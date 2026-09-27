@@ -997,6 +997,36 @@ public partial class InteractiveGue : GraphicalUiElement
     }
 
 
+    public override GraphicalUiElement Clone()
+    {
+        InteractiveGue clone = (InteractiveGue)base.Clone();
+
+        // The copied handlers belong to whoever subscribed to the source, usually its Forms
+        // control, so clicking the clone would click the source's control. That control's Visual
+        // is the source, so the clone has no control of its own.
+        clone.Click = null;
+        clone.ClickBubbling = null;
+        clone.ClickPreview = null;
+        clone.DoubleClick = null;
+        clone.Dragging = null;
+        clone.EnabledChange = null;
+        clone.HoverOver = null;
+        clone._losePush = null;
+        clone._hasSubscribedLosePusheEvents = false;
+        clone.MouseWheelScroll = null;
+        clone.PushPreview = null;
+        clone.Push = null;
+        clone.RemovedAsPushed = null;
+        clone.RightClick = null;
+        clone.RollOff = null;
+        clone.RollOn = null;
+        clone.RollOver = null;
+        clone.RollOverBubbling = null;
+        clone._formsControlAsObject = null;
+
+        return clone;
+    }
+
     public override void RemoveFromManagers()
     {
         base.RemoveFromManagers();

@@ -79,6 +79,22 @@ public partial class GraphicalUiElement
         this.ParentChanged += HandleBindingParentChanged;
     }
 
+    partial void ResetBindingStateForClone()
+    {
+        // MemberwiseClone shares the binding dictionaries and their path observers, whose handlers
+        // apply values to the source, so a binding added on the clone would bind the source. The
+        // clone starts with no bindings and no inherited context, since it has no parent. An
+        // explicitly assigned BindingContext is a value, not wiring, so it is kept.
+        vmPropsToUiProps = new Dictionary<string, VmToUiProperty>();
+        vmEventsToUiMethods = new Dictionary<string, VmToUiProperty>();
+        _isSubscribedToViewModelPropertyChanged = false;
+        mInheritedBindingContext = null;
+        BindingContextBinding = null;
+        BindingContextBindingPropertyOwner = null;
+        BindingContextChanged = null;
+        InheritedBindingContextChanged = null;
+    }
+
     partial void CustomRemoveFromManagers()
     {
         RemoveBindingContextRecursively();

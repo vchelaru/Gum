@@ -82,13 +82,7 @@ public class ColoredCircleRuntime : AposShapeRuntime
     public override GraphicalUiElement Clone()
     {
         var toReturn = (ColoredCircleRuntime)base.Clone();
-
-        // Should this call SetContainedObject?
-        if(this.mContainedCircle != null)
-        {
-            SetContainedShape(new Circle());
-        }
-
+        toReturn.mContainedCircle = null!;
         return toReturn;
     }
 }

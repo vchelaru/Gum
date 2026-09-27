@@ -1631,6 +1631,179 @@ public class GraphicalUiElementTests : BaseTestClass
         sourceChild.Parent.ShouldBe(source);
     }
 
+    [Fact]
+    public void Clone_ShouldAddToAndRemoveFromManagersIndependently_WhenSourceWasAdded()
+    {
+        // Record what the add/remove hooks put on a layer, so the test doesn't depend on which
+        // manager each renderable type is routed to.
+        Action<IRenderableIpso, ISystemManagers, Layer?>? originalAdd = GraphicalUiElement.AddRenderableToManagers;
+        Action<IRenderableIpso, ISystemManagers>? originalRemove = GraphicalUiElement.RemoveRenderableFromManagers;
+        HashSet<IRenderableIpso> registered = new();
+        GraphicalUiElement.AddRenderableToManagers = (renderable, _, _) => registered.Add(renderable);
+        GraphicalUiElement.RemoveRenderableFromManagers = (renderable, _) => registered.Remove(renderable);
+
+        try
+        {
+            SpriteRuntime source = new();
+            source.AddToManagers(SystemManagers.Default, new Layer());
+            IRenderableIpso sourceRenderable = (IRenderableIpso)source.RenderableComponent!;
+
+            GraphicalUiElement clone = source.Clone();
+            clone.AddToManagers(SystemManagers.Default, new Layer());
+            IRenderableIpso cloneRenderable = (IRenderableIpso)clone.RenderableComponent!;
+
+            registered.ShouldContain(cloneRenderable,
+                "because the clone was never added, even though the source was");
+
+            source.RemoveFromManagers();
+            registered.ShouldNotContain(sourceRenderable);
+            registered.ShouldContain(cloneRenderable, "because removing the source must not remove the clone");
+
+            clone.RemoveFromManagers();
+            registered.ShouldNotContain(cloneRenderable);
+        }
+        finally
+        {
+            GraphicalUiElement.AddRenderableToManagers = originalAdd;
+            GraphicalUiElement.RemoveRenderableFromManagers = originalRemove;
+        }
+    }
+
+    [Fact]
+    public void Clone_ShouldResolveEffectiveManagersThroughNewParent_WhenSourceWasAdded()
+    {
+        ContainerRuntime parent = new();
+        parent.AddToManagers(SystemManagers.Default, new Layer());
+        ContainerRuntime source = new();
+        source.AddToManagers(SystemManagers.Default, new Layer());
+
+        GraphicalUiElement clone = source.Clone();
+        clone.EffectiveManagers.ShouldBeNull("because the clone starts detached");
+        parent.AddChild(clone);
+
+        clone.EffectiveManagers.ShouldBe(SystemManagers.Default);
+    }
+
+    [Fact]
+    public void Clone_ShouldNotRaiseSourceEventHandlers()
+    {
+        ContainerRuntime source = new();
+        int clickCount = 0;
+        int sizeChangedCount = 0;
+        int bindingContextChangedCount = 0;
+        source.Click += (_, _) => clickCount++;
+        source.SizeChanged += (_, _) => sizeChangedCount++;
+        source.BindingContextChanged += (_, _) => bindingContextChangedCount++;
+
+        ContainerRuntime clone = (ContainerRuntime)source.Clone();
+        clone.CallClick();
+        clone.Width = source.Width + 10;
+        clone.BindingContext = new object();
+
+        clickCount.ShouldBe(0);
+        sizeChangedCount.ShouldBe(0);
+        bindingContextChangedCount.ShouldBe(0);
+
+        source.CallClick();
+        clickCount.ShouldBe(1, "because the source keeps its own handlers");
+    }
+
+    [Fact]
+    public void Clone_OfFormsVisual_ShouldNotReferenceOrDriveSourceControl()
+    {
+        Gum.Forms.Controls.Button button = new();
+        int buttonClickCount = 0;
+        button.Click += (_, _) => buttonClickCount++;
+
+        InteractiveGue clone = (InteractiveGue)button.Visual.Clone();
+        clone.CallClick();
+
+        clone.FormsControlAsObject.ShouldBeNull(
+            "because the source's control uses the source as its Visual, not the clone");
+        buttonClickCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Clone_SetBindingOnClone_ShouldNotBindSource()
+    {
+        CloneViewModel viewModel = new();
+        ContainerRuntime source = new();
+        source.BindingContext = viewModel;
+        source.SetBinding(nameof(source.Width), nameof(viewModel.Width));
+
+        GraphicalUiElement clone = source.Clone();
+        clone.SetBinding(nameof(clone.Height), nameof(viewModel.Height));
+        viewModel.Height = 77;
+
+        clone.Height.ShouldBe(77);
+        source.Height.ShouldNotBe(77, "because the clone's binding must not be added to the source");
+    }
+
+    [Theory]
+    [MemberData(nameof(RuntimeTypes))]
+    public void Clone_ShouldNotKeepReferencesToSourceRenderables(Type runtimeType)
+    {
+        System.Reflection.ConstructorInfo constructor = runtimeType.GetConstructors()
+            .First(ctor => ctor.GetParameters().All(p => p.IsOptional));
+        GraphicalUiElement source = (GraphicalUiElement)constructor.Invoke(
+            constructor.GetParameters().Select(p => p.DefaultValue).ToArray());
+        // Runtimes cache their renderable lazily, so read every property to fill those caches.
+        foreach (System.Reflection.PropertyInfo property in runtimeType.GetProperties())
+        {
+            if (property.GetIndexParameters().Length == 0 && property.CanRead)
+            {
+                try { property.GetValue(source); } catch { }
+            }
+        }
+
+        GraphicalUiElement clone = source.Clone();
+
+        for (Type? type = runtimeType; type != null && type != typeof(object); type = type.BaseType)
+        {
+            foreach (System.Reflection.FieldInfo field in type.GetFields(
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly))
+            {
+                object? sourceValue = field.GetValue(source);
+                if (sourceValue is IRenderable)
+                {
+                    field.GetValue(clone).ShouldNotBeSameAs(sourceValue,
+                        $"because {type.Name}.{field.Name} on the clone would write to the source's renderable");
+                }
+            }
+        }
+    }
+
+    public static TheoryData<Type> RuntimeTypes()
+    {
+        TheoryData<Type> data = new();
+        foreach (Type type in typeof(SpriteRuntime).Assembly.GetTypes()
+            .Where(item => item.Namespace == typeof(SpriteRuntime).Namespace
+                && item.IsSubclassOf(typeof(GraphicalUiElement))
+                && !item.IsAbstract
+                && item.GetConstructors().Any(ctor => ctor.GetParameters().All(p => p.IsOptional)))
+            .OrderBy(item => item.Name))
+        {
+            data.Add(type);
+        }
+        return data;
+    }
+
+    private class CloneViewModel : Gum.Mvvm.ViewModel
+    {
+        public float Width
+        {
+            get => Get<float>();
+            set => Set(value);
+        }
+
+        public float Height
+        {
+            get => Get<float>();
+            set => Set(value);
+        }
+    }
+
     #endregion
 
     #region Parent/Children related

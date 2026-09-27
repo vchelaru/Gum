@@ -393,4 +393,11 @@ public class TextRuntime : InteractiveGue
         textRenderable.RawText = "Hello World";
         this.ResumeLayout();
     }
+
+    public override GraphicalUiElement Clone()
+    {
+        TextRuntime toReturn = (TextRuntime)base.Clone();
+        toReturn.mContainedText = null;
+        return toReturn;
+    }
 }
