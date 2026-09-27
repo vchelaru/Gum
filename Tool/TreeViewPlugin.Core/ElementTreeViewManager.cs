@@ -726,7 +726,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             RootScreensTreeNode.ClearChildren();
             RootComponentsTreeNode.ClearChildren();
-            // maybe we support behavior folders in the future? If so:
             RootBehaviorsTreeNode.ClearChildren();
         }
     }
@@ -747,9 +746,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             string fullPath = rootDirectoryForElementType + FileManager.GetDirectory(element.Name);
 
-            if(!neededFolders.Contains(fullPath))
+            neededFolders.Add(fullPath);
+        }
+
+        foreach (BehaviorSave behavior in project.Behaviors)
+        {
+            if (behavior.Name != null)
             {
-                neededFolders.Add(fullPath);
+                neededFolders.Add(_fileLocations.BehaviorsFolder + FileManager.GetDirectory(behavior.Name));
             }
         }
 
@@ -909,8 +913,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 {
                     fullPath = _fileLocations.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
                 }
-                // Unlike screens and components, behavior folders missing on disk get no node
-                // (AddNeededButMissingFromFileSystemFolderNodes skips behaviors).
                 GumTreeNode parentNode = GetTreeNodeFor(fullPath)
                     ?? throw new InvalidOperationException($"Error trying to get parent node for behavior {fullPath}");
 
@@ -942,17 +944,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        // Also flat (non-recursive): unlike standard elements above, a non-BehaviorSave-tagged node
-        // (a behavior subfolder) is left alone rather than removed.
-        for (int i = RootBehaviorsTreeNode.ChildCount - 1; i > -1; i--)
-        {
-            BehaviorSave? behavior = RootBehaviorsTreeNode.GetChildAt(i).Tag as BehaviorSave;
-
-            if (behavior != null && (!gumProject.Behaviors.Contains(behavior) || !ShouldShow(behavior)))
-            {
-                RootBehaviorsTreeNode.RemoveChildAt(i);
-            }
-        }
+        RootBehaviorsTreeNode.RemoveRecursivelyIfStale<BehaviorSave>(
+            behavior => gumProject.Behaviors.Contains(behavior) && ShouldShow(behavior));
 
         #endregion
 

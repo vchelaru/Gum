@@ -309,11 +309,13 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
             var leftSideRoot = ObjectFinder.Self.GetRootVariable(leftSideQualified, parentElement);
             VariableSave? rightSideRoot = null;
-            string rightSide = assignment.SyntaxNode.ToString();
+            // EvaluatedSyntax.FromSyntaxNode always sets SyntaxNode; it is nullable only because
+            // the property is publicly settable.
+            string rightSide = assignment.SyntaxNode?.ToString() ?? string.Empty;
 
             if(rightSide.Contains("global::"))
             {
-                EvaluatedSyntax.ConvertGlobalToElementNameWithSlashes(rightSide, out string elementName, out string elementType);
+                EvaluatedSyntax.ConvertGlobalToElementNameWithSlashes(rightSide, out string? elementName, out string? elementType);
 
                 var element = ObjectFinder.Self.GetElementSave(elementName);
                 if(element != null)
@@ -324,9 +326,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 }
             }
 
-            else 
+            else
             {
-                var unevaluated = 
                 // it's a variable in this element
                 rightSideRoot = ObjectFinder.Self.GetRootVariable(rightSide, parentElement);
             }

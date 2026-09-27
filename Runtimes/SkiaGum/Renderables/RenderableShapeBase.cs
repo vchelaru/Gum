@@ -13,8 +13,27 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
+public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, ICloneable
 {
+    /// <summary>
+    /// Creates a copy for <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/>. The copy has its
+    /// own children collection, no parent, no <see cref="OnPreRender"/> hook, and builds its own
+    /// paint on first draw. A derived shape
+    /// that holds mutable reference state (such as a point list) overrides this to copy it.
+    /// </summary>
+    public virtual object Clone()
+    {
+        RenderableShapeBase clone = (RenderableShapeBase)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        // The copied paint reference belongs to the source, so drop it rather than dispose it.
+        clone._cachedPaint = null;
+        clone.NeedsUpdate = true;
+        // The hook targets the source's runtime; the clone's runtime rebinds its own.
+        clone.OnPreRender = null;
+        return clone;
+    }
+
     #region Fields/Properties
 
     SKColor _color = SKColors.Red;

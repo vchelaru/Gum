@@ -48,17 +48,8 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
         return path;
     }
 
-    object ICloneable.Clone() => Clone();
-
-    public RoundedRectangle Clone()
-    {
-        var newInstance = (RoundedRectangle)this.MemberwiseClone();
-        newInstance.mParent = null;
-        newInstance.mChildren = new ();
-        newInstance.ClearCachedPaint();
-
-        return newInstance;
-    }
+    /// <inheritdoc cref="RenderableShapeBase.Clone"/>
+    public new RoundedRectangle Clone() => (RoundedRectangle)base.Clone();
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {

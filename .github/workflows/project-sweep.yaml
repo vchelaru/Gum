@@ -45,6 +45,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - name: Test the sweep's saved-file comparison
+        shell: pwsh
+        run: ./Tools/project-sweep-facts-tests.ps1
       - name: Sweep real projects
         shell: pwsh
         run: ./Tools/project-sweep.ps1 -WorkRoot "${{ runner.temp }}/sweep"

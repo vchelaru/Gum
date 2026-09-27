@@ -132,7 +132,9 @@ public sealed class GumService : IGumService
     /// </summary>
     public void UseKeyboardDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(FormsUtilities.Keyboard);
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(
+            FormsUtilities.Keyboard ?? throw new System.InvalidOperationException(
+                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
     }
 
     private Gum.Async.SingleThreadSynchronizationContext? _syncContext;
