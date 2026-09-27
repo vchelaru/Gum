@@ -5,8 +5,8 @@ namespace Gum.ProjectServices;
 
 /// <summary>
 /// Loads a Gum project's localization files (CSV or RESX) into an
-/// <see cref="ILocalizationService"/> in headless contexts such as the CLI,
-/// mirroring the load policy used by the Gum tool and the game runtime.
+/// <see cref="ILocalizationService"/> in headless contexts such as the CLI, through the
+/// <see cref="ProjectLocalizationLoader"/> policy the Gum tool and the game runtime share.
 /// </summary>
 public interface IHeadlessLocalizationLoader
 {

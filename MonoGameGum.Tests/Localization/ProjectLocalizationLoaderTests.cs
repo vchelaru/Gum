@@ -96,6 +96,92 @@ public class ProjectLocalizationLoaderTests
         relativePaths.ShouldBe(new[] { "Strings.csv" });
     }
 
+    [Fact]
+    public void Load_loose_csv_with_a_short_row_falls_back_to_the_string_id()
+    {
+        using TempProjectDirectory directory = new TempProjectDirectory();
+        directory.Write("Loc/Strings.csv", "String ID,English,Spanish\nT_Hello,Hello\nT_Bye,Bye,Adios\n");
+        GumProjectSave project = directory.ProjectWithLocalizationFiles("Loc\\Strings.csv");
+        LocalizationService service = new LocalizationService();
+        List<string> warnings = new List<string>();
+
+        ProjectLocalizationLoader.Load(project, service, null, warnings);
+
+        warnings.ShouldBeEmpty();
+        service.CurrentLanguage = 2;
+        service.Translate("T_Hello").ShouldBe("T_Hello");
+        service.Translate("T_Bye").ShouldBe("Adios");
+    }
+
+    [Fact]
+    public void Load_loose_resx_finds_its_satellites()
+    {
+        using TempProjectDirectory directory = new TempProjectDirectory();
+        directory.Write("Loc/Strings.resx", Resx("T_Hello", "Hello"));
+        directory.Write("Loc/Strings.es.resx", Resx("T_Hello", "Hola"));
+        GumProjectSave project = directory.ProjectWithLocalizationFiles("Loc\\Strings.resx");
+        LocalizationService service = new LocalizationService();
+        List<string> warnings = new List<string>();
+
+        ProjectLocalizationLoader.Load(project, service, null, warnings);
+
+        warnings.ShouldBeEmpty();
+        service.Languages.ShouldBe(new[] { "Default", "es" });
+        service.CurrentLanguage = 2;
+        service.Translate("T_Hello").ShouldBe("Hola");
+    }
+
+    // One missing file warns and skips, like one missing file among several already did.
+    [Theory]
+    [InlineData("Missing.csv")]
+    [InlineData("Missing.resx")]
+    public void Load_loose_single_missing_file_warns_instead_of_throwing(string fileName)
+    {
+        using TempProjectDirectory directory = new TempProjectDirectory();
+        GumProjectSave project = directory.ProjectWithLocalizationFiles(fileName);
+        LocalizationService service = new LocalizationService();
+        List<string> warnings = new List<string>();
+
+        ProjectLocalizationLoader.Load(project, service, null, warnings);
+
+        warnings.ShouldHaveSingleItem().ShouldContain(fileName);
+        service.HasDatabase.ShouldBeFalse();
+    }
+
+    private sealed class TempProjectDirectory : IDisposable
+    {
+        private readonly string _path = System.IO.Path.Combine(System.IO.Path.GetTempPath(),
+            "GumProjectLocalizationLoaderTests_" + Guid.NewGuid().ToString("N"));
+
+        public TempProjectDirectory() => System.IO.Directory.CreateDirectory(_path);
+
+        public void Write(string relativePath, string content)
+        {
+            string fullPath = System.IO.Path.Combine(_path, relativePath);
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(fullPath)!);
+            System.IO.File.WriteAllText(fullPath, content);
+        }
+
+        public GumProjectSave ProjectWithLocalizationFiles(params string[] files)
+        {
+            GumProjectSave project = new GumProjectSave { FullFileName = System.IO.Path.Combine(_path, "Project.gumx") };
+            project.LocalizationFiles.AddRange(files);
+            return project;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                System.IO.Directory.Delete(_path, recursive: true);
+            }
+            catch (System.IO.IOException)
+            {
+                // Best-effort cleanup of a temp folder.
+            }
+        }
+    }
+
     private static GumProjectSave ProjectWithLocalizationFiles(params string[] files)
     {
         GumProjectSave project = new GumProjectSave { FullFileName = "C:/Game/Content/Project.gumx" };

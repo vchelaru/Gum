@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
@@ -17,11 +18,6 @@ using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 
-/// <summary>
-/// Covers FileCommands aside from CSV-loading, which requires the real, concrete
-/// CsvLocalizationLoader (depends on CsvLibrary, net8.0-windows) and so stays in
-/// Tool/Tests/GumToolUnitTests/Commands/FileCommandsTests.cs.
-/// </summary>
 public class FileCommandsTests : BaseTestClass
 {
     private readonly AutoMocker _mocker;
@@ -62,6 +58,7 @@ public class FileCommandsTests : BaseTestClass
             _tempDirectory == null ? null : _tempDirectory + Path.DirectorySeparatorChar);
 
         _mocker.Use<IPathCaseSensitivity>(new PathCaseSensitivity());
+        _mocker.Use<ICsvLocalizationLoader>(new CsvLocalizationLoader());
         _fileCommands = _mocker.CreateInstance<FileCommands>();
     }
 
@@ -254,6 +251,62 @@ public class FileCommandsTests : BaseTestClass
         _outputCalls.Count.ShouldBe(0);
         _errorCalls.Count.ShouldBe(0);
         _localizationService.HasDatabase.ShouldBeFalse();
+        raised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void LoadLocalizationFile_ShouldLoadResxSatellites_WhenPathUsesBackslashes()
+    {
+        _tempDirectory = CreateTempDirectory();
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Loc"));
+        WriteResxFile(Path.Combine(_tempDirectory, "Loc", "Strings.resx"),
+            new Dictionary<string, string> { { "T_OK", "OK" } });
+        WriteResxFile(Path.Combine(_tempDirectory, "Loc", "Strings.es.resx"),
+            new Dictionary<string, string> { { "T_OK", "Aceptar" } });
+        _gumProject.LocalizationFiles.Add("Loc\\Strings.resx");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _errorCalls.ShouldBeEmpty();
+        _localizationService.Languages.ShouldBe(new[] { "Default", "es" });
+        _localizationService.CurrentLanguage = 2;
+        _localizationService.Translate("T_OK").ShouldBe("Aceptar");
+    }
+
+    [Fact]
+    public void LoadLocalizationFile_ShouldLoadSingleCsvWithTheToolParser_AndApplyTheProjectLanguage()
+    {
+        // The tool parser drops "//" comment rows and fills a short row's missing cells with the ID.
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"),
+            "String ID,English,Spanish\n// comment,x,y\nT_Hello,Hello\nT_Bye,Bye,Adios\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+        _gumProject.CurrentLanguageIndex = 2;
+
+        _fileCommands.LoadLocalizationFile();
+
+        _errorCalls.ShouldBeEmpty();
+        _localizationService.CurrentLanguage.ShouldBe(2);
+        _localizationService.Translate("T_Bye").ShouldBe("Adios");
+        _localizationService.Translate("T_Hello").ShouldBe("T_Hello");
+        _localizationService.Keys.ShouldNotContain("// comment");
+    }
+
+    [Fact]
+    public void LoadLocalizationFile_ShouldShowADialogAndStillRaiseLoaded_WhenAFileCannotBeParsed()
+    {
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.resx"), "this is not xml");
+        _gumProject.LocalizationFiles.Add("Strings.resx");
+        bool raised = false;
+        _fileCommands.LocalizationLoaded += () => raised = true;
+
+        _fileCommands.LoadLocalizationFile();
+
+        _mocker.GetMock<IDialogService>().Verify(
+            d => d.ShowMessage(It.Is<string>(m => m.Contains("Error loading localization file(s)")),
+                It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
         raised.ShouldBeTrue();
     }
 

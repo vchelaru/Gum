@@ -139,6 +139,83 @@ public class HeadlessLocalizationLoaderTests : IDisposable
         _localizationService.Keys.ShouldContain("T_Hello");
     }
 
+    [Fact]
+    public void LoadLocalizationFiles_ResxWithSatellitesInASubfolder_LoadsEveryLanguage()
+    {
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Loc"));
+        WriteResx(Path.Combine("Loc", "Strings.resx"), ("T_Hello", "Hello"));
+        WriteResx(Path.Combine("Loc", "Strings.es.resx"), ("T_Hello", "Hola"));
+        GumProjectSave project = CreateProjectWithFiles("Loc\\Strings.resx");
+
+        _sut.LoadLocalizationFiles(project, _tempDirectory, _localizationService);
+
+        _logger.Errors.ShouldBeEmpty();
+        _localizationService.Languages.ShouldBe(new[] { "Default", "es" });
+        _localizationService.CurrentLanguage = 2;
+        _localizationService.Translate("T_Hello").ShouldBe("Hola");
+    }
+
+    [Fact]
+    public void LoadLocalizationFiles_CsvRowShorterThanHeader_FallsBackToTheStringId()
+    {
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"),
+            "String ID,English,Spanish\nT_Hello,Hello\n");
+        GumProjectSave project = CreateProjectWithFiles("Strings.csv");
+
+        _sut.LoadLocalizationFiles(project, _tempDirectory, _localizationService);
+
+        _localizationService.CurrentLanguage = 2;
+        _localizationService.Translate("T_Hello").ShouldBe("T_Hello");
+    }
+
+    [Fact]
+    public void LoadLocalizationFiles_MissingSingleResx_LogsError()
+    {
+        GumProjectSave project = CreateProjectWithFiles("DoesNotExist.resx");
+
+        _sut.LoadLocalizationFiles(project, _tempDirectory, _localizationService);
+
+        _localizationService.HasDatabase.ShouldBeFalse();
+        _logger.Errors.ShouldHaveSingleItem().ShouldContain("DoesNotExist.resx");
+    }
+
+    [Fact]
+    public void LoadLocalizationFiles_MultipleResxWithOneMissing_LogsErrorAndLoadsTheRest()
+    {
+        WriteResx("First.resx", ("T_First", "First"));
+        GumProjectSave project = CreateProjectWithFiles("First.resx", "Missing.resx");
+
+        _sut.LoadLocalizationFiles(project, _tempDirectory, _localizationService);
+
+        _logger.Errors.ShouldHaveSingleItem().ShouldContain("Missing.resx");
+        _localizationService.Keys.ShouldContain("T_First");
+    }
+
+    [Fact]
+    public void LoadLocalizationFiles_KeyCollision_PrintsOutputNotError()
+    {
+        WriteResx("First.resx", ("T_Shared", "First"));
+        WriteResx("Second.resx", ("T_Shared", "Second"));
+        GumProjectSave project = CreateProjectWithFiles("First.resx", "Second.resx");
+
+        _sut.LoadLocalizationFiles(project, _tempDirectory, _localizationService);
+
+        _logger.Errors.ShouldBeEmpty();
+        _logger.Outputs.ShouldHaveSingleItem().ShouldStartWith("Localization warning: ");
+        _logger.Outputs[0].ShouldContain("T_Shared");
+    }
+
+    [Fact]
+    public void LoadLocalizationFiles_UnparseableFile_LogsErrorInsteadOfThrowing()
+    {
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.resx"), "this is not xml");
+        GumProjectSave project = CreateProjectWithFiles("Strings.resx");
+
+        _sut.LoadLocalizationFiles(project, _tempDirectory, _localizationService);
+
+        _logger.Errors.ShouldHaveSingleItem().ShouldContain("Error loading localization file(s)");
+    }
+
     private GumProjectSave CreateProjectWithFiles(params string[] relativeFiles)
     {
         GumProjectSave project = new GumProjectSave();
