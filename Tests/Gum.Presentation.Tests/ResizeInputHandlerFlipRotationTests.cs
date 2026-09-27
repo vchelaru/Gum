@@ -157,6 +157,25 @@ public class ResizeInputHandlerFlipRotationTests
     }
 
     [Fact]
+    public void HandleDrag_AppliesTheDeadZoneMovement_WhenTheDragStartsWithSmallTicks()
+    {
+        // #5257: two-pixel ticks, as a mouse reports them. The first three stay inside the 6-pixel
+        // dead zone; the handle still ends up under the cursor, 10 pixels right of the push.
+        var (sut, cursor, representation) = CreateGrabbedSut(
+            x: 0, y: 0, width: 20, height: 10, rotation: 0, sideGrabbed: ResizeSide.Right);
+
+        for (int x = 102; x <= 110; x += 2)
+        {
+            cursor.X = x;
+            cursor.XChange = 2;
+            cursor.YChange = 0;
+            sut.HandleDrag();
+        }
+
+        representation.Width.ShouldBe(30, tolerance: 0.01);
+    }
+
+    [Fact]
     public void OnDrag_ShouldNotDriftAcrossTicks_WhenLeftHandleDraggedOnRotatedObject()
     {
         // Regression for the position "shift" the user found manually: a handle that moves BOTH
@@ -169,28 +188,29 @@ public class ResizeInputHandlerFlipRotationTests
         var (sut, cursor, representation) = CreateGrabbedSut(
             x: 5, y: 0, width: 20, height: 10, rotation: 90, sideGrabbed: ResizeSide.Left);
 
-        // Two small ticks, same direction, each moving the cursor right by 3 (shrinking the object
-        // from the Left, well short of crossing the anchor at local X=25).
+        // Two small ticks, same direction, moving the cursor right by 7 then 3 (shrinking the object
+        // from the Left, well short of crossing the anchor at local X=25). The first tick leaves the
+        // 6px dead zone.
+        cursor.X = 107;
+        cursor.XChange = 7;
+        cursor.YChange = 0;
+        sut.HandleDrag();
+
         cursor.X = 110;
         cursor.XChange = 3;
         cursor.YChange = 0;
         sut.HandleDrag();
 
-        cursor.X = 120;
-        cursor.XChange = 3;
-        cursor.YChange = 0;
-        sut.HandleDrag();
-
-        // Local (pre-rotation) X should move by the full 6px total (Left-origin, Left handle keeps
-        // the Right edge fixed) and Width should shrink by 6, matching one big 6px tick exactly -
-        // this must hold regardless of how the 6px was split across ticks.
-        var expectedRepositionLocal = new System.Numerics.Vector2(6, 0);
+        // Local (pre-rotation) X should move by the full 10px total (Left-origin, Left handle keeps
+        // the Right edge fixed) and Width should shrink by 10, matching one big 10px tick exactly -
+        // this must hold regardless of how the 10px was split across ticks.
+        var expectedRepositionLocal = new System.Numerics.Vector2(10, 0);
         expectedRepositionLocal.Y *= -1;
         MathFunctions.RotateVector(ref expectedRepositionLocal, MathHelper.ToRadians(90));
         expectedRepositionLocal.Y *= -1;
 
         representation.X.ShouldBe(5 + expectedRepositionLocal.X, tolerance: 0.01);
         representation.Y.ShouldBe(0 + expectedRepositionLocal.Y, tolerance: 0.01);
-        representation.Width.ShouldBe(14, tolerance: 0.01); // 20 - 6
+        representation.Width.ShouldBe(10, tolerance: 0.01); // 20 - 10
     }
 }
