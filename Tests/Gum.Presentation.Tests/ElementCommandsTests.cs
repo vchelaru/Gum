@@ -17,6 +17,7 @@ using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System.Globalization;
 
 namespace Gum.Presentation.Tests;
 
@@ -586,5 +587,30 @@ public class ElementCommandsTests : BaseTestClass
 
         // assert
         name.ShouldBe("TextInstance1");
+    }
+
+    // SortVariables runs on every project save. Czech collation sorts "ch" after "h", so a
+    // CurrentCulture sort writes a different variable order on a cs-CZ machine (#5207).
+    [Fact]
+    public void SortVariables_OrdersTheSame_UnderADifferentCulture()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("cs-CZ");
+            ComponentSave component = new() { Name = "MyComponent" };
+            StateSave defaultState = new() { Name = "Default", ParentContainer = component };
+            defaultState.Variables.Add(new VariableSave { Name = "HealthBar.X", Type = "float", Value = 1f });
+            defaultState.Variables.Add(new VariableSave { Name = "CheckBox.X", Type = "float", Value = 2f });
+            component.States.Add(defaultState);
+
+            _sut.SortVariables(component);
+
+            defaultState.Variables.Select(item => item.Name).ShouldBe(new[] { "CheckBox.X", "HealthBar.X" });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 }

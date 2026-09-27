@@ -15,13 +15,9 @@ public class ScreenImportService : IScreenImportService
             return ScreenImportResult.Conflict(screenSave.Name);
         }
 
-        List<ElementReference> elementReferences = project.ScreenReferences;
-        elementReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
-        elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-        List<ScreenSave> screens = project.Screens;
-        screens.Add(screenSave);
-        screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+        project.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
+        project.Screens.Add(screenSave);
+        project.SortElementsAndReferencesByName();
 
         screenSave.Initialize(null);
 
