@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CodeOutputPlugin.ViewModels;
 using Gum.ProjectServices.CodeGeneration;
@@ -144,7 +145,8 @@ public class CodeOutputSettingsMembers
                     !valueToSet.EndsWith("/");
                 if (needsAppendedSlash)
                 {
-                    valueToSet += "\\";
+                    // Native, since "\" is a file-name character on macOS/Linux.
+                    valueToSet += Path.DirectorySeparatorChar;
                 }
 
                 if (!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false && _projectState.ProjectDirectory != null)

@@ -132,6 +132,39 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void Detect_BackslashCodeProjectRoot_FindsCsprojOnEveryOS()
+    {
+        // A project saved on Windows stores CodeProjectRoot with backslashes. On macOS/Linux a
+        // backslash is a file-name character, so an unnormalized "..\..\" names a directory
+        // that does not exist and detection fell back instead of reading the csproj.
+        string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "MonoGameGum");
+        Directory.CreateDirectory(referencedProjectDir);
+        File.WriteAllText(Path.Combine(referencedProjectDir, "AssemblyAttributes.cs"),
+            "[assembly: GumSyntaxVersion(Version = 3)]\n");
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        string gumProjectDir = Path.Combine(gameDir, "Content", "GumProject");
+        Directory.CreateDirectory(gumProjectDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <ProjectReference Include=""..\libs\MonoGameGum\MonoGameGum.csproj"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "..\\..\\"
+        };
+
+        SyntaxVersionResult result = _sut.Detect(settings, gumProjectDir + Path.DirectorySeparatorChar);
+
+        result.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        result.Version.ShouldBe(3);
+    }
+
+    [Fact]
     public void Detect_ProjectReference_ReadsHigherVersion()
     {
         string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "SkiaGum");

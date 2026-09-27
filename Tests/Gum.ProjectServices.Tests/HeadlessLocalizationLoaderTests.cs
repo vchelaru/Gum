@@ -100,6 +100,22 @@ public class HeadlessLocalizationLoaderTests : IDisposable
     }
 
     [Fact]
+    public void LoadLocalizationFiles_BackslashRelativePath_LoadsOnEveryOS()
+    {
+        // The tool stores a project-relative path with the saving OS's separator, so a project
+        // saved on Windows lists "Localization\Strings.csv". On macOS/Linux the backslash is a
+        // file-name character unless it is converted.
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Localization"));
+        WriteCsv(Path.Combine("Localization", "Strings.csv"));
+        GumProjectSave project = CreateProjectWithFiles("Localization\\Strings.csv");
+
+        _sut.LoadLocalizationFiles(project, _tempDirectory, _localizationService);
+
+        _logger.Errors.ShouldBeEmpty();
+        _localizationService.Keys.ShouldContain("T_OK");
+    }
+
+    [Fact]
     public void LoadLocalizationFiles_SingleCsv_SetsCurrentLanguageFromProject()
     {
         WriteCsv("LocalizationDB.csv");
