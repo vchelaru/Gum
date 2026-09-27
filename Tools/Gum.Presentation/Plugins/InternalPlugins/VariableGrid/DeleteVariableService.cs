@@ -7,8 +7,6 @@ using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
@@ -23,13 +21,15 @@ public class DeleteVariableService : IDeleteVariableService
     private readonly IRenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
     private readonly IPluginManager _pluginManager;
+    private readonly IInstanceOverrideRemover _instanceOverrideRemover;
 
     public DeleteVariableService(IUndoManager undoManager,
         IFileCommands fileCommands,
         IGuiCommands guiCommands,
         IRenameLogic renameLogic,
         IDialogService dialogService,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IInstanceOverrideRemover instanceOverrideRemover)
     {
         _undoManager = undoManager;
         _fileCommands = fileCommands;
@@ -37,6 +37,7 @@ public class DeleteVariableService : IDeleteVariableService
         _renameLogic = renameLogic;
         _dialogService = dialogService;
         _pluginManager = pluginManager;
+        _instanceOverrideRemover = instanceOverrideRemover;
     }
 
     public bool CanDeleteVariable(VariableSave variable)
@@ -69,26 +70,8 @@ public class DeleteVariableService : IDeleteVariableService
                 _fileCommands.TryAutoSaveObject(behavior);
             }
 
-            // Instance-level value overrides elsewhere in the project are cascaded (removed, and
-            // recorded so undo/redo can restore/re-remove them). See ADR 0016.
-            var crossElementRemovals = new List<CrossElementVariableChange>();
-            foreach (var change in cascadingInstanceOverrides)
-            {
-                if (change.Container is ElementSave changeElement &&
-                    changeElement.GetInstance(change.Variable.SourceObject) is { } instance)
-                {
-                    crossElementRemovals.Add(CrossElementVariableChange.CaptureBefore(changeElement, change.State, change.Variable));
-
-                    change.State.Variables.Remove(change.Variable);
-                    _fileCommands.TryAutoSaveElement(changeElement);
-                    _pluginManager.VariableSet(changeElement, instance, change.Variable.GetRootName(), null);
-                }
-            }
-
-            if (crossElementRemovals.Count > 0)
-            {
-                _undoManager.RecordCrossElementVariableChanges(crossElementRemovals);
-            }
+            // Instance-level value overrides elsewhere in the project are cascaded. See ADR 0016.
+            _instanceOverrideRemover.RemoveAndRecordForUndo(cascadingInstanceOverrides);
         }
 
         _guiCommands.RefreshVariables(force: true);
@@ -134,7 +117,7 @@ public class DeleteVariableService : IDeleteVariableService
 
         var renames = _renameLogic.GetChangesForRenamedVariable(stateContainer, variable.Name, variable.GetRootName());
 
-        var blockingChanges = renames.VariableChanges.Where(c => !string.IsNullOrEmpty(c.Variable.ExposedAsName)).ToList();
+        var blockingChanges = renames.VariableChanges.Where(c => !c.IsPlainInstanceOverride).ToList();
 
         if (blockingChanges.Count > 0 || renames.VariableReferenceChanges.Count > 0)
         {
@@ -146,7 +129,7 @@ public class DeleteVariableService : IDeleteVariableService
                 $"Cannot delete variable {variable.Name} because it is referenced by other elements.\n\n{blockingResponse.GetChangesDetails()}");
         }
 
-        cascadingInstanceOverrides = renames.VariableChanges.Where(c => string.IsNullOrEmpty(c.Variable.ExposedAsName)).ToList();
+        cascadingInstanceOverrides = renames.VariableChanges.Where(c => c.IsPlainInstanceOverride).ToList();
 
         return GeneralResponse.SuccessfulResponse;
     }

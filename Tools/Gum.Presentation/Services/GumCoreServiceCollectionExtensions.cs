@@ -153,6 +153,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IAnimationUndoProviderRegistrar>(provider => provider.GetRequiredService<AnimationUndoProviderRelay>());
         services.AddSingleton<EditVariableService>();
         services.AddSingleton<IEditVariableService>(provider => provider.GetRequiredService<EditVariableService>());
+        services.AddSingleton<IInstanceOverrideRemover, InstanceOverrideRemover>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<IStateEditingIndicatorService, StateEditingIndicatorService>();

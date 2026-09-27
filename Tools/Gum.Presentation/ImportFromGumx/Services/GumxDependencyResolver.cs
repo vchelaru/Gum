@@ -43,8 +43,15 @@ public class GumxDependencyResolver : IGumxDependencyResolver
         var referencedStandardNames = new HashSet<string>();
         var behaviorNames = new HashSet<string>();
 
-        foreach (var element in directSelected)
+        // A component a variable reference reads from is a dependency too, and brings its own, so
+        // each newly found component is walked in turn.
+        var pending = new Queue<ElementSave>(directSelected);
+        var walked = new HashSet<ElementSave>();
+        while (pending.Count > 0)
         {
+            var element = pending.Dequeue();
+            if (!walked.Add(element)) continue;
+
             CollectBehaviorNames(element, behaviorNames);
 
             var referenced = objectFinder.GetElementsReferencedByThis(element);
@@ -55,18 +62,22 @@ public class GumxDependencyResolver : IGumxDependencyResolver
                 if (refElement is ComponentSave comp)
                 {
                     allTransitiveComponents.TryAdd(comp.Name, comp);
+                    pending.Enqueue(comp);
                 }
                 else if (refElement is StandardElementSave)
                 {
                     referencedStandardNames.Add(refElement.Name);
                 }
             }
-        }
 
-        // Collect behaviors from transitive components too
-        foreach (var comp in allTransitiveComponents.Values)
-        {
-            CollectBehaviorNames(comp, behaviorNames);
+            foreach (var name in GetComponentsReadByVariableReferences(element))
+            {
+                if (sourceComponentsByName.TryGetValue(name, out var comp))
+                {
+                    allTransitiveComponents.TryAdd(comp.Name, comp);
+                    pending.Enqueue(comp);
+                }
+            }
         }
 
         // Remove directly selected components from the transitive set
@@ -129,6 +140,41 @@ public class GumxDependencyResolver : IGumxDependencyResolver
         return result;
     }
 
+    /// <summary>
+    /// The components named on the right of the element's <c>VariableReferences</c> lines
+    /// (<c>Color = Components/Styles.Primary.FillColor</c> reads from <c>Styles</c>), on the
+    /// element itself and on its instances.
+    /// </summary>
+    private static IEnumerable<string> GetComponentsReadByVariableReferences(ElementSave element)
+    {
+        const string componentsPrefix = "Components/";
+        foreach (var state in element.AllStates)
+        {
+            foreach (var variableList in state.VariableLists)
+            {
+                if (variableList.GetRootName() != "VariableReferences") continue;
+
+                foreach (var item in variableList.ValueAsIList)
+                {
+                    if (item is not string line) continue;
+
+                    int equalsIndex = line.IndexOf('=');
+                    if (equalsIndex < 0) continue;
+
+                    string right = line.Substring(equalsIndex + 1).Trim();
+                    if (!right.StartsWith(componentsPrefix, System.StringComparison.Ordinal)) continue;
+
+                    // Element names hold no dots, so the name ends where the variable begins.
+                    int dotIndex = right.IndexOf('.', componentsPrefix.Length);
+                    if (dotIndex > componentsPrefix.Length)
+                    {
+                        yield return right.Substring(componentsPrefix.Length, dotIndex - componentsPrefix.Length);
+                    }
+                }
+            }
+        }
+    }
+
     private static void CollectBehaviorNames(ElementSave element, HashSet<string> behaviorNames)
     {
         foreach (var behavior in element.Behaviors)
@@ -168,6 +214,15 @@ public class GumxDependencyResolver : IGumxDependencyResolver
                     && sourceComponentsByName.TryGetValue(instance.BaseType, out var dep))
                 {
                     Visit(dep);
+                }
+            }
+
+            // Components its variable references read from, so their values exist when it imports
+            foreach (var name in GetComponentsReadByVariableReferences(component))
+            {
+                if (componentSet.Contains(name) && sourceComponentsByName.TryGetValue(name, out var referencedDep))
+                {
+                    Visit(referencedDep);
                 }
             }
 

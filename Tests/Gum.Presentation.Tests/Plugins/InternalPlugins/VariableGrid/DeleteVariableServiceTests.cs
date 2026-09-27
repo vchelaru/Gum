@@ -38,7 +38,8 @@ public class DeleteVariableServiceTests : BaseTestClass
             _guiCommands.Object,
             _renameLogic.Object,
             _dialogService.Object,
-            _pluginManager.Object);
+            _pluginManager.Object,
+            new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object));
     }
 
     private static (ComponentSave Owner, VariableSave Variable) MakeOwnerWithCustomVariable()

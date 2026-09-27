@@ -312,9 +312,18 @@ public partial class Cursor : ICursor
         }
     }
 
-    public bool PrimaryDoubleClick { get; private set; }
+    /// <summary>
+    /// Whether this frame's primary click completes a double click: it came within
+    /// <see cref="MaximumSecondsBetweenClickForDoubleClick"/> of the previous click, near it (see
+    /// <see cref="MouseDoubleClickTolerance"/> and <see cref="TouchDoubleClickTolerance"/>), and
+    /// neither release ended a drag.
+    /// </summary>
+    public bool PrimaryDoubleClick => _primaryClicks.DoubleClick;
 
-    public bool PrimaryDoublePush { get; private set; }
+    /// <summary>
+    /// Whether this frame's primary push came soon after, and near, the previous push.
+    /// </summary>
+    public bool PrimaryDoublePush => _primaryClicks.DoublePush;
 
     public bool PrimaryClickNoSlide => PrimaryClick;
 
@@ -365,7 +374,7 @@ public partial class Cursor : ICursor
         }
     }
 
-    public bool SecondaryDoubleClick { get; private set; }
+    public bool SecondaryDoubleClick => _secondaryClicks.DoubleClick;
 
     public bool MiddlePush
     {
@@ -393,7 +402,7 @@ public partial class Cursor : ICursor
         }
     }
 
-    public bool MiddleDoubleClick { get; private set; }
+    public bool MiddleDoubleClick => _middleClicks.DoubleClick;
 
     // This property follows the FRB naming conventions.
     // This is confusing for a number of reasons:
@@ -441,15 +450,43 @@ public partial class Cursor : ICursor
     TouchCollection _lastFrameTouchCollection = new TouchCollection();
 
     public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
+
+    /// <summary>
+    /// How far, in <see cref="X"/>/<see cref="Y"/> units on either axis, the second click of a mouse
+    /// double click may land from the first. Defaults to 4, the width of Windows' double-click rectangle.
+    /// </summary>
+    public float MouseDoubleClickTolerance { get; set; } = 4;
+
+    /// <summary>
+    /// How far, in <see cref="X"/>/<see cref="Y"/> units on either axis, the second tap of a touch
+    /// double tap may land from the first. Defaults to 250, roughly Android's 100dp double-tap slop
+    /// on a typical phone. Gum does not read the display density, so a game that knows it can set
+    /// this to 100 * density for an exact match.
+    /// </summary>
+    public float TouchDoubleClickTolerance { get; set; } = 250;
+
+    /// <summary>
+    /// How far, in <see cref="X"/>/<see cref="Y"/> units on either axis, the mouse may move while a
+    /// button is held before the press counts as a drag. A release that ends a drag is still a click
+    /// but cannot start or complete a double click. Defaults to 6.
+    /// </summary>
+    public float MouseDragThreshold { get; set; } = 6;
+
+    /// <summary>
+    /// How far, in <see cref="X"/>/<see cref="Y"/> units on either axis, a touch may move before it
+    /// counts as a drag. A release that ends a drag cannot start or complete a double tap.
+    /// Defaults to 20, roughly Android's 8dp touch slop on a typical phone.
+    /// </summary>
+    public float TouchDragThreshold { get; set; } = 20;
 #if XNALIKE
     private readonly GameWindow? _gameWindow;
 #endif
-    double mLastPrimaryClickTime = -999;
-    public double LastPrimaryClickTime => mLastPrimaryClickTime;
-    double mLastPrimaryPushTime = -999;
-    public double LastPrimaryPushTime => mLastPrimaryPushTime;
-    double mLastSecondaryClickTime = -999;
-    double mLastMiddleClickTime = -999;
+    readonly ButtonClickTracker _primaryClicks = new ButtonClickTracker();
+    readonly ButtonClickTracker _secondaryClicks = new ButtonClickTracker();
+    readonly ButtonClickTracker _middleClicks = new ButtonClickTracker();
+
+    public double LastPrimaryClickTime => _primaryClicks.LastClickTime;
+    public double LastPrimaryPushTime => _primaryClicks.LastPushTime;
 
 #if XNALIKE
 public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
@@ -478,24 +515,41 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
 
     public void Activity(double gameTime)
     {
+        var isMobile = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
+
+        MouseState? mouseState = isMobile ? null : GetMouseState();
+
+        var shouldDoTouchPanel = true;
+
+#if KNI
+        shouldDoTouchPanel = TouchPanel.Current != null;
+#endif
+
+        var touchCollection = shouldDoTouchPanel ? GetTouchCollection() : _touchCollection;
+
+        Activity(gameTime, mouseState, touchCollection, isMobile);
+    }
+
+    /// <summary>
+    /// Advances the cursor one frame from already-read input. <paramref name="mouseState"/> is
+    /// null on platforms without a mouse.
+    /// </summary>
+    internal void Activity(double gameTime, MouseState? mouseState, TouchCollection touchCollection, bool isMobile = false)
+    {
         mLastFrameMouseState = _mouseState;
         _lastFrameTouchCollection = _touchCollection;
-        PrimaryDoubleClick = false;
-        PrimaryDoublePush = false;
 
         LastX = X;
         LastY = Y;
 
         int? x = null;
         int? y = null;
-        var isMobile = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
-        var supportsMouse = !isMobile;
 
-        if(supportsMouse)
+        if(mouseState != null)
         {
             LastInputDevice = InputDevice.Mouse;
 
-            _mouseState = GetMouseState();
+            _mouseState = mouseState.Value;
             x = _mouseState.X;
             y = _mouseState.Y;
         }
@@ -504,16 +558,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
             LastInputDevice = InputDevice.TouchScreen;
         }
 
-        var shouldDoTouchPanel = true;
-
-#if KNI
-        shouldDoTouchPanel = TouchPanel.Current != null;
-#endif
-
-        if (shouldDoTouchPanel)
-        {
-            _touchCollection = GetTouchCollection();
-        }
+        _touchCollection = touchCollection;
 
         var lastFrameTouchCollectionCount = 0;
         try
@@ -563,41 +608,77 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
             // do nothing
         }
 
-        if (PrimaryPush)
+        var isTouch = LastInputDevice == InputDevice.TouchScreen;
+        _primaryClicks.Update(gameTime, PrimaryPush, PrimaryClick, X, Y,
+            isTouch ? TouchDoubleClickTolerance : MouseDoubleClickTolerance,
+            isTouch ? TouchDragThreshold : MouseDragThreshold);
+        _secondaryClicks.Update(gameTime, SecondaryPush, SecondaryClick, X, Y,
+            MouseDoubleClickTolerance, MouseDragThreshold);
+        _middleClicks.Update(gameTime, MiddlePush, MiddleClick, X, Y,
+            MouseDoubleClickTolerance, MouseDragThreshold);
+    }
+
+    // Double push/click detection for one button (#5293).
+    sealed class ButtonClickTracker
+    {
+        public double LastPushTime { get; private set; } = -999;
+        public double LastClickTime { get; private set; } = -999;
+        public bool DoublePush { get; private set; }
+        public bool DoubleClick { get; private set; }
+
+        int _pushX;
+        int _pushY;
+        int _clickX;
+        int _clickY;
+        // Also false after a drag's release, so that release can't pair with a later click.
+        bool _canClickPair;
+        // Set once the pointer leaves the drag dead zone around the push, and kept even if it
+        // comes back, so the release that ends a drag is not a click for double-click purposes.
+        bool _hasDraggedSincePush;
+
+        public void Update(double time, bool push, bool click, int x, int y,
+            float tolerance, float dragThreshold)
         {
-            if (gameTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
+            DoublePush = false;
+            DoubleClick = false;
+
+            if (push)
             {
-                PrimaryDoublePush = true;
+                DoublePush = time - LastPushTime < MaximumSecondsBetweenClickForDoubleClick &&
+                    IsWithin(x - _pushX, y - _pushY, tolerance);
+
+                LastPushTime = time;
+                _pushX = x;
+                _pushY = y;
+                _hasDraggedSincePush = false;
             }
-            mLastPrimaryPushTime = gameTime;
+            else if (!IsWithin(x - _pushX, y - _pushY, dragThreshold))
+            {
+                _hasDraggedSincePush = true;
+            }
+
+            if (click)
+            {
+                if (_hasDraggedSincePush)
+                {
+                    _canClickPair = false;
+                }
+                else
+                {
+                    DoubleClick = _canClickPair &&
+                        time - LastClickTime < MaximumSecondsBetweenClickForDoubleClick &&
+                        IsWithin(x - _clickX, y - _clickY, tolerance);
+
+                    _clickX = x;
+                    _clickY = y;
+                    _canClickPair = true;
+                }
+                LastClickTime = time;
+            }
         }
 
-        if (PrimaryClick)
-        {
-            if (gameTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
-            {
-                PrimaryDoubleClick = true;
-            }
-            mLastPrimaryClickTime = gameTime;
-        }
-
-        if (SecondaryClick)
-        {
-            if (gameTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
-            {
-                SecondaryDoubleClick = true;
-            }
-            mLastSecondaryClickTime = gameTime;
-        }
-
-        if(MiddleClick)
-        {
-            if (gameTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
-            {
-                MiddleDoubleClick = true;
-            }
-            mLastMiddleClickTime = gameTime;
-        }
+        static bool IsWithin(int dx, int dy, float distance) =>
+            Math.Abs(dx) <= distance && Math.Abs(dy) <= distance;
     }
 
     public override string ToString()
