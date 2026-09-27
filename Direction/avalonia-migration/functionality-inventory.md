@@ -9,7 +9,9 @@
   the end of their area.
 - `tested:` names a test class that already exercises the item, found by searching the test
   projects. Most are unit or headless-view tests, not end-to-end runs. A blank item has no test found.
-- An end-to-end test tags itself `[Trait("Feature", "<ID>")]`.
+- An end-to-end test tags itself `[Trait("Feature", "<ID>")]`. The end-to-end suite is
+  `Tests/Gum.Avalonia.Tests/EndToEnd/`, tagged `[Trait("Category", "EndToEnd")]`. A skipped test
+  does not make its item `tested:`.
 - Sources swept: `StandardMenuModelBuilder` and every plugin `AddMenuEntry`, every context menu
   builder, `HotkeyManager` and the per-view key handlers, `DialogViewRegistry`, `TabViewRegistry`
   and plugin `AddControl` calls, the displayer registries, every drag-drop handler, `HeadOptions`,
@@ -34,8 +36,8 @@
 
 ## Edit menu (EDIT)
 
-- EDIT-001 Undo. tested: UndoManagerTests
-- EDIT-002 Redo. tested: UndoManagerTests
+- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests
+- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests
 - EDIT-003 Undo/Redo enabled state follows history
 - EDIT-004 Add > Screen. tested: AddScreenDialogViewModelTests
 - EDIT-005 Add > Component. tested: AddComponentDialogViewModelTests
@@ -108,10 +110,10 @@
 - TREE-012 Node icons by type. tested: TreeNodeImageLogicTests
 - TREE-013 Project title: View in explorer. tested: ProjectTitleContextMenuBuilderTests
 - TREE-014 Project title: Copy full path. tested: ProjectTitleContextMenuBuilderTests
-- TREE-015 Screens node: Add Screen
+- TREE-015 Screens node: Add Screen. tested: TreeScenarioTests
 - TREE-016 Screens node: Import Screen. tested: ImportScreenDialogTests
-- TREE-017 Screens/Components node: Add Folder. tested: AddFolderDialogViewModelTests
-- TREE-018 Components node: Add Component
+- TREE-017 Screens/Components node: Add Folder. tested: AddFolderDialogViewModelTests, TreeScenarioTests
+- TREE-018 Components node: Add Component. tested: TreeScenarioTests
 - TREE-019 Components node: Import Components. tested: ImportComponentDialogTests
 - TREE-020 Behaviors node: Add Behavior
 - TREE-021 Behaviors node: Import Behavior. tested: ImportBehaviorDialogTests
@@ -120,29 +122,30 @@
 - TREE-024 Folder: Delete Folder(s)
 - TREE-025 Element: View References. tested: DisplayReferencesDialogTests
 - TREE-026 Element: Copy Full Path
-- TREE-027 Element: Duplicate
-- TREE-028 Element: Delete (one or many). tested: ElementDeleteServiceTests
+- TREE-027 Element: Duplicate. tested: TreeScenarioTests
+- TREE-028 Element: Delete (one or many). tested: ElementDeleteServiceTests, TreeScenarioTests
 - TREE-029 Element: Force Save Object
 - TREE-030 Component: Add/Remove Favorites. tested: FavoriteComponentManagerTests
 - TREE-031 Instance: Go to definition
 - TREE-032 Instance: Create Component. tested: CreateComponentDialogViewModelTests
 - TREE-033 Instance: Lock / Unlock
-- TREE-034 Instance: Duplicate (one or many)
-- TREE-035 Instance: Delete (one or many). tested: InstanceDeletionHelperTests
+- TREE-034 Instance: Duplicate (one or many). tested: TreeScenarioTests
+- TREE-035 Instance: Delete (one or many). tested: InstanceDeletionHelperTests, TreeScenarioTests
 - TREE-036 Instance: Add parent object
 - TREE-037 Instance: Add to base element
 - TREE-038 Behavior: Rename. tested: EditCommandsTests
 - TREE-039 Behavior: Delete. tested: DeleteObjectPluginTests
 - TREE-040 Standard element: View in explorer / Force Save
 - TREE-041 Mixed selection: Delete N items
-- TREE-042 Delete key deletes selection
-- TREE-043 F2 renames element. tested: RenameElementDialogViewModelTests
-- TREE-044 Ctrl+C / Ctrl+V instances. tested: CopyPasteLogicDestinationTests
-- TREE-045 Ctrl+X cut instances
-- TREE-046 Ctrl+D duplicate
-- TREE-047 Alt+Up / Alt+Down reorder instance
+- TREE-042 Delete key deletes selection. tested: TreeScenarioTests
+- TREE-043 F2 renames element. tested: RenameElementDialogViewModelTests, TreeScenarioTests
+- TREE-044 Ctrl+C / Ctrl+V instances. tested: CopyPasteLogicDestinationTests, TreeScenarioTests
+- TREE-045 Ctrl+X cut instances. tested: TreeScenarioTests
+- TREE-046 Ctrl+D duplicate. tested: TreeScenarioTests
+- TREE-047 Alt+Up / Alt+Down reorder instance. tested: TreeScenarioTests
 - TREE-048 Newly added instance scrolls into view. tested: ElementTreeViewManagerAddInstanceScrollTests
 - TREE-049 Tree refresh keeps selection. tested: ElementTreeViewManagerRefreshTests
+- TREE-050 Element/instance: Add object (standard type or favorite). tested: TreeScenarioTests
 
 ## Standards palette (PAL)
 
@@ -377,14 +380,14 @@
 
 ## Hotkeys (KEY)
 
-- KEY-001 Ctrl+Z undo
-- KEY-002 Ctrl+Y / Ctrl+Shift+Z redo. tested: HotkeyManagerTests
-- KEY-003 Ctrl+C copy
-- KEY-004 Ctrl+X cut
-- KEY-005 Ctrl+V paste. tested: CopyPasteLogicDestinationTests
-- KEY-006 Ctrl+D duplicate
-- KEY-007 Delete
-- KEY-008 F2 rename. tested: HotkeyManagerTests
+- KEY-001 Ctrl+Z undo. tested: TreeScenarioTests
+- KEY-002 Ctrl+Y / Ctrl+Shift+Z redo. tested: HotkeyManagerTests, TreeScenarioTests
+- KEY-003 Ctrl+C copy. tested: TreeScenarioTests
+- KEY-004 Ctrl+X cut. tested: TreeScenarioTests
+- KEY-005 Ctrl+V paste. tested: CopyPasteLogicDestinationTests, TreeScenarioTests
+- KEY-006 Ctrl+D duplicate. tested: TreeScenarioTests
+- KEY-007 Delete. tested: TreeScenarioTests
+- KEY-008 F2 rename. tested: HotkeyManagerTests, TreeScenarioTests
 - KEY-009 F12 go to definition
 - KEY-010 Ctrl+F search
 - KEY-011 Ctrl+E variable filter. tested: PropertyGridManagerTests
@@ -392,7 +395,7 @@
 - KEY-013 Shift+arrow nudge 5px
 - KEY-014 Ctrl+arrow move camera. tested: CameraControllerTests
 - KEY-015 Ctrl+plus / minus zoom. tested: CameraControllerTests
-- KEY-016 Alt+Up / Alt+Down reorder
+- KEY-016 Alt+Up / Alt+Down reorder. tested: TreeScenarioTests
 - KEY-017 Alt+Left / Alt+Right selection history. tested: SelectionHistoryTests
 - KEY-018 Ctrl+? show hotkeys. tested: MainHotkeyPluginTests
 - KEY-019 Key mapping to Avalonia gestures. tested: AvaloniaKeyMappingTests
@@ -419,11 +422,11 @@
 ## Dialogs (DLG)
 
 - DLG-001 Message. tested: MessageDialogViewModelTests
-- DLG-002 Get user string. tested: GetUserStringDialogViewModelTests
+- DLG-002 Get user string. tested: GetUserStringDialogViewModelTests, TreeScenarioTests
 - DLG-003 Choice. tested: ChoiceDialogViewModelTests
 - DLG-004 New Project (Forms, DemoScreen options). tested: NewProjectLogicTests
-- DLG-005 Add Screen / Component / Instance / State / Category / Folder. tested: AddScreenDialogViewModelTests
-- DLG-006 Rename element. tested: RenameElementDialogViewModelTests
+- DLG-005 Add Screen / Component / Instance / State / Category / Folder. tested: AddScreenDialogViewModelTests, TreeScenarioTests
+- DLG-006 Rename element. tested: RenameElementDialogViewModelTests, TreeScenarioTests
 - DLG-007 Rename folder. tested: RenameFolderDialogViewModelTests
 - DLG-008 Create Component from instances. tested: CreateComponentDialogViewModelTests
 - DLG-009 Import Screen / Component / Behavior. tested: ImportBaseDialogViewModelTests
@@ -501,7 +504,7 @@ Cross-feature scenarios the code lists don't show. Most need a real project, a s
 - COMBO-015 Undo across an element switch
 - COMBO-016 Undo a rename, then save and reload
 - COMBO-017 Undo a cascading delete. tested: CrossElementStateUndoTests
-- COMBO-018 Undo all edits returns byte-identical files
+- COMBO-018 Undo all edits returns byte-identical files. tested: TreeScenarioTests
 - COMBO-019 Edit in category state, then Make Default
 - COMBO-020 Expose variable, then set it on an instance
 - COMBO-021 Un-expose variable set on instances
