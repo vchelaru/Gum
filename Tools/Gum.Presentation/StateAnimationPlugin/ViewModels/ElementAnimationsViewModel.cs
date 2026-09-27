@@ -755,8 +755,7 @@ public partial class ElementAnimationsViewModel : ViewModel
                 newVm.Time = SelectedAnimation.Keyframes.Last().Time + 1f;
             }
 
-            SelectedAnimation.Keyframes.Add(newVm);
-            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.AddKeyframe(newVm);
             SelectedAnimation.SelectedKeyframe = newVm;
         }
     }
@@ -783,8 +782,7 @@ public partial class ElementAnimationsViewModel : ViewModel
                 newVm.Time = SelectedAnimation.Keyframes.Last().Time + 1f;
             }
 
-            SelectedAnimation.Keyframes.Add(newVm);
-            SelectedAnimation.Keyframes.BubbleSort();
+            SelectedAnimation.AddKeyframe(newVm);
             SelectedAnimation.SelectedKeyframe = newVm;
         }
     }
@@ -798,7 +796,9 @@ public partial class ElementAnimationsViewModel : ViewModel
     }
 
     /// <summary>
-    /// Pastes the copied keyframe. Returns the source keyframe that was copied, or null if nothing was pasted.
+    /// Pastes the copied keyframe a tenth of a second after it. Returns the keyframe added, or null
+    /// if nothing was pasted. The keyframe is not selected: the tab selects it once it has given it
+    /// this element's state list, since a state box shown before that clears the keyframe's state.
     /// </summary>
     public AnimatedKeyframeViewModel? PasteKeyframe()
     {
@@ -806,10 +806,13 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             var copiedKeyframe = copied.Clone();
             copiedKeyframe.Time += .1f;
-            SelectedAnimation.Keyframes.Add(copiedKeyframe);
-            SelectedAnimation.Keyframes.BubbleSort();
-            SelectedAnimation.SelectedKeyframe = copiedKeyframe;
-            return copied;
+            SelectedAnimation.AddKeyframe(copiedKeyframe);
+            // Copied from another element, the keyframe may name a state this one lacks.
+            if (_selectedState.SelectedElement is { } element)
+            {
+                SelectedAnimation.RefreshErrors(element);
+            }
+            return copiedKeyframe;
         }
         return null;
     }

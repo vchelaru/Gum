@@ -300,6 +300,31 @@ public partial class AnimationViewModel : ViewModel
             }
         }
 
+        // A sort moves keyframes one remove and insert at a time; SortList reports once at the end.
+        if (mIsInMiddleOfSort)
+        {
+            return;
+        }
+
+        NotifyKeyframesChanged();
+    }
+
+    /// <summary>
+    /// Adds <paramref name="keyframe"/> at its place in time order (after any keyframe at the same
+    /// time), as one change. Adding at the end and sorting would report the list mid-sort.
+    /// </summary>
+    public void AddKeyframe(AnimatedKeyframeViewModel keyframe)
+    {
+        int index = Keyframes.Count;
+        while (index > 0 && Keyframes[index - 1].Time > keyframe.Time)
+        {
+            index--;
+        }
+        Keyframes.Insert(index, keyframe);
+    }
+
+    private void NotifyKeyframesChanged()
+    {
         NotifyPropertyChanged(nameof(Length));
 
         NotifyPropertyChanged(nameof(Keyframes));
@@ -372,11 +397,21 @@ public partial class AnimationViewModel : ViewModel
 
         var oldSelected = this.SelectedKeyframe;
 
-        this.Keyframes.BubbleSort();
+        bool moved;
+        try
+        {
+            moved = this.Keyframes.BubbleSort();
+        }
+        finally
+        {
+            this.SelectedKeyframe = oldSelected;
+            mIsInMiddleOfSort = false;
+        }
 
-        this.SelectedKeyframe = oldSelected;
-
-        mIsInMiddleOfSort = false;
+        if (moved)
+        {
+            NotifyKeyframesChanged();
+        }
     }
 
 
@@ -470,8 +505,10 @@ public partial class AnimationViewModel : ViewModel
 
 public static class ListExtension
 {
-    public static void BubbleSort(this IList o)
+    /// <summary>Sorts <paramref name="o"/> in place, keeping equal items in order; true when anything moved.</summary>
+    public static bool BubbleSort(this IList o)
     {
+        bool moved = false;
         for (int i = o.Count - 1; i >= 0; i--)
         {
             for (int j = 1; j <= i; j++)
@@ -482,9 +519,11 @@ public static class ListExtension
                 {
                     o.Remove(o1);
                     o.Insert(j, o1);
+                    moved = true;
                 }
             }
         }
+        return moved;
     }
 }
 

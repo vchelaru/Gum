@@ -587,9 +587,7 @@ public class AnimationTabController
                 newVm.Time = selectedAnimation.Keyframes.Last().Time + 1f;
             }
 
-            selectedAnimation.Keyframes.BubbleSort();
-
-            selectedAnimation.Keyframes.Add(newVm);
+            selectedAnimation.AddKeyframe(newVm);
             // Call this *before* setting SelectedKeyframe so the available
             // states are assigned. Otherwise
             // StateName will be nulled out.
@@ -599,9 +597,22 @@ public class AnimationTabController
     }
 
     /// <summary>
-    /// Wired to the WPF window's <c>AnimationKeyframeAdded</c> (and called directly by
-    /// <see cref="HandleAddStateKeyframe"/>): wires a newly-added keyframe's available-states list and
-    /// change notifications.
+    /// Called by each head's view after a paste into the keyframe list: wires the pasted keyframe,
+    /// then selects it. Wiring first gives the state box this element's states before it shows the
+    /// keyframe; shown without them, the box clears the keyframe's state.
+    /// </summary>
+    public void HandleKeyframePasted(AnimatedKeyframeViewModel pasted)
+    {
+        HandleAnimationKeyrameAdded(pasted);
+        if (ViewModel?.SelectedAnimation is { } animation && animation.Keyframes.Contains(pasted))
+        {
+            animation.SelectedKeyframe = pasted;
+        }
+    }
+
+    /// <summary>
+    /// Called by <see cref="HandleAddStateKeyframe"/> and <see cref="HandleKeyframePasted"/>: wires a
+    /// newly-added keyframe's available-states list and change notifications.
     /// </summary>
     public void HandleAnimationKeyrameAdded(AnimatedKeyframeViewModel newVm)
     {

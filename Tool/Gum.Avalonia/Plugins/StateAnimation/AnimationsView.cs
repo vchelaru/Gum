@@ -10,6 +10,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using StateAnimationPlugin;
@@ -164,9 +165,14 @@ public sealed class AnimationsView : Grid
         // modifiers, so a bubbling handler never sees the Alt+arrow reorder hotkeys.
         animations.AddHandler(KeyDownEvent, (_, e) =>
         {
+            bool hadFocus = animations.IsKeyboardFocusWithin;
             if (ViewModel is { } viewModel && _keyHandler.HandleAnimationListKey(e.ToGumKeyEventArgs(), viewModel))
             {
                 e.Handled = true;
+            }
+            if (hadFocus)
+            {
+                KeepKeyboardFocus(animations);
             }
         }, RoutingStrategies.Tunnel);
 
@@ -217,13 +223,35 @@ public sealed class AnimationsView : Grid
         keyframes.ContextMenu = AvaloniaContextMenus.CreateRebuildingMenu(() => ViewModel?.AnimationStateRightClickItems);
         keyframes.AddHandler(KeyDownEvent, (_, e) =>
         {
+            bool hadFocus = keyframes.IsKeyboardFocusWithin;
             if (ViewModel is { } viewModel && _keyHandler.HandleKeyframeListKey(e.ToGumKeyEventArgs(), viewModel) is { } pasted)
             {
                 KeyframePasted?.Invoke(pasted);
             }
+            if (hadFocus)
+            {
+                KeepKeyboardFocus(keyframes);
+            }
         }, RoutingStrategies.Tunnel);
 
         return CreateColumn(title, add, keyframes);
+    }
+
+    // A list hotkey that moves or removes the focused row (reorder, delete, a paste that resorts)
+    // takes the row's container, and the keyboard focus with it, out of the list; the next hotkey
+    // would then reach nothing. Called for a list that had the focus before the key: once the list
+    // has laid out again, the selected row, else the list, takes the focus back.
+    private static void KeepKeyboardFocus(ListBox list)
+    {
+        global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (list.IsKeyboardFocusWithin || list.GetVisualRoot() == null)
+            {
+                return;
+            }
+            Control? row = list.SelectedItem is { } selected ? list.ContainerFromItem(selected) : null;
+            (row ?? list).Focus();
+        }, global::Avalonia.Threading.DispatcherPriority.Loaded);
     }
 
     private static Control CreateKeyframeRow()
