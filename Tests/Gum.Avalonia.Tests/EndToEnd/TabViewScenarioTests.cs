@@ -416,6 +416,7 @@ public class TabViewScenarioTests
         ThemeMode? originalMode = theming.Mode;
         System.Drawing.Color? originalAccent = theming.Accent;
         ThemeVariant? originalVariant = Application.Current!.RequestedThemeVariant;
+        Dictionary<object, object?> originalResources = Application.Current.Resources.ToDictionary(entry => entry.Key, entry => entry.Value);
         double originalFontSize = uiSettings.BaseFontSize;
         bool? originalPalette = projectManager.UseStandardsPalette;
         bool originalEffectivePalette = projectManager.EffectiveUseStandardsPalette;
@@ -479,10 +480,14 @@ public class TabViewScenarioTests
         }
         finally
         {
-            fontSize.Dispose();
+            // Set back while the window still follows it, so the app's font size resource follows too.
             uiSettings.BaseFontSize = originalFontSize;
+            fontSize.Dispose();
+            // The setters restore the settings but apply the default accent's brushes, which are not
+            // the ones the test app started with, so the app's resources are put back as they were.
             theming.Mode = originalMode;
             theming.Accent = originalAccent;
+            RestoreResources(originalResources);
             Application.Current.RequestedThemeVariant = originalVariant;
             Tabs.IsToolsVisible = true;
             if (palette.IsChecked != originalEffectivePalette)
@@ -586,7 +591,7 @@ public class TabViewScenarioTests
 
     /// <summary>The head's own view of the tab titled <paramref name="title"/>, in a headless window.</summary>
     private static HeadlessWindowDriver HostTab(string title, double width = 500, double height = 700) =>
-        new HeadlessWindowDriver((Control)Tab(title).Content, width, height, framesFolderName: "GumTabViewScenarios", contentOutlivesTest: true);
+        new HeadlessWindowDriver((Control)Tab(title).Content, width, height, framesFolderName: "GumTabViewScenarios");
 
     /// <summary>An enum variable as the saved file holds it, whether it loaded as the enum or its number.</summary>
     private static int SavedEnum(ElementSave saved, string variableName) =>
@@ -601,6 +606,23 @@ public class TabViewScenarioTests
     private static Button ButtonWithContent(HeadlessWindowDriver window, string content) =>
         window.Window.GetVisualDescendants().OfType<Button>().SingleOrDefault(button => button.IsEffectivelyVisible && button.Content as string == content)
         ?? throw new InvalidOperationException($"No visible button reads \"{content}\".");
+
+    /// <summary>Puts the app's own resources back to <paramref name="original"/>: every test in the assembly shares the app.</summary>
+    private static void RestoreResources(Dictionary<object, object?> original)
+    {
+        IResourceDictionary resources = Application.Current!.Resources;
+        foreach (object key in resources.Keys.Where(key => !original.ContainsKey(key)).ToList())
+        {
+            resources.Remove(key);
+        }
+        foreach (KeyValuePair<object, object?> entry in original)
+        {
+            if (!resources.TryGetValue(entry.Key, out object? current) || !ReferenceEquals(current, entry.Value))
+            {
+                resources[entry.Key] = entry.Value;
+            }
+        }
+    }
 
     private static void SideButton(ProjectTreeHarness tree, MouseButton button)
     {
