@@ -522,6 +522,7 @@ public class CopyPasteRenameScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "COMBO-006")]
+    [Trait("Feature", "ANIM-019")]
     [Trait("Feature", "TREE-043")]
     [Trait("Feature", "EDIT-001")]
     public void RenamingAComponentWithAnimations_MovesItsAnimationFile_AndUndoMovesItBack()

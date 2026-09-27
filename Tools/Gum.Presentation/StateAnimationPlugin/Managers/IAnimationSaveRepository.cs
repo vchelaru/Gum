@@ -21,7 +21,9 @@ public interface IAnimationSaveRepository
     /// <summary>
     /// Persists an already-built <see cref="ElementAnimationsSave"/> to the given element's animation
     /// file, suppressing the resulting file-watch event. Used by undo/redo, which restores a captured
-    /// animations snapshot (not a live view model) for the element it is applying to.
+    /// animations snapshot (not a live view model) for the element it is applying to. A save with
+    /// no animations deletes the file instead: undo captures "no file" and "no animations" alike,
+    /// and restores both as an empty save.
     /// </summary>
     void SaveElementAnimations(ElementSave element, ElementAnimationsSave save);
 }

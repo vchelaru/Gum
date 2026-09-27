@@ -58,7 +58,7 @@ public class AnimationTabKeyHandler
 
     /// <summary>
     /// Handles a key pressed in the keyframe list while a keyframe is selected. Returns the keyframe a
-    /// paste added, which the view hands to the plugin so the edit is recorded; otherwise null.
+    /// paste added, which the view hands to the plugin to wire and select; otherwise null.
     /// </summary>
     public AnimatedKeyframeViewModel? HandleKeyframeListKey(GumKeyEventArgs e, ElementAnimationsViewModel viewModel)
     {

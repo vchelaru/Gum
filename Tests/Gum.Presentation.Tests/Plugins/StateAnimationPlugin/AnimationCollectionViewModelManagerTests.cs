@@ -140,6 +140,25 @@ public class AnimationCollectionViewModelManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void SaveElementAnimations_deletes_the_file_when_the_save_has_no_animations()
+    {
+        // Undo restores "no animations" as an empty save; the element had no sidecar then.
+        ComponentSave element = new ComponentSave { Name = "Foo" };
+        FilePath ganxPath = new FilePath(Path.Combine(_tempDirectory, "FooAnimations.ganx"));
+        _animationFilePathService
+            .Setup(x => x.GetAbsoluteAnimationFileNameFor(It.IsAny<ElementSave>()))
+            .Returns(ganxPath);
+        ElementAnimationsSave withWalk = new ElementAnimationsSave { ElementName = "Foo" };
+        withWalk.Animations.Add(new AnimationSave { Name = "Walk" });
+        _manager.SaveElementAnimations(element, withWalk);
+
+        _manager.SaveElementAnimations(element, new ElementAnimationsSave());
+
+        File.Exists(ganxPath.FullPath).ShouldBeFalse();
+        _fileWatchManager.Verify(x => x.IgnoreNextChangeUntil(It.IsAny<FilePath>(), It.IsAny<DateTime?>()), Times.Exactly(2));
+    }
+
+    [Fact]
     public void GetElementAnimationsSave_returns_null_when_file_missing()
     {
         ComponentSave element = new ComponentSave { Name = "Foo" };

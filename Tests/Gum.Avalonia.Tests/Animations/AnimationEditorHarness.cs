@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Plugins.StateAnimation;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -17,9 +18,11 @@ using Gum.Menus;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.StateAnimation.SaveClasses;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using StateAnimationPlugin.Timeline;
 using StateAnimationPlugin.ViewModels;
 
@@ -44,6 +47,7 @@ internal sealed class AnimationEditorHarness : IDisposable
     private readonly MenuItemModel? _menuItemAdded;
     private readonly HeadlessWindowDriver? _driver;
     private readonly string _sidecarExtension;
+    private ToolExceptionWatch? _exceptions;
 
     /// <param name="jsonProject">True for a .gumj project, whose sidecars are .ganj files.</param>
     /// <param name="userDataFolder">
@@ -119,6 +123,9 @@ internal sealed class AnimationEditorHarness : IDisposable
 
     /// <summary>The folder <see cref="Project"/> lives in; element files and sidecars resolve under it.</summary>
     public string ProjectFolder => _fixture.ProjectFolder;
+
+    /// <summary>The project file's full path.</summary>
+    public string ProjectFilePath => _fixture.ProjectFilePath;
 
     public ISelectedState SelectedState => _fixture.SelectedState;
 
@@ -197,8 +204,9 @@ internal sealed class AnimationEditorHarness : IDisposable
     /// </summary>
     public ComponentSave AddComponent(string name, string category, params string[] states)
     {
-        ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };
-        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        ComponentSave component = new ComponentSave();
+        Services.GetRequiredService<ProjectCommands>().PrepareNewComponentSave(component, name, "Container");
+        AddCategoryStateVariable(component, category);
         StateSaveCategory categorySave = new StateSaveCategory { Name = category };
         for (int i = 0; i < states.Length; i++)
         {
@@ -208,6 +216,8 @@ internal sealed class AnimationEditorHarness : IDisposable
         }
         component.Categories.Add(categorySave);
         Project.Components.Add(component);
+        // The project file lists its elements by reference; without one a reload drops the element.
+        Project.ComponentReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Component });
         return component;
     }
 
@@ -215,7 +225,8 @@ internal sealed class AnimationEditorHarness : IDisposable
     public ScreenSave AddScreen(string name, string category, params string[] states)
     {
         ScreenSave screen = new ScreenSave { Name = name };
-        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        screen.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
+        AddCategoryStateVariable(screen, category);
         StateSaveCategory categorySave = new StateSaveCategory { Name = category };
         foreach (string stateName in states)
         {
@@ -223,8 +234,14 @@ internal sealed class AnimationEditorHarness : IDisposable
         }
         screen.Categories.Add(categorySave);
         Project.Screens.Add(screen);
+        Project.ScreenReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Screen });
         return screen;
     }
+
+    // The Default state holds the category's state variable, as the tool's Add Category leaves it;
+    // without it, loading the saved element adds one and a re-save changes the file.
+    private static void AddCategoryStateVariable(ElementSave element, string category) =>
+        element.GetDefaultStateOrThrow().Variables.Add(new VariableSave { Name = category + "State", Type = category, SetsValue = true });
 
     /// <summary>Adds an instance of <paramref name="type"/> named <paramref name="name"/> to <paramref name="owner"/>.</summary>
     public InstanceSave AddInstance(ElementSave owner, string name, ComponentSave type)
@@ -445,6 +462,101 @@ internal sealed class AnimationEditorHarness : IDisposable
 
     #endregion
 
+    #region End-to-end oracles
+
+    /// <summary>
+    /// Readies an end-to-end scenario after its setup: saves every file (setup edits the project
+    /// directly), routes the main window's app-wide hotkeys (Ctrl+Z, Ctrl+Y) to the tab's window,
+    /// starts watching for exceptions, and returns the files, for "undoing back to the start
+    /// restores them". Call it with the element to edit already selected.
+    /// </summary>
+    public ProjectFileSnapshot StartScenario()
+    {
+        SaveAll();
+        if (_exceptions == null)
+        {
+            TimelineEndToEndTests.RouteAppWideHotkeys(Window);
+            _exceptions = new ToolExceptionWatch();
+        }
+        return SnapshotFiles();
+    }
+
+    /// <summary>Saves every file, as File > Save All does.</summary>
+    public void SaveAll() => Services.GetRequiredService<IFileCommands>().ForceSaveProject(forceSaveContainedElements: true);
+
+    /// <summary>The project's files right now, for a later byte comparison.</summary>
+    public ProjectFileSnapshot SnapshotFiles() => ProjectFileSnapshot.Take(ProjectFolder);
+
+    /// <summary>Ctrl+Z, handled app-wide as in the main window (after <see cref="StartScenario"/>).</summary>
+    public void Undo()
+    {
+        Press(Key.Z, PhysicalKey.Z, RawInputModifiers.Control);
+        ThrowIfPluginFailed();
+    }
+
+    /// <summary>Ctrl+Y, handled app-wide as in the main window (after <see cref="StartScenario"/>).</summary>
+    public void Redo()
+    {
+        Press(Key.Y, PhysicalKey.Y, RawInputModifiers.Control);
+        ThrowIfPluginFailed();
+    }
+
+    /// <summary>
+    /// The shared end-of-scenario checks, for the element the tab shows: the saved sidecar holds
+    /// exactly what the tab shows; the saved project passes <c>gumcli check</c> (keyframe
+    /// references included), reloads cleanly and re-saves unchanged; the tab shows the same
+    /// animations once the element is selected again in the reloaded project; and nothing logged an
+    /// error or an exception meanwhile.
+    /// </summary>
+    public void AssertOracles()
+    {
+        if (_exceptions == null)
+        {
+            throw new InvalidOperationException("Call StartScenario before the gesture, so the oracles have an exception watch.");
+        }
+        Layout();
+        ThrowIfPluginFailed();
+        ElementSave element = ViewModel.Element ?? throw new InvalidOperationException("The tab shows no element to check.");
+        bool isScreen = element is ScreenSave;
+        string elementName = element.Name;
+        AssertTabMatchesSavedSidecar(element, "before the reload");
+
+        ProjectOracles.AssertSaveReloadAndCheckClean(_fixture);
+
+        ElementSave reloaded = (isScreen
+            ? Project.Screens.FirstOrDefault(screen => screen.Name == elementName)
+            : (ElementSave?)Project.Components.FirstOrDefault(component => component.Name == elementName))
+            ?? throw new InvalidOperationException($"The reloaded project has no {elementName}.");
+        Select(reloaded);
+        AssertTabMatchesSavedSidecar(reloaded, "after the reload");
+        _exceptions.AssertClean();
+    }
+
+    /// <summary>The sidecar on disk holds, byte for byte, what the tab would save for <paramref name="element"/>.</summary>
+    private void AssertTabMatchesSavedSidecar(ElementSave element, string when)
+    {
+        ElementAnimationsSave shown = ViewModel.ToSave();
+        string sidecar = AnimationFilePath(element);
+        if (!File.Exists(sidecar))
+        {
+            shown.Animations.ShouldBeEmpty($"the tab shows animations for {element.Name} {when}, but none were saved");
+            return;
+        }
+        string shownPath = Path.Combine(Path.GetTempPath(), "GumAnimationEditor", Guid.NewGuid().ToString("N") + _sidecarExtension);
+        Directory.CreateDirectory(Path.GetDirectoryName(shownPath)!);
+        try
+        {
+            shown.Save(shownPath);
+            File.ReadAllText(sidecar).ShouldBe(File.ReadAllText(shownPath), $"the saved sidecar differs from what the tab shows for {element.Name} {when}");
+        }
+        finally
+        {
+            File.Delete(shownPath);
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// True when any pixel within <paramref name="radius"/> of <paramref name="center"/> is within
     /// <paramref name="tolerance"/> per channel of <paramref name="color"/>.
@@ -487,6 +599,7 @@ internal sealed class AnimationEditorHarness : IDisposable
             {
                 Services.GetRequiredService<MenuModel>().GetItem("View")?.Items.Remove(_menuItemAdded);
             }
+            _exceptions?.Dispose();
             _driver?.Dispose();
             if (_tab != null)
             {
