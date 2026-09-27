@@ -137,15 +137,14 @@ public sealed class ImportFromGumxView : Grid
             checkBox.SetCurrentValue(ToggleButton.IsCheckedProperty, node.IsChecked);
         };
 
-        Button details = new Button
+        // A HyperlinkButton, not a transparent Button: the head's Button style draws Primary.Contrast
+        // (white) text, which vanished on the light tree; the link style follows the theme.
+        HyperlinkButton details = new HyperlinkButton
         {
             Content = new TextBlock { Text = "Details...", TextDecorations = TextDecorations.Underline },
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
             Padding = new Thickness(0),
             Margin = new Thickness(8, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
-            Cursor = new Cursor(StandardCursorType.Hand),
         };
         details.Bind(IsVisibleProperty, new Binding(nameof(ImportTreeNodeViewModel.IsDetailsButtonVisible)));
         details.Click += (_, _) => (DataContext as ImportFromGumxViewModel)?.ShowStandardDiffCommand.Execute(node);
