@@ -37,8 +37,8 @@
 
 ## Edit menu (EDIT)
 
-- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
-- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
+- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests, FormsAndImportScenarioTests
+- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests, FormsAndImportScenarioTests
 - EDIT-003 Undo/Redo enabled state follows history
 - EDIT-004 Add > Screen. tested: AddScreenDialogViewModelTests
 - EDIT-005 Add > Component. tested: AddComponentDialogViewModelTests
