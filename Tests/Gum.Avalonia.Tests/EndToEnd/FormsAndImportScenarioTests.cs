@@ -6,6 +6,7 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Menus;
 using Gum.Services.Dialogs;
+using Gum.StateAnimation.SaveClasses;
 using GumFormsPlugin.ViewModels;
 using ImportFromGumxPlugin.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -215,7 +216,44 @@ public class FormsAndImportScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "DLG-022")]
+    [Trait("Feature", "CONT-008")]
+    public void ImportGumx_AStandardWithAnimations_ReplacesTheTargetsAnimationsWhole()
+    {
+        // A Standard replaces the target's Standard whole (#5340), and its animations go with it.
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        string targetAnimations = Path.Combine(tree.Project.ProjectFolder, "Standards", "TextAnimations.ganx");
+        SaveAnimations(targetAnimations, "TargetOnly");
+        using TempThemeCopy source = new TempThemeCopy("Standard");
+        SaveAnimations(Path.Combine(Path.GetDirectoryName(source.ProjectFile)!, "Standards", "TextAnimations.ganx"), "Pulse");
+        tree.Dialogs.AnswerNextOpenFile(source.ProjectFile);
+        tree.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            dialog.BrowseCommand.Execute(null);
+            tree.WaitUntil(() => dialog.IsPreviewLoaded, AsyncWork, "the .gumx preview");
+            Leaf(dialog, "Text").IsChecked = true;
+            return true;
+        });
+
+        tree.PickMainMenu("Content", "Import", ".gumx…");
+        WaitForTheImportsReload(tree);
+
+        ElementAnimationsSave.Load(targetAnimations).Animations.Select(animation => animation.Name)
+            .ShouldBe(new[] { "Pulse" }, "the source's animations replace the target's, none kept");
+
+        tree.AssertOracles();
+    }
+
     #endregion
+
+    private static void SaveAnimations(string path, string animationName)
+    {
+        ElementAnimationsSave animations = new ElementAnimationsSave();
+        animations.Animations.Add(new AnimationSave { Name = animationName });
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        animations.Save(path);
+    }
 
     private static ComponentSave ComponentNamed(GumProjectSave project, string name) =>
         project.Components.Single(component => component.Name == name);

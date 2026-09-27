@@ -49,4 +49,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Per-process temp folder for the tool's per-user files (#5337). -->
+    <Compile Include="..\..\..\Tests\Shared\**\*.cs" Link="Shared\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>

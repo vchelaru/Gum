@@ -62,6 +62,15 @@ public class PluginItemViewModel : Mvvm.ViewModel
 
     public string DisplayText => summary.DisplayText;
 
+    /// <summary>
+    /// Whether the checkbox is offered. A plugin the tool needs cannot be turned off, but one that
+    /// crashed can still be turned back on.
+    /// </summary>
+    public bool CanToggle => summary.CanBeDisabled || !summary.IsEnabled;
+
+    /// <summary>Explains a checkbox that is not offered; null when it is.</summary>
+    public string? ToolTip => CanToggle ? null : "Gum needs this plugin, so it cannot be turned off.";
+
     public bool IsEnabled
     {
         get => summary.IsEnabled;
@@ -75,8 +84,7 @@ public class PluginItemViewModel : Mvvm.ViewModel
             if (!value)
             {
                 summary = pluginManager.DisableUserPlugin(summary.PluginHandle);
-                NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(DisplayText));
+                NotifySummaryChanged();
             }
             else
             {
@@ -109,7 +117,14 @@ public class PluginItemViewModel : Mvvm.ViewModel
             summary = pluginManager.TryEnablePlugin(summary.PluginHandle);
         }
 
+        NotifySummaryChanged();
+    }
+
+    private void NotifySummaryChanged()
+    {
         NotifyPropertyChanged(nameof(IsEnabled));
         NotifyPropertyChanged(nameof(DisplayText));
+        NotifyPropertyChanged(nameof(CanToggle));
+        NotifyPropertyChanged(nameof(ToolTip));
     }
 }

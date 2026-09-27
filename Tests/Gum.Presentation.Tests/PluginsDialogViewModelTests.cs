@@ -123,4 +123,32 @@ public class PluginsDialogViewModelTests
         pluginManager.Verify(p => p.TryEnablePlugin(It.IsAny<object>()), Times.Never);
         viewModel.Plugins[0].IsEnabled.ShouldBeFalse();
     }
+
+    [Fact]
+    public void CanToggle_PluginThatCannotBeDisabled_IsOfferedOnlyWhileItIsOff()
+    {
+        object handle = new();
+        PluginSummary running = new("Core Plugin", "Core Plugin", IsEnabled: true, HasFailureDetails: false, handle, CanBeDisabled: false);
+        PluginSummary crashed = running with { IsEnabled = false, HasFailureDetails = true };
+        Mock<IPluginManager> pluginManager = new();
+        pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([running, crashed with { PluginHandle = new object() }]);
+        pluginManager.Setup(p => p.TryEnablePlugin(It.IsAny<object>())).Returns(running);
+        Mock<IDialogService> dialogService = new();
+        dialogService.Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Affirmative);
+        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object, Mock.Of<IClipboardService>());
+        PluginItemViewModel runningItem = viewModel.Plugins[0];
+        PluginItemViewModel crashedItem = viewModel.Plugins[1];
+
+        runningItem.CanToggle.ShouldBeFalse();
+        runningItem.ToolTip.ShouldNotBeNull();
+        crashedItem.CanToggle.ShouldBeTrue("a crashed plugin the tool needs can still be turned back on");
+
+        List<string?> changed = new();
+        crashedItem.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        crashedItem.IsEnabled = true;
+
+        crashedItem.CanToggle.ShouldBeFalse();
+        changed.ShouldContain(nameof(PluginItemViewModel.CanToggle));
+    }
 }

@@ -11,6 +11,7 @@ public class ImportTreeNodeViewModel : ViewModel
     private InclusionState _inclusionState;
     private bool _suppressChildNotifications;
     private IReadOnlyList<StandardDiffRowViewModel>? _standardDiffRows;
+    private string? _requiredReason;
 
     public string DisplayName { get; }
     public string FullName { get; }
@@ -44,6 +45,28 @@ public class ImportTreeNodeViewModel : ViewModel
     /// <summary>Whether the "Details..." button next to the checkbox is shown. True iff there are diff rows.</summary>
     [DependsOn(nameof(StandardDiffRows))]
     public bool IsDetailsButtonVisible => HasStandardDiffRows;
+
+    /// <summary>
+    /// Why this row is imported whether or not the user wants it, shown as the check box's
+    /// tooltip; null when the user is free to check or uncheck it. Set on a differing Standard
+    /// that a selected element uses, since such a Standard is always imported with it.
+    /// </summary>
+    public string? RequiredReason
+    {
+        get => _requiredReason;
+        set
+        {
+            if (_requiredReason != value)
+            {
+                _requiredReason = value;
+                NotifyPropertyChanged(nameof(RequiredReason));
+                NotifyPropertyChanged(nameof(IsCheckable));
+            }
+        }
+    }
+
+    /// <summary>Whether the user can change this row's check box. False while <see cref="RequiredReason"/> is set.</summary>
+    public bool IsCheckable => _requiredReason == null;
 
     public InclusionState InclusionState
     {

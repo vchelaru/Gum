@@ -1,4 +1,3 @@
-using Gum.Managers;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
@@ -75,6 +74,33 @@ public class PluginDialogTests
     }
 
     [AvaloniaFact]
+    public void ImportFromGumxView_RequiredRow_IsDisabledWithItsReasonAsTooltip()
+    {
+        ImportFromGumxViewModel viewModel = CreateImportViewModel();
+        ImportTreeNodeViewModel folder = new ImportTreeNodeViewModel("Standards", "Standards");
+        ImportTreeNodeViewModel leaf = new ImportTreeNodeViewModel("Text", "Text", ElementItemType.Standard);
+        folder.Children.Add(leaf);
+        viewModel.RootNodes.Add(folder);
+        viewModel.IsPreviewLoaded = true;
+
+        ImportFromGumxView view = (ImportFromGumxView)Registry.CreateView(viewModel);
+        Window window = new Window { Content = view };
+        window.Show();
+        window.UpdateLayout();
+        CheckBox leafBox = view.Tree.GetVisualDescendants().OfType<CheckBox>().First(box => box.DataContext == leaf);
+        leafBox.IsEnabled.ShouldBeTrue();
+
+        const string reason = "Used by Button; this Standard is imported with it.";
+        leaf.RequiredReason = reason;
+
+        leafBox.IsEnabled.ShouldBeFalse();
+        ToolTip.GetTip(leafBox).ShouldBe(reason);
+        // A disabled control shows no tooltip unless asked to.
+        ToolTip.GetShowOnDisabled(leafBox).ShouldBeTrue();
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void ImportFromGumxDialog_OnAShortWindow_ScrollsOnlyTheTree()
     {
         // As WPF's ScrollContent="False": the tree scrolls inside the dialog while the destination
@@ -126,8 +152,7 @@ public class PluginDialogTests
         Services.GetRequiredService<IImportLogic>(),
         Services.GetRequiredService<IFileCommands>(),
         Services.GetRequiredService<IDialogService>(),
-        Services.GetRequiredService<IDispatcher>(),
-        Services.GetRequiredService<IOutputManager>()).CreateImportViewModel();
+        Services.GetRequiredService<IDispatcher>()).CreateImportViewModel();
 
     private static void ShouldBeInsideWindow(Control control, Window window)
     {

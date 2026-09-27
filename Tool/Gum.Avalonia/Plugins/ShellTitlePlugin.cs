@@ -35,6 +35,7 @@ public class ShellTitlePlugin : PluginBase, IPriorityPlugin
 
     /// <inheritdoc/>
     public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
+    public override bool CanUserDisable => false;
 
     private void UpdateTitle(GumProjectSave? project) =>
         _shell.ProjectFilePath = string.IsNullOrEmpty(project?.FullFileName) ? null : project.FullFileName;
