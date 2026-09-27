@@ -13,7 +13,13 @@ public interface IErrorChecker
     event Action<ElementSave, ErrorViewModel[]>? ErrorsChecked;
 
     ErrorViewModel[] GetErrorsFor(ElementSave? element, GumProjectSave project);
-    ErrorViewModel[] GetErrorsFor(ElementSave? element, PluginBase plugin);
+
+    /// <summary>
+    /// The rows plugins contribute through <see cref="PluginBase.GetAllErrors"/>, from every plugin
+    /// or only <paramref name="plugin"/>. They are project-wide (the orphaned code files), so they
+    /// are listed whatever is selected and are not part of an element's check.
+    /// </summary>
+    ErrorViewModel[] GetPluginErrors(PluginBase? plugin = null);
 
     /// <summary>
     /// The errors that belong to the project rather than an element (see
