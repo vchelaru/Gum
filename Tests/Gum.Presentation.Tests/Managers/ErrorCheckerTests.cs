@@ -67,27 +67,23 @@ public class ErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
-    public void GetErrorsFor_ShouldDefaultElementName_WhenPluginErrorHasNone()
+    public void GetPluginErrors_LinksHelp_AndDoesNotRaiseErrorsChecked()
     {
-        GumProjectSave project = new GumProjectSave();
-        ObjectFinder.Self.GumProjectSave = project;
-
-        ComponentSave component = new ComponentSave { Name = "SomeComponent" };
-        project.Components.Add(component);
-
-        ITypeResolver typeResolver = new DefaultTypeResolver();
-        IHeadlessErrorChecker headlessErrorChecker = new HeadlessErrorChecker(typeResolver);
+        PluginBase plugin = new Mock<PluginBase>().Object;
         Mock<IPluginManager> mockPluginManager = new Mock<IPluginManager>();
         mockPluginManager
-            .Setup(m => m.FillWithErrors(It.IsAny<List<ErrorViewModel>>(), It.IsAny<object?>()))
+            .Setup(m => m.FillWithErrors(It.IsAny<List<ErrorViewModel>>(), plugin))
             .Callback<List<ErrorViewModel>, object?>(
-                (list, _) => list.Add(new ErrorViewModel { Message = "plugin error" }));
-        IErrorDocsRegistry errorDocsRegistry = new ErrorDocsRegistry();
-        ErrorChecker sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry, Mock.Of<IFileSystemRevealService>());
+                (list, _) => list.Add(new ErrorViewModel { Code = "GUM0005", Message = "plugin error" }));
+        ErrorChecker sut = new ErrorChecker(Mock.Of<IHeadlessErrorChecker>(), mockPluginManager.Object,
+            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>());
+        int raisedCount = 0;
+        sut.ErrorsChecked += (_, _) => raisedCount++;
 
-        ErrorViewModel[] errors = sut.GetErrorsFor(component, project);
+        ErrorViewModel[] errors = sut.GetPluginErrors(plugin);
 
-        errors.ShouldContain(e => e.Message == "plugin error" && e.ElementName == "SomeComponent");
+        errors.ShouldHaveSingleItem().HelpUrl.ShouldNotBeNull();
+        raisedCount.ShouldBe(0);
     }
 
     [Fact]
@@ -130,17 +126,5 @@ public class ErrorCheckerTests : BaseTestClass
         errors[1].HasAction.ShouldBeFalse();
         errors[0].ActionCommand!.Execute(null);
         revealService.Verify(r => r.RevealFile(filePath), Times.Once);
-    }
-
-    [Fact]
-    public void GetErrorsFor_DoesNotRaiseErrorsChecked_ForOnePluginsErrors()
-    {
-        ComponentSave component = new ComponentSave { Name = "SomeComponent" };
-        int raisedCount = 0;
-        _sut.ErrorsChecked += (_, _) => raisedCount++;
-
-        _sut.GetErrorsFor(component, new Mock<PluginBase>().Object);
-
-        raisedCount.ShouldBe(0);
     }
 }

@@ -6,6 +6,7 @@ using Gum.Messages;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.Errors;
+using Gum.ProjectServices;
 using Gum.Services;
 using Gum.ToolStates;
 using Moq;
@@ -153,5 +154,51 @@ public class MainErrorsPluginTests : BaseTestClass
         _plugin.CallElementSelected(_screen);
 
         _viewModel.Errors.ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Plugin rows (the orphaned code files, GUM0005) are project-wide: they list whatever is
+    /// selected, including nothing, and never count toward the selected element's tree "!" (#5272).
+    /// </summary>
+    [Fact]
+    public void PluginErrors_AreListedWithNothingSelected_AndLeftOutOfTheElementsCheck()
+    {
+        PluginBase orphanPlugin = new Mock<PluginBase>().Object;
+        ErrorViewModel orphanRow = new ErrorViewModel { Code = "GUM0005", Message = "Orphaned generated code file", OwnerPlugin = orphanPlugin };
+        Mock<IPluginManager> pluginManager = new();
+        pluginManager.Setup(m => m.FillWithErrors(It.IsAny<List<ErrorViewModel>>(), It.IsAny<object?>()))
+            .Callback<List<ErrorViewModel>, object?>((list, _) => list.Add(orphanRow));
+        Mock<IHeadlessErrorChecker> headlessErrorChecker = new();
+        headlessErrorChecker.Setup(c => c.GetErrorsFor(It.IsAny<ElementSave>(), It.IsAny<GumProjectSave>()))
+            .Returns(new ErrorResult[0]);
+        headlessErrorChecker.Setup(c => c.GetProjectErrors(It.IsAny<GumProjectSave>()))
+            .Returns(new ErrorResult[0]);
+        ErrorChecker errorChecker = new ErrorChecker(headlessErrorChecker.Object, pluginManager.Object,
+            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>());
+        List<ErrorViewModel[]> elementChecks = new();
+        errorChecker.ErrorsChecked += (_, errors) => elementChecks.Add(errors);
+        AllErrorsViewModel viewModel = null!;
+        Mock<ITabManager> tabManager = new();
+        tabManager.Setup(t => t.AddControl(It.IsAny<object>(), "Errors", It.IsAny<TabLocation>()))
+            .Callback<object, string, TabLocation>((content, _, _) => viewModel = (AllErrorsViewModel)content)
+            .Returns(Mock.Of<IPluginTab>());
+        IMessenger messenger = new WeakReferenceMessenger();
+        MainErrorsPlugin plugin = new MainErrorsPlugin(errorChecker, messenger, _selectedState.Object,
+            Mock.Of<IClipboardService>(), Mock.Of<IFileSystemRevealService>(), _projectState.Object,
+            Mock.Of<IDispatcher>())
+        {
+            TabManager = tabManager.Object,
+        };
+        plugin.StartUp();
+
+        messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = orphanPlugin });
+        viewModel.Errors.ShouldBe(new[] { orphanRow });
+
+        plugin.CallElementSelected(null);
+        viewModel.Errors.ShouldBe(new[] { orphanRow });
+
+        plugin.CallElementSelected(_screen);
+        viewModel.Errors.ShouldBe(new[] { orphanRow });
+        elementChecks.ShouldHaveSingleItem().ShouldBeEmpty();
     }
 }
