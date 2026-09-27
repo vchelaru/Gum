@@ -6,7 +6,7 @@ using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Math.Geometry;
 
-public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
+public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso, ICloneable
 {
     #region Fields
 
@@ -307,6 +307,20 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     {
         throw new NotImplementedException();
     }
+
+    /// <summary>
+    /// Creates a copy with its own children collection and its own line primitive, so changing
+    /// the copy's color or cell sizes leaves this grid unchanged.
+    /// </summary>
+    public virtual LineGrid Clone()
+    {
+        LineGrid clone = (LineGrid)MemberwiseClone();
+        clone.Children = new ObservableCollectionNoReset<IRenderableIpso>();
+        clone.mLinePrimitive = mLinePrimitive.Clone();
+        return clone;
+    }
+
+    object ICloneable.Clone() => Clone();
 
     public override string ToString() => $"LineGrid {Name}";
 }

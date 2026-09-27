@@ -14,7 +14,7 @@ namespace RenderingLibrary.Math.Geometry
         TopLeft
     }
 
-    public class LineCircle : SpriteBatchRenderableBase, IVisible, IRenderableIpso
+    public class LineCircle : SpriteBatchRenderableBase, IVisible, IRenderableIpso, System.ICloneable
     {
         #region Fields
         float mRadius;
@@ -304,6 +304,21 @@ namespace RenderingLibrary.Math.Geometry
         IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
         void IRenderable.PreRender() { }
+
+        /// <summary>
+        /// Creates a copy with its own children collection, no parent, and its own line primitive,
+        /// so changing the copy's color or radius leaves this circle unchanged.
+        /// </summary>
+        public virtual LineCircle Clone()
+        {
+            LineCircle clone = (LineCircle)MemberwiseClone();
+            clone.mChildren = new();
+            clone.mParent = null;
+            clone.mLinePrimitive = mLinePrimitive.Clone();
+            return clone;
+        }
+
+        object System.ICloneable.Clone() => Clone();
 
     }
 }
