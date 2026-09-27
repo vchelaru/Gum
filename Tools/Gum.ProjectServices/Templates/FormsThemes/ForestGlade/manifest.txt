@@ -51,8 +51,7 @@ Components/ForestGlade/Controls/TextBox.gucx
 Components/ForestGlade/Controls/Toast.gucx
 Components/ForestGlade/Controls/UserControl.gucx
 Components/ForestGlade/Controls/Window.gucx
-Components/ForestGlade/Elements/Bevel.gucx
-Components/ForestGlade/Elements/FocusRect.gucx
+Components/ForestGlade/Elements/TextInputChrome.gucx
 Components/ForestGlade/Styles.gucx
 EventExport/.gitignore
 Fonts/Nunito-Bold.ttf
