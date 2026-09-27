@@ -112,8 +112,9 @@ public class FormsFileService : IFormsFileService
                 continue;
             }
 
-            // Skip per-theme metadata files (file-list manifest, prerequisite declarations, and
-            // the gallery preview image). They describe the theme but aren't part of the user's project.
+            // Skip per-theme metadata files (the Standard theme's file-list manifest, prerequisite
+            // declarations, and the gallery preview image). They describe the theme but aren't part
+            // of the user's project.
             var fileName = Path.GetFileName(sourceFile);
             if (string.Equals(fileName, "manifest.txt", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(fileName, ThemeRequirements.ThemeRequirementsFileName, StringComparison.OrdinalIgnoreCase) ||
