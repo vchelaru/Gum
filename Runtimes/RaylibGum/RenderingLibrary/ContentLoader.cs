@@ -242,6 +242,19 @@ public sealed class ContentLoader : IContentLoader
             return null;
         }
 
+        Font? font = BuildBitmapFontThroughStreamHook(fntPath, fntContents);
+        if (font != null)
+        {
+            // #5253: a bundled dropshadow font ships its "-shadow.fnt" sibling in the same bundle.
+            RegisterShadowSiblingIfPresent(fntPath, font.Value.Texture.Id);
+        }
+        return font;
+    }
+
+    // Parses fntContents and loads its page through the hooked texture path. Does not probe for a
+    // shadow sibling, so loading the sibling itself through here cannot recurse.
+    private static Font? BuildBitmapFontThroughStreamHook(string fntPath, string fntContents)
+    {
         ParsedFontFile parsedFontFile = new ParsedFontFile(fntContents);
 
         string[] pageFileNames = parsedFontFile.GetPagesAsArrayOfStrings;
@@ -364,10 +377,13 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
-    // #4057: loads the "-shadow.fnt" sibling next to primaryFntPath (if present) via raylib's native
-    // loader and records it in RaylibFontShadowRegistry against the primary's texture id. Absent for
-    // the vast majority of fonts (no dropshadow requested), in which case this is a no-op - the Text
-    // renderable's shadow-registry lookup simply finds nothing and draws no shadow pass.
+    // #4057: loads the "-shadow.fnt" sibling next to primaryFntPath (if present) and records it in
+    // RaylibFontShadowRegistry against the primary's texture id. Absent for the vast majority of
+    // fonts (no dropshadow requested), in which case this is a no-op - the Text renderable's
+    // shadow-registry lookup simply finds nothing and draws no shadow pass. Resolved the same way as
+    // the primary: raylib's native loader when the file is on disk, otherwise through the
+    // CustomGetStreamFromFile hook (#5253). The shadow always gets its own page texture, because
+    // ManagedFont.Dispose unloads both fonts' textures.
     private static void RegisterShadowSiblingIfPresent(string primaryFntPath, uint primaryTextureId)
     {
         const string fntExtension = ".fnt";
@@ -379,11 +395,29 @@ public sealed class ContentLoader : IContentLoader
         string shadowFntPath = primaryFntPath.Substring(0, primaryFntPath.Length - fntExtension.Length)
             + "-shadow" + fntExtension;
 
+        Font? shadowFont = null;
         if (System.IO.File.Exists(shadowFntPath))
         {
-            Font shadowFont = Raylib.LoadFont(shadowFntPath);
-            TextureFilterApplier(shadowFont.Texture, DefaultTextureFilter);
-            RaylibFontShadowRegistry.Register(primaryTextureId, shadowFont);
+            Font loadedShadowFont = Raylib.LoadFont(shadowFntPath);
+            TextureFilterApplier(loadedShadowFont.Texture, DefaultTextureFilter);
+            shadowFont = loadedShadowFont;
+        }
+        else if (FileManager.FileExists(shadowFntPath))
+        {
+            try
+            {
+                shadowFont = BuildBitmapFontThroughStreamHook(shadowFntPath, FileManager.FromFileText(shadowFntPath));
+            }
+            catch (Exception exception)
+            {
+                // The shadow is optional: a broken sibling costs the shadow, not the primary font.
+                Console.Error.WriteLine($"Could not load dropshadow font '{shadowFntPath}': {exception.Message}");
+            }
+        }
+
+        if (shadowFont != null)
+        {
+            RaylibFontShadowRegistry.Register(primaryTextureId, shadowFont.Value);
         }
     }
 

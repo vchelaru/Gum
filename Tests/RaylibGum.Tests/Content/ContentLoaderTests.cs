@@ -344,6 +344,90 @@ public class ContentLoaderTests : BaseTestClass
         }
     }
 
+    // #5253: a bundled dropshadow font's "-shadow.fnt" sibling must be found through the hook too.
+    // All three files exist only in memory, so a registered shadow font proves the sibling .fnt and
+    // its page were read through CustomGetStreamFromFile.
+    [Fact]
+    public void LoadContent_Font_WithShadowSiblingServedOnlyThroughHook_ShouldRegisterShadowFont()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        Dictionary<string, byte[]> inMemoryFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Font18Arial.fnt", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt")) },
+            { "Font18Arial-shadow.fnt", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial-shadow.fnt")) },
+            { "Font18Arial_0.png", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png")) },
+        };
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+                inMemoryFiles.TryGetValue(Path.GetFileName(incomingPath), out byte[]? bytes)
+                    ? new MemoryStream(bytes)
+                    : null!;
+
+            string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
+                "GumRaylibShadowHookTest_" + Guid.NewGuid().ToString("N"), "Font18Arial.fnt");
+
+            Font font = LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath);
+
+            RaylibFontShadowRegistry.TryGet(font.Texture.Id, out Font shadowFont).ShouldBeTrue();
+            shadowFont.GlyphCount.ShouldBe(2);
+            shadowFont.Texture.Id.ShouldNotBe(font.Texture.Id,
+                "ManagedFont.Dispose unloads both fonts, so they must not share one GPU texture");
+
+            // The shadow's metrics entry is dropped with it, so a reused texture id can't inherit it.
+            uint shadowTextureId = shadowFont.Texture.Id;
+            RaylibFontMetricsRegistry.TryGet(shadowTextureId, out _).ShouldBeTrue();
+            new ManagedFont(font).Dispose();
+            RaylibFontMetricsRegistry.TryGet(shadowTextureId, out _).ShouldBeFalse();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // #5253: the shadow sibling is optional, so a broken one in a bundle must not fail the primary load.
+    [Fact]
+    public void LoadContent_Font_WithMalformedShadowSiblingServedThroughHook_ShouldLoadPrimaryWithoutShadow()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        Dictionary<string, byte[]> inMemoryFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Font18Arial.fnt", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt")) },
+            { "Font18Arial-shadow.fnt", System.Text.Encoding.UTF8.GetBytes("not a bitmap font") },
+            { "Font18Arial_0.png", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png")) },
+        };
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+                inMemoryFiles.TryGetValue(Path.GetFileName(incomingPath), out byte[]? bytes)
+                    ? new MemoryStream(bytes)
+                    : null!;
+
+            string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
+                "GumRaylibShadowHookTest_" + Guid.NewGuid().ToString("N"), "Font18Arial.fnt");
+
+            Font font = LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath);
+
+            font.GlyphCount.ShouldBe(191);
+            RaylibFontShadowRegistry.TryGet(font.Texture.Id, out _).ShouldBeFalse();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
     // #3496: a multi-page .fnt loaded through the stream hook must fail loudly instead of silently
     // building a Font against only page 0 (glyphs on page 1+ would get real .fnt coordinates mapped
     // onto the wrong atlas texture, mis-rendering with no error). Merging pages here isn't supported —

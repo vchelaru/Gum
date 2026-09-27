@@ -43,6 +43,8 @@ public class ManagedFont : IDisposable
             // doesn't leak — RaylibFontShadowRegistry only tracks the association, not the font's lifetime.
             if (RaylibFontShadowRegistry.Remove(Font.Texture.Id, out Raylib_cs.Font shadowFont))
             {
+                // Shadows built from .fnt text (stream hook, KernSmith) register metrics for their own texture.
+                RaylibFontMetricsRegistry.Remove(shadowFont.Texture.Id);
                 Raylib_cs.Raylib.UnloadFont(shadowFont);
             }
 
