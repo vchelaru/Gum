@@ -1,6 +1,6 @@
 ---
 name: gum-tool-import-from-gumx
-description: The "Import from .gumx" dialog. Triggers: ImportFromGumxPlugin, GumxDependencyResolver, ImportTreeNodeViewModel, ImportFromGumxView, importing components/screens/behaviors/standards across projects, the dialog's TreeView templating.
+description: The "Import from .gumx" dialog. Triggers: ImportFromGumxPlugin, GumxDependencyResolver, ImportTreeNodeViewModel, ImportFromGumxView, importing components/screens/behaviors/standards across projects, the dialog's tree rows and Details link.
 ---
 
 # Import from .gumx Dialog
@@ -15,11 +15,10 @@ Cross-project import dialog (Content → Import → ".gumx…"). Lets the user p
 - `Tools/Gum.Presentation/ImportFromGumx/Services/GumxImportService` — performs the actual import + conflict reporting.
 
 All three concrete services above (and their interfaces) live in the headless **Gum.Presentation** assembly (no WPF) — their dependency closures were already headless, so the concrete classes moved too, not just their interfaces. `GumxSourceService`/`IGumxSourceService` keep their original `Gum.Plugins.ImportPlugin.Services` namespace; `GumxDependencyResolver`/`GumxImportService` use `ImportFromGumxPlugin.Services`.
-- `ViewModels/ImportFromGumxViewModel` — orchestrates load/preview/import; owns `RootNodes` and `RecomputeTransitiveDependencies()`.
+- `Tools/Gum.Presentation/ImportFromGumx/ImportFromGumxViewModel` — orchestrates load/preview/import; owns `RootNodes` and `RecomputeTransitiveDependencies()`.
 - `Tools/Gum.ProjectServices/ImportFromGumx/ImportTreeNodeViewModel` — one node in the TreeView; folder or leaf; carries `IsChecked`, `InclusionState`, optional `StandardDiffRows`. Lives in the **headless `net8.0` `Gum.ProjectServices`** assembly (no WPF) so its display logic is unit-testable without standing up WPF (#3229, ADR-0003/0004); namespace stays `ImportFromGumxPlugin.ViewModels`.
 - `Tools/Gum.ProjectServices/ImportFromGumx/StandardDiffRowViewModel` — passive `Kind + Summary` display record for one diff entry (same headless assembly; sibling `ImportPreviewItemViewModel.cs` holds the `ElementItemType`/`InclusionState` enums).
-- `Views/ImportFromGumxView.xaml` + `.xaml.cs` — the dialog.
-- `ViewModels/StandardDiffDetailsViewModel.cs` + `Views/StandardDiffDetailsView.xaml` — the read-only "Details..." modal launched from a flagged Standard row.
+- `Tool/Gum.Avalonia/Plugins/PluginDialogs/ImportFromGumxViews.cs` — the dialog (`ImportFromGumxView`) and the read-only "Details..." modal (`StandardDiffDetailsView`), built in C#. The modal's view model is `Tools/Gum.Presentation/ImportFromGumx/StandardDiffDetailsViewModel`.
 
 ## InclusionState bookkeeping (#2642)
 
@@ -30,21 +29,9 @@ Three sets of state live on `ImportFromGumxViewModel`:
 
 When you touch the recompute loop: **always** detach `OnItemPropertyChanged` before mutating `InclusionState`, then re-attach. Otherwise the mutation re-enters the recompute path and clobbers tracking.
 
-## TreeView templating
+## Tree rows
 
-One `HierarchicalDataTemplate` per row: a horizontal `StackPanel` with the checkbox and an optional "Details..." `Hyperlink` next to it. The hyperlink's `Visibility` is bound to `ImportTreeNodeViewModel.IsDetailsButtonVisible` (a `bool` `[DependsOn(nameof(StandardDiffRows))]` computed property) through a stock `BooleanToVisibilityConverter`, so it only shows on flagged-Standard rows. The hyperlink's `Command` reaches up to `ImportFromGumxViewModel.ShowStandardDiffCommand` via `RelativeSource AncestorType={x:Type UserControl}`, with the row VM passed as `CommandParameter`. Clicking opens `StandardDiffDetailsView` (a separate DialogService modal) which renders the row's `StandardDiffRows`.
-
-A `Hyperlink` (inside a `TextBlock`) rather than a `Button` because a padded `Button` overflows the TreeViewItem row height and causes consecutive rows to visually overlap.
-
-### Why no inline expander
-
-Early attempts embedded an `Expander` directly in the TreeView row to show the diff in-place. That fought several layers at once:
-
-1. **`HierarchicalDataTemplate.ItemTemplateSelector` is a plain CLR property, not a DependencyProperty** — `DynamicResource` is illegal there (`XamlParseException` at load); `StaticResource` works but creates a chicken-and-egg with templates that reference the selector.
-2. **`TreeView.ItemTemplateSelector` only fires at the root level** — nested rows (children of folder nodes) fall back to the default template unless every `HierarchicalDataTemplate` *also* sets its own selector. No auto-cascade.
-3. **The Frb theme defines a `HeaderTemplate` on `Expander` that treats Header content as data** (binds `{Binding}` and renders via `ToString`). A raw `CheckBox` in `<Expander.Header>` renders as `System.Windows.Controls.CheckBox Content:Foo IsChecked:True`, not as a control.
-
-Each had a workaround, but stacking them in the same row produced a brittle XAML/theme arrangement. The "Details..." button + separate modal trades one extra click for zero theme conflicts and ~30 lines of XAML.
+Each row is a check box plus a "Details..." `HyperlinkButton`, visible only on flagged-Standard rows (`ImportTreeNodeViewModel.IsDetailsButtonVisible`). The link opens `StandardDiffDetailsView` as a separate modal showing the row's `StandardDiffRows`; the diff is not expanded inline in the tree. A force-included Standard's check box is disabled, with `RequiredReason` as its tooltip.
 
 ## Diff row generation
 
@@ -52,13 +39,14 @@ Each had a workaround, but stacking them in the same row produced a brittle XAML
 - Added/removed categories → `StandardDiffRowViewModel("Category added"|"Category removed", name)`.
 - Each `StandardVariableDiff` → one row with `Kind` mapped from `StandardVariableDiffKind` (Added/Removed/Changed) and `Summary = "{Variable} · {Field}: {Default} → {Project} · ..."`.
 
-Returns `null` when there are no rows so the selector falls through to the default template and no expander is drawn.
+Returns `null` when there are no rows, so the row shows no Details link.
 
 ## Testing
 
 - `ImportFromGumxViewModelTests` (in `Tests/Gum.Presentation.Tests/Plugins/ImportFromGumxPlugin/`) uses `InitializeFromProjectForTesting(GumProjectSave)` to bypass the file/URL load and seed the source. The `_projectState` field exposes the destination (a `FakeProjectState` whose `GumProjectSave` is mutable) so tests can stage destination standards/components for diff and conflict scenarios.
 - `GumxDependencyResolverTests` operate on the resolver directly without going through the VM.
-- `ImportTreeNodeViewModelTests` lives in `Tests/Gum.ProjectServices.Tests` (**net8.0, no WPF stood up**) — it covers the node's `IsChecked` folder/child cascade and the `IsDetailsButtonVisible` flag. That the node VM is testable without WPF is the payoff of moving it into the headless assembly (#3229).
+- `ImportTreeNodeViewModelTests` lives in `Tests/Gum.ProjectServices.Tests` — it covers the node's `IsChecked` folder/child cascade and the `IsDetailsButtonVisible` flag.
+- The Avalonia view is covered headlessly in `Tests/Gum.Avalonia.Tests` (`PluginDialogTests`), and the end-to-end import scenarios are in `EndToEnd/FormsAndImportScenarioTests.cs`.
 
 ## History notes
 
