@@ -56,7 +56,7 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `ProjectOracleTests.cs` | Each oracle fails on the damage it exists to catch. |
 | `CanvasHarness.cs` | The head's Editor tab (toolbar, canvas, scroll bars) on a real graphics device, next to a `ProjectTreeHarness` over the same project, whose oracles it ends with. Pointer, key, wheel and drop input in window coordinates (`WindowPointOf(worldX, worldY)`), a drawn frame after every event, and `SavedValue` to read what reached disk. |
 | `CanvasScenarioTests.cs` | The Editor canvas: selection, move, resize, rotate, nudge, polygon points, camera, rulers, drops. |
-| `TreeScenarioTests.cs`, `VariableScenarioTests.cs` | The scenarios: the Project tree; the Variables tab, states and edits that cascade into other elements. |
+| `TreeScenarioTests.cs`, `VariableScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search); the Variables tab, states and edits that cascade into other elements; copy, paste, rename and delete where they meet references, parents, states and animations. |
 
 A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
 the gesture with its dialogs queued, asserts the model and the tree, undoes back and compares the
@@ -68,6 +68,18 @@ through `tree.Grid`, and undoes with `tree.Undo()`.
 `ToolProjectFixture.AddCategory` and `AddState` record undo as the tool's dialogs do. Setup that
 edits an element some other way without an undo lock leaves the element's undo baseline behind, and
 the scenario's first Ctrl+Z then undoes the setup too.
+
+Gotchas in scenario setup:
+
+- The Animations tab reads an element's `.ganx` when the element is selected. A scenario that
+  writes a sidecar after adding the element (which selects it) selects something else and back
+  before the gesture, or the tab keeps its empty copy and writes that over the file.
+- The delete dialog remembers the last "delete children" choice for the session. A scenario that
+  deletes a parent instance sets both options itself.
+- The Standard folder is hidden while the Standards palette is on (the default), so a standard
+  element has no tree row to right-click.
+- The search box and "Include Variables" belong to the head's panel, which outlives the test; the
+  harness clears both on dispose.
 
 ### Canvas scenarios
 

@@ -1774,6 +1774,281 @@ public class GraphicalUiElementTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void Clone_AddingDefinitionsToClone_ShouldNotAddThemToSource()
+    {
+        ContainerRuntime source = new();
+        StateSave sourceState = new() { Name = "SourceState" };
+        StateSaveCategory sourceCategory = new() { Name = "SourceCategory" };
+        AnimationRuntime sourceAnimation = new() { Name = "SourceAnimation" };
+        source.AddStates(new List<StateSave> { sourceState });
+        source.AddCategory(sourceCategory);
+        source.AddExposedVariable("SourceExposed", "Child.Width");
+        source.Animations = new List<AnimationRuntime> { sourceAnimation };
+
+        GraphicalUiElement clone = source.Clone();
+        clone.AddStates(new List<StateSave> { new StateSave { Name = "CloneState" } });
+        clone.AddCategory(new StateSaveCategory { Name = "CloneCategory" });
+        clone.AddExposedVariable("CloneExposed", "Child.Height");
+        clone.Animations!.Add(new AnimationRuntime { Name = "CloneAnimation" });
+
+        clone.States.ShouldContainKey("SourceState");
+        clone.Categories.ShouldContainKey("SourceCategory");
+        clone.IsExposedVariable("SourceExposed").ShouldBeTrue();
+        clone.Animations.ShouldContain(sourceAnimation);
+
+        source.States.ShouldNotContainKey("CloneState");
+        source.Categories.ShouldNotContainKey("CloneCategory");
+        source.IsExposedVariable("CloneExposed").ShouldBeFalse();
+        source.Animations.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Clone_ExposedVariableAddedToClone_ShouldNotRedirectSourceSetProperty()
+    {
+        ContainerRuntime source = new();
+        ContainerRuntime sourceChild = new() { Name = "Child", Width = 10 };
+        source.AddChild(sourceChild);
+        sourceChild.ElementGueContainingThis = source;
+
+        GraphicalUiElement clone = source.Clone();
+        clone.AddExposedVariable("ChildWidth", "Child.Width");
+        source.SetProperty("ChildWidth", 50f);
+
+        sourceChild.Width.ShouldBe(10, "because the exposed variable was added to the clone only");
+    }
+
+    [Fact]
+    public void Clone_PlayAnimationOnClone_ShouldNotPlayOnSource()
+    {
+        ContainerRuntime source = new();
+        AnimationRuntime animation = new() { Name = "Fade" };
+
+        GraphicalUiElement clone = source.Clone();
+        clone.PlayAnimation(animation);
+
+        clone.AnimationController.IsPlaying.ShouldBeTrue();
+        source.AnimationController.IsPlaying.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clone_PendingCustomVariableSetOnClone_ShouldNotReachSourceControl()
+    {
+        ContainerRuntime source = new();
+        source.SetProperty(nameof(CloneCustomVariableHolder.Skin), "source.png");
+        source.SetProperty(nameof(CloneCustomVariableHolder.Sound), "source.wav");
+
+        ContainerRuntime clone = (ContainerRuntime)source.Clone();
+        clone.SetProperty(nameof(CloneCustomVariableHolder.Skin), "clone.png");
+        CloneCustomVariableHolder sourceControl = new();
+        source.FormsControlAsObject = sourceControl;
+        CloneCustomVariableHolder cloneControl = new();
+        clone.FormsControlAsObject = cloneControl;
+
+        sourceControl.Skin.ShouldBe("source.png");
+        sourceControl.Sound.ShouldBe("source.wav");
+        cloneControl.Skin.ShouldBe("clone.png");
+        cloneControl.Sound.ShouldBe("source.wav",
+            "because the clone keeps the values the source was waiting to apply");
+    }
+
+    [Fact]
+    public void Clone_ApplyStateOnCloneWhileSourceIsApplyingIt_ShouldApply()
+    {
+        ContainerRuntime source = new();
+        GraphicalUiElement? clone = null;
+        int applyCount = 0;
+        StateSave state = new() { Name = "Recursive" };
+        state.Apply = () =>
+        {
+            applyCount++;
+            if (clone == null)
+            {
+                clone = source.Clone();
+                clone.ApplyState(state);
+            }
+        };
+
+        source.ApplyState(state);
+
+        applyCount.ShouldBe(2, "because the clone is not in the middle of applying the state, the source is");
+    }
+
+    [Fact]
+    public void Clone_OfSuspendedSource_ShouldApplySourcePendingLayoutOnResume()
+    {
+        ContainerRuntime source = new() { Width = 10 };
+        source.SuspendLayout();
+        source.Width = 123;
+
+        GraphicalUiElement clone = source.Clone();
+        clone.ResumeLayout();
+
+        clone.AbsoluteWidth.ShouldBe(123);
+    }
+
+    [Fact]
+    public void Clone_LaidOutDuringSourceLayout_ShouldNotMakeSourceRepeatChildLayout()
+    {
+        int independentLayouts = CountParentLayoutsWhenChildResizeLaysOutAnother(useClone: false);
+        int cloneLayouts = CountParentLayoutsWhenChildResizeLaysOutAnother(useClone: true);
+
+        cloneLayouts.ShouldBe(independentLayouts,
+            "because laying out the clone must not reset which children the source already laid out");
+    }
+
+    // Lays out a content-sized parent whose second child resizes during the parent's first
+    // children pass; that child's SizeChanged lays out another element mid-pass.
+    private static int CountParentLayoutsWhenChildResizeLaysOutAnother(bool useClone)
+    {
+        ContainerRuntime parent = new() { WidthUnits = DimensionUnitType.RelativeToChildren, Width = 0 };
+        ContainerRuntime first = new();
+        ContainerRuntime second = new();
+        parent.AddChild(first);
+        parent.AddChild(second);
+        GraphicalUiElement other = useClone
+            ? parent.Clone()
+            : new ContainerRuntime { WidthUnits = DimensionUnitType.RelativeToChildren, Width = 0 };
+        second.SizeChanged += (_, _) => other.UpdateLayout();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        second.Width = second.Width + 50;
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        int before = GraphicalUiElement.UpdateLayoutCallCount;
+        parent.UpdateLayout();
+        return GraphicalUiElement.UpdateLayoutCallCount - before;
+    }
+
+    [Fact]
+    public void Clone_StackLayoutOnClone_ShouldNotChangeSourceRowDimensions()
+    {
+        ContainerRuntime source = new()
+        {
+            ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack,
+            WrapsChildren = true
+        };
+        source.AddChild(new ContainerRuntime { Width = 10, Height = 10 });
+        source.UpdateLayout();
+        source.StackedRowOrColumnDimensions.ShouldNotBeNull();
+        float sourceRowHeight = source.StackedRowOrColumnDimensions![0];
+
+        GraphicalUiElement clone = source.Clone();
+        clone.AddChild(new ContainerRuntime { Width = 10, Height = sourceRowHeight + 90 });
+        clone.UpdateLayout();
+
+        source.StackedRowOrColumnDimensions[0].ShouldBe(sourceRowHeight);
+    }
+
+    // Reference-typed instance fields a clone may share with its source.
+    private static readonly HashSet<string> FieldsSharedWithClone = new()
+    {
+        "name", // immutable string
+        "<ElementSave>k__BackingField", // the element definition
+        "mTagIfNoContainedObject", // user data, like an assigned BindingContext
+        "mBindingContext", // an explicitly assigned value (see ResetBindingStateForClone)
+        "<ExplicitIVisibleParent>k__BackingField", // assigned by FlatRedBall, never read by Gum
+    };
+
+    // Reference-typed instance fields that belong to one element, so a clone needs its own (or none).
+    private static readonly HashSet<string> FieldsOwnedByEachElement = new()
+    {
+        "currentDirtyState",
+        "fullyUpdatedChildren",
+        "statesInStack",
+        "_pendingCustomVariables",
+        "mExposedVariables",
+        "mStates",
+        "mCategories",
+        "<StackedRowOrColumnDimensions>k__BackingField",
+        "<Animations>k__BackingField",
+        "<AnimationController>k__BackingField",
+        "mContainedObjectAsIpso",
+        "mContainedObjectAsIVisible",
+        "_childrenWrapper",
+        "_parent",
+        "mWhatContainsThis",
+        "mWhatThisContains",
+        "mManagers",
+        "mLayer",
+        "vmPropsToUiProps",
+        "vmEventsToUiMethods",
+        "mInheritedBindingContext",
+        "<BindingContextBinding>k__BackingField",
+        "<BindingContextBindingPropertyOwner>k__BackingField",
+        "SizeChanged",
+        "PositionChanged",
+        "VisibleChanged",
+        "ParentChanged",
+        "PropertyChanged",
+        "BindingContextChanged",
+        "InheritedBindingContextChanged",
+        "_formsControlAsObject",
+        "_losePush",
+        "Click",
+        "ClickBubbling",
+        "ClickPreview",
+        "DoubleClick",
+        "Dragging",
+        "EnabledChange",
+        "HoverOver",
+        "MouseWheelScroll",
+        "Push",
+        "PushPreview",
+        "RemovedAsPushed",
+        "RightClick",
+        "RollOff",
+        "RollOn",
+        "RollOver",
+        "RollOverBubbling",
+    };
+
+    [Fact]
+    public void Clone_ShouldNotShareAnyPerElementReferenceWithSource()
+    {
+        ContainerRuntime parent = new() { BindingContext = new CloneViewModel() };
+        ContainerRuntime source = new() { ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack };
+        parent.AddChild(source);
+        source.ElementGueContainingThis = parent;
+        source.AddChild(new ContainerRuntime());
+        source.UpdateLayout();
+        source.AddStates(new List<StateSave> { new StateSave { Name = "State" } });
+        source.AddCategory(new StateSaveCategory { Name = "Category" });
+        source.AddExposedVariable("Exposed", "Child.Width");
+        source.Animations = new List<AnimationRuntime>();
+        source.SetProperty("NotAPropertyOfTheVisual", "pending");
+        source.SetBinding(nameof(source.Width), nameof(CloneViewModel.Width));
+        source.SizeChanged += (_, _) => { };
+        source.Click += (_, _) => { };
+        source.SuspendLayout();
+        source.Height = source.Height + 10;
+
+        GraphicalUiElement clone = source.Clone();
+
+        foreach (Type type in new[] { typeof(GraphicalUiElement), typeof(InteractiveGue) })
+        {
+            foreach (System.Reflection.FieldInfo field in type.GetFields(
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly))
+            {
+                if (field.FieldType.IsValueType || FieldsSharedWithClone.Contains(field.Name))
+                {
+                    continue;
+                }
+                FieldsOwnedByEachElement.ShouldContain(field.Name,
+                    $"{type.Name}.{field.Name} is a new reference field: add it to {nameof(FieldsSharedWithClone)} " +
+                    $"or {nameof(FieldsOwnedByEachElement)}, and give the clone its own in Clone() if it is per-element");
+
+                object? sourceValue = field.GetValue(source);
+                if (sourceValue != null)
+                {
+                    field.GetValue(clone).ShouldNotBeSameAs(sourceValue,
+                        $"because {type.Name}.{field.Name} belongs to the source");
+                }
+            }
+        }
+    }
+
     public static TheoryData<Type> RuntimeTypes()
     {
         TheoryData<Type> data = new();
@@ -1787,6 +2062,14 @@ public class GraphicalUiElementTests : BaseTestClass
             data.Add(type);
         }
         return data;
+    }
+
+    // Stands in for a Forms control that owns custom variables the visual doesn't declare.
+    private class CloneCustomVariableHolder
+    {
+        public string? Skin { get; set; }
+
+        public string? Sound { get; set; }
     }
 
     private class CloneViewModel : Gum.Mvvm.ViewModel

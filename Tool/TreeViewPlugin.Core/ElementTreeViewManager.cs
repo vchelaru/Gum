@@ -2001,6 +2001,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 AddToFlatList(results, screen);
             }
 
+            AddMatchingInstances(results, screen, filterTextLower);
+
             if (includeVariables)
             {
                 SearchInstanceVariables(results, screen, filterTextLower);
@@ -2013,13 +2015,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 AddToFlatList(results, component);
             }
 
-            foreach (var instance in component.Instances)
-            {
-                if (instance.Name.ToLower().Contains(filterTextLower))
-                {
-                    AddToFlatList(results, instance, $"{component.Name}/{instance.Name} ({instance.BaseType})");
-                }
-            }
+            AddMatchingInstances(results, component, filterTextLower);
 
             if (includeVariables)
             {
@@ -2050,6 +2046,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
 
         View.ShowSearchResults(results);
+    }
+
+    private static void AddMatchingInstances(List<SearchItemViewModel> results, ElementSave element, string filterTextLower)
+    {
+        foreach (var instance in element.Instances)
+        {
+            if (instance.Name.ToLower().Contains(filterTextLower))
+            {
+                AddToFlatList(results, instance, $"{element.Name}/{instance.Name} ({instance.BaseType})");
+            }
+        }
     }
 
     private static void SearchInstanceVariables(List<SearchItemViewModel> results, ElementSave element, string filterTextLower)

@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.StateAnimation.SaveClasses;
 using GumRuntime;
 using RenderingLibrary.Graphics;
 using System;
@@ -70,6 +71,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     public IReadOnlyList<ErrorResult> GetAllErrors(GumProjectSave project)
     {
         var errors = new List<ErrorResult>();
+        // Paths the element checks already reported as GUM0008, so the project pass skips them.
+        var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
 
         ObjectFinder.Self.GumProjectSave = project;
         ObjectFinder.Self.EnableCache();
@@ -77,16 +80,17 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             foreach (var screen in project.Screens)
             {
-                errors.AddRange(GetErrorsForInternal(screen, project));
+                errors.AddRange(GetErrorsForInternal(screen, project, caseMismatchPaths));
             }
             foreach (var component in project.Components)
             {
-                errors.AddRange(GetErrorsForInternal(component, project));
+                errors.AddRange(GetErrorsForInternal(component, project, caseMismatchPaths));
             }
             foreach (var standard in project.StandardElements)
             {
-                errors.AddRange(GetErrorsForInternal(standard, project));
+                errors.AddRange(GetErrorsForInternal(standard, project, caseMismatchPaths));
             }
+            errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
         }
         finally
         {
@@ -99,7 +103,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// <summary>
     /// Internal version that skips ObjectFinder setup (already done by caller).
     /// </summary>
-    private List<ErrorResult> GetErrorsForInternal(ElementSave element, GumProjectSave project)
+    private List<ErrorResult> GetErrorsForInternal(ElementSave element, GumProjectSave project, ISet<string>? caseMismatchPaths = null)
     {
         var errors = new List<ErrorResult>();
 
@@ -108,8 +112,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             errors.AddRange(GetBehaviorErrorsFor(asComponent, project));
         }
-        errors.AddRange(GetMissingSourceFileErrorsFor(element, project));
-        errors.AddRange(GetMissingExternalFileErrorsFor(element, project));
+        errors.AddRange(GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths));
+        errors.AddRange(GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
@@ -531,7 +535,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// comment in ElementReference.ToElementSave), because saving the element is exactly what
     /// recreates the missing file.
     /// </summary>
-    private List<ErrorResult> GetMissingSourceFileErrorsFor(ElementSave element, GumProjectSave project)
+    private List<ErrorResult> GetMissingSourceFileErrorsFor(ElementSave element, GumProjectSave project, ISet<string>? caseMismatchPaths)
     {
         var errors = new List<ErrorResult>();
 
@@ -539,7 +543,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             element.GetFileExtension(GumProjectSave.IsJsonFormat(project?.FullFileName ?? ""));
 
         // A file that exists under a different case is GUM0008, whether or not this file system found it.
-        if (TryGetCaseMismatchError(element, project, element.Name, expectedRelativePath, _caseChecker, out var caseMismatch))
+        if (TryGetCaseMismatchError(element.Name, project, element.Name, expectedRelativePath, caseMismatchPaths, out var caseMismatch))
         {
             errors.Add(caseMismatch);
             return errors;
@@ -577,7 +581,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// generation for that element - the same reasoning <see cref="GetAchxOriginErrorsFor"/>
     /// already uses for its content-drift warning.
     /// </summary>
-    private List<ErrorResult> GetMissingExternalFileErrorsFor(ElementSave element, GumProjectSave project)
+    private List<ErrorResult> GetMissingExternalFileErrorsFor(ElementSave element, GumProjectSave project, ISet<string>? reportedCaseMismatchPaths)
     {
         var errors = new List<ErrorResult>();
 
@@ -595,7 +599,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
         foreach (var warning in result.MissingFiles)
         {
-            if (TryGetCaseMismatchError(element, project, warning.ReferencedFromElementName, warning.ReferencedPath, _caseChecker, out var caseMismatch))
+            if (TryGetCaseMismatchError(element.Name, project, warning.ReferencedFromElementName, warning.ReferencedPath, reportedCaseMismatchPaths, out var caseMismatch))
             {
                 if (caseMismatchPaths.Add(warning.ReferencedPath))
                 {
@@ -618,7 +622,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         foreach (var includedFile in result.ExternalFiles.Concat(result.FontCacheFiles))
         {
             if (!caseMismatchPaths.Contains(includedFile)
-                && TryGetCaseMismatchError(element, project, element.Name, includedFile, _caseChecker, out var caseMismatch))
+                && TryGetCaseMismatchError(element.Name, project, element.Name, includedFile, reportedCaseMismatchPaths, out var caseMismatch))
             {
                 caseMismatchPaths.Add(includedFile);
                 errors.Add(caseMismatch);
@@ -636,15 +640,17 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// A reference that resolves on Windows but not on a case-sensitive file system (Linux). Reported
     /// on every OS so the project is fixed where it was authored: a Warning where the file still
     /// loads, an Error where it does not. Replaces GUM0004/GUM0006 for that file, since "missing"
-    /// would send the user looking for a file that is there.
+    /// would send the user looking for a file that is there. A found mismatch's path is added to
+    /// <c>reportedPaths</c>.
     /// </summary>
-    private static bool TryGetCaseMismatchError(
-        ElementSave element,
+    private bool TryGetCaseMismatchError(
+        string elementName,
         GumProjectSave? project,
         string referencedFrom,
         string relativePath,
-        IFileNameCaseChecker caseChecker,
-        out ErrorResult error)
+        ISet<string>? reportedPaths,
+        out ErrorResult error,
+        bool failsOnEveryFileSystem = false)
     {
         error = null!;
         if (string.IsNullOrEmpty(project?.FullFileName))
@@ -653,22 +659,71 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         var projectRootDirectory = FileManager.GetDirectory(project!.FullFileName);
-        var onDiskPath = caseChecker.FindCaseMismatch(projectRootDirectory, relativePath);
+        var onDiskPath = _caseChecker.FindCaseMismatch(projectRootDirectory, relativePath);
         if (onDiskPath == null)
         {
             return false;
         }
 
-        bool loadsHere = File.Exists(Path.Combine(projectRootDirectory, relativePath));
+        reportedPaths?.Add(relativePath);
+        bool loadsHere = !failsOnEveryFileSystem && File.Exists(Path.Combine(projectRootDirectory, relativePath));
         error = new ErrorResult
         {
-            ElementName = element.Name,
+            ElementName = elementName,
             Code = "GUM0008",
             Severity = loadsHere ? ErrorSeverity.Warning : ErrorSeverity.Error,
             Message = $"{referencedFrom} references \"{relativePath}\", but the file on disk is named " +
                 $"\"{onDiskPath}\". The names must match exactly on case-sensitive file systems."
         };
         return true;
+    }
+
+    /// <summary>
+    /// GUM0008 for the files the element checks don't reach: behavior and localization files,
+    /// element animation files, and the files a referenced file loads (<c>.fnt</c> pages,
+    /// <c>.achx</c> frames). Skips paths already in <paramref name="reportedPaths"/>.
+    /// </summary>
+    private List<ErrorResult> GetProjectFileCaseMismatchErrors(GumProjectSave project, ISet<string> reportedPaths)
+    {
+        var errors = new List<ErrorResult>();
+        if (string.IsNullOrEmpty(project.FullFileName))
+        {
+            return errors;
+        }
+
+        var projectRootDirectory = FileManager.GetDirectory(project.FullFileName);
+        var result = new GumProjectDependencyWalker().Walk(
+            project, projectRootDirectory, GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
+
+        // The walker lists an animation file only when File.Exists finds it, which a case-sensitive
+        // file system doesn't for a mismatched name, so they are listed here too. A mismatch is an
+        // Error everywhere: the runtime names the animations after the file on disk and matches
+        // that name to the element case-sensitively, so they never attach.
+        var animationSuffix = ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(project.FullFileName));
+        var animationFiles = new HashSet<string>(
+            project.AllElements.Select(element => $"{element.Subfolder}/{element.Name}{animationSuffix}"),
+            StringComparer.Ordinal);
+
+        // The .gumx is opened by whatever path the caller passes, so its own name is not checked.
+        var projectFileName = Path.GetFileName(project.FullFileName);
+
+        var candidates = result.CoreFiles
+            .Concat(result.ExternalFiles)
+            .Concat(result.MissingFiles.Select(missing => missing.ReferencedPath))
+            .Concat(animationFiles);
+
+        foreach (var relativePath in candidates)
+        {
+            if (relativePath != projectFileName
+                && !reportedPaths.Contains(relativePath)
+                && TryGetCaseMismatchError("(project)", project, "The project", relativePath, reportedPaths, out var caseMismatch,
+                    failsOnEveryFileSystem: animationFiles.Contains(relativePath)))
+            {
+                errors.Add(caseMismatch);
+            }
+        }
+
+        return errors;
     }
 
     #endregion

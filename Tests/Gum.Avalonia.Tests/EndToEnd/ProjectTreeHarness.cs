@@ -10,6 +10,7 @@ using Gum.Avalonia.Tests.VariableGrid;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -184,6 +185,35 @@ internal sealed class ProjectTreeHarness : IDisposable
         _exceptions.ThrowIfCrashed();
     }
 
+    /// <summary>Types <paramref name="text"/> into the search box, which swaps the tree for the results list.</summary>
+    public void Search(string text)
+    {
+        _driver.TypeInto(View.SearchBox, text);
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>Clicks the "Include Variables" option under the search box (shown while the search box has text).</summary>
+    public void ClickIncludeVariables()
+    {
+        _driver.Click(View.IncludeVariablesCheckBox);
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>The text of each search result, in order.</summary>
+    public List<string> SearchResultTexts() =>
+        View.SearchResults.Items.OfType<SearchItemViewModel>().Select(item => item.Display).ToList();
+
+    /// <summary>Clicks the search result showing <paramref name="display"/>, which selects what it stands for.</summary>
+    public void ClickSearchResult(string display)
+    {
+        _driver.Layout();
+        Control row = View.SearchResults.GetVisualDescendants().OfType<ListBoxItem>()
+            .SingleOrDefault(item => (item.DataContext as SearchItemViewModel)?.Display == display)
+            ?? throw new InvalidOperationException($"No search result shows \"{display}\"; they are [{string.Join(", ", SearchResultTexts())}].");
+        _driver.Click(row);
+        _exceptions.ThrowIfCrashed();
+    }
+
     /// <summary>Ctrl+Z, handled app-wide as in the main window.</summary>
     public void Undo() => Press(Key.Z, PhysicalKey.Z, RawInputModifiers.Control);
 
@@ -238,6 +268,9 @@ internal sealed class ProjectTreeHarness : IDisposable
     {
         try
         {
+            // The head's panel outlives the test; a search left in it would hide the next test's tree.
+            View.ClearSearchText();
+            View.IncludeVariablesCheckBox.IsChecked = false;
             _grid?.Dispose();
             _driver.Dispose();
         }

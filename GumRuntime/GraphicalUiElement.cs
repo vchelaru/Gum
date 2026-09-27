@@ -1703,7 +1703,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// Gets the AnimationController that manages animation playback for this element.
     /// Use this to control animations (play, pause, stop), check playback state, and subscribe to animation events.
     /// </summary>
-    public AnimationController AnimationController { get; } = new();
+    public AnimationController AnimationController { get; private set; } = new();
 
     /// <summary>
     /// Convenience wrapper for <see cref="AnimationController.Play(AnimationRuntime)"/>.
@@ -1977,6 +1977,28 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.mManagers = null;
         newClone.mLayer = null;
         newClone.SetContainedObject(clonedRenderable);
+        // Per-instance state gets its own copy, so changes to one element can't reach the other.
+        // The clone keeps the source's pending layout, definitions and pending Forms values; the
+        // scratch sets and row sizes are only meaningful mid-layout or for its own children.
+        newClone.currentDirtyState = currentDirtyState == null ? null : new DirtyState
+        {
+            ParentUpdateType = currentDirtyState.ParentUpdateType,
+            ChildrenUpdateDepth = currentDirtyState.ChildrenUpdateDepth,
+            XOrY = currentDirtyState.XOrY
+        };
+        newClone.fullyUpdatedChildren = new HashSet<GraphicalUiElement>();
+        newClone.statesInStack = new HashSet<StateSave>();
+        newClone.StackedRowOrColumnDimensions = null;
+        newClone._pendingCustomVariables = _pendingCustomVariables == null
+            ? null
+            : new Dictionary<string, object?>(_pendingCustomVariables);
+        newClone.mExposedVariables = new Dictionary<string, string>(mExposedVariables);
+        newClone.mStates = new Dictionary<string, StateSave>(mStates);
+        newClone.mCategories = new Dictionary<string, StateSaveCategory>(mCategories);
+#if !FRB
+        newClone.Animations = Animations == null ? null : new List<AnimationRuntime>(Animations);
+        newClone.AnimationController = new AnimationController();
+#endif
         // The copied handlers belong to whoever subscribed to the source (its binding handler, its
         // Forms control, user code), so raising them on the clone would act on the source. Re-run
         // the constructor's per-instance wiring so the clone's own binding handler is the only subscriber.
