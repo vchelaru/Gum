@@ -45,6 +45,8 @@ The type check `is IPriorityPlugin` is used at runtime — priority plugins rece
 
 `StartUp()` is called once on load — subscribe to events and add menu entries here (the menu model is populated before plugins load). `ShutDown(PluginShutDownReason)` is called on unload. Service dependencies arrive through `[ImportingConstructor]` parameters or the inherited `[Import]` properties; a few legacy plugins still call `Locator.GetRequiredService<T>()` in their constructor (drain on touch). If any plugin handler throws, `PluginContainer` disables that plugin for the rest of the session. `PluginInstantiator` (`Tools/Gum.Presentation/Plugins/`) creates plugins one at a time; a plugin whose constructor throws or whose import is missing is reported in Output and skipped, and the rest still load.
 
+`StartUp()` runs once per plugin instance; turning a plugin off and on in Manage Plugins only toggles `IsEnabled`, so `ShutDown(UserDisabled)` must not tear down what `StartUp` created. While a plugin is off, the tabs and menu items it added through its base are hidden and disabled. Nothing enforces the two ways around that: a plugin taking `ITabManager` in its constructor must wrap it with `TrackTabsFrom`, and menu items must go through `AddMenuEntry`, not straight into `Menu`. A plugin whose `ShutDown` always refuses must also override `CanUserDisable => false`, which greys its Manage Plugins checkbox and makes startup ignore a stored "disabled" entry for it.
+
 ## Internal Plugin Map
 
 Each internal plugin has a `Main[FeatureName]Plugin.cs` entry point in `[FeatureName]/` under `Tools/Gum.Presentation/Plugins/InternalPlugins/` (shared) or `Gum/Plugins/InternalPlugins/` (WPF-only).
@@ -140,7 +142,7 @@ Missing (2)/(3) doesn't fail the build or the test - it just means the plugin's 
 And four more for the Avalonia head, which is the tool that ships:
 
 4. **`Gum.slnx`** — add the project under the `Plugins` folder so the tool build and the three-OS CI job build it.
-5. **`Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj`** — a `ProjectReference`, and an entry in `PluginHostTests`'s assembly list, so the head's composition test exercises it.
+5. **`Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj`** — a `ProjectReference` marked `HeadPlugin="true"` (only marked plugins are copied into the test output's `Plugins/`, so the end-to-end tests load them), and an entry in `PluginHostTests`'s assembly list, so the head's composition test exercises it.
 6. **`.github/workflows/build-and-release.yml`** — the `publish-avalonia` job builds each neutral plugin by csproj before publishing (`dotnet publish` does not run their post-builds); a plugin missing from that list ships in no package.
 7. **The plugin's csproj post-build** copies into both heads' output folders and falls back to a repo-relative `$(SolutionDir)` when built outside a solution; copy the target from `Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj`. Target plain `net10.0` with the banned-API analyzer, never `net10.0-windows`.
 

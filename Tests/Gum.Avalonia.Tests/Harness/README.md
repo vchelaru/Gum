@@ -135,8 +135,10 @@ Gotchas in scenario setup:
   come after setup: it saves everything, or the "auto-saved equals Save All" oracle fails on setup.
   Setup edits in the tab (adding the animations to edit) are in the undo history too; undo only as
   many steps as the scenario's own gestures.
-- The test process loads neither the neutral plugins under `Gum/` (Forms, Import .gumx) nor the
-  staged Forms themes, so Forms scenarios are skipped until #5304.
+- A scripted Import .gumx answer must wait for the dialog's posted dependency recompute before it
+  returns true; answering at once imports without the dependencies.
+- Add Forms and Import .gumx end by reloading the project, so read it from `IProjectManager`
+  afterwards; `tree.Project.Project` is the stale pre-reload copy.
 - The editor tab, which sits out, fills a project's canvas sizes when the tool opens it; a scenario
   that makes a new project through the tool sets `CustomCanvasSizes` itself before the oracles.
 

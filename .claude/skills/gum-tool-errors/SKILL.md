@@ -50,6 +50,7 @@ The tree's "!" follows every full check through `ErrorsChecked`, including the E
 | `GetInvalidVariableTypeErrorsFor` | Custom variable uses an unknown or misnamed type (State suffix issues) |
 | `GetMissingSourceFileErrorsFor` | GUM0004: element file missing on disk; GUM0008 when it exists under a different case |
 | `GetMissingExternalFileErrorsFor` | GUM0006: referenced texture/font file missing (via `GumProjectDependencyWalker`); GUM0008 for a case-only difference |
+| `GetUnresolvableVariableReferenceErrorsFor` | GUM0009 (warning): a `VariableReferences` line reads an element, instance or variable the project doesn't have, so it never applies. The end-to-end oracles fail on it despite the warning severity |
 
 ## Key Files
 

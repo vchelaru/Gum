@@ -20,7 +20,7 @@ Undo history is stored separately for each open element (Screen, Component, or S
 Undos do not record or restore the user's selection state. After undoing or redoing an operation, the selected object in the tree view or canvas may not match what was selected when the change was originally made.
 
 ### No Persistence
-Undo history is entirely in-memory and is cleared when the project is loaded or Gum is closed. There is no way to undo changes made in a previous session.
+Undo history is entirely in-memory and is lost when Gum closes. Loading a different project clears it. Reloading the same project file (Import .gumx, Add Forms, an on-disk `.gumx` change) keeps the history of each element and behavior whose file and animations the reload left unchanged, and drops the rest (`HandleProjectLoaded` → `CarryOverTo`).
 
 ### Element Deletion Is Not Undoable
 When an element (Screen, Component, or StandardElement) is deleted, its entire undo history is discarded along with it. Deleting an element cannot be undone.
@@ -106,6 +106,6 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 |------------|---------|
 | No general cross-element undo | Undo stacks are per-element; a change to a non-selected element records into that element's own history through `RequestLock(element)` (undo it after selecting that element), and the only action spanning two histories is a variable change recorded via `RecordCrossElementVariableChanges` (see above) — everything else stays ungrouped |
 | No selection restore | Selection state is not captured or restored on undo/redo |
-| No persistence | History is cleared on project load or app close |
+| No persistence | History is lost on app close or opening another project; a same-project reload keeps unchanged elements' history |
 | No element-deletion undo | Deleting an element removes its history permanently |
 | Behaviors not supported | Behavior changes are not reliably undoable |

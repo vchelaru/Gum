@@ -72,7 +72,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 | `HeadlessCodeGenerationService` | Orchestrates per-element code file generation |
 | `CodeGenerationAutoSetupService` | Walks up to find `.csproj`, derives `CodeProjectRoot`, namespace, output library |
 | `CodeOutputProjectSettingsManager` | Loads/saves `ProjectCodeSettings.codsj` |
-| `ErrorResult` | POCO: `ElementName`, `Message`, `Severity` (`Warning`/`Error`) |
+| `ErrorResult` | POCO: `ElementName`, `Message`, `Severity` (`Warning`/`Error`), `Code` (e.g. `GUM0006`, may be null), `FilePath`. `check --json` emits `code`; scripts should match on it, not message text |
 | `DiffStandardsService` / `IDiffStandardsService` | Compares a loaded project's Standards against `StandardElementsManager.Self`'s programmatic defaults. Returns `DiffStandardsResult` with `Differences`, `MissingFromProject`, `ProjectOnlyStandards`. |
 | `ReferencePropagationService` / `IReferencePropagationService` | Detects states where a `VariableReferences` row exists without the corresponding materialized scalars in `Variables`, and propagates them on demand. `Detect` returns `DetectUnpropagatedReferencesResult`. `PropagateReferences` mutates the project (runs the static `ElementSaveExtensions.ApplyVariableReferences` per offending state) and returns the modified elements; the caller persists. Walks Screens + Components only; Standards are intentionally skipped (their default-evaluating refs would produce false positives). Expression evaluation depends on whoever wires `ElementSaveExtensions.CustomEvaluateExpression` — the CLI calls `GumExpressionService.Initialize()` before invoking. |
 
