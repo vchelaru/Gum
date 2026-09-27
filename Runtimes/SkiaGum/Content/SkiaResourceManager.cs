@@ -37,11 +37,7 @@ public static class SkiaResourceManager
 
     private static void CacheSvg(string resourceName)
     {
-        // See CacheSKImage for why this is guarded by IsRelative — callers that
-        // pass an already-absolute name would double-prefix and miss the file.
-        var absoluteFile = FileManager.IsRelative(resourceName)
-            ? FileManager.RelativeDirectory + resourceName
-            : resourceName;
+        var absoluteFile = GetAbsoluteFilePath(resourceName);
         if(System.IO.File.Exists(absoluteFile))
         {
             using var fileStream = System.IO.File.OpenRead(absoluteFile);
@@ -173,7 +169,12 @@ public static class SkiaResourceManager
         return skBitmapCache[resourceName];
     }
 
-    private static void CacheSKImage(string resourceName)
+    /// <summary>
+    /// The on-disk path tried for <paramref name="resourceName"/> before falling back to embedded
+    /// resources, with native separators. A project saved on Windows stores SourceFile values with
+    /// backslashes, which macOS/Linux read as part of the file name.
+    /// </summary>
+    internal static string GetAbsoluteFilePath(string resourceName)
     {
         // Only prepend RelativeDirectory when the caller passed a relative name.
         // AnimationFrame.ToAnimationFrame already pre-prefixes with RelativeDirectory
@@ -184,6 +185,12 @@ public static class SkiaResourceManager
         var absoluteFile = FileManager.IsRelative(resourceName)
             ? FileManager.RelativeDirectory + resourceName
             : resourceName;
+        return FileManager.Standardize(absoluteFile, preserveCase: true);
+    }
+
+    private static void CacheSKImage(string resourceName)
+    {
+        var absoluteFile = GetAbsoluteFilePath(resourceName);
         if (System.IO.File.Exists(absoluteFile))
         {
             using var fileStream = System.IO.File.OpenRead(absoluteFile);

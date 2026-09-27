@@ -74,7 +74,9 @@ public class GumxSourceService : IGumxSourceService
         }
         else
         {
-            var path = Path.Combine(sourceBase, relativeElementPath);
+            // A source saved on Windows can use backslashes, which are file-name characters on
+            // macOS/Linux.
+            var path = Path.Combine(sourceBase, relativeElementPath.Replace('\\', Path.DirectorySeparatorChar));
             return File.Exists(path) ? await File.ReadAllTextAsync(path) : null;
         }
     }
@@ -122,7 +124,7 @@ public class GumxSourceService : IGumxSourceService
         }
         else
         {
-            var path = Path.Combine(sourceBase, relativePath);
+            var path = Path.Combine(sourceBase, relativePath.Replace('\\', Path.DirectorySeparatorChar));
             return File.Exists(path) ? await File.ReadAllBytesAsync(path) : null;
         }
     }

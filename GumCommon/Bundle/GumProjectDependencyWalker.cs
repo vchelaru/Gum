@@ -2,10 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+#if !FRB
+using Gum.StateAnimation.SaveClasses;
+#endif
+using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 
 namespace Gum.Bundle;
@@ -91,6 +96,13 @@ public class GumProjectDependencyWalker
                     CollectFontCacheReferences(project, project.AllElements, projectRootDirectory,
                         inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
                         fontCache, external, missing);
+
+                    // Project-wide only: scoped walks back the tool's per-element error check,
+                    // which should not parse every .fnt/.achx on each refresh. The tool's one
+                    // project-wide walk (file-watch roots, on project load) does pay it once.
+                    CollectFilesReferencedByReferencedFiles(projectRootDirectory,
+                        inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
+                        fontCache, external, missing);
                 }
             }
             else
@@ -140,16 +152,19 @@ public class GumProjectDependencyWalker
         {
             reference.ElementType = ElementType.Screen;
             AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
+            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
         }
         foreach (ElementReference reference in project.ComponentReferences ?? new List<ElementReference>())
         {
             reference.ElementType = ElementType.Component;
             AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
+            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
         }
         foreach (ElementReference reference in project.StandardElementReferences ?? new List<ElementReference>())
         {
             reference.ElementType = ElementType.Standard;
             AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
+            AddElementAnimationsIfPresent(reference, projectRootDirectory, core, isJsonFormat);
         }
         foreach (BehaviorReference reference in project.BehaviorReferences ?? new List<BehaviorReference>())
         {
@@ -160,6 +175,71 @@ public class GumProjectDependencyWalker
             {
                 missing.Add(new DependencyWarning(relative, reference.Name ?? string.Empty,
                     $"Behavior file '{relative}' was not found on disk."));
+            }
+        }
+
+        CollectLocalizationFiles(project, projectRootDirectory, core, missing);
+    }
+
+    /// <summary>
+    /// Adds the element's <c>{Name}Animations.ganx</c> (or <c>.ganj</c> for a JSON project), which
+    /// <c>GumAnimationLoader</c> enumerates at runtime. Optional: most elements have none.
+    /// </summary>
+    private static void AddElementAnimationsIfPresent(
+        ElementReference reference,
+        string projectRootDirectory,
+        HashSet<string> core,
+        bool isJsonFormat)
+    {
+#if !FRB
+        // FRB compiles this file without Gum's animation save classes, and loads animations itself.
+        string relative = NormalizeRelative(reference.Subfolder + "/" + reference.Name
+            + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat));
+        if (File.Exists(ToFullPath(projectRootDirectory, relative)))
+        {
+            core.Add(relative);
+        }
+#endif
+    }
+
+    /// <summary>
+    /// Adds <see cref="GumProjectSave.LocalizationFiles"/>, which <c>GumService</c> loads at startup,
+    /// plus each <c>.resx</c> file's <c>{BaseName}.*.resx</c> satellites, discovered the same way the
+    /// runtime's RESX loader discovers them.
+    /// </summary>
+    private static void CollectLocalizationFiles(
+        GumProjectSave project,
+        string projectRootDirectory,
+        HashSet<string> core,
+        List<DependencyWarning> missing)
+    {
+        foreach (string localizationFile in project.LocalizationFiles ?? new List<string>())
+        {
+            if (string.IsNullOrEmpty(localizationFile))
+            {
+                continue;
+            }
+
+            string relative = NormalizeRelative(localizationFile);
+            core.Add(relative);
+            string fullPath = ToFullPath(projectRootDirectory, relative);
+            if (!File.Exists(fullPath))
+            {
+                missing.Add(new DependencyWarning(relative, "(project)",
+                    $"Localization file '{relative}' was not found on disk."));
+                continue;
+            }
+
+            if (!string.Equals(Path.GetExtension(relative), ".resx", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string relativeDirectory = GetRelativeDirectory(relative);
+            string satellitePattern = Path.GetFileNameWithoutExtension(relative) + ".*.resx";
+            foreach (string satellite in Directory.GetFiles(Path.GetDirectoryName(fullPath)!, satellitePattern))
+            {
+                core.Add(relativeDirectory + Path.GetFileName(satellite));
             }
         }
     }
@@ -560,6 +640,120 @@ public class GumProjectDependencyWalker
                 $"Referenced file '{relative}' was not found on disk."));
         }
     }
+
+    /// <summary>
+    /// Adds the files that already-collected files load in turn: a <c>.fnt</c>'s page textures and
+    /// an <c>.achx</c>/<c>.achj</c>'s frame textures. Each is resolved the way the runtime resolves it.
+    /// </summary>
+    private static void CollectFilesReferencedByReferencedFiles(
+        string projectRootDirectory,
+        bool includeFontCache,
+        bool includeExternal,
+        HashSet<string> fontCache,
+        HashSet<string> external,
+        List<DependencyWarning> missing)
+    {
+        foreach (string referencingFile in fontCache.Concat(external).ToList())
+        {
+            string fullPath = ToFullPath(projectRootDirectory, referencingFile);
+            if (!File.Exists(fullPath))
+            {
+                continue;
+            }
+
+            IEnumerable<string> referencedFiles;
+            try
+            {
+                referencedFiles = GetFilesReferencedBy(referencingFile, fullPath);
+            }
+            catch (Exception exception)
+            {
+                missing.Add(new DependencyWarning(referencingFile, referencingFile,
+                    $"File '{referencingFile}' could not be read to find the files it references: {exception.Message}"));
+                continue;
+            }
+
+            foreach (string referencedFile in referencedFiles)
+            {
+                AddExternalOrFontCache(referencedFile, referencingFile, projectRootDirectory,
+                    includeFontCache, includeExternal, fontCache, external, missing);
+            }
+        }
+    }
+
+    private static IEnumerable<string> GetFilesReferencedBy(string relativePath, string fullPath)
+    {
+        string extension = Path.GetExtension(relativePath).ToLowerInvariant();
+        string relativeDirectory = GetRelativeDirectory(relativePath);
+
+        if (extension == ".fnt")
+        {
+            // BitmapFont.ReloadTextures: page files are relative to the .fnt's own directory.
+            ParsedFontFile fontFile = new ParsedFontFile(File.ReadAllText(fullPath));
+            return fontFile.GetPagesAsArrayOfStrings
+                .Where(page => !string.IsNullOrEmpty(page))
+                .Select(page => ResolveAgainst(relativeDirectory, page))
+                .ToList();
+        }
+
+        if (extension == ".achx" || extension == ".achj")
+        {
+            // AnimationChainList.ToAnimationChainList: frame textures are relative to the .achx when
+            // FileRelativeTextures is set, else to the project directory (the runtime's RelativeDirectory).
+            AnimationChainListSave chains = AnimationChainListSave.FromFile(fullPath);
+            string textureDirectory = chains.FileRelativeTextures ? relativeDirectory : string.Empty;
+            return chains.AnimationChains
+                .SelectMany(chain => chain.Frames)
+                .Select(frame => frame.TextureName)
+                .Where(texture => !string.IsNullOrEmpty(texture))
+                .Select(texture => ResolveAgainst(textureDirectory, texture!))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+        }
+
+        return Enumerable.Empty<string>();
+    }
+
+    /// <summary>
+    /// Combines a forward-slash directory (empty, or ending in '/') with a path, collapsing "." and
+    /// ".." segments. A rooted <paramref name="path"/> is returned unchanged.
+    /// </summary>
+    private static string ResolveAgainst(string relativeDirectory, string path)
+    {
+        string normalized = NormalizeRelative(path);
+        if (Path.IsPathRooted(path))
+        {
+            return normalized;
+        }
+
+        List<string> segments = new List<string>();
+        foreach (string segment in (relativeDirectory + normalized).Split('/'))
+        {
+            if (segment.Length == 0 || segment == ".")
+            {
+                continue;
+            }
+            if (segment == ".." && segments.Count > 0 && segments[segments.Count - 1] != "..")
+            {
+                segments.RemoveAt(segments.Count - 1);
+            }
+            else
+            {
+                segments.Add(segment);
+            }
+        }
+        return string.Join("/", segments);
+    }
+
+    /// <summary>The forward-slash directory of <paramref name="relativePath"/>, ending in '/', or empty.</summary>
+    private static string GetRelativeDirectory(string relativePath)
+    {
+        int slash = relativePath.LastIndexOf('/');
+        return slash < 0 ? string.Empty : relativePath.Substring(0, slash + 1);
+    }
+
+    private static string ToFullPath(string projectRootDirectory, string relativePath) =>
+        Path.Combine(projectRootDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar));
 
     private static void AddFontCacheFntAndPages(
         string fntRelative,

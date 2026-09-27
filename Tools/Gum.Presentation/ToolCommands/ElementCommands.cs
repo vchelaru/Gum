@@ -247,7 +247,7 @@ public class ElementCommands : IElementCommands
     {
         foreach (var stateSave in container.AllStates)
         {
-            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+            stateSave.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
         }
     }
 
@@ -708,7 +708,7 @@ public class ElementCommands : IElementCommands
                 CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState)
             });
 
-            elementToAddTo.GetDefaultStateOrThrow().Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+            elementToAddTo.GetDefaultStateOrThrow().Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
         }
         else if(objectToAddTo is BehaviorSave behaviorSave)
         {

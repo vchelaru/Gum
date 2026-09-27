@@ -507,40 +507,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             _guiCommands.RefreshVariableValues();
         }
 
-        // Oct 13, 2022
-        // This should set 
-        // values on all contained objects for this particular state
-        // Maybe this could be slow? not sure, but this covers all cases so if
-        // there are performance issues, will investigate later.
-        var references = ObjectFinder.Self.GetElementReferencesToThis(parentElement);
-        var filteredReferences = references
-            .Where(item => item.ReferenceType == ReferenceType.VariableReference);
-
-        HashSet<StateSave> statesAlreadyApplied = new HashSet<StateSave>();
-        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
-        foreach (var reference in filteredReferences)
-        {
-            // ObjectFinder sets the owner and state on every variable reference it returns.
-            if (reference is not { OwnerOfReferencingObject: { } owner, StateSave: { } referencingState })
-            {
-                continue;
-            }
-            if (statesAlreadyApplied.Contains(referencingState) == false)
-            {
-                ElementSaveExtensions.ApplyVariableReferences(owner, referencingState,
-                    _wireframeObjectManager.GetRepresentation(owner), isFullCommit);
-                statesAlreadyApplied.Add(referencingState);
-                elementsToSave.Add(owner);
-            }
-        }
-
-        if (trySave)
-        {
-            foreach (var elementToSave in elementsToSave)
-            {
-                _fileCommands.TryAutoSaveElement(elementToSave);
-            }
-        }
+        ApplyReferencesToElement(parentElement, trySave, isFullCommit);
 
         var newValue = stateSave.GetValueRecursive(qualifiedName);
 
@@ -558,6 +525,40 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         if (didSetDeepReference)
         {
             _wireframeCommands.Refresh(forceLayout: true);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
+    {
+        // Every state that references this element, whichever of its values changed; simpler than
+        // tracking which references read the changed variable.
+        var references = ObjectFinder.Self.GetElementReferencesToThis(element)
+            .Where(item => item.ReferenceType == ReferenceType.VariableReference);
+
+        HashSet<StateSave> statesAlreadyApplied = new HashSet<StateSave>();
+        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+        foreach (var reference in references)
+        {
+            // ObjectFinder sets the owner and state on every variable reference it returns.
+            if (reference is not { OwnerOfReferencingObject: { } owner, StateSave: { } referencingState })
+            {
+                continue;
+            }
+            if (statesAlreadyApplied.Add(referencingState))
+            {
+                ElementSaveExtensions.ApplyVariableReferences(owner, referencingState,
+                    _wireframeObjectManager.GetRepresentation(owner), isFullCommit);
+                elementsToSave.Add(owner);
+            }
+        }
+
+        if (trySave)
+        {
+            foreach (var elementToSave in elementsToSave)
+            {
+                _fileCommands.TryAutoSaveElement(elementToSave);
+            }
         }
     }
 

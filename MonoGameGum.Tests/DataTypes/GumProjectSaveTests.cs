@@ -5,6 +5,7 @@ using RenderingLibrary;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -652,6 +653,33 @@ public class GumProjectSaveTests : BaseTestClass
 
         project.ScreenReferences.Count.ShouldBe(1);
         project.ScreenReferences[0].Name.ShouldBe("MainMenu");
+    }
+
+    // Czech collation sorts "ch" after "h", so a CurrentCulture sort orders these two names
+    // differently on a cs-CZ machine than on an en-US one, and the project re-saves reordered
+    // there (#5207).
+    [Fact]
+    public void SortElementsAndReferencesByName_OrdersTheSame_UnderADifferentCulture()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("cs-CZ");
+            GumProjectSave project = new GumProjectSave();
+            project.ComponentReferences.Add(new ElementReference { Name = "HealthBar", ElementType = ElementType.Component });
+            project.ComponentReferences.Add(new ElementReference { Name = "CheckBox", ElementType = ElementType.Component });
+            project.Components.Add(new ComponentSave { Name = "HealthBar" });
+            project.Components.Add(new ComponentSave { Name = "CheckBox" });
+
+            project.SortElementsAndReferencesByName();
+
+            project.ComponentReferences.Select(item => item.Name).ShouldBe(new[] { "CheckBox", "HealthBar" });
+            project.Components.Select(item => item.Name).ShouldBe(new[] { "CheckBox", "HealthBar" });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     // Loading sorts every reference list by name, so a list saved in the order its entries were

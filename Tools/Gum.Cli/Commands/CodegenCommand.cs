@@ -119,7 +119,8 @@ public static class CodegenCommand
 
         // Print the resolved (absolute) output root so misconfigured CodeProjectRoot
         // values (e.g. machine-specific absolute paths) are obvious in the output.
-        string resolvedCodeProjectRoot = projectSettings.CodeProjectRoot!;
+        // Settings saved on Windows use backslashes, which are file-name characters on macOS/Linux.
+        string resolvedCodeProjectRoot = projectSettings.CodeProjectRoot!.Replace('\\', Path.DirectorySeparatorChar);
         if (!Path.IsPathRooted(resolvedCodeProjectRoot))
         {
             resolvedCodeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory!, resolvedCodeProjectRoot));
