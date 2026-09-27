@@ -28,7 +28,9 @@ public class PolygonPointInputHandler : InputHandlerBase
 
     private int? _grabbedIndex = null;
     private int? _selectedIndex = null;
-    private GraphicalUiElement? _lastSelectedElement = null;
+    // The selected polygon's instance or element. Its visual is rebuilt after every edit, so the
+    // visual itself cannot say whether the selection moved to another polygon.
+    private object? _lastSelectedObject = null;
 
     public override int Priority => 95; // Higher than move, lower than resize
 
@@ -172,15 +174,17 @@ public class PolygonPointInputHandler : InputHandlerBase
     {
         _grabbedIndex = null;
 
-        var currentSelection = Context.SelectedObjects.FirstOrDefault();
+        var currentSelection = Context.SelectedObjects.FirstOrDefault()?.Tag;
 
-        // Only clear point selection if we switched to a different element
-        if (currentSelection != _lastSelectedElement)
+        // Only clear point selection if we switched to a different polygon, or its points no
+        // longer include the selected one (an edit in the Variables tab, say).
+        if (currentSelection != _lastSelectedObject ||
+            _selectedIndex >= (SelectedLinePolygon?.PointCount ?? 0))
         {
             _selectedIndex = null;
         }
 
-        _lastSelectedElement = currentSelection;
+        _lastSelectedObject = currentSelection;
         UpdateVisualState();
     }
 

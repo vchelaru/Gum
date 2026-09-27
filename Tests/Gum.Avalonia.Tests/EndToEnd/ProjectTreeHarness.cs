@@ -222,6 +222,9 @@ internal sealed class ProjectTreeHarness : IDisposable
 
     #endregion
 
+    /// <summary>Fails at once when a gesture made anywhere in the tool crashed.</summary>
+    public void ThrowIfCrashed() => _exceptions.ThrowIfCrashed();
+
     #region Oracles
 
     /// <summary>Saves every file, as File > Save All does; for setup that edits the data directly.</summary>
