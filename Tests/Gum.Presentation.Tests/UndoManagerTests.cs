@@ -794,6 +794,64 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleProjectLoaded_AnElementWhoseFileIsUnchanged_KeepsItsHistoryOnlyWhileItsAnimationsAreToo()
+    {
+        ComponentSave card = _selectedState.Object.SelectedComponent!;
+        card.Name = "Card";
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Components.Add(card);
+        _undoManager.HandleProjectLoaded(loaded);
+        _animationUndoProvider.Store[card] = AnimationsWithKeyframes("Old");
+        _undoManager.RecordState();
+        _animationUndoProvider.Store[card] = AnimationsWithKeyframes("Edited");
+        _undoManager.RecordUndo();
+
+        // Same animations, with the edit undone: the history still describes the element.
+        _undoManager.PerformUndo();
+        GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        ComponentSave reloadedCard = FileManager.CloneSaveObject(card);
+        reloaded.Components.Add(reloadedCard);
+        _animationUndoProvider.Store[reloadedCard] = AnimationsWithKeyframes("Old");
+        _undoManager.HandleProjectLoaded(reloaded);
+        SelectComponent(reloadedCard);
+        _undoManager.PerformRedo();
+        _animationUndoProvider.Store[reloadedCard].Animations.Single().Name.ShouldBe("Edited");
+
+        // Animations the reload replaced: undoing would write the pre-reload ones over them.
+        GumProjectSave reimported = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        ComponentSave reimportedCard = FileManager.CloneSaveObject(reloadedCard);
+        reimported.Components.Add(reimportedCard);
+        _animationUndoProvider.Store[reimportedCard] = AnimationsWithKeyframes("Pulse");
+        _undoManager.HandleProjectLoaded(reimported);
+        SelectComponent(reimportedCard);
+        _undoManager.CanUndo().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleProjectLoaded_AnElementWhoseAnimationEditIsUndone_DropsItsHistoryWhenTheReloadChangedItsAnimations()
+    {
+        ComponentSave card = _selectedState.Object.SelectedComponent!;
+        card.Name = "Card";
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Components.Add(card);
+        _undoManager.HandleProjectLoaded(loaded);
+        _animationUndoProvider.Store[card] = AnimationsWithKeyframes("Old");
+        _undoManager.RecordState();
+        _animationUndoProvider.Store[card] = AnimationsWithKeyframes("Edited");
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        ComponentSave reloadedCard = FileManager.CloneSaveObject(card);
+        reloaded.Components.Add(reloadedCard);
+        _animationUndoProvider.Store[reloadedCard] = AnimationsWithKeyframes("Pulse");
+        _undoManager.HandleProjectLoaded(reloaded);
+        SelectComponent(reloadedCard);
+
+        _undoManager.CanRedo().ShouldBeFalse("redoing would write the pre-reload animations over the reloaded ones");
+    }
+
+    [Fact]
     public void HandleProjectLoaded_ADifferentFile_DiscardsAllHistory()
     {
         ComponentSave card = _selectedState.Object.SelectedComponent!;
