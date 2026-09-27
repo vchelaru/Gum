@@ -1,5 +1,3 @@
-using Gum.Managers;
-using Moq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -41,8 +39,7 @@ public class ImportFromGumxViewModelTests
         GumxDependencyResolver resolver = new GumxDependencyResolver();
         _projectState = new FakeProjectState();
         GumxImportService importService = new GumxImportService(
-            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService,
-            Mock.Of<IOutputManager>());
+            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService);
 
         _dialogService = new FakeDialogService();
         _sut = new ImportFromGumxViewModel(
@@ -270,6 +267,79 @@ public class ImportFromGumxViewModelTests
 
         textStandardLeaf.HasStandardDiffRows.ShouldBeTrue();
         textStandardLeaf.StandardDiffRows!.ShouldContain(r => r.Kind == "Category added" && r.Summary == "TextColor");
+    }
+
+    [Fact]
+    public void RecomputeTransitiveDependencies_DifferingStandardUncheckedByUser_IsCheckedAgain()
+    {
+        // #5340: a differing Standard that a selected component uses is always imported with it.
+        // The view disables its check box, and even an uncheck that gets through does not stick.
+        StandardElementSave sourceText = new StandardElementSave { Name = "Text" };
+        sourceText.Categories.Add(new StateSaveCategory { Name = "TextColor" });
+        sourceText.States.Add(new StateSave { Name = "Default" });
+
+        StandardElementSave destText = new StandardElementSave { Name = "Text" };
+        destText.States.Add(new StateSave { Name = "Default" });
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text" });
+
+        GumProjectSave source = new GumProjectSave();
+        source.Components.Add(button);
+        source.StandardElements.Add(sourceText);
+        _projectState.GumProjectSave.StandardElements.Add(destText);
+
+        _sut.InitializeFromProjectForTesting(source);
+        ImportTreeNodeViewModel buttonLeaf = FindLeaf("Button", ElementItemType.Component);
+        ImportTreeNodeViewModel textStandardLeaf = FindLeaf("Text", ElementItemType.Standard);
+
+        buttonLeaf.InclusionState = InclusionState.Explicit;
+        _sut.RecomputeTransitiveDependencies();
+        textStandardLeaf.InclusionState.ShouldBe(InclusionState.Explicit);
+
+        textStandardLeaf.InclusionState = InclusionState.NotIncluded;
+        _sut.RecomputeTransitiveDependencies();
+
+        textStandardLeaf.InclusionState.ShouldBe(InclusionState.Explicit);
+    }
+
+    [Fact]
+    public void RecomputeTransitiveDependencies_DifferingStandardUsedBySelectedComponent_IsLockedWithReason()
+    {
+        // A differing Standard a selected component uses is always imported (#5340); the row
+        // says so instead of silently re-checking itself, and frees up once nothing needs it.
+        StandardElementSave sourceText = new StandardElementSave { Name = "Text" };
+        sourceText.Categories.Add(new StateSaveCategory { Name = "TextColor" });
+        sourceText.States.Add(new StateSave { Name = "Default" });
+
+        StandardElementSave destText = new StandardElementSave { Name = "Text" };
+        destText.States.Add(new StateSave { Name = "Default" });
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text" });
+
+        GumProjectSave source = new GumProjectSave();
+        source.Components.Add(button);
+        source.StandardElements.Add(sourceText);
+        _projectState.GumProjectSave.StandardElements.Add(destText);
+
+        _sut.InitializeFromProjectForTesting(source);
+        ImportTreeNodeViewModel buttonLeaf = FindLeaf("Button", ElementItemType.Component);
+        ImportTreeNodeViewModel textStandardLeaf = FindLeaf("Text", ElementItemType.Standard);
+        textStandardLeaf.IsCheckable.ShouldBeTrue();
+
+        buttonLeaf.InclusionState = InclusionState.Explicit;
+        _sut.RecomputeTransitiveDependencies();
+
+        textStandardLeaf.IsCheckable.ShouldBeFalse();
+        textStandardLeaf.RequiredReason.ShouldNotBeNull();
+        textStandardLeaf.RequiredReason.ShouldContain("Used by Button");
+
+        buttonLeaf.InclusionState = InclusionState.NotIncluded;
+        _sut.RecomputeTransitiveDependencies();
+
+        textStandardLeaf.IsCheckable.ShouldBeTrue();
+        textStandardLeaf.RequiredReason.ShouldBeNull();
     }
 
     [Fact]

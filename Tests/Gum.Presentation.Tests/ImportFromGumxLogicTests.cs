@@ -1,4 +1,3 @@
-using Gum.Managers;
 using Gum.Commands;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services;
@@ -26,8 +25,7 @@ public class ImportFromGumxLogicTests
     public ImportFromGumxLogicTests()
     {
         _logic = new ImportFromGumxLogic(
-            _projectState.Object, _importLogic.Object, _fileCommands.Object, _dialogService.Object, _dispatcher.Object,
-            Mock.Of<IOutputManager>());
+            _projectState.Object, _importLogic.Object, _fileCommands.Object, _dialogService.Object, _dispatcher.Object);
     }
 
     [Fact]

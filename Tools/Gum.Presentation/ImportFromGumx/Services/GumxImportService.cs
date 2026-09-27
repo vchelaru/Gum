@@ -5,7 +5,6 @@ using Gum.DataTypes.Serialization;
 using Gum.DataTypes.Serialization.Json;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Commands;
-using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.ToolStates;
@@ -28,20 +27,17 @@ public class GumxImportService : IGumxImportService
     private readonly IProjectState _projectState;
     private readonly IFileCommands _fileCommands;
     private readonly IGumxSourceService _sourceService;
-    private readonly IOutputManager _outputManager;
 
     public GumxImportService(
         IImportLogic importLogic,
         IProjectState projectState,
         IFileCommands fileCommands,
-        IGumxSourceService sourceService,
-        IOutputManager outputManager)
+        IGumxSourceService sourceService)
     {
         _importLogic = importLogic;
         _projectState = projectState;
         _fileCommands = fileCommands;
         _sourceService = sourceService;
-        _outputManager = outputManager;
     }
 
     private static readonly HashSet<string> _assetExtensions =
@@ -141,8 +137,12 @@ public class GumxImportService : IGumxImportService
         await CopyGanxFilesAsync(
             selections.DirectScreens.Cast<ElementSave>().Where(IsWritten),
             "Screens", nameMap, sourceBase, projectDir);
-        foreach (var standard in selections.Standards.Where(s => !skippedElements.Contains(s)))
-            await MergeStandardAnimationsAsync(standard, sourceBase, projectDir);
+        // A standard's animations are replaced whole along with its element file (#5238, #5340),
+        // including by none when the source has none. Standards are never renamed, so no name map.
+        await CopyGanxFilesAsync(
+            selections.Standards.Cast<ElementSave>().Where(s => !skippedElements.Contains(s)),
+            "Standards", new Dictionary<string, string>(), sourceBase, projectDir,
+            removeWhenSourceHasNone: true);
 
         // 8. Save project then reload (standards take effect only after reload)
         string? fileName = _projectState.GumProjectSave?.FullFileName;
@@ -229,14 +229,17 @@ public class GumxImportService : IGumxImportService
     /// the element file (e.g. Components/Controls/ButtonAnimations.ganx). Both source extensions
     /// are attempted, and whichever is found is re-serialized into the destination project's own
     /// format - a byte copy would put XML inside a .ganj the runtime then fails to parse
-    /// (issue #4595). Silently skips elements that have neither file.
+    /// (issue #4595). Skips elements that have neither file, unless
+    /// <paramref name="removeWhenSourceHasNone"/> is set, in which case the destination's sidecar is
+    /// deleted so it matches the source.
     /// </summary>
     private async Task CopyGanxFilesAsync(
         IEnumerable<ElementSave> elements,
         string elementSubfolder,
         Dictionary<string, string> nameMap,
         string sourceBase,
-        string projectDir)
+        string projectDir,
+        bool removeWhenSourceHasNone = false)
     {
         foreach (var element in elements)
         {
@@ -249,56 +252,15 @@ public class GumxImportService : IGumxImportService
             ElementAnimationsSave? animations = await FetchSourceAnimationsAsync(elementSubfolder, sourceName, sourceBase);
             if (animations == null)
             {
+                if (removeWhenSourceHasNone && File.Exists(destPath))
+                {
+                    File.Delete(destPath);
+                }
                 continue;
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
             animations.Save(destPath);
-        }
-    }
-
-    /// <summary>
-    /// Adds the source Standard's animations to the destination's sidecar by name (issue #5238).
-    /// The standard element itself is overwritten on import, but its animations are the user's
-    /// work, so an animation whose name the destination already has is kept, and the skipped
-    /// names are listed in Output.
-    /// </summary>
-    private async Task MergeStandardAnimationsAsync(StandardElementSave standard, string sourceBase, string projectDir)
-    {
-        ElementAnimationsSave? incoming = await FetchSourceAnimationsAsync("Standards", standard.Name, sourceBase);
-        if (incoming == null || incoming.Animations.Count == 0)
-        {
-            return;
-        }
-
-        string destPath = Path.Combine(projectDir, "Standards",
-            standard.Name + ElementAnimationsSave.GetFileNameSuffix(IsDestinationJsonFormat));
-        ElementAnimationsSave destination = File.Exists(destPath)
-            ? ElementAnimationsSave.Load(destPath)
-            : new ElementAnimationsSave();
-
-        var existingNames = new HashSet<string>(destination.Animations.Select(a => a.Name), StringComparer.InvariantCultureIgnoreCase);
-        var skippedNames = new List<string>();
-        foreach (AnimationSave animation in incoming.Animations)
-        {
-            if (existingNames.Add(animation.Name))
-            {
-                destination.Animations.Add(animation);
-            }
-            else
-            {
-                skippedNames.Add(animation.Name);
-            }
-        }
-
-        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-        destination.Save(destPath);
-
-        if (skippedNames.Count > 0)
-        {
-            _outputManager.AddOutput(
-                $"Import: {standard.Name} already has animation(s) named {string.Join(", ", skippedNames)}; " +
-                "kept the existing one(s) and skipped the imported ones.");
         }
     }
 

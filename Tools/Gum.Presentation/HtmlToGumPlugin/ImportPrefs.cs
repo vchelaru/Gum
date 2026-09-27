@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using ToolsUtilities;
 
 namespace HtmlToGumPlugin;
 
@@ -15,10 +16,8 @@ public sealed class ImportPrefs
     public bool NoResponsive { get; set; }
     public string DestinationSubfolder { get; set; } = "";
 
-    private static string PrefsPath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create),
-            "HtmlToGumPlugin", "import-prefs.json");
+    internal static string PrefsPath =>
+        Path.Combine(FileManager.UserApplicationDataForThisApplication, "HtmlToGumPlugin", "import-prefs.json");
 
     public static ImportPrefs Load()
     {

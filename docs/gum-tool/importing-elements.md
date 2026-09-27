@@ -36,3 +36,13 @@ To import from a project:
 3. Browser or enter the location of the project
 4. Select the desired objects to import. You can click entire folders to select all contained objects. Note that dependencies (such as behaviors) are automatically checked.
 5. Click the Import button
+
+### Importing Standard Elements
+
+An imported Standard element replaces the Standard of the same name in your project entirely, including its animations. Your project's own values, variables, categories, and animations on that Standard are gone after the import. The **Skip Existing** choice for elements that already exist applies only to components, screens, and behaviors, never to Standards.
+
+When a selected component or screen uses a Standard that differs from yours, Gum always imports that Standard with it. Its check box is disabled, and hovering over it shows which elements use it.
+
+{% hint style="warning" %}
+Avoid editing Standard elements in a project you plan to import into. Put your customizations in components instead.
+{% endhint %}

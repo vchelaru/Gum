@@ -157,7 +157,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Color = Components/Bubblegum/Styles.Placeholder.Color</string>
+        <string>Color = Components/Bubblegum/Styles.Placeholder.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -167,7 +167,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Color = Components/Bubblegum/Styles.Placeholder.Color</string>
+        <string>Color = Components/Bubblegum/Styles.Placeholder.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -177,7 +177,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Color = Components/Bubblegum/Styles.Placeholder.Color</string>
+        <string>Color = Components/Bubblegum/Styles.Placeholder.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">

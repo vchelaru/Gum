@@ -63,21 +63,13 @@ public class SettingsManagerTests : BaseTestClass
     {
         // The head's --user-data option redirects every per-user file through this override, so an
         // unattended run must not write the plugin's column ratio into the user's own settings.
-        string? original = FileManager.UserApplicationDataFolderOverride;
         FileManager.UserApplicationDataFolderOverride = _tempDirectory;
-        try
-        {
-            SettingsManager settingsManager = new SettingsManager();
-            settingsManager.GlobalSettings.FirstToSecondColumnRatio = 3m;
+        SettingsManager settingsManager = new SettingsManager();
+        settingsManager.GlobalSettings.FirstToSecondColumnRatio = 3m;
 
-            settingsManager.SaveSettings();
+        settingsManager.SaveSettings();
 
-            File.Exists(Path.Combine(_tempDirectory, "AnimationPlugin", "GlobalAnimationSettings.json")).ShouldBeTrue();
-        }
-        finally
-        {
-            FileManager.UserApplicationDataFolderOverride = original;
-        }
+        File.Exists(Path.Combine(_tempDirectory, "AnimationPlugin", "GlobalAnimationSettings.json")).ShouldBeTrue();
     }
 
     [Fact]
@@ -94,11 +86,11 @@ public class SettingsManagerTests : BaseTestClass
 
     public override void Dispose()
     {
+        base.Dispose();
+
         if (Directory.Exists(_tempDirectory))
         {
             Directory.Delete(_tempDirectory, recursive: true);
         }
-
-        base.Dispose();
     }
 }
