@@ -554,6 +554,18 @@ public class FormsUtilities
         _defaultTooltipTemplate = null;
     }
 
+    /// <summary>
+    /// Undoes <see cref="RegisterFromFileFormRuntimeDefaults"/>: removes the loaded project's
+    /// component-to-Forms-runtime registrations and the initial-state notifier, leaving every other
+    /// registration in place. For teardown paths that can't clear all registrations.
+    /// </summary>
+    internal static void UnregisterFromFileFormRuntimeDefaults()
+    {
+        string? fromFileNamespace = typeof(DefaultFromFileButtonRuntime).Namespace;
+        ElementSaveExtensions.UnregisterGueInstantiationTypes(type => type.Namespace == fromFileNamespace);
+        ElementSaveExtensions.InitialStateAppliedNotifier = null;
+    }
+
     private static VisualTemplate? _defaultTooltipTemplate;
 
     // Distinguishes a template this class registered for a project's Tooltip component from one

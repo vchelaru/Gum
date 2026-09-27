@@ -665,40 +665,14 @@ public partial class GumService : IGumService
             Root.RemoveFromManagers();
         }
 
-        // The statics reset with null! below are declared non-null but start as null! until
-        // Initialize sets them; teardown returns them to that pre-Initialize state.
-        if (FrameworkElement.PopupRoot != null)
-        {
-            FrameworkElement.PopupRoot.Children.Clear();
-            FrameworkElement.PopupRoot.RemoveFromManagers();
-            FrameworkElement.PopupRoot = null!;
-        }
-
-        if (FrameworkElement.ModalRoot != null)
-        {
-            FrameworkElement.ModalRoot.Children.Clear();
-            FrameworkElement.ModalRoot.RemoveFromManagers();
-            FrameworkElement.ModalRoot = null!;
-        }
-
-        FrameworkElement.KeyboardsForUiControl.Clear();
-        FrameworkElement.GamePadsForUiControl.Clear();
-        FrameworkElement.MainCursor = null!;
-        FrameworkElement.MainKeyboard = null!;
+        // Forms roots, Forms input registrations and templates, the project, and the content cache.
+        // Shared with GumServiceSkiaBase.
+        GumServiceTeardown.ReleaseFormsAndContent();
+        CurrentProjectResolution = null;
 
         FormsUtilities.Uninitialize();
 
         ElementSaveExtensions.ClearRegistrations();
-
-        FrameworkElement.DefaultFormsTemplates.Clear();
-#pragma warning disable CS0618 // obsolete types and members still load from older projects
-        FrameworkElement.DefaultFormsComponents.Clear();
-#pragma warning restore CS0618
-
-        ObjectFinder.Self.GumProjectSave = null;
-        CurrentProjectResolution = null;
-
-        LoaderManager.Self.DisposeAndClear();
 
         // Platform-specific teardown: XNALIKE clears RenderableRegistry/Text/Sprite state, uninits
         // the Renderer, and nulls the Game; raylib resets Text.DefaultFont. Implemented in the

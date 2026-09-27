@@ -205,6 +205,89 @@ public class GumServiceTests
         modalIndex.ShouldBeGreaterThan(rootIndex);
     }
 
+    // Issue #5230: Uninitialize tears down so the same Default instance can be initialized again
+    // without stacking new state on the old.
+    [Fact]
+    public void Uninitialize_ThenInitialize_StartsFromCleanState()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+        GumService.Default.Root.AddChild(new ContainerRuntime());
+        InteractiveGue oldPopupRoot = GumService.Default.PopupRoot;
+
+        GumService.Default.Uninitialize();
+
+        GumService.Default.IsInitialized.ShouldBeFalse();
+        IGumService.Default.ShouldBeNull();
+        FrameworkElement.PopupRoot.ShouldBeNull();
+        FrameworkElement.ModalRoot.ShouldBeNull();
+        FrameworkElement.DefaultFormsTemplates.ShouldBeEmpty();
+
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+        GumService.Default.Root.Children.ShouldBeEmpty();
+        GumService.Default.PopupRoot.ShouldNotBeSameAs(oldPopupRoot);
+        FrameworkElement.DefaultFormsTemplates.ShouldContainKey(typeof(Button));
+    }
+
+    [Fact]
+    public void Uninitialize_AfterProjectLoad_ClearsProjectAndRestoresRelativeDirectory()
+    {
+        string sourceDirectory = Path.Combine(Path.GetTempPath(), "SkiaUninitializeTests_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(sourceDirectory);
+        // Other tests load projects on the shared Default without tearing down; start clean.
+        GumService.Default.Uninitialize();
+        string relativeDirectoryBefore = ToolsUtilities.FileManager.RelativeDirectory;
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        try
+        {
+            string gumxPath = Path.Combine(sourceDirectory, "Proj.gumx");
+            new GumProjectSave().Save(gumxPath, saveElements: false);
+            GumService.Default.Initialize(surface.Canvas, 200, 100, gumxPath);
+            ToolsUtilities.FileManager.RelativeDirectory.ShouldNotBe(relativeDirectoryBefore);
+
+            GumService.Default.Uninitialize();
+
+            Gum.Managers.ObjectFinder.Self.GumProjectSave.ShouldBeNull();
+            GumService.Default.LastLoadResult.ShouldBeNull();
+            ToolsUtilities.FileManager.RelativeDirectory.ShouldBe(relativeDirectoryBefore);
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.RelativeDirectory = relativeDirectoryBefore;
+            GumService.Default.Initialize(surface.Canvas, 200, 100);
+            try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
+    // A project component with a Forms behavior is registered to a from-file Forms runtime on load.
+    // Uninitialize must drop that registration, or a same-named plain component in the next project
+    // would still be built as the old project's Forms runtime.
+    [Fact]
+    public void Uninitialize_RemovesProjectFormsRuntimeRegistrations()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+        ComponentSave component = new() { Name = "Foo", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        {
+            BehaviorName = Gum.DataTypes.Behaviors.StandardFormsBehaviorNames.PanelBehaviorName
+        });
+        GumProjectSave project = new();
+        project.Components.Add(component);
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        GumRuntime.ElementSaveExtensions.CreateGueForElement(component)
+            .ShouldBeOfType<Gum.Forms.DefaultFromFileVisuals.DefaultFromFilePanelRuntime>();
+
+        GumService.Default.Uninitialize();
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+        GumRuntime.ElementSaveExtensions.CreateGueForElement(component)
+            .ShouldNotBeOfType<Gum.Forms.DefaultFromFileVisuals.DefaultFromFilePanelRuntime>();
+    }
+
     [Fact]
     public void GumService_ShouldDeriveFromGumServiceSkiaBase()
     {
