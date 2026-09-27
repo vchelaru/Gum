@@ -30,6 +30,4 @@ internal sealed class RetryingSharedInstance<T> where T : class, IDisposable
         }
         return _instance;
     }
-
-    public void Clear() => _instance = null;
 }

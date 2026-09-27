@@ -90,7 +90,7 @@ public class SkiaResourceManagerTests
     }
 
     // #5221: a hook that serves only its own bundle (the .gumpkg hook with no fallback) must not
-    // hide a loose file that exists on disk.
+    // hide a loose file that exists on disk. The hook is asked first (#5255); disk is the fallback.
     [Fact]
     public void GetSKBitmap_WhenHookDoesNotServeTheFile_ShouldStillLoadItFromDisk()
     {

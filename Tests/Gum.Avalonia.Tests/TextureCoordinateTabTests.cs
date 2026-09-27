@@ -36,9 +36,7 @@ public class TextureCoordinateTabTests
 
     private static bool HasDisplay => TestEnvironment.CanCreateDeviceInProcess("GUM_RUN_CANVAS_DEVICE_TESTS");
 
-    private static void OnUiThread(Action action) =>
-        HeadlessUnitTestSession.GetOrStartForAssembly(typeof(TextureCoordinateTabTests).Assembly)
-            .Dispatch(action, CancellationToken.None).GetAwaiter().GetResult();
+    private static void OnUiThread(Action action) => DeviceTestThread.Run(action);
 
     [SkippableFact]
     public void SelectingASpriteWithNoTexture_LeavesNoRegionToDrag()
@@ -51,7 +49,7 @@ public class TextureCoordinateTabTests
         {
             TextureCoordinateView view = new TextureCoordinateView(new CanvasRedrawScheduler(TimeProvider.System));
             using HeadlessWindowDriver driver = new HeadlessWindowDriver(view, 600, 500, "GumTextureCoordinateTabTests");
-            // Disposing it releases the process-wide shared device, which CanvasHostTests checks.
+            // Disposing it releases its reference on the shared device, which CanvasHostTests counts.
             using ImageRegionCanvasControl canvasControl = view.GetVisualDescendants().OfType<ImageRegionCanvasControl>().Single();
             Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
             using TextureCoordinateDisplayController controller = CreateController(selectedState.Object);
@@ -59,7 +57,7 @@ public class TextureCoordinateTabTests
             using Texture2D texture = new Texture2D(view.Canvas.SystemManagers.Renderer.GraphicsDevice!, 64, 64);
 
             ComponentSave textured = SpriteComponent("Textured");
-            StateSave texturedState = textured.DefaultState;
+            StateSave texturedState = textured.DefaultState!;
             texturedState.SetValue("TextureAddress", TextureAddress.Custom, nameof(TextureAddress));
             texturedState.SetValue("TextureLeft", 16, "int");
             texturedState.SetValue("TextureTop", 16, "int");
@@ -72,7 +70,7 @@ public class TextureCoordinateTabTests
             view.Canvas.RectangleSelectors.Count.ShouldBe(1, "the textured sprite's region is shown");
 
             ComponentSave untextured = SpriteComponent("Untextured");
-            untextured.DefaultState.SetValue("TextureAddress", TextureAddress.Custom, nameof(TextureAddress));
+            untextured.DefaultState!.SetValue("TextureAddress", TextureAddress.Custom, nameof(TextureAddress));
             Select(selectedState, untextured, new GraphicalUiElement(new Sprite(null)));
             controller.Refresh();
             controller.RefreshSelector(RefreshType.Force);

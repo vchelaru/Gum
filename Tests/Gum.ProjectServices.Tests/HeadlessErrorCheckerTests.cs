@@ -1373,6 +1373,30 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void GetProjectErrors_ShouldReportOnlyTheRowsNoElementOwns()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Textures/hero.png");
+            AddComponentWithSpriteSourceFile("HeroHolder", "Textures/Hero.png");
+            WriteEmptyFile(projectDirectory, "Localization/strings.csv");
+            Project.LocalizationFiles.Add("Localization/Strings.csv");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+            ErrorResult error = errors.ShouldHaveSingleItem();
+            error.Code.ShouldBe("GUM0008");
+            error.Message.ShouldContain("\"Localization/Strings.csv\"");
+            error.FilePath.ShouldBe(Path.Combine(projectDirectory, "Localization/strings.csv"));
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
     // Returns <temp>/<guid>/Project and points the project at Project.gumx inside it.
     private string CreateTempProjectDirectory()
     {

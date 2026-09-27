@@ -62,6 +62,20 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public static BlendState NormalBlendState { get; set; } = BlendState.NonPremultiplied;
 
+        /// <summary>
+        /// How Sprite textures are sampled when drawn at a size other than their own:
+        /// <see cref="SKFilterMode.Nearest"/> (point, the default) or <see cref="SKFilterMode.Linear"/>.
+        /// Mirrors the MonoGame renderer's <c>TextureFilter</c>. Set from the project's
+        /// <c>TextureFilter</c> when GumService loads a project (issue #5231). NineSlice always
+        /// samples nearest to avoid seams between its sections.
+        /// </summary>
+        public static SKFilterMode TextureFilter { get; set; } = SKFilterMode.Nearest;
+
+        /// <summary>
+        /// The sampling Sprite passes to its image draws, built from <see cref="TextureFilter"/>.
+        /// </summary>
+        internal static SKSamplingOptions TextureSampling => new SKSamplingOptions(TextureFilter, SKMipmapMode.None);
+
         public static Renderer Self
         {
             get
