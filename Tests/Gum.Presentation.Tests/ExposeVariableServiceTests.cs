@@ -10,7 +10,9 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
 using Shouldly;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gum.Presentation.Tests;
 
@@ -55,7 +57,61 @@ public class ExposeVariableServiceTests : BaseTestClass
             _nameVerifier.Object,
             _dialogService.Object,
             _variableSaveLogic.Object,
-            _pluginManager.Object);
+            _pluginManager.Object,
+            new InstanceOverrideRemover(_undoManager.Object, _fileCommands.Object, _pluginManager.Object));
+    }
+
+    private delegate void ShowChoiceCallback(Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel);
+
+    /// <summary>
+    /// Answers the next choice dialog: <paramref name="pick"/> is the option text the user selects, or
+    /// null for Cancel. Returns the shown dialog through <paramref name="shown"/>.
+    /// </summary>
+    private void AnswerChoiceDialog(string? pick, List<ChoiceDialogViewModel> shown)
+    {
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<Action<ChoiceDialogViewModel>?>(), out It.Ref<ChoiceDialogViewModel>.IsAny))
+            .Callback(new ShowChoiceCallback((Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel) =>
+            {
+                viewModel = new ChoiceDialogViewModel();
+                initializer?.Invoke(viewModel);
+                shown.Add(viewModel);
+                if (pick == null)
+                {
+                    viewModel.NegativeCommand.Execute(null);
+                }
+                else
+                {
+                    viewModel.SelectedValue = pick;
+                    viewModel.AffirmativeCommand.Execute(null);
+                }
+            }))
+            .Returns(pick != null);
+    }
+
+    /// <summary>
+    /// Button exposes Label.Text as LabelText; screen Title's OkButton sets LabelText.
+    /// </summary>
+    private (ComponentSave Button, VariableSave Exposed, ScreenSave Title, VariableSave InstanceValue) MakeExposedVariableSetOnAnInstance()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        VariableSave exposed = new VariableSave { Name = "Label.Text", Type = "string", ExposedAsName = "LabelText" };
+        button.GetDefaultStateOrThrow().Variables.Add(exposed);
+
+        ScreenSave title = new ScreenSave { Name = "Title" };
+        title.States.Add(new StateSave { Name = "Default", ParentContainer = title });
+        title.Instances.Add(new InstanceSave { Name = "OkButton", BaseType = "Button", ParentContainer = title });
+        VariableSave instanceValue = new VariableSave { Name = "OkButton.LabelText", Type = "string", Value = "OK" };
+        title.GetDefaultStateOrThrow().Variables.Add(instanceValue);
+
+        VariableChangeResponse changes = new VariableChangeResponse();
+        changes.VariableChanges.Add(new VariableChange { Container = title, State = title.GetDefaultStateOrThrow(), Variable = instanceValue });
+        _renameLogic
+            .Setup(x => x.GetChangesForRenamedVariable(button, "Label.Text", "LabelText"))
+            .Returns(changes);
+
+        return (button, exposed, title, instanceValue);
     }
 
     [Fact]
@@ -67,7 +123,7 @@ public class ExposeVariableServiceTests : BaseTestClass
         component.Instances.Add(instance);
 
         var variable = new VariableSave { Name = "MyInstance.Visible", Value = true };
-        component.DefaultState.Variables.Add(variable);
+        component.GetDefaultStateOrThrow().Variables.Add(variable);
 
         _selectedState.Setup(x => x.SelectedElement).Returns(component);
         _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
@@ -117,6 +173,31 @@ public class ExposeVariableServiceTests : BaseTestClass
         _pluginManager.Verify(x => x.VariableDelete(component, "MyExposedVisible"), Times.Once);
         _fileCommands.Verify(x => x.TryAutoSaveCurrentElement(), Times.Once);
         _guiCommands.Verify(x => x.RefreshVariables(true), Times.Once);
+        _dialogService.Verify(x => x.Show(It.IsAny<Action<ChoiceDialogViewModel>?>(), out It.Ref<ChoiceDialogViewModel>.IsAny), Times.Never);
+    }
+
+    [Fact]
+    public void HandleUnexposeVariableClick_WhenOnlyAnInheritingElementExposesTheSameName_ShowsNoDialog()
+    {
+        // An inheriting element's own exposed-name entry is not an instance value, so there is nothing to clear.
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        VariableSave exposed = new VariableSave { Name = "Label.Text", ExposedAsName = "LabelText" };
+        ComponentSave fancyButton = new ComponentSave { Name = "FancyButton", BaseType = "Button" };
+        StateSave fancyDefault = new StateSave { Name = "Default", ParentContainer = fancyButton };
+        fancyButton.States.Add(fancyDefault);
+        VariableSave derivedExposed = new VariableSave { Name = "Label.Text", ExposedAsName = "LabelText" };
+        fancyDefault.Variables.Add(derivedExposed);
+        VariableChangeResponse changes = new VariableChangeResponse();
+        changes.VariableChanges.Add(new VariableChange { Container = fancyButton, State = fancyDefault, Variable = derivedExposed });
+        _renameLogic
+            .Setup(x => x.GetChangesForRenamedVariable(button, "Label.Text", "LabelText"))
+            .Returns(changes);
+
+        _service.HandleUnexposeVariableClick(exposed, button);
+
+        exposed.ExposedAsName.ShouldBeNull();
+        fancyDefault.Variables.ShouldContain(derivedExposed);
+        _dialogService.Verify(x => x.Show(It.IsAny<Action<ChoiceDialogViewModel>?>(), out It.Ref<ChoiceDialogViewModel>.IsAny), Times.Never);
     }
 
     [Fact]
@@ -141,6 +222,63 @@ public class ExposeVariableServiceTests : BaseTestClass
 
         variable.ExposedAsName.ShouldBe("MyExposedVisible");
         _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _pluginManager.Verify(x => x.VariableDelete(It.IsAny<ElementSave>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void HandleUnexposeVariableClick_ClearChosen_UnexposesAndRemovesInstanceValuesInOneUndo()
+    {
+        (ComponentSave button, VariableSave exposed, ScreenSave title, VariableSave instanceValue) = MakeExposedVariableSetOnAnInstance();
+        List<ChoiceDialogViewModel> shown = new List<ChoiceDialogViewModel>();
+        AnswerChoiceDialog("Un-expose and clear values", shown);
+        bool isLockHeld = false;
+        bool? wasLockHeldWhenRecorded = null;
+        _undoManager.Setup(x => x.RequestLock()).Returns(() =>
+        {
+            isLockHeld = true;
+            return new UndoLock(() => isLockHeld = false);
+        });
+        _undoManager
+            .Setup(x => x.RecordCrossElementVariableChanges(It.IsAny<IEnumerable<CrossElementVariableChange>>()))
+            .Callback(() => wasLockHeldWhenRecorded = isLockHeld);
+
+        _service.HandleUnexposeVariableClick(exposed, button);
+
+        shown.Single().Message.ShouldContain("OkButton in Title");
+        shown.Single().OptionValues.ShouldBe(new[] { "Un-expose and clear values", "Un-expose, keep values" });
+        shown.Single().CanCancel.ShouldBeTrue();
+        exposed.ExposedAsName.ShouldBeNull();
+        title.GetDefaultStateOrThrow().Variables.ShouldNotContain(instanceValue);
+        wasLockHeldWhenRecorded.ShouldBe(true);
+        _undoManager.Verify(x => x.RequestLock(), Times.Once);
+        _pluginManager.Verify(x => x.VariableDelete(button, "LabelText"), Times.Once);
+    }
+
+    [Fact]
+    public void HandleUnexposeVariableClick_KeepChosen_UnexposesAndLeavesInstanceValues()
+    {
+        (ComponentSave button, VariableSave exposed, ScreenSave title, VariableSave instanceValue) = MakeExposedVariableSetOnAnInstance();
+        AnswerChoiceDialog("Un-expose, keep values", new List<ChoiceDialogViewModel>());
+
+        _service.HandleUnexposeVariableClick(exposed, button);
+
+        exposed.ExposedAsName.ShouldBeNull();
+        title.GetDefaultStateOrThrow().Variables.ShouldContain(instanceValue);
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(It.IsAny<IEnumerable<CrossElementVariableChange>>()), Times.Never);
+        _pluginManager.Verify(x => x.VariableDelete(button, "LabelText"), Times.Once);
+    }
+
+    [Fact]
+    public void HandleUnexposeVariableClick_Cancelled_ChangesNothing()
+    {
+        (ComponentSave button, VariableSave exposed, ScreenSave title, VariableSave instanceValue) = MakeExposedVariableSetOnAnInstance();
+        AnswerChoiceDialog(null, new List<ChoiceDialogViewModel>());
+
+        _service.HandleUnexposeVariableClick(exposed, button);
+
+        exposed.ExposedAsName.ShouldBe("LabelText");
+        title.GetDefaultStateOrThrow().Variables.ShouldContain(instanceValue);
+        _undoManager.Verify(x => x.RequestLock(), Times.Never);
         _pluginManager.Verify(x => x.VariableDelete(It.IsAny<ElementSave>(), It.IsAny<string>()), Times.Never);
     }
 }

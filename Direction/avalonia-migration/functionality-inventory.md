@@ -508,7 +508,7 @@ Cross-feature scenarios the code lists don't show. Most need a real project, a s
 - COMBO-018 Undo all edits returns byte-identical files. tested: TreeScenarioTests
 - COMBO-019 Edit in category state, then Make Default. tested: VariableScenarioTests
 - COMBO-020 Expose variable, then set it on an instance. tested: VariableScenarioTests
-- COMBO-021 Un-expose variable set on instances
+- COMBO-021 Un-expose variable set on instances. tested: VariableScenarioTests
 - COMBO-022 Change base type with instances and states set
 - COMBO-023 Reparent across element via tree drag, then undo
 - COMBO-024 Multi-select edit across different types

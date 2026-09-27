@@ -370,22 +370,88 @@ public class VariableScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5246: un-exposing a variable leaves the instance values set through it")]
+    [AvaloniaFact]
     [Trait("Feature", "VAR-012")]
     [Trait("Feature", "COMBO-021")]
-    public void UnexposingAVariableSetOnInstances_ClearsThoseValues()
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void UnexposingAVariableSetOnInstances_AndChoosingClear_ClearsThoseValues_AndUndoRedoFollowIt()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         VariableGridHarness grid = ExposeLabelTextAndUseButtonInTitle(tree);
         grid.TypeAndLeave("LabelText", "OK");
-
         tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single()));
+        ProjectFileSnapshot beforeUnexpose = tree.SnapshotFiles();
+        string? listedInstances = null;
+        tree.Dialogs.AnswerNext<ChoiceDialogViewModel>(dialog =>
+        {
+            listedInstances = dialog.Message;
+            dialog.SelectedValue = "Un-expose and clear values";
+            return true;
+        });
+
+        grid.PickRowMenuItem("Text", "Un-expose Variable LabelText (Label.Text)");
+
+        listedInstances.ShouldNotBeNull();
+        listedInstances.ShouldContain("OkButton in Title");
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldNotContain(variable => variable.ExposedAsName == "LabelText");
+        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBeNull();
+        VariableGridHarness.StoredValue(grid.ReadSaved(Screen(tree, "Title")), "OkButton.LabelText").ShouldBeNull();
+
+        tree.Undo();
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldContain(variable => variable.ExposedAsName == "LabelText");
+        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBe("OK");
+        tree.SnapshotFiles().ShouldMatch(beforeUnexpose, "one undo should restore the exposure and the cleared instance value");
+
+        tree.Redo();
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldNotContain(variable => variable.ExposedAsName == "LabelText");
+        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBeNull();
+        VariableGridHarness.StoredValue(grid.ReadSaved(Screen(tree, "Title")), "OkButton.LabelText").ShouldBeNull();
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-012")]
+    [Trait("Feature", "COMBO-021")]
+    public void UnexposingAVariableSetOnInstances_AndChoosingKeep_LeavesThoseValues()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        VariableGridHarness grid = ExposeLabelTextAndUseButtonInTitle(tree);
+        grid.TypeAndLeave("LabelText", "OK");
+        tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single()));
+        tree.Dialogs.AnswerNext<ChoiceDialogViewModel>(dialog =>
+        {
+            dialog.SelectedValue = "Un-expose, keep values";
+            return true;
+        });
+
         grid.PickRowMenuItem("Text", "Un-expose Variable LabelText (Label.Text)");
 
         Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldNotContain(variable => variable.ExposedAsName == "LabelText");
-        // The instance value set the exposed variable, which no longer exists.
-        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBeNull();
-        VariableGridHarness.StoredValue(grid.ReadSaved(Screen(tree, "Title")), "OkButton.LabelText").ShouldBeNull();
+        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBe("OK");
+        VariableGridHarness.StoredValue(grid.ReadSaved(Screen(tree, "Title")), "OkButton.LabelText").ShouldBe("OK");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-012")]
+    [Trait("Feature", "COMBO-021")]
+    public void UnexposingAVariableSetOnInstances_AndCancelling_ChangesNothing()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        VariableGridHarness grid = ExposeLabelTextAndUseButtonInTitle(tree);
+        grid.TypeAndLeave("LabelText", "OK");
+        tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single()));
+        ProjectFileSnapshot beforeUnexpose = tree.SnapshotFiles();
+        tree.Dialogs.AnswerNext<ChoiceDialogViewModel>(_ => false);
+
+        grid.PickRowMenuItem("Text", "Un-expose Variable LabelText (Label.Text)");
+
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldContain(variable => variable.ExposedAsName == "LabelText");
+        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBe("OK");
+        tree.SnapshotFiles().ShouldMatch(beforeUnexpose, "cancelling should leave every file as it was");
 
         tree.AssertOracles();
     }

@@ -5,6 +5,8 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.Undo;
@@ -23,6 +25,7 @@ public class ExposeVariableService : IExposeVariableService
     private readonly IDialogService _dialogService;
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly IPluginManager _pluginManager;
+    private readonly IInstanceOverrideRemover _instanceOverrideRemover;
 
     public ExposeVariableService(
         IUndoManager undoManager,
@@ -33,7 +36,8 @@ public class ExposeVariableService : IExposeVariableService
         INameVerifier nameVerifier,
         IDialogService dialogService,
         IVariableSaveLogic variableSaveLogic,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IInstanceOverrideRemover instanceOverrideRemover)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
@@ -44,6 +48,7 @@ public class ExposeVariableService : IExposeVariableService
         _dialogService = dialogService;
         _variableSaveLogic = variableSaveLogic;
         _pluginManager = pluginManager;
+        _instanceOverrideRemover = instanceOverrideRemover;
     }
 
     public OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
@@ -257,35 +262,75 @@ public class ExposeVariableService : IExposeVariableService
 
     public void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave)
     {
-        // do we want to support undos? I think so....?
-
-
         // The un-expose menu item only shows for an exposed variable.
         if (variableSave.ExposedAsName is not { } oldExposedName)
         {
             return;
         }
 
-        var response = GetIfCanUnexposeVariable(variableSave, oldExposedName, elementSave);
+        var renames = _renameLogic.GetChangesForRenamedVariable(elementSave, variableSave.Name, oldExposedName);
+        var response = GetIfCanUnexposeVariable(renames, oldExposedName);
         if (response.Succeeded == false)
         {
             _dialogService.ShowMessage(response.Message);
             return;
         }
 
+        List<VariableChange> instanceOverrides = renames.VariableChanges.Where(c => c.IsPlainInstanceOverride).ToList();
+        bool shouldClearInstanceValues = false;
+        if (instanceOverrides.Count > 0)
+        {
+            if (AskWhetherToClearInstanceValues(oldExposedName, instanceOverrides) is not { } shouldClear)
+            {
+                return;
+            }
+            shouldClearInstanceValues = shouldClear;
+        }
+
         using var undoLock = _undoManager.RequestLock();
 
         variableSave.ExposedAsName = null;
+
+        if (shouldClearInstanceValues)
+        {
+            _instanceOverrideRemover.RemoveAndRecordForUndo(instanceOverrides);
+        }
 
         _pluginManager.VariableDelete(elementSave, oldExposedName);
         _fileCommands.TryAutoSaveCurrentElement();
         _guiCommands.RefreshVariables(force: true);
     }
 
-    private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, string exposedName, ElementSave elementSave)
+    /// <summary>
+    /// Asks whether to clear the instance values that set the variable being un-exposed. Returns null
+    /// when the user cancels.
+    /// </summary>
+    private bool? AskWhetherToClearInstanceValues(string exposedName, List<VariableChange> instanceOverrides)
     {
-        var renames = _renameLogic.GetChangesForRenamedVariable(elementSave, variableSave.Name, exposedName);
+        var instanceLines = instanceOverrides
+            .Select(change => $"\u2022 {change.Variable.SourceObject} in {(change.Container as ElementSave)?.Name ?? change.Container.ToString()}")
+            .Distinct();
 
+        string message = $"{exposedName} is set on these instances:\n\n{string.Join("\n", instanceLines)}\n\n" +
+            "Kept values stay in the files and return if the variable is exposed again.";
+
+        // String keys: ShowChoices returns default(T) on cancel, which for a value type is a valid key.
+        var options = new Dictionary<string, string>
+        {
+            ["clear"] = "Un-expose and clear values",
+            ["keep"] = "Un-expose, keep values",
+        };
+
+        return _dialogService.ShowChoices(message, options, title: "Un-expose Variable", canCancel: true) switch
+        {
+            "clear" => true,
+            "keep" => false,
+            _ => null,
+        };
+    }
+
+    private GeneralResponse GetIfCanUnexposeVariable(VariableChangeResponse renames, string exposedName)
+    {
         if (renames.VariableReferenceChanges.Count > 0)
         {
             string message = $"Cannot unexpose variable {exposedName} because it is referenced by:\n\n";
