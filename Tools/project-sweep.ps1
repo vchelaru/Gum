@@ -13,8 +13,9 @@ Every project is copied to a work folder first; the originals are never touched.
               formatting, line order, or newly written default-valued fields (it was saved by an
               older Gum) is reported as a note.
   toolsave    gumcli resave, which loads the way the tool does, including the load-time back-fill
-              of standard-element defaults. Files the first save rewrites are reported as a note,
-              since the back-fill is by design. A second save that rewrites anything again fails:
+              of standard-element defaults and the migration of a Circle's legacy Radius r to
+              Width = Height = 2r. Files the first save rewrites are reported as a note, since
+              both are by design; any other lost or changed value fails. A second save that rewrites anything again fails:
               the save is not stable.
   codegen     gumcli codegen. Skipped when the project has no code settings and auto-detection
               finds no .csproj. Fails when a written file has a backslash in its name (a Windows
@@ -160,105 +161,9 @@ function Format-FileList([string[]]$files) {
     return "$($files.Count) file(s): $shown$more"
 }
 
-# A saved file as a flat list of "path = value" facts, so two files that hold the same data compare
-# equal regardless of formatting: XML attributes and child elements are the same fact (the compact
-# and verbose formats), and comments, xmlns and xsi:type are ignored. JSON is flattened the same way.
-# The XML walk and the multiset comparison are C#: as PowerShell functions they took minutes over
-# the corpus, most of the sweep's run time.
-Add-Type -TypeDefinition @'
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Xml;
-
-public static class ProjectSweepFacts
-{
-    public static void AddXmlFacts(XmlElement element, string path, List<string> facts)
-    {
-        foreach (XmlAttribute attribute in element.Attributes)
-        {
-            if (attribute.Name.StartsWith("xmlns") || attribute.Prefix == "xsi") continue;
-            facts.Add(path + "/" + attribute.LocalName + " = " + attribute.Value);
-        }
-        var children = new List<XmlElement>();
-        foreach (XmlNode child in element.ChildNodes)
-        {
-            if (child is XmlElement childElement) children.Add(childElement);
-        }
-        if (children.Count == 0)
-        {
-            if (element.Attributes.Count == 0 || !string.IsNullOrEmpty(element.InnerText)) facts.Add(path + " = " + element.InnerText);
-            return;
-        }
-        foreach (var child in children) AddXmlFacts(child, path + "/" + child.LocalName, facts);
-    }
-
-    public static string HashWithoutCarriageReturns(string file)
-    {
-        var bytes = System.IO.File.ReadAllBytes(file);
-        var kept = System.Array.FindAll(bytes, b => b != 13);
-        return System.Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(kept));
-    }
-
-    // Facts in the original missing from the saved list, counted as a multiset.
-    public static List<string> Removed(List<string> original, List<string> saved, string ignore)
-    {
-        var remaining = new Dictionary<string, int>();
-        foreach (var fact in saved) remaining[fact] = remaining.TryGetValue(fact, out var n) ? n + 1 : 1;
-        // Case-insensitive, as PowerShell's -match was.
-        var defaults = new Regex(" = (false|0|null|)$", RegexOptions.IgnoreCase);
-        var ignoreRegex = string.IsNullOrEmpty(ignore) ? null : new Regex(ignore, RegexOptions.IgnoreCase);
-        var removed = new List<string>();
-        foreach (var fact in original)
-        {
-            if (remaining.TryGetValue(fact, out var count) && count > 0) { remaining[fact] = count - 1; continue; }
-            if (defaults.IsMatch(fact)) continue;
-            if (ignoreRegex != null && ignoreRegex.IsMatch(fact)) continue;
-            removed.Add(fact);
-        }
-        return removed;
-    }
-}
-'@
-
-function Add-JsonFacts($node, [string]$path, [System.Collections.Generic.List[string]]$facts) {
-    if ($node -is [System.Collections.IDictionary]) {
-        foreach ($key in $node.Keys) { Add-JsonFacts $node[$key] "$path/$key" $facts }
-    } elseif ($node -is [System.Collections.IList]) {
-        if ($node.Count -eq 0) { $facts.Add("$path = ") }
-        foreach ($item in $node) { Add-JsonFacts $item $path $facts }
-    } elseif ($null -eq $node) {
-        $facts.Add("$path = null")
-    } elseif ($node -is [bool]) {
-        $facts.Add("$path = $($node.ToString().ToLowerInvariant())")
-    } else {
-        $facts.Add("$path = $([System.Convert]::ToString($node, [System.Globalization.CultureInfo]::InvariantCulture))")
-    }
-}
-
-function Get-Facts([string]$file) {
-    $facts = [System.Collections.Generic.List[string]]::new()
-    $text = [System.IO.File]::ReadAllText($file)
-    if ($text.TrimStart([char]0xFEFF).TrimStart().StartsWith('<')) {
-        $document = [System.Xml.XmlDocument]::new()
-        $document.LoadXml($text.TrimStart([char]0xFEFF))
-        [ProjectSweepFacts]::AddXmlFacts($document.DocumentElement, $document.DocumentElement.LocalName, $facts)
-    } else {
-        Add-JsonFacts ($text | ConvertFrom-Json -AsHashtable) '' $facts
-    }
-    # The comma keeps PowerShell from unrolling the list into an array.
-    return , $facts
-}
-
-# Facts (as a multiset) in the original that are gone from the saved copy, ignoring default values
-# (false, 0, null, empty) that a newer serializer omits. Reordering and additions are not removals.
-function Get-RemovedFacts([string]$original, [string]$saved, [string]$ignore) {
-    if (-not (Test-Path -LiteralPath $original)) { return @() }
-    try {
-        return @([ProjectSweepFacts]::Removed((Get-Facts $original), (Get-Facts $saved), $ignore))
-    } catch {
-        return @("(could not compare: $($_.Exception.Message))")
-    }
-}
+# Get-RemovedFacts and [ProjectSweepFacts]: the saved-file comparison, tested by
+# Tools/project-sweep-facts-tests.ps1.
+. (Join-Path $PSScriptRoot 'project-sweep-facts.ps1')
 
 function Get-ErrorLines($output, [int]$count = 3) {
     return (@($output | Where-Object { $_ -match '(?i)error' }) | Select-Object -First $count) -join '; '
@@ -381,7 +286,8 @@ foreach ($projectFile in $projects) {
                 foreach ($file in $rewritten) {
                     # The back-fill refreshes a standard variable's Category (its property-grid group)
                     # from the current defaults, so a recategorized variable is expected, not lost data.
-                    $removed = @(Get-RemovedFacts (Join-Path $pristineDir $file) (Join-Path $copyDir $file) '^StandardElementSave/State/Variable/Category = ')
+                    # The load also migrates a Circle's legacy Radius to Width/Height.
+                    $removed = @(Get-RemovedFacts (Join-Path $pristineDir $file) (Join-Path $copyDir $file) '^StandardElementSave/State/Variable/Category = ' -AllowCircleRadiusMigration)
                     if ($removed.Count -gt 0) {
                         $lossy += $file
                         Add-Content -LiteralPath $log -Value (@('', "values removed or changed in ${file} (against the original):") + ($removed | Select-Object -First 20))
