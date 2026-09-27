@@ -84,20 +84,14 @@ jobs:
       # The runners have no GPU, so the KNI device tests (CanvasHostTests, TextureCoordinateTab*,
       # CanvasScenarioTests) skip themselves here
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
-      #
-      # Retries only the tests that actually failed, not the whole assembly: Avalonia's headless
-      # xunit host has a still-open dispatcher-setup race that can orphan one test's compositor.
-      # The script explains the race, the retry strategy, and why the retry .trx files are kept
-      # out of the reporter's TestResults/*.trx glob. pwsh is explicit (not the OS default shell)
-      # so the one script runs identically across the Windows/macOS/Linux matrix.
+      # --no-build runs against the Release build above; a rebuild here can hit a parallel-build
+      # file lock (MSB3248). --blame names the test that was running if the test host crashes.
       - name: Gum.Avalonia.Tests (headless)
-        shell: pwsh
-        run: .github/scripts/run-avalonia-head-tests.ps1
+        run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --logger "trx;LogFileName=avalonia-head.trx" --results-directory TestResults
       # The full-startup layer (phase 100): the real head executable on a fixture project, plus the
       # KNI device tests and the canvas end-to-end scenarios. Only Linux has a cheap virtual display
       # plus software GL on the runner (Xvfb + Mesa llvmpipe), so it is the one OS where CI proves
-      # the startup sequence and the device path; the other two run them locally. The same retry
-      # script as the headless step reruns only failed tests, for the same dispatcher race.
+      # the startup sequence and the device path; the other two run them locally.
       - name: Gum.Avalonia head and device tests under Xvfb (Linux)
         if: runner.os == 'Linux'
         # A hang here once ran 74 minutes with no output; fail fast and dump the stuck test host.
@@ -109,7 +103,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
-          xvfb-run -a -s "-screen 0 1600x1000x24" pwsh .github/scripts/run-avalonia-head-tests.ps1 -Filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests" -TrxName head-process.trx -HangTimeout 8m
+          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=head-process.trx" --results-directory TestResults --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests"
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
       - name: Gum.Presentation.Tests (shared logic on every OS)
