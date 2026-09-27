@@ -28,6 +28,8 @@
 		     this via Gum/Properties/AssemblyInfo.cs, so the grant moves with the class. Drop this
 		     once the tests migrate into Gum.Presentation.Tests, mirroring UndoManagerTests. -->
 		<InternalsVisibleTo Include="GumToolUnitTests" />
+		<!-- PluginFailureGuardAttribute re-enables a plugin through PluginContainer.RestoreEnabled. -->
+		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
 	</ItemGroup>
 
 	<ItemGroup>

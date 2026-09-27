@@ -86,7 +86,7 @@ public class UndoPlugin : CorePriorityPlugin
 
     void HandleProjectLoad(DataTypes.GumProjectSave obj)
     {
-        _undoManager.ClearAll();
+        _undoManager.HandleProjectLoaded(obj);
         OptionallyBroadcastUndosChanged();
     }
 

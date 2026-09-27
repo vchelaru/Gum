@@ -1,3 +1,5 @@
+using Gum.Managers;
+using Moq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -36,6 +38,7 @@ public class GumxImportServiceTests : IDisposable
 
     // ── system under test ─────────────────────────────────────────────────
     private readonly GumxSourceService _sourceService = new();
+    private readonly Mock<IOutputManager> _outputManager = new();
     private readonly GumxImportService _sut;
 
     public GumxImportServiceTests()
@@ -50,7 +53,8 @@ public class GumxImportServiceTests : IDisposable
         _projectState  = new FakeProjectState(_projectDir, _gumProject);
         _importLogic   = new FakeImportLogic(_projectDir);
 
-        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService);
+        _sut = new GumxImportService(
+            _importLogic, _projectState, _fileCommands, _sourceService, _outputManager.Object);
     }
 
     public void Dispose()
@@ -390,6 +394,110 @@ public class GumxImportServiceTests : IDisposable
         // Assert
         result.ConflictingElements.ShouldBeEmpty();
     }
+
+    // ── Standard animations (#5238) ───────────────────────────────────────
+
+    [Fact]
+    public async Task ImportAsync_StandardAnimations_AddsNewNamesAndKeepsExistingNames()
+    {
+        // The standard itself is overwritten, but its animations merge by name: a name the
+        // destination already has is never overwritten, and the skip is reported in Output. Names
+        // match ignoring case, as the Animations tab's own duplicate-name check does.
+        string standardName = "Text";
+        StandardElementSave standard = WriteSourceStandard(standardName);
+        WriteAnimationSidecar(_sourceDir, "Standards", standardName, isJsonFormat: false,
+            new AnimationSave { Name = "fade", Loops = false },
+            new AnimationSave { Name = "Pulse" });
+        WriteAnimationSidecar(_projectDir, "Standards", standardName, isJsonFormat: false,
+            new AnimationSave { Name = "Fade", Loops = true });
+
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(standard);
+
+        await _sut.ImportAsync(SelectionsForStandard(standard), source, _sourceDir, destinationSubfolder: "");
+
+        ElementAnimationsSave merged = ElementAnimationsSave.Load(
+            Path.Combine(_projectDir, "Standards", $"{standardName}Animations.ganx"));
+        merged.Animations.Select(a => a.Name).ShouldBe(new[] { "Fade", "Pulse" });
+        merged.Animations[0].Loops.ShouldBeTrue();
+        _outputManager.Verify(o => o.AddOutput(It.Is<string>(s =>
+            s.Contains(standardName) && s.Contains("fade") && !s.Contains("Pulse"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportAsync_StandardAnimations_WritesSidecarInDestinationFormat_WhenDestinationHasNone()
+    {
+        string standardName = "Sprite";
+        StandardElementSave standard = WriteSourceStandard(standardName);
+        WriteAnimationSidecar(_sourceDir, "Standards", standardName, isJsonFormat: true,
+            new AnimationSave { Name = "Spin" });
+
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(standard);
+
+        await _sut.ImportAsync(SelectionsForStandard(standard), source, _sourceDir, destinationSubfolder: "");
+
+        string destPath = Path.Combine(_projectDir, "Standards", $"{standardName}Animations.ganx");
+        ElementAnimationsSave.Load(destPath).Animations.Single().Name.ShouldBe("Spin");
+        _outputManager.Verify(o => o.AddOutput(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ImportAsync_SkipResolution_ConflictingComponentAnimationsLeftUntouched()
+    {
+        // Skip leaves the conflicting component alone, so its animation sidecar must stay too.
+        string componentName = "ExistingButton";
+        string destComponentDir = Path.Combine(_projectDir, "Components");
+        Directory.CreateDirectory(destComponentDir);
+        File.WriteAllText(
+            Path.Combine(destComponentDir, $"{componentName}.{GumProjectSave.ComponentExtension}"),
+            "<ComponentSave><Name>ExistingButton</Name></ComponentSave>");
+        WriteAnimationSidecar(_projectDir, "Components", componentName, isJsonFormat: false,
+            new AnimationSave { Name = "Original" });
+
+        WriteSourceComponent(componentName);
+        WriteSourceAnimationSidecar(componentName, isJsonFormat: false, animationName: "Incoming");
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        await _sut.ImportAsync(SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Skip);
+
+        ElementAnimationsSave.Load(Path.Combine(destComponentDir, $"{componentName}Animations.ganx"))
+            .Animations.Single().Name.ShouldBe("Original");
+    }
+
+    private StandardElementSave WriteSourceStandard(string name)
+    {
+        string file = Path.Combine(_sourceDir, "Standards", $"{name}.{GumProjectSave.StandardExtension}");
+        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        File.WriteAllText(file, $"<StandardElementSave><Name>{name}</Name></StandardElementSave>");
+        return new StandardElementSave
+        {
+            Name = name,
+            States = new() { new StateSave { Name = "Default", Variables = new() } }
+        };
+    }
+
+    private static void WriteAnimationSidecar(string rootDir, string subfolder, string elementName,
+        bool isJsonFormat, params AnimationSave[] animations)
+    {
+        ElementAnimationsSave save = new();
+        save.Animations.AddRange(animations);
+        string path = Path.Combine(rootDir, subfolder, elementName + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        save.Save(path);
+    }
+
+    private static ImportSelections SelectionsForStandard(StandardElementSave standard) => new()
+    {
+        DirectComponents = new(),
+        TransitiveComponents = new(),
+        DirectScreens = new(),
+        Behaviors = new(),
+        Standards = new() { standard },
+    };
 
     // ── asset gating ──────────────────────────────────────────────────────
 

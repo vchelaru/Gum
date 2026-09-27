@@ -1,5 +1,6 @@
 using Avalonia.Headless.XUnit;
 using Gum.DataTypes;
+using Gum.Avalonia.Tests.VariableGrid;
 using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Managers;
@@ -68,11 +69,14 @@ public class FormsAndImportScenarioTests
     [Trait("Feature", "DLG-021")]
     [Trait("Feature", "CONT-010")]
     [Trait("Feature", "COMBO-032")]
+    [Trait("Feature", "EDIT-001")]
     public void AddForms_WithAChosenTheme_ImportsItsComponentsIntoTheProject_AndIsNotOfferedAgain()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         tree.Project.AddComponent("Card");
         tree.SaveAll();
+        tree.Click(tree.NodeFor(ComponentNamed(tree.Project.Project, "Card")));
+        tree.Grid.TypeAndEnter("Width", "175");
         GumProjectSave theme = StagedTheme("Bubblegum");
         tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
         {
@@ -90,6 +94,9 @@ public class FormsAndImportScenarioTests
         project.Screens.ShouldBeEmpty("no demo screen was asked for");
         tree.ChildTexts(tree.RootNode("Components")).ShouldContain("Card");
         MainMenuHeaders("Content").ShouldNotContain("Add Forms Components", "a project that has Forms is not offered them again");
+        tree.Click(tree.NodeFor(ComponentNamed(project, "Card")));
+        tree.Undo();
+        VariableGridHarness.StoredValue(ComponentNamed(project, "Card"), "Width").ShouldBeNull("the edit made before adding Forms is still in Card's history");
 
         tree.AssertOracles();
     }
@@ -171,7 +178,47 @@ public class FormsAndImportScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "CONT-008")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void ImportGumx_AfterEditingAnExistingComponent_ThatEditCanStillBeUndoneAndRedone()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Card");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(ComponentNamed(tree.Project.Project, "Card")));
+        tree.Grid.TypeAndEnter("Width", "175");
+        using TempThemeCopy source = new TempThemeCopy("Standard");
+        tree.Dialogs.AnswerNextOpenFile(source.ProjectFile);
+        tree.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            dialog.BrowseCommand.Execute(null);
+            tree.WaitUntil(() => dialog.IsPreviewLoaded, AsyncWork, "the .gumx preview");
+            dialog.DestinationSubfolder = "Imported";
+            Leaf(dialog, "Controls/ButtonStandard").IsChecked = true;
+            tree.WaitUntil(() => Leaf(dialog, "ButtonBehavior").IsChecked == true, AsyncWork, "the preview to include the button's behavior");
+            return true;
+        });
+
+        tree.PickMainMenu("Content", "Import", ".gumx…");
+        GumProjectSave project = WaitForTheImportsReload(tree);
+        tree.Click(tree.NodeFor(ComponentNamed(project, "Card")));
+        VariableGridHarness.StoredValue(ComponentNamed(project, "Card"), "Width").ShouldBe(175f);
+
+        tree.Undo();
+        VariableGridHarness.StoredValue(ComponentNamed(project, "Card"), "Width").ShouldBeNull("the edit made before the import is still in Card's history");
+
+        tree.Redo();
+        VariableGridHarness.StoredValue(ComponentNamed(project, "Card"), "Width").ShouldBe(175f);
+
+        tree.AssertOracles();
+    }
+
     #endregion
+
+    private static ComponentSave ComponentNamed(GumProjectSave project, string name) =>
+        project.Components.Single(component => component.Name == name);
 
     /// <summary>The project of a Forms theme as the test output stages it.</summary>
     private static GumProjectSave StagedTheme(string name)

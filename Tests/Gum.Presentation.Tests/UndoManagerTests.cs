@@ -687,6 +687,142 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleProjectLoaded_ReloadingTheSameFile_KeepsHistoryOfUnchangedElements_AndDropsChangedOnes()
+    {
+        ComponentSave card = _selectedState.Object.SelectedComponent!;
+        card.Name = "Card";
+        ComponentSave other = new ComponentSave { Name = "Other" };
+        other.States.Add(new StateSave { Name = "Default", ParentContainer = other });
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Components.Add(card);
+        loaded.Components.Add(other);
+        _undoManager.HandleProjectLoaded(loaded);
+        card.DefaultState.SetValue("X", 10f);
+        _undoManager.RecordState();
+        card.DefaultState.SetValue("X", 11f);
+        CrossElementVariableChange crossChange;
+        using (_undoManager.RequestLock())
+        {
+            crossChange = CrossElementVariableChange.CaptureBefore(other, other.DefaultState, new VariableSave { Name = "Y", Value = 1f });
+            _undoManager.RecordCrossElementVariableChanges(new[] { crossChange });
+        }
+        ComponentSave changedCard = FileManager.CloneSaveObject(card);
+        changedCard.DefaultState.SetValue("X", 99f);
+
+        GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        ComponentSave reloadedCard = FileManager.CloneSaveObject(card);
+        ComponentSave reloadedOther = FileManager.CloneSaveObject(other);
+        reloaded.Components.Add(reloadedCard);
+        reloaded.Components.Add(reloadedOther);
+        _undoManager.HandleProjectLoaded(reloaded);
+        SelectComponent(reloadedCard);
+
+        crossChange.Container.ShouldBeSameAs(reloadedOther, "a replayed change must reach the reloaded element");
+        _undoManager.PerformUndo();
+        reloadedCard.DefaultState.GetValueOrDefault<float>("X").ShouldBe(10f);
+
+        GumProjectSave reloadedWithAChange = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        reloadedWithAChange.Components.Add(changedCard);
+        _undoManager.HandleProjectLoaded(reloadedWithAChange);
+        SelectComponent(changedCard);
+        _undoManager.CanRedo().ShouldBeFalse("the file changed under the history, so the history no longer describes it");
+    }
+
+    [Fact]
+    public void HandleProjectLoaded_WhenAnElementAnEditChangedAlongsideIsReloadedChanged_DropsTheEditorsHistory()
+    {
+        ComponentSave card = _selectedState.Object.SelectedComponent!;
+        card.Name = "Card";
+        ComponentSave other = new ComponentSave { Name = "Other" };
+        other.States.Add(new StateSave { Name = "Default", ParentContainer = other });
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Components.Add(card);
+        loaded.Components.Add(other);
+        _undoManager.HandleProjectLoaded(loaded);
+        _undoManager.RecordState();
+        card.DefaultState.SetValue("X", 11f);
+        using (_undoManager.RequestLock())
+        {
+            _undoManager.RecordCrossElementVariableChanges(new[]
+            {
+                CrossElementVariableChange.CaptureBefore(other, other.DefaultState, new VariableSave { Name = "Y", Value = 1f }),
+            });
+        }
+
+        GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        ComponentSave reloadedCard = FileManager.CloneSaveObject(card);
+        ComponentSave changedOther = FileManager.CloneSaveObject(other);
+        changedOther.DefaultState.SetValue("Z", 5f);
+        reloaded.Components.Add(reloadedCard);
+        reloaded.Components.Add(changedOther);
+        _undoManager.HandleProjectLoaded(reloaded);
+        SelectComponent(reloadedCard);
+
+        _undoManager.CanUndo().ShouldBeFalse("undoing the edit could no longer reverse its change to Other");
+    }
+
+    [Fact]
+    public void HandleProjectLoaded_ReloadingTheSameFile_KeepsHistoryOfUnchangedBehaviors_AndDropsChangedOnes()
+    {
+        BehaviorSave kept = new BehaviorSave { Name = "Kept" };
+        BehaviorSave changed = new BehaviorSave { Name = "Changed" };
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Behaviors.Add(kept);
+        loaded.Behaviors.Add(changed);
+        _undoManager.HandleProjectLoaded(loaded);
+        foreach (BehaviorSave behavior in new[] { kept, changed })
+        {
+            _selectedState.Setup(x => x.SelectedBehavior).Returns(behavior);
+            _undoManager.RecordBehaviorState();
+            behavior.Categories.Add(new StateSaveCategory { Name = "Added" });
+            _undoManager.RecordBehaviorUndo();
+        }
+
+        GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        BehaviorSave reloadedKept = FileManager.CloneSaveObject(kept);
+        BehaviorSave reloadedChanged = FileManager.CloneSaveObject(changed);
+        reloadedChanged.Categories.Add(new StateSaveCategory { Name = "FromTheImport" });
+        reloaded.Behaviors.Add(reloadedKept);
+        reloaded.Behaviors.Add(reloadedChanged);
+        _undoManager.HandleProjectLoaded(reloaded);
+
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(reloadedKept);
+        _undoManager.PerformUndo();
+        reloadedKept.Categories.ShouldBeEmpty();
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(reloadedChanged);
+        _undoManager.CanUndo().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleProjectLoaded_ADifferentFile_DiscardsAllHistory()
+    {
+        ComponentSave card = _selectedState.Object.SelectedComponent!;
+        card.Name = "Card";
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Components.Add(card);
+        _undoManager.HandleProjectLoaded(loaded);
+        card.DefaultState.SetValue("X", 10f);
+        _undoManager.RecordState();
+        card.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+
+        GumProjectSave other = new GumProjectSave { FullFileName = "/game/OtherProject.gumx" };
+        ComponentSave sameCard = FileManager.CloneSaveObject(card);
+        other.Components.Add(sameCard);
+        _undoManager.HandleProjectLoaded(other);
+        SelectComponent(sameCard);
+
+        _undoManager.CanUndo().ShouldBeFalse();
+    }
+
+    private void SelectComponent(ComponentSave component)
+    {
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+        _selectedState.Setup(x => x.SelectedComponent).Returns(component);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+    }
+
+    [Fact]
     public void PerformRedo_AfterDivergentChange_ShouldNotBeAvailable()
     {
         ComponentSave component = _selectedState.Object.SelectedComponent!;

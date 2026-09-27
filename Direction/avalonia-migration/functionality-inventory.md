@@ -37,8 +37,8 @@
 
 ## Edit menu (EDIT)
 
-- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
-- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
+- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests, FormsAndImportScenarioTests
+- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests, FormsAndImportScenarioTests
 - EDIT-003 Undo/Redo enabled state follows history
 - EDIT-004 Add > Screen. tested: AddScreenDialogViewModelTests
 - EDIT-005 Add > Component. tested: AddComponentDialogViewModelTests
@@ -214,10 +214,10 @@
 - VAR-009 Row: Make Default. tested: VariableEditScenarioTests, VariableScenarioTests
 - VAR-010 Row: Copy Qualified Variable Name. tested: VariableGridEntryTests
 - VAR-011 Row: Expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
-- VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests
+- VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-013 Row: Show on Instances
 - VAR-014 Row: Hide from Instances. tested: VariableMenuScenarioTests
-- VAR-015 Row: Delete Variable. tested: VariableMenuScenarioTests
+- VAR-015 Row: Delete Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-016 Row: Edit / Rename Variable. tested: EditVariableServiceTests
 - VAR-017 Row: copy variable reference
 - VAR-018 Composite row: Expose/Un-expose channels. tested: CompositeMemberLogicApplyTests

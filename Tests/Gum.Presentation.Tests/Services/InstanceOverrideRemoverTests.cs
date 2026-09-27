@@ -56,6 +56,31 @@ public class InstanceOverrideRemoverTests : BaseTestClass
     }
 
     [Fact]
+    public void RemoveAndRecordForUndo_RemovesAnInheritingElementsOwnValue_AndRecordsItWithNoInstance()
+    {
+        ComponentSave fancyButton = new ComponentSave { Name = "FancyButton", BaseType = "Button" };
+        fancyButton.States.Add(new StateSave { Name = "Default", ParentContainer = fancyButton });
+        VariableSave derivedValue = new VariableSave { Name = "Speed", Type = "float", Value = 5f };
+        fancyButton.GetDefaultStateOrThrow().Variables.Add(derivedValue);
+        List<CrossElementVariableChange>? recorded = null;
+        _undoManager
+            .Setup(x => x.RecordCrossElementVariableChanges(It.IsAny<IEnumerable<CrossElementVariableChange>>()))
+            .Callback<IEnumerable<CrossElementVariableChange>>(changes => recorded = changes.ToList());
+
+        _remover.RemoveAndRecordForUndo(new[]
+        {
+            new VariableChange { Container = fancyButton, State = fancyButton.GetDefaultStateOrThrow(), Variable = derivedValue, IsInheritingElementValue = true }
+        });
+
+        fancyButton.GetDefaultStateOrThrow().Variables.ShouldNotContain(derivedValue);
+        _fileCommands.Verify(x => x.TryAutoSaveElement(fancyButton), Times.Once);
+        _pluginManager.Verify(x => x.VariableSet(fancyButton, null, "Speed", null, It.IsAny<bool>()), Times.Once);
+        recorded.ShouldNotBeNull();
+        recorded.Single().Instance.ShouldBeNull();
+        recorded.Single().Before!.Name.ShouldBe("Speed");
+    }
+
+    [Fact]
     public void RemoveAndRecordForUndo_SkipsAnOverrideWhoseInstanceIsMissing_AndRecordsNothing()
     {
         ScreenSave screen = new ScreenSave { Name = "Title" };

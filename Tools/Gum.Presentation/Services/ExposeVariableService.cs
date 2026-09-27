@@ -276,24 +276,24 @@ public class ExposeVariableService : IExposeVariableService
             return;
         }
 
-        List<VariableChange> instanceOverrides = renames.VariableChanges.Where(c => c.IsPlainInstanceOverride).ToList();
-        bool shouldClearInstanceValues = false;
-        if (instanceOverrides.Count > 0)
+        List<VariableChange> valuesToClear = renames.VariableChanges.Where(c => c.IsRemovableValue).ToList();
+        bool shouldClearValues = false;
+        if (valuesToClear.Count > 0)
         {
-            if (AskWhetherToClearInstanceValues(oldExposedName, instanceOverrides) is not { } shouldClear)
+            if (AskWhetherToClearValues(oldExposedName, valuesToClear) is not { } shouldClear)
             {
                 return;
             }
-            shouldClearInstanceValues = shouldClear;
+            shouldClearValues = shouldClear;
         }
 
         using var undoLock = _undoManager.RequestLock();
 
         variableSave.ExposedAsName = null;
 
-        if (shouldClearInstanceValues)
+        if (shouldClearValues)
         {
-            _instanceOverrideRemover.RemoveAndRecordForUndo(instanceOverrides);
+            _instanceOverrideRemover.RemoveAndRecordForUndo(valuesToClear);
         }
 
         _pluginManager.VariableDelete(elementSave, oldExposedName);
@@ -302,16 +302,22 @@ public class ExposeVariableService : IExposeVariableService
     }
 
     /// <summary>
-    /// Asks whether to clear the instance values that set the variable being un-exposed. Returns null
-    /// when the user cancels.
+    /// Asks whether to clear the values instances and inheriting elements set for the variable being
+    /// un-exposed. Returns null when the user cancels.
     /// </summary>
-    private bool? AskWhetherToClearInstanceValues(string exposedName, List<VariableChange> instanceOverrides)
+    private bool? AskWhetherToClearValues(string exposedName, List<VariableChange> valuesToClear)
     {
-        var instanceLines = instanceOverrides
-            .Select(change => $"\u2022 {change.Variable.SourceObject} in {(change.Container as ElementSave)?.Name ?? change.Container.ToString()}")
+        var valueLines = valuesToClear
+            .Select(change =>
+            {
+                string containerName = (change.Container as ElementSave)?.Name ?? change.Container.ToString() ?? string.Empty;
+                return change.IsInheritingElementValue
+                    ? $"\u2022 {containerName} (derived)"
+                    : $"\u2022 {change.Variable.SourceObject} in {containerName}";
+            })
             .Distinct();
 
-        string message = $"{exposedName} is set on these instances:\n\n{string.Join("\n", instanceLines)}\n\n" +
+        string message = $"{exposedName} is set on:\n\n{string.Join("\n", valueLines)}\n\n" +
             "Kept values stay in the files and return if the variable is exposed again.";
 
         // String keys: ShowChoices returns default(T) on cancel, which for a value type is a valid key.

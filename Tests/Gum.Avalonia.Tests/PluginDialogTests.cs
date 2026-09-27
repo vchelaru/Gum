@@ -1,3 +1,4 @@
+using Gum.Managers;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
@@ -125,7 +126,8 @@ public class PluginDialogTests
         Services.GetRequiredService<IImportLogic>(),
         Services.GetRequiredService<IFileCommands>(),
         Services.GetRequiredService<IDialogService>(),
-        Services.GetRequiredService<IDispatcher>()).CreateImportViewModel();
+        Services.GetRequiredService<IDispatcher>(),
+        Services.GetRequiredService<IOutputManager>()).CreateImportViewModel();
 
     private static void ShouldBeInsideWindow(Control control, Window window)
     {

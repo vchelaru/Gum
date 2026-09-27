@@ -40,10 +40,17 @@ public class VariableChange
     public object? NewValue;
 
     /// <summary>
-    /// True when <see cref="Variable"/> is a value an instance sets, false when it is an inheriting
-    /// element's own exposed-name entry. Only the former can be removed and restored as a plain value.
+    /// True when <see cref="Variable"/> is an inheriting element's own value for the variable, such as
+    /// FancyButton setting LabelText that its base Button exposes, rather than an instance's value.
     /// </summary>
-    public bool IsPlainInstanceOverride => string.IsNullOrEmpty(Variable.ExposedAsName);
+    public bool IsInheritingElementValue;
+
+    /// <summary>
+    /// True when <see cref="Variable"/> is a value that can be removed and restored: one an instance sets,
+    /// or one an inheriting element sets on itself. False when an inheriting element exposes a different
+    /// variable of its own under the same name.
+    /// </summary>
+    public bool IsRemovableValue => IsInheritingElementValue || string.IsNullOrEmpty(Variable.ExposedAsName);
 }
 
 public class VariableReferenceChange
