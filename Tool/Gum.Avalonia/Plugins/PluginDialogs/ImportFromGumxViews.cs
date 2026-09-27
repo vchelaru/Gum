@@ -131,6 +131,10 @@ public sealed class ImportFromGumxView : Grid
         // One-way from the view model; a click goes through the view model's toggle, and the box
         // then shows whatever state the view model settled on.
         checkBox.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(ImportTreeNodeViewModel.IsChecked)) { Mode = BindingMode.OneWay });
+        // A required row can't be unchecked; the tooltip says why, so it has to show while disabled.
+        checkBox.Bind(IsEnabledProperty, new Binding(nameof(ImportTreeNodeViewModel.IsCheckable)));
+        checkBox.Bind(ToolTip.TipProperty, new Binding(nameof(ImportTreeNodeViewModel.RequiredReason)));
+        ToolTip.SetShowOnDisabled(checkBox, true);
         checkBox.Click += (_, _) =>
         {
             node.Toggle();

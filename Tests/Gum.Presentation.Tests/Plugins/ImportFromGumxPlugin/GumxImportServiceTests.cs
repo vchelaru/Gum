@@ -1,5 +1,3 @@
-using Gum.Managers;
-using Moq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -38,7 +36,6 @@ public class GumxImportServiceTests : IDisposable
 
     // ── system under test ─────────────────────────────────────────────────
     private readonly GumxSourceService _sourceService = new();
-    private readonly Mock<IOutputManager> _outputManager = new();
     private readonly GumxImportService _sut;
 
     public GumxImportServiceTests()
@@ -53,8 +50,7 @@ public class GumxImportServiceTests : IDisposable
         _projectState  = new FakeProjectState(_projectDir, _gumProject);
         _importLogic   = new FakeImportLogic(_projectDir);
 
-        _sut = new GumxImportService(
-            _importLogic, _projectState, _fileCommands, _sourceService, _outputManager.Object);
+        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService);
     }
 
     public void Dispose()
@@ -395,33 +391,93 @@ public class GumxImportServiceTests : IDisposable
         result.ConflictingElements.ShouldBeEmpty();
     }
 
-    // ── Standard animations (#5238) ───────────────────────────────────────
+    [Fact]
+    public async Task ImportAsync_ExistingStandard_IsReplacedWholeBySourceFile_EvenWithSkipResolution()
+    {
+        // #5340: a selected Standard replaces the destination's file outright. The destination's
+        // own values, variables, and categories are gone, and Skip (which protects components,
+        // screens, and behaviors) does not apply to Standards.
+        string destPath = Path.Combine(_projectDir, "Standards", $"Text.{GumProjectSave.StandardExtension}");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        StandardElementSave destText = StandardWithFontSize("Text", fontSize: 40);
+        destText.States[0].Variables.Add(new VariableSave { Name = "Rotation", Type = "float", Value = 5f, SetsValue = true });
+        destText.Categories.Add(new StateSaveCategory { Name = "UserCategory" });
+        destText.Save(destPath);
+
+        string sourcePath = Path.Combine(_sourceDir, "Standards", $"Text.{GumProjectSave.StandardExtension}");
+        Directory.CreateDirectory(Path.GetDirectoryName(sourcePath)!);
+        StandardElementSave sourceText = StandardWithFontSize("Text", fontSize: 18);
+        sourceText.Save(sourcePath);
+
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(sourceText);
+
+        await _sut.ImportAsync(SelectionsForStandard(sourceText), source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Skip);
+
+        StandardElementSave written = GumFileSerializer.DeserializeElementSave<StandardElementSave>(File.ReadAllText(destPath), GumProjectSave.NativeVersion)!;
+        written.States[0].Variables.Single(v => v.Name == "FontSize").Value.ShouldBe(18);
+        written.States[0].Variables.ShouldNotContain(v => v.Name == "Rotation");
+        written.Categories.ShouldNotContain(c => c.Name == "UserCategory");
+    }
+
+    private static StandardElementSave StandardWithFontSize(string name, int fontSize) =>
+        new StandardElementSave
+        {
+            Name = name,
+            States = new()
+            {
+                new StateSave
+                {
+                    Name = "Default",
+                    Variables = new() { new VariableSave { Name = "FontSize", Type = "int", Value = fontSize, SetsValue = true } }
+                }
+            }
+        };
+
+    // ── Standard animations (#5238, #5340) ────────────────────────────────
 
     [Fact]
-    public async Task ImportAsync_StandardAnimations_AddsNewNamesAndKeepsExistingNames()
+    public async Task ImportAsync_StandardAnimations_ReplaceDestinationAnimationsWhole()
     {
-        // The standard itself is overwritten, but its animations merge by name: a name the
-        // destination already has is never overwritten, and the skip is reported in Output. Names
-        // match ignoring case, as the Animations tab's own duplicate-name check does.
+        // Importing a standard replaces the destination's standard file whole (#5340), so its
+        // animations are replaced whole along with it: no merge, nothing of the destination's kept.
         string standardName = "Text";
         StandardElementSave standard = WriteSourceStandard(standardName);
         WriteAnimationSidecar(_sourceDir, "Standards", standardName, isJsonFormat: false,
-            new AnimationSave { Name = "fade", Loops = false },
+            new AnimationSave { Name = "Fade", Loops = false },
             new AnimationSave { Name = "Pulse" });
         WriteAnimationSidecar(_projectDir, "Standards", standardName, isJsonFormat: false,
-            new AnimationSave { Name = "Fade", Loops = true });
+            new AnimationSave { Name = "Fade", Loops = true },
+            new AnimationSave { Name = "DestinationOnly" });
 
         GumProjectSave source = SourceProject();
         source.StandardElements.Add(standard);
 
         await _sut.ImportAsync(SelectionsForStandard(standard), source, _sourceDir, destinationSubfolder: "");
 
-        ElementAnimationsSave merged = ElementAnimationsSave.Load(
+        ElementAnimationsSave replaced = ElementAnimationsSave.Load(
             Path.Combine(_projectDir, "Standards", $"{standardName}Animations.ganx"));
-        merged.Animations.Select(a => a.Name).ShouldBe(new[] { "Fade", "Pulse" });
-        merged.Animations[0].Loops.ShouldBeTrue();
-        _outputManager.Verify(o => o.AddOutput(It.Is<string>(s =>
-            s.Contains(standardName) && s.Contains("fade") && !s.Contains("Pulse"))), Times.Once);
+        replaced.Animations.Select(a => a.Name).ShouldBe(new[] { "Fade", "Pulse" });
+        replaced.Animations[0].Loops.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ImportAsync_StandardWithoutSourceAnimations_RemovesTheDestinationsAnimations()
+    {
+        // Replacing whole includes having none: the destination's animations could name states
+        // the imported standard no longer has.
+        string standardName = "Text";
+        StandardElementSave standard = WriteSourceStandard(standardName);
+        WriteAnimationSidecar(_projectDir, "Standards", standardName, isJsonFormat: false,
+            new AnimationSave { Name = "DestinationOnly" });
+
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(standard);
+
+        await _sut.ImportAsync(SelectionsForStandard(standard), source, _sourceDir, destinationSubfolder: "");
+
+        File.Exists(Path.Combine(_projectDir, "Standards", $"{standardName}Animations.ganx")).ShouldBeFalse();
     }
 
     [Fact]
@@ -439,7 +495,6 @@ public class GumxImportServiceTests : IDisposable
 
         string destPath = Path.Combine(_projectDir, "Standards", $"{standardName}Animations.ganx");
         ElementAnimationsSave.Load(destPath).Animations.Single().Name.ShouldBe("Spin");
-        _outputManager.Verify(o => o.AddOutput(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

@@ -29,6 +29,36 @@ public class GumxDependencyResolverTests
         result.TransitiveComponents.Select(component => component.Name).ShouldBe(new[] { "Palette", "Styles" });
     }
 
+    [Fact]
+    public void ComputeTransitive_ListsTheUsersOfEachDifferingStandard_AndOnlyDifferingOnes()
+    {
+        GumProjectSave source = new GumProjectSave();
+        GumProjectSave destination = new GumProjectSave();
+        AddStandard(source, "Text").Categories.Add(new StateSaveCategory { Name = "TextColor" });
+        AddStandard(destination, "Text");
+        AddStandard(source, "Sprite");
+        AddStandard(destination, "Sprite");
+        ComponentSave label = AddComponent(source, "Label");
+        label.Instances.Add(new InstanceSave { Name = "Text", BaseType = "Text", ParentContainer = label });
+        label.Instances.Add(new InstanceSave { Name = "Icon", BaseType = "Sprite", ParentContainer = label });
+        ComponentSave button = AddComponent(source, "Button");
+        button.Instances.Add(new InstanceSave { Name = "Text", BaseType = "Text", ParentContainer = button });
+
+        DependencySet result = new GumxDependencyResolver().ComputeTransitive(
+            new List<ElementSave> { label, button }, source, destination);
+
+        result.DifferingStandardUsers.Keys.Select(standard => standard.Name).ShouldBe(new[] { "Text" });
+        result.DifferingStandardUsers.Values.Single().ShouldBe(new[] { "Button", "Label" });
+    }
+
+    private static StandardElementSave AddStandard(GumProjectSave project, string name)
+    {
+        StandardElementSave standard = new StandardElementSave { Name = name };
+        standard.States.Add(new StateSave { Name = "Default", ParentContainer = standard });
+        project.StandardElements.Add(standard);
+        return standard;
+    }
+
     private static ComponentSave AddComponent(GumProjectSave project, string name)
     {
         ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };
