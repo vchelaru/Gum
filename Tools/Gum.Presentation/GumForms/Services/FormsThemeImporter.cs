@@ -300,7 +300,7 @@ public class FormsThemeImporter : IFormsThemeImporter
                     StandardElementsManager.Self.GetDefaultStateFor(standardElementName)?.Clone();
                 if (actualDefault != null)
                 {
-                    actualDefault.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
+                    actualDefault.Variables.Sort((a, b) => GumProjectSave.CompareNames(a.Name, b.Name));
 
                     // JSON comparison requires we have Newtonsoft, or requires running a newer version
                     // of .NET to have the JSON serailzier present. This isn't currently supported in Gum

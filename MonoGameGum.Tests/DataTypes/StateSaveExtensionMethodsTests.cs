@@ -2,6 +2,8 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using Shouldly;
 using Xunit;
 
@@ -73,5 +75,48 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
         StateSaveExtensionMethods.SetValue(state, "ButtonInstance.Locked", true, instanceSave: null);
 
         instance.Locked.ShouldBeTrue();
+    }
+
+    // Czech collation sorts "ch" after "h", so a CurrentCulture sort orders these variables
+    // differently on a cs-CZ machine, and the element file re-saves reordered there (#5207).
+    [Fact]
+    public void Initialize_SortsVariablesTheSame_UnderADifferentCulture()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("cs-CZ");
+            StateSave state = new StateSave();
+            state.Variables.Add(new VariableSave { Name = "HealthBar.X", Type = "float", Value = 1f });
+            state.Variables.Add(new VariableSave { Name = "CheckBox.X", Type = "float", Value = 2f });
+
+            state.Initialize();
+
+            state.Variables.Select(item => item.Name).ShouldBe(new[] { "CheckBox.X", "HealthBar.X" });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [Fact]
+    public void SetValue_SortsVariablesTheSame_UnderADifferentCulture()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("cs-CZ");
+            StateSave state = new StateSave();
+            state.Variables.Add(new VariableSave { Name = "HealthBar.X", Type = "float", Value = 1f, SetsValue = true });
+
+            StateSaveExtensionMethods.SetValue(state, "CheckBox.X", 2f, instanceSave: null, variableType: "float");
+
+            state.Variables.Select(item => item.Name).ShouldBe(new[] { "CheckBox.X", "HealthBar.X" });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 }

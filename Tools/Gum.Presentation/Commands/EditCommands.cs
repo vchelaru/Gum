@@ -502,9 +502,8 @@ public class EditCommands : IEditCommands
 
             var gumProject = _projectManager.GetLoadedProject();
             gumProject.BehaviorReferences.Add(new BehaviorReference { Name = name });
-            gumProject.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProject.Behaviors.Add(behavior);
-            gumProject.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProject.SortElementsAndReferencesByName();
 
             _pluginManager.BehaviorCreated(behavior);
 
