@@ -231,7 +231,7 @@ public class CopyPasteRenameScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5249: cutting a component and pasting it on a folder copies it instead of moving it")]
+    [AvaloniaFact]
     [Trait("Feature", "TREE-045")]
     public void CuttingAComponent_AndPastingOnAnotherFolder_MovesIt()
     {
@@ -242,6 +242,7 @@ public class CopyPasteRenameScenarioTests
         ComponentSave toggle = tree.Project.AddComponent("Controls/Toggle");
         tree.Project.AddInstance(toggle, "Label", "Text");
         tree.Click(tree.NodeFor(Component(tree, "Controls/Toggle")));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
 
         tree.Press(Key.X, PhysicalKey.X, RawInputModifiers.Control);
         tree.Click(tree.FolderNode("Components", "Menus"));
@@ -250,6 +251,75 @@ public class CopyPasteRenameScenarioTests
         tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Menus/Toggle" });
         File.Exists(Path.Combine(tree.Project.ProjectFolder, "Components", "Controls", "Toggle.gucx")).ShouldBeFalse();
         File.Exists(Path.Combine(tree.Project.ProjectFolder, "Components", "Menus", "Toggle.gucx")).ShouldBeTrue();
+        tree.SelectedState.SelectedElement.ShouldBeSameAs(toggle);
+
+        // The cut was used up by the move, so a second paste adds nothing.
+        tree.Click(tree.RootNode("Components"));
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Menus/Toggle" });
+
+        tree.Click(tree.NodeFor(toggle));
+        tree.Undo();
+        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Controls/Toggle" });
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the move should put the component back");
+
+        tree.Redo();
+        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Menus/Toggle" });
+        File.Exists(Path.Combine(tree.Project.ProjectFolder, "Components", "Controls", "Toggle.gucx")).ShouldBeFalse();
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "TREE-045")]
+    public void CuttingAComponent_ThenDeletingIt_PastesNothing()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Panel");
+        ComponentSave toggle = tree.Project.AddComponent("Toggle");
+        tree.Dialogs.AnswerNext<AddFolderDialogViewModel>(dialog => { dialog.Value = "Menus"; return true; });
+        tree.RightClick(tree.RootNode("Components"));
+        tree.PickMenu("Add Folder");
+        tree.Click(tree.NodeFor(toggle));
+        tree.Press(Key.X, PhysicalKey.X, RawInputModifiers.Control);
+        tree.Dialogs.AnswerNext<DeleteOptionsDialogViewModel>(_ => true);
+        tree.RightClick(tree.NodeFor(toggle));
+        tree.PickMenu("Delete");
+        tree.Click(tree.FolderNode("Components", "Menus"));
+        ProjectFileSnapshot deleted = tree.SnapshotFiles();
+
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+
+        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Panel" });
+        tree.SnapshotFiles().ShouldMatch(deleted, "a deleted cut element should not come back");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "TREE-045")]
+    public void CuttingAComponent_AndPastingWhereItIsNotAFolder_LeavesItInPlace()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Panel");
+        ComponentSave toggle = tree.Project.AddComponent("Controls/Toggle");
+        tree.Click(tree.NodeFor(toggle));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Press(Key.X, PhysicalKey.X, RawInputModifiers.Control);
+        tree.Click(tree.FolderNode("Components", "Controls"));
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+        tree.Click(tree.NodeFor(Component(tree, "Panel")));
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+
+        // Its own folder and a component are not somewhere to move it, and a cut never copies.
+        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Controls/Toggle", "Panel" });
+        tree.SnapshotFiles().ShouldMatch(start, "a cut with nowhere to move should change no file");
+
+        // The cut is still pending, so pasting on the Components root moves it there.
+        tree.Click(tree.RootNode("Components"));
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Panel", "Toggle" });
 
         tree.AssertOracles();
     }
