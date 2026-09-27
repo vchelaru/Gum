@@ -522,6 +522,42 @@ public class ContentLoaderTests : BaseTestClass
         }
     }
 
+    // #5225: a .gumpkg hook serves only its bundle and throws for anything else, so a loose texture
+    // on disk must still load from disk when the hook misses it.
+    [Fact]
+    public void LoadContent_WhenTextureIsOnDiskAndHookDoesNotServeIt_ShouldLoadFromDisk()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "GumRaylibLooseOverHookTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+
+        try
+        {
+            string fileName = "loose_pixel.png";
+            File.WriteAllBytes(Path.Combine(tempRoot, fileName), CreatePngBytes(7, 2));
+            FileManager.RelativeDirectory = tempRoot.Replace('\\', '/') + "/";
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = requestedPath =>
+                throw new FileNotFoundException("Not in the bundle.", requestedPath);
+
+            Texture2D loaded = LoaderManager.Self.LoadContent<Texture2D>(fileName);
+
+            loaded.Width.ShouldBe(7);
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = null;
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            if (Directory.Exists(tempRoot))
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        }
+    }
+
     // Encodes a real PNG into memory by exporting a generated image to a throwaway temp file and
     // reading the bytes back — raylib has no public encode-to-byte[] helper exposed here, and this
     // matches the GenImageColor/ExportImage idiom already used below.

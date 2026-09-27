@@ -865,54 +865,68 @@ namespace ToolsUtilities
 
             try
             {
-
-                // Normalize to an absolute path BEFORE handing off — both for the host-installed
-                // CustomGetStreamFromFile hook and for the direct File.OpenRead fallback. FileExists
-                // already does this via Standardize(makeAbsolute: true); keeping the two APIs in
-                // lockstep is important because callers commonly do FileExists(p) then
-                // GetStreamForFile(p). If they disagreed on path shape, the hook would see two
-                // different strings for the same logical file — the exact bug that caused
-                // ".ganx FileExists succeeds, then XmlDeserialize 404s" on Blazor WASM.
-                if (IsRelative(fileName))
+                // Normalize the same way FileExists does BEFORE handing off, for both the hook and
+                // the disk read. Callers commonly do FileExists(p) then GetStreamForFile(p); if the
+                // two disagreed on path shape (separators, "..", relative vs absolute), the hook
+                // would see two different strings for the same logical file — the bug behind
+                // ".ganx FileExists succeeds, then XmlDeserialize 404s" on Blazor WASM (#5222).
+                if (!IsUrl(fileName))
                 {
-                    fileName = FileManager.MakeAbsolute(fileName);
+                    fileName = Standardize(fileName, preserveCase: true, makeAbsolute: true);
                 }
 
-                if (CustomGetStreamFromFile != null)
+                if (CustomGetStreamFromFile == null)
                 {
-                    var customStream = CustomGetStreamFromFile(fileName);
-                    if (customStream == null)
+                    // Let OpenRead throw its FileNotFound/DirectoryNotFound for a missing file.
+                    return TryOpenFromDisk(fileName) ?? File.OpenRead(fileName);
+                }
+
+                // The hook wins when it has the file, so a loaded .gumpkg overrides stale loose
+                // copies next to it. A hook that serves only its own content (a bundle, a zip) misses
+                // any other file, so fall back to disk: FileExists reports a loose file as existing,
+                // and reading it must not fail just because a hook is installed (#5225).
+                Exception hookMiss;
+                try
+                {
+                    Stream? customStream = CustomGetStreamFromFile(fileName);
+                    if (customStream != null)
                     {
-                        throw new FileNotFoundException($"CustomGetStreamFromFile returned null for {fileName}", fileName);
+                        return customStream;
                     }
-                    return customStream;
+                    hookMiss = new FileNotFoundException($"CustomGetStreamFromFile returned null for {fileName}", fileName);
                 }
-                else
-                {
-                    fileName = fileName.Replace('\\', Path.DirectorySeparatorChar)
-                        .Replace('/', Path.DirectorySeparatorChar);
+                catch (FileNotFoundException e) { hookMiss = e; }
+                catch (DirectoryNotFoundException e) { hookMiss = e; }
 
-#if NET6_0_OR_GREATER
-                    // In a macOS .app bundle the executable is in Contents/MacOS/ but loose content
-                    // ships in Contents/Resources/. Gum anchored fileName on the executable directory,
-                    // so if it isn't there, retry against the bundle's Resources directory (issue #731).
-                    if (System.OperatingSystem.IsMacOS() && !File.Exists(fileName))
-                    {
-                        string? resourcesPath = GetMacOSBundleResourcesPath(fileName, ExeLocation);
-                        if (resourcesPath != null && File.Exists(resourcesPath))
-                        {
-                            fileName = resourcesPath;
-                        }
-                    }
-#endif
-
-                    return System.IO.File.OpenRead(fileName);
-                }
+                return TryOpenFromDisk(fileName) ?? throw hookMiss;
             }
             catch (Exception e)
             {
                 throw new IOException("Could not get the stream for the file " + fileName, e);
             }
+        }
+
+        private static Stream? TryOpenFromDisk(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                return File.OpenRead(fileName);
+            }
+
+#if NET6_0_OR_GREATER
+            // In a macOS .app bundle the executable is in Contents/MacOS/ but loose content ships in
+            // Contents/Resources/. Gum anchored fileName on the executable directory, so if it isn't
+            // there, retry against the bundle's Resources directory (issue #731).
+            if (System.OperatingSystem.IsMacOS())
+            {
+                string? resourcesPath = GetMacOSBundleResourcesPath(fileName, ExeLocation);
+                if (resourcesPath != null && File.Exists(resourcesPath))
+                {
+                    return File.OpenRead(resourcesPath);
+                }
+            }
+#endif
+            return null;
         }
 
 #if NET5_0_OR_GREATER
