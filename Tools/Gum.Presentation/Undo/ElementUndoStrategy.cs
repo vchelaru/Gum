@@ -1089,4 +1089,65 @@ public class ElementUndoStrategy : IUndoStrategy
         _baselineElement = null;
         _targetedBaselines.Clear();
     }
+
+    /// <summary>
+    /// Moves each element's history onto the element of the same name in <paramref name="reloaded"/>,
+    /// the same project reopened, when the reload left it and every element its cross-element changes
+    /// touch unchanged; drops the rest. Those changes are re-pointed at the reloaded elements, so undo
+    /// still replays them in full.
+    /// </summary>
+    public void CarryOverTo(GumProjectSave reloaded)
+    {
+        Dictionary<ElementSave, ElementSave?> matches = new Dictionary<ElementSave, ElementSave?>();
+        ElementSave? UnchangedMatch(ElementSave old)
+        {
+            if (!matches.TryGetValue(old, out ElementSave? match))
+            {
+                match = reloaded.AllElements.FirstOrDefault(element => element.GetType() == old.GetType() && element.Name == old.Name);
+                if (match != null && !AreEqual(old, match))
+                {
+                    match = null;
+                }
+                matches[old] = match;
+            }
+            return match;
+        }
+
+        List<KeyValuePair<ElementSave, ElementHistory>> carried = new List<KeyValuePair<ElementSave, ElementHistory>>();
+        foreach (KeyValuePair<ElementSave, ElementHistory> pair in mUndos)
+        {
+            ElementSave? match = UnchangedMatch(pair.Key);
+            List<CrossElementVariableChange> changes = pair.Value.Actions
+                .SelectMany(action => action.CrossElementVariableChanges ?? Enumerable.Empty<CrossElementVariableChange>())
+                .ToList();
+            // An undo that skipped a changed container would restore this element but not the other.
+            if (match == null || changes.Any(change => UnchangedMatch(change.Container) == null))
+            {
+                continue;
+            }
+            foreach (CrossElementVariableChange change in changes)
+            {
+                // Instance and state are found again by name on replay.
+                change.Container = UnchangedMatch(change.Container)!;
+            }
+            carried.Add(new KeyValuePair<ElementSave, ElementHistory>(match, pair.Value));
+        }
+
+        Clear();
+        foreach (KeyValuePair<ElementSave, ElementHistory> pair in carried)
+        {
+            mUndos.Add(pair.Key, pair.Value);
+        }
+    }
+
+    // Compares round-tripped copies: an element edited in memory and the same element read back from
+    // its file serialize differently (a variable's empty Type, say) until both have been through the
+    // serializer once.
+    private static bool AreEqual(ElementSave first, ElementSave second) => (first, second) switch
+    {
+        (ScreenSave a, ScreenSave b) => FileManager.AreSaveObjectsEqual(FileManager.CloneSaveObject(a), FileManager.CloneSaveObject(b)),
+        (ComponentSave a, ComponentSave b) => FileManager.AreSaveObjectsEqual(FileManager.CloneSaveObject(a), FileManager.CloneSaveObject(b)),
+        (StandardElementSave a, StandardElementSave b) => FileManager.AreSaveObjectsEqual(FileManager.CloneSaveObject(a), FileManager.CloneSaveObject(b)),
+        _ => false,
+    };
 }

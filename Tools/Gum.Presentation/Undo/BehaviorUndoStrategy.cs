@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.ToolStates;
 using System;
@@ -252,6 +253,29 @@ public class BehaviorUndoStrategy : IUndoStrategy
     {
         _behaviorUndos.Clear();
         _recordedBehaviorSnapshot = null;
+    }
+
+    /// <summary>
+    /// Moves each behavior's history onto the behavior of the same name in <paramref name="reloaded"/>,
+    /// the same project reopened, when the reload left it unchanged; drops the rest.
+    /// </summary>
+    public void CarryOverTo(GumProjectSave reloaded)
+    {
+        List<KeyValuePair<BehaviorSave, BehaviorHistory>> carried = new List<KeyValuePair<BehaviorSave, BehaviorHistory>>();
+        foreach (KeyValuePair<BehaviorSave, BehaviorHistory> pair in _behaviorUndos)
+        {
+            BehaviorSave? match = reloaded.Behaviors.FirstOrDefault(behavior => behavior.Name == pair.Key.Name);
+            if (match != null && FileManager.AreSaveObjectsEqual(CloneBehavior(pair.Key), CloneBehavior(match)))
+            {
+                carried.Add(new KeyValuePair<BehaviorSave, BehaviorHistory>(match, pair.Value));
+            }
+        }
+
+        Clear();
+        foreach (KeyValuePair<BehaviorSave, BehaviorHistory> pair in carried)
+        {
+            _behaviorUndos.Add(pair.Key, pair.Value);
+        }
     }
 
     /// <summary>
