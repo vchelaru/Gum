@@ -135,6 +135,9 @@ public sealed class PluginsDialogView : Border
                 CheckBox box = new CheckBox();
                 box.Bind(ContentControl.ContentProperty, new Binding(nameof(PluginItemViewModel.DisplayText)));
                 box.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(PluginItemViewModel.IsEnabled)) { Mode = BindingMode.TwoWay });
+                box.Bind(IsEnabledProperty, new Binding(nameof(PluginItemViewModel.CanToggle)));
+                box.Bind(ToolTip.TipProperty, new Binding(nameof(PluginItemViewModel.ToolTip)));
+                ToolTip.SetShowOnDisabled(box, true);
                 return box;
             }),
         };

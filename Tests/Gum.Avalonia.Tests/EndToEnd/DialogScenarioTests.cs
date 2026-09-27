@@ -282,6 +282,44 @@ public class DialogScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "DLG-015")]
+    public void ManagePlugins_OffersTheCheckboxOnlyForPluginsThatTurnOff_AndRecordsOnlyWhatTurnedOff()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
+        IPluginEnablementStore store = Services.GetRequiredService<IPluginEnablementStore>();
+        PluginContainer loadRecent = PluginContainerFor(pluginManager, "MainRecentFilesPlugin");
+        List<string> sprangBack = new List<string>();
+        tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
+        {
+            PluginItemViewModel loadRecentRow = dialog.Plugins.Single(plugin => plugin.DisplayText == loadRecent.ToString());
+            loadRecentRow.CanToggle.ShouldBeFalse();
+            loadRecentRow.IsEnabled = false;
+            loadRecentRow.IsEnabled.ShouldBeTrue();
+
+            // Every checkbox offered really turns its plugin off, so none springs back.
+            foreach (PluginItemViewModel row in dialog.Plugins.Where(plugin => plugin.CanToggle && plugin.IsEnabled))
+            {
+                row.IsEnabled = false;
+                if (row.IsEnabled)
+                {
+                    sprangBack.Add(row.DisplayText);
+                }
+                row.IsEnabled = true;
+            }
+            return true;
+        });
+
+        tree.PickMainMenu("Plugins", "Manage Plugins");
+
+        loadRecent.IsEnabled.ShouldBeTrue();
+        store.IsDisabled(loadRecent.Plugin.UniqueId).ShouldBeFalse("Load Recent never turned off, so the next launch must start it");
+        sprangBack.ShouldBeEmpty();
+        pluginManager.PluginContainers.Values.ShouldAllBe(container => !store.IsDisabled(container.Plugin.UniqueId));
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "PROP-007")]
     [Trait("Feature", "PROP-012")]
     [Trait("Feature", "PROP-015")]
