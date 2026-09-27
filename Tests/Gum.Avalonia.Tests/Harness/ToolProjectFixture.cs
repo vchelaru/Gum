@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Avalonia.Plugins.EditorTab;
+using Gum.Avalonia.Plugins.TextureCoordinates;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
@@ -51,10 +52,11 @@ internal sealed class ToolProjectFixture : IDisposable
         _dialogScope = ((SwitchableDialogService)Services.GetRequiredService<IDialogService>()).Use(Dialogs);
         // The editor tab draws on a canvas the headless run never builds, so every element it is
         // asked to show throws and the plugin manager disables it for the rest of the run, which
-        // breaks later tests that need it (CanvasRedrawTests). It sits out while the fixture runs.
+        // breaks later tests that need it (CanvasRedrawTests). It sits out while the fixture runs,
+        // and so does the Texture Coordinates tab, which reads the visuals the editor tab builds.
         _pluginManager = Services.GetRequiredService<PluginManager>();
         _originalPlugins = _pluginManager.Plugins;
-        _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => plugin is not AvaloniaEditorTabPlugin).ToList();
+        _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => !IsCanvasPlugin(plugin)).ToList();
         try
         {
             SelectedState = Services.GetRequiredService<ISelectedState>();
@@ -152,18 +154,21 @@ internal sealed class ToolProjectFixture : IDisposable
     }
 
     /// <summary>
-    /// Lets the editor tab plugin, which sits out while the fixture runs, receive events again; for
-    /// a harness that has given it a canvas on a graphics device. Dispose restores the plugins the
-    /// fixture started with.
+    /// Lets the editor tab and Texture Coordinates tab plugins, which sit out while the fixture
+    /// runs, receive events again; for a harness that has given them canvases on a graphics device.
+    /// Dispose restores the plugins the fixture started with.
     /// </summary>
-    public void IncludeEditorTab()
+    public void IncludeCanvasTabs()
     {
         IEnumerable<PluginBase> current = _pluginManager.Plugins ?? Enumerable.Empty<PluginBase>();
         // In the composed order, which event dispatch follows.
         _pluginManager.Plugins = (_originalPlugins ?? Enumerable.Empty<PluginBase>())
-            .Where(plugin => plugin is AvaloniaEditorTabPlugin || current.Contains(plugin))
+            .Where(plugin => IsCanvasPlugin(plugin) || current.Contains(plugin))
             .ToList();
     }
+
+    private static bool IsCanvasPlugin(PluginBase plugin) =>
+        plugin is AvaloniaEditorTabPlugin or AvaloniaTextureCoordinatePlugin;
 
     /// <summary>The standard element named <paramref name="name"/> (Text, Sprite, Container...).</summary>
     public StandardElementSave Standard(string name) => Project.StandardElements.Single(element => element.Name == name);

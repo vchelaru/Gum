@@ -7,7 +7,7 @@ depend on the tab.
 | File | Role |
 |---|---|
 | `HeadlessWindowDriver.cs` | The window: clicks, right-click menus, drags, keys, typing, pixel reads, `SaveFrame`. Fails fast on the headless compositor race (see `Animations/README.md`, "Gotchas"). |
-| `ToolProjectFixture.cs` | A new project in a temp folder (`.gumx` or `.gumj`, optionally with a shared per-user folder), built through the tool's own commands (`AddComponent`, `AddInstance`, `AddCategory`, `AddState`), with every dialog answered by `Dialogs`. The editor tab plugin sits out meanwhile: it needs a canvas the headless run never builds. Dispose restores the tool, including the plugin set, so a harness that swaps plugins in need not put them back itself. |
+| `ToolProjectFixture.cs` | A new project in a temp folder (`.gumx` or `.gumj`, optionally with a shared per-user folder), built through the tool's own commands (`AddComponent`, `AddInstance`, `AddCategory`, `AddState`), with every dialog answered by `Dialogs`. The editor tab and Texture Coordinates plugins sit out meanwhile: they need canvases the headless run never builds. Dispose restores the tool, including the plugin set, so a harness that swaps plugins in need not put them back itself. |
 | `ScriptedDialogService.cs` | Answers dialogs from a queue; an unanswered dialog fails the test instead of hanging. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
 
@@ -16,7 +16,9 @@ size on its own. Give it the main window's own wiring: `AppWideWindowInput.Route
 `AppWideWindowInput.FollowBaseFontSize` (dispose the latter). `UiFontSizeEndToEndTests` shows both.
 
 The harnesses built on these: `../Animations/AnimationEditorHarness.cs` (hosts its own plugin
-instance) and `../VariableGrid/VariableGridHarness.cs` (hosts the head's singleton tab).
+instance), `../VariableGrid/VariableGridHarness.cs` (hosts the head's singleton tab) and
+`../TextureCoordinates/TextureCoordinateTabHarness.cs` (the head's Texture Coordinates tab on a
+graphics device, beside `CanvasHarness`, so selecting in the tree gives it the real visual).
 
 ## Plugins between tests
 
@@ -99,7 +101,10 @@ class in its filter.
 
 - The canvas polls its input once per frame, and `CanvasHarness` draws one after each event. The
   editor tab plugin, its canvas and the shared device are built once and live for the rest of the
-  process, as in the tool; the fixture lets the plugin back in for the harness's lifetime.
+  process, as in the tool; the fixture lets the plugin back in for the harness's lifetime. The
+  Texture Coordinates plugin builds its tab at the same moment and sits out and comes back with it.
+- The Texture Coordinates tab's view model (zoom, snap to grid, exposed source) is a singleton.
+  `TextureCoordinateTabHarness` resets the zoom; snap to grid follows each new project's settings.
 - A drag is ignored until it is more than 6 pixels from the press, and movement before that is
   lost (#5257). `Drag` moves in 10 to 20 pixel steps so nothing is lost; pass `steps` to test
   small moves.

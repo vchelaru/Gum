@@ -310,12 +310,12 @@
 
 ## Texture Coordinates tab (TEX)
 
-- TEX-001 Shows selected sprite/NineSlice texture. tested: TextureCoordinateDisplayControllerTests
-- TEX-002 Drag region to set coords. tested: RectangleSelectorTests
-- TEX-003 Resize region handles. tested: RectangleSelectorDragRoundingTests
-- TEX-004 Snap to grid
-- TEX-005 Zoom. tested: TextureCoordinateDisplayScaleTests
-- TEX-006 Exposed texture coordinates. tested: ExposedTextureCoordinateLogicTests
+- TEX-001 Shows selected sprite/NineSlice texture. tested: TextureCoordinateDisplayControllerTests, TextureCoordinateTabScenarioTests
+- TEX-002 Drag region to set coords. tested: RectangleSelectorTests, TextureCoordinateTabScenarioTests
+- TEX-003 Resize region handles. tested: RectangleSelectorDragRoundingTests, TextureCoordinateTabScenarioTests
+- TEX-004 Snap to grid. tested: MainControlViewModelTests, TextureCoordinateTabScenarioTests
+- TEX-005 Zoom. tested: TextureCoordinateDisplayScaleTests, TextureCoordinateTabScenarioTests
+- TEX-006 Exposed texture coordinates. tested: ExposedTextureCoordinateLogicTests, TextureCoordinateTabScenarioTests
 - TEX-007 Background. tested: BackgroundManagerTests
 
 ## Code tab (CODE)

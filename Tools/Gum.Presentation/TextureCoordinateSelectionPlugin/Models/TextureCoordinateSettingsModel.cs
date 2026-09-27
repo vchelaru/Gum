@@ -4,5 +4,5 @@ public class TextureCoordinateSettingsModel
 {
     public bool IsSnapToGridChecked { get; set; }
 
-    public int SelectedSnapToGridValue { get; set; }
+    public int SelectedSnapToGridValue { get; set; } = 16;
 }
