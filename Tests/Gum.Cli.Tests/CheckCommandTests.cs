@@ -1,4 +1,5 @@
 using Shouldly;
+using System.Text.Json;
 
 namespace Gum.Cli.Tests;
 
@@ -69,6 +70,20 @@ public class CheckCommandTests : IDisposable
         result.StandardOutput.ShouldContain("\"element\":");
         result.StandardOutput.ShouldContain("\"message\":");
         result.StandardOutput.ShouldContain("\"severity\":");
+    }
+
+    [Fact]
+    public void Check_JsonFlag_ShouldIncludeEachErrorsCode()
+    {
+        string filePath = CreateProjectWithMissingSpriteTexture("CodeJson");
+
+        CliTestHelper result = CliTestHelper.Run("check", filePath, "--json");
+
+        using JsonDocument document = JsonDocument.Parse(result.StandardOutput);
+        JsonElement entry = document.RootElement.EnumerateArray()
+            .Single(e => e.GetProperty("element").GetString() == "SpriteWithMissingTexture");
+        entry.GetProperty("code").GetString().ShouldBe("GUM0006");
+        entry.GetProperty("severity").GetString().ShouldBe("Warning");
     }
 
     [Fact]
