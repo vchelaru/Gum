@@ -149,9 +149,9 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 - `GumCommon/Localization/LocalizationService.cs` — default implementation
 - `GumCommon/Localization/LocalizationServiceExtensions.cs` — CSV/RESX loaders
 - `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` — static `LocalizationService` property (with `LocalizationServiceChanged` event), `_localizationKeys` `ConditionalWeakTable`, `TryGetLocalizationKey`, and translation logic in `TrySetPropertyOnText`
-- `Gum/Commands/FileCommands.cs` — `LoadLocalizationFile()` (CSV/RESX branch, `LocalizationLoaded` event)
-- `Gum/Commands/IFileCommands.cs` — `LocalizationLoaded` event declaration
-- `Gum/Managers/FileChangeReactionLogic.cs` — `IsLocalizationFileThatShouldTriggerReload()` (list + satellite matching)
+- `Tools/Gum.Presentation/Commands/FileCommands.cs` — `LoadLocalizationFile()` (CSV/RESX branch, `LocalizationLoaded` event)
+- `Tools/Gum.Presentation/Commands/IFileCommands.cs` — `LocalizationLoaded` event declaration
+- `Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs` — `IsLocalizationFileThatShouldTriggerReload()` (list + satellite matching)
 - `Gum/Plugins/InternalPlugins/ProjectPropertiesWindowPlugin/` — Language dropdown + `LocalizationFiles` list editor UI
 - `WpfDataUi/Controls/MultiFileDisplay.xaml(.cs)` — `IDataUi` control for `List<string>` file-path lists; composes `FilePickingLogic`
 - `WpfDataUi/Controls/FilePickingLogic.cs` — shared file-dialog/relative-path plumbing (pattern like `TextBoxDisplayLogic`)
