@@ -117,6 +117,8 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `TreeScenarioTests.cs`, `VariableScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search); the Variables tab, states and edits that cascade into other elements; copy, paste, rename and delete where they meet references, parents, states and animations. |
 | `AnimationScenarioTests.cs` | The Animations tab on `../Animations/AnimationEditorHarness.cs`: `StartScenario()` after setup (saves, routes Ctrl+Z/Ctrl+Y, starts the exception watch, returns the start snapshot), `Undo`/`Redo`, and `AssertOracles()`, which also checks the saved sidecar holds exactly what the tab shows, before and after the reload. |
 | `DialogScenarioTests.cs` | Dialogs reached from the main menu (`ProjectTreeHarness.PickMainMenu("File", "New Project")`) and the Project tree: New Project, Load Project and Load Recent, Import Components, Theming, Manage Plugins, Project Properties. An async menu action is followed by `WaitUntil`. |
+| `CodeTabHarness.cs`, `CodeGenScenarioTests.cs` | The head's Code tab in its own window beside a `ProjectTreeHarness`: settings rows, Generate, and the generated files read back from disk. |
+| `HeadCommandLineScenarioTests.cs` | The head's command line without a window: `HeadOptions` and `CommandLineManager` parse a launch line, and the test hands what they read to the services startup uses. gumcli's process-level scenarios are in `Tests/Gum.Cli.Tests/EndToEnd/`. |
 
 A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
 the gesture with its dialogs queued, asserts the model and the tree, undoes back and compares the
@@ -148,6 +150,10 @@ Gotchas in scenario setup:
   returns true; answering at once imports without the dependencies.
 - Add Forms and Import .gumx end by reloading the project, so read it from `IProjectManager`
   afterwards; `tree.Project.Project` is the stale pre-reload copy.
+- `ToolProjectFixture` creates its project without raising the project-load event, so the Code
+  Output plugin still holds the code settings of whatever project an earlier test loaded.
+  `CodeTabHarness` saves and reopens the project first; a scenario that generates code without it
+  writes into another test's folder.
 - The editor tab, which sits out, fills a project's canvas sizes when the tool opens it; a scenario
   that makes a new project through the tool sets `CustomCanvasSizes` itself before the oracles.
 

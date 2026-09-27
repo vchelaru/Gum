@@ -216,18 +216,24 @@ public sealed class App : Application
     // An unattended run can start with an element, and optionally one of its instances, selected.
     private void ApplyStartupSelection()
     {
-        if (_options.SelectPath is not { } path)
+        if (_options.SelectPath is { } path)
         {
-            return;
+            SelectStartupPath(path, _services.GetRequiredService<ISelectedState>());
         }
+    }
 
+    /// <summary>
+    /// Selects the element named before the <c>#</c> of <paramref name="path"/> and, when one
+    /// follows it, that element's instance; an element that doesn't exist selects nothing.
+    /// </summary>
+    internal static void SelectStartupPath(string path, ISelectedState selectedState)
+    {
         string[] parts = path.Split('#', 2);
         if (ObjectFinder.Self.GetElementSave(parts[0]) is not { } element)
         {
             return;
         }
 
-        ISelectedState selectedState = _services.GetRequiredService<ISelectedState>();
         selectedState.SelectedElement = element;
         if (parts.Length > 1 && element.Instances.Find(instance => instance.Name == parts[1]) is { } selectedInstance)
         {
@@ -243,11 +249,13 @@ public sealed class App : Application
             return;
         }
 
-        RequestedThemeVariant = string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase)
-            ? ThemeVariant.Light
-            : ThemeVariant.Dark;
+        RequestedThemeVariant = ThemeVariantFor(theme);
         _services.GetRequiredService<IMessenger>().Send(new ThemeChangedMessage(_services.GetRequiredService<IThemingService>().EffectiveSettings));
     }
+
+    /// <summary>The variant <c>--theme</c> names: "light" in any case is light, anything else dark.</summary>
+    internal static ThemeVariant ThemeVariantFor(string theme) =>
+        string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase) ? ThemeVariant.Light : ThemeVariant.Dark;
 
     // See issue #4781: a permanent, debugger-independent freeze reported between giving a rename/add-state
     // command and its popup appearing. The heartbeat timer proves the UI thread is still pumping; the

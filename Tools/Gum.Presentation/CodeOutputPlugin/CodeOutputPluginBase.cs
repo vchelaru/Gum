@@ -254,6 +254,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         // Services resolve ProjectDirectory lazily via IProjectDirectoryProvider,
         // so no reconstruction is needed here — just reload project-scoped settings.
         codeOutputProjectSettings = _codeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+        _settingsMembers.HandleProjectLoaded();
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);
     }

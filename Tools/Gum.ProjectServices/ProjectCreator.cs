@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -59,7 +60,10 @@ public class ProjectCreator : IProjectCreator
             FullFileName = filePath,
             // The default standard elements seed the latest variable surface, so stamp the
             // project at the matching version rather than the GumProjectSave ctor default.
-            Version = GumProjectSave.NativeVersion
+            Version = GumProjectSave.NativeVersion,
+            // Loading reads a missing list as an empty one, so a project written without it gains
+            // the element the first time anything re-saves it.
+            CustomCanvasSizes = new List<CustomCanvasSize>(),
         };
 
         foreach (var name in StandardElementNames)
