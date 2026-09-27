@@ -90,31 +90,12 @@ Rules that keep scenarios honest:
   own must clear it the same way.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame that
   the headless session sometimes refuses.
-- Occasionally a test fails at once with "The window hit-tests nothing after a render tick".
-  Confirmed cause, not a Gum bug: `Dispatcher.UIThread` in Avalonia's own
-  `src/Avalonia.Base/Threading/Dispatcher.cs` is `s_uiThread ??= CreateUIThreadDispatcher()` with no
-  lock; the headless session nulls it before each isolated test's app setup and recreates it lazily,
-  so something touching `Dispatcher.UIThread` from another thread in that window (suspected: a GC
-  finalizer, unconfirmed) can create a second instance and orphan the media context/render timer on
-  the loser. Still present through Avalonia 11.3.22 (checked every 11.3.x changelog since 17); a
-  11.3→12 upgrade is not the fix — 12.1.1 has an open, worse version of the same class of bug that
-  poisons the whole test process at a measured 3–5% rate (AvaloniaUI/Avalonia#22021). The poisoning
-  is scoped to the whole test's isolated dispatcher session, not to one Window: recreating just the
-  Window in place (closing it and building a fresh one) still failed 3/3 in local repro, confirmed by
-  running the suite until it reproduced locally. Only a fresh process gets a genuinely independent
-  roll, since `s_uiThread` resets on process start.
-
-  This assembly has ~90 tests that each independently create a harness (and so each independently
-  roll the dice on this race), so a *whole-assembly* retry does not scale: the per-run failure
-  probability compounds well above the per-test rate as tests are added, and every retry re-pays the
-  full ~90s run cost even though usually at most one test actually flaked. CI instead parses the
-  `.trx` on failure for the exact test(s) that failed and re-runs only that filtered set as a fresh
-  process (`build-and-test.yaml`, the `Gum.Avalonia.Tests (headless)` step) — a couple of seconds,
-  not another ~90s — up to 4 total attempts; a genuine failure reproduces on every attempt and still
-  fails the step. Both cost and odds now scale with the number of tests that actually flake (usually
-  0 or 1), not with the assembly's size. Locally, just rerun the test. The harness checks for the
-  race right after the window opens so it fails in milliseconds with that message rather than as a
-  click that "did not land". The tool's file watch plugin used to add its own thread-pool timer to
-  the mix; it now runs that timer
-  only while its tab is shown. Do not add thread-pool work that reaches into Avalonia to the harness
-  or to a plugin's StartUp.
+- The assembly runs one Avalonia application and one UI dispatcher for every test
+  (`[assembly: AvaloniaTestIsolation(PerAssembly)]` in `TestAppBuilder.cs`). Keep it that way. With
+  per-test isolation, Avalonia nulls `Dispatcher.UIThread` before each test and recreates it lazily
+  without a lock, from whichever thread reads it first. Tool work that outlives its test, such as a
+  font generation continuation reporting progress to the status bar, read it from a pool thread in
+  that window and built a dispatcher bound to the wrong platform. The next window then rendered
+  and hit-tested nothing. The harness still checks for that right after the window opens and fails
+  with "The window hit-tests nothing after a render tick"; treat that message as a regression, not
+  a flake to rerun.

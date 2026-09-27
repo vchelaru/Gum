@@ -40,7 +40,7 @@ public class UiFontSizeEndToEndTests
         int toolbarIndex = editorTab.Children.IndexOf(toolbar);
         editorTab.Children.Remove(toolbar);
         toolbar.DataContext = editorTab.DataContext;
-        HeadlessWindowDriver.ReleaseTemplatedContent(projectView);
+        HeadlessWindowDriver.DetachFromHost(projectView);
         DockPanel host = new DockPanel();
         DockPanel.SetDock(toolbar, Dock.Top);
         host.Children.Add(toolbar);
@@ -49,7 +49,7 @@ public class UiFontSizeEndToEndTests
         IDisposable? fontSizeFollower = null;
         try
         {
-            driver = new HeadlessWindowDriver(host, width: 900, height: 700, framesFolderName: "GumUiFontSize", contentOutlivesTest: true);
+            driver = new HeadlessWindowDriver(host, width: 900, height: 700, framesFolderName: "GumUiFontSize");
             TimelineRouting(driver.Window);
             fontSizeFollower = AppWideWindowInput.FollowBaseFontSize(driver.Window, services.GetRequiredService<IAppScaleProvider>());
             List<Button> collapseButtons = projectView.GetVisualDescendants().OfType<Button>()

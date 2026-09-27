@@ -56,7 +56,7 @@ internal sealed class TextureCoordinateTabHarness : IDisposable
                 ?? throw new InvalidOperationException(
                     $"The tool has no {TabTitle} tab; an earlier test may have removed it. Tabs: {string.Join(", ", TabManager.AllTabs.Select(candidate => candidate.Title))}");
             View = (TextureCoordinateView)Tab.Content;
-            _driver = new HeadlessWindowDriver(View, width: 600, height: 500, framesFolderName: "GumTextureCoordinates", contentOutlivesTest: true);
+            _driver = new HeadlessWindowDriver(View, width: 600, height: 500, framesFolderName: "GumTextureCoordinates");
             CanvasControl = View.GetVisualDescendants().OfType<ImageRegionCanvasControl>().Single();
             CanvasControl.ErrorOccurred += HandleFrameError;
             // The zoom is the tool's for the session, so it outlives each test; start where the tool does.
