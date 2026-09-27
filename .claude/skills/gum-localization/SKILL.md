@@ -42,7 +42,7 @@ Translation logic in `TranslateForLanguage`:
 
 `GumCommon/Localization/LocalizationServiceExtensions.cs` — extension methods on `ILocalizationService`:
 
-**CSV:** `AddCsvDatabase(Stream)` — uses CsvHelper. First column = string ID, subsequent columns = translations. First row = language headers. Languages list populated from header row. Cells are trimmed outside quotes, a quote inside an unquoted cell is literal, rows whose ID is blank or starts with `//` are skipped, and a repeated ID keeps its last row; `LocalizationServiceExtensionsTests` pins each.
+**CSV:** `AddCsvDatabase(Stream)` — uses CsvHelper. First column = string ID, subsequent columns = translations. First row = language headers. Languages list populated from header row.
 
 **RESX:** Four overloads — single or multi, path-based or stream-based. All accept an optional `Action<string> onWarning` callback (used on cross-file key collisions; runtime never logs on its own).
 

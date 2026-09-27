@@ -95,16 +95,19 @@ public static class ProjectLocalizationLoader
             return;
         }
 
+        Action<string>? optionsOnWarning = options.OnWarning;
+        Action<string>? onWarning = optionsOnWarning == null
+            ? null
+            : message => optionsOnWarning("Localization warning: " + message);
+
         if (IsResx(existingPaths[0]))
         {
-            Action<string>? onWarning = options.OnWarning;
-            LoadResx(service, existingPaths, projectDirectory, bundleFileProvider,
-                onWarning == null ? null : message => onWarning("Localization warning: " + message));
+            LoadResx(service, existingPaths, projectDirectory, bundleFileProvider, onWarning);
         }
         else
         {
             // Only a single file gets here: several files are all RESX by now.
-            LoadCsv(service, existingPaths[0], projectDirectory, bundleFileProvider);
+            LoadCsv(service, existingPaths[0], projectDirectory, bundleFileProvider, onWarning);
         }
     }
 
@@ -130,17 +133,16 @@ public static class ProjectLocalizationLoader
         string.Equals(Path.GetExtension(path), ".resx", StringComparison.OrdinalIgnoreCase);
 
     private static void LoadCsv(ILocalizationService service, string relativePath, string projectDirectory,
-        IGumFileProvider? bundleFileProvider)
+        IGumFileProvider? bundleFileProvider, Action<string>? onWarning)
     {
-        if (bundleFileProvider != null)
-        {
-            using Stream bundleStream = bundleFileProvider.OpenRead(relativePath);
-            service.AddCsvDatabase(bundleStream);
-            return;
-        }
+        Action<string>? onFileWarning = onWarning == null
+            ? null
+            : message => onWarning($"{relativePath}: {message}");
 
-        using Stream stream = FileManager.GetStreamForFile(ToLooseFilePath(projectDirectory, relativePath));
-        service.AddCsvDatabase(stream);
+        using Stream stream = bundleFileProvider != null
+            ? bundleFileProvider.OpenRead(relativePath)
+            : FileManager.GetStreamForFile(ToLooseFilePath(projectDirectory, relativePath));
+        service.AddCsvDatabase(stream, onFileWarning);
     }
 
     private static void LoadResx(ILocalizationService service, List<string> relativePaths,

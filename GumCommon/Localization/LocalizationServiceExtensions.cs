@@ -14,12 +14,29 @@ namespace Gum.Localization;
 
 public static class LocalizationServiceExtensions
 {
-    public static void AddCsvDatabase(this ILocalizationService service, Stream stream)
+    /// <inheritdoc cref="AddCsvDatabase(ILocalizationService, Stream, Action{string}?)"/>
+    public static void AddCsvDatabase(this ILocalizationService service, Stream stream) =>
+        AddCsvDatabase(service, stream, onWarning: null);
+
+    /// <summary>
+    /// Loads a CSV localization database. The first row holds the headers: the first column is the
+    /// string ID and every other column is a language. Each later row is one string ID and its
+    /// translations.
+    /// </summary>
+    /// <remarks>
+    /// Cells and headers are trimmed of spaces and tabs outside quotes. A quote inside an unquoted
+    /// cell is kept as text, but a quoted cell with unescaped inner quotes throws
+    /// <see cref="BadDataException"/>. Rows whose ID is blank or starts with <c>//</c> are skipped.
+    /// A cell missing from a short row falls back to the ID; cells past the header are ignored. When
+    /// an ID repeats, the later row wins and <paramref name="onWarning"/> is told.
+    /// </remarks>
+    /// <param name="service">The service to populate.</param>
+    /// <param name="stream">The CSV contents.</param>
+    /// <param name="onWarning">Receives a message for each repeated string ID.</param>
+    public static void AddCsvDatabase(this ILocalizationService service, Stream stream,
+        Action<string>? onWarning)
     {
         using var reader = new StreamReader(stream);
-        // Hand-edited CSVs often have spaces after commas and quotes inside an unquoted cell
-        // (He said "hi"). Trim outside quotes and keep such quotes literally. A quoted cell with
-        // unescaped inner quotes is still an error, since its text can't be recovered.
         CsvConfiguration configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
             TrimOptions = TrimOptions.Trim,
@@ -40,6 +57,8 @@ public static class LocalizationServiceExtensions
         var columnCount = csv.ColumnCount;
 
         Dictionary<string, string[]> entryDictionary = new Dictionary<string, string[]>();
+        // The row each ID was last read from, to name both rows when an ID repeats.
+        Dictionary<string, int> rowById = new Dictionary<string, int>();
         // ReadHeader throws when there is no header row, so HeaderRecord is set from here on.
         List<string> headerList = csv.HeaderRecord?.Skip(1).ToList() ?? new List<string>();
 
@@ -72,6 +91,14 @@ public static class LocalizationServiceExtensions
                     ? csv.GetField(i) ?? stringId
                     : stringId;
             }
+
+            int row = csv.Parser.Row;
+            if (rowById.TryGetValue(stringId, out int previousRow))
+            {
+                onWarning?.Invoke(
+                    $"Key '{stringId}' is defined on CSV row {previousRow} and row {row}; using row {row} (last-write-wins).");
+            }
+            rowById[stringId] = row;
 
             entryDictionary[stringId] = translatedStrings;
         }

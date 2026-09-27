@@ -38,15 +38,20 @@ public class LocalizationServiceExtensionsTests : IDisposable
     }
 
     [Fact]
-    public void AddCsvDatabase_DuplicateId_ShouldKeepLastRow()
+    public void AddCsvDatabase_DuplicateId_ShouldKeepLastRowAndWarn()
     {
-        string csv = "String ID,English\nT_Hello,First\nT_Hello,Second\n";
+        string csv = "String ID,English\nT_Hello,First\nT_Bye,Bye\nT_Hello,Second\n";
         using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+        List<string> warnings = new List<string>();
 
-        _service.AddCsvDatabase(stream);
+        _service.AddCsvDatabase(stream, warnings.Add);
 
         _service.CurrentLanguage = 1;
         _service.Translate("T_Hello").ShouldBe("Second");
+        string warning = warnings.ShouldHaveSingleItem();
+        warning.ShouldContain("'T_Hello'");
+        warning.ShouldContain("row 4");
+        warning.ShouldContain("row 2");
     }
 
     [Fact]

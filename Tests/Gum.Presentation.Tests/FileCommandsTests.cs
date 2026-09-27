@@ -308,6 +308,20 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadLocalizationFile_ShouldRouteRepeatedCsvIdToOutputTab()
+    {
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"),
+            "String ID,English\nT_Hello,First\nT_Hello,Second\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _errorCalls.ShouldBeEmpty();
+        _outputCalls.ShouldHaveSingleItem().ShouldContain("'T_Hello'");
+    }
+
+    [Fact]
     public void LoadLocalizationFile_ShouldTranslateEveryLanguage_InAThreeLanguageCsv()
     {
         _tempDirectory = CreateTempDirectory();
