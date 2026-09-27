@@ -45,6 +45,21 @@ public class LocalizationServiceExtensionsTests : IDisposable
     }
 
     [Fact]
+    public void AddCsvDatabase_RowShorterThanHeader_ShouldFallBackToStringIdForMissingCells()
+    {
+        string csv = "String ID,English,Spanish\nT_Hello,Hello\nT_Bye,Bye,Adios\n";
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        _service.AddCsvDatabase(stream);
+
+        _service.CurrentLanguage = 1;
+        _service.Translate("T_Hello").ShouldBe("Hello");
+        _service.CurrentLanguage = 2;
+        _service.Translate("T_Hello").ShouldBe("T_Hello");
+        _service.Translate("T_Bye").ShouldBe("Adios");
+    }
+
+    [Fact]
     public void AddCsvDatabase_ShouldLoadStrings_FromStream()
     {
         var csv = "StringId,English,Spanish\nT_OK,OK,OK\nT_Cancel,Cancel,Cancelar\n";
