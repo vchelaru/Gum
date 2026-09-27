@@ -585,83 +585,12 @@ public partial class GumService : IGumService
                 throw new Exception(stringBuilder.ToString());
             }
 
-            var localizationFiles = gumProject.LocalizationFiles;
-            if (localizationFiles != null && localizationFiles.Count > 0)
+            var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
+            if (localizationService != null)
             {
-                // A project with localization files was loaded from disk, so it has a file name.
-                var projectDirectory = FileManager.GetDirectory(gumProject.FullFileName!);
-                var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
-
-                var resolvedPaths = ResolveLocalizationFilePaths(projectDirectory, localizationFiles);
-
-                // Policy mirrors the tool's FileCommands.LoadLocalizationFile:
-                //   0 paths -> no-op
-                //   1 path  -> dispatch by extension (single-file overloads)
-                //   2+ paths -> require all .resx; call the multi-file RESX overload.
-                //              Mixed CSV+RESX or multi-CSV is rejected because the
-                //              runtime LocalizationService has no merge API for them.
-                if (resolvedPaths.Count == 1 && localizationService != null)
-                {
-                    var fileName = resolvedPaths[0];
-                    var extension = FileManager.GetExtension(fileName);
-
-                    if (string.Equals(extension, "resx", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // RESX satellite discovery requires enumerating the directory
-                        // (e.g. Strings.es.resx alongside Strings.resx). On desktop platforms
-                        // the path-based overload handles this via Directory.GetFiles.
-                        // Bundled-content platforms (Android/iOS/TitleContainer) cannot
-                        // enumerate sibling files from a stream, so this auto-load path
-                        // assumes real filesystem access - matching the existing CSV behavior.
-                        localizationService.AddResxDatabase(fileName);
-                    }
-                    else
-                    {
-                        using var stream = FileManager.GetStreamForFile(fileName);
-                        localizationService.AddCsvDatabase(stream);
-                    }
-                }
-                else if (resolvedPaths.Count > 1 && localizationService != null)
-                {
-                    var allResx = true;
-                    foreach (var path in resolvedPaths)
-                    {
-                        if (!string.Equals(FileManager.GetExtension(path), "resx", StringComparison.OrdinalIgnoreCase))
-                        {
-                            allResx = false;
-                            break;
-                        }
-                    }
-
-                    if (!allResx)
-                    {
-                        loadResult.Warnings.Add(
-                            "Localization: multiple files configured but not all are .resx. " +
-                            "Mixed CSV/RESX and multi-CSV loading are not supported. Loading was skipped.");
-                    }
-                    else
-                    {
-                        var existingPaths = new List<string>();
-                        foreach (var path in resolvedPaths)
-                        {
-                            if (System.IO.File.Exists(path))
-                            {
-                                existingPaths.Add(path);
-                            }
-                            else
-                            {
-                                loadResult.Warnings.Add($"Localization: file not found, skipping: {path}");
-                            }
-                        }
-
-                        if (existingPaths.Count > 0)
-                        {
-                            localizationService.AddResxDatabase(
-                                existingPaths,
-                                onWarning: message => loadResult.Warnings.Add("Localization warning: " + message));
-                        }
-                    }
-                }
+                ProjectLocalizationLoader.Load(gumProject, localizationService,
+                    projectResolution.UsedBundle ? projectResolution.FileProvider : null,
+                    loadResult.Warnings);
             }
 
             ObjectFinder.Self.GumProjectSave = gumProject;
@@ -713,24 +642,6 @@ public partial class GumService : IGumService
         bool useLinearFiltering = string.Equals(gumProject?.TextureFilter, "Linear", StringComparison.Ordinal);
 
         ApplyTextureFilterPlatform(useLinearFiltering);
-    }
-
-    /// <summary>
-    /// Joins each non-empty project-relative localization path onto <paramref name="projectDirectory"/>,
-    /// with native separators. A project saved on Windows stores these paths with backslashes, which
-    /// macOS/Linux read as part of the file name.
-    /// </summary>
-    internal static List<string> ResolveLocalizationFilePaths(string projectDirectory, IEnumerable<string?> relativePaths)
-    {
-        var resolvedPaths = new List<string>();
-        foreach (var relative in relativePaths)
-        {
-            if (!string.IsNullOrEmpty(relative))
-            {
-                resolvedPaths.Add(FileManager.Standardize(projectDirectory + relative, preserveCase: true));
-            }
-        }
-        return resolvedPaths;
     }
 
     private void ApplyStandardElementDefaults(GumProjectSave gumProject)
