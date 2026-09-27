@@ -96,6 +96,10 @@ Rules that keep scenarios honest:
   without a lock, from whichever thread reads it first. Tool work that outlives its test, such as a
   font generation continuation reporting progress to the status bar, read it from a pool thread in
   that window and built a dispatcher bound to the wrong platform. The next window then rendered
-  and hit-tested nothing. The harness still checks for that right after the window opens and fails
-  with "The window hit-tests nothing after a render tick"; treat that message as a regression, not
-  a flake to rerun.
+  and hit-tested nothing.
+- Hit testing reads what the compositor last rendered, and the compositor sends one frame at a
+  time. The shared application renders nothing between tests, so the last test's final frame can
+  still be waiting when a new window opens, holding back the window's first frame. A window of your
+  own needs a render tick, `Dispatcher.UIThread.RunJobs()` and a second tick before it hit-tests
+  anything; `HeadlessWindowDriver` does this. It then checks the window and fails with "The window
+  hit-tests nothing after a render tick"; treat that message as a regression, not a flake to rerun.

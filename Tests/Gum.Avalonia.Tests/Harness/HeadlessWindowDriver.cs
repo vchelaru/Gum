@@ -42,76 +42,10 @@ internal sealed class HeadlessWindowDriver : IDisposable
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         if (Window.InputHitTest(new Point(2, 2)) == null)
         {
-            // TEMP #5360 diagnostic: what state is the compositor in, and does more pumping recover it?
-            string before = Diag5360();
-            int recoveredAfter = -1;
-            for (int i = 1; i <= 10; i++)
-            {
-                AvaloniaHeadlessPlatform.ForceRenderTimerTick();
-                Dispatcher.UIThread.RunJobs();
-                if (Window.InputHitTest(new Point(2, 2)) != null)
-                {
-                    recoveredAfter = i;
-                    break;
-                }
-            }
-            string after = Diag5360();
             // Every gesture would land on nothing; see Animations/README.md, "Gotchas".
             Dispose();
-            throw new InvalidOperationException($"The window hit-tests nothing after a render tick. DIAG5360 before=[{before}] recoveredAfterRounds={recoveredAfter} after=[{after}]");
+            throw new InvalidOperationException("The window hit-tests nothing after a render tick: the compositor has not rendered its first frame.");
         }
-        s_firstDispatcher ??= Dispatcher.UIThread;
-    }
-
-    private static Dispatcher? s_firstDispatcher;
-
-    // TEMP #5360 diagnostic.
-    private string Diag5360()
-    {
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        void Add(string name, Func<object?> read)
-        {
-            try { sb.Append(name).Append('=').Append(read() ?? "null").Append("; "); }
-            catch (Exception e) { sb.Append(name).Append("=!").Append(e.GetType().Name).Append("; "); }
-        }
-        const System.Reflection.BindingFlags Any = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
-        object? Field(object? target, string name) => target?.GetType().GetField(name, Any)?.GetValue(target);
-        object? Prop(object? target, string name) => target?.GetType().GetProperty(name, Any)?.GetValue(target);
-        Add("sameDispatcher", () => s_firstDispatcher == null ? "first" : ReferenceEquals(s_firstDispatcher, Dispatcher.UIThread));
-        Add("checkAccess", () => Dispatcher.UIThread.CheckAccess());
-        Add("thread", () => Environment.CurrentManagedThreadId);
-        Add("visible", () => Window.IsVisible);
-        Add("bounds", () => Window.Bounds);
-        Add("clientSize", () => Window.ClientSize);
-        Add("compVisual", () => Prop(Window, "CompositionVisual") != null);
-        object? mediaContext = null;
-        Add("mediaContext", () => (mediaContext = typeof(AvaloniaObject).Assembly.GetType("Avalonia.Media.MediaContext")?.GetProperty("Instance", Any)?.GetValue(null)) != null);
-        Add("pendingBatches", () => Prop(Field(mediaContext, "_pendingCompositionBatches"), "Count"));
-        Add("requestedCommits", () => Prop(Field(mediaContext, "_requestedCommits"), "Count"));
-        Add("renderQueued", () => Field(mediaContext, "_nextRenderOp") != null);
-        Add("animWaiting", () => Field(mediaContext, "_animationsAreWaitingForComposition"));
-        Add("invokeOnRender", () => Prop(Field(mediaContext, "_invokeOnRenderCallbacks"), "Count"));
-        Add("mcDispatcherSame", () => ReferenceEquals(Field(mediaContext, "_dispatcher"), Dispatcher.UIThread));
-        object? timer = null;
-        Add("timerLookup", () =>
-        {
-            object? locator = typeof(AvaloniaObject).Assembly.GetType("Avalonia.AvaloniaLocator")!.GetProperty("Current", Any)!.GetValue(null);
-            System.Reflection.MethodInfo getService = locator!.GetType().GetMethod("GetService", Any, new[] { typeof(Type) })!;
-            timer = getService.Invoke(locator, new object[] { typeof(global::Avalonia.Rendering.IRenderTimer) });
-            return timer != null;
-        });
-        Add("timerType", () => timer?.GetType().Name);
-        Add("forceTickSet", () => Field(timer, "_forceTick") != null);
-        object? renderer = Prop(Window, "Renderer");
-        Add("rendererType", () => renderer?.GetType().Name);
-        object? target = Prop(renderer, "CompositionTarget");
-        Add("targetRoot", () => Prop(target, "Root") != null);
-        Add("targetSize", () => Prop(target, "Size"));
-        Add("targetScaling", () => Prop(target, "Scaling"));
-        Add("rendererQueued", () => Field(renderer, "_queuedUpdate"));
-        Add("rendererDirty", () => Prop(Field(renderer, "_dirty"), "Count"));
-        Add("hitVisuals", () => { object? r = target?.GetType().GetMethod("TryHitTest")?.Invoke(target, new object?[] { new Point(2, 2), null, null }); return r == null ? "nullList" : Prop(r, "Count"); });
-        return sb.ToString();
     }
 
     /// <summary>The headless window; input goes through it.</summary>
