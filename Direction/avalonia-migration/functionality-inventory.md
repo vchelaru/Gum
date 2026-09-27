@@ -158,34 +158,34 @@
 
 ## Editor canvas (CANV)
 
-- CANV-001 Click selects instance
-- CANV-002 Shift+click multi-select. tested: SelectionManagerRectangleTests
-- CANV-003 Marquee select. tested: SelectionManagerRectangleTests
+- CANV-001 Click selects instance. tested: CanvasScenarioTests
+- CANV-002 Shift+click multi-select. tested: SelectionManagerRectangleTests, CanvasScenarioTests
+- CANV-003 Marquee select. tested: SelectionManagerRectangleTests, CanvasScenarioTests
 - CANV-004 Click nested component child. tested: SelectionManagerNestedComponentClickResolutionTests
-- CANV-005 Drag to move
-- CANV-006 Shift-drag locks to axis
-- CANV-007 Resize handles
-- CANV-008 Shift keeps aspect ratio
-- CANV-009 Alt resizes from center
+- CANV-005 Drag to move. tested: CanvasScenarioTests
+- CANV-006 Shift-drag locks to axis. tested: CanvasScenarioTests
+- CANV-007 Resize handles. tested: CanvasScenarioTests
+- CANV-008 Shift keeps aspect ratio. tested: CanvasScenarioTests
+- CANV-009 Alt resizes from center. tested: CanvasScenarioTests
 - CANV-010 Resize with non-pixel units. tested: ResizeInputHandlerNonPixelUnitTests
 - CANV-011 Resize past zero flips. tested: ResizeInputHandlerFlipTests
-- CANV-012 Rotation handle
-- CANV-013 Shift snaps rotation to 15 degrees
-- CANV-014 Polygon point drag, add, remove
+- CANV-012 Rotation handle. tested: CanvasScenarioTests
+- CANV-013 Shift snaps rotation to 15 degrees. tested: CanvasScenarioTests
+- CANV-014 Polygon point drag, add, remove. tested: CanvasScenarioTests
 - CANV-015 Locked instance can't move
 - CANV-016 Hover highlight. tested: SelectionManagerHighlightTests
 - CANV-017 Snap to Grid toggle. tested: MoveInputHandlerGridSnapTests
 - CANV-018 Grid Size field. tested: GridSnapperTests
 - CANV-019 Grid overlay. tested: GridOverlayCalculatorTests
-- CANV-020 Zoom +/- buttons and zoom combo
-- CANV-021 Ctrl+wheel zoom. tested: WheelZoomAccumulatorTests
-- CANV-022 Middle-drag / Space-drag pan. tested: CameraControllerTests
-- CANV-023 Scrollbars pan. tested: ScrollbarServiceTests
+- CANV-020 Zoom +/- buttons and zoom combo. tested: CanvasScenarioTests
+- CANV-021 Ctrl+wheel zoom. tested: WheelZoomAccumulatorTests, CanvasScenarioTests
+- CANV-022 Middle-drag / Space-drag pan. tested: CameraControllerTests, CanvasScenarioTests
+- CANV-023 Scrollbars pan. tested: ScrollbarServiceTests, CanvasScenarioTests
 - CANV-024 Canvas size preset combo
 - CANV-025 Font Scale +/-
 - CANV-026 Preview in runtime button. tested: PreviewLauncherTests
-- CANV-027 Rulers
-- CANV-028 Drag guide out of ruler
+- CANV-027 Rulers. tested: CanvasScenarioTests
+- CANV-028 Drag guide out of ruler. tested: CanvasScenarioTests
 - CANV-029 Dimension and distance display
 - CANV-030 Checkerboard / background color. tested: BackgroundManagerTests
 - CANV-031 Right-click: Bring to Front. tested: RightClickViewModelTests
@@ -381,8 +381,8 @@
 
 ## Hotkeys (KEY)
 
-- KEY-001 Ctrl+Z undo. tested: TreeScenarioTests
-- KEY-002 Ctrl+Y / Ctrl+Shift+Z redo. tested: HotkeyManagerTests, TreeScenarioTests
+- KEY-001 Ctrl+Z undo. tested: TreeScenarioTests, CanvasScenarioTests
+- KEY-002 Ctrl+Y / Ctrl+Shift+Z redo. tested: HotkeyManagerTests, TreeScenarioTests, CanvasScenarioTests
 - KEY-003 Ctrl+C copy. tested: TreeScenarioTests
 - KEY-004 Ctrl+X cut. tested: TreeScenarioTests
 - KEY-005 Ctrl+V paste. tested: CopyPasteLogicDestinationTests, TreeScenarioTests
@@ -392,10 +392,10 @@
 - KEY-009 F12 go to definition
 - KEY-010 Ctrl+F search
 - KEY-011 Ctrl+E variable filter. tested: PropertyGridManagerTests
-- KEY-012 Arrow nudge 1px. tested: HotkeyManagerNudgeTests
-- KEY-013 Shift+arrow nudge 5px
-- KEY-014 Ctrl+arrow move camera. tested: CameraControllerTests
-- KEY-015 Ctrl+plus / minus zoom. tested: CameraControllerTests
+- KEY-012 Arrow nudge 1px. tested: HotkeyManagerNudgeTests, CanvasScenarioTests
+- KEY-013 Shift+arrow nudge 5px. tested: CanvasScenarioTests
+- KEY-014 Ctrl+arrow move camera. tested: CameraControllerTests, CanvasScenarioTests
+- KEY-015 Ctrl+plus / minus zoom. tested: CameraControllerTests, CanvasScenarioTests
 - KEY-016 Alt+Up / Alt+Down reorder. tested: TreeScenarioTests
 - KEY-017 Alt+Left / Alt+Right selection history. tested: SelectionHistoryTests
 - KEY-018 Ctrl+? show hotkeys. tested: MainHotkeyPluginTests
@@ -414,11 +414,11 @@
 - DRAG-009 Tree: search result drag
 - DRAG-010 Tree: external files drop. tested: DragDropManagerTreeFileDropTests
 - DRAG-011 Canvas: node drop adds instance. tested: DragDropManagerWireframeDropParentingTests
-- DRAG-012 Canvas: drop onto instance parents it. tested: DragDropManagerWireframeDropParentingTests
-- DRAG-013 Canvas: image file drop. tested: FileDropTargetFilterTests
+- DRAG-012 Canvas: drop onto instance parents it. tested: DragDropManagerWireframeDropParentingTests, CanvasScenarioTests
+- DRAG-013 Canvas: image file drop. tested: FileDropTargetFilterTests, CanvasScenarioTests
 - DRAG-014 Canvas: animation-chain file drop defaults. tested: AnimationChainDropDefaultsTests
 - DRAG-015 Window: drop project file opens it. tested: ProjectFileDropLogicTests
-- DRAG-016 Standards palette chip drag. tested: StandardsPaletteAddTests
+- DRAG-016 Standards palette chip drag. tested: StandardsPaletteAddTests, CanvasScenarioTests
 
 ## Dialogs (DLG)
 

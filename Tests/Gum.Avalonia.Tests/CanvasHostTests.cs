@@ -107,12 +107,15 @@ public class CanvasHostTests
 
         OnUiThread(() =>
         {
+            // The editor canvas of an earlier canvas scenario keeps its reference for the run, and
+            // then this host is not the last one.
+            int referencesBefore = GameRenderDeviceHost.ReferenceCount;
             GraphicsDevice device;
             using (GameRenderDeviceHost first = new GameRenderDeviceHost())
             {
                 device = first.GraphicsDevice;
             }
-            GameRenderDeviceHost.ReferenceCount.ShouldBe(0);
+            GameRenderDeviceHost.ReferenceCount.ShouldBe(referencesBefore);
 
             using GameRenderDeviceHost second = new GameRenderDeviceHost();
 

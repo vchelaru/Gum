@@ -1,6 +1,7 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.ToolStates;
@@ -215,6 +216,29 @@ public class FileCommandsTests : BaseTestClass
         string ownFilePath = Path.Combine(projectDir, "Behaviors", "ButtonBehavior.behx");
         BehaviorSave onDisk = BehaviorReference.DeserializeBehavior(ownFilePath, projectVersion: _gumProject.Version);
         onDisk.DefaultImplementation.ShouldBe("Controls/ButtonStandard");
+    }
+
+    // Save All sorts every state's variables before writing; an auto-save of one element must write
+    // the same bytes, or the next Save All reorders the file (a canvas drop appends its X and Y).
+    [Fact]
+    public void TryAutoSaveElement_WritesVariablesSortedByName_AsSaveAllDoes()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        ComponentSave button = new() { Name = "Button", BaseType = "Container" };
+        StateSave state = new() { Name = "Default", ParentContainer = button };
+        button.States.Add(state);
+        state.SetValue("Sprite.X", 60f, "float");
+        state.SetValue("Background.X", 10f, "float");
+
+        _fileCommands.TryAutoSaveElement(button);
+
+        string saved = File.ReadAllText(Path.Combine(_tempDirectory, "Components", "Button.gucx"));
+        saved.IndexOf("Background.X", StringComparison.Ordinal).ShouldBeLessThan(saved.IndexOf("Sprite.X", StringComparison.Ordinal));
     }
 
     [Fact]
