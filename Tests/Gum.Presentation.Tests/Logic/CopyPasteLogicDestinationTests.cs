@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Messages;
+using Gum.Services;
 using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
@@ -58,6 +59,8 @@ public class CopyPasteLogicDestinationTests : BaseTestClass
         selectedState.Setup(x => x.SelectedStateSave).Returns(defaultState);
         selectedState.Setup(x => x.SelectedStateCategorySave).Returns((StateSaveCategory?)null);
 
+        // A mocked manager would refuse every paste as circular.
+        mocker.Use<ICircularReferenceManager>(new CircularReferenceManager(ObjectFinder.Self));
         _copyPasteLogic = mocker.CreateInstance<CopyPasteLogic>();
     }
 

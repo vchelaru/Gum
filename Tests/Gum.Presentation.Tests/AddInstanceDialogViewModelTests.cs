@@ -4,6 +4,7 @@ using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Logic;
 using Gum.ToolStates;
+using Gum.Undo;
 using Moq;
 
 namespace Gum.Presentation.Tests;
@@ -32,7 +33,8 @@ public class AddInstanceDialogViewModelTests
             _selectedState.Object,
             _nameVerifier.Object,
             _addInstanceLogic.Object,
-            _setVariableLogic.Object);
+            _setVariableLogic.Object,
+            new Mock<IUndoManager>().Object);
     }
 
     [Fact]

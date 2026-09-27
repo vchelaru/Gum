@@ -98,15 +98,15 @@
 ## Project tree (TREE)
 
 - TREE-001 Click selects element. tested: TreeNodeMouseDownSelectionLogicTests
-- TREE-002 Ctrl+click multi-select. tested: TreeNodeClickDispatchLogicTests
+- TREE-002 Ctrl+click multi-select. tested: TreeNodeClickDispatchLogicTests, TreeScenarioTests
 - TREE-003 Shift+click range select. tested: TreeNodeRangeSelectionLogicTests
 - TREE-004 Arrow-key navigation. tested: TreeNodeKeyNavigationLogicTests
 - TREE-005 Expand and collapse nodes. tested: CollapseToggleServiceTests
 - TREE-006 Expanded state persists. tested: TreeViewStateServiceTests
 - TREE-007 Tree follows canvas selection. tested: TreeSelectionSyncTests
-- TREE-008 Search box filters project. tested: ProjectSearchBoxTests
-- TREE-009 Search "Include Variables"
-- TREE-010 Clear search button. tested: ProjectSearchBoxTests
+- TREE-008 Search box filters project. tested: ProjectSearchBoxTests, TreeScenarioTests
+- TREE-009 Search "Include Variables". tested: TreeScenarioTests
+- TREE-010 Clear search button. tested: ProjectSearchBoxTests, TreeScenarioTests
 - TREE-011 Error icon on broken element. tested: MainTreeViewPluginErrorIndicatorTests, VariableScenarioTests
 - TREE-012 Node icons by type. tested: TreeNodeImageLogicTests
 - TREE-013 Project title: View in explorer. tested: ProjectTitleContextMenuBuilderTests
@@ -116,31 +116,31 @@
 - TREE-017 Screens/Components node: Add Folder. tested: AddFolderDialogViewModelTests, TreeScenarioTests
 - TREE-018 Components node: Add Component. tested: TreeScenarioTests
 - TREE-019 Components node: Import Components. tested: ImportComponentDialogTests
-- TREE-020 Behaviors node: Add Behavior
+- TREE-020 Behaviors node: Add Behavior. tested: TreeScenarioTests
 - TREE-021 Behaviors node: Import Behavior. tested: ImportBehaviorDialogTests
 - TREE-022 Folder/category node: View in explorer. tested: ElementTreeViewManagerNullSafetyTests
-- TREE-023 Folder: Rename Folder. tested: RenameFolderDialogViewModelTests
-- TREE-024 Folder: Delete Folder(s)
-- TREE-025 Element: View References. tested: DisplayReferencesDialogTests
+- TREE-023 Folder: Rename Folder. tested: RenameFolderDialogViewModelTests, TreeScenarioTests
+- TREE-024 Folder: Delete Folder(s). tested: TreeScenarioTests
+- TREE-025 Element: View References. tested: DisplayReferencesDialogTests, TreeScenarioTests
 - TREE-026 Element: Copy Full Path
-- TREE-027 Element: Duplicate. tested: TreeScenarioTests
+- TREE-027 Element: Duplicate. tested: TreeScenarioTests, CopyPasteRenameScenarioTests
 - TREE-028 Element: Delete (one or many). tested: ElementDeleteServiceTests, TreeScenarioTests
-- TREE-029 Element: Force Save Object
-- TREE-030 Component: Add/Remove Favorites. tested: FavoriteComponentManagerTests
-- TREE-031 Instance: Go to definition
-- TREE-032 Instance: Create Component. tested: CreateComponentDialogViewModelTests
-- TREE-033 Instance: Lock / Unlock
+- TREE-029 Element: Force Save Object. tested: TreeScenarioTests
+- TREE-030 Component: Add/Remove Favorites. tested: FavoriteComponentManagerTests, TreeScenarioTests
+- TREE-031 Instance: Go to definition. tested: TreeScenarioTests
+- TREE-032 Instance: Create Component. tested: CreateComponentDialogViewModelTests, TreeScenarioTests
+- TREE-033 Instance: Lock / Unlock. tested: TreeScenarioTests
 - TREE-034 Instance: Duplicate (one or many). tested: TreeScenarioTests
 - TREE-035 Instance: Delete (one or many). tested: InstanceDeletionHelperTests, TreeScenarioTests
-- TREE-036 Instance: Add parent object
-- TREE-037 Instance: Add to base element
-- TREE-038 Behavior: Rename. tested: EditCommandsTests
-- TREE-039 Behavior: Delete. tested: DeleteObjectPluginTests
+- TREE-036 Instance: Add parent object. tested: TreeScenarioTests
+- TREE-037 Instance: Add to base element. tested: TreeScenarioTests
+- TREE-038 Behavior: Rename. tested: EditCommandsTests, TreeScenarioTests
+- TREE-039 Behavior: Delete. tested: DeleteObjectPluginTests, TreeScenarioTests
 - TREE-040 Standard element: View in explorer / Force Save
-- TREE-041 Mixed selection: Delete N items
-- TREE-042 Delete key deletes selection. tested: TreeScenarioTests
-- TREE-043 F2 renames element. tested: RenameElementDialogViewModelTests, TreeScenarioTests, VariableScenarioTests
-- TREE-044 Ctrl+C / Ctrl+V instances. tested: CopyPasteLogicDestinationTests, TreeScenarioTests
+- TREE-041 Mixed selection: Delete N items. tested: TreeScenarioTests
+- TREE-042 Delete key deletes selection. tested: TreeScenarioTests, CopyPasteRenameScenarioTests
+- TREE-043 F2 renames element. tested: RenameElementDialogViewModelTests, TreeScenarioTests, VariableScenarioTests, CopyPasteRenameScenarioTests
+- TREE-044 Ctrl+C / Ctrl+V instances. tested: CopyPasteLogicDestinationTests, TreeScenarioTests, CopyPasteRenameScenarioTests
 - TREE-045 Ctrl+X cut instances. tested: TreeScenarioTests
 - TREE-046 Ctrl+D duplicate. tested: TreeScenarioTests
 - TREE-047 Alt+Up / Alt+Down reorder instance. tested: TreeScenarioTests
@@ -488,19 +488,19 @@
 
 Cross-feature scenarios the code lists don't show. Most need a real project, a save and a reload.
 
-- COMBO-001 Copy instance with variable reference into another element
-- COMBO-002 Paste instance whose parent isn't copied
-- COMBO-003 Paste instance into element lacking its component type's state
+- COMBO-001 Copy instance with variable reference into another element. tested: CopyPasteRenameScenarioTests
+- COMBO-002 Paste instance whose parent isn't copied. tested: CopyPasteRenameScenarioTests
+- COMBO-003 Paste instance into element lacking its component type's state. tested: CopyPasteRenameScenarioTests
 - COMBO-004 Rename element other elements inherit from. tested: VariableScenarioTests
 - COMBO-005 Rename component used as instances elsewhere. tested: VariableScenarioTests
-- COMBO-006 Rename component referenced by animations
-- COMBO-007 Rename instance referenced by variable references
-- COMBO-008 Rename state used by instances and animations
-- COMBO-009 Rename category with exposed state variable
+- COMBO-006 Rename component referenced by animations. tested: CopyPasteRenameScenarioTests
+- COMBO-007 Rename instance referenced by variable references. tested: CopyPasteRenameScenarioTests
+- COMBO-008 Rename state used by instances and animations. tested: CopyPasteRenameScenarioTests
+- COMBO-009 Rename category with exposed state variable. tested: CopyPasteRenameScenarioTests
 - COMBO-010 Delete component used as instances. tested: VariableScenarioTests
 - COMBO-011 Delete base element of inherited elements
 - COMBO-012 Delete state used by animation keyframes
-- COMBO-013 Delete instance that is a parent of others
+- COMBO-013 Delete instance that is a parent of others. tested: CopyPasteRenameScenarioTests
 - COMBO-014 Undo across a state switch. tested: VariableScenarioTests
 - COMBO-015 Undo across an element switch. tested: VariableScenarioTests
 - COMBO-016 Undo a rename, then save and reload. tested: VariableScenarioTests
@@ -527,4 +527,4 @@ Cross-feature scenarios the code lists don't show. Most need a real project, a s
 - COMBO-037 Behavior added to component, then required state removed
 - COMBO-038 Paste category values to multi-selected instances
 - COMBO-039 Selection history after deleting a visited element
-- COMBO-040 Tree search, then rename the found element
+- COMBO-040 Tree search, then rename the found element. tested: TreeScenarioTests

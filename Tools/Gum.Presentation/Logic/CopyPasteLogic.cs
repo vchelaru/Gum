@@ -13,8 +13,10 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ToolsUtilities;
 
 namespace Gum.Logic;
@@ -96,6 +98,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     // own constructor, so resolving IElementTreeRoots directly here would cycle back through this class
     // during DI construction. Deferring resolution to first use breaks the cycle.
     private readonly Lazy<IElementTreeRoots> _elementTreeRoots;
+    private readonly ICircularReferenceManager _circularReferenceManager;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -117,9 +120,11 @@ public class CopyPasteLogic : ICopyPasteLogic
         IAddDestinationTracker addDestinationTracker,
         ICopyPasteProjectProvider copyPasteProjectProvider,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        Lazy<IElementTreeRoots> elementTreeRoots
+        Lazy<IElementTreeRoots> elementTreeRoots,
+        ICircularReferenceManager circularReferenceManager
         )
     {
+        _circularReferenceManager = circularReferenceManager;
         _wireframeObjectManager = wireframeObjectManager;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -651,6 +656,14 @@ public class CopyPasteLogic : ICopyPasteLogic
             _dialogService.ShowMessage($"Cannot create an instance in {targetElement} because it is a standard element");
             return new List<InstanceSave>();
         }
+        // An instance of the target (or of anything containing it) would make the element contain itself.
+        InstanceSave? circularInstance = instancesToCopy.FirstOrDefault(instance =>
+            !_circularReferenceManager.CanTypeBeAddedToElement(targetElement, instance.BaseType));
+        if (circularInstance != null)
+        {
+            _dialogService.ShowMessage($"Cannot paste {circularInstance.Name} ({circularInstance.BaseType}) into {targetElement.Name} because it would create a circular reference");
+            return new List<InstanceSave>();
+        }
         ///////////////////////End Early Out/////////////////////
 
         var selectedState = forcedSelectedState ?? _selectedState;
@@ -731,6 +744,12 @@ public class CopyPasteLogic : ICopyPasteLogic
                 else
                 {
                     parent = destination;
+                }
+                // A parent must live in the target element (moving an instance into its base
+                // element keeps the derived element's selection, for example).
+                if (!shouldAttachToPastedInstance && parent is InstanceSave parentOutsideTarget && parentOutsideTarget.ParentContainer != targetElement)
+                {
+                    parent = targetElement;
                 }
 
                 newInstanceToParentDictionary[newInstance] = parent;
@@ -867,6 +886,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                                 itemsOwnedByReachableStates.Contains(baseSourceList.Name)) continue;
                             VariableListSave copiedBaseList = baseSourceList.Clone();
                             copiedBaseList.Name = newInstance.Name + "." + copiedBaseList.GetRootName();
+                            RemapPastedReferenceLines(copiedBaseList, oldNewNameDictionary);
                             baseTargetState.VariableLists.RemoveAll(item => item.Name == copiedBaseList.Name);
                             baseTargetState.VariableLists.Add(copiedBaseList);
                         }
@@ -880,6 +900,13 @@ public class CopyPasteLogic : ICopyPasteLogic
                     // We now have to copy over the states
                     if (targetElement != sourceElement)
                     {
+                        // A category state of the source has no counterpart in the target, so its
+                        // values must not become the target's defaults.
+                        if (sourceElement != null && stateSave.Name != sourceElement.GetDefaultStateOrThrow().Name)
+                        {
+                            continue;
+                        }
+
                         if (sourceElement != null && sourceElement.States.Count != 1)
                         {
                             _dialogService.ShowMessage("Only the default state variables will be copied since the source and target elements differ.");
@@ -928,6 +955,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                         {
                             VariableListSave copiedList = sourceVariableList.Clone();
                             copiedList.Name = newInstance.Name + "." + copiedList.GetRootName();
+                            RemapPastedReferenceLines(copiedList, oldNewNameDictionary);
 
                             targetState.VariableLists.RemoveAll(item => item.Name == copiedList.Name);
                             targetState.VariableLists.Add(copiedList);
@@ -1033,6 +1061,32 @@ public class CopyPasteLogic : ICopyPasteLogic
         _addDestinationTracker.Anchor(destination);
 
         return newInstances;
+    }
+
+    // A pasted reference to a sibling that was pasted with it points at that sibling's copy, which
+    // may have been renamed to stay unique ("Width = Background.Width" -> "Width = Background1.Width").
+    private static void RemapPastedReferenceLines(VariableListSave list, Dictionary<string, string> oldNewNameDictionary)
+    {
+        List<string> renamed = oldNewNameDictionary.Where(pair => pair.Key != pair.Value).Select(pair => pair.Key).ToList();
+        if (list.GetRootName() != "VariableReferences" || list.ValueAsIList == null || renamed.Count == 0)
+        {
+            return;
+        }
+
+        // An instance name that starts a dotted path; "Components/Button.Background" names another element's instance.
+        Regex instanceName = new Regex(@"(?<![\w./])(" + string.Join("|", renamed.Select(Regex.Escape)) + @")(?=\.)");
+        IList lines = list.ValueAsIList;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (lines[i] is not string line || line.TrimStart().StartsWith("//"))
+            {
+                continue;
+            }
+            int equalsIndex = line.IndexOf('=');
+            string rightSide = line.Substring(equalsIndex + 1);
+            lines[i] = line.Substring(0, equalsIndex + 1) +
+                instanceName.Replace(rightSide, match => oldNewNameDictionary[match.Value]);
+        }
     }
 
     // Expands the tree node of each newly-pasted instance whose source (by name) was expanded at copy

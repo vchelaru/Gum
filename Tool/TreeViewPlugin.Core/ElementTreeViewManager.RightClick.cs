@@ -568,12 +568,18 @@ public partial class ElementTreeViewManager
 
     private void HandleMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement, ElementSave baseElement)
     {
-        foreach (var instance in instances)
+        // Each element records its own undo step. The derived element's is recorded first, while it is
+        // still selected: the paste below selects the new instances in the base element.
+        using (_undoManager.RequestLock(derivedElement))
         {
-            instance.DefinedByBase = true;
+            foreach (var instance in instances)
+            {
+                instance.DefinedByBase = true;
+            }
+            _fileCommands.TryAutoSaveElement(derivedElement);
         }
 
-
+        using var baseUndoLock = _undoManager.RequestLock(baseElement);
         _copyPasteLogic.PasteInstanceSaves(
             instances.ToList(),
             derivedElement.DefaultState is { } defaultState
