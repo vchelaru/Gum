@@ -64,7 +64,8 @@ internal sealed class ToolProjectFixture : IDisposable
             IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
             projectManager.CreateNewProject();
             Project = projectManager.GumProjectSave!;
-            Project.FullFileName = Path.Combine(ProjectFolder, projectFileName);
+            ProjectFilePath = Path.Combine(ProjectFolder, projectFileName);
+            Project.FullFileName = ProjectFilePath;
         }
         catch
         {
@@ -74,8 +75,11 @@ internal sealed class ToolProjectFixture : IDisposable
         }
     }
 
-    /// <summary>The temp project.</summary>
-    public GumProjectSave Project { get; }
+    /// <summary>The temp project; a new object after <see cref="SaveAndReload"/>.</summary>
+    public GumProjectSave Project { get; private set; }
+
+    /// <summary>The project file's full path.</summary>
+    public string ProjectFilePath { get; }
 
     /// <summary>The folder <see cref="Project"/> lives in.</summary>
     public string ProjectFolder { get; }
@@ -113,6 +117,26 @@ internal sealed class ToolProjectFixture : IDisposable
 
     /// <summary>Adds a state named <paramref name="name"/> to <paramref name="category"/>.</summary>
     public StateSave AddState(ElementSave owner, StateSaveCategory category, string name) => ElementCommands.AddState(owner, category, name);
+
+    /// <summary>
+    /// Saves every file, then opens the project again through the tool's own load path, as a user
+    /// reopening it does. Objects taken from the old <see cref="Project"/> are stale afterwards.
+    /// </summary>
+    public void SaveAndReload()
+    {
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        Services.GetRequiredService<IFileCommands>().ForceSaveProject(forceSaveContainedElements: true);
+        Task load = projectManager.LoadProjectAsync(new FilePath(ProjectFilePath));
+        // [AvaloniaFact] tests stay synchronous; the load posts work to the UI thread it waits on.
+        while (!load.IsCompleted)
+        {
+            Thread.Sleep(10);
+            Dispatcher.UIThread.RunJobs();
+        }
+        load.GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+        Project = projectManager.GumProjectSave ?? throw new InvalidOperationException("The reload left no project loaded.");
+    }
 
     /// <summary>The standard element named <paramref name="name"/> (Text, Sprite, Container...).</summary>
     public StandardElementSave Standard(string name) => Project.StandardElements.Single(element => element.Name == name);
