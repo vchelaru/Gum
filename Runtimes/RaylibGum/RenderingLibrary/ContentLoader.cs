@@ -77,8 +77,14 @@ public sealed class ContentLoader : IContentLoader
         Font? font = null;
 
         var isFnt = contentName.ToLower().EndsWith(".fnt");
-        // try loading locally first:
-        if (System.IO.File.Exists(contentName))
+        // The CustomGetStreamFromFile hook wins over a loose file at the same path, as it does for
+        // every other content load, so a loaded bundle overrides stale loose copies (#5299).
+        string? hookedFntText = isFnt ? TryReadFntFromStreamHook(contentName) : null;
+        if (hookedFntText != null)
+        {
+            font = BuildBitmapFontWithShadowSibling(contentName, hookedFntText);
+        }
+        else if (System.IO.File.Exists(contentName))
         {
             if (isFnt)
             {
@@ -106,14 +112,9 @@ public sealed class ContentLoader : IContentLoader
         }
         else if (isFnt)
         {
-            // The .fnt isn't on disk at this path, but it may still be reachable through the
-            // FileManager.CustomGetStreamFromFile hook (e.g. a .gumpkg/zip bundle, the
-            // GumFromZipFile sample, an encrypted/in-memory asset store). raylib's path-based
-            // LoadFont can't see the hook, and LoadFontFromMemory can't resolve a bitmap font's
-            // separate .png page from memory — so parse the .fnt ourselves (reusing
-            // ParsedFontFile), load the page through the already-hooked texture path, and assemble
-            // the raylib Font. Returns null if the hook can't supply the file, in which case we
-            // fall through to the default(Font) handling below. (#3037)
+            // Neither the hook nor this exact disk path has the .fnt, but FileManager's own disk
+            // fallback may (e.g. a macOS .app's Resources folder). Null falls through to the
+            // default(Font) handling below. (#3037)
             font = TryLoadBitmapFontThroughStreamHook(contentName);
         }
 
@@ -226,9 +227,8 @@ public sealed class ContentLoader : IContentLoader
     }
 
     // Loads an AngelCode bitmap font (.fnt + .png page) through FileManager.GetStreamForFile so the
-    // CustomGetStreamFromFile hook is honored. Used only when the .fnt is not present on disk — the
-    // on-disk path still uses raylib's native LoadFont (see LoadFont). Returns null when the hook
-    // (or disk fallback) can't supply the .fnt, letting the caller fall back to default(Font). #3037
+    // CustomGetStreamFromFile hook and FileManager's disk fallbacks are honored. Returns null when
+    // nothing can supply the .fnt, letting the caller fall back to default(Font). #3037
     private static Font? TryLoadBitmapFontThroughStreamHook(string fntPath)
     {
         string fntContents;
@@ -242,6 +242,14 @@ public sealed class ContentLoader : IContentLoader
             return null;
         }
 
+        return BuildBitmapFontWithShadowSibling(fntPath, fntContents);
+    }
+
+    // raylib's path-based LoadFont can't see the hook, and LoadFontFromMemory can't resolve a bitmap
+    // font's separate .png page, so parse the .fnt ourselves and load the page through the hooked
+    // texture path.
+    private static Font? BuildBitmapFontWithShadowSibling(string fntPath, string fntContents)
+    {
         Font? font = BuildBitmapFontThroughStreamHook(fntPath, fntContents);
         if (font != null)
         {
@@ -249,6 +257,59 @@ public sealed class ContentLoader : IContentLoader
             RegisterShadowSiblingIfPresent(fntPath, font.Value.Texture.Id);
         }
         return font;
+    }
+
+    // Reads a .fnt's text from CustomGetStreamFromFile alone, skipping GetStreamForFile's disk
+    // fallback, so a caller can prefer the hook and still load loose files with raylib's native
+    // loader. Returns null when no hook is installed, it misses, or it serves a multi-page font that
+    // also exists on disk: only the native loader can merge pages, so the loose copy is used.
+    private static string? TryReadFntFromStreamHook(string fntPath)
+    {
+        string? text = TryReadTextFromStreamHook(fntPath);
+        if (text != null && System.IO.File.Exists(fntPath) && HasMultiplePages(text))
+        {
+            return null;
+        }
+        return text;
+    }
+
+    private static bool HasMultiplePages(string fntText)
+    {
+        try
+        {
+            return new ParsedFontFile(fntText).GetPagesAsArrayOfStrings.Length > 1;
+        }
+        catch
+        {
+            // Malformed text is reported by the load that follows, not here.
+            return false;
+        }
+    }
+
+    // The path is normalized the same way GetStreamForFile normalizes it before calling the hook.
+    private static string? TryReadTextFromStreamHook(string path)
+    {
+        Func<string, Stream>? hook = FileManager.CustomGetStreamFromFile;
+        if (hook == null)
+        {
+            return null;
+        }
+
+        string hookPath = FileManager.IsUrl(path)
+            ? path
+            : FileManager.Standardize(path, preserveCase: true, makeAbsolute: true);
+        try
+        {
+            using Stream? stream = hook(hookPath);
+            if (stream == null)
+            {
+                return null;
+            }
+            using StreamReader reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
     }
 
     // Parses fntContents and loads its page through the hooked texture path. Does not probe for a
@@ -381,8 +442,7 @@ public sealed class ContentLoader : IContentLoader
     // RaylibFontShadowRegistry against the primary's texture id. Absent for the vast majority of
     // fonts (no dropshadow requested), in which case this is a no-op - the Text renderable's
     // shadow-registry lookup simply finds nothing and draws no shadow pass. Resolved the same way as
-    // the primary: raylib's native loader when the file is on disk, otherwise through the
-    // CustomGetStreamFromFile hook (#5253). The shadow always gets its own page texture, because
+    // the primary (#5253). The shadow always gets its own page texture, because
     // ManagedFont.Dispose unloads both fonts' textures.
     private static void RegisterShadowSiblingIfPresent(string primaryFntPath, uint primaryTextureId)
     {
@@ -396,23 +456,30 @@ public sealed class ContentLoader : IContentLoader
             + "-shadow" + fntExtension;
 
         Font? shadowFont = null;
-        if (System.IO.File.Exists(shadowFntPath))
+        try
         {
-            Font loadedShadowFont = Raylib.LoadFont(shadowFntPath);
-            TextureFilterApplier(loadedShadowFont.Texture, DefaultTextureFilter);
-            shadowFont = loadedShadowFont;
-        }
-        else if (FileManager.FileExists(shadowFntPath))
-        {
-            try
+            // Same order as the primary: the hook, then a loose file, then FileManager's other
+            // disk fallbacks (#5299).
+            string? hookedShadowText = TryReadFntFromStreamHook(shadowFntPath);
+            if (hookedShadowText != null)
+            {
+                shadowFont = BuildBitmapFontThroughStreamHook(shadowFntPath, hookedShadowText);
+            }
+            else if (System.IO.File.Exists(shadowFntPath))
+            {
+                Font loadedShadowFont = Raylib.LoadFont(shadowFntPath);
+                TextureFilterApplier(loadedShadowFont.Texture, DefaultTextureFilter);
+                shadowFont = loadedShadowFont;
+            }
+            else if (FileManager.FileExists(shadowFntPath))
             {
                 shadowFont = BuildBitmapFontThroughStreamHook(shadowFntPath, FileManager.FromFileText(shadowFntPath));
             }
-            catch (Exception exception)
-            {
-                // The shadow is optional: a broken sibling costs the shadow, not the primary font.
-                Console.Error.WriteLine($"Could not load dropshadow font '{shadowFntPath}': {exception.Message}");
-            }
+        }
+        catch (Exception exception)
+        {
+            // The shadow is optional: a broken sibling costs the shadow, not the primary font.
+            Console.Error.WriteLine($"Could not load dropshadow font '{shadowFntPath}': {exception.Message}");
         }
 
         if (shadowFont != null)

@@ -243,6 +243,66 @@ public class ElementAnimationsViewModelTests
     }
 
     [Fact]
+    public void PastingAKeyframe_BeforeALaterOne_ReportsOnlyTheSortedList_AndReturnsThePastedKeyframe()
+    {
+        // Each reported change is saved and recorded as its own undo, so a paste reported mid-sort
+        // (a keyframe missing, or out of order) leaves undo steps that restore states that never existed.
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>(), new KeyframeClipboard());
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        AnimatedKeyframeViewModel pressed = new AnimatedKeyframeViewModel { StateName = "Cat/Pressed", Time = 0, HasValidState = true };
+        walk.Keyframes.Add(pressed);
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/Released", Time = 1, HasValidState = true });
+        viewModel.Animations.Add(walk);
+        viewModel.SelectedAnimation = walk;
+        walk.SelectedKeyframe = pressed;
+        viewModel.CopySelectedKeyframe();
+        List<string> reported = new List<string>();
+        viewModel.AnyChange += (_, _) => reported.Add(string.Join(",", walk.Keyframes.Select(keyframe => $"{keyframe.StateName}@{keyframe.Time}")));
+
+        AnimatedKeyframeViewModel? pasted = viewModel.PasteKeyframe();
+
+        reported.ShouldAllBe(state => state == "Cat/Pressed@0,Cat/Pressed@0.1,Cat/Released@1");
+        pasted.ShouldBeSameAs(walk.Keyframes[1]);
+    }
+
+    [Fact]
+    public void PastingAKeyframeIntoAnElementWithoutItsState_FlagsIt()
+    {
+        KeyframeClipboard clipboard = new KeyframeClipboard();
+        clipboard.Copied = new AnimatedKeyframeViewModel { StateName = "Cat/Released", Time = 0, HasValidState = true };
+        ComponentSave label = new ComponentSave { Name = "Label" };
+        ISelectedState labelSelected = Mock.Of<ISelectedState>(s => s.SelectedElement == label);
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>(), clipboard);
+        AnimationViewModel grow = new(labelSelected, Mock.Of<IWireframeObjectManager>()) { Name = "Grow" };
+        viewModel.Animations.Add(grow);
+        viewModel.SelectedAnimation = grow;
+
+        AnimatedKeyframeViewModel? pasted = viewModel.PasteKeyframe();
+
+        pasted.ShouldNotBeNull().IsMissingReference.ShouldBeTrue();
+        grow.HasBrokenKeyframe.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void MovingAKeyframePastAnother_ReportsOnlyTheSortedList()
+    {
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>());
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        AnimatedKeyframeViewModel pressed = new AnimatedKeyframeViewModel { StateName = "Cat/Pressed", Time = 0, HasValidState = true };
+        walk.Keyframes.Add(pressed);
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/Released", Time = 1, HasValidState = true });
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/Hidden", Time = 2, HasValidState = true });
+        viewModel.Animations.Add(walk);
+        List<string> reported = new List<string>();
+        viewModel.AnyChange += (_, _) => reported.Add(string.Join(",", walk.Keyframes.Select(keyframe => $"{keyframe.StateName}@{keyframe.Time}")));
+
+        pressed.Time = 3;
+
+        reported.ShouldNotBeEmpty();
+        reported.ShouldAllBe(state => state == "Cat/Released@1,Cat/Hidden@2,Cat/Pressed@3");
+    }
+
+    [Fact]
     public void DuplicatingAnAnimation_LeavesTheKeyframesThatPlayTheOriginal_PlayingTheOriginal()
     {
         Mock<IRenameManager> renameManager = new Mock<IRenameManager>();

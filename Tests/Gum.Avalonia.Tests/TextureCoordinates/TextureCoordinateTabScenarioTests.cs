@@ -68,11 +68,7 @@ public class TextureCoordinateTabScenarioTests
             tab.Tab.IsVisible.ShouldBeTrue(tab.Describe());
 
             tab.TurnPluginOffAndOn(whileOff: () =>
-                tab.IsTabInShell.ShouldBeFalse("the tab of a plugin that is off is hidden"));
-            // Turning it back on subscribes again to the render surface's one-time event.
-            tab.Plugin.CallXnaInitialized();
-            tab.TabManager.AllTabs.Count(candidate => candidate.Title == TextureCoordinateTabHarness.TabTitle).ShouldBe(1);
-            tab.Select(button);
+                tab.IsTabInShell.ShouldBeFalse("the tab of a plugin that is off is hidden"));            tab.Select(button);
             tab.Select(icon);
 
             tab.IsTabInShell.ShouldBeTrue(tab.Describe());

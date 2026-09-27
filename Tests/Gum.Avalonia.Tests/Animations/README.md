@@ -62,6 +62,8 @@ Rules that keep scenarios honest:
   tool calls: `PluginManager.ElementRename`, `IDeleteLogic.Remove` under `UndoManager.RequestLock`,
   `UndoManager.PerformUndo`, `Plugin.CallReactToFileChanged`.
 - Anything that needs real time (playback) goes through `Wait` or `WaitUntil`, never `await`.
+- An end-to-end scenario (inventory-tagged, in `../EndToEnd/AnimationScenarioTests.cs`) calls
+  `StartScenario()` after its setup and ends with `AssertOracles()`; see `../Harness/README.md`.
 - Call `ThrowIfPluginFailed` after an event that could throw inside the plugin: the plugin manager
   swallows the exception and disables the plugin, which otherwise looks like a silent no-op.
 - To check what was drawn, use `AnyPixelNear` with a color (solid fills) or a predicate (thin

@@ -8,7 +8,7 @@ depend on the tab.
 |---|---|
 | `HeadlessWindowDriver.cs` | The window: clicks, right-click menus, drags, keys, typing, pixel reads, `SaveFrame`. Fails fast on the headless compositor race (see `Animations/README.md`, "Gotchas"). |
 | `ToolProjectFixture.cs` | A new project in a temp folder (`.gumx` or `.gumj`, optionally with a shared per-user folder), built through the tool's own commands (`AddComponent`, `AddInstance`, `AddCategory`, `AddState`), with every dialog answered by `Dialogs`. The editor tab and Texture Coordinates plugins sit out meanwhile: they need canvases the headless run never builds. Dispose restores the tool, including the plugin set, so a harness that swaps plugins in need not put them back itself. |
-| `ScriptedDialogService.cs` | Answers dialogs from a queue; an unanswered dialog fails the test instead of hanging. |
+| `ScriptedDialogService.cs` | Answers dialogs from a queue, file pickers included (`AnswerNextOpenFile`, `AnswerNextSaveFile`); an unanswered dialog fails the test instead of hanging. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
 
 A test window does not get the main window's app-wide hotkeys (Ctrl+Z, Ctrl+Plus) or its UI font
@@ -67,6 +67,8 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `CanvasHarness.cs` | The head's Editor tab (toolbar, canvas, scroll bars) on a real graphics device, next to a `ProjectTreeHarness` over the same project, whose oracles it ends with. Pointer, key, wheel and drop input in window coordinates (`WindowPointOf(worldX, worldY)`), a drawn frame after every event, and `SavedValue` to read what reached disk. |
 | `CanvasScenarioTests.cs` | The Editor canvas: selection, move, resize, rotate, nudge, polygon points, camera, rulers, drops. |
 | `TreeScenarioTests.cs`, `VariableScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search); the Variables tab, states and edits that cascade into other elements; copy, paste, rename and delete where they meet references, parents, states and animations. |
+| `AnimationScenarioTests.cs` | The Animations tab on `../Animations/AnimationEditorHarness.cs`: `StartScenario()` after setup (saves, routes Ctrl+Z/Ctrl+Y, starts the exception watch, returns the start snapshot), `Undo`/`Redo`, and `AssertOracles()`, which also checks the saved sidecar holds exactly what the tab shows, before and after the reload. |
+| `DialogScenarioTests.cs` | Dialogs reached from the main menu (`ProjectTreeHarness.PickMainMenu("File", "New Project")`) and the Project tree: New Project, Load Project and Load Recent, Import Components, Theming, Manage Plugins, Project Properties. An async menu action is followed by `WaitUntil`. |
 
 A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
 the gesture with its dialogs queued, asserts the model and the tree, undoes back and compares the
@@ -90,6 +92,14 @@ Gotchas in scenario setup:
   element has no tree row to right-click.
 - The search box and "Include Variables" belong to the head's panel, which outlives the test; the
   harness clears both on dispose.
+- An Animations scenario builds its elements in memory and selects one, so `StartScenario()` must
+  come after setup: it saves everything, or the "auto-saved equals Save All" oracle fails on setup.
+  Setup edits in the tab (adding the animations to edit) are in the undo history too; undo only as
+  many steps as the scenario's own gestures.
+- The test process loads neither the neutral plugins under `Gum/` (Forms, Import .gumx) nor the
+  staged Forms themes, so Forms scenarios are skipped until #5304.
+- The editor tab, which sits out, fills a project's canvas sizes when the tool opens it; a scenario
+  that makes a new project through the tool sets `CustomCanvasSizes` itself before the oracles.
 
 ### Canvas scenarios
 

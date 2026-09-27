@@ -1,4 +1,5 @@
 ﻿using System;
+using Gum.Plugins.BaseClasses;
 
 namespace Gum.Plugins
 {
@@ -13,10 +14,37 @@ namespace Gum.Plugins
         }
 
 
+        /// <summary>
+        /// Whether the plugin receives events. Turning it off also disables the menu entries it
+        /// added through <see cref="PluginBase.AddMenuEntry(System.Action?, string[])"/>, so nothing
+        /// calls into a plugin that is off.
+        /// </summary>
         public bool IsEnabled
         {
-            get;
-            set;
+            get => _isEnabled;
+            set
+            {
+                _isEnabled = value;
+                (Plugin as PluginBase)?.SetMenuEntriesSuspended(isSuspended: !value);
+            }
+        }
+        private bool _isEnabled;
+
+        /// <summary>
+        /// Whether <see cref="IPlugin.StartUp"/> has completed on this instance. StartUp runs once
+        /// per instance: turning a plugin off and on again only toggles <see cref="IsEnabled"/>,
+        /// since running it again would repeat everything it adds (menu entries, event handlers).
+        /// </summary>
+        public bool HasStartedUp { get; private set; }
+
+        /// <summary>Runs the plugin's StartUp unless it has already completed on this instance.</summary>
+        public void StartUpIfNeeded()
+        {
+            if (!HasStartedUp)
+            {
+                Plugin.StartUp();
+                HasStartedUp = true;
+            }
         }
 
         public string Name

@@ -98,9 +98,9 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
     {
-        // Turning the plugin back on does not rebuild the tab (XnaInitialized is raised once), so
-        // turning it off only hides it. The host sends no events to a plugin that is off, so the tab
-        // stays hidden until the next selection with texture coordinates after it is back on.
+        // Turning the plugin back on only re-enables it (StartUp runs once), so turning it off only
+        // hides the tab. The host sends no events to a plugin that is off, so the tab stays hidden
+        // until the next selection with texture coordinates after it is back on.
         if (shutDownReason == PluginShutDownReason.UserDisabled)
         {
             textureCoordinatePluginTab?.Hide();
@@ -127,13 +127,6 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
 
     private void HandleXnaInitialized()
     {
-        // This can run more than once (turning the plugin back on may run StartUp again); the tab
-        // is built once.
-        if (textureCoordinatePluginTab is not null)
-        {
-            return;
-        }
-
         textureCoordinatePluginTab = _displayController.CreateControl(CreateView(), _viewModel, _viewModel.AvailableZoomLevels);
         textureCoordinatePluginTab.Hide();
         textureCoordinatePluginTab.GotFocus += HandleTabShown;

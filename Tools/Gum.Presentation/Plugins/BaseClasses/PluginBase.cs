@@ -41,9 +41,48 @@ public abstract class PluginBase : IPlugin
     /// <summary>The head's menu model. Optional so heads that still render menus themselves compose.</summary>
     [Import(AllowDefault = true)] public Gum.Menus.MenuModel? Menu { get => _menu; set => _menu = value; }
 
+    // Leaf items this plugin added, so turning the plugin off can disable them (a top-level menu
+    // returned for a one-part path may be shared with other plugins, so it is not tracked).
+    private readonly List<Gum.Menus.MenuItemModel> _addedMenuEntries = new();
+    // Each entry's own IsEnabled from when the plugin was turned off; null while it is on.
+    private Dictionary<Gum.Menus.MenuItemModel, bool>? _menuEntryStateWhileSuspended;
+
     /// <summary>Adds a menu item at the given path (top menu, submenus, item) and returns its model.</summary>
-    public Gum.Menus.MenuItemModel AddMenuEntry(IEnumerable<string> menuAndSubmenus, Action? click = null) =>
-        (_menu ?? throw new InvalidOperationException("This head does not export a MenuModel for plugins.")).AddMenuItem(menuAndSubmenus, click);
+    public Gum.Menus.MenuItemModel AddMenuEntry(IEnumerable<string> menuAndSubmenus, Action? click = null)
+    {
+        Gum.Menus.MenuModel menu = _menu ?? throw new InvalidOperationException("This head does not export a MenuModel for plugins.");
+        List<string> path = menuAndSubmenus.ToList();
+        Gum.Menus.MenuItemModel item = menu.AddMenuItem(path, click);
+        if (path.Count > 1)
+        {
+            _addedMenuEntries.Add(item);
+        }
+        return item;
+    }
+
+    /// <summary>
+    /// Disables every menu entry this plugin added while it is turned off, and restores each
+    /// entry's own enabled state when it is turned back on. Called by <see cref="PluginContainer"/>.
+    /// </summary>
+    internal void SetMenuEntriesSuspended(bool isSuspended)
+    {
+        if (isSuspended && _menuEntryStateWhileSuspended == null)
+        {
+            _menuEntryStateWhileSuspended = _addedMenuEntries.ToDictionary(item => item, item => item.IsEnabled);
+            foreach (Gum.Menus.MenuItemModel item in _addedMenuEntries)
+            {
+                item.IsEnabled = false;
+            }
+        }
+        else if (!isSuspended && _menuEntryStateWhileSuspended != null)
+        {
+            foreach (KeyValuePair<Gum.Menus.MenuItemModel, bool> pair in _menuEntryStateWhileSuspended)
+            {
+                pair.Key.IsEnabled = pair.Value;
+            }
+            _menuEntryStateWhileSuspended = null;
+        }
+    }
 
     /// <summary>Adds a menu item at the given path and returns its model.</summary>
     public Gum.Menus.MenuItemModel AddMenuEntry(Action? click, params string[] menuAndSubmenus) => AddMenuEntry(menuAndSubmenus, click);
