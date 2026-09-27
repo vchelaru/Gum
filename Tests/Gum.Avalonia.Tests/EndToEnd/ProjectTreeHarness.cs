@@ -31,6 +31,7 @@ internal sealed class ProjectTreeHarness : IDisposable
 
     private readonly HeadlessWindowDriver _driver;
     private readonly ToolExceptionWatch _exceptions;
+    private readonly Dictionary<AvaloniaPluginTab, bool> _tabVisibilityAtStart;
     private VariableGridHarness? _grid;
 
     public ProjectTreeHarness()
@@ -38,6 +39,10 @@ internal sealed class ProjectTreeHarness : IDisposable
         ToolStartup.EnsureInitialized();
         TreeManager = Services.GetRequiredService<ElementTreeViewManager>();
         View = (AvaloniaElementTreeView)TreeManager.View;
+        // The head's tabs outlive the test, and selecting an element with an animation file shows
+        // the Animations tab, so Dispose puts each tab back as it was.
+        _tabVisibilityAtStart = ((AvaloniaTabManager)Services.GetRequiredService<ITabManager>()).AllTabs
+            .ToDictionary(tab => tab, tab => tab.IsVisible);
         Project = new ToolProjectFixture("GumProjectTree");
         _exceptions = new ToolExceptionWatch();
         try
@@ -320,6 +325,10 @@ internal sealed class ProjectTreeHarness : IDisposable
             // The head's panel outlives the test; a search left in it would hide the next test's tree.
             View.ClearSearchText();
             View.IncludeVariablesCheckBox.IsChecked = false;
+            foreach (KeyValuePair<AvaloniaPluginTab, bool> tab in _tabVisibilityAtStart)
+            {
+                tab.Key.IsVisible = tab.Value;
+            }
             _grid?.Dispose();
             _driver.Dispose();
         }
