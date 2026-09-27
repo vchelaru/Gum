@@ -459,14 +459,25 @@ public class ReferenceFinder : IReferenceFinder
             {
                 foreach (var variable in state.Variables)
                 {
-                    if (variable.ExposedAsName == oldStrippedOrExposedName)
+                    // The inheriting element's own value for the variable. The tool stores a value for an
+                    // exposed variable under the base's own entry name (Label.Text exposed as LabelText),
+                    // and a value for a custom variable unprefixed (Speed). An exposed entry with another
+                    // name is a variable the inheriting element exposes itself, and a custom variable it
+                    // declares is its own too.
+                    bool isInheritingElementValue =
+                        (variable.ExposedAsName == oldStrippedOrExposedName && variable.Name == oldFullName) ||
+                        (string.IsNullOrEmpty(variable.ExposedAsName) && string.IsNullOrEmpty(variable.SourceObject) &&
+                            variable.Name == oldStrippedOrExposedName && !variable.IsCustomVariable);
+
+                    if (isInheritingElementValue || variable.ExposedAsName == oldStrippedOrExposedName)
                     {
                         variableChanges.Add(new VariableChange
                         {
                             Container = item,
                             Category = item.Categories.FirstOrDefault(item => item.States.Contains(state)),
                             State = state,
-                            Variable = variable
+                            Variable = variable,
+                            IsInheritingElementValue = isInheritingElementValue
                         });
                     }
                 }
