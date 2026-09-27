@@ -3,10 +3,15 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers.Converters;
+using Gum.Services;
 using Gum.ToolStates;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shouldly;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using WpfDataUi.DataTypes;
 using Xunit;
 
@@ -83,6 +88,40 @@ public class StandardElementsManagerTests : BaseTestClass
         VariableSave variable = state.Variables.First();
         variable.CustomTypeConverter.ShouldBeOfType<AvailableParentsTypeConverter>();
         variable.PropertiesToSetOnDisplayer["IsEditable"].ShouldBe(true);
+    }
+
+    // The Component standard gets its State variable from StandardElementsManager; the tool setup
+    // only attaches the drop-down converter. A second State variable was saved into every new
+    // project's Component.gutx and dropped on reopen (#5194).
+    [Fact]
+    public void Initialize_LeavesOneStateVariable_OnComponentWithStatesConverter()
+    {
+        // Initialize builds AvailableContainedTypeConverter, which still resolves its services
+        // through the Locator.
+        ServiceCollection services = new ServiceCollection();
+        services.AddSingleton(Mock.Of<ISelectedState>());
+        services.AddSingleton(Mock.Of<IProjectManager>());
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        Locator.Register(serviceProvider);
+        try
+        {
+            StandardElementsManager.Self.RefreshDefaults();
+
+            CreateSut().Initialize();
+
+            VariableSave[] stateVariables = StandardElementsManager.Self.DefaultStates["Component"].Variables
+                .Where(variable => variable.Name == "State")
+                .ToArray();
+            stateVariables.Length.ShouldBe(1);
+            stateVariables[0].CustomTypeConverter.ShouldBeOfType<AvailableStatesConverter>();
+        }
+        finally
+        {
+            // Initialize decorates the shared default states; later tests get plain ones.
+            StandardElementsManager.Self.RefreshDefaults();
+            PropertyInfo providersProperty = typeof(Locator).GetProperty("ServiceProviders", BindingFlags.NonPublic | BindingFlags.Static)!;
+            ((List<IServiceProvider>)providersProperty.GetValue(null)!).Remove(serviceProvider);
+        }
     }
 
     [Theory]

@@ -145,6 +145,12 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     /// <summary>The (X) button inside the search box that clears it, for tests.</summary>
     internal Button SearchClearButton => _searchClearButton;
 
+    /// <summary>The element tree, for tests.</summary>
+    internal AvaloniaGumTreeView Tree => _tree;
+
+    /// <summary>The tree's right-click menu, which opens as its own popup, for tests.</summary>
+    internal ContextMenu ContextMenu => _contextMenu;
+
     /// <inheritdoc/>
     public GumTreeNodeCollection Nodes => _tree.Nodes;
 

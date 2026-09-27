@@ -35,3 +35,36 @@ test fails with "already has a visual parent".
 
 Use the head's singleton manager and view rather than building a second one: everything the tool
 routes to the tab (`IGuiCommands.RefreshVariables`, plugin events) reaches the singleton only.
+
+## End-to-end suite (`../EndToEnd/`)
+
+The regression pass from #5141: scenarios that drive whole tool features with real input, tagged
+with the IDs of `Direction/avalonia-migration/functionality-inventory.md`
+(`[Trait("Feature", "TREE-043")]`) and `[Trait("Category", "EndToEnd")]`, so a nightly run can
+select them and per-PR CI can later leave them out.
+
+```
+dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
+```
+
+| File | Role |
+|---|---|
+| `ProjectTreeHarness.cs` | The head's own Project tab in a window with the main window's app-wide hotkeys, over a new project saved to disk. Row clicks, the tree's right-click menu (`PickMenu("Add object to Button", "Sprite")`), keys, Ctrl+Z and Ctrl+Y. A gesture that crashed fails at once. Its `Grid` is the Variables tab over the same project, in a second window (`../VariableGrid/VariableGridHarness.cs`). |
+| `ProjectOracles.cs` | The checks any scenario runs at its end: what the tool auto-saved equals Save All; the saved project passes the checks `gumcli check` runs; the tree shows exactly the saved folders, elements and instances; reopening reports no errors and re-saving changes no byte. |
+| `ProjectFileSnapshot.cs` | Every project file's bytes, for "undo back to the start restores the files". A mismatch names each file and its first differing line, and copies both versions to `%TEMP%\GumEndToEnd\diffs`. |
+| `ToolExceptionWatch.cs` | Output-tab errors, exceptions the head's UI-thread hook would write to the crash log, and plugins disabled after throwing. |
+| `ProjectOracleTests.cs` | Each oracle fails on the damage it exists to catch. |
+| `TreeScenarioTests.cs`, `VariableScenarioTests.cs` | The scenarios: the Project tree; the Variables tab, states and edits that cascade into other elements. |
+
+A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
+the gesture with its dialogs queued, asserts the model and the tree, undoes back and compares the
+snapshot, redoes, then calls `AssertOracles()`. Undo history is per element, so a cross-element
+change is undone in each element. Adding or deleting a whole element records no undo; assert that
+Ctrl+Z leaves the files alone instead. A Variables-tab scenario selects through the tree (`tree.Click`), edits
+through `tree.Grid`, and undoes with `tree.Undo()`.
+
+`ToolProjectFixture.AddCategory` and `AddState` record undo as the tool's dialogs do. Setup that
+edits an element some other way without an undo lock leaves the element's undo baseline behind, and
+the scenario's first Ctrl+Z then undoes the setup too.
+
+`pwsh Tools/e2e-coverage.ps1` lists the inventory IDs no non-skipped test tags, per area.

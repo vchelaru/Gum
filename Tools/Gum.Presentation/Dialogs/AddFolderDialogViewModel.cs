@@ -37,7 +37,9 @@ public class AddFolderDialogViewModel : GetUserStringDialogBaseViewModel
             return;
         }
 
-        string folder = parentFolder + Value + "\\";
+        // Through FilePath so the separator is the platform's own: a backslash is a file name
+        // character on macOS and Linux, where it would end up in the folder's name.
+        string folder = new FilePath(parentFolder.FullPath + Value + "/").FullPath;
 
         // If the path is relative
         // that means that the root
