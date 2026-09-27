@@ -34,8 +34,13 @@ internal sealed class VariableGridHarness : IDisposable
 
     private readonly PluginManager _pluginManager;
     private readonly HeadlessWindowDriver _driver;
+    private readonly bool _ownsProject;
 
-    public VariableGridHarness()
+    /// <param name="project">
+    /// A project another harness owns and disposes (an end-to-end scenario's tree harness); a new
+    /// one when null.
+    /// </param>
+    public VariableGridHarness(ToolProjectFixture? project = null)
     {
         _pluginManager = Services.GetRequiredService<PluginManager>();
         GridManager = Services.GetRequiredService<PropertyGridManager>();
@@ -44,14 +49,18 @@ internal sealed class VariableGridHarness : IDisposable
         ThrowIfPluginFailed();
         View = (VariablesTabView)ToolStartup.VariablesTab.Content;
 
-        Project = new ToolProjectFixture("GumVariableGrid");
+        _ownsProject = project == null;
+        Project = project ?? new ToolProjectFixture("GumVariableGrid");
         try
         {
             _driver = new HeadlessWindowDriver(View, width: 520, height: 1600, framesFolderName: "GumVariableGrid", contentOutlivesTest: true);
         }
         catch
         {
-            Project.Dispose();
+            if (_ownsProject)
+            {
+                Project.Dispose();
+            }
             throw;
         }
     }
@@ -314,7 +323,10 @@ internal sealed class VariableGridHarness : IDisposable
         }
         finally
         {
-            Project.Dispose();
+            if (_ownsProject)
+            {
+                Project.Dispose();
+            }
             // Leave the singleton grid empty for the next test, as the tool is with nothing selected.
             GridManager.RefreshEntireGrid(force: true);
         }

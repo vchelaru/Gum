@@ -24,6 +24,16 @@ public class GumJsonSerializationTests
     }
 
     [Fact]
+    public void BehaviorReference_GetRelativeFilePath_WindowsSavedSourcePath_UsesForwardSlashes()
+    {
+        BehaviorReference reference = new BehaviorReference { Name = "ButtonBehavior", SourcePath = "..\\..\\FormsBehaviors\\ButtonBehavior.behx" };
+
+        string path = reference.GetRelativeFilePath();
+
+        path.ShouldBe("../../FormsBehaviors/ButtonBehavior.behx");
+    }
+
+    [Fact]
     public void BehaviorReference_GetRelativeFilePath_JsonFormatWithoutSourcePath_UsesJsonExtension()
     {
         BehaviorReference reference = new BehaviorReference { Name = "ButtonBehavior" };

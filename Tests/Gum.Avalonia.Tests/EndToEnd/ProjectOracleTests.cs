@@ -26,13 +26,11 @@ public class ProjectOracleTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5194: a new project's Component standard saves a duplicate State variable and its standards in creation order")]
+    [AvaloniaFact]
     [Trait("Feature", "FILE-001")]
     public void NewProject_ReloadResavesUnchanged()
     {
         using ToolProjectFixture fixture = new ToolProjectFixture("GumProjectOracles");
-        // The editor tab plugin, which sits out of headless runs, fills the canvas sizes on load.
-        fixture.Project.CustomCanvasSizes ??= new List<CustomCanvasSize>();
         Services.GetRequiredService<IFileCommands>().ForceSaveProject(forceSaveContainedElements: true);
         ProjectFileSnapshot created = ProjectFileSnapshot.Take(fixture.ProjectFolder);
 

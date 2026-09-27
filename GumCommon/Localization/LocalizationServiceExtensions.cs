@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using ToolsUtilities;
 
 namespace Gum.Localization;
 
@@ -91,8 +92,12 @@ public static class LocalizationServiceExtensions
         var fileGroups = new List<FileGroup>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var baseResxFilePath in baseResxFilePaths)
+        foreach (var requestedPath in baseResxFilePaths)
         {
+            // A project saved on Windows stores "Localization\Strings.resx"; macOS/Linux read a
+            // backslash as part of the file name, so the path and satellite search need native separators.
+            var baseResxFilePath = FileManager.Standardize(requestedPath, preserveCase: true);
+
             // Skip duplicates — a list with the same path twice would otherwise report
             // every key as a collision against itself, spamming onWarning.
             if (!seen.Add(Path.GetFullPath(baseResxFilePath)))

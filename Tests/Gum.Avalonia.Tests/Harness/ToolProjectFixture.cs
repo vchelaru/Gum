@@ -64,6 +64,8 @@ internal sealed class ToolProjectFixture : IDisposable
             IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
             projectManager.CreateNewProject();
             Project = projectManager.GumProjectSave!;
+            // The editor tab, sitting out, fills the canvas sizes of every project the tool opens.
+            Project.CustomCanvasSizes ??= new List<CustomCanvasSize>();
             ProjectFilePath = Path.Combine(ProjectFolder, projectFileName);
             Project.FullFileName = ProjectFilePath;
         }
@@ -112,11 +114,22 @@ internal sealed class ToolProjectFixture : IDisposable
     public InstanceSave AddInstance(ElementSave owner, string name, string type) =>
         ElementCommands.AddInstance(owner, name, type) ?? throw new InvalidOperationException($"A plugin rejected the instance {name}.");
 
-    /// <summary>Adds a state category to <paramref name="owner"/>.</summary>
-    public StateSaveCategory AddCategory(ElementSave owner, string name) => ElementCommands.AddCategory(owner, name);
+    /// <summary>
+    /// Adds a state category to <paramref name="owner"/>, recording undo as the Add Category dialog
+    /// does. Without the record, the next undone edit would restore a baseline from before the add.
+    /// </summary>
+    public StateSaveCategory AddCategory(ElementSave owner, string name)
+    {
+        using IDisposable undoLock = UndoManager.RequestLock(owner);
+        return ElementCommands.AddCategory(owner, name);
+    }
 
-    /// <summary>Adds a state named <paramref name="name"/> to <paramref name="category"/>.</summary>
-    public StateSave AddState(ElementSave owner, StateSaveCategory category, string name) => ElementCommands.AddState(owner, category, name);
+    /// <summary>Adds a state named <paramref name="name"/> to <paramref name="category"/>, recording undo as the Add State dialog does.</summary>
+    public StateSave AddState(ElementSave owner, StateSaveCategory category, string name)
+    {
+        using IDisposable undoLock = UndoManager.RequestLock(owner);
+        return ElementCommands.AddState(owner, category, name);
+    }
 
     /// <summary>
     /// Saves every file, then opens the project again through the tool's own load path, as a user

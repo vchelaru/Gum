@@ -6,6 +6,7 @@ using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
+using Gum.Avalonia.Tests.VariableGrid;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -28,6 +29,7 @@ internal sealed class ProjectTreeHarness : IDisposable
 
     private readonly HeadlessWindowDriver _driver;
     private readonly ToolExceptionWatch _exceptions;
+    private VariableGridHarness? _grid;
 
     public ProjectTreeHarness()
     {
@@ -38,9 +40,8 @@ internal sealed class ProjectTreeHarness : IDisposable
         _exceptions = new ToolExceptionWatch();
         try
         {
-            // Scenarios start from a project opened from disk, as most sessions do; adding elements
-            // also refuses a project that was never saved.
-            Project.SaveAndReload();
+            // Adding elements refuses a project that was never saved.
+            SaveAll();
             TreeManager.RefreshUi();
             _driver = new HeadlessWindowDriver((Control)View.Content, width: 400, height: 900, framesFolderName: "GumProjectTree", contentOutlivesTest: true);
             AppWideWindowInput.RouteHotkeys(_driver.Window,
@@ -69,6 +70,12 @@ internal sealed class ProjectTreeHarness : IDisposable
     public ISelectedState SelectedState => Project.SelectedState;
 
     public IUndoManager UndoManager => Project.UndoManager;
+
+    /// <summary>
+    /// The head's Variables tab over the same project, in a window of its own, created on first
+    /// use. Select through the tree (<see cref="Click"/>) and undo with <see cref="Undo"/>, as a user does.
+    /// </summary>
+    public VariableGridHarness Grid => _grid ??= new VariableGridHarness(Project);
 
 
     #region Finding nodes
@@ -228,6 +235,7 @@ internal sealed class ProjectTreeHarness : IDisposable
     {
         try
         {
+            _grid?.Dispose();
             _driver.Dispose();
         }
         finally
