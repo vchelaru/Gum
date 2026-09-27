@@ -74,6 +74,7 @@
 
 	<ItemGroup>
 		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+		<AdditionalFiles Include="..\..\BannedSymbols.ToolUserData.txt" Link="BannedSymbols.ToolUserData.txt" />
 	</ItemGroup>
 
 	<ItemGroup>

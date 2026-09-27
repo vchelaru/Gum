@@ -1,0 +1,8 @@
+# Per-user folders the Gum tool must resolve through FileManager.UserApplicationDataForThisApplication,
+# which honors --user-data and the per-process test override (#5362).
+# Consumed by Microsoft.CodeAnalysis.BannedApiAnalyzers (RS0030) in every tool project; the
+# ToolUserDataFolderGuardTests test in Gum.Presentation.Tests keeps each project wired to this file.
+# Format: <prefix>:<fully qualified symbol>;<message>
+
+F:System.Environment.SpecialFolder.ApplicationData;Use FileManager.UserApplicationDataForThisApplication, which honors --user-data and the test override.
+F:System.Environment.SpecialFolder.LocalApplicationData;Use FileManager.UserApplicationDataForThisApplication, which honors --user-data and the test override.

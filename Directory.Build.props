@@ -5,4 +5,9 @@
   <PropertyGroup>
     <EnableWindowsTargeting Condition="'$(EnableWindowsTargeting)' == ''">true</EnableWindowsTargeting>
   </PropertyGroup>
+  <!-- A banned-symbol hit (RS0030, from BannedSymbols.*.txt) fails the build. Only projects that
+       reference Microsoft.CodeAnalysis.BannedApiAnalyzers can raise it. -->
+  <PropertyGroup>
+    <WarningsAsErrors>$(WarningsAsErrors);RS0030</WarningsAsErrors>
+  </PropertyGroup>
 </Project>
