@@ -1,3 +1,5 @@
+using Gum.Managers;
+using Moq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -39,7 +41,8 @@ public class ImportFromGumxViewModelTests
         GumxDependencyResolver resolver = new GumxDependencyResolver();
         _projectState = new FakeProjectState();
         GumxImportService importService = new GumxImportService(
-            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService);
+            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService,
+            Mock.Of<IOutputManager>());
 
         _dialogService = new FakeDialogService();
         _sut = new ImportFromGumxViewModel(
