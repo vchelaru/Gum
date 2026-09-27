@@ -7,7 +7,7 @@ using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Math.Geometry;
 
-public class Line : SpriteBatchRenderableBase, IRenderableIpso
+public class Line : SpriteBatchRenderableBase, IRenderableIpso, System.ICloneable
 {
     #region Fields
 
@@ -244,6 +244,21 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
 
 
     void IRenderable.PreRender() { }
+
+    /// <summary>
+    /// Creates a copy with its own children collection, no parent, and its own line primitive,
+    /// so changing the copy's color leaves this line unchanged.
+    /// </summary>
+    public virtual Line Clone()
+    {
+        Line clone = (Line)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        clone.mLinePrimitive = mLinePrimitive.Clone();
+        return clone;
+    }
+
+    object System.ICloneable.Clone() => Clone();
 
     public override string? ToString()
     {

@@ -76,7 +76,18 @@ namespace RenderingLibrary.Math.Geometry
 
             mVectors = new List<Vector2>();
         }
-        
+
+        /// <summary>
+        /// Returns a copy with its own point list, so changing the copy's points, color or
+        /// width leaves this primitive unchanged. The texture is shared.
+        /// </summary>
+        public LinePrimitive Clone()
+        {
+            LinePrimitive clone = (LinePrimitive)MemberwiseClone();
+            clone.mVectors = new List<Vector2>(mVectors);
+            return clone;
+        }
+
         /// <summary>
         /// Adds a vector to the LinePrimitive object. The position is relative to the position of the LinePrimitive (object space)
         /// </summary>
