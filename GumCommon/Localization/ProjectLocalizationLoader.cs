@@ -1,109 +1,176 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Gum.Bundle;
 using Gum.DataTypes;
 using ToolsUtilities;
 
 namespace Gum.Localization;
 
 /// <summary>
-/// Loads a Gum project's <see cref="GumProjectSave.LocalizationFiles"/> into an
-/// <see cref="ILocalizationService"/> during a runtime <c>GumService.Initialize</c>. Shared by every
-/// runtime's GumService so the MonoGame family, raylib and Skia apply one policy.
+/// Loads a project's <see cref="GumProjectSave.LocalizationFiles"/> into an
+/// <see cref="ILocalizationService"/>: the auto-load <c>GumService</c> runs when it loads a project.
 /// </summary>
-internal static class ProjectLocalizationLoader
+/// <remarks>
+/// Policy mirrors the tool's <c>FileCommands.LoadLocalizationFile</c>: one file dispatches by
+/// extension, several files must all be <c>.resx</c> (the service has no merge API for CSV), and
+/// anything else is skipped with a warning. Paths may use either separator: bundle lookups use
+/// forward slashes, loose-file paths use native separators.
+/// </remarks>
+public static class ProjectLocalizationLoader
 {
     /// <summary>
-    /// Loads the localization files of <paramref name="gumProject"/> into
-    /// <paramref name="localizationService"/>. The policy mirrors the tool's
-    /// <c>FileCommands.LoadLocalizationFile</c>: one file dispatches by extension; several files must
-    /// all be .resx and are merged; mixed CSV/RESX or multiple CSVs are skipped with a warning because
-    /// <see cref="ILocalizationService"/> has no merge API for them.
+    /// Loads <paramref name="project"/>'s localization files into <paramref name="service"/>.
     /// </summary>
-    /// <param name="gumProject">The loaded project; its directory anchors the relative file paths.</param>
-    /// <param name="localizationService">The service to load into. Null skips loading.</param>
-    /// <param name="warnings">Receives non-fatal problems (skipped files, key collisions).</param>
-    internal static void Load(GumProjectSave gumProject, ILocalizationService? localizationService, ICollection<string> warnings)
+    /// <param name="project">A project loaded from disk or a bundle, so it has a file name.</param>
+    /// <param name="service">The service to populate.</param>
+    /// <param name="bundleFileProvider">
+    /// The bundle's provider when the project came from a <c>.gumpkg</c>, else <c>null</c>. A bundle
+    /// has no directory to enumerate, so RESX satellites are found through the provider instead.
+    /// </param>
+    /// <param name="warnings">Receives non-fatal problems: skipped files and string ID collisions.</param>
+    public static void Load(GumProjectSave project, ILocalizationService service,
+        IGumFileProvider? bundleFileProvider, ICollection<string> warnings)
     {
-        var localizationFiles = gumProject.LocalizationFiles;
-        if (localizationService == null || localizationFiles == null || localizationFiles.Count == 0)
+        List<string> relativePaths = ToRelativePaths(project.LocalizationFiles);
+        if (relativePaths.Count == 0)
         {
             return;
         }
 
-        // A project with localization files was loaded from disk, so it has a file name.
-        var projectDirectory = FileManager.GetDirectory(gumProject.FullFileName!);
-        var resolvedPaths = ResolveLocalizationFilePaths(projectDirectory, localizationFiles);
+        string projectDirectory = FileManager.GetDirectory(project.FullFileName!);
 
-        if (resolvedPaths.Count == 1)
+        if (relativePaths.Count == 1)
         {
-            var fileName = resolvedPaths[0];
-
-            if (IsResx(fileName))
+            string relativePath = relativePaths[0];
+            if (IsResx(relativePath))
             {
-                // RESX satellite discovery requires enumerating the directory
-                // (e.g. Strings.es.resx alongside Strings.resx). On desktop platforms
-                // the path-based overload handles this via Directory.GetFiles.
-                // Bundled-content platforms (Android/iOS/TitleContainer) cannot
-                // enumerate sibling files from a stream, so this auto-load path
-                // assumes real filesystem access - matching the existing CSV behavior.
-                localizationService.AddResxDatabase(fileName);
+                LoadResx(service, relativePaths, projectDirectory, bundleFileProvider, onWarning: null);
             }
             else
             {
-                using var stream = FileManager.GetStreamForFile(fileName);
-                localizationService.AddCsvDatabase(stream);
+                using Stream stream = bundleFileProvider != null
+                    ? bundleFileProvider.OpenRead(relativePath)
+                    : FileManager.GetStreamForFile(ToLooseFilePath(projectDirectory, relativePath));
+                service.AddCsvDatabase(stream);
+            }
+            return;
+        }
+
+        if (!relativePaths.All(IsResx))
+        {
+            warnings.Add(
+                "Localization: multiple files configured but not all are .resx. " +
+                "Mixed CSV/RESX and multi-CSV loading are not supported. Loading was skipped.");
+            return;
+        }
+
+        List<string> existingPaths = new List<string>();
+        foreach (string relativePath in relativePaths)
+        {
+            bool exists = bundleFileProvider != null
+                ? bundleFileProvider.Exists(relativePath)
+                : File.Exists(ToLooseFilePath(projectDirectory, relativePath));
+            if (exists)
+            {
+                existingPaths.Add(relativePath);
+            }
+            else
+            {
+                warnings.Add($"Localization: file not found, skipping: {ToLooseFilePath(projectDirectory, relativePath)}");
             }
         }
-        else if (resolvedPaths.Count > 1)
+
+        if (existingPaths.Count > 0)
         {
-            if (!resolvedPaths.TrueForAll(IsResx))
-            {
-                warnings.Add(
-                    "Localization: multiple files configured but not all are .resx. " +
-                    "Mixed CSV/RESX and multi-CSV loading are not supported. Loading was skipped.");
-                return;
-            }
+            LoadResx(service, existingPaths, projectDirectory, bundleFileProvider,
+                onWarning: message => warnings.Add("Localization warning: " + message));
+        }
+    }
 
-            var existingPaths = new List<string>();
-            foreach (var path in resolvedPaths)
-            {
-                if (System.IO.File.Exists(path))
-                {
-                    existingPaths.Add(path);
-                }
-                else
-                {
-                    warnings.Add($"Localization: file not found, skipping: {path}");
-                }
-            }
+    /// <summary>
+    /// The non-empty entries of <paramref name="localizationFiles"/> with forward slashes, the form
+    /// bundle entries are keyed by. A project saved on Windows stores backslashes.
+    /// </summary>
+    internal static List<string> ToRelativePaths(IEnumerable<string?> localizationFiles) =>
+        localizationFiles
+            .Where(path => !string.IsNullOrEmpty(path))
+            .Select(path => path!.Replace('\\', '/'))
+            .ToList();
 
-            if (existingPaths.Count > 0)
+    /// <summary>
+    /// Joins a project-relative path onto <paramref name="projectDirectory"/> with native separators.
+    /// Loose paths go to File.Exists and Directory.GetFiles, and macOS/Linux read a backslash as part
+    /// of the file name.
+    /// </summary>
+    internal static string ToLooseFilePath(string projectDirectory, string relativePath) =>
+        FileManager.Standardize(projectDirectory + relativePath, preserveCase: true);
+
+    private static bool IsResx(string path) =>
+        string.Equals(Path.GetExtension(path), ".resx", StringComparison.OrdinalIgnoreCase);
+
+    private static void LoadResx(ILocalizationService service, List<string> relativePaths,
+        string projectDirectory, IGumFileProvider? bundleFileProvider, Action<string>? onWarning)
+    {
+        if (bundleFileProvider == null)
+        {
+            // Loose files: the path overload discovers satellites with Directory.GetFiles.
+            service.AddResxDatabase(relativePaths.Select(path => ToLooseFilePath(projectDirectory, path)), onWarning);
+            return;
+        }
+
+        List<Stream> openedStreams = new List<Stream>();
+        try
+        {
+            var fileGroups = new List<(string? groupName, IEnumerable<(string languageName, Stream stream)> streams)>();
+            foreach (string relativePath in relativePaths)
             {
-                localizationService.AddResxDatabase(
-                    existingPaths,
-                    onWarning: message => warnings.Add("Localization warning: " + message));
+                var languages = new List<(string languageName, Stream stream)>();
+                foreach ((string languageName, string path) in GetResxLanguageFiles(bundleFileProvider, relativePath))
+                {
+                    Stream stream = bundleFileProvider.OpenRead(path);
+                    openedStreams.Add(stream);
+                    languages.Add((languageName, stream));
+                }
+                fileGroups.Add((Path.GetFileName(relativePath), languages));
+            }
+            service.AddResxDatabase(fileGroups, onWarning);
+        }
+        finally
+        {
+            foreach (Stream stream in openedStreams)
+            {
+                stream.Dispose();
             }
         }
     }
 
     /// <summary>
-    /// Joins each non-empty project-relative localization path onto <paramref name="projectDirectory"/>,
-    /// with native separators. A project saved on Windows stores these paths with backslashes, which
-    /// macOS/Linux read as part of the file name.
+    /// The base file labeled "Default", then its <c>{BaseName}.{culture}.resx</c> satellites in the
+    /// same directory, ordered by path: the same labels and order the path-based loader produces.
     /// </summary>
-    internal static List<string> ResolveLocalizationFilePaths(string projectDirectory, IEnumerable<string?> relativePaths)
+    private static IEnumerable<(string languageName, string path)> GetResxLanguageFiles(
+        IGumFileProvider provider, string baseRelativePath)
     {
-        var resolvedPaths = new List<string>();
-        foreach (var relative in relativePaths)
-        {
-            if (!string.IsNullOrEmpty(relative))
-            {
-                resolvedPaths.Add(FileManager.Standardize(projectDirectory + relative, preserveCase: true));
-            }
-        }
-        return resolvedPaths;
-    }
+        yield return ("Default", baseRelativePath);
 
-    private static bool IsResx(string path) =>
-        string.Equals(FileManager.GetExtension(path), "resx", StringComparison.OrdinalIgnoreCase);
+        int slash = baseRelativePath.LastIndexOf('/');
+        string directory = slash < 0 ? string.Empty : baseRelativePath.Substring(0, slash + 1);
+        string baseName = Path.GetFileNameWithoutExtension(baseRelativePath);
+
+        // A pattern without '/' matches file names in every folder, so keep only this folder's.
+        // Bundle lookups are case-sensitive, as every bundle entry lookup is. The default comparer
+        // matches the path-based loader's OrderBy, so language columns line up in both modes.
+        IEnumerable<string> satellites = provider.EnumerateFiles(directory + baseName + ".*.resx")
+            .Where(path => path.LastIndexOf('/') == slash
+                && string.CompareOrdinal(path, 0, directory, 0, directory.Length) == 0)
+            .OrderBy(path => path);
+
+        foreach (string satellite in satellites)
+        {
+            string satelliteName = Path.GetFileNameWithoutExtension(satellite);
+            yield return (satelliteName.Substring(baseName.Length + 1), satellite);
+        }
+    }
 }

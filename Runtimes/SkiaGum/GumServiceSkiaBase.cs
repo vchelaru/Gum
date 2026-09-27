@@ -421,7 +421,12 @@ public abstract class GumServiceSkiaBase : IGumService
             var gumProject = GumProjectSave.Load(gumProjectFile, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
             loadResult.ThrowIfFailed(gumProject);
-            ProjectLocalizationLoader.Load(gumProject, CustomSetPropertyOnRenderable.LocalizationService, loadResult.Warnings);
+            var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
+            if (localizationService != null)
+            {
+                // This base loads only loose projects (.gumpkg is #5228), so there is no bundle provider.
+                ProjectLocalizationLoader.Load(gumProject, localizationService, bundleFileProvider: null, loadResult.Warnings);
+            }
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
             // Overrides the code-only defaults registered above with the project's own

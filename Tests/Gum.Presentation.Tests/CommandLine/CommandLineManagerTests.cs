@@ -85,6 +85,37 @@ public class CommandLineManagerTests
         _fontManager.Verify(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData(new object[] { new[] { "Gum.exe", "--rebuildfonts" } })]
+    [InlineData(new object[] { new[] { "Gum.exe", "--rebuildfonts", "--generatecode" } })]
+    public async Task ReadCommandLine_PrintsUsageAndExits_WhenRebuildFontsHasNoProject(string[] args)
+    {
+        // With nothing after it, the option read past the end of the arguments and threw.
+        await _commandLineManager.ReadCommandLine(args);
+
+        _commandLineManager.ShouldExitImmediately.ShouldBeTrue();
+        _commandLineManager.UsageError.ShouldBe("--rebuildfonts requires a project file");
+        _guiCommands.Verify(g => g.PrintOutput("--rebuildfonts requires a project file"), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReadCommandLine_ReportsUsageError_WhenGenerateCodeHasNoProject()
+    {
+        await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "--generatecode" });
+
+        _commandLineManager.UsageError.ShouldBe("--generatecode requires a project file");
+        _guiCommands.Verify(g => g.PrintOutput("--generatecode requires a project file"), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReadCommandLine_HasNoUsageError_WhenGenerateCodeProjectComesFirst()
+    {
+        await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "MyProject.gumx", "--generatecode" });
+
+        _commandLineManager.UsageError.ShouldBeNull();
+    }
+
     [Fact]
     public async Task ReadCommandLine_SetsGlueProjectToLoad_WhenGumxArg()
     {

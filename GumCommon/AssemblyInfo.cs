@@ -19,6 +19,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("RaylibGum")]
 [assembly: InternalsVisibleTo("SokolGum")]
 
-// SkiaGum's GumServiceSkiaBase shares the project-load policy (e.g. ProjectLocalizationLoader)
-// with the MonoGame/raylib GumService.
+// SkiaGum's GumServiceSkiaBase shares GumService internals with the MonoGame/raylib GumService
+// (LanguageChangeSubscription, GumLoadResult.ThrowIfFailed).
 [assembly: InternalsVisibleTo("SkiaGum")]

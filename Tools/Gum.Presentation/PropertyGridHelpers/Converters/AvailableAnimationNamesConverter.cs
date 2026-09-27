@@ -67,6 +67,8 @@ namespace Gum.PropertyGridHelpers.Converters
                     var projectState = Locator.GetRequiredService<IProjectState>();
                     sourceFile = projectState.ProjectDirectory + sourceFile;
                 }
+                // FilePath converts a Windows-saved backslash, a file-name character on macOS/Linux.
+                sourceFile = new FilePath(sourceFile).FullPath;
 
                 if(System.IO.File.Exists(sourceFile))
                 {

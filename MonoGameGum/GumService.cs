@@ -561,7 +561,13 @@ public partial class GumService : IGumService
 
             loadResult.ThrowIfFailed(gumProject);
 
-            ProjectLocalizationLoader.Load(gumProject, CustomSetPropertyOnRenderable.LocalizationService, loadResult.Warnings);
+            var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
+            if (localizationService != null)
+            {
+                ProjectLocalizationLoader.Load(gumProject, localizationService,
+                    projectResolution.UsedBundle ? projectResolution.FileProvider : null,
+                    loadResult.Warnings);
+            }
 
             ObjectFinder.Self.GumProjectSave = gumProject;
 
