@@ -1,4 +1,5 @@
 using Gum.Managers;
+using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 
@@ -12,11 +13,19 @@ namespace Gum.Presentation.Tests;
 /// whichever test runs next. Resetting on construction too means a test's starting state
 /// doesn't depend on any other test's history. Both singletons live in GumCommon, so this
 /// stays within the headless boundary — no WPF/WinForms required.
+/// <para>
+/// Also restores <see cref="FileManager.UserApplicationDataFolderOverride"/> on dispose, so a test
+/// may point it anywhere (or clear it) without sending later tests out of the process's temp
+/// user-data folder.
+/// </para>
 /// </summary>
 public class BaseTestClass : IDisposable
 {
+    private readonly string? _originalUserDataOverride;
+
     public BaseTestClass()
     {
+        _originalUserDataOverride = FileManager.UserApplicationDataFolderOverride;
         ObjectFinder.Self.GumProjectSave = null;
         StandardElementsManager.Self.Initialize();
     }
@@ -24,5 +33,6 @@ public class BaseTestClass : IDisposable
     public virtual void Dispose()
     {
         ObjectFinder.Self.GumProjectSave = null;
+        FileManager.UserApplicationDataFolderOverride = _originalUserDataOverride;
     }
 }

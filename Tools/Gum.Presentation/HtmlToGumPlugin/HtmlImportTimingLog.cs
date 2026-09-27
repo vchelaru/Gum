@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace HtmlToGumPlugin;
 
@@ -183,9 +184,7 @@ public static class HtmlImportTimingLog
 
     /// <summary>Log the plugin appends one entry to per import, next to its import-prefs.json.</summary>
     public static string LogPath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create),
-            "HtmlToGumPlugin", "import-timings.log");
+        Path.Combine(FileManager.UserApplicationDataForThisApplication, "HtmlToGumPlugin", "import-timings.log");
 
     /// <summary>Reads the converter's timings.json out of its staging folder; null if it wasn't written.</summary>
     public static ConverterTimings? TryReadConverterTimings(string stageDir)
