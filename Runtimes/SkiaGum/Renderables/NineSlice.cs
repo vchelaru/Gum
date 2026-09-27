@@ -35,6 +35,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
     // across the boundary between two sections of the nine-slice source texture,
     // producing visible seams; nearest-neighbour samples a single texel per output
     // pixel and matches the pixel-art look that nine-slice borders typically use.
+    // So NineSlice deliberately ignores Renderer.TextureFilter, which Sprite honors.
     private static readonly SKSamplingOptions _sampling =
         new SKSamplingOptions(SKFilterMode.Nearest, SKMipmapMode.None);
 
