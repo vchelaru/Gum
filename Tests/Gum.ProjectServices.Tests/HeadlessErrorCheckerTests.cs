@@ -1627,9 +1627,9 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     public void GetErrorsFor_ShouldNotReportGum0009_WhenEveryReferenceResolves()
     {
         ComponentSave styles = AddStylesComponent("Styles", colorInstanceName: "Primary");
-        styles.DefaultState.Variables.Add(new VariableSave { Name = "Primary.Width", ExposedAsName = "PrimaryWidth", Type = "float", Value = 5f, SetsValue = true });
+        styles.DefaultState!.Variables.Add(new VariableSave { Name = "Primary.Width", ExposedAsName = "PrimaryWidth", Type = "float", Value = 5f, SetsValue = true });
         styles.Categories.Add(new StateSaveCategory { Name = "Theme" });
-        styles.DefaultState.Variables.Add(new VariableSave { Name = "Spacing", Type = "float", Value = 4f, SetsValue = true, IsCustomVariable = true });
+        styles.DefaultState!.Variables.Add(new VariableSave { Name = "Spacing", Type = "float", Value = 4f, SetsValue = true, IsCustomVariable = true });
         ComponentSave derivedStyles = new ComponentSave { Name = "Folder/DerivedStyles", BaseType = "Styles" };
         derivedStyles.States.Add(new StateSave { Name = "Default", ParentContainer = derivedStyles });
         Project.Components.Add(derivedStyles);
