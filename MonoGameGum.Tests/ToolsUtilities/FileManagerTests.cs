@@ -60,6 +60,72 @@ public class FileManagerTests : IDisposable
         Path.IsPathRooted(((FileNotFoundException)ex.InnerException!).FileName).ShouldBeTrue();
     }
 
+    // #5225: a .gumpkg hook serves only its bundle and throws for anything else. FileExists reports a
+    // loose file as existing, so GetStreamForFile must read it from disk rather than asking only the hook.
+    [Fact]
+    public void GetStreamForFile_WhenLooseFileExistsAndHookDoesNotServeIt_ShouldReadTheLooseFile()
+    {
+        string loosePath = Path.Combine(Path.GetTempPath(), "GumLooseOverHook_" + Guid.NewGuid().ToString("N") + ".txt");
+        File.WriteAllText(loosePath, "loose");
+        FileManager.CustomGetStreamFromFile = requestedPath =>
+            throw new FileNotFoundException("Not in the bundle.", requestedPath);
+
+        try
+        {
+            FileManager.FileExists(loosePath).ShouldBeTrue();
+            using StreamReader reader = new(FileManager.GetStreamForFile(loosePath));
+
+            reader.ReadToEnd().ShouldBe("loose");
+        }
+        finally
+        {
+            File.Delete(loosePath);
+        }
+    }
+
+    // A loaded .gumpkg must override stale loose copies at the same path (gumcli pack writes the bundle
+    // next to the .gumx by default), so the hook wins whenever it serves the file.
+    [Fact]
+    public void GetStreamForFile_WhenHookServesAFileThatIsAlsoOnDisk_ShouldReturnTheHookContent()
+    {
+        string loosePath = Path.Combine(Path.GetTempPath(), "GumHookOverLoose_" + Guid.NewGuid().ToString("N") + ".txt");
+        File.WriteAllText(loosePath, "loose");
+        FileManager.CustomGetStreamFromFile = _ => new MemoryStream(Encoding.UTF8.GetBytes("bundled"));
+
+        try
+        {
+            using StreamReader reader = new(FileManager.GetStreamForFile(loosePath));
+
+            reader.ReadToEnd().ShouldBe("bundled");
+        }
+        finally
+        {
+            File.Delete(loosePath);
+        }
+    }
+
+    // #5222: callers pair FileExists(p) with GetStreamForFile(p), so the hook must see one path shape
+    // for both, including an absolute path with ".." and mixed separators.
+    [Fact]
+    public void GetStreamForFile_ShouldHandTheHookTheSamePathAsFileExists_ForAnAbsolutePath()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumHookPathShape_" + Guid.NewGuid().ToString("N"));
+        string requested = root + "/Project/../Shared\\X.behx";
+        List<string> hookPaths = new();
+        FileManager.CustomGetStreamFromFile = requestedPath =>
+        {
+            hookPaths.Add(requestedPath);
+            return new MemoryStream(Encoding.UTF8.GetBytes("bundled"));
+        };
+
+        FileManager.FileExists(requested).ShouldBeTrue();
+        using (Stream stream = FileManager.GetStreamForFile(requested)) { }
+
+        hookPaths.Count.ShouldBe(2);
+        hookPaths[1].ShouldBe(hookPaths[0]);
+        hookPaths[0].ShouldNotContain("..");
+    }
+
     [Fact]
     public void FromFileText_ShouldLoad_WhenPathHasDotDotSlash()
     {
