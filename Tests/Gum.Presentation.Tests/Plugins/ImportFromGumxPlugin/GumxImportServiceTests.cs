@@ -391,6 +391,59 @@ public class GumxImportServiceTests : IDisposable
         result.ConflictingElements.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task ImportAsync_ExistingStandard_IsReplacedWholeBySourceFile_EvenWithSkipResolution()
+    {
+        // Pins current behavior while #5340 decides whether it is right: a selected Standard
+        // replaces the destination's file outright. The destination's own values, variables, and
+        // categories are lost, and Skip (which protects components/screens/behaviors) does not
+        // apply to Standards.
+        string destPath = Path.Combine(_projectDir, "Standards", $"Text.{GumProjectSave.StandardExtension}");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        StandardElementSave destText = StandardWithFontSize("Text", fontSize: 40);
+        destText.States[0].Variables.Add(new VariableSave { Name = "Rotation", Type = "float", Value = 5f, SetsValue = true });
+        destText.Categories.Add(new StateSaveCategory { Name = "UserCategory" });
+        destText.Save(destPath);
+
+        string sourcePath = Path.Combine(_sourceDir, "Standards", $"Text.{GumProjectSave.StandardExtension}");
+        Directory.CreateDirectory(Path.GetDirectoryName(sourcePath)!);
+        StandardElementSave sourceText = StandardWithFontSize("Text", fontSize: 18);
+        sourceText.Save(sourcePath);
+
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(sourceText);
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents     = new(),
+            TransitiveComponents = new(),
+            DirectScreens        = new(),
+            Behaviors            = new(),
+            Standards            = new() { sourceText },
+        };
+
+        await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Skip);
+
+        StandardElementSave written = GumFileSerializer.DeserializeElementSave<StandardElementSave>(File.ReadAllText(destPath), GumProjectSave.NativeVersion)!;
+        written.States[0].Variables.Single(v => v.Name == "FontSize").Value.ShouldBe(18);
+        written.States[0].Variables.ShouldNotContain(v => v.Name == "Rotation");
+        written.Categories.ShouldNotContain(c => c.Name == "UserCategory");
+    }
+
+    private static StandardElementSave StandardWithFontSize(string name, int fontSize) =>
+        new StandardElementSave
+        {
+            Name = name,
+            States = new()
+            {
+                new StateSave
+                {
+                    Name = "Default",
+                    Variables = new() { new VariableSave { Name = "FontSize", Type = "int", Value = fontSize, SetsValue = true } }
+                }
+            }
+        };
+
     // ── asset gating ──────────────────────────────────────────────────────
 
     [Fact]

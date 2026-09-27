@@ -270,6 +270,41 @@ public class ImportFromGumxViewModelTests
     }
 
     [Fact]
+    public void RecomputeTransitiveDependencies_DifferingStandardUncheckedByUser_IsCheckedAgain()
+    {
+        // Pins current behavior while #5340 decides whether it is right: a differing Standard that
+        // a selected component references is auto-checked, and unchecking it does not stick, so the
+        // user cannot keep their own copy of that Standard when importing the component.
+        StandardElementSave sourceText = new StandardElementSave { Name = "Text" };
+        sourceText.Categories.Add(new StateSaveCategory { Name = "TextColor" });
+        sourceText.States.Add(new StateSave { Name = "Default" });
+
+        StandardElementSave destText = new StandardElementSave { Name = "Text" };
+        destText.States.Add(new StateSave { Name = "Default" });
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text" });
+
+        GumProjectSave source = new GumProjectSave();
+        source.Components.Add(button);
+        source.StandardElements.Add(sourceText);
+        _projectState.GumProjectSave.StandardElements.Add(destText);
+
+        _sut.InitializeFromProjectForTesting(source);
+        ImportTreeNodeViewModel buttonLeaf = FindLeaf("Button", ElementItemType.Component);
+        ImportTreeNodeViewModel textStandardLeaf = FindLeaf("Text", ElementItemType.Standard);
+
+        buttonLeaf.InclusionState = InclusionState.Explicit;
+        _sut.RecomputeTransitiveDependencies();
+        textStandardLeaf.InclusionState.ShouldBe(InclusionState.Explicit);
+
+        textStandardLeaf.InclusionState = InclusionState.NotIncluded;
+        _sut.RecomputeTransitiveDependencies();
+
+        textStandardLeaf.InclusionState.ShouldBe(InclusionState.Explicit);
+    }
+
+    [Fact]
     public void RecomputeTransitiveDependencies_StandardMatchingDestination_HasNoDiffRows()
     {
         // Identical source and destination standard — nothing to diff, no expander.
