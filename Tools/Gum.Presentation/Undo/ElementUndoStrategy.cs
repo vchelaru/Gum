@@ -1092,8 +1092,8 @@ public class ElementUndoStrategy : IUndoStrategy
 
     /// <summary>
     /// Moves each element's history onto the element of the same name in <paramref name="reloaded"/>,
-    /// the same project reopened, when the reload left it and every element its cross-element changes
-    /// touch unchanged; drops the rest. Those changes are re-pointed at the reloaded elements, so undo
+    /// the same project reopened, when the reload left it (file and animations) and every element its
+    /// cross-element changes touch unchanged; drops the rest. Those changes are re-pointed at the reloaded elements, so undo
     /// still replays them in full.
     /// </summary>
     public void CarryOverTo(GumProjectSave reloaded)
@@ -1117,6 +1117,11 @@ public class ElementUndoStrategy : IUndoStrategy
         foreach (KeyValuePair<ElementSave, ElementHistory> pair in mUndos)
         {
             ElementSave? match = UnchangedMatch(pair.Key);
+            // The element file alone does not cover its animations sidecar, which undo also writes.
+            if (match != null && !DoAnimationsMatchHistory(pair.Value, match))
+            {
+                continue;
+            }
             List<CrossElementVariableChange> changes = pair.Value.Actions
                 .SelectMany(action => action.CrossElementVariableChanges ?? Enumerable.Empty<CrossElementVariableChange>())
                 .ToList();
@@ -1138,6 +1143,30 @@ public class ElementUndoStrategy : IUndoStrategy
         {
             mUndos.Add(pair.Key, pair.Value);
         }
+    }
+
+    // Whether reloaded's animations are the ones the history holds at its current position: those
+    // after the nearest applied action that changed them, else those before the nearest undone one.
+    // A history that never touched animations never writes them, so any animations match it.
+    private bool DoAnimationsMatchHistory(ElementHistory history, ElementSave reloaded)
+    {
+        ElementAnimationsSave? expected = null;
+        for (int i = history.UndoIndex; i >= 0 && expected == null; i--)
+        {
+            expected = history.Actions[i].RedoState?.Animations;
+        }
+        for (int i = history.UndoIndex + 1; i < history.Actions.Count && expected == null; i++)
+        {
+            expected = history.Actions[i].UndoState.Animations;
+        }
+        if (expected == null)
+        {
+            return true;
+        }
+
+        // A snapshot stores "no animations" as an empty save; the provider returns null for it.
+        ElementAnimationsSave current = _animationUndoProvider.GetCurrentAnimations(reloaded) ?? new ElementAnimationsSave();
+        return FileManager.AreSaveObjectsEqual(FileManager.CloneSaveObject(expected), FileManager.CloneSaveObject(current));
     }
 
     // Compares round-tripped copies: an element edited in memory and the same element read back from

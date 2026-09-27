@@ -1,4 +1,5 @@
 using Avalonia.Headless.XUnit;
+using Gum.Avalonia.Tests.Animations;
 using Gum.DataTypes;
 using Gum.Avalonia.Tests.VariableGrid;
 using Gum.Dialogs;
@@ -245,7 +246,64 @@ public class FormsAndImportScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "CONT-008")]
+    [Trait("Feature", "EDIT-001")]
+    public void ImportGumx_AStandardWhoseFileIsUnchangedButWhoseAnimationsAreNot_UndoKeepsTheImportedAnimations()
+    {
+        // The reload keeps an unchanged element's history (#5339), but the element file alone does
+        // not say whether the import replaced its animations (#5345).
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        string targetAnimations = Path.Combine(editor.ProjectFolder, "Standards", "TextAnimations.ganx");
+        SaveAnimations(targetAnimations, "Old");
+        StandardElementSave text = editor.Project.StandardElements.Single(standard => standard.Name == "Text");
+        editor.Select(text);
+        editor.StartScenario();
+        // The tab adds animations only to screens and components, but renames a Standard's.
+        editor.RightClick(editor.RowFor(editor.AnimationList, editor.ViewModel.Animations.Single()));
+        editor.Dialogs.AnswerNextUserString("Edited");
+        editor.PickContextMenuItem("Rename Animation");
+        ElementAnimationsSave.Load(targetAnimations).Animations.Select(animation => animation.Name).ShouldBe(new[] { "Edited" });
+        using TempThemeCopy source = new TempThemeCopy("Standard");
+        string sourceStandards = Path.Combine(Path.GetDirectoryName(source.ProjectFile)!, "Standards");
+        File.Copy(Path.Combine(editor.ProjectFolder, "Standards", "Text." + GumProjectSave.StandardExtension),
+            Path.Combine(sourceStandards, "Text." + GumProjectSave.StandardExtension), overwrite: true);
+        SaveAnimations(Path.Combine(sourceStandards, "TextAnimations.ganx"), "Pulse");
+        editor.Dialogs.AnswerNextOpenFile(source.ProjectFile);
+        editor.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            dialog.BrowseCommand.Execute(null);
+            editor.WaitUntil(() => dialog.IsPreviewLoaded, AsyncWork).ShouldBeTrue("the .gumx preview loads");
+            Leaf(dialog, "Text").IsChecked = true;
+            return true;
+        });
+
+        PickMainMenu("Content", "Import", ".gumx…");
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        editor.WaitUntil(() => projectManager.GumProjectSave != editor.Project, AsyncWork).ShouldBeTrue("the project reloads after the import");
+        StandardElementSave reloadedText = projectManager.GumProjectSave!.StandardElements.Single(standard => standard.Name == "Text");
+        editor.Select(reloadedText);
+        ElementAnimationsSave.Load(targetAnimations).Animations.Select(animation => animation.Name).ShouldBe(new[] { "Pulse" });
+
+        editor.Undo();
+
+        ElementAnimationsSave.Load(targetAnimations).Animations.Select(animation => animation.Name)
+            .ShouldBe(new[] { "Pulse" }, "undoing the edit made before the import must not write the pre-import animations back");
+    }
+
     #endregion
+
+    private static void PickMainMenu(params string[] path)
+    {
+        IEnumerable<MenuItemModel> items = Services.GetRequiredService<MenuModel>().TopLevelItems;
+        MenuItemModel? item = null;
+        foreach (string header in path)
+        {
+            item = items.Single(candidate => !candidate.IsSeparator && candidate.Header == header);
+            items = item.Items;
+        }
+        item!.Invoke();
+    }
 
     private static void SaveAnimations(string path, string animationName)
     {
