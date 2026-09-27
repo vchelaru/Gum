@@ -410,17 +410,19 @@ public class CopyPasteRenameScenarioTests
         tree.Click(tree.NodeFor(Component(tree, "Panel")));
         grid.TypeLinesAndApply("VariableReferences", "Height = Components/Button.LabelWidth");
         tree.Click(tree.NodeFor(Component(tree, "Button")));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
 
         VariableSave exposed = Component(tree, "Button").GetDefaultStateOrThrow().Variables.Single(variable => variable.ExposedAsName == "LabelWidth");
         tree.Dialogs.AnswerNextUserString("TextWidth");
         Services.GetRequiredService<Gum.Services.IEditVariableService>().ShowEditVariableWindow(exposed, Component(tree, "Button"));
-        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/Button.TextWidth" });
+        // The rename replaces only the name, so the line keeps the spacing it was typed with.
+        Component(tree, "Panel").GetDefaultStateOrThrow().GetVariableListSave("VariableReferences").ShouldNotBeNull().ValueAsIList
+            .Cast<string>().ShouldBe(new[] { "Height = Components/Button.TextWidth" });
 
         tree.Undo();
 
         ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/Button.LabelWidth" });
-        // Lines rather than files: the rename drops the spaces around "=" (#5270).
-        ReferenceLines(grid.ReadSaved(Component(tree, "Panel"))).ShouldBe(new[] { "Height = Components/Button.LabelWidth" });
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the rename should restore the reference line as it was typed");
 
         tree.AssertOracles();
     }

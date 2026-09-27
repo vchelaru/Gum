@@ -18,21 +18,18 @@ public class EditVariableService : IEditVariableService
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IUndoManager _undoManager;
-    private readonly Func<AddVariableViewModel> _addVariableViewModelFactory;
 
     public EditVariableService(IRenameLogic renameLogic,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IUndoManager undoManager,
-        Func<AddVariableViewModel> addVariableViewModelFactory)
+        IUndoManager undoManager)
     {
         _renameLogic = renameLogic;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _undoManager = undoManager;
-        _addVariableViewModelFactory = addVariableViewModelFactory;
     }
 
     /// <summary>
@@ -132,8 +129,6 @@ public class EditVariableService : IEditVariableService
     {
         using var undoLock = _undoManager.RequestLock();
 
-        var variableChanges = changeResponse.VariableChanges;
-
         variable.ExposedAsName = newName;
 
         HashSet<ElementSave> changedElements = new HashSet<ElementSave>();
@@ -143,34 +138,8 @@ public class EditVariableService : IEditVariableService
             changedElements.Add(containerElement);
         }
 
-        foreach (var change in variableChanges)
-        {
-            var element = change.Container as ElementSave;
-            if (element != null)
-            {
-                changedElements.Add(element);
-            }
-
-            if(change.Variable.ExposedAsName == oldName)
-            {
-                change.Variable.ExposedAsName = newName;
-            }
-            else if(change.Variable.GetRootName() == oldName)
-            {
-                var prefix = string.Empty;
-                if(change.Variable.SourceObject != null)
-                {
-                    prefix = change.Variable.SourceObject + ".";
-                }
-
-                change.Variable.Name = prefix + newName;
-            }
-        }
-
-        // We can re-use the logic in the AddVariableViewModel:
-        var vm = _addVariableViewModelFactory();
-        vm.RenameType = RenameType.ExposedName;
-        vm.ApplyVariableReferenceChanges(changeResponse, newName, oldName, changedElements);
+        // Undo reverses the rename through the same call, so both directions rewrite alike.
+        _renameLogic.ApplyVariableRenameChanges(changeResponse, oldName, newName, changedElements);
 
         _guiCommands.RefreshVariables(force:true);
         foreach(var element in changedElements)

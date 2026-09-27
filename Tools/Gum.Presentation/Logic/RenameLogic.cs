@@ -329,48 +329,35 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                 }
             }
 
-            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
-            if (oldLine == null) continue;
+            if (variableList.ValueAsIList[referenceChange.LineIndex] is not string oldLine) continue;
 
-            var equalIndex = oldLine.IndexOf("=");
-            if (equalIndex < 0) continue;
-
-            var leftSide = oldLine.Substring(0, equalIndex).Trim();
-            var rightSide = oldLine.Substring(equalIndex + 1).Trim();
-
-            if (referenceChange.ChangedSide is SideOfEquals.Left or SideOfEquals.Both)
-            {
-                if (leftSide.StartsWith(oldName + "."))
-                    leftSide = newName + leftSide.Substring(oldName.Length);
-            }
-
-            if (referenceChange.ChangedSide is SideOfEquals.Right or SideOfEquals.Both)
-            {
-                // Preserve optional state prefix (e.g. "Highlighted:OldName.X")
-                var colonIndex = rightSide.IndexOf(":");
-                var statePrefix = colonIndex >= 0 ? rightSide.Substring(0, colonIndex + 1) : string.Empty;
-                var rightCore = colonIndex >= 0 ? rightSide.Substring(colonIndex + 1) : rightSide;
-
-                if (rightCore.StartsWith(oldName + "."))
+            variableList.ValueAsIList[referenceChange.LineIndex] = RewriteReferenceLine(oldLine, referenceChange.ChangedSide,
+                leftSide => leftSide.StartsWith(oldName + ".") ? newName + leftSide.Substring(oldName.Length) : leftSide,
+                rightSide =>
                 {
-                    rightCore = newName + rightCore.Substring(oldName.Length);
-                }
-                else
-                {
-                    // Handle qualified cross-component reference: "Components/ComponentA/Sprite.Width"
-                    var qualifiedOldPattern = "." + oldName + ".";
-                    var patternIndex = rightCore.LastIndexOf(qualifiedOldPattern);
-                    if (patternIndex >= 0)
+                    // Preserve optional state prefix (e.g. "Highlighted:OldName.X")
+                    var colonIndex = rightSide.IndexOf(":");
+                    var statePrefix = colonIndex >= 0 ? rightSide.Substring(0, colonIndex + 1) : string.Empty;
+                    var rightCore = colonIndex >= 0 ? rightSide.Substring(colonIndex + 1) : rightSide;
+
+                    if (rightCore.StartsWith(oldName + "."))
                     {
-                        rightCore = rightCore.Substring(0, patternIndex + 1) + newName +
-                                    rightCore.Substring(patternIndex + 1 + oldName.Length);
+                        rightCore = newName + rightCore.Substring(oldName.Length);
                     }
-                }
+                    else
+                    {
+                        // Handle qualified cross-component reference: "Components/ComponentA/Sprite.Width"
+                        var qualifiedOldPattern = "." + oldName + ".";
+                        var patternIndex = rightCore.LastIndexOf(qualifiedOldPattern);
+                        if (patternIndex >= 0)
+                        {
+                            rightCore = rightCore.Substring(0, patternIndex + 1) + newName +
+                                        rightCore.Substring(patternIndex + 1 + oldName.Length);
+                        }
+                    }
 
-                rightSide = statePrefix + rightCore;
-            }
-
-            variableList.ValueAsIList[referenceChange.LineIndex] = $"{leftSide} = {rightSide}";
+                    return statePrefix + rightCore;
+                });
         }
 
         foreach (var (variableList, undoChange) in listUndoChanges)
@@ -422,21 +409,13 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         foreach (var referenceChange in changes.VariableReferenceChanges)
         {
             var variableList = referenceChange.VariableReferenceList;
-            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
-            if (oldLine == null) continue;
+            if (variableList.ValueAsIList[referenceChange.LineIndex] is not string oldLine || !oldLine.Contains('=')) continue;
 
-            var equalIndex = oldLine.IndexOf("=");
-            if (equalIndex < 0) continue;
-
-            var left = oldLine.Substring(0, equalIndex).Trim();
-            var right = oldLine.Substring(equalIndex + 1).Trim();
-
-            if (right.StartsWith(qualifiedOldName + "."))
-            {
-                right = qualifiedNewName + right.Substring(qualifiedOldName.Length);
-            }
-
-            variableList.ValueAsIList[referenceChange.LineIndex] = $"{left} = {right}";
+            variableList.ValueAsIList[referenceChange.LineIndex] = RewriteReferenceLine(oldLine, SideOfEquals.Right,
+                left => left,
+                right => right.StartsWith(qualifiedOldName + ".")
+                    ? qualifiedNewName + right.Substring(qualifiedOldName.Length)
+                    : right);
             containersToSave.Add(referenceChange.Container);
         }
 
@@ -773,41 +752,64 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             }
         }
 
-        foreach (var referenceChange in changes.VariableReferenceChanges)
+        ApplyVariableReferenceRenames(changes.VariableReferenceChanges, oldStrippedOrExposedName, newStrippedOrExposedName, elementsNeedingSave);
+    }
+
+    public void ApplyVariableReferenceRenames(IEnumerable<VariableReferenceChange> referenceChanges,
+        string oldStrippedOrExposedName, string newStrippedOrExposedName,
+        HashSet<ElementSave> elementsNeedingSave)
+    {
+        foreach (var referenceChange in referenceChanges)
         {
-            if (referenceChange.Container != null)
-                elementsNeedingSave.Add(referenceChange.Container);
+            elementsNeedingSave.Add(referenceChange.Container);
 
-            var variableList = referenceChange.VariableReferenceList;
-            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
-            if (oldLine == null) continue;
+            var lines = referenceChange.VariableReferenceList.ValueAsIList;
+            if (lines[referenceChange.LineIndex] is not string oldLine) continue;
 
-            var leftAndRight = oldLine.Split('=').Select(item => item.Trim()).ToArray();
-            if (leftAndRight.Length < 2) continue;
-
-            if (referenceChange.ChangedSide is SideOfEquals.Left or SideOfEquals.Both)
-            {
-                if (leftAndRight[0] == oldStrippedOrExposedName)
-                    leftAndRight[0] = newStrippedOrExposedName;
-            }
-
-            if (referenceChange.ChangedSide is SideOfEquals.Right or SideOfEquals.Both)
-            {
-                if (leftAndRight[1] == oldStrippedOrExposedName)
-                {
-                    leftAndRight[1] = newStrippedOrExposedName;
-                }
-                else if (leftAndRight[1].EndsWith("." + oldStrippedOrExposedName))
-                {
-                    var newLength = leftAndRight[1].Length - oldStrippedOrExposedName.Length;
-                    leftAndRight[1] = leftAndRight[1].Substring(0, newLength) + newStrippedOrExposedName;
-                }
-            }
-
-            variableList.ValueAsIList[referenceChange.LineIndex] = $"{leftAndRight[0]}={leftAndRight[1]}";
+            lines[referenceChange.LineIndex] = RewriteReferenceLine(oldLine, referenceChange.ChangedSide,
+                left => left == oldStrippedOrExposedName ? newStrippedOrExposedName : left,
+                right =>
+                    right == oldStrippedOrExposedName ? newStrippedOrExposedName
+                    : right.EndsWith("." + oldStrippedOrExposedName)
+                        ? right.Substring(0, right.Length - oldStrippedOrExposedName.Length) + newStrippedOrExposedName
+                    : right);
         }
     }
 
-
     #endregion
+
+    /// <summary>
+    /// Rewrites the sides of a VariableReferences line named by <paramref name="changedSide"/>. Each
+    /// rewrite sees the side trimmed, and the whitespace around it is put back, so the line keeps the
+    /// spacing it was typed with and an undo that reverses the rename restores it exactly. The
+    /// assignment is the first '='; the right side may itself contain '=' (==, &lt;=, ...).
+    /// </summary>
+    private static string RewriteReferenceLine(string line, SideOfEquals changedSide,
+        Func<string, string> rewriteLeft, Func<string, string> rewriteRight)
+    {
+        var equalsIndex = line.IndexOf('=');
+        if (equalsIndex < 0) return line;
+
+        var left = line.Substring(0, equalsIndex);
+        var right = line.Substring(equalsIndex + 1);
+
+        if (changedSide is SideOfEquals.Left or SideOfEquals.Both)
+        {
+            left = RewriteTrimmed(left, rewriteLeft);
+        }
+
+        if (changedSide is SideOfEquals.Right or SideOfEquals.Both)
+        {
+            right = RewriteTrimmed(right, rewriteRight);
+        }
+
+        return left + "=" + right;
+    }
+
+    private static string RewriteTrimmed(string side, Func<string, string> rewrite)
+    {
+        var trimmed = side.Trim();
+        var start = side.Length - side.TrimStart().Length;
+        return side.Substring(0, start) + rewrite(trimmed) + side.Substring(start + trimmed.Length);
+    }
 }

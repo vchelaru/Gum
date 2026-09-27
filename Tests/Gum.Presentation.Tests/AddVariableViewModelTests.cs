@@ -55,7 +55,8 @@ public class AddVariableViewModelTests : BaseTestClass
             _fileCommands.Object,
             _nameVerifier.Object,
             _selectedState.Object,
-            _pluginManager.Object);
+            _pluginManager.Object,
+            new Mock<IRenameLogic>().Object);
 
         GumProjectSave gumProject = new GumProjectSave();
         gumProject.Components.Add(_component);
