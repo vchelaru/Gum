@@ -1,6 +1,7 @@
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Gum.DataTypes;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Dialogs;
 using Gum.Services.Dialogs;
 using Shouldly;
@@ -297,6 +298,23 @@ public class CodeGenScenarioTests
         code.ShowsButton("Auto").ShouldBeTrue("a project opened with no code settings is offered setup");
         code.Grid.IsEffectivelyVisible.ShouldBeFalse();
         code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void CodeSettingsOfAFinishedScenario_DoNotReachTheNextTestsProject()
+    {
+        using (CodeTabHarness first = new CodeTabHarness())
+        {
+            first.Select(first.Project.AddComponent("Card"));
+            first.SetUpManualGeneration();
+        }
+
+        using ToolProjectFixture next = new ToolProjectFixture("GumCodeTab");
+        // A new component generates on add when the project has a Code Project Root.
+        next.AddComponent("Panel");
+
+        Directory.Exists(Path.Combine(next.ProjectFolder, CodeTabHarness.CodeFolderName)).ShouldBeFalse(
+            "the next project has no code settings, so nothing is generated into it");
     }
 
     private static void WriteMinimalCsproj(string folder) =>

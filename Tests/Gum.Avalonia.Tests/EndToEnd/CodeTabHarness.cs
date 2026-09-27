@@ -17,8 +17,10 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 /// <summary>
 /// The head's Code tab (preview, settings grid, Generate button) in a window of its own, next to a
 /// <see cref="ProjectTreeHarness"/> over the same temp project. The project is saved and reopened
-/// through the tool's load path first, so the Code Output plugin reads this project's code settings
-/// and not a previous test's. Code is written under <see cref="CodeFolder"/>, inside the project folder.
+/// through the tool's load path first, so the Code Output plugin reads the code settings and
+/// .csproj in the project's folder. Code is written under <see cref="CodeFolder"/>, inside the
+/// project folder. The fixture's dispose opens a new project, which puts the plugin's code settings
+/// back to the defaults (pinned by <c>CodeSettingsOfAFinishedScenario_DoNotReachTheNextTestsProject</c>).
 /// </summary>
 internal sealed class CodeTabHarness : IDisposable
 {
@@ -48,7 +50,7 @@ internal sealed class CodeTabHarness : IDisposable
             _wasSelected = Tab.IsSelected;
             // The preview only follows the selection while the tab is the one shown.
             Tab.IsSelected = true;
-            _driver = new HeadlessWindowDriver(View, width: 1000, height: 800, framesFolderName: "GumCodeTab", contentOutlivesTest: true);
+            _driver = new HeadlessWindowDriver(View, width: 1000, height: 800, framesFolderName: "GumCodeTab");
         }
         catch
         {

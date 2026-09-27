@@ -139,10 +139,10 @@ Gotchas in scenario setup:
   returns true; answering at once imports without the dependencies.
 - Add Forms and Import .gumx end by reloading the project, so read it from `IProjectManager`
   afterwards; `tree.Project.Project` is the stale pre-reload copy.
-- `ToolProjectFixture` creates its project without raising the project-load event, so the Code
-  Output plugin still holds the code settings of whatever project an earlier test loaded.
-  `CodeTabHarness` saves and reopens the project first; a scenario that generates code without it
-  writes into another test's folder.
+- The Code Output plugin reads `ProjectCodeSettings.codsj` only when a project loads, and
+  `ToolProjectFixture` loads its project before the project has a folder. A scenario that needs
+  code settings or a `.csproj` in place passes them to `CodeTabHarness`'s `beforeLoad`, which
+  writes them and then reopens the project.
 - The editor tab, which sits out, fills a project's canvas sizes when the tool opens it; a scenario
   that makes a new project through the tool sets `CustomCanvasSizes` itself before the oracles.
 
