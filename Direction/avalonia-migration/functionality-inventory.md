@@ -20,10 +20,10 @@
 
 ## File menu (FILE)
 
-- FILE-001 New Project. tested: NewProjectLogicTests, ProjectOracleTests
-- FILE-002 Load Project
+- FILE-001 New Project. tested: NewProjectLogicTests, ProjectOracleTests, DialogScenarioTests
+- FILE-002 Load Project. tested: DialogScenarioTests
 - FILE-003 Load Recent, pick a listed project. tested: RecentFilesLogicTests
-- FILE-004 Load Recent > More... dialog. tested: LoadRecentViewModelTests
+- FILE-004 Load Recent > More... dialog. tested: LoadRecentViewModelTests, DialogScenarioTests
 - FILE-005 Save Project
 - FILE-006 Save All
 - FILE-007 Export > Export as Image
@@ -115,7 +115,7 @@
 - TREE-016 Screens node: Import Screen. tested: ImportScreenDialogTests
 - TREE-017 Screens/Components node: Add Folder. tested: AddFolderDialogViewModelTests, TreeScenarioTests
 - TREE-018 Components node: Add Component. tested: TreeScenarioTests
-- TREE-019 Components node: Import Components. tested: ImportComponentDialogTests
+- TREE-019 Components node: Import Components. tested: ImportComponentDialogTests, DialogScenarioTests
 - TREE-020 Behaviors node: Add Behavior. tested: TreeScenarioTests
 - TREE-021 Behaviors node: Import Behavior. tested: ImportBehaviorDialogTests
 - TREE-022 Folder/category node: View in explorer. tested: ElementTreeViewManagerNullSafetyTests
@@ -288,25 +288,25 @@
 
 ## Animations tab (ANIM)
 
-- ANIM-001 Add Animation. tested: AnimationListScenarioTests
-- ANIM-002 Rename Animation. tested: AnimationRenameManagerTests
-- ANIM-003 Delete Animation. tested: AnimationListScenarioTests
-- ANIM-004 Duplicate Animation. tested: DuplicateServiceTests
-- ANIM-005 Set to Looping / Single Play. tested: AnimationListScenarioTests
-- ANIM-006 Squash/Stretch Frame Times. tested: KeyframeEditingTests
-- ANIM-007 Add State keyframe. tested: KeyframeEditingTests
-- ANIM-008 Add Sub-Animation keyframe. tested: SubAnimationNestingTests
-- ANIM-009 Add Named Event keyframe. tested: KeyframeEditingTests
-- ANIM-010 Delete keyframe. tested: KeyframeEditingTests
-- ANIM-011 Edit keyframe time and interpolation. tested: DetailColumnTests
-- ANIM-012 Timeline scrub and time box. tested: TimelineEndToEndTests
-- ANIM-013 Play / stop. tested: PlaybackTests
-- ANIM-014 Broken keyframe marker. tested: AnimationErrorTests
-- ANIM-015 Uncategorized-state warning. tested: AnimationErrorTests
-- ANIM-016 List keys: reorder, delete, copy, paste. tested: AnimationTabKeyHandlerTests
-- ANIM-017 Instance sub-animations. tested: InstanceSubAnimationTests
-- ANIM-018 External file change reloads. tested: ExternalChangeTests
-- ANIM-019 Element rename/delete updates animations. tested: ElementLifecycleTests
+- ANIM-001 Add Animation. tested: AnimationListScenarioTests, AnimationScenarioTests
+- ANIM-002 Rename Animation. tested: AnimationRenameManagerTests, AnimationScenarioTests
+- ANIM-003 Delete Animation. tested: AnimationListScenarioTests, AnimationScenarioTests
+- ANIM-004 Duplicate Animation. tested: DuplicateServiceTests, AnimationScenarioTests
+- ANIM-005 Set to Looping / Single Play. tested: AnimationListScenarioTests, AnimationScenarioTests
+- ANIM-006 Squash/Stretch Frame Times. tested: KeyframeEditingTests, AnimationScenarioTests
+- ANIM-007 Add State keyframe. tested: KeyframeEditingTests, AnimationScenarioTests
+- ANIM-008 Add Sub-Animation keyframe. tested: SubAnimationNestingTests, AnimationScenarioTests
+- ANIM-009 Add Named Event keyframe. tested: KeyframeEditingTests, AnimationScenarioTests
+- ANIM-010 Delete keyframe. tested: KeyframeEditingTests, AnimationScenarioTests
+- ANIM-011 Edit keyframe time and interpolation. tested: DetailColumnTests, AnimationScenarioTests
+- ANIM-012 Timeline scrub and time box. tested: TimelineEndToEndTests, AnimationScenarioTests
+- ANIM-013 Play / stop. tested: PlaybackTests, AnimationScenarioTests
+- ANIM-014 Broken keyframe marker. tested: AnimationErrorTests, AnimationScenarioTests
+- ANIM-015 Uncategorized-state warning. tested: AnimationErrorTests, AnimationScenarioTests
+- ANIM-016 List keys: reorder, delete, copy, paste. tested: AnimationTabKeyHandlerTests, AnimationScenarioTests
+- ANIM-017 Instance sub-animations. tested: InstanceSubAnimationTests, AnimationScenarioTests
+- ANIM-018 External file change reloads. tested: ExternalChangeTests, AnimationScenarioTests
+- ANIM-019 Element rename/delete updates animations. tested: ElementLifecycleTests, CopyPasteRenameScenarioTests
 
 ## Texture Coordinates tab (TEX)
 
@@ -348,19 +348,19 @@
 - PROP-004 Show Canvas Outline. tested: ProjectPropertiesViewModelTests
 - PROP-005 Show Checker Background. tested: ProjectPropertiesChangeLogicTests
 - PROP-006 Texture Filter. tested: ProjectPropertiesGridPresenterTests
-- PROP-007 Restrict To Unit Values
+- PROP-007 Restrict To Unit Values. tested: DialogScenarioTests
 - PROP-008 Restrict File Names For Android. tested: ProjectPropertiesGridPresenterTests
 - PROP-009 Render Text Character By Character
 - PROP-010 Localization Files. tested: ProjectPropertiesChangeLogicTests
 - PROP-011 Language. tested: ProjectPropertiesViewModelTests
-- PROP-012 Show Localization
+- PROP-012 Show Localization. tested: DialogScenarioTests
 - PROP-013 Font Ranges. tested: ProjectPropertiesViewModelTests
 - PROP-014 Use Font Character File. tested: ProjectPropertiesChangeLogicTests
-- PROP-015 Font Spacing H / V
+- PROP-015 Font Spacing H / V. tested: DialogScenarioTests
 - PROP-016 Auto-Size Font Outputs. tested: ProjectPropertiesGridPresenterTests
 - PROP-017 Font Generator. tested: ProjectPropertiesGridPresenterTests
 - PROP-018 Single Pixel Texture file and bounds. tested: ProjectPropertiesChangeLogicTests
-- PROP-019 Close button. tested: ProjectPropertiesViewTests
+- PROP-019 Close button. tested: ProjectPropertiesViewTests, DialogScenarioTests
 
 ## Other tabs (TAB)
 
@@ -422,25 +422,25 @@
 
 ## Dialogs (DLG)
 
-- DLG-001 Message. tested: MessageDialogViewModelTests
-- DLG-002 Get user string. tested: GetUserStringDialogViewModelTests, TreeScenarioTests
+- DLG-001 Message. tested: MessageDialogViewModelTests, AnimationScenarioTests
+- DLG-002 Get user string. tested: GetUserStringDialogViewModelTests, TreeScenarioTests, AnimationScenarioTests
 - DLG-003 Choice. tested: ChoiceDialogViewModelTests
-- DLG-004 New Project (Forms, DemoScreen options). tested: NewProjectLogicTests
+- DLG-004 New Project (Forms, DemoScreen options). tested: NewProjectLogicTests, DialogScenarioTests
 - DLG-005 Add Screen / Component / Instance / State / Category / Folder. tested: AddScreenDialogViewModelTests, TreeScenarioTests
 - DLG-006 Rename element. tested: RenameElementDialogViewModelTests, TreeScenarioTests
 - DLG-007 Rename folder. tested: RenameFolderDialogViewModelTests
 - DLG-008 Create Component from instances. tested: CreateComponentDialogViewModelTests
-- DLG-009 Import Screen / Component / Behavior. tested: ImportBaseDialogViewModelTests
+- DLG-009 Import Screen / Component / Behavior. tested: ImportBaseDialogViewModelTests, DialogScenarioTests
 - DLG-010 Delete options (Y/N keys). tested: DeleteOptionsDialogTests
 - DLG-011 Display references. tested: DisplayReferencesDialogTests
 - DLG-012 Expose color. tested: ExposeColorDialogViewModelTests
-- DLG-013 Theming. tested: ThemingDialogViewModelTests
-- DLG-014 Load recent. tested: LoadRecentViewModelTests
-- DLG-015 Plugins. tested: PluginsDialogViewTests
+- DLG-013 Theming. tested: ThemingDialogViewModelTests, DialogScenarioTests
+- DLG-014 Load recent. tested: LoadRecentViewModelTests, DialogScenarioTests
+- DLG-015 Plugins. tested: PluginsDialogViewTests, DialogScenarioTests
 - DLG-016 Add/Edit variable. tested: AddVariableViewModelTests
-- DLG-017 Add animation. tested: DialogFocusTests
-- DLG-018 Add state keyframe
-- DLG-019 Sub-animation selection. tested: SubAnimationSelectionDialogViewModelTests
+- DLG-017 Add animation. tested: DialogFocusTests, AnimationScenarioTests
+- DLG-018 Add state keyframe. tested: AnimationScenarioTests
+- DLG-019 Sub-animation selection. tested: SubAnimationSelectionDialogViewModelTests, AnimationScenarioTests
 - DLG-020 Freeze diagnostics prompt. tested: FreezeDiagnosticsPromptServiceTests
 - DLG-021 Add Forms (theme choice). tested: AddFormsViewModelTests
 - DLG-022 Import from .gumx (file or URL, subfolder, picks). tested: ImportFromGumxViewModelTests
@@ -499,7 +499,7 @@ Cross-feature scenarios the code lists don't show. Most need a real project, a s
 - COMBO-009 Rename category with exposed state variable. tested: CopyPasteRenameScenarioTests
 - COMBO-010 Delete component used as instances. tested: VariableScenarioTests
 - COMBO-011 Delete base element of inherited elements
-- COMBO-012 Delete state used by animation keyframes
+- COMBO-012 Delete state used by animation keyframes. tested: AnimationScenarioTests
 - COMBO-013 Delete instance that is a parent of others. tested: CopyPasteRenameScenarioTests
 - COMBO-014 Undo across a state switch. tested: VariableScenarioTests
 - COMBO-015 Undo across an element switch. tested: VariableScenarioTests

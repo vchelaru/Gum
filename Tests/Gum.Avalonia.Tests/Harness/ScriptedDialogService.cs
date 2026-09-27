@@ -15,6 +15,8 @@ internal sealed class ScriptedDialogService : IDialogService
     private readonly Queue<MessageDialogResult> _messageAnswers;
     private readonly Queue<string?> _userStrings;
     private readonly List<string> _messages;
+    private readonly Queue<List<string>?> _openFiles;
+    private readonly Queue<string?> _saveFiles;
 
     public ScriptedDialogService()
     {
@@ -22,6 +24,8 @@ internal sealed class ScriptedDialogService : IDialogService
         _messageAnswers = new Queue<MessageDialogResult>();
         _userStrings = new Queue<string?>();
         _messages = new List<string>();
+        _openFiles = new Queue<List<string>?>();
+        _saveFiles = new Queue<string?>();
     }
 
     /// <summary>Every message the code under test showed, in order.</summary>
@@ -108,13 +112,19 @@ internal sealed class ScriptedDialogService : IDialogService
         return answer;
     }
 
+    /// <summary>Queues the files the user picks in the next open-file picker, or null for Cancel.</summary>
+    public void AnswerNextOpenFile(params string[]? paths) => _openFiles.Enqueue(paths?.ToList());
+
+    /// <summary>Queues the path the user picks in the next save-file picker, or null for Cancel.</summary>
+    public void AnswerNextSaveFile(string? path) => _saveFiles.Enqueue(path);
+
     /// <inheritdoc/>
     public List<string>? OpenFile(OpenFileDialogOptions? options = null) =>
-        throw new InvalidOperationException("Headless scenarios never open a file picker.");
+        _openFiles.Count > 0 ? _openFiles.Dequeue() : throw new InvalidOperationException("No answer was queued for the open-file picker.");
 
     /// <inheritdoc/>
     public string? SaveFile(SaveFileDialogOptions? options = null) =>
-        throw new InvalidOperationException("Headless scenarios never open a save picker.");
+        _saveFiles.Count > 0 ? _saveFiles.Dequeue() : throw new InvalidOperationException("No answer was queued for the save-file picker.");
 
     /// <inheritdoc/>
     public string? OpenFolder(OpenFolderDialogOptions? options = null) =>

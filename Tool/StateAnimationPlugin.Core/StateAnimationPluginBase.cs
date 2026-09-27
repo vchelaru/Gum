@@ -154,8 +154,8 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
     /// <summary>Starts adding a state keyframe to the selected animation (the tab's Add &gt; State).</summary>
     protected void AddStateKeyframe() => _controller.HandleAddStateKeyframe(this, EventArgs.Empty);
 
-    /// <summary>Records a keyframe the user pasted into the keyframe list.</summary>
-    protected void AddPastedKeyframe(AnimatedKeyframeViewModel keyframe) => _controller.HandleAnimationKeyrameAdded(keyframe);
+    /// <summary>Wires and selects a keyframe the user pasted into the keyframe list.</summary>
+    protected void AddPastedKeyframe(AnimatedKeyframeViewModel keyframe) => _controller.HandleKeyframePasted(keyframe);
 
     /// <summary>Remembers the ratio of the animation column to the keyframe column across sessions.</summary>
     protected void SaveColumnRatio(double animationColumnWidth, double keyframeColumnWidth)
