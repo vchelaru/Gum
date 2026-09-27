@@ -32,6 +32,13 @@ internal sealed class HeadlessWindowDriver : IDisposable
         Window = new Window { Content = content, Width = width, Height = height };
         Window.Show();
         Layout();
+        // Hit testing reads what the compositor last rendered, and the compositor takes one frame
+        // at a time: a new frame waits until the previous one has been rendered and acknowledged.
+        // The application outlives the test and nothing renders between tests, so an earlier
+        // test's last frame can still be waiting here. The first tick renders that frame, the
+        // jobs acknowledge it and send this window's first frame, and the second tick renders it.
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        Dispatcher.UIThread.RunJobs();
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         if (Window.InputHitTest(new Point(2, 2)) == null)
         {
