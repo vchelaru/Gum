@@ -130,10 +130,11 @@ public class ContentLoaderTests : BaseTestClass
         }
     }
 
-    // The stream-hook path is only taken when the .fnt is absent from disk; an on-disk .fnt still
-    // loads via raylib's native LoadFont, so a normal game's font loading is unchanged. #3037
-    [Fact]
-    public void LoadContent_Font_WhenFntOnDisk_ShouldStillLoadViaNativePath()
+    // An on-disk .fnt the hook does not serve (or with no hook at all) loads from disk. #3037, #5299
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LoadContent_Font_WhenFntOnDiskAndHookMisses_ShouldLoadFromDisk(bool installHookThatMisses)
     {
         string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
         string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
@@ -143,7 +144,7 @@ public class ContentLoaderTests : BaseTestClass
         try
         {
             LoaderManager.Self.CacheTextures = false;
-            FileManager.CustomGetStreamFromFile = null;
+            FileManager.CustomGetStreamFromFile = installHookThatMisses ? _ => null! : null;
 
             Font font = LoaderManager.Self.LoadContent<Font>(fntPath);
 
@@ -391,6 +392,56 @@ public class ContentLoaderTests : BaseTestClass
         }
     }
 
+    // #5299: the hook wins over loose files for fonts, as it does for every other content load, so a
+    // loaded bundle overrides stale loose copies. The loose primary and shadow are swapped copies of
+    // the hooked ones, so each glyph count shows which source was read. (A loose .fnt raylib cannot
+    // parse crashes its native loader, so the stale copies must be valid.)
+    [Fact]
+    public void LoadContent_Font_WhenHookAndLooseFileServeSamePath_ShouldUseHook()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        byte[] primaryFntBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt"));
+        byte[] shadowFntBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial-shadow.fnt"));
+        byte[] pageBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png"));
+        Dictionary<string, byte[]> inMemoryFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Font18Arial.fnt", primaryFntBytes },
+            { "Font18Arial-shadow.fnt", shadowFntBytes },
+            { "Font18Arial_0.png", pageBytes },
+        };
+
+        string looseDirectory = Path.Combine(Path.GetTempPath(), "GumRaylibHookWinsTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(looseDirectory);
+        string looseFntPath = Path.Combine(looseDirectory, "Font18Arial.fnt");
+        File.WriteAllBytes(looseFntPath, shadowFntBytes);
+        File.WriteAllBytes(Path.Combine(looseDirectory, "Font18Arial-shadow.fnt"), primaryFntBytes);
+        File.WriteAllBytes(Path.Combine(looseDirectory, "Font18Arial_0.png"), pageBytes);
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+                inMemoryFiles.TryGetValue(Path.GetFileName(incomingPath), out byte[]? bytes)
+                    ? new MemoryStream(bytes)
+                    : null!;
+
+            Font font = LoaderManager.Self.LoadContent<Font>(looseFntPath);
+
+            font.GlyphCount.ShouldBe(191);
+            RaylibFontShadowRegistry.TryGet(font.Texture.Id, out Font shadowFont).ShouldBeTrue();
+            shadowFont.GlyphCount.ShouldBe(2);
+            new ManagedFont(font).Dispose();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+            Directory.Delete(looseDirectory, recursive: true);
+        }
+    }
+
     // #5253: the shadow sibling is optional, so a broken one in a bundle must not fail the primary load.
     [Fact]
     public void LoadContent_Font_WithMalformedShadowSiblingServedThroughHook_ShouldLoadPrimaryWithoutShadow()
@@ -466,6 +517,50 @@ public class ContentLoaderTests : BaseTestClass
         finally
         {
             FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // #5299: when the hook also serves a multi-page .fnt that exists on disk (e.g. a pass-through
+    // hook), the loose file loads through raylib's native loader instead of throwing.
+    [Fact]
+    public void LoadContent_Font_WithMultiPageFntOnDiskAlsoServedThroughHook_ShouldLoadFromDisk()
+    {
+        const string multiPageFntText =
+            "info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+            "common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=2 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+            "page id=0 file=\"Page0.png\"\n" +
+            "page id=1 file=\"Page1.png\"\n" +
+            "chars count=1\n" +
+            "char id=65   x=0     y=0     width=4     height=13    xoffset=1     yoffset=4     xadvance=6     page=0  chnl=15\n";
+        byte[] pageBytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Content", "FontCache", "Font18Arial_0.png"));
+
+        string looseDirectory = Path.Combine(Path.GetTempPath(), "GumRaylibMultiPageLooseTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(looseDirectory);
+        string looseFntPath = Path.Combine(looseDirectory, "MultiPage.fnt");
+        File.WriteAllText(looseFntPath, multiPageFntText);
+        File.WriteAllBytes(Path.Combine(looseDirectory, "Page0.png"), pageBytes);
+        File.WriteAllBytes(Path.Combine(looseDirectory, "Page1.png"), pageBytes);
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+                File.Exists(incomingPath) ? File.OpenRead(incomingPath) : null!;
+
+            Font font = default;
+            Should.NotThrow(() =>
+                font = LoaderManager.Self.LoadContent<Font>(looseFntPath));
+
+            font.GlyphCount.ShouldBe(1);
+            new ManagedFont(font).Dispose();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+            Directory.Delete(looseDirectory, recursive: true);
         }
     }
 
