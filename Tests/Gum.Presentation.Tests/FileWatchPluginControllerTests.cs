@@ -96,7 +96,7 @@ public class FileWatchPluginControllerTests
 
         controller.HandleVariableSet(element, instance: null, variableName: "SourceFile", oldValue: null, isFullCommit: true);
 
-        // RefreshRootDirectory -> no project loaded -> clears ignores and disables.
+        // RefreshRootDirectory -> no project loaded -> disables.
         fileWatchManager.Verify(m => m.Disable(), Times.Once);
     }
 
@@ -116,7 +116,6 @@ public class FileWatchPluginControllerTests
         controller.HandleVariableSet(element, instance: null, variableName: "SomeVariable", oldValue: null, isFullCommit: true);
 
         fileWatchManager.Verify(m => m.Disable(), Times.Never);
-        fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Never);
     }
 
     [Fact]
@@ -146,7 +145,6 @@ public class FileWatchPluginControllerTests
         controller.HandleVariableSet(element: null, instance: null, variableName: "SourceFile", oldValue: null, isFullCommit: true);
 
         fileWatchManager.Verify(m => m.Disable(), Times.Never);
-        fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Never);
     }
 
     [Fact]
@@ -157,9 +155,7 @@ public class FileWatchPluginControllerTests
 
         controller.HandleProjectLocationSet(new FilePath(@"C:\Project\Project.gumx"));
 
-        // HandleProjectLoaded() clears ignores, then RefreshRootDirectory() (no project loaded)
-        // clears them again before disabling.
-        fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Exactly(2));
+        // HandleProjectLoaded() -> RefreshRootDirectory() (no project loaded) disables.
         fileWatchManager.Verify(m => m.Disable(), Times.Once);
     }
 
@@ -184,9 +180,7 @@ public class FileWatchPluginControllerTests
         controller.HandleProjectLoad(save);
 
         // save.FullFileName is set, so HandleProjectLoaded runs RefreshRootDirectory; the mocked
-        // ProjectManager reports no loaded project, so it takes the "no project" branch (clears
-        // ignores twice - once from HandleProjectLoaded, once from RefreshRootDirectory - then disables).
-        fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Exactly(2));
+        // ProjectManager reports no loaded project, so it takes the "no project" branch and disables.
         fileWatchManager.Verify(m => m.Disable(), Times.Once);
     }
 

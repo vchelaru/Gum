@@ -43,10 +43,11 @@ public class MoveInputHandler : InputHandlerBase
 
     public override bool HandlePush(float worldX, float worldY)
     {
-        // When multi-select key is held, don't claim the push.
-        // Shift+click on body should add to selection via the rectangle-selector fallback,
-        // not start a move operation.
-        if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.MultiSelect))
+        // The multi-select key (Shift) is also the axis-lock key. On the body of an object that
+        // is already selected it starts an axis-locked move; anywhere else the push is left to
+        // the rectangle selector, which adds to the selection.
+        if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.MultiSelect) &&
+            !Context.SelectionManager.IsOverSelectedBody)
         {
             return false;
         }
@@ -95,13 +96,11 @@ public class MoveInputHandler : InputHandlerBase
 
     private void ApplyCursorMovement()
     {
-        var cursor = Context.Cursor;
-
         float xToMoveBy = Context.IsXMovementEnabled
-            ? cursor.XChange / Context.Camera.Zoom
+            ? GetCursorXChange()
             : 0;
         float yToMoveBy = Context.IsYMovementEnabled
-            ? cursor.YChange / Context.Camera.Zoom
+            ? GetCursorYChange()
             : 0;
 
         var vector2 = new Vector2(xToMoveBy, yToMoveBy);

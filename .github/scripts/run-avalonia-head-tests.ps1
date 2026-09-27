@@ -1,6 +1,8 @@
 # Purpose: Run Gum.Avalonia.Tests, retrying only the tests that failed, and leave TestResults/
 #          holding one truthful full-suite .trx for the workflow's test reporter.
-# Usage:   pwsh .github/scripts/run-avalonia-head-tests.ps1
+# Usage:   pwsh .github/scripts/run-avalonia-head-tests.ps1 [-Filter <expr>] [-TrxName <name>] [-HangTimeout <time>]
+#          -Filter picks the tests of the first attempt (the Xvfb step runs the display tests
+#          only); -HangTimeout turns on a hang dump after that long in one test.
 #
 # Avalonia's headless xunit host resolves Dispatcher.UIThread via an unsynchronized
 # `s_uiThread ??= ...` (Avalonia.Base/Threading/Dispatcher.cs), so a test-session setup race can
@@ -26,11 +28,19 @@
 # fails the attempt before any test runs, so a retry meant to re-roll the dispatcher race could
 # never get to it.
 
+param(
+    [string]$Filter,
+    [string]$TrxName = 'avalonia-head.trx',
+    [string]$HangTimeout
+)
+
 $ErrorActionPreference = 'Stop'
 
 $resultsDirectory = 'TestResults'
 $retryDirectory = Join-Path $resultsDirectory 'retries'
-$baselineTrx = Join-Path $resultsDirectory 'avalonia-head.trx'
+$baselineTrx = Join-Path $resultsDirectory $TrxName
+$trxStem = [IO.Path]::GetFileNameWithoutExtension($TrxName)
+$hangArgs = if ($HangTimeout) { @('--blame-hang-timeout', $HangTimeout, '--blame-hang-dump-type', 'mini') } else { @() }
 $maxAttempts = 4
 
 function Read-Trx($path)
@@ -82,18 +92,18 @@ function Merge-RetryOutcomes($baselinePath, $retryPath)
     $baseline.Document.Save((Resolve-Path -LiteralPath $baselinePath).ProviderPath)
 }
 
-$filterArgs = @()
+$filterArgs = if ($Filter) { @('--filter', $Filter) } else { @() }
 for ($attempt = 1; $attempt -le $maxAttempts; $attempt++)
 {
     $isRetry = $attempt -gt 1
-    $trxName = if ($isRetry) { "avalonia-head-retry$attempt.trx" } else { Split-Path $baselineTrx -Leaf }
+    $trxName = if ($isRetry) { "$trxStem-retry$attempt.trx" } else { $TrxName }
     $trxDirectory = if ($isRetry) { $retryDirectory } else { $resultsDirectory }
     $trxPath = Join-Path $trxDirectory $trxName
 
     # --blame names the test that was running if the test host crashes, which a crash otherwise
     # reports only as "Test host process crashed".
     dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build `
-        --blame --logger "trx;LogFileName=$trxName" --results-directory $trxDirectory @filterArgs
+        --blame @hangArgs --logger "trx;LogFileName=$trxName" --results-directory $trxDirectory @filterArgs
     $exitCode = $LASTEXITCODE
 
     # A nonzero exit with no .trx, or none naming a failed test, is a build or host crash rather

@@ -139,7 +139,7 @@ public class ResizeInputHandlerNonPixelUnitTests
 
         // Drag the Right handle left by 190px in one tick - far more than the raw Ratio value (1),
         // but well short of the real 200px pixel width reaching zero.
-        cursor.X = 70;
+        cursor.X = -90;
         cursor.XChange = -190;
         cursor.YChange = 0;
         sut.HandleDrag();

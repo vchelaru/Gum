@@ -332,25 +332,15 @@ public class SpriteRuntime : GraphicalUiElement
     }
 #else
     /// <summary>
-    /// The file path to the texture. Setting this will load the texture via the LoaderManager.
+    /// The file path to the texture, or to an .achx/.achj animation chain file whose chains are
+    /// loaded into <see cref="AnimationChains"/>. Loads through the LoaderManager.
     /// </summary>
     public string? SourceFile
     {
         // eventually we may want to store this off somehow
         get => null;
-        set
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                Texture = null;
-            }
-            else
-            {
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var image = loaderManager.LoadContent<SkiaSharp.SKBitmap>(value);
-                Texture = image;
-            }
-        }
+        // The Skia dispatcher owns the texture-vs-animation-chain branch.
+        set => SourceFileName = value!;
     }
 #endif
 

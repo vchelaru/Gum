@@ -18,8 +18,5 @@ public class NullFileWatchIgnoreList : IFileWatchIgnoreList
     public void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null) { }
 
     /// <inheritdoc/>
-    public void ClearIgnoredFiles() { }
-
-    /// <inheritdoc/>
     public bool TryGetIgnoreFileChange(FilePath fileName) => false;
 }

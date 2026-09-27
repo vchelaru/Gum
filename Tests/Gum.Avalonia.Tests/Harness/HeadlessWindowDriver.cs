@@ -50,9 +50,10 @@ internal sealed class HeadlessWindowDriver : IDisposable
         if (Window.InputHitTest(new Point(2, 2)) == null)
         {
             // Every gesture would land on nothing; see Animations/README.md, "Gotchas". Only a
-            // fresh process gets an independent roll, so fail fast rather than retry here.
-            Window.Content = null;
-            Window.Close();
+            // fresh process gets an independent roll, so fail fast rather than retry here. A view
+            // that outlives the test is released as Dispose releases it, or its templates keep it
+            // and every later test that hosts it fails with "already has a visual parent".
+            Dispose();
             throw new InvalidOperationException("The window hit-tests nothing after a render tick: this test's Avalonia session bound its compositor to a dispatcher that is not the current one.");
         }
     }

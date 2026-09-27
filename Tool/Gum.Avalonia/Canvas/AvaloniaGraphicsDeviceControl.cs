@@ -277,6 +277,40 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         }
     }
 
+    /// <summary>
+    /// Draws one frame now, whatever the frame timer, the rate throttle and the redraw gate would
+    /// say. For tests that drive the canvas one frame per input event, since the canvas polls its
+    /// input once per frame.
+    /// </summary>
+    internal bool RenderFrameNow()
+    {
+        EnsureDevice();
+        double scale = RenderScaling;
+        int width = ToPhysicalPixelSize(Bounds.Width, scale);
+        int height = ToPhysicalPixelSize(Bounds.Height, scale);
+        float desiredFramesPerSecond = _frameLoop!.DesiredFramesPerSecond;
+        _frameLoop.DesiredFramesPerSecond = 0;
+        bool rendered;
+        try
+        {
+            rendered = _frameLoop.TryRenderFrame(width, height, this);
+        }
+        finally
+        {
+            // A failed frame drops the loop to its slow retry rate, which must stand.
+            if (!_frameLoop.Error.HasErrors)
+            {
+                _frameLoop.DesiredFramesPerSecond = desiredFramesPerSecond;
+            }
+        }
+        if (rendered)
+        {
+            _frameGate.MarkDrawn(width, height);
+            FramePresented?.Invoke();
+        }
+        return rendered;
+    }
+
     /// <summary>Raised after each frame is drawn and pushed to the displayed bitmap.</summary>
     public event Action? FramePresented;
 

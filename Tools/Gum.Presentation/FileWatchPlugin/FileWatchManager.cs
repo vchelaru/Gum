@@ -331,8 +331,6 @@ public class FileWatchManager : IFileWatchManager
     public void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null)
         => _ignoreList.IgnoreNextChangeUntil(filePath, time);
 
-    public void ClearIgnoredFiles() => _ignoreList.ClearIgnoredFiles();
-
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromMilliseconds(500)) - DateTime.Now;
 
     private enum FileReadiness

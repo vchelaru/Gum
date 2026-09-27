@@ -78,6 +78,32 @@ public abstract class GumServiceSkiaBase : IGumService
     }
 
     /// <summary>
+    /// Re-applies all styles on <see cref="Root"/>, <see cref="PopupRoot"/> and
+    /// <see cref="ModalRoot"/>. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/> to push variable
+    /// reference changes to all live visuals. Forms runtime state (typed text, caret, scroll
+    /// positions) is preserved.
+    /// </summary>
+    public void RefreshStyles()
+    {
+        Root?.RefreshStyles();
+        PopupRoot?.RefreshStyles();
+        ModalRoot?.RefreshStyles();
+    }
+
+    /// <summary>
+    /// Re-applies all styles on <paramref name="target"/> and its children, preserving Forms
+    /// runtime state. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/> to push variable
+    /// reference changes to live visuals in a specific subtree.
+    /// </summary>
+    /// <param name="target">The root of the subtree to refresh.</param>
+    public void RefreshStyles(GraphicalUiElement target)
+    {
+        target?.RefreshStyles();
+    }
+
+    /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
     /// like <see cref="GraphicalUiElement.AddToRoot()"/>
     /// to guard against calls made before Initialize.
@@ -89,6 +115,14 @@ public abstract class GumServiceSkiaBase : IGumService
     /// non-fatal warnings such as localization file collisions. Null when no project was loaded.
     /// </summary>
     public GumLoadResult? LastLoadResult { get; private set; }
+
+    /// <summary>
+    /// The <see cref="ProjectResolution"/> produced when the current project was loaded, or
+    /// <c>null</c> if no project file has been loaded. Carries the project's
+    /// <see cref="IGumFileProvider"/> (loose directory or <c>.gumpkg</c> bundle), which
+    /// <see cref="LoadAnimations"/> enumerates.
+    /// </summary>
+    public ProjectResolution? CurrentProjectResolution { get; private set; }
 
     /// <summary>
     /// The root container that fills the entire canvas. Elements added via
@@ -303,23 +337,19 @@ public abstract class GumServiceSkiaBase : IGumService
     public void ExportSnapshot(string filePath, bool shake = true) =>
         SnapshotExporter.ExportSnapshot(Root, filePath, shake);
 
-    // Set by Initialize when a project is loaded from a loose .gumx/.gumj file, so LoadAnimations can
-    // enumerate *Animations.ganx/.ganj files from the project's own directory. This base has no
-    // .gumpkg (bundle) support, so it's always a loose-file provider. Not used by EnableHotReload's
-    // reload path -- GumHotReloadManager builds its own provider from the watched source path.
-    private IGumFileProvider? _projectFileProvider;
-
     /// <summary>
     /// Loads animations for all elements in the project by enumerating the project's
-    /// <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files from the directory the project was
-    /// loaded from.
+    /// <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files through
+    /// <see cref="CurrentProjectResolution"/>'s file provider: the loaded project's directory, or its
+    /// <c>.gumpkg</c> bundle.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Thrown if a Gum project hasn't been loaded first (via the <c>gumProjectFile</c> overload of
     /// <see cref="Initialize(SKCanvas, int, int, string)"/>).
     /// </exception>
     [Obsolete("Experimental - this API may change in future versions")]
-    public void LoadAnimations() => GumAnimationLoader.LoadAnimations(_projectFileProvider);
+    public void LoadAnimations() =>
+        GumAnimationLoader.LoadAnimations(CurrentProjectResolution?.FileProvider, CurrentProjectResolution?.UsedBundle ?? false);
 
     #endregion
 
@@ -414,6 +444,10 @@ public abstract class GumServiceSkiaBase : IGumService
         // for it (issue #4452).
         FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
 
+        // Lets RefreshStyles keep typed text, caret, and scroll positions (issue #5229). Installed
+        // per Initialize rather than in the constructor so a re-initialize after teardown gets them.
+        FormsRefreshStylesHooks.Install();
+
         Root.AddToManagers(SystemManagers.Default);
         Root.UpdateLayout();
 
@@ -428,16 +462,24 @@ public abstract class GumServiceSkiaBase : IGumService
         }
 
         LastLoadResult = null;
+        ReleaseProjectResolution();
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-            var gumProject = GumProjectSave.Load(gumProjectFile, out GumLoadResult loadResult);
+            // Resolve loose-vs-bundle off the file extension, the same as the MonoGame/raylib
+            // GumService: ".gumx"/".gumj" = loose, ".gumpkg" = bundle. In bundle mode this installs
+            // a CustomGetStreamFromFile hook so content loads also read from the bundle.
+            ProjectResolution projectResolution = GumBundleLoader.Resolve(gumProjectFile);
+            CurrentProjectResolution = projectResolution;
+            _installedBundleHook = projectResolution.UsedBundle ? FileManager.CustomGetStreamFromFile : null;
+            var gumProject = GumProjectSave.Load(projectResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
             loadResult.ThrowIfFailed(gumProject);
             var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
             if (localizationService != null)
             {
-                // This base loads only loose projects (.gumpkg is #5228), so there is no bundle provider.
-                ProjectLocalizationLoader.Load(gumProject, localizationService, bundleFileProvider: null, loadResult.Warnings);
+                ProjectLocalizationLoader.Load(gumProject, localizationService,
+                    projectResolution.UsedBundle ? projectResolution.FileProvider : null,
+                    loadResult.Warnings);
             }
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
@@ -451,11 +493,88 @@ public abstract class GumServiceSkiaBase : IGumService
                 : gumProjectFile;
             var gumDirectory = FileManager.GetDirectory(absolutePath);
 
+            _relativeDirectoryBeforeProjectLoad ??= FileManager.RelativeDirectory;
             FileManager.RelativeDirectory = gumDirectory;
-            _projectFileProvider = new LooseFileGumFileProvider(gumDirectory);
         }
 
         IsInitialized = true;
+    }
+
+    // The CustomGetStreamFromFile hook the current bundle load installed, or null for a loose project.
+    private Func<string, System.IO.Stream>? _installedBundleHook;
+
+    // Drops the previous project's resolution. A bundle load replaced FileManager.CustomGetStreamFromFile,
+    // so put back the hook it composed over rather than stacking the next bundle on top of it. Skipped
+    // when the host has since installed its own hook, which is theirs to keep.
+    private void ReleaseProjectResolution()
+    {
+        if (_installedBundleHook != null && FileManager.CustomGetStreamFromFile == _installedBundleHook)
+        {
+            FileManager.CustomGetStreamFromFile = CurrentProjectResolution?.PreviousHook;
+        }
+        _installedBundleHook = null;
+        CurrentProjectResolution = null;
+    }
+
+    // The RelativeDirectory in effect before Initialize pointed it at a loaded project, restored by
+    // Uninitialize. Null when no project has been loaded since the last Uninitialize.
+    private string? _relativeDirectoryBeforeProjectLoad;
+
+    /// <summary>
+    /// Tears down what <c>Initialize</c> set up — the roots, Forms state, the loaded project, cached
+    /// content, and hot reload — so this instance can be initialized again cleanly.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the MonoGame/raylib <c>GumService.Uninitialize</c>, this keeps the runtime-type
+    /// registrations and the property/renderable delegates, removing only the ones the loaded
+    /// project added. Skia wires the rest once per process (SystemManagers' global setup and
+    /// generated code's module initializers), so a later <c>Initialize</c> would not restore them.
+    /// </remarks>
+    public void Uninitialize()
+    {
+        _hotReloadManager?.Stop();
+        _hotReloadManager = null;
+
+        DeferredQueue?.Clear();
+
+        InteractiveGue.CurrentInputReceiver = null;
+
+        if (Root != null)
+        {
+            Root.Children.Clear();
+            Root.RemoveFromManagers();
+            Root = null!;
+        }
+
+        // Forms roots, Forms input registrations and templates, the project, and the content cache.
+        // Shared with the MonoGame/raylib GumService.
+        GumServiceTeardown.ReleaseFormsAndContent();
+
+        FormsUtilities.Uninitialize();
+        FormsUtilities.UnregisterFromFileFormRuntimeDefaults();
+
+        // Restores the stream hook a .gumpkg load replaced (issue #5285).
+        ReleaseProjectResolution();
+        LastLoadResult = null;
+
+        GraphicalUiElement.CanvasWidth = 0;
+        GraphicalUiElement.CanvasHeight = 0;
+
+        _windowFit?.Reset();
+
+        SystemManagers.Default = null!;
+        IGumService.Default = null;
+
+        if (_relativeDirectoryBeforeProjectLoad != null)
+        {
+            FileManager.RelativeDirectory = _relativeDirectoryBeforeProjectLoad;
+            _relativeDirectoryBeforeProjectLoad = null;
+        }
+
+        _hasReceivedUpdate = false;
+        _previousTotalSeconds = 0;
+
+        IsInitialized = false;
     }
 
     /// <summary>

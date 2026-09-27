@@ -193,6 +193,9 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     /// <summary>The toolbar above the canvas, for tests; null until the editor tab is built.</summary>
     internal EditorToolbar? Toolbar => _toolbar;
 
+    /// <summary>The wireframe canvas, for tests; null until the editor tab is built.</summary>
+    internal WireframeCanvasControl? CanvasControl => _canvasControl;
+
     /// <inheritdoc/>
     protected override void OnUiBaseFontSizeChanged(double size) => _toolbar?.UpdateButtonSizes(size);
 

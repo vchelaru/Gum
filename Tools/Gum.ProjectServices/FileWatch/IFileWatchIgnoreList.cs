@@ -19,6 +19,5 @@ public interface IFileWatchIgnoreList
     IReadOnlyDictionary<FilePath, DateTime> TimedChangesToIgnore { get; }
 
     void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null);
-    void ClearIgnoredFiles();
     bool TryGetIgnoreFileChange(FilePath fileName);
 }

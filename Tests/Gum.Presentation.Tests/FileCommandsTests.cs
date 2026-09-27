@@ -1,8 +1,10 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
+using Gum.Services;
 using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
@@ -59,6 +61,7 @@ public class FileCommandsTests : BaseTestClass
         _projectState.Setup(p => p.ProjectDirectory).Returns(() =>
             _tempDirectory == null ? null : _tempDirectory + Path.DirectorySeparatorChar);
 
+        _mocker.Use<IPathCaseSensitivity>(new PathCaseSensitivity());
         _fileCommands = _mocker.CreateInstance<FileCommands>();
     }
 
@@ -215,6 +218,29 @@ public class FileCommandsTests : BaseTestClass
         string ownFilePath = Path.Combine(projectDir, "Behaviors", "ButtonBehavior.behx");
         BehaviorSave onDisk = BehaviorReference.DeserializeBehavior(ownFilePath, projectVersion: _gumProject.Version);
         onDisk.DefaultImplementation.ShouldBe("Controls/ButtonStandard");
+    }
+
+    // Save All sorts every state's variables before writing; an auto-save of one element must write
+    // the same bytes, or the next Save All reorders the file (a canvas drop appends its X and Y).
+    [Fact]
+    public void TryAutoSaveElement_WritesVariablesSortedByName_AsSaveAllDoes()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        ComponentSave button = new() { Name = "Button", BaseType = "Container" };
+        StateSave state = new() { Name = "Default", ParentContainer = button };
+        button.States.Add(state);
+        state.SetValue("Sprite.X", 60f, "float");
+        state.SetValue("Background.X", 10f, "float");
+
+        _fileCommands.TryAutoSaveElement(button);
+
+        string saved = File.ReadAllText(Path.Combine(_tempDirectory, "Components", "Button.gucx"));
+        saved.IndexOf("Background.X", StringComparison.Ordinal).ShouldBeLessThan(saved.IndexOf("Sprite.X", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -392,6 +418,31 @@ public class FileCommandsTests : BaseTestClass
             .Select(Path.GetFileName)
             .ShouldBe(new[] { "gamemenuscreens" });
         File.Exists(Path.Combine(newDir, "DialogueScreen.gusx")).ShouldBeTrue();
+    }
+
+    // Where the file system keeps Foo and foo apart, moving Foo to foo is a move into another
+    // folder, which merges the same way as a move to any other existing folder. Returns early
+    // where no case-sensitive directory can be made (a default macOS volume).
+    [Fact]
+    public void MoveDirectory_WhenACaseOnlyDifferentDestinationIsASeparateFolder_ShouldMergeIntoIt()
+    {
+        _tempDirectory = CaseSensitiveTempDirectory.TryCreate();
+        if (_tempDirectory == null)
+        {
+            return;
+        }
+        string source = Path.Combine(_tempDirectory, "Foo");
+        string destination = Path.Combine(_tempDirectory, "foo");
+        Directory.CreateDirectory(source);
+        Directory.CreateDirectory(destination);
+        File.WriteAllText(Path.Combine(source, "A.gusx"), "a");
+        File.WriteAllText(Path.Combine(destination, "B.gusx"), "b");
+
+        _fileCommands.MoveDirectory(source, destination);
+
+        Directory.GetDirectories(_tempDirectory).Select(Path.GetFileName).ShouldBe(new[] { "foo" });
+        Directory.GetFiles(destination).Select(Path.GetFileName).OrderBy(name => name)
+            .ShouldBe(new[] { "A.gusx", "B.gusx" });
     }
 
     [Fact]

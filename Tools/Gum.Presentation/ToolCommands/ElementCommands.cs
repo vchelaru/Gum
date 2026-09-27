@@ -243,7 +243,13 @@ public class ElementCommands : IElementCommands
         }
     }
 
-    public void SortVariables(IStateContainer container)
+    public void SortVariables(IStateContainer container) => SortStateVariables(container);
+
+    /// <summary>
+    /// Sorts every state's variables by name, the order a project save writes them in. Every
+    /// element write goes through this, so a file's bytes do not depend on which save wrote it.
+    /// </summary>
+    internal static void SortStateVariables(IStateContainer container)
     {
         foreach (var stateSave in container.AllStates)
         {

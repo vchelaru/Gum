@@ -117,7 +117,7 @@ public class FileWatchLogicTests
     }
 
     [Fact]
-    public void RefreshRootDirectory_ClearsIgnoredFilesAndDisables_WhenNoProjectLoaded()
+    public void RefreshRootDirectory_Disables_WhenNoProjectLoaded()
     {
         // GumProjectSave defaults to null on the mock, so GumProjectSave?.FullFileName
         // is null and RefreshRootDirectory takes the "no project" branch. This avoids
@@ -125,7 +125,6 @@ public class FileWatchLogicTests
         _fileWatchLogic.RefreshRootDirectory();
         RunPostedAction();
 
-        _fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Once);
         _fileWatchManager.Verify(m => m.Disable(), Times.Once);
     }
 
@@ -141,7 +140,6 @@ public class FileWatchLogicTests
 
         _dispatcher.Verify(d => d.Post(It.IsAny<Action>()), Times.Once);
         _fileWatchManager.Verify(m => m.Disable(), Times.Never);
-        _fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Never);
     }
 
     [Fact]

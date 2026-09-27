@@ -13,6 +13,7 @@ using Gum.Undo;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
+using System.IO;
 using ToolsUtilities;
 using Xunit;
 
@@ -46,6 +47,51 @@ public class DragDropManagerFolderDropTests
         fileCommands.Verify(commands => commands.MoveDirectory(It.IsAny<string>(), expectedDestination), Times.Once);
     }
 
+    // Where the file system keeps Foo and foo apart, foo/Bar is not inside Foo, so the drop is
+    // allowed and moves only Foo's elements. Returns early where no case-sensitive directory can
+    // be made (a default macOS volume).
+    [Fact]
+    public void FolderDroppedIntoACaseOnlyDifferentSeparateFolder_IsAllowedAndMovesOnlyItsOwnElements()
+    {
+        string? projectFolder = CaseSensitiveTempDirectory.TryCreate();
+        if (projectFolder == null)
+        {
+            return;
+        }
+        try
+        {
+            string components = Path.Combine(projectFolder, "Components") + Path.DirectorySeparatorChar;
+            Directory.CreateDirectory(components + "Foo");
+            Directory.CreateDirectory(Path.Combine(components + "foo", "Bar"));
+            Mock<ITreeNode> componentsRoot = new Mock<ITreeNode>();
+            componentsRoot.SetupGet(node => node.Text).Returns("Components");
+            Mock<ITreeNode> dragged = FolderNode("Foo", componentsRoot.Object, components + "Foo/");
+            Mock<ITreeNode> lowerFoo = FolderNode("foo", componentsRoot.Object, components + "foo/");
+            Mock<ITreeNode> target = FolderNode("Bar", lowerFoo.Object, components + "foo/Bar/");
+            ComponentSave moved = new ComponentSave { Name = "Foo/Button" };
+            ComponentSave untouched = new ComponentSave { Name = "foo/Label" };
+            GumProjectSave project = new GumProjectSave { FullFileName = Path.Combine(projectFolder, "Project.gumx") };
+            project.Components.Add(moved);
+            project.Components.Add(untouched);
+            Mock<IProjectManager> projectManager = new Mock<IProjectManager>();
+            projectManager.SetupGet(manager => manager.GumProjectSave).Returns(project);
+            Mock<IProjectState> projectState = new Mock<IProjectState>();
+            projectState.SetupGet(state => state.GumProjectSave).Returns(project);
+            DragDropManager manager = CreateManager(Mock.Of<IFileCommands>(), projectManager.Object, projectState.Object);
+
+            bool isValid = manager.ValidateNodeSorting(new[] { dragged.Object }, target.Object, dropTarget: null);
+            manager.OnNodeSortingDropped(new[] { dragged.Object }, target.Object, dropTarget: null);
+
+            isValid.ShouldBeTrue();
+            moved.Name.ShouldBe("foo/Bar/Foo/Button");
+            untouched.Name.ShouldBe("foo/Label");
+        }
+        finally
+        {
+            Directory.Delete(projectFolder, recursive: true);
+        }
+    }
+
     private static Mock<ITreeNode> FolderNode(string text, ITreeNode parent, string fullPath)
     {
         Mock<ITreeNode> node = new Mock<ITreeNode>();
@@ -74,5 +120,6 @@ public class DragDropManagerFolderDropTests
             Mock.Of<IPluginManager>(),
             Mock.Of<IReorderLogic>(),
             projectManager,
-            projectState);
+            projectState,
+            new PathCaseSensitivity());
 }

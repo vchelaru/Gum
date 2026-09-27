@@ -45,10 +45,6 @@ public class FileWatchLogic
     {
         using var _ = Gum.Diagnostics.StartupTiming.Time("FileWatchLogic.HandleProjectLoaded (total, called from MainFileWatchPlugin)");
 
-        // On a project load we always clear ignored files, but if the project
-        // is null then we also clear ignored files - see RefreshRootDirectory()
-        _fileWatchManager.ClearIgnoredFiles();
-
         RefreshRootDirectory();
     }
 
@@ -77,8 +73,6 @@ public class FileWatchLogic
         }
         else
         {
-
-            _fileWatchManager.ClearIgnoredFiles();
             _fileWatchManager.Disable();
         }
     }
