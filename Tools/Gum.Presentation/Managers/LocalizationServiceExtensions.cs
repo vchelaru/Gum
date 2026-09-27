@@ -37,6 +37,16 @@ public static class LocalizationServiceExtensions
             if (key?.Trim().StartsWith("//") == true)
             {
                 entryDictionary.Remove(key);
+                continue;
+            }
+
+            // The CSV reader returns null for cells missing from a row shorter than the header
+            // (#5095). Fall back to the ID, like GumCommon's AddCsvDatabase and a missing RESX
+            // translation do.
+            string[] translations = entryDictionary[key];
+            for (int i = 0; i < translations.Length; i++)
+            {
+                translations[i] ??= key;
             }
         }
 

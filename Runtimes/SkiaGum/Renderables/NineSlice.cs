@@ -15,7 +15,15 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
     /// <see cref="AnimationChainLogic.ApplyFrame"/> to copy the active frame's
     /// texture and (UV-derived) source rectangle onto this NineSlice.
     /// </summary>
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
+
+    /// <inheritdoc/>
+    public override object Clone()
+    {
+        NineSlice clone = (NineSlice)base.Clone();
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        return clone;
+    }
 
     /// <inheritdoc/>
     public override object Clone()
