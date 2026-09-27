@@ -1,4 +1,5 @@
 using InputLibrary;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using Shouldly;
 
@@ -114,6 +115,40 @@ public class CursorTests
 
         Click(60 + Cursor.MaximumPixelsBetweenClicksForDoubleClick, 0.2);
         cursor.PrimaryDoubleClick.ShouldBeTrue();
+    }
+
+    // A release that ends a drag is not a click: two quick drags ending near each other read as a
+    // double click, which punches through and changes the canvas selection (#5286).
+    [Fact]
+    public void PrimaryDoubleClick_IgnoresAReleaseThatEndedADrag()
+    {
+        (Cursor cursor, FakeHost host) = Create();
+        void Gesture(float pushX, float farthestX, float releaseX, double time)
+        {
+            host.Pointer = new HostPointerState(pushX, 10, true, false, false);
+            cursor.Activity(time);
+            host.Pointer = new HostPointerState(farthestX, 10, true, false, false);
+            cursor.Activity(time + 0.01);
+            host.Pointer = new HostPointerState(releaseX, 10, true, false, false);
+            cursor.Activity(time + 0.02);
+            host.Pointer = new HostPointerState(releaseX, 10, false, false, false);
+            cursor.Activity(time + 0.03);
+        }
+
+        Gesture(pushX: 40, farthestX: 70, releaseX: 60, time: 0);
+        Gesture(pushX: 50, farthestX: 80, releaseX: 60, time: 0.1);
+        cursor.PrimaryDoubleClick.ShouldBeFalse("both releases ended drags");
+
+        Gesture(pushX: 60, farthestX: 60, releaseX: 60, time: 0.2);
+        cursor.PrimaryDoubleClick.ShouldBeFalse("the previous release ended a drag, so this is a first click");
+
+        Gesture(pushX: 60, farthestX: 90, releaseX: 60, time: 0.3);
+        cursor.PrimaryDoubleClick.ShouldBeFalse("the drag went out and came back, so it is still a drag");
+
+        float jitter = GrabbedState.PixelsToMoveBeforeDrag;
+        Gesture(pushX: 60, farthestX: 60 + jitter, releaseX: 60, time: 0.4);
+        Gesture(pushX: 60, farthestX: 60 + jitter, releaseX: 60, time: 0.5);
+        cursor.PrimaryDoubleClick.ShouldBeTrue("movement inside the drag dead zone is still a click");
     }
 
     [Fact]
