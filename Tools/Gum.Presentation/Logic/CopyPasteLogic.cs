@@ -745,9 +745,15 @@ public class CopyPasteLogic : ICopyPasteLogic
                 {
                     parent = destination;
                 }
-                // A parent must live in the target element (moving an instance into its base
-                // element keeps the derived element's selection, for example).
-                if (!shouldAttachToPastedInstance && parent is InstanceSave parentOutsideTarget && parentOutsideTarget.ParentContainer != targetElement)
+                // A parent must be the target element or live in it (moving an instance into its
+                // base element keeps the derived element's selection, for example).
+                bool isParentOutsideTarget = parent switch
+                {
+                    InstanceSave parentInstance => parentInstance.ParentContainer != targetElement,
+                    ElementSave parentElement => parentElement != targetElement,
+                    _ => false,
+                };
+                if (!shouldAttachToPastedInstance && isParentOutsideTarget)
                 {
                     parent = targetElement;
                 }
