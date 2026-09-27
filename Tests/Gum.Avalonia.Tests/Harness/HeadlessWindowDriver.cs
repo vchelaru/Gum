@@ -78,10 +78,12 @@ internal sealed class HeadlessWindowDriver : IDisposable
         Add("clientSize", () => Window.ClientSize);
         Add("compVisual", () => Prop(Window, "CompositionVisual") != null);
         object? mediaContext = null;
-        Add("mediaContext", () => (mediaContext = typeof(Window).Assembly.GetType("Avalonia.Media.MediaContext")?.GetProperty("Instance", Any)?.GetValue(null)) != null);
+        Add("mediaContext", () => (mediaContext = typeof(AvaloniaObject).Assembly.GetType("Avalonia.Media.MediaContext")?.GetProperty("Instance", Any)?.GetValue(null)) != null);
         Add("pendingBatches", () => Prop(Field(mediaContext, "_pendingCompositionBatches"), "Count"));
         Add("requestedCommits", () => Prop(Field(mediaContext, "_requestedCommits"), "Count"));
         Add("renderQueued", () => Field(mediaContext, "_nextRenderOp") != null);
+        Add("animWaiting", () => Field(mediaContext, "_animationsAreWaitingForComposition"));
+        Add("invokeOnRender", () => Prop(Field(mediaContext, "_invokeOnRenderCallbacks"), "Count"));
         Add("mcDispatcherSame", () => ReferenceEquals(Field(mediaContext, "_dispatcher"), Dispatcher.UIThread));
         object? timer = null;
         Add("timerLookup", () =>
