@@ -62,9 +62,18 @@ graphics device, beside `CanvasHarness`, so selecting in the tree gives it the r
 ## Plugins between tests
 
 `PluginManager` disables a plugin that throws for the rest of the process. `../PluginFailureGuardAttribute.cs`
-runs around every test in the assembly: it fails the test that disabled a guarded plugin, then gives
-every plugin the test disabled a fresh, enabled container and restores `PluginManager.Plugins` if the
-test left it changed. Each test starts with the same plugins enabled, whatever ran before it.
+runs around every test in the assembly: it fails the test that disabled a guarded plugin, then
+re-enables every plugin the test disabled (`PluginContainer.RestoreEnabled`, which keeps its
+started state) and restores `PluginManager.Plugins` if the test left it changed. Each test starts with
+the same plugins enabled, whatever ran before it.
+
+## State that outlives a test
+
+Head singletons (tabs, menus, the tree panel) live for the whole test process. A harness that wraps
+them restores what a test can change when it is disposed (`ProjectTreeHarness` restores tab
+visibility), rather than each test cleaning up in its own `finally`. When an end-to-end test passes
+alone but fails in a full run, read the message: "hit-tests nothing" is the headless compositor race
+(#5360); anything else is usually state an earlier test left behind.
 
 ## Hosting a singleton tab's view
 

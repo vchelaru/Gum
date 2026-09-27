@@ -72,6 +72,8 @@ Light/dark theming uses brushes defined in `Gum/Themes/Frb.Brushes.{Light,Dark}.
 
 This is the only situation where `DataTrigger` is preferred over a VM-side property.
 
+A clickable text link in the Avalonia head is a `HyperlinkButton`, never a transparent `Button`: the head's `Button` style forces white `Primary.Contrast` text, while `HyperlinkButton` takes `Frb.Brushes.Link` per theme through `FrbThemeResources.ControlBrushAliases`.
+
 ## Common Pitfalls
 
 **Missing `[DependsOn]`**: If a getter computes from another property but lacks the attribute, the UI will show stale values. The `ViewModel` constructor scans for `[DependsOn]` via reflection at construction time — it only works if the attribute is present.
