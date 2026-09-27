@@ -14,17 +14,45 @@ namespace MonoGameGum.IntegrationTests;
 // moves test execution onto that context. xunit's execution pipeline keeps its continuations on
 // the current SynchronizationContext, so each test's constructor, body, and Dispose run on the
 // main thread. Harmless on Windows and Linux, so every OS takes the same path.
+//
+// Main calls ConsoleRunner.EntryPoint rather than ConsoleRunner.Run. Run arms a watchdog when
+// EntryPoint returns that prints "Waiting 10 seconds for foreground threads to exit..." to stdout
+// if the process is still alive one second later. On a loaded machine this host can take that
+// long to wake the main thread and exit, and the line then lands in the JSON the test adapter
+// reads from the -assemblyInfo launch, failing the run before any test starts. Main keeps the
+// watchdog's force-exit but reports on stderr, where it cannot corrupt that output.
 public static class Program
 {
+    const int ForegroundThreadExitSeconds = 10;
+
     public static int Main(string[] args)
     {
         MainThreadSynchronizationContext context = MainThreadSynchronizationContext.Instance;
+        using ConsoleRunner runner = new ConsoleRunner(args);
 
-        Task<int> runnerTask = Task.Run(() => ConsoleRunner.Run(args));
+        Task<int> runnerTask = Task.Run(() => runner.EntryPoint());
         runnerTask.ContinueWith(_ => context.Complete(), TaskScheduler.Default);
 
         context.RunOnCurrentThread();
-        return runnerTask.GetAwaiter().GetResult();
+        int result = runnerTask.GetAwaiter().GetResult();
+
+        StartForegroundThreadWatchdog();
+        return result;
+    }
+
+    // A background thread does not keep the process alive, so this only fires when a test left a
+    // foreground thread running after Main returned.
+    static void StartForegroundThreadWatchdog()
+    {
+        Thread watchdog = new Thread(() =>
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(ForegroundThreadExitSeconds));
+            Console.Error.WriteLine(
+                $"[FATAL ERROR] Foreground threads were still running {ForegroundThreadExitSeconds} seconds after the tests finished, forcing process exit");
+            Environment.Exit(1);
+        });
+        watchdog.IsBackground = true;
+        watchdog.Start();
     }
 }
 
