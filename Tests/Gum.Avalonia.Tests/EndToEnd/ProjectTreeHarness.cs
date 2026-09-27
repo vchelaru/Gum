@@ -10,6 +10,7 @@ using Gum.Avalonia.Tests.VariableGrid;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Menus;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -212,6 +213,51 @@ internal sealed class ProjectTreeHarness : IDisposable
             ?? throw new InvalidOperationException($"No search result shows \"{display}\"; they are [{string.Join(", ", SearchResultTexts())}].");
         _driver.Click(row);
         _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>
+    /// Picks the main menu item at <paramref name="path"/> ("File", "New Project"), as the head does
+    /// once the menu closes, and runs the work it posts. An item whose action is async (New Project,
+    /// Load Recent) may still be running; follow it with <see cref="WaitUntil"/>.
+    /// </summary>
+    public void PickMainMenu(params string[] path)
+    {
+        IEnumerable<MenuItemModel> items = Services.GetRequiredService<MenuModel>().TopLevelItems;
+        MenuItemModel? item = null;
+        foreach (string header in path)
+        {
+            List<MenuItemModel> candidates = items.Where(candidate => !candidate.IsSeparator).ToList();
+            item = candidates.SingleOrDefault(candidate => candidate.Header == header)
+                ?? throw new InvalidOperationException($"The menu has no \"{header}\"; it has [{string.Join(", ", candidates.Select(candidate => candidate.Header))}].");
+            items = item.Items;
+        }
+        if (!item!.IsEnabled)
+        {
+            throw new InvalidOperationException($"The menu item \"{string.Join(" > ", path)}\" is disabled.");
+        }
+        item.Invoke();
+        _driver.Layout();
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>
+    /// Pumps the UI thread until <paramref name="condition"/> holds, for work a gesture started
+    /// asynchronously (a project load, a theme import); fails after <paramref name="timeout"/>.
+    /// </summary>
+    public void WaitUntil(Func<bool> condition, TimeSpan timeout, string what)
+    {
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (!condition())
+        {
+            if (stopwatch.Elapsed > timeout)
+            {
+                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}].");
+            }
+            Thread.Sleep(10);
+            _driver.Layout();
+            _exceptions.ThrowIfCrashed();
+        }
+        _driver.Layout();
     }
 
     /// <summary>Ctrl+Z, handled app-wide as in the main window.</summary>

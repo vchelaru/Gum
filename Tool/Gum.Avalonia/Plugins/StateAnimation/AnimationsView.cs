@@ -170,7 +170,7 @@ public sealed class AnimationsView : Grid
             {
                 e.Handled = true;
             }
-            if (hadFocus)
+            if (hadFocus && !animations.IsKeyboardFocusWithin)
             {
                 KeepKeyboardFocus(animations);
             }
@@ -228,7 +228,7 @@ public sealed class AnimationsView : Grid
             {
                 KeyframePasted?.Invoke(pasted);
             }
-            if (hadFocus)
+            if (hadFocus && !keyframes.IsKeyboardFocusWithin)
             {
                 KeepKeyboardFocus(keyframes);
             }
@@ -239,8 +239,9 @@ public sealed class AnimationsView : Grid
 
     // A list hotkey that moves or removes the focused row (reorder, delete, a paste that resorts)
     // takes the row's container, and the keyboard focus with it, out of the list; the next hotkey
-    // would then reach nothing. Called for a list that had the focus before the key: once the list
-    // has laid out again, the selected row, else the list, takes the focus back.
+    // would then reach nothing. Called when the hotkey itself took the focus (a Tab moves it only
+    // after this tunneling handler, so it is not undone): once the list has laid out again, the
+    // selected row, else the list, takes the focus back.
     private static void KeepKeyboardFocus(ListBox list)
     {
         global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>

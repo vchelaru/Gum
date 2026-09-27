@@ -232,6 +232,9 @@ public class AnimationScenarioTests
         editor.Redo();
         editor.Redo();
         editor.ViewModel.Animations.Select(animation => animation.Name).ShouldBe(expectedAfterDelete);
+        editor.Click(editor.RowFor(editor.AnimationList, editor.ViewModel.Animations[0]));
+        editor.Press(Key.Tab, PhysicalKey.Tab);
+        editor.AnimationList.IsKeyboardFocusWithin.ShouldBeFalse("Tab still moves the focus out of the list");
 
         editor.AssertOracles();
     }

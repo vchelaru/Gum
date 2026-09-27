@@ -58,6 +58,9 @@ internal static class ToolStartup
         PluginManager pluginManager = services.GetRequiredService<PluginManager>();
         if (!pluginManager.IsInitialized)
         {
+            // The head's main window builds the standard menu before the plugins add their items to
+            // it; built later (a test resolving the window), it would drop theirs.
+            _ = services.GetRequiredService<MainWindow>();
             pluginManager.Initialize();
         }
         // The standard-state refresh goes through the plugins, so they load first.
