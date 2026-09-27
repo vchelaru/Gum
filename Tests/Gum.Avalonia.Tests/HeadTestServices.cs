@@ -1,6 +1,7 @@
 ﻿using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Tests.Harness;
+using Gum.Plugins;
 using Gum.Services.Dialogs;
 using Gum.ProjectServices.FontGeneration;
 using Gum.Services;
@@ -40,6 +41,10 @@ public static class HeadTestServices
         services.AddGumAvalonia();
         // Real generation runs on a thread-pool task that can outlive its test (#5097).
         services.Replace(ServiceDescriptor.Singleton<IFontFileGenerator, NoOpFontFileGenerator>());
+        // Its default file is fixed when it is built, under the per-user folder of the test host,
+        // which every test run on the machine shares: a plugin a test turns off would stay off.
+        services.Replace(ServiceDescriptor.Singleton<IPluginEnablementStore>(
+            new PluginEnablementStore(Path.Combine(Path.GetDirectoryName(settingsPath)!, "GumPluginSettings.xml"))));
         // A harness scripts the dialogs that services built once for the whole run open.
         services.AddSingleton<AvaloniaDialogService>();
         services.Replace(ServiceDescriptor.Singleton<IDialogService>(provider =>

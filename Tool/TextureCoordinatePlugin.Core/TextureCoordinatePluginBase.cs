@@ -98,6 +98,15 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
     {
+        // Turning the plugin back on only re-enables it (StartUp runs once), so turning it off only
+        // hides the tab. The host sends no events to a plugin that is off, so the tab stays hidden
+        // until the next selection with texture coordinates after it is back on.
+        if (shutDownReason == PluginShutDownReason.UserDisabled)
+        {
+            textureCoordinatePluginTab?.Hide();
+            return true;
+        }
+
         if (textureCoordinatePluginTab is not null)
         {
             RemoveTab(textureCoordinatePluginTab);

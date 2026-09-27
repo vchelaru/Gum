@@ -33,6 +33,8 @@ public sealed class PluginFailureGuardAttribute : BeforeAfterTestAttribute
         "MainTreeViewPlugin",
         "MainVariableGridPlugin",
         "MainErrorsPlugin",
+        // Its tab is built with the canvases (CanvasHarness), and sits out every other test (ToolProjectFixture).
+        "AvaloniaTextureCoordinatePlugin",
     ];
 
     private readonly HashSet<string> _failedBefore = new();

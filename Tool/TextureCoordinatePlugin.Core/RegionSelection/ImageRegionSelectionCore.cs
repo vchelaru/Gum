@@ -613,7 +613,9 @@ public class ImageRegionSelectionCore
 
         if (!IsCameraPanning)
         {
-            foreach (var item in mRectangleSelectors)
+            // A selector's region events reach the display controller, which can add or remove
+            // selectors (a refresh after the edit), so this walks a copy.
+            foreach (var item in mRectangleSelectors.ToArray())
             {
                 item.Activity(mCursor, mKeyboard, mInputHost);
             }
