@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Services;
 using Gum.Dialogs;
 using Gum.Settings;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -40,12 +41,21 @@ public class AccentPaletteTests
         System.Drawing.Color accent = System.Drawing.Color.FromArgb(255, 0x4c, 0xaf, 0x50);
         Color expectedDark = AccentPalette.Darken(Color.FromRgb(0x4c, 0xaf, 0x50));
 
-        theming.Accent = accent;
+        // The application outlives the test, so the tool's own accent goes back afterwards.
+        System.Drawing.Color toolAccent = TestAppBuilder.Services.GetRequiredService<IThemingService>().EffectiveSettings.Accent;
+        try
+        {
+            theming.Accent = accent;
 
-        ISolidColorBrush dark = (ISolidColorBrush)Application.Current!.Resources["Frb.Brushes.Primary.Dark"]!;
-        ISolidColorBrush contrast = (ISolidColorBrush)Application.Current.Resources["Frb.Brushes.Primary.Contrast"]!;
-        dark.Color.ShouldBe(expectedDark);
-        contrast.Color.ShouldBe(AccentPalette.ContrastingForeground(expectedDark));
+            ISolidColorBrush dark = (ISolidColorBrush)Application.Current!.Resources["Frb.Brushes.Primary.Dark"]!;
+            ISolidColorBrush contrast = (ISolidColorBrush)Application.Current.Resources["Frb.Brushes.Primary.Contrast"]!;
+            dark.Color.ShouldBe(expectedDark);
+            contrast.Color.ShouldBe(AccentPalette.ContrastingForeground(expectedDark));
+        }
+        finally
+        {
+            theming.Accent = toolAccent;
+        }
     }
 
     /// <summary>Theme settings held in memory, never written to disk.</summary>

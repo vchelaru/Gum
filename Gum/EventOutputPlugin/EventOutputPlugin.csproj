@@ -27,6 +27,7 @@
 	<ItemGroup>
 		<!-- Cross-platform purity guard: no Windows-only APIs in a plugin the Avalonia head hosts. -->
 		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+		<AdditionalFiles Include="..\..\BannedSymbols.ToolUserData.txt" Link="BannedSymbols.ToolUserData.txt" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

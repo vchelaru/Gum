@@ -18,6 +18,7 @@
 	<ItemGroup>
 		<!-- Cross-platform purity guard: no Windows-only APIs in a plugin the Avalonia head hosts. -->
 		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+		<AdditionalFiles Include="..\..\BannedSymbols.ToolUserData.txt" Link="BannedSymbols.ToolUserData.txt" />
 	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<!-- Built outside a solution (a test project on its own, CI on macOS/Linux) the repo root is two levels up. -->
