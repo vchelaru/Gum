@@ -14,8 +14,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if SKIA
+using Gum.Graphics.Animation;
 using HarfBuzzSharp;
 using RenderingLibrary;
+using RenderingLibrary.Graphics.Animation;
 using SkiaGum.Content;
 using SkiaGum.Helpers;
 using Gum.GueDeriving;
@@ -1290,14 +1292,18 @@ public partial class CustomSetPropertyOnRenderable
         {
             case "SourceFile":
                 var asString = value as string;
-                if (!string.IsNullOrEmpty(asString))
+                if (string.IsNullOrEmpty(asString))
                 {
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    asNineSlice.Texture = loaderManager.LoadContent<SKBitmap>(asString);
+                    asNineSlice.Texture = null;
+                }
+                else if (AnimationChainListFileLoader.IsAnimationChainFile(asString))
+                {
+                    AssignAnimationChainSourceFile(asString, asNineSlice.AnimationLogic, asNineSlice, graphicalUiElement);
                 }
                 else
                 {
-                    asNineSlice.Texture = null;
+                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    asNineSlice.Texture = loaderManager.LoadContent<SKBitmap>(asString);
                 }
                 return true;
             case nameof(NineSlice.Alpha):
@@ -1375,6 +1381,39 @@ public partial class CustomSetPropertyOnRenderable
         return false;
     }
 
+    // An .achx/.achj SourceFile loads animation chains instead of a texture, the same as the
+    // MonoGame/raylib dispatcher (issue #5226). The first frame supplies the texture.
+    private static void AssignAnimationChainSourceFile(string value, AnimationChainLogic animationLogic,
+        ITextureCoordinate renderable, GraphicalUiElement graphicalUiElement)
+    {
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        try
+        {
+            animationLogic.AnimationChains = AnimationChainListFileLoader.Load(ref value, loaderManager);
+        }
+        catch (Exception ex)
+        {
+            // Honor MissingFileBehavior, else report the error, as the MonoGame/raylib dispatcher does.
+            string message = $"Error setting SourceFile";
+            if (graphicalUiElement.Tag != null)
+            {
+                message += $" in {graphicalUiElement.Tag}";
+            }
+            message += $"\n{value}";
+            message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+            message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                throw new System.IO.FileNotFoundException(message, ex);
+            }
+            animationLogic.AnimationChains = null;
+            PropertyAssignmentError?.Invoke(message + "\n" + ex);
+        }
+        animationLogic.RefreshCurrentChainToDesiredName();
+        animationLogic.UpdateToCurrentAnimationFrame();
+        graphicalUiElement.UpdateTextureValuesFrom(renderable);
+    }
+
     private static bool TrySetPropertyOnSprite(Sprite asSprite, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         var spriteRuntime = graphicalUiElement as SpriteRuntime;
@@ -1383,19 +1422,26 @@ public partial class CustomSetPropertyOnRenderable
         {
             case "SourceFile":
                 var asString = value as string;
-                if(spriteRuntime != null)
+                SKBitmap? image = null;
+                if (!string.IsNullOrEmpty(asString))
                 {
-                    spriteRuntime.SourceFile = asString;
-                }
-                else if (!string.IsNullOrEmpty(asString))
-                {
+                    if (AnimationChainListFileLoader.IsAnimationChainFile(asString))
+                    {
+                        AssignAnimationChainSourceFile(asString, asSprite.AnimationLogic, asSprite, graphicalUiElement);
+                        return true;
+                    }
                     var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    var image = loaderManager.LoadContent<SKBitmap>(asString);
-                    asSprite.Texture = image;
+                    image = loaderManager.LoadContent<SKBitmap>(asString);
+                }
+                // Through the runtime when there is one, so its Texture setter re-runs
+                // PercentageOfSourceFile layout.
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.Texture = image;
                 }
                 else
                 {
-                    asSprite.Texture = null;
+                    asSprite.Texture = image;
                 }
                 return true;
             case nameof(Sprite.Alpha):
