@@ -49,9 +49,7 @@ public class CodeGenerationFileLocationsService
 
             if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
             {
-                string prefix = selectedElement is ScreenSave ? "Screens"
-                    : selectedElement is ComponentSave ? "Components"
-                    : "Standards";
+                string prefix = ElementReference.GetSubfolder(selectedElement);
                 var splitName = (prefix + "/" + elementName).Split('/');
 
                 var context = new CodeGenerationContext(_nameVerifier, selectedElement);
