@@ -4,6 +4,7 @@ using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
 using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace SkiaGum.Renderables;
@@ -22,6 +23,8 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
     {
         NineSlice clone = (NineSlice)base.Clone();
         clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        // Each side disposes its own section images, so the clone builds its own.
+        clone._sectionImages = null;
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
         if (_ownsImage && _texture != null)
@@ -30,14 +33,6 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
         }
         return clone;
     }
-
-    // Nearest-neighbour sampling. Linear filtering bleeds adjacent-section texels
-    // across the boundary between two sections of the nine-slice source texture,
-    // producing visible seams; nearest-neighbour samples a single texel per output
-    // pixel and matches the pixel-art look that nine-slice borders typically use.
-    // So NineSlice deliberately ignores Renderer.TextureFilter, which Sprite honors.
-    private static readonly SKSamplingOptions _sampling =
-        new SKSamplingOptions(SKFilterMode.Nearest, SKMipmapMode.None);
 
     public NineSlice()
     {
@@ -144,6 +139,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
         {
             return;
         }
+        ClearSectionImages();
         if (_ownsImage)
         {
             _image?.Dispose();
@@ -299,6 +295,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
             srcCornerH = fullOutsideH;
         }
 
+        // Sampling follows Renderer.TextureFilter, like Sprite. Under Linear, a pixel at a section's
+        // edge samples half a texel past it, and SkiaSharp's DrawImage(src, dest) does not clamp to
+        // src, so it would blend in the neighboring section's texels. Each section is then drawn
+        // from its own image (see GetSectionImage), whose edges clamp.
+        SKSamplingOptions sampling = global::RenderingLibrary.Graphics.Renderer.TextureSampling;
+        SectionDraw draw = new(canvas, paint, sampling, UseSectionImages: sampling.Filter != SKFilterMode.Nearest);
+
         float destLeft = boundingRect.Left;
         float destTop = boundingRect.Top;
         float destRight = boundingRect.Right;
@@ -317,82 +320,149 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
         DrawSection(
             srcLeft, srcTop, srcCornerW, srcCornerH,
             destLeft, destTop, destCornerW, destCornerH,
-            canvas, paint);
+            draw);
 
         DrawSection(
             srcRight - srcCornerW, srcTop, srcCornerW, srcCornerH,
             destRight - destCornerW, destTop, destCornerW, destCornerH,
-            canvas, paint);
+            draw);
 
         DrawSection(
             srcLeft, srcBottom - srcCornerH, srcCornerW, srcCornerH,
             destLeft, destBottom - destCornerH, destCornerW, destCornerH,
-            canvas, paint);
+            draw);
 
         DrawSection(
             srcRight - srcCornerW, srcBottom - srcCornerH, srcCornerW, srcCornerH,
             destRight - destCornerW, destBottom - destCornerH, destCornerW, destCornerH,
-            canvas, paint);
+            draw);
 
         DrawMiddleSection(
             srcLeft + srcCornerW, srcTop, insideTextureW, srcCornerH,
             destLeft + destCornerW, destTop, destInsideW, destCornerH,
             tileHorizontally: IsTilingMiddleSections, tileVertically: false,
-            canvas, paint);
+            draw);
 
         DrawMiddleSection(
             srcLeft + srcCornerW, srcBottom - srcCornerH, insideTextureW, srcCornerH,
             destLeft + destCornerW, destBottom - destCornerH, destInsideW, destCornerH,
             tileHorizontally: IsTilingMiddleSections, tileVertically: false,
-            canvas, paint);
+            draw);
 
         DrawMiddleSection(
             srcLeft, srcTop + srcCornerH, srcCornerW, insideTextureH,
             destLeft, destTop + destCornerH, destCornerW, destInsideH,
             tileHorizontally: false, tileVertically: IsTilingMiddleSections,
-            canvas, paint);
+            draw);
 
         DrawMiddleSection(
             srcRight - srcCornerW, srcTop + srcCornerH, srcCornerW, insideTextureH,
             destRight - destCornerW, destTop + destCornerH, destCornerW, destInsideH,
             tileHorizontally: false, tileVertically: IsTilingMiddleSections,
-            canvas, paint);
+            draw);
 
         DrawMiddleSection(
             srcLeft + srcCornerW, srcTop + srcCornerH, insideTextureW, insideTextureH,
             destLeft + destCornerW, destTop + destCornerH, destInsideW, destInsideH,
             tileHorizontally: IsTilingMiddleSections, tileVertically: IsTilingMiddleSections,
-            canvas, paint);
+            draw);
+    }
+
+    // What every section of one DrawBound call draws with.
+    private readonly record struct SectionDraw(
+        SKCanvas Canvas, SKPaint Paint, SKSamplingOptions Sampling, bool UseSectionImages);
+
+    // Section images by source rect, kept across frames so a GPU canvas uploads each one once.
+    // Cleared whenever Image changes.
+    private Dictionary<SKRectI, SKImage>? _sectionImages;
+
+    // A cap on distinct section rects (an animated SourceRectangle or resized corners add more)
+    // before the cache is dropped and rebuilt.
+    private const int MaxCachedSectionImages = 64;
+
+    // Returns the image holding just this section, or null when the caller should sample Image
+    // directly, as Nearest does: the section is all of Image, or not inside it.
+    private SKImage? GetSectionImage(SKRectI section)
+    {
+        _sectionImages ??= new Dictionary<SKRectI, SKImage>();
+        if (_sectionImages.TryGetValue(section, out SKImage? cached))
+        {
+            return cached;
+        }
+
+        SKRectI imageBounds = new SKRectI(0, 0, Image!.Width, Image.Height);
+        // A whole-image section already clamps at its edges. Subset would also hand back Image
+        // itself here, which the cache must never dispose.
+        if (section == imageBounds || !imageBounds.Contains(section))
+        {
+            return null;
+        }
+
+        if (_sectionImages.Count >= MaxCachedSectionImages)
+        {
+            ClearSectionImages();
+            _sectionImages = new Dictionary<SKRectI, SKImage>();
+        }
+
+        SKImage? sectionImage = Image.Subset(section);
+        if (sectionImage != null)
+        {
+            _sectionImages[section] = sectionImage;
+        }
+        return sectionImage;
+    }
+
+    private void ClearSectionImages()
+    {
+        if (_sectionImages == null)
+        {
+            return;
+        }
+        foreach (SKImage sectionImage in _sectionImages.Values)
+        {
+            sectionImage.Dispose();
+        }
+        _sectionImages = null;
     }
 
     private void DrawSection(
         int srcX, int srcY, int srcW, int srcH,
         float destX, float destY, float destW, float destH,
-        SKCanvas canvas, SKPaint paint)
+        SectionDraw draw)
     {
-        if (destW <= 0 || destH <= 0 || srcW <= 0 || srcH <= 0)
-        {
-            return;
-        }
-        SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
-        SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
-        canvas.DrawImage(Image, src, dest, _sampling, paint);
+        DrawMiddleSection(srcX, srcY, srcW, srcH, destX, destY, destW, destH,
+            tileHorizontally: false, tileVertically: false, draw);
     }
 
     private void DrawMiddleSection(
         int srcX, int srcY, int srcW, int srcH,
         float destX, float destY, float destW, float destH,
         bool tileHorizontally, bool tileVertically,
-        SKCanvas canvas, SKPaint paint)
+        SectionDraw draw)
     {
         if (destW <= 0 || destH <= 0 || srcW <= 0 || srcH <= 0)
         {
             return;
         }
 
+        // Source coordinates below are relative to sourceImage: the section's own image starts at
+        // the section's corner.
+        SKImage sourceImage = Image!;
+        SKImage? sectionImage = draw.UseSectionImages
+            ? GetSectionImage(SKRectI.Create(srcX, srcY, srcW, srcH))
+            : null;
+        if (sectionImage != null)
+        {
+            sourceImage = sectionImage;
+            srcX = 0;
+            srcY = 0;
+        }
+
         if (!tileHorizontally && !tileVertically)
         {
-            DrawSection(srcX, srcY, srcW, srcH, destX, destY, destW, destH, canvas, paint);
+            SKRect src = new SKRect(srcX, srcY, srcX + srcW, srcY + srcH);
+            SKRect dest = new SKRect(destX, destY, destX + destW, destY + destH);
+            draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
             return;
         }
 
@@ -435,7 +505,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
                     destY + currentY,
                     destX + currentX + thisTileDestW,
                     destY + currentY + thisTileDestH);
-                canvas.DrawImage(Image, src, dest, _sampling, paint);
+                draw.Canvas.DrawImage(sourceImage, src, dest, draw.Sampling, draw.Paint);
 
                 currentX += thisTileDestW;
             }
