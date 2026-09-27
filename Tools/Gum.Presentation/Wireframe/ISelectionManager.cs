@@ -15,6 +15,12 @@ public interface ISelectionManager
     bool IsOverBody { get; set; }
 
     /// <summary>
+    /// Whether the cursor is over the body of an object that is already selected, as opposed to
+    /// the body of one that a click would select. Updated with <see cref="IsOverBody"/>.
+    /// </summary>
+    bool IsOverSelectedBody { get; }
+
+    /// <summary>
     /// Whether any object is currently selected.
     /// </summary>
     bool HasSelection { get; }

@@ -73,6 +73,8 @@ public class SelectionManager : ISelectionManager
         set;
     }
 
+    public bool IsOverSelectedBody { get; private set; }
+
     public GraphicalUiElement? SelectedGue
     {
         get
@@ -501,6 +503,9 @@ public class SelectionManager : ISelectionManager
                         IsOverBody = false;
                     }
                 }
+
+                IsOverSelectedBody = IsOverBody && representationOver != null &&
+                    mSelectedIpsos.Contains(representationOver);
             }
 
             // This updates the sizes and texture coordinates of the highlighted representation if
@@ -914,12 +919,9 @@ public class SelectionManager : ISelectionManager
                 handlerProcessedRelease = true;
 
                 // Even when a handler owns the release, clean up the rectangle
-                // selector in case it was partially started before the handler
-                // took over.
-                if (_rectangleSelector?.IsActive == true)
-                {
-                    _rectangleSelector.HandleRelease();
-                }
+                // selector: it may have been partially started before the handler
+                // took over, or hold the push a Shift press also gave it.
+                _rectangleSelector?.HandleRelease();
             }
 
             // PHASE 1: HANDLERS - Let active handlers continue/release
