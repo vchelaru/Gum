@@ -172,6 +172,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     public override string FriendlyName => "Editor Tab Plugin";
 
     public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
+    public override bool CanUserDisable => false;
 
     #region Head hooks
 

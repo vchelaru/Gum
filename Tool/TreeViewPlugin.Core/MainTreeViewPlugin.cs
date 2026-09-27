@@ -73,6 +73,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
     public override Version Version => new Version();
 
     public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
+    public override bool CanUserDisable => false;
 
     public override void StartUp()
     {

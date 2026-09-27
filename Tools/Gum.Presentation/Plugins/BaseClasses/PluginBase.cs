@@ -386,6 +386,13 @@ public abstract class PluginBase : IPlugin
     public abstract void StartUp();
     public abstract bool ShutDown(PluginShutDownReason shutDownReason);
 
+    /// <summary>
+    /// Whether the user can turn this plugin off in Manage Plugins. A plugin the tool needs to run
+    /// (its <see cref="ShutDown"/> refuses a user shutdown) returns false: its checkbox is not
+    /// offered, and a disabled entry left for it in the plugin settings is ignored at load.
+    /// </summary>
+    public virtual bool CanUserDisable => true;
+
     #region Plugin Tabs
 
     public IPluginTab CreateTab(object control, string tabName, TabLocation defaultLocation = TabLocation.RightBottom)

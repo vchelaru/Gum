@@ -40,6 +40,7 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
 
     /// <inheritdoc/>
     public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
+    public override bool CanUserDisable => false;
 
     /// <inheritdoc/>
     public override void StartUp()
@@ -194,6 +195,7 @@ public abstract class ExclusionsPluginBase : PluginBase, IPriorityPlugin
 
     /// <inheritdoc/>
     public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
+    public override bool CanUserDisable => false;
 
     /// <inheritdoc/>
     public override void StartUp()

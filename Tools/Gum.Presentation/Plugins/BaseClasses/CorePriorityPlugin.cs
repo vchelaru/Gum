@@ -19,4 +19,7 @@ public abstract class CorePriorityPlugin : PluginBase, IPriorityPlugin
 
     /// <inheritdoc/>
     public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
+
+    /// <inheritdoc/>
+    public override bool CanUserDisable => false;
 }

@@ -1109,7 +1109,16 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 plugin.UniqueId = plugin.GetType().FullName ?? plugin.GetType().Name;
 
 
-                if (!instance._pluginEnablementStore.IsDisabled(plugin.UniqueId))
+                bool isDisabledInStore = instance._pluginEnablementStore.IsDisabled(plugin.UniqueId);
+                if (isDisabledInStore && !CanUserDisable(plugin))
+                {
+                    // An entry the user could not have made through Manage Plugins; drop it rather
+                    // than leave a plugin the tool needs switched off.
+                    instance._pluginEnablementStore.Enable(plugin.UniqueId);
+                    isDisabledInStore = false;
+                }
+
+                if (!isDisabledInStore)
                 {
                     pluginContainer.StartUpIfNeeded();
                 }
@@ -1233,15 +1242,19 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         if (doesPluginWantToShutDown)
         {
             container!.IsEnabled = false;
-        }
 
-        if (shutDownReason == PluginShutDownReason.UserDisabled)
-        {
-            _pluginEnablementStore.Disable(pluginToShutDown.UniqueId);
+            // Recorded only once the plugin is actually off, so the next launch starts what the
+            // user saw running.
+            if (shutDownReason == PluginShutDownReason.UserDisabled)
+            {
+                _pluginEnablementStore.Disable(pluginToShutDown.UniqueId);
+            }
         }
 
         return doesPluginWantToShutDown;
     }
+
+    private static bool CanUserDisable(IPlugin plugin) => (plugin as PluginBase)?.CanUserDisable ?? true;
 
     /// <inheritdoc/>
     public IReadOnlyList<PluginSummary> GetAllPluginSummaries() =>
@@ -1312,7 +1325,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public PluginSummary DisableUserPlugin(object pluginHandle)
     {
         PluginContainer container = (PluginContainer)pluginHandle;
-        ShutDownPlugin(container.Plugin, PluginShutDownReason.UserDisabled);
+        if (CanUserDisable(container.Plugin))
+        {
+            ShutDownPlugin(container.Plugin, PluginShutDownReason.UserDisabled);
+        }
         return ToPluginSummary(container);
     }
 
@@ -1336,7 +1352,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     }
 
     private static PluginSummary ToPluginSummary(PluginContainer container) =>
-        new(container.Name, container.ToString(), container.IsEnabled, !string.IsNullOrEmpty(container.FailureDetails), container);
+        new(container.Name, container.ToString(), container.IsEnabled, !string.IsNullOrEmpty(container.FailureDetails), container,
+            CanBeDisabled: CanUserDisable(container.Plugin));
 
     internal static void AddInternalPlugins()
     {
