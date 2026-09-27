@@ -89,6 +89,36 @@ public class SkiaResourceManagerTests
         }
     }
 
+    // #5221: a hook that serves only its own bundle (the .gumpkg hook with no fallback) must not
+    // hide a loose file that exists on disk.
+    [Fact]
+    public void GetSKBitmap_WhenHookDoesNotServeTheFile_ShouldStillLoadItFromDisk()
+    {
+        string absolutePath = Path.Combine(Path.GetTempPath(), "GumSkiaHookDiskTest_" + Guid.NewGuid().ToString("N") + ".png");
+        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            using (SKBitmap source = new SKBitmap(3, 2))
+            using (SKImage image = SKImage.FromBitmap(source))
+            using (SKData encoded = image.Encode(SKEncodedImageFormat.Png, 100))
+            using (FileStream fileStream = File.OpenWrite(absolutePath))
+            {
+                encoded.SaveTo(fileStream);
+            }
+            FileManager.CustomGetStreamFromFile = requestedPath =>
+                throw new FileNotFoundException("Not in the bundle.", requestedPath);
+
+            SKBitmap loaded = SkiaResourceManager.GetSKBitmap(absolutePath);
+
+            loaded.Width.ShouldBe(3);
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+            File.Delete(absolutePath);
+        }
+    }
+
     // #5111: GetSKBitmapFromUrl downloads the image and hands the stream to GetSKBitmap, which
     // must decode that stream instead of looking for the URL on disk or as an embedded resource.
     [Fact]

@@ -153,17 +153,13 @@ namespace Gum.Managers
             FilePath standardized = file.RemoveExtension().StandardizedCaseSensitive;
             var relativeToFolderForType = standardized.RelativeTo(projectDirectory).Replace("\\", "/");
 
-            if (relativeToFolderForType.StartsWith("Screens/"))
+            foreach (var subfolder in new[] { ElementReference.ScreenSubfolder, ElementReference.ComponentSubfolder, ElementReference.StandardSubfolder })
             {
-                relativeToFolderForType = relativeToFolderForType.Substring("Screens/".Length);
-            }
-            else if (relativeToFolderForType.StartsWith("Components/"))
-            {
-                relativeToFolderForType = relativeToFolderForType.Substring("Components/".Length);
-            }
-            else if (relativeToFolderForType.StartsWith("Standards/"))
-            {
-                relativeToFolderForType = relativeToFolderForType.Substring("Standards/".Length);
+                var prefix = subfolder + "/";
+                if (relativeToFolderForType.StartsWith(prefix))
+                {
+                    return relativeToFolderForType.Substring(prefix.Length);
+                }
             }
             return relativeToFolderForType;
         }

@@ -1972,14 +1972,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone._parent = null;
         newClone.mWhatContainsThis = null;
         newClone.mWhatThisContains = new List<GraphicalUiElement>();
+        // The source's managers and layer describe where the source was added. Keeping them makes
+        // AddToManagers treat the clone as already added, so it never reaches a layer.
+        newClone.mManagers = null;
+        newClone.mLayer = null;
         newClone.SetContainedObject(clonedRenderable);
-        // The copied ParentChanged handlers belong to the source (its binding handler, its Forms
-        // control), so parenting the clone would update the source. Re-run the constructor's
-        // per-instance wiring so the clone's own binding handler is the only subscriber.
+        // The copied handlers belong to whoever subscribed to the source (its binding handler, its
+        // Forms control, user code), so raising them on the clone would act on the source. Re-run
+        // the constructor's per-instance wiring so the clone's own binding handler is the only subscriber.
+        newClone.SizeChanged = null;
+        newClone.PositionChanged = null;
+        newClone.VisibleChanged = null;
         newClone.ParentChanged = null;
+        newClone.PropertyChanged = null;
+        newClone.ResetBindingStateForClone();
         newClone.OnConstructor();
         return newClone;
     }
+
+    partial void ResetBindingStateForClone();
 
     #endregion
 

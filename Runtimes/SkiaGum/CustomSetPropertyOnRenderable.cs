@@ -1209,12 +1209,12 @@ public partial class CustomSetPropertyOnRenderable
         {
             string prefixed = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + value);
 
-            // Mirrors SkiaResourceManager.CacheSKImage's texture-loading fallback: prefer the path
-            // relative to the loaded project's directory, but fall back to the original path (left
-            // for the resolver to interpret, typically relative to the working directory) when that
-            // candidate doesn't exist -- e.g. a loose shader file shipped next to the executable
-            // rather than inside the .gumx project folder (#4001).
-            value = System.IO.File.Exists(prefixed) ? prefixed : value;
+            // Prefer the path relative to the loaded project's directory, but fall back to the
+            // original path (left for the resolver to interpret, typically relative to the working
+            // directory) when that candidate doesn't exist -- e.g. a loose shader file shipped next
+            // to the executable rather than inside the .gumx project folder (#4001). FileExists also
+            // probes FileManager.CustomGetStreamFromFile, so a bundled shader counts as existing.
+            value = ToolsUtilities.FileManager.FileExists(prefixed) ? prefixed : value;
         }
 
         // LoaderManager caches disposables by normalized path (same convention as the texture cache)

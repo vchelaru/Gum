@@ -382,21 +382,9 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             containersToSave.Add(container);
         }
 
-        string qualifiedOldName = elementSave switch
-        {
-            ScreenSave => $"Screens/{oldName}",
-            ComponentSave => $"Components/{oldName}",
-            StandardElementSave => $"Standards/{oldName}",
-            _ => oldName
-        };
+        string qualifiedOldName = ElementReference.GetQualifiedName(elementSave, oldName);
 
-        string qualifiedNewName = elementSave switch
-        {
-            ScreenSave => $"Screens/{elementSave.Name}",
-            ComponentSave => $"Components/{elementSave.Name}",
-            StandardElementSave => $"Standards/{elementSave.Name}",
-            _ => elementSave.Name
-        };
+        string qualifiedNewName = ElementReference.GetQualifiedName(elementSave, elementSave.Name);
 
         foreach (var referenceChange in changes.VariableReferenceChanges)
         {
