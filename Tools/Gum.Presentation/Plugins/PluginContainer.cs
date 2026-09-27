@@ -16,8 +16,8 @@ namespace Gum.Plugins
 
         /// <summary>
         /// Whether the plugin receives events. Turning it off also disables the menu entries it
-        /// added through <see cref="PluginBase.AddMenuEntry(System.Action?, string[])"/>, so nothing
-        /// calls into a plugin that is off.
+        /// added through <see cref="PluginBase.AddMenuEntry(System.Action?, string[])"/> and hides
+        /// the tabs it added, so nothing calls into or shows a plugin that is off.
         /// </summary>
         public bool IsEnabled
         {
@@ -25,7 +25,7 @@ namespace Gum.Plugins
             set
             {
                 _isEnabled = value;
-                (Plugin as PluginBase)?.SetMenuEntriesSuspended(isSuspended: !value);
+                (Plugin as PluginBase)?.SetAddedUiSuspended(isSuspended: !value);
             }
         }
         private bool _isEnabled;
@@ -101,6 +101,17 @@ namespace Gum.Plugins
             {
                 this.FailureDetails += "\nPlugin also failed during shutdown";
             }
+        }
+
+        /// <summary>
+        /// Turns the plugin back on and forgets its failure without running StartUp again. For test
+        /// hosts that put a plugin an earlier test turned off back as it was.
+        /// </summary>
+        internal void RestoreEnabled()
+        {
+            FailureException = null;
+            FailureDetails = null;
+            IsEnabled = true;
         }
 
         public override string ToString()

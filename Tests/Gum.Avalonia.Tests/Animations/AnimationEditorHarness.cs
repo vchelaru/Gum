@@ -70,7 +70,10 @@ internal sealed class AnimationEditorHarness : IDisposable
             Plugin.TabManager = Services.GetRequiredService<ITabManager>();
             Plugin.DialogService = Dialogs;
             Plugin.Menu = menu;
-            Plugin.StartUp();
+            // Started through its container, which then knows StartUp ran, so turning the plugin
+            // off and on does not run it again.
+            PluginContainer container = new PluginContainer(Plugin);
+            container.StartUpIfNeeded();
             _menuItemAdded = viewMenu.Items.Except(viewItemsBefore).SingleOrDefault();
 
             // Selection, rename, undo and the other plugin events reach this instance through the
@@ -78,7 +81,7 @@ internal sealed class AnimationEditorHarness : IDisposable
             // event too (moving or copying the same sidecar first); the fixture puts the set back.
             _headPlugin = _pluginManager.InitializedPlugins.FirstOrDefault(plugin => plugin is AvaloniaStateAnimationPlugin);
             _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => plugin != _headPlugin).Append(Plugin).ToList();
-            _pluginManager.PluginContainers[Plugin] = new PluginContainer(Plugin);
+            _pluginManager.PluginContainers[Plugin] = container;
 
             _tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
             _tab = _tabManager.AllTabs.Last(tab => tab.Title == "Animations");
