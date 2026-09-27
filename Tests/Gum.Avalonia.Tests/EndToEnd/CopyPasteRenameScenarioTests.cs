@@ -350,7 +350,7 @@ public class CopyPasteRenameScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5248: undoing an instance rename leaves other elements' references on the new name")]
+    [AvaloniaFact]
     [Trait("Feature", "COMBO-007")]
     [Trait("Feature", "EDIT-001")]
     public void UndoingAnInstanceRename_RestoresReferencesInOtherElements()
@@ -366,6 +366,61 @@ public class CopyPasteRenameScenarioTests
 
         Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Background", "Label" });
         tree.SnapshotFiles().ShouldMatch(start, "undoing the rename should restore every reference to the old name");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "COMBO-006")]
+    [Trait("Feature", "EDIT-001")]
+    public void UndoingAComponentRename_RestoresReferencesInOtherElements()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ReferenceButtonBackgroundFromLabelAndPanel(tree);
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "PrimaryButton"; return true; });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/PrimaryButton.Background.Width" });
+
+        tree.Undo();
+
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/Button.Background.Width" });
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the rename should restore references to the old name");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-012")]
+    [Trait("Feature", "EDIT-001")]
+    public void UndoingAnExposedVariableRename_RestoresReferencesInOtherElements()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Panel");
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        grid.TypeAndEnter("Width", "75");
+        tree.Dialogs.AnswerNextUserString("LabelWidth");
+        grid.PickRowMenuItem("Width", "Expose Variable");
+        tree.Click(tree.NodeFor(Component(tree, "Panel")));
+        grid.TypeLinesAndApply("VariableReferences", "Height = Components/Button.LabelWidth");
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+
+        VariableSave exposed = Component(tree, "Button").GetDefaultStateOrThrow().Variables.Single(variable => variable.ExposedAsName == "LabelWidth");
+        tree.Dialogs.AnswerNextUserString("TextWidth");
+        Services.GetRequiredService<Gum.Services.IEditVariableService>().ShowEditVariableWindow(exposed, Component(tree, "Button"));
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/Button.TextWidth" });
+
+        tree.Undo();
+
+        ReferenceLines(Component(tree, "Panel")).ShouldBe(new[] { "Height = Components/Button.LabelWidth" });
+        // Lines rather than files: the rename drops the spaces around "=" (#5270).
+        ReferenceLines(grid.ReadSaved(Component(tree, "Panel"))).ShouldBe(new[] { "Height = Components/Button.LabelWidth" });
 
         tree.AssertOracles();
     }

@@ -161,6 +161,8 @@ A project can reference a file whose name differs from the file on disk only by 
 
 When this happens the Gum tool reports a **GUM0008** entry in the [Errors tab](../editor-tab.md), naming what referenced the file, the name it used, and the name on disk. It is a warning on a file system where the file still loads and an error where it does not. To resolve it, rename the file to match the reference, or change the reference to match the file.
 
+`gumcli check` reports GUM0008 for every file the project loads at runtime. Besides element files and the files elements reference, this covers behavior files, localization files, element animation files, and the textures that a `.fnt` or `.achx` file names. These belong to the whole project rather than one element, so the Errors tab does not list them. A mismatched animation file is always an error, because the game never connects its animations to the element, on any file system.
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

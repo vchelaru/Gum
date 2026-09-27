@@ -1238,6 +1238,201 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void GetAllErrors_ShouldReportGum0008_WhenAchxFrameTextureDiffersOnlyByCase()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Anim/hero.png");
+            AnimationChainListSave achx = new AnimationChainListSave();
+            AnimationChainSave chain = new AnimationChainSave { Name = "Walk" };
+            // Resolved against the .achx's own folder (FileRelativeTextures defaults to true).
+            chain.Frames.Add(new AnimationFrameSave { TextureName = "Hero.png", FrameLength = 0.1f });
+            achx.AnimationChains.Add(chain);
+            FileManager.XmlSerialize(achx, Path.Combine(projectDirectory, "Anim", "walk.achx"));
+            AddComponentWithSpriteSourceFile("HeroHolder", "Anim/walk.achx");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            ErrorResult error = errors.Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+            error.Message.ShouldContain("\"Anim/Hero.png\"");
+            error.Message.ShouldContain("\"Anim/hero.png\"");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Theory]
+    [InlineData(null, "Behaviors/buttonbehavior.behx", "Behaviors/ButtonBehavior.behx")]
+    [InlineData("../Shared/ButtonBehavior.behx", "../Shared/buttonbehavior.behx", "../Shared/ButtonBehavior.behx")]
+    public void GetAllErrors_ShouldReportGum0008_WhenBehaviorFileDiffersOnlyByCase(
+        string? sourcePath, string onDiskPath, string referencedPath)
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, onDiskPath);
+            Project.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior", SourcePath = sourcePath });
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            ErrorResult error = errors.Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+            error.Message.ShouldContain($"\"{referencedPath}\"");
+            error.Message.ShouldContain($"\"{onDiskPath}\"");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldReportGum0008_WhenElementAnimationFileDiffersOnlyByCase()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Components/buttonAnimations.ganx");
+            Project.Components.Add(new ComponentSave { Name = "Button" });
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            ErrorResult error = errors.Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+            error.Message.ShouldContain("\"Components/ButtonAnimations.ganx\"");
+            error.Message.ShouldContain("\"Components/buttonAnimations.ganx\"");
+            // The runtime names the animations after the file on disk and matches element names
+            // exactly, so they never attach, even where the file opens.
+            error.Severity.ShouldBe(ErrorSeverity.Error);
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldReportGum0008_WhenLocalizationFileDiffersOnlyByCase()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Localization/strings.csv");
+            Project.LocalizationFiles.Add("Localization/Strings.csv");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            ErrorResult error = errors.Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+            error.Message.ShouldContain("\"Localization/Strings.csv\"");
+            error.Message.ShouldContain("\"Localization/strings.csv\"");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldReportGum0008OncePerElement_WhenTheProjectPassFindsTheSamePath()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Textures/hero.png");
+            AddComponentWithSpriteSourceFile("HeroHolder", "Textures/Hero.png");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            ErrorResult error = errors.Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+            error.ElementName.ShouldBe("HeroHolder");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldNotReportGum0008_WhenOnlyTheProjectFileIsOpenedUnderADifferentCase()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Project.gumx");
+            Project.FullFileName = Path.Combine(projectDirectory, "project.gumx");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+            errors.ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldReportOnlyTheRowsNoElementOwns()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Textures/hero.png");
+            AddComponentWithSpriteSourceFile("HeroHolder", "Textures/Hero.png");
+            WriteEmptyFile(projectDirectory, "Localization/strings.csv");
+            Project.LocalizationFiles.Add("Localization/Strings.csv");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+            ErrorResult error = errors.ShouldHaveSingleItem();
+            error.Code.ShouldBe("GUM0008");
+            error.Message.ShouldContain("\"Localization/Strings.csv\"");
+            error.FilePath.ShouldBe(Path.Combine(projectDirectory, "Localization/strings.csv"));
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    // Returns <temp>/<guid>/Project and points the project at Project.gumx inside it.
+    private string CreateTempProjectDirectory()
+    {
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumErrorChecker_" + Guid.NewGuid().ToString("N"), "Project");
+        Directory.CreateDirectory(projectDirectory);
+        Project.FullFileName = Path.Combine(projectDirectory, "Project.gumx");
+        return projectDirectory;
+    }
+
+    // Deletes the temp parent too, which also holds a linked file placed beside the project folder.
+    private static void DeleteTempProjectDirectory(string projectDirectory) =>
+        Directory.Delete(Path.GetDirectoryName(projectDirectory)!, recursive: true);
+
+    private static void WriteEmptyFile(string projectDirectory, string relativePath)
+    {
+        string fullPath = Path.GetFullPath(Path.Combine(projectDirectory, relativePath));
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        File.WriteAllText(fullPath, string.Empty);
+    }
+
+    private void AddComponentWithSpriteSourceFile(string componentName, string sourceFile)
+    {
+        ComponentSave component = new ComponentSave { Name = componentName };
+        component.Instances.Add(new InstanceSave { Name = "MySprite", BaseType = "Sprite" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "MySprite.SourceFile",
+            Value = sourceFile,
+            Type = "string",
+            IsFile = true,
+        });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+    }
+
     #endregion
 
     #region GUM0007 — Enum variable value is not defined
