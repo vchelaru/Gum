@@ -44,23 +44,30 @@ public partial class Cursor
         return state;
     }
 
-    private TouchCollection GetTouchCollection()
+    static readonly TouchCollection EmptyTouches = new TouchCollection();
+
+    // raylib reports touch points only on its touch backends (Android, web); desktop GLFW always
+    // reports zero, so desktop keeps reading the mouse.
+    private TouchCollection GetTouchCollection() =>
+        CreateTouchCollection(Raylib.GetTouchPointCount(), Raylib.GetTouchPointId, Raylib.GetTouchPosition);
+
+    /// <summary>
+    /// Builds a <see cref="TouchCollection"/> from raylib-style indexed touch points. Takes the
+    /// reads as delegates so tests can supply touches without touch hardware.
+    /// </summary>
+    internal static TouchCollection CreateTouchCollection(int count, Func<int, int> getId, Func<int, Vector2> getPosition)
     {
-        var touchCollection = new TouchCollection();
-        int touchCount = Raylib.GetTouchPointCount();
-        //TouchLocation[] touches = new TouchLocation[touchCount];
-        //for (int i = 0; i < touchCount; i++)
-        //{
-        //    TouchPoint point = Raylib.GetTouchPoint(i);
-        //    TouchLocation location = new TouchLocation(
-        //        point.id,
-        //        TouchLocationState.Moved,
-        //        new Microsoft.Xna.Framework.Vector2(point.position.X, point.position.Y)
-        //    );
-        //    touches[i] = location;
-        //}
-        //touchCollection = new TouchCollection(touches);
-        return touchCollection;
+        if (count <= 0)
+        {
+            return EmptyTouches;
+        }
+
+        var touches = new TouchLocation[count];
+        for (int i = 0; i < count; i++)
+        {
+            touches[i] = new TouchLocation(getId(i), getPosition(i));
+        }
+        return new TouchCollection(touches);
     }
 
     private int? GetViewportLeft() =>
