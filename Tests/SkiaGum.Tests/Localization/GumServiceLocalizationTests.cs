@@ -50,7 +50,7 @@ public class GumServiceLocalizationTests : IDisposable
         text.Text = "T_OK";
         service.CurrentLanguage = 2;
 
-        ((Text)text.RenderableComponent).RawText.ShouldBe("Aceptar");
+        ((Text)text.RenderableComponent!).RawText!.ShouldBe("Aceptar");
     }
 
     [Fact]

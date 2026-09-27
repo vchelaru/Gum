@@ -151,9 +151,9 @@ public class GumServiceTests
         GumService.Default.Initialize(surface.Canvas, 200, 100);
 
         var renderables = SystemManagers.Default.Renderer.MainLayer.Renderables;
-        int rootIndex = renderables.IndexOf(GumService.Default.Root.RenderableComponent as IRenderableIpso);
-        int popupIndex = renderables.IndexOf(GumService.Default.PopupRoot.RenderableComponent as IRenderableIpso);
-        int modalIndex = renderables.IndexOf(GumService.Default.ModalRoot.RenderableComponent as IRenderableIpso);
+        int rootIndex = renderables.IndexOf((GumService.Default.Root.RenderableComponent as IRenderableIpso)!);
+        int popupIndex = renderables.IndexOf((GumService.Default.PopupRoot.RenderableComponent as IRenderableIpso)!);
+        int modalIndex = renderables.IndexOf((GumService.Default.ModalRoot.RenderableComponent as IRenderableIpso)!);
 
         rootIndex.ShouldBe(0);
         popupIndex.ShouldBeGreaterThan(rootIndex);
