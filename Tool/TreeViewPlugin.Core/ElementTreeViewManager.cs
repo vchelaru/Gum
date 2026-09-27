@@ -56,8 +56,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     // and the using static below) so they can be unit-tested without a tree and referenced from
     // headless code.
 
-    // The head's Project panel, created in Initialize.
-    private IElementTreeView View => _view
+    // The head's Project panel, created in Initialize. Internal so end-to-end tests can drive it.
+    internal IElementTreeView View => _view
         ?? throw new InvalidOperationException($"{nameof(Initialize)} must run before the tree view is used.");
 
     private TreeSelectionModel Selection => View.Selection;
