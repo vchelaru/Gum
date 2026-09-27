@@ -255,7 +255,7 @@ public class DialogScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5303: re-enabling a plugin runs its StartUp again and adds its menu item twice")]
+    [AvaloniaFact]
     [Trait("Feature", "DLG-015")]
     public void ManagePlugins_TurningAPluginOffAndOnAgain_AddsItsMenuItemOnce()
     {
