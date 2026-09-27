@@ -13,4 +13,12 @@
 		<ProjectReference Include="..\..\Runtimes\SkiaGum.Standalone\SkiaGum.Standalone.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- Per-user folders go through FileManager.UserApplicationDataForThisApplication (#5362). -->
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<AdditionalFiles Include="..\..\BannedSymbols.ToolUserData.txt" Link="BannedSymbols.ToolUserData.txt" />
+	</ItemGroup>
 </Project>

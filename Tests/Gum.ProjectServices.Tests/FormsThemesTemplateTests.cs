@@ -83,25 +83,37 @@ public class FormsThemesTemplateTests
             new object[] { folder, "Screens", GumProjectSave.ScreenExtension },
         });
 
-    // Add Forms installs every element file on disk (FormsFileService.GetSourceDestinations) and
-    // gumcli new/add-forms install every manifest line (FormsTemplateCreator), while the tool and
-    // gumcli check only see what the .gumx references. An element in one set but not another is
-    // installed without ever being checked or seen while the theme is edited (#5348).
+    // Add Forms installs every element file on disk (FormsFileService.GetSourceDestinations), while
+    // the tool and gumcli check only see what the .gumx references. An element on disk but not in
+    // the .gumx is installed without ever being checked or seen while the theme is edited (#5348).
     [Theory]
     [MemberData(nameof(TemplateFoldersAndSubfolders))]
-    public void GumxReferences_ShouldMatchElementFilesOnDiskAndManifest(string templateFolder, string subfolder, string extension)
+    public void GumxReferences_ShouldMatchElementFilesOnDisk(string templateFolder, string subfolder, string extension)
     {
         StandardElementsManager.Self.Initialize();
-        string templateDir = Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates",
-            templateFolder.Replace('/', Path.DirectorySeparatorChar));
-        string elementDir = Path.Combine(templateDir, subfolder);
+        string templateDir = GetTemplateDir(templateFolder);
         GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
 
-        List<string> onDisk = Directory.GetFiles(elementDir, "*." + extension, SearchOption.AllDirectories)
-            .Select(file => Path.GetRelativePath(elementDir, file).Replace('\\', '/'))
-            .Select(relative => relative.Substring(0, relative.Length - extension.Length - 1))
+        List<ElementReference> references = subfolder == "Screens" ? project.ScreenReferences : project.ComponentReferences;
+        List<string> inGumx = references
+            .Select(reference => reference.Name)
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
+
+        inGumx.ShouldBe(GetElementNamesOnDisk(templateDir, subfolder, extension),
+            $"{templateFolder}/{subfolder}: .gumx references vs files on disk");
+    }
+
+    // gumcli new/add-forms extract the base template from embedded resources by its manifest
+    // (FormsTemplateCreator), so an element missing from the manifest never reaches a new project.
+    // Themes have no manifest: Add Forms copies their folders directly.
+    [Theory]
+    [InlineData("Components", GumProjectSave.ComponentExtension)]
+    [InlineData("Screens", GumProjectSave.ScreenExtension)]
+    public void FormsTemplateManifest_ShouldMatchElementFilesOnDisk(string subfolder, string extension)
+    {
+        string templateDir = GetTemplateDir("FormsTemplate");
+
         List<string> inManifest = File.ReadAllLines(Path.Combine(templateDir, "manifest.txt"))
             .Select(line => line.Trim())
             .Where(line => line.StartsWith(subfolder + "/", StringComparison.Ordinal)
@@ -109,14 +121,23 @@ public class FormsThemesTemplateTests
             .Select(line => line.Substring(subfolder.Length + 1, line.Length - subfolder.Length - extension.Length - 2))
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
-        List<ElementReference> references = subfolder == "Screens" ? project.ScreenReferences : project.ComponentReferences;
-        List<string> inGumx = references
-            .Select(reference => reference.Name)
+
+        inManifest.ShouldBe(GetElementNamesOnDisk(templateDir, subfolder, extension),
+            $"FormsTemplate/{subfolder}: manifest.txt vs files on disk");
+    }
+
+    private static string GetTemplateDir(string templateFolder) =>
+        Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates",
+            templateFolder.Replace('/', Path.DirectorySeparatorChar));
+
+    private static List<string> GetElementNamesOnDisk(string templateDir, string subfolder, string extension)
+    {
+        string elementDir = Path.Combine(templateDir, subfolder);
+        return Directory.GetFiles(elementDir, "*." + extension, SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(elementDir, file).Replace('\\', '/'))
+            .Select(relative => relative.Substring(0, relative.Length - extension.Length - 1))
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
-
-        inGumx.ShouldBe(onDisk, $"{templateFolder}/{subfolder}: .gumx references vs files on disk");
-        inManifest.ShouldBe(onDisk, $"{templateFolder}/{subfolder}: manifest.txt vs files on disk");
     }
 
     // Same check as "gumcli check-references": a reference whose scalar isn't materialized renders

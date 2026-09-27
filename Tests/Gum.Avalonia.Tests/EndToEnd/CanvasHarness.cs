@@ -66,7 +66,7 @@ internal sealed class CanvasHarness : IDisposable
             Canvas = Plugin.CanvasControl ?? throw new InvalidOperationException("The editor tab plugin built no canvas.");
             AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
             Control tab = (Control)tabManager.AllTabs.Single(candidate => candidate.Title == "Editor").Content;
-            _driver = new HeadlessWindowDriver(tab, width: 1000, height: 800, framesFolderName: "GumCanvas", contentOutlivesTest: true);
+            _driver = new HeadlessWindowDriver(tab, width: 1000, height: 800, framesFolderName: "GumCanvas");
             AppWideWindowInput.RouteHotkeys(_driver.Window,
                 Services.GetRequiredService<IHotkeyManager>(),
                 Services.GetRequiredService<AvaloniaModifierKeyState>());
