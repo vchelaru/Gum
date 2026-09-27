@@ -7,7 +7,9 @@ namespace Gum.Undo;
 /// <summary>
 /// One variable change made on an element other than the one that owns the undo entry it's attached
 /// to - for example, deleting a state removes MyButton.VisibilityState wherever another element set
-/// it, and renaming the state rewrites that value. Captured when the change is made so the owning
+/// it, and renaming the state rewrites that value. A change holds either a variable
+/// (<see cref="Before"/>/<see cref="After"/>) or a variable list such as VariableReferences
+/// (<see cref="BeforeList"/>/<see cref="AfterList"/>). Captured when the change is made so the owning
 /// element's undo entry can reverse it on undo and re-apply it on redo, without the other element
 /// needing its own undo entry. See ADR 0016.
 /// </summary>
@@ -44,6 +46,22 @@ public class CrossElementVariableChange
     public VariableSave? After { get; set; }
 
     /// <summary>
+    /// A copy of the variable list before the change, for a list modification such as rewriting
+    /// VariableReferences lines. Null for a variable change.
+    /// </summary>
+    public VariableListSave? BeforeList { get; set; }
+
+    /// <summary>
+    /// A copy of the variable list after the change. Null for a variable change.
+    /// </summary>
+    public VariableListSave? AfterList { get; set; }
+
+    /// <summary>
+    /// The unqualified name of the changed variable or list, used to notify plugins on replay.
+    /// </summary>
+    public string RootName => (BeforeList ?? AfterList)?.GetRootName() ?? (After ?? Before)!.GetRootName();
+
+    /// <summary>
     /// Copies <paramref name="variable"/> as <see cref="Before"/>. Call before the change; a removal
     /// needs nothing more, a modification calls <see cref="CaptureAfter"/> once it is done.
     /// </summary>
@@ -65,5 +83,29 @@ public class CrossElementVariableChange
     public void CaptureAfter(VariableSave variable)
     {
         After = variable.Clone();
+    }
+
+    /// <summary>
+    /// Copies <paramref name="list"/> as <see cref="BeforeList"/>. Call before modifying the list, then
+    /// <see cref="CaptureAfter(VariableListSave)"/> once it is done.
+    /// </summary>
+    public static CrossElementVariableChange CaptureBefore(ElementSave container, StateSave state, VariableListSave list)
+    {
+        return new CrossElementVariableChange
+        {
+            Container = container,
+            Instance = string.IsNullOrEmpty(list.SourceObject) ? null : container.GetInstance(list.SourceObject),
+            State = state,
+            CategoryName = container.Categories.FirstOrDefault(category => category.States.Contains(state))?.Name,
+            BeforeList = list.Clone(),
+        };
+    }
+
+    /// <summary>
+    /// Records the modified list as <see cref="AfterList"/>.
+    /// </summary>
+    public void CaptureAfter(VariableListSave list)
+    {
+        AfterList = list.Clone();
     }
 }

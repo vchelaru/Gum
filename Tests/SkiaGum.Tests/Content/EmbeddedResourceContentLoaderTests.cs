@@ -104,6 +104,49 @@ public class EmbeddedResourceContentLoaderTests
         }
     }
 
+    // #5255: gumcli pack writes the .gumpkg next to the loose content, so a stale loose copy often
+    // sits at the same path the bundle serves. The hook wins, as FileManager.GetStreamForFile does on
+    // every other backend. The loose copy here is undecodable, so only the hook's bytes can load.
+    [Theory]
+    [InlineData("image.png")]
+    [InlineData("vector.svg")]
+    [InlineData("animation.json")]
+    [InlineData("font.ttf")]
+    public void LoadContent_WhenHookAndLooseFileBothHaveTheFile_ShouldLoadFromTheHook(string fileName)
+    {
+        byte[] contentBytes = CreateContentBytes(fileName);
+        string directory = Path.Combine(Path.GetTempPath(), "GumSkiaHookWins_" + Guid.NewGuid().ToString("N"));
+        string loosePath = Path.Combine(directory, fileName);
+        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
+
+        try
+        {
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(loosePath, "stale loose copy, not valid content");
+            FileManager.CustomGetStreamFromFile = requestedPath =>
+                requestedPath.Contains(directory)
+                    ? new MemoryStream(contentBytes)
+                    : throw new FileNotFoundException($"Unexpected read of '{requestedPath}'.", requestedPath);
+
+            EmbeddedResourceContentLoader loader = new EmbeddedResourceContentLoader();
+
+            object? loaded = Path.GetExtension(fileName) switch
+            {
+                ".png" => loader.LoadContent<SKBitmap>(loosePath),
+                ".svg" => loader.LoadContent<Svg.Skia.SKSvg>(loosePath),
+                ".json" => loader.LoadContent<SkiaSharp.Skottie.Animation>(loosePath),
+                _ => loader.LoadContent<SKTypeface>(loosePath),
+            };
+
+            loaded.ShouldNotBeNull();
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static byte[] CreateContentBytes(string fileName)
     {
         switch (Path.GetExtension(fileName))

@@ -104,6 +104,13 @@ namespace ToolsUtilities
 
         #region Delegates
 
+        /// <summary>
+        /// Host stream hook (a .gumpkg bundle, a zip, a mobile asset store). <see cref="GetStreamForFile"/>
+        /// asks it before disk, so a file it serves wins over a loose copy at the same path. To let
+        /// disk serve a file the hook doesn't have, return null or throw
+        /// <see cref="FileNotFoundException"/> or <see cref="DirectoryNotFoundException"/>; any other
+        /// exception fails the read.
+        /// </summary>
         public static Func<string, Stream>? CustomGetStreamFromFile;
 
         #endregion
