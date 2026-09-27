@@ -5,6 +5,7 @@ using RenderingLibrary;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -652,6 +653,73 @@ public class GumProjectSaveTests : BaseTestClass
 
         project.ScreenReferences.Count.ShouldBe(1);
         project.ScreenReferences[0].Name.ShouldBe("MainMenu");
+    }
+
+    // Czech collation sorts "ch" after "h", so a CurrentCulture sort orders these two names
+    // differently on a cs-CZ machine than on an en-US one, and the project re-saves reordered
+    // there (#5207).
+    [Fact]
+    public void SortElementsAndReferencesByName_OrdersTheSame_UnderADifferentCulture()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("cs-CZ");
+            GumProjectSave project = new GumProjectSave();
+            project.ComponentReferences.Add(new ElementReference { Name = "HealthBar", ElementType = ElementType.Component });
+            project.ComponentReferences.Add(new ElementReference { Name = "CheckBox", ElementType = ElementType.Component });
+            project.Components.Add(new ComponentSave { Name = "HealthBar" });
+            project.Components.Add(new ComponentSave { Name = "CheckBox" });
+
+            project.SortElementsAndReferencesByName();
+
+            project.ComponentReferences.Select(item => item.Name).ShouldBe(new[] { "CheckBox", "HealthBar" });
+            project.Components.Select(item => item.Name).ShouldBe(new[] { "CheckBox", "HealthBar" });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    // Loading sorts every reference list by name, so a list saved in the order its entries were
+    // added (a new project's standards, a component added after others) would reorder on the next
+    // save after reopening (#5194). Save writes the same order load produces.
+    [Theory]
+    [InlineData("Project.gumx")]
+    [InlineData("Project.gumj")]
+    public void Save_WritesReferencesInNameOrder_WhenAddedOutOfOrder(string projectFileName)
+    {
+        string folder = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try
+        {
+            GumProjectSave project = new GumProjectSave { Version = GumProjectSave.NativeVersion };
+            project.ScreenReferences.Add(new ElementReference { Name = "Title", ElementType = ElementType.Screen });
+            project.ScreenReferences.Add(new ElementReference { Name = "Options", ElementType = ElementType.Screen });
+            project.ComponentReferences.Add(new ElementReference { Name = "Slider", ElementType = ElementType.Component });
+            project.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+            project.StandardElementReferences.Add(new ElementReference { Name = "Text", ElementType = ElementType.Standard });
+            project.StandardElementReferences.Add(new ElementReference { Name = "Container", ElementType = ElementType.Standard });
+            project.BehaviorReferences.Add(new Gum.DataTypes.Behaviors.BehaviorReference { Name = "SliderBehavior" });
+            project.BehaviorReferences.Add(new Gum.DataTypes.Behaviors.BehaviorReference { Name = "ButtonBehavior" });
+            string projectPath = Path.Combine(folder, projectFileName);
+            Directory.CreateDirectory(folder);
+
+            project.Save(projectPath, saveElements: false);
+
+            GumProjectSave loaded = GumProjectSave.Load(projectPath, out _)!;
+            loaded.ScreenReferences.Select(item => item.Name).ShouldBe(new[] { "Options", "Title" });
+            loaded.ComponentReferences.Select(item => item.Name).ShouldBe(new[] { "Button", "Slider" });
+            loaded.StandardElementReferences.Select(item => item.Name).ShouldBe(new[] { "Container", "Text" });
+            loaded.BehaviorReferences.Select(item => item.Name).ShouldBe(new[] { "ButtonBehavior", "SliderBehavior" });
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using Gum.Renderables;
+using RenderingLibrary;
 using Shouldly;
 using System;
 using NineSlice = Gum.Renderables.NineSlice;
@@ -13,7 +14,7 @@ namespace RaylibGum.Tests.Renderables;
 /// <c>TextBoxBase.RefreshTemplateFromSelectionInstance</c> can clone a SelectionInstance
 /// template without going down the null-template path that NREs.
 /// </summary>
-public class RenderableCloneTests
+public class RenderableCloneTests : BaseTestClass
 {
     [Fact]
     public void LinePolygon_Clone_DoesNotSharePoints()
@@ -139,6 +140,19 @@ public class RenderableCloneTests
         var clone = (Text)((ICloneable)original).Clone();
 
         clone.Children.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Text_Clone_DoesNotShareWrappedText()
+    {
+        Text original = new(SystemManagers.Default) { Width = null };
+        original.RawText = "Original";
+
+        Text clone = (Text)((ICloneable)original).Clone();
+        clone.RawText = "Changed";
+
+        original.WrappedText.ShouldBe(new[] { "Original" });
+        clone.WrappedText.ShouldBe(new[] { "Changed" });
     }
 
     [Fact]

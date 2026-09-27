@@ -214,25 +214,11 @@ namespace Gum.DataTypes
         }
 
         /// <summary>
-        /// Sorts the project's elements, behaviors, and their reference lists by name. Malformed
-        /// projects (missing or nil entries, entries with no name) are tolerated rather than
-        /// failing the load - unnamed entries sort to the front.
+        /// Sorts the project's elements, behaviors, and their reference lists by name; see
+        /// <see cref="GumProjectSave.SortElementsAndReferencesByName"/>.
         /// </summary>
-        public static void SortElementAndBehaviors(this GumProjectSave gumProjectSave)
-        {
-            gumProjectSave.ScreenReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-            gumProjectSave.ComponentReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-            gumProjectSave.StandardElementReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-            gumProjectSave.BehaviorReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-
-            gumProjectSave.Screens?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-            gumProjectSave.Components?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-            gumProjectSave.StandardElements?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-            gumProjectSave.Behaviors?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
-        }
-
-        private static int CompareByName(string? first, string? second) =>
-            string.Compare(first, second, StringComparison.CurrentCulture);
+        public static void SortElementAndBehaviors(this GumProjectSave gumProjectSave) =>
+            gumProjectSave.SortElementsAndReferencesByName();
 
         /// <summary>
         /// Adds any Standard Elements that have been created since the project was last saved.  This should be called

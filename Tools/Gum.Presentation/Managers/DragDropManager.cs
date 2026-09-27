@@ -790,7 +790,9 @@ public class DragDropManager : IDragDropManager
         }
 
         string folderName = draggedFolderNode.Text;
-        string newFullPath = targetFullPath.FullPath + folderName + "\\";
+        // Through FilePath so the separator is the platform's own: a backslash is a file name
+        // character on macOS and Linux, where it would end up in the folder's name.
+        string newFullPath = new FilePath(targetFullPath.FullPath + folderName + "/").FullPath;
 
         if (Directory.Exists(newFullPath))
         {

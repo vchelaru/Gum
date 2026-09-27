@@ -32,6 +32,12 @@ public interface ICommandLineManager
     string? ElementName { get; }
 
     /// <summary>
+    /// Why the requested command can't run (an option missing its project file, say), or null. The
+    /// head reports it on stderr and exits with a failure code.
+    /// </summary>
+    string? UsageError { get; }
+
+    /// <summary>
     /// Parses the process command-line arguments (<see cref="System.Environment.GetCommandLineArgs"/>)
     /// and populates this manager's properties accordingly.
     /// </summary>
