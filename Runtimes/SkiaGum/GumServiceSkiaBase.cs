@@ -78,6 +78,32 @@ public abstract class GumServiceSkiaBase : IGumService
     }
 
     /// <summary>
+    /// Re-applies all styles on <see cref="Root"/>, <see cref="PopupRoot"/> and
+    /// <see cref="ModalRoot"/>. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/> to push variable
+    /// reference changes to all live visuals. Forms runtime state (typed text, caret, scroll
+    /// positions) is preserved.
+    /// </summary>
+    public void RefreshStyles()
+    {
+        Root?.RefreshStyles();
+        PopupRoot?.RefreshStyles();
+        ModalRoot?.RefreshStyles();
+    }
+
+    /// <summary>
+    /// Re-applies all styles on <paramref name="target"/> and its children, preserving Forms
+    /// runtime state. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/> to push variable
+    /// reference changes to live visuals in a specific subtree.
+    /// </summary>
+    /// <param name="target">The root of the subtree to refresh.</param>
+    public void RefreshStyles(GraphicalUiElement target)
+    {
+        target?.RefreshStyles();
+    }
+
+    /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
     /// like <see cref="GraphicalUiElement.AddToRoot()"/>
     /// to guard against calls made before Initialize.
@@ -413,6 +439,10 @@ public abstract class GumServiceSkiaBase : IGumService
         // code-only Forms control got no Visual unless a .gumx project happened to define one
         // for it (issue #4452).
         FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
+
+        // Lets RefreshStyles keep typed text, caret, and scroll positions (issue #5229). Installed
+        // per Initialize rather than in the constructor so a re-initialize after teardown gets them.
+        FormsRefreshStylesHooks.Install();
 
         Root.AddToManagers(SystemManagers.Default);
         Root.UpdateLayout();
