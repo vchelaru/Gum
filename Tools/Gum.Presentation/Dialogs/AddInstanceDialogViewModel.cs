@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -7,6 +8,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Logic;
 using Gum.ToolStates;
+using Gum.Undo;
 
 namespace Gum.Dialogs;
 
@@ -25,6 +27,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IUndoManager _undoManager;
     
     public bool IsAddingAsParentToSelectedInstance { get; set; }
 
@@ -32,8 +35,10 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         ISelectedState selectedState,
         INameVerifier nameVerifier, 
         IAddInstanceLogic addInstanceLogic,
-        ISetVariableLogic setVariableLogic)
+        ISetVariableLogic setVariableLogic,
+        IUndoManager undoManager)
     {
+        _undoManager = undoManager;
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _addInstanceLogic = addInstanceLogic;
@@ -58,7 +63,8 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
                 return;
             }
 
-            // The new parent is created at the root, then takes the focused instance's place.
+            // The new parent is created at the root, then takes the focused instance's place, as one undo step.
+            using IDisposable undoLock = _undoManager.RequestLock();
             InstanceSave? newInstance = _addInstanceLogic.AddInstance(elementToAdd, selectedElement, Value);
             if (newInstance != null)
             {
