@@ -43,6 +43,9 @@ namespace Gum.CommandLine
             private set;
         }
 
+        /// <inheritdoc/>
+        public string? UsageError { get; private set; }
+
         #endregion
 
         public CommandLineManager(
@@ -116,14 +119,30 @@ namespace Gum.CommandLine
 
                     }
                 }
-
-
             }
+
+            // Checked after the loop: the project may come before or after the option.
+            if (ShouldCodeGenAll && GlueProjectToLoad == null)
+            {
+                ReportUsageError("--generatecode requires a project file");
+            }
+        }
+
+        private void ReportUsageError(string message)
+        {
+            // The first problem is the one reported on exit; later ones still reach the output.
+            UsageError ??= message;
+            _guiCommands.PrintOutput(message);
         }
 
         private async Task HandleRebuildFontCommand(string[] commandLineArgs, int index)
         {
-            // param 1 should be the .gumx
+            // The argument after the option is the project to rebuild.
+            if (index + 1 >= commandLineArgs.Length || !GumProjectSave.IsProjectFile(commandLineArgs[index + 1]))
+            {
+                ReportUsageError("--rebuildfonts requires a project file");
+                return;
+            }
 
             var gumxFile = commandLineArgs[index + 1];
 

@@ -245,9 +245,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         {
             if(_commandLineManager.Value.ShouldCodeGenAll)
             {
+                // CommandLineManager has already reported the missing project as a usage error.
                 if (_commandLineManager.Value.GlueProjectToLoad is not { } projectToLoad)
                 {
-                    _guiCommands.PrintOutput("--generatecode requires a project file");
                     return;
                 }
 

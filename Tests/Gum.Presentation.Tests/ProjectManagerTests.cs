@@ -122,8 +122,8 @@ public class ProjectManagerTests : BaseTestClass
         // and the mocked messenger has none.
         Task initialize = _projectManager.Initialize();
 
+        // The command-line manager reports the missing project (CommandLineManagerTests).
         _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
-        _guiCommands.Verify(g => g.PrintOutput("--generatecode requires a project file"), Times.Once);
         await initialize;
     }
 
