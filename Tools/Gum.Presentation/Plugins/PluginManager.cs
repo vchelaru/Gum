@@ -1111,8 +1111,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
                 if (!instance._pluginEnablementStore.IsDisabled(plugin.UniqueId))
                 {
-
-                    plugin.StartUp();
+                    pluginContainer.StartUpIfNeeded();
                 }
                 else
                 {
@@ -1211,19 +1210,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     public static bool ShutDownPlugin(IPlugin pluginToShutDown)
     {
-        return ShutDownPlugin(pluginToShutDown, PluginShutDownReason.PluginInitiated);
+        return mGlobalInstance.ShutDownPlugin(pluginToShutDown, PluginShutDownReason.PluginInitiated);
     }
 
-    internal static bool ShutDownPlugin(IPlugin pluginToShutDown,
+    private bool ShutDownPlugin(IPlugin pluginToShutDown,
         PluginShutDownReason shutDownReason)
     {
         bool doesPluginWantToShutDown = true;
-        PluginContainer? container = null;
-
-        if (mGlobalInstance.mPluginContainers.ContainsKey(pluginToShutDown))
-        {
-            container = mGlobalInstance.mPluginContainers[pluginToShutDown];
-        }
+        mPluginContainers.TryGetValue(pluginToShutDown, out PluginContainer? container);
 
         try
         {
@@ -1243,15 +1237,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         if (shutDownReason == PluginShutDownReason.UserDisabled)
         {
-            mGlobalInstance._pluginEnablementStore.Disable(pluginToShutDown.UniqueId);
+            _pluginEnablementStore.Disable(pluginToShutDown.UniqueId);
         }
 
         return doesPluginWantToShutDown;
-    }
-
-    internal static void ReenablePlugin(IPlugin pluginToReenable)
-    {
-        mGlobalInstance._pluginEnablementStore.Enable(pluginToReenable.UniqueId);
     }
 
     /// <inheritdoc/>
@@ -1334,8 +1323,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         container.IsEnabled = true;
         try
         {
-            container.Plugin.StartUp();
-            ReenablePlugin(container.Plugin);
+            // A plugin that already started keeps what its StartUp added while it was off, so
+            // turning it back on only flips IsEnabled; one disabled since load starts up now.
+            container.StartUpIfNeeded();
+            _pluginEnablementStore.Enable(container.Plugin.UniqueId);
         }
         catch (Exception exception)
         {
