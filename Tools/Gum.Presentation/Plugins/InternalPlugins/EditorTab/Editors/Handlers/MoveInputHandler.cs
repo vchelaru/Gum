@@ -96,13 +96,11 @@ public class MoveInputHandler : InputHandlerBase
 
     private void ApplyCursorMovement()
     {
-        var cursor = Context.Cursor;
-
         float xToMoveBy = Context.IsXMovementEnabled
-            ? cursor.XChange / Context.Camera.Zoom
+            ? GetCursorXChange()
             : 0;
         float yToMoveBy = Context.IsYMovementEnabled
-            ? cursor.YChange / Context.Camera.Zoom
+            ? GetCursorYChange()
             : 0;
 
         var vector2 = new Vector2(xToMoveBy, yToMoveBy);

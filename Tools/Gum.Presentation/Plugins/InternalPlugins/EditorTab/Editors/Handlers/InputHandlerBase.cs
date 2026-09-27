@@ -50,6 +50,7 @@ public abstract class InputHandlerBase : IInputHandler
 
         if (Context.GrabbedState.HasMovedEnough)
         {
+            Context.GrabbedState.BeginDragFrame();
             OnDrag();
         }
     }
@@ -74,14 +75,19 @@ public abstract class InputHandlerBase : IInputHandler
 
     #region Helper Methods
 
+    /// <summary>
+    /// This drag frame's cursor movement in world units. Handlers read this rather than the
+    /// cursor's own frame change, which leaves out the movement made inside the dead zone.
+    /// </summary>
     protected float GetCursorXChange()
     {
-        return Context.Cursor.XChange / Context.Camera.Zoom;
+        return Context.GrabbedState.DragXChange / Context.Camera.Zoom;
     }
 
+    /// <inheritdoc cref="GetCursorXChange"/>
     protected float GetCursorYChange()
     {
-        return Context.Cursor.YChange / Context.Camera.Zoom;
+        return Context.GrabbedState.DragYChange / Context.Camera.Zoom;
     }
 
     protected void MarkAsChanged()
