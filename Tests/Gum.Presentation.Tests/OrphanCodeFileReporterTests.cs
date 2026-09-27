@@ -159,6 +159,38 @@ public class OrphanCodeFileReporterTests : BaseTestClass
     }
 
     [Fact]
+    public async Task RefreshAsync_ShouldDropThePreviousProjectsOrphans_BeforeScanningANewProject()
+    {
+        // A row left over from the old project would offer to delete that project's file (#5290).
+        ArrangeScan(new OrphanCodeFile(
+            new FilePath("/old/Stale.Generated.cs"), OrphanCodeFileKind.Generated, "Stale"));
+        await _sut.RefreshAsync(new GumProjectSave(), new CodeOutputProjectSettings());
+        _dispatcher.RunPending();
+        int raiseCount = 0;
+        _sut.OrphansChanged += () => raiseCount++;
+
+        await _sut.RefreshAsync(new GumProjectSave(), new CodeOutputProjectSettings());
+
+        _sut.Orphans.ShouldBeEmpty("the new project's scan result is still waiting for the UI thread");
+        raiseCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepOrphans_WhileRescanningTheSameProject()
+    {
+        OrphanCodeFile orphan = new OrphanCodeFile(
+            new FilePath("/game/Screens/DeletedScreen.Generated.cs"), OrphanCodeFileKind.Generated, "DeletedScreen");
+        ArrangeScan(orphan);
+        GumProjectSave project = new GumProjectSave();
+        await _sut.RefreshAsync(project, new CodeOutputProjectSettings());
+        _dispatcher.RunPending();
+
+        await _sut.RefreshAsync(project, new CodeOutputProjectSettings());
+
+        _sut.Orphans.ShouldBe(new[] { orphan });
+    }
+
+    [Fact]
     public async Task Resolve_ShouldMoveGeneratedFileToRecycleBin_WithoutPrompting()
     {
         FilePath filePath = new FilePath("/game/Screens/DeletedScreen.Generated.cs");

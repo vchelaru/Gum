@@ -34,6 +34,7 @@ public class OrphanCodeFileReporter
     private readonly IOutputManager _outputManager;
     private readonly List<OrphanCodeFile> _orphans;
     private CancellationTokenSource? _currentScan;
+    private GumProjectSave? _scannedProject;
 
     public OrphanCodeFileReporter(
         IOrphanCodeFileScanService scanService,
@@ -62,7 +63,8 @@ public class OrphanCodeFileReporter
     public event Action? OrphansChanged;
 
     /// <summary>
-    /// Re-runs the scan and replaces <see cref="Orphans"/>; clears the list when no project is loaded.
+    /// Re-runs the scan and replaces <see cref="Orphans"/>. The list clears as soon as the refresh
+    /// starts when <paramref name="project"/> is a different project (or none) from the last refresh.
     /// Call it on the UI thread: the project is read there, the disk walk runs on the thread pool, and
     /// the result is posted back through <see cref="IDispatcher"/>, where <paramref name="onApplied"/>
     /// also runs. Starting a new refresh cancels the previous one and discards its result. The
@@ -76,10 +78,18 @@ public class OrphanCodeFileReporter
         CancellationTokenSource scan = new CancellationTokenSource();
         _currentScan = scan;
 
-        if (project == null)
+        // Rows found for another project would offer to delete that project's files, so they go now
+        // rather than when this scan's result arrives. A rescan of the same project keeps them.
+        bool isDifferentProject = project != _scannedProject;
+        _scannedProject = project;
+        if (isDifferentProject && _orphans.Count > 0)
         {
             _orphans.Clear();
             OrphansChanged?.Invoke();
+        }
+
+        if (project == null)
+        {
             return;
         }
 
