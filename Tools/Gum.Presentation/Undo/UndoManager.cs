@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using ToolsUtilities;
 
 namespace Gum.Undo;
 
@@ -27,6 +28,10 @@ public class UndoManager : IUndoManager
     private readonly IReadOnlyList<IUndoStrategy> _strategies;
 
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
+
+    // The project of the last load. Its file name is read at the next load, not stored now: a new
+    // project gets its file only when first saved.
+    private GumProjectSave? _loadedProject;
 
     public UndoSnapshot? RecordedSnapshot => _elementStrategy.RecordedSnapshot;
     public ElementHistory? CurrentElementHistory => _elementStrategy.CurrentElementHistory;
@@ -143,4 +148,22 @@ public class UndoManager : IUndoManager
         _elementStrategy.Clear();
         _behaviorStrategy.Clear();
     }
+
+    /// <inheritdoc/>
+    public void HandleProjectLoaded(GumProjectSave project)
+    {
+        if (IsSameFile(_loadedProject?.FullFileName, project.FullFileName))
+        {
+            _elementStrategy.CarryOverTo(project);
+            _behaviorStrategy.CarryOverTo(project);
+        }
+        else
+        {
+            ClearAll();
+        }
+        _loadedProject = project;
+    }
+
+    private static bool IsSameFile(string? first, string? second) =>
+        !string.IsNullOrEmpty(first) && !string.IsNullOrEmpty(second) && new FilePath(first) == new FilePath(second);
 }

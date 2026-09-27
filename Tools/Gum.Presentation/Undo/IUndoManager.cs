@@ -30,6 +30,13 @@ public interface IUndoManager
 
     void ClearAll();
 
+    /// <summary>
+    /// Reacts to a project load. Reopening the file that was already open (an import or Add Forms
+    /// saves and reopens the project) keeps the history of every element and behavior the reload
+    /// left unchanged, moved onto the reloaded objects; anything else clears all history.
+    /// </summary>
+    void HandleProjectLoaded(GumProjectSave project);
+
     void RecordState();
     void RecordBehaviorState();
     /// <summary>

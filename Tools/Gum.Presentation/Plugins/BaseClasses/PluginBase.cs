@@ -34,7 +34,20 @@ public abstract class PluginBase : IPlugin
 
     [Import] public IGuiCommands GuiCommands { get => _guiCommands; set => _guiCommands = value; }
     [Import] public IFileCommands FileCommands { get => _fileCommands; set => _fileCommands = value; }
-    [Import] public ITabManager TabManager { get => _tabManager; set => _tabManager = value; }
+    private ITabManager _importedTabManager = null!;
+    /// <summary>
+    /// The head's tab manager as imported. <see cref="_tabManager"/> wraps it so the tabs a plugin
+    /// adds are hidden while the plugin is off.
+    /// </summary>
+    [Import] public ITabManager TabManager
+    {
+        get => _importedTabManager;
+        set
+        {
+            _importedTabManager = value;
+            _tabManager = TrackTabsFrom(value);
+        }
+    }
     [Import] public IDialogService DialogService { get => _dialogService; set => _dialogService = value; }
 
     private Gum.Menus.MenuModel? _menu;
@@ -44,8 +57,11 @@ public abstract class PluginBase : IPlugin
     // Leaf items this plugin added, so turning the plugin off can disable them (a top-level menu
     // returned for a one-part path may be shared with other plugins, so it is not tracked).
     private readonly List<Gum.Menus.MenuItemModel> _addedMenuEntries = new();
-    // Each entry's own IsEnabled from when the plugin was turned off; null while it is on.
+    // Tabs added through a tab manager wrapped by TrackTabsFrom, and not removed since.
+    private readonly List<IPluginTab> _addedTabs = new();
+    // What the plugin itself had set when it was turned off; null while it is on.
     private Dictionary<Gum.Menus.MenuItemModel, bool>? _menuEntryStateWhileSuspended;
+    private Dictionary<IPluginTab, bool>? _tabVisibilityWhileSuspended;
 
     /// <summary>Adds a menu item at the given path (top menu, submenus, item) and returns its model.</summary>
     public Gum.Menus.MenuItemModel AddMenuEntry(IEnumerable<string> menuAndSubmenus, Action? click = null)
@@ -55,23 +71,32 @@ public abstract class PluginBase : IPlugin
         Gum.Menus.MenuItemModel item = menu.AddMenuItem(path, click);
         if (path.Count > 1)
         {
+            DropMenuEntriesNoLongerInTheMenu();
             _addedMenuEntries.Add(item);
         }
         return item;
     }
 
     /// <summary>
-    /// Disables every menu entry this plugin added while it is turned off, and restores each
-    /// entry's own enabled state when it is turned back on. Called by <see cref="PluginContainer"/>.
+    /// While the plugin is off, disables every menu entry it added and hides every tab it added;
+    /// turning it back on restores each one's own enabled state and visibility. Called by
+    /// <see cref="PluginContainer"/>.
     /// </summary>
-    internal void SetMenuEntriesSuspended(bool isSuspended)
+    internal void SetAddedUiSuspended(bool isSuspended)
     {
         if (isSuspended && _menuEntryStateWhileSuspended == null)
         {
+            DropMenuEntriesNoLongerInTheMenu();
             _menuEntryStateWhileSuspended = _addedMenuEntries.ToDictionary(item => item, item => item.IsEnabled);
             foreach (Gum.Menus.MenuItemModel item in _addedMenuEntries)
             {
                 item.IsEnabled = false;
+            }
+
+            _tabVisibilityWhileSuspended = _addedTabs.ToDictionary(tab => tab, tab => tab.IsVisible);
+            foreach (IPluginTab tab in _addedTabs)
+            {
+                tab.Hide();
             }
         }
         else if (!isSuspended && _menuEntryStateWhileSuspended != null)
@@ -81,6 +106,38 @@ public abstract class PluginBase : IPlugin
                 pair.Key.IsEnabled = pair.Value;
             }
             _menuEntryStateWhileSuspended = null;
+
+            // A tab removed while the plugin was off (a failed plugin's ShutDown) stays removed.
+            foreach (KeyValuePair<IPluginTab, bool> pair in _tabVisibilityWhileSuspended!)
+            {
+                if (pair.Value && _addedTabs.Contains(pair.Key))
+                {
+                    pair.Key.Show();
+                }
+            }
+            _tabVisibilityWhileSuspended = null;
+        }
+    }
+
+    // A plugin may take its item out of the menu and add a new one (the Forms plugin does on each
+    // project load); the one it took out is no longer its to disable.
+    private void DropMenuEntriesNoLongerInTheMenu()
+    {
+        if (_addedMenuEntries.Count == 0 || _menu == null)
+        {
+            return;
+        }
+        HashSet<Gum.Menus.MenuItemModel> inMenu = new();
+        AddWithDescendants(_menu.TopLevelItems, inMenu);
+        _addedMenuEntries.RemoveAll(item => !inMenu.Contains(item));
+    }
+
+    private static void AddWithDescendants(IEnumerable<Gum.Menus.MenuItemModel> items, HashSet<Gum.Menus.MenuItemModel> into)
+    {
+        foreach (Gum.Menus.MenuItemModel item in items)
+        {
+            into.Add(item);
+            AddWithDescendants(item.Items, into);
         }
     }
 
@@ -354,6 +411,39 @@ public abstract class PluginBase : IPlugin
     public void RemoveTab(IPluginTab tab)
     {
         _tabManager.RemoveTab(tab);
+    }
+
+    /// <summary>
+    /// Wraps <paramref name="tabManager"/> so the tabs added through it belong to this plugin and are
+    /// hidden while it is off. <see cref="_tabManager"/> is already wrapped; a plugin that receives
+    /// its tab manager through its constructor passes it through this before using it.
+    /// </summary>
+    protected ITabManager TrackTabsFrom(ITabManager tabManager) => new TabOwnershipTracker(tabManager, this);
+
+    /// <summary>Records each tab added through the wrapped manager as <see cref="_owner"/>'s.</summary>
+    private sealed class TabOwnershipTracker : ITabManager
+    {
+        private readonly ITabManager _inner;
+        private readonly PluginBase _owner;
+
+        public TabOwnershipTracker(ITabManager inner, PluginBase owner)
+        {
+            _inner = inner;
+            _owner = owner;
+        }
+
+        public IPluginTab AddControl(object element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
+        {
+            IPluginTab tab = _inner.AddControl(element, tabTitle, tabLocation);
+            _owner._addedTabs.Add(tab);
+            return tab;
+        }
+
+        public void RemoveTab(IPluginTab plugin)
+        {
+            _owner._addedTabs.Remove(plugin);
+            _inner.RemoveTab(plugin);
+        }
     }
 
     #endregion

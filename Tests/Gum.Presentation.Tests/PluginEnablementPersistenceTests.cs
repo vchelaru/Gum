@@ -64,6 +64,20 @@ public class PluginEnablementPersistenceTests : IDisposable
     }
 
     [Fact]
+    public void PluginThatCannotBeUserDisabled_KeepsItsMenuEntriesWhenUnchecked_ButLosesThemWhenItFails()
+    {
+        TestPlugin plugin = new TestPlugin { AllowsUserDisable = false };
+        (PluginManager manager, PluginContainer container) = StartUp(plugin, new PluginEnablementStore(_fileName));
+        MenuItemModel entry = plugin.AddMenuEntry(() => { }, "Content", "Core Item");
+
+        manager.DisableUserPlugin(container);
+        entry.IsEnabled.ShouldBeTrue("unchecking a plugin that cannot be turned off must not suspend it");
+
+        container.Fail(new InvalidOperationException("handler threw"), "Failed in ProjectLoad");
+        entry.IsEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
     public void StartupPlugin_StaleDisabledEntryForPluginThatCannotBeUserDisabled_StartsItAndClearsTheEntry()
     {
         TestPlugin plugin = new TestPlugin { AllowsUserDisable = false };

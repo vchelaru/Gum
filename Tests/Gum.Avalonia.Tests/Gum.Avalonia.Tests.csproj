@@ -25,17 +25,42 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Tool\Gum.Avalonia\Gum.Avalonia.csproj" />
-    <!-- The plugin projects that build without WPF; the host tests compose them. -->
-    <ProjectReference Include="..\..\Gum\ConvertToJsonPlugin\ConvertToJsonPlugin.csproj" />
-    <ProjectReference Include="..\..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" />
-    <ProjectReference Include="..\..\Gum\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.csproj" />
-    <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
-    <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
-    <ProjectReference Include="..\..\Gum\SvgPlugin\SkiaPlugin.csproj" />
+    <!-- The plugin projects that build without WPF; the host tests compose them, and
+         StageHeadPlugins gives the test output the Plugins/ folder the head loads them from. -->
+    <ProjectReference Include="..\..\Gum\ConvertToJsonPlugin\ConvertToJsonPlugin.csproj" HeadPlugin="true" />
+    <ProjectReference Include="..\..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" HeadPlugin="true" />
+    <ProjectReference Include="..\..\Gum\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.csproj" HeadPlugin="true" />
+    <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" HeadPlugin="true" />
+    <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" HeadPlugin="true" />
+    <ProjectReference Include="..\..\Gum\SvgPlugin\SkiaPlugin.csproj" HeadPlugin="true" />
     <!-- PluginAssemblyWriter: stand-in plugins built against another build of the tool. -->
     <ProjectReference Include="..\..\Tests\PluginHostFixture\PluginHostFixture.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+  <!--
+    The end-to-end scenarios run the tool as it ships, so the test output gets the two folders the
+    head's output has: Plugins/<Name>/ and Content/FormsThemes/. Both are copied from the head's
+    output, where each plugin's own post-build staged them (that post-build is the one place the
+    layout is defined). Only the referenced plugins are copied, all rebuilt by this build, so a
+    stale DLL left in the head's folder never reaches a test; both folders are emptied first.
+  -->
+  <Target Name="StageHeadPlugins" AfterTargets="Build">
+    <PropertyGroup>
+      <AvaloniaHeadOutDir>$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/</AvaloniaHeadOutDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_HeadPluginProject Include="@(ProjectReference)" Condition="'%(ProjectReference.HeadPlugin)' == 'true'" />
+      <_HeadPluginFile Include="$(AvaloniaHeadOutDir)Plugins/%(_HeadPluginProject.Filename)/**/*">
+        <PluginName>%(_HeadPluginProject.Filename)</PluginName>
+      </_HeadPluginFile>
+      <_HeadFormsThemeFile Include="$(AvaloniaHeadOutDir)Content/FormsThemes/**/*" />
+    </ItemGroup>
+    <Error Condition="!Exists('$(AvaloniaHeadOutDir)Plugins/%(_HeadPluginProject.Filename)/%(_HeadPluginProject.Filename).dll')" Text="%(_HeadPluginProject.Filename) is not staged in $(AvaloniaHeadOutDir)Plugins; its post-build should have put it there." />
+    <Error Condition="'@(_HeadFormsThemeFile)' == ''" Text="No Forms themes were staged in $(AvaloniaHeadOutDir)Content/FormsThemes; GumFormsPlugin's post-build should have put them there." />
+    <RemoveDir Directories="$(OutDir)Plugins;$(OutDir)Content/FormsThemes" />
+    <Copy SourceFiles="@(_HeadPluginFile)" DestinationFolder="$(OutDir)Plugins/%(PluginName)/%(RecursiveDir)" />
+    <Copy SourceFiles="@(_HeadFormsThemeFile)" DestinationFolder="$(OutDir)Content/FormsThemes/%(RecursiveDir)" />
+  </Target>
 </Project>
