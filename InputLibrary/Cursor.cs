@@ -1,5 +1,6 @@
 using System;
 using Gum.Input;
+using Gum.Wireframe;
 
 namespace InputLibrary
 {
@@ -30,6 +31,12 @@ namespace InputLibrary
         double mLastClickTime = double.NegativeInfinity;
         float mLastClickX;
         float mLastClickY;
+
+        float _pushX;
+        float _pushY;
+        // Set once the pointer leaves the drag dead zone around the push, and kept even if it
+        // comes back, so the release that ends a drag is not a click for double-click purposes.
+        bool _hasDraggedSincePush;
 
         bool mHasBeenSet = false;
         CursorKind mSetCursor = CursorKind.Arrow;
@@ -180,7 +187,25 @@ namespace InputLibrary
 
             mPointerState = mControl?.GetPointerState() ?? default;
 
-            if (PrimaryClick)
+            if (mPointerState.IsLeftDown && !mLastFramePointerState.IsLeftDown)
+            {
+                _pushX = X;
+                _pushY = Y;
+                _hasDraggedSincePush = false;
+            }
+            else if (mPointerState.IsLeftDown &&
+                (Math.Abs(X - _pushX) > GrabbedState.PixelsToMoveBeforeDrag ||
+                 Math.Abs(Y - _pushY) > GrabbedState.PixelsToMoveBeforeDrag))
+            {
+                _hasDraggedSincePush = true;
+            }
+
+            if (PrimaryClick && _hasDraggedSincePush)
+            {
+                // A drag's release can neither complete a double click nor start one.
+                mLastClickTime = double.NegativeInfinity;
+            }
+            else if (PrimaryClick)
             {
                 var timeSinceLastClick =
                     currentTime - mLastClickTime;

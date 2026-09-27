@@ -153,6 +153,12 @@ public class GrabbedState
     }
 
     /// <summary>
+    /// How far, in screen pixels on either axis, the cursor may move from the push before the
+    /// gesture becomes a drag. A release inside this dead zone is a click.
+    /// </summary>
+    public const float PixelsToMoveBeforeDrag = 6;
+
+    /// <summary>
     /// Returns whether the cursor has moved enough from the initial grab point to start applying movement/sizing.
     /// This is initially false to prevent accidental movement when clicking on an object, and stays
     /// true once the drag has started, even if the cursor comes back near the grab point.
@@ -161,7 +167,6 @@ public class GrabbedState
     {
         get
         {
-            const float pixelsToMoveBeforeApplying = 6;
             var cursor = _cursor;
 
             if (!cursor.PrimaryDown)
@@ -170,8 +175,8 @@ public class GrabbedState
             }
 
             return _hasDragStarted ||
-                Math.Abs(cursor.X - CursorPushScreenX) > pixelsToMoveBeforeApplying ||
-                Math.Abs(cursor.Y - CursorPushScreenY) > pixelsToMoveBeforeApplying;
+                Math.Abs(cursor.X - CursorPushScreenX) > PixelsToMoveBeforeDrag ||
+                Math.Abs(cursor.Y - CursorPushScreenY) > PixelsToMoveBeforeDrag;
         }
     }
 

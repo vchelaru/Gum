@@ -210,12 +210,14 @@ public class CanvasScenarioTests
             canvas.SavedValue(button, "Box.X").ShouldBe(60f, canvas.Describe());
             canvas.SavedValue(button, "Box.Y").ShouldBe(40f);
 
-            // Wandering back inside the dead zone mid-drag still moves the box. (Pressed away from
-            // the last release, which a quick release there would take as a double click.)
-            canvas.PressButton(canvas.WindowPointOf(80, 50));
-            canvas.DragTo(canvas.WindowPointOf(90, 50));
-            canvas.DragTo(canvas.WindowPointOf(84, 50));
+            // Wandering back inside the dead zone mid-drag still moves the box. Pressed where the
+            // last drag ended and released within 4 pixels of it: a drag's release is not the
+            // first click of a double click, so this does not punch through (#5286).
+            canvas.PressButton(canvas.WindowPointOf(90, 60));
+            canvas.DragTo(canvas.WindowPointOf(100, 60));
+            canvas.DragTo(canvas.WindowPointOf(94, 60));
             canvas.ReleaseButton();
+            canvas.Project.SelectedState.SelectedInstance.ShouldBeSameAs(box, canvas.Describe());
             canvas.SavedValue(button, "Box.X").ShouldBe(64f, canvas.Describe());
 
             // The bottom-right resize handle sits just outside the corner (124, 80).
