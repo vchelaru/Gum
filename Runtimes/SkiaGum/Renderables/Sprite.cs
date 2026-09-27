@@ -236,7 +236,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             }
 
             SKPaint renderTargetPaint = base.GetCachedPaint(boundingRect, absoluteRotation);
-            canvas.DrawImage(bakedImage, boundingRect, renderTargetPaint);
+            canvas.DrawImage(bakedImage, boundingRect, Renderer.TextureSampling, renderTargetPaint);
             return;
         }
 
@@ -291,7 +291,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
                     if(Image != null)
                     {
-                        canvas.DrawImage(Image, sourceRectangle, boundingRect, paint);
+                        canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
                     }
                     else
                     {
@@ -305,7 +305,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             {
                 if(Image != null)
                 {
-                    canvas.DrawImage(Image, sourceRectangle, boundingRect, paint);
+                    canvas.DrawImage(Image, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
                 }
                 else
                 {
@@ -318,7 +318,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         {
             if (Image != null)
             {
-                canvas.DrawImage(Image, boundingRect, paint);
+                canvas.DrawImage(Image, boundingRect, Renderer.TextureSampling, paint);
             }
             else
             {

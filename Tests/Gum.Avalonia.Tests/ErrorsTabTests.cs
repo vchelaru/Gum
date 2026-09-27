@@ -3,6 +3,8 @@ using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Panels;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Tests.Harness;
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.Errors;
@@ -43,5 +45,30 @@ public class ErrorsTabTests
         ErrorsView errors = window.GetVisualDescendants().OfType<ErrorsView>().Single();
         errors.GetRealizedContainers().Count().ShouldBe(2);
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Rows_ListProjectLevelCaseMismatch_WhateverIsSelected()
+    {
+        // The localization file belongs to the project, not to any element (#5262).
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumErrorsTabProjectErrors");
+        ComponentSave component = fixture.AddComponent("Button");
+        File.WriteAllText(Path.Combine(fixture.ProjectFolder, "strings.csv"), "String ID,English\nT_Hi,Hi\n");
+        fixture.Project.LocalizationFile = "Strings.csv";
+
+        fixture.SaveAndReload();
+
+        AllErrorsViewModel viewModel = GetHeadErrorsViewModel();
+        viewModel.Errors.ShouldContain(error => error.Code == "GUM0008" && error.Message.Contains("Strings.csv"),
+            "with nothing selected");
+        fixture.SelectedState.SelectedElement = fixture.Project.Components.Single(item => item.Name == component.Name);
+        viewModel.Errors.ShouldContain(error => error.Code == "GUM0008" && error.Message.Contains("Strings.csv"),
+            "with an element selected");
+    }
+
+    private static AllErrorsViewModel GetHeadErrorsViewModel()
+    {
+        AvaloniaPluginTab tab = Services.GetRequiredService<AvaloniaTabManager>().AllTabs.Single(item => item.Title == "Errors");
+        return tab.Content as AllErrorsViewModel ?? (AllErrorsViewModel)((Control)tab.Content).DataContext!;
     }
 }

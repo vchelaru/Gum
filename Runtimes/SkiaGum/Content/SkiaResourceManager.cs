@@ -199,20 +199,15 @@ public static class SkiaResourceManager
     /// Opens <paramref name="resourceName"/> through <see cref="FileManager.GetStreamForFile"/>, the
     /// seam the MonoGame and raylib loaders read through, so a host's
     /// <see cref="FileManager.CustomGetStreamFromFile"/> (a .gumpkg bundle, a zip, a mobile asset
-    /// store) is honored. Returns null when neither disk nor the hook has the file, leaving the
-    /// caller to fall back to embedded resources.
+    /// store) is honored. The hook wins over a loose file at the same path, so a bundle overrides
+    /// stale loose copies next to it; disk is the fallback. Returns null when neither has the file,
+    /// leaving the caller to fall back to embedded resources.
     /// </summary>
     private static Stream? TryOpenFile(string resourceName)
     {
         var absoluteFile = GetAbsoluteFilePath(resourceName);
-        // A loose file wins: once a hook is installed GetStreamForFile reads only through it, and a
-        // hook that serves just its bundle would otherwise hide files that exist on disk.
-        if (System.IO.File.Exists(absoluteFile))
-        {
-            return System.IO.File.OpenRead(absoluteFile);
-        }
-        // FileExists probes the hook (and the macOS .app Resources folder), so a missing file costs
-        // no first-chance exception.
+        // FileExists probes disk, the macOS .app Resources folder and the hook, so a missing file
+        // costs no first-chance exception.
         return FileManager.FileExists(absoluteFile)
             ? FileManager.GetStreamForFile(absoluteFile)
             : null;

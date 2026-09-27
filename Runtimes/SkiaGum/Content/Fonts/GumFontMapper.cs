@@ -107,9 +107,9 @@ public class GumFontMapper : FontMapper
     }
 
     /// <summary>
-    /// Reads <paramref name="fullPath"/> through the FileManager stream hook, falling back to disk
-    /// because FileManager routes exclusively to the hook once one is installed — a hook that
-    /// doesn't carry this font must not hide a copy on disk. Null if neither source has it.
+    /// Reads <paramref name="fullPath"/> through <see cref="ToolsUtilities.FileManager.GetStreamForFile"/>,
+    /// which asks the stream hook first and falls back to disk, the same order every other Skia
+    /// content type uses. Null if neither source has it.
     /// </summary>
     private static byte[]? ReadFontBytes(string fullPath)
     {
@@ -122,11 +122,6 @@ public class GumFontMapper : FontMapper
         }
         catch (IOException)
         {
-            if (File.Exists(fullPath))
-            {
-                return File.ReadAllBytes(fullPath);
-            }
-
             return null;
         }
     }
@@ -208,7 +203,7 @@ public class GumFontMapper : FontMapper
     }
 
     private static string GetEmbeddedFontKey(string familyName, string? style) =>
-        $"{familyName} {style}";
+        $"{familyName}\0{style}";
 
     private static string GetStyleSlot(bool isBold, bool isItalic) => (isBold, isItalic) switch
     {

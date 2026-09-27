@@ -269,17 +269,29 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </param>
     /// <remarks>
     /// Reloads the element tree, re-applies *Animations.ganx/.ganj files, and re-applies the project's
-    /// texture filter, matching the render-only base's own capabilities. Skia has no global
-    /// texture-filter setting to re-apply (elided, same as the prior Silk.NET implementation).
+    /// texture filter.
     /// </remarks>
     public void EnableHotReload(string absoluteGumxSourcePath)
     {
         _hotReloadManager = new GumHotReloadManager(
-            applyProjectTextureFilter: _ => { },
+            applyProjectTextureFilter: ApplyProjectTextureFilter,
             loadAnimationsFromProvider: GumAnimationLoader.LoadAnimationsFromProvider,
             disposeCachedAsset: path => LoaderManager.Self.Dispose(path));
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.Start(absoluteGumxSourcePath);
+    }
+
+    /// <summary>
+    /// Applies the project's <see cref="GumProjectSave.TextureFilter"/> to
+    /// <see cref="Renderer.TextureFilter"/> so sprites render with the filtering the editor previewed
+    /// (issue #5231). Runs during project load; assigning <see cref="Renderer.TextureFilter"/> after
+    /// <c>Initialize</c> overrides it.
+    /// </summary>
+    private static void ApplyProjectTextureFilter(GumProjectSave gumProject)
+    {
+        Renderer.TextureFilter = ProjectTextureFilter.UsesLinearFiltering(gumProject)
+            ? SKFilterMode.Linear
+            : SKFilterMode.Nearest;
     }
 
     /// <summary>
@@ -459,6 +471,7 @@ public abstract class GumServiceSkiaBase : IGumService
             }
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
+            ApplyProjectTextureFilter(gumProject);
             // Overrides the code-only defaults registered above with the project's own
             // Forms-behavior visuals, where the project defines one.
             FormsUtilities.RegisterFromFileFormRuntimeDefaults();

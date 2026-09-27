@@ -601,9 +601,7 @@ public partial class GumService : IGumService
     /// </remarks>
     internal static void ApplyProjectTextureFilter(GumProjectSave gumProject)
     {
-        bool useLinearFiltering = string.Equals(gumProject?.TextureFilter, "Linear", StringComparison.Ordinal);
-
-        ApplyTextureFilterPlatform(useLinearFiltering);
+        ApplyTextureFilterPlatform(ProjectTextureFilter.UsesLinearFiltering(gumProject));
     }
 
     private void ApplyStandardElementDefaults(GumProjectSave gumProject)
