@@ -98,7 +98,8 @@ public class GumProjectDependencyWalker
                         fontCache, external, missing);
 
                     // Project-wide only: scoped walks back the tool's per-element error check,
-                    // which should not parse every .fnt/.achx on each refresh.
+                    // which should not parse every .fnt/.achx on each refresh. The tool's one
+                    // project-wide walk (file-watch roots, on project load) does pay it once.
                     CollectFilesReferencedByReferencedFiles(projectRootDirectory,
                         inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
                         fontCache, external, missing);

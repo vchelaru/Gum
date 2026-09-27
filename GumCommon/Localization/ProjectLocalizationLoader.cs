@@ -144,10 +144,12 @@ public static class ProjectLocalizationLoader
         string baseName = Path.GetFileNameWithoutExtension(baseRelativePath);
 
         // A pattern without '/' matches file names in every folder, so keep only this folder's.
+        // Bundle lookups are case-sensitive, as every bundle entry lookup is. The default comparer
+        // matches the path-based loader's OrderBy, so language columns line up in both modes.
         IEnumerable<string> satellites = provider.EnumerateFiles(directory + baseName + ".*.resx")
             .Where(path => path.LastIndexOf('/') == slash
                 && string.CompareOrdinal(path, 0, directory, 0, directory.Length) == 0)
-            .OrderBy(path => path, StringComparer.Ordinal);
+            .OrderBy(path => path);
 
         foreach (string satellite in satellites)
         {
