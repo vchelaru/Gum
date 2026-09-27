@@ -57,7 +57,7 @@ All formats produce the same internal structure: `Dictionary<string, string[]>` 
 
 The tool stores `LocalizationFiles` — a `List<string>` of project-relative paths — on `GumProjectSave`. A legacy single-string `LocalizationFile` property is kept as a back-compat serialization shim (reads/writes index 0) so `.gumx` files written by the new tool can still be partially loaded by older tool versions. See `gum-project-versioning` skill for why no version bump was needed.
 
-**Policy in `FileCommands.LoadLocalizationFile()`:**
+**Load policy** lives in `GumCommon/Localization/ProjectLocalizationLoader.cs`, shared by the tool (`FileCommands.LoadLocalizationFile()`), gumcli (`HeadlessLocalizationLoader`) and the runtime `GumService`. Each host passes only a `ProjectLocalizationLoadOptions` (bundle provider, where skips and warnings go); CSV always goes through `AddCsvDatabase`, so tool and game parse a file the same way.
 - 0 paths → no-op.
 - 1 RESX or multiple RESX → routed through the multi-file `AddResxDatabase(IEnumerable<string>, onWarning)` overload. `onWarning` is wired to `IOutputManager.AddOutput` so collisions appear in the Output tab.
 - 1 CSV → single-file CSV path.
@@ -65,7 +65,7 @@ The tool stores `LocalizationFiles` — a `List<string>` of project-relative pat
 
 **UI:** `ProjectPropertiesViewModel` exposes `LocalizationFiles` with `PreferredDisplayer = typeof(MultiFileDisplay)` — a list editor with Add/Remove/Up/Down buttons that composes `FilePickingLogic`.
 
-**Runtime auto-load:** `ProjectLocalizationLoader.Load` (`GumCommon/Localization/ProjectLocalizationLoader.cs`) applies the same policy for both the MonoGame and Skia `GumService`, and collision warnings surface on `GumService.Default.LastLoadResult.Warnings` (no Output tab available in games).
+**Runtime auto-load:** the MonoGame and Skia `GumService` call the same `ProjectLocalizationLoader.Load`; collision warnings surface on `GumService.Default.LastLoadResult.Warnings` (no Output tab available in games).
 
 **File watching:** `FileChangeReactionLogic.IsLocalizationFileThatShouldTriggerReload(changedFile, IEnumerable<FilePath> baseFiles)` returns true if the changed file matches any base path in the list OR any base's satellite (`{BaseName}.*.resx` in the same directory). A single-file overload is preserved as the inner loop body.
 
@@ -155,7 +155,7 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 - `Gum/Plugins/InternalPlugins/ProjectPropertiesWindowPlugin/` — Language dropdown + `LocalizationFiles` list editor UI
 - `WpfDataUi/Controls/MultiFileDisplay.xaml(.cs)` — `IDataUi` control for `List<string>` file-path lists; composes `FilePickingLogic`
 - `WpfDataUi/Controls/FilePickingLogic.cs` — shared file-dialog/relative-path plumbing (pattern like `TextBoxDisplayLogic`)
-- `GumCommon/Localization/ProjectLocalizationLoader.cs` — runtime auto-load of `.gumx` `LocalizationFiles`, called by `MonoGameGum/GumService.cs` and `Runtimes/SkiaGum/GumServiceSkiaBase.cs`
+- `GumCommon/Localization/ProjectLocalizationLoader.cs` — load policy for `.gumx` `LocalizationFiles`, called by the tool's `FileCommands`, gumcli's `HeadlessLocalizationLoader`, `MonoGameGum/GumService.cs` and `Runtimes/SkiaGum/GumServiceSkiaBase.cs`
 - `MonoGameGum/GumService.cs` — `RefreshLocalization()` walks the three roots; constructor wires the `RefreshLocalizationOnElementAction` delegate and subscribes to `LocalizationServiceChanged`
 - `GumRuntime/GraphicalUiElement.cs` — `RefreshLocalization()` recursion + `RefreshLocalizationOnElementAction` static delegate hook
 - `MonoGameGum.Tests/Localization/RefreshLocalizationTests.cs` — runtime language-switch tests (Forms controls, BBCode-from-translation, TextNoTranslate survival, popup/modal roots)

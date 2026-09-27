@@ -114,6 +114,22 @@ public class ProjectLocalizationLoaderTests
     }
 
     [Fact]
+    public void Load_loose_csv_with_a_repeated_id_warns_and_keeps_the_later_row()
+    {
+        using TempProjectDirectory directory = new TempProjectDirectory();
+        directory.Write("Strings.csv", "String ID,English\nT_Hello,First\nT_Hello,Second\n");
+        GumProjectSave project = directory.ProjectWithLocalizationFiles("Strings.csv");
+        LocalizationService service = new LocalizationService();
+        List<string> warnings = new List<string>();
+
+        ProjectLocalizationLoader.Load(project, service, null, warnings);
+
+        warnings.ShouldHaveSingleItem().ShouldContain("'T_Hello'");
+        service.CurrentLanguage = 1;
+        service.Translate("T_Hello").ShouldBe("Second");
+    }
+
+    [Fact]
     public void Load_loose_resx_finds_its_satellites()
     {
         using TempProjectDirectory directory = new TempProjectDirectory();

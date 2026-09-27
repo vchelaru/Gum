@@ -58,7 +58,6 @@ public class FileCommandsTests : BaseTestClass
             _tempDirectory == null ? null : _tempDirectory + Path.DirectorySeparatorChar);
 
         _mocker.Use<IPathCaseSensitivity>(new PathCaseSensitivity());
-        _mocker.Use<ICsvLocalizationLoader>(new CsvLocalizationLoader());
         _fileCommands = _mocker.CreateInstance<FileCommands>();
     }
 
@@ -241,6 +240,22 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadLocalizationFile_ShouldClearPreviousDatabase_WhenSwitchingToAProjectWithNoLocalizationFiles()
+    {
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"), "StringId,English\nT_OK,OK\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+        _fileCommands.LoadLocalizationFile();
+        _localizationService.HasDatabase.ShouldBeTrue();
+
+        _gumProject.LocalizationFiles.Clear();
+        _fileCommands.LoadLocalizationFile();
+
+        _localizationService.HasDatabase.ShouldBeFalse();
+        _localizationService.Translate("T_OK").ShouldBe("T_OK");
+    }
+
+    [Fact]
     public void LoadLocalizationFile_ShouldDoNothing_WhenLocalizationFilesIsEmpty()
     {
         bool raised = false;
@@ -274,9 +289,9 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
-    public void LoadLocalizationFile_ShouldLoadSingleCsvWithTheToolParser_AndApplyTheProjectLanguage()
+    public void LoadLocalizationFile_ShouldLoadSingleCsv_AndApplyTheProjectLanguage()
     {
-        // The tool parser drops "//" comment rows and fills a short row's missing cells with the ID.
+        // The runtime's parser drops "//" comment rows and fills a short row's missing cells with the ID.
         _tempDirectory = CreateTempDirectory();
         File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"),
             "String ID,English,Spanish\n// comment,x,y\nT_Hello,Hello\nT_Bye,Bye,Adios\n");
@@ -290,6 +305,41 @@ public class FileCommandsTests : BaseTestClass
         _localizationService.Translate("T_Bye").ShouldBe("Adios");
         _localizationService.Translate("T_Hello").ShouldBe("T_Hello");
         _localizationService.Keys.ShouldNotContain("// comment");
+    }
+
+    [Fact]
+    public void LoadLocalizationFile_ShouldRouteRepeatedCsvIdToOutputTab()
+    {
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"),
+            "String ID,English\nT_Hello,First\nT_Hello,Second\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _errorCalls.ShouldBeEmpty();
+        _outputCalls.ShouldHaveSingleItem().ShouldContain("'T_Hello'");
+    }
+
+    [Fact]
+    public void LoadLocalizationFile_ShouldTranslateEveryLanguage_InAThreeLanguageCsv()
+    {
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"),
+            "StringId,English,Spanish,French\nT_Cancel,Cancel,Cancelar,Annuler\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _localizationService.Languages.ShouldBe(new[] { "English", "Spanish", "French" });
+        _localizationService.CurrentLanguage = 0;
+        _localizationService.Translate("T_Cancel").ShouldBe("T_Cancel");
+        _localizationService.CurrentLanguage = 1;
+        _localizationService.Translate("T_Cancel").ShouldBe("Cancel");
+        _localizationService.CurrentLanguage = 2;
+        _localizationService.Translate("T_Cancel").ShouldBe("Cancelar");
+        _localizationService.CurrentLanguage = 3;
+        _localizationService.Translate("T_Cancel").ShouldBe("Annuler");
     }
 
     [Fact]
