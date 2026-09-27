@@ -1,5 +1,6 @@
 using Gum.Bundle;
 using Gum.DataTypes;
+using Gum.Localization;
 using Gum.ProjectServices;
 using Shouldly;
 using ToolsUtilities;
@@ -293,6 +294,44 @@ public class PackCommandTests : IDisposable
     }
 
     [Fact]
+    public void Pack_bundles_csv_localization_so_the_bundle_loads_it_without_loose_files()
+    {
+        string projectPath = CreateCleanProject("CsvLocalization");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteLooseFile(projectDir, "Localization/Strings.csv", "ID,English,Spanish\nT_Hello,Hello,Hola\n");
+        SetLocalizationFiles(projectPath, "Localization/Strings.csv");
+        string bundlePath = Path.Combine(projectDir, "CsvLocalization.gumpkg");
+
+        CliTestHelper.Run("pack", projectPath, "-o", bundlePath).ExitCode.ShouldBe(0);
+        Directory.Delete(Path.Combine(projectDir, "Localization"), recursive: true);
+        LocalizationService localization = LoadBundleLocalization(bundlePath, out List<string> warnings);
+
+        warnings.ShouldBeEmpty();
+        localization.CurrentLanguage = 2;
+        localization.Translate("T_Hello").ShouldBe("Hola");
+    }
+
+    [Fact]
+    public void Pack_bundles_resx_localization_and_satellites_so_the_bundle_loads_them_without_loose_files()
+    {
+        string projectPath = CreateCleanProject("ResxLocalization");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        WriteLooseFile(projectDir, "Localization/Strings.resx", ResxWith("T_Hello", "Hello"));
+        WriteLooseFile(projectDir, "Localization/Strings.es.resx", ResxWith("T_Hello", "Hola"));
+        SetLocalizationFiles(projectPath, "Localization/Strings.resx");
+        string bundlePath = Path.Combine(projectDir, "ResxLocalization.gumpkg");
+
+        CliTestHelper.Run("pack", projectPath, "-o", bundlePath).ExitCode.ShouldBe(0);
+        Directory.Delete(Path.Combine(projectDir, "Localization"), recursive: true);
+        LocalizationService localization = LoadBundleLocalization(bundlePath, out List<string> warnings);
+
+        warnings.ShouldBeEmpty();
+        localization.Languages.ShouldBe(new[] { "Default", "es" });
+        localization.CurrentLanguage = 2;
+        localization.Translate("T_Hello").ShouldBe("Hola");
+    }
+
+    [Fact]
     public void Pack_writes_output_to_default_path_when_no_dash_o()
     {
         string projectPath = CreateCleanProject("DefaultOut");
@@ -436,6 +475,39 @@ public class PackCommandTests : IDisposable
         string componentRef = $"  <ComponentReference Name=\"{componentName}\" />";
         gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
         File.WriteAllText(gumxPath, gumxContent);
+    }
+
+    private static void WriteLooseFile(string projectDir, string relativePath, string content)
+    {
+        string fullPath = Path.Combine(projectDir, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        File.WriteAllText(fullPath, content);
+    }
+
+    private static void SetLocalizationFiles(string gumxPath, string relativePath)
+    {
+        string gumxContent = File.ReadAllText(gumxPath);
+        gumxContent = gumxContent.Replace("</GumProjectSave>",
+            $"  <LocalizationFiles><string>{relativePath}</string></LocalizationFiles>\n</GumProjectSave>");
+        File.WriteAllText(gumxPath, gumxContent);
+    }
+
+    private static string ResxWith(string name, string value) =>
+        $"<?xml version=\"1.0\" encoding=\"utf-8\"?><root><data name=\"{name}\"><value>{value}</value></data></root>";
+
+    // Loads the bundle the way GumService does at runtime: resolve the .gumpkg, load the project
+    // through the installed bundle hook, then auto-load the project's localization files.
+    private static LocalizationService LoadBundleLocalization(string bundlePath, out List<string> warnings)
+    {
+        ProjectResolution resolution = GumBundleLoader.Resolve(bundlePath);
+        GumProjectSave? project = GumProjectSave.Load(resolution.ResolvedGumxPath, out GumLoadResult loadResult);
+        loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+        project.ShouldNotBeNull();
+
+        LocalizationService localization = new LocalizationService();
+        warnings = new List<string>();
+        ProjectLocalizationLoader.Load(project!, localization, resolution.FileProvider, warnings);
+        return localization;
     }
 
     private static Dictionary<string, byte[]> ReadBundleEntries(string bundlePath)

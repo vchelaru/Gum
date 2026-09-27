@@ -216,10 +216,12 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
 
         GumProjectSave project = TestProjectBuilder.BuildProject(standards: new[] { textStandard });
 
+        // A loadable .fnt with no pages: pack parses each custom font for its page textures.
+        byte[] pagelessFnt = System.Text.Encoding.UTF8.GetBytes("info face=\"Arial\" size=8\ncommon lineHeight=8 base=6 pages=0\n");
         string root = CreateProjectRoot(new[]
         {
-            (defaultFnt, EmptyContent),
-            (titleFnt, EmptyContent),
+            (defaultFnt, pagelessFnt),
+            (titleFnt, pagelessFnt),
         });
 
         ObjectFinder.Self.GumProjectSave = project;
