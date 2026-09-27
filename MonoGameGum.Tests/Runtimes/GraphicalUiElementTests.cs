@@ -1558,6 +1558,81 @@ public class GraphicalUiElementTests : BaseTestClass
 
     #endregion
 
+    #region Clone
+
+    [Fact]
+    public void Clone_ShouldNotKeepSourceParent()
+    {
+        ContainerRuntime parent = new();
+        ContainerRuntime source = new();
+        parent.AddChild(source);
+
+        GraphicalUiElement clone = source.Clone();
+        clone.UpdateLayout();
+
+        clone.Parent.ShouldBeNull();
+        parent.Children.ShouldNotContain(clone);
+        ((IRenderableIpso)clone.RenderableComponent!).Parent.ShouldBeNull(
+            "because layout must not parent the clone's renderable to the source's parent");
+        ((IRenderableIpso)parent.RenderableComponent!).Children
+            .ShouldNotContain((IRenderableIpso)clone.RenderableComponent!);
+    }
+
+    [Fact]
+    public void Clone_ShouldJoinParent_WhenParentIsAssignedToSourceParent()
+    {
+        ContainerRuntime parent = new();
+        ContainerRuntime source = new();
+        parent.AddChild(source);
+
+        GraphicalUiElement clone = source.Clone();
+        clone.Parent = parent;
+
+        parent.Children.ShouldContain(clone);
+        ((IRenderableIpso)clone.RenderableComponent!).Parent.ShouldBe(parent);
+    }
+
+    [Fact]
+    public void Clone_ShouldInheritBindingContextFromOwnParent_WithoutChangingSource()
+    {
+        ContainerRuntime sourceParent = new();
+        sourceParent.BindingContext = "source context";
+        ContainerRuntime source = new();
+        sourceParent.AddChild(source);
+        ContainerRuntime cloneParent = new();
+        cloneParent.BindingContext = "clone context";
+
+        GraphicalUiElement clone = source.Clone();
+        cloneParent.AddChild(clone);
+
+        clone.BindingContext.ShouldBe("clone context");
+        source.BindingContext.ShouldBe("source context",
+            "because the clone's parent change must not run the source's ParentChanged handler");
+    }
+
+    [Fact]
+    public void Clone_ShouldHaveIndependentChildren()
+    {
+        ContainerRuntime source = new();
+        ContainerRuntime sourceChild = new();
+        source.AddChild(sourceChild);
+        sourceChild.ElementGueContainingThis = source;
+
+        GraphicalUiElement clone = source.Clone();
+        ContainerRuntime cloneChild = new();
+        clone.AddChild(cloneChild);
+        cloneChild.ElementGueContainingThis = clone;
+
+        clone.Children.ShouldNotContain(sourceChild);
+        clone.ContainedElements.ShouldNotContain(sourceChild);
+        clone.ContainedElements.ShouldNotBeSameAs(source.ContainedElements);
+        source.Children.ShouldNotContain(cloneChild);
+        source.ContainedElements.ShouldNotContain(cloneChild);
+        sourceChild.Parent.ShouldBe(source);
+    }
+
+    #endregion
+
     #region Parent/Children related
 
     [Fact]

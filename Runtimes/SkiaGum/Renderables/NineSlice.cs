@@ -140,7 +140,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
     /// </summary>
     public float BorderScale { get; set; } = 1f;
 
-    public object Clone() => this.MemberwiseClone();
+    public object Clone()
+    {
+        NineSlice clone = (NineSlice)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        return clone;
+    }
 
     protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {

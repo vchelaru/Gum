@@ -13,7 +13,10 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 {
     public object Clone()
     {
-        return this.MemberwiseClone();
+        Sprite clone = (Sprite)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        return clone;
     }
     public SKBitmap? Texture 
     { 

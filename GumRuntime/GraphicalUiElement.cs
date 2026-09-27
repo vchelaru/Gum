@@ -1964,10 +1964,20 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 : GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
         }
 
-        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
+        GraphicalUiElement newClone = (GraphicalUiElement)this.MemberwiseClone();
 
-        newClone.SetContainedObject(clonedRenderable);
+        // MemberwiseClone copies the source's place in the hierarchy. The clone starts detached
+        // with no children, matching the renderable clones: otherwise layout parents the clone's
+        // renderable to the source's parent, and assigning that parent is a no-op.
+        newClone._parent = null;
         newClone.mWhatContainsThis = null;
+        newClone.mWhatThisContains = new List<GraphicalUiElement>();
+        newClone.SetContainedObject(clonedRenderable);
+        // The copied ParentChanged handlers belong to the source (its binding handler, its Forms
+        // control), so parenting the clone would update the source. Re-run the constructor's
+        // per-instance wiring so the clone's own binding handler is the only subscriber.
+        newClone.ParentChanged = null;
+        newClone.OnConstructor();
         return newClone;
     }
 
