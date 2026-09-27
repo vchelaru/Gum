@@ -470,21 +470,7 @@ public partial class GumService : IGumService
         // elided on Silk) rather than a shared #if (issue #3608).
         AssignClipboard();
 
-        GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
-        {
-            if (formsObject is FrameworkElement frameworkElement)
-            {
-                frameworkElement.SaveRuntimeProperties();
-            }
-        };
-        GraphicalUiElement.UpdateFormsStateAction = formsObject =>
-        {
-            if (formsObject is FrameworkElement frameworkElement)
-            {
-                frameworkElement.UpdateState();
-                frameworkElement.ApplyRuntimeProperties();
-            }
-        };
+        FormsRefreshStylesHooks.Install();
     }
 
     /// <summary>
