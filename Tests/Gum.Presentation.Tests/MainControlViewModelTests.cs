@@ -1,4 +1,5 @@
 using Gum.Commands;
+using Gum.DataTypes;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Moq;
@@ -6,6 +7,7 @@ using Shouldly;
 using TextureCoordinateSelectionPlugin.Logic;
 using TextureCoordinateSelectionPlugin.Models;
 using TextureCoordinateSelectionPlugin.ViewModels;
+using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 
@@ -85,6 +87,47 @@ public class MainControlViewModelTests
         _viewModel.SelectedExposedSource = source;
 
         _displayController.Verify(controller => controller.SetCurrentExposedSource(source), Times.Once);
+        _displayController.Verify(controller => controller.Refresh(), Times.Once);
+    }
+
+    [Fact]
+    public void LoadSettings_ForAProjectWithNoSettingsFile_RestoresTheDefaultsWithoutSaving()
+    {
+        // The previous project turned snapping on; this one never saved texture settings.
+        _viewModel.IsSnapToGridChecked = true;
+        _viewModel.SelectedSnapToGridValue = 8;
+        _projectManager.SetupGet(manager => manager.GumProjectSave)
+            .Returns(new GumProjectSave { FullFileName = "/NoTextureSettings/Project.gumx" });
+        _fileCommands.Invocations.Clear();
+
+        _viewModel.LoadSettings();
+
+        _viewModel.IsSnapToGridChecked.ShouldBeFalse();
+        _viewModel.SelectedSnapToGridValue.ShouldBe(16);
+        _fileCommands.Verify(commands => commands.SaveIfDiffers(It.IsAny<FilePath>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateExposedSources_WhenTheViewClearsTheSelectionForTheNewList_HandsTheControllerOnlyTheNewSource()
+    {
+        ExposedTextureCoordinateSet oldSource = new ExposedTextureCoordinateSet { SourceObjectName = "Icon" };
+        _viewModel.UpdateExposedSources(new List<ExposedTextureCoordinateSet> { oldSource }, preserveSelection: false);
+        // A combo box bound to the list clears its selection when the list is replaced.
+        _viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainControlViewModel.AvailableExposedSources))
+            {
+                _viewModel.SelectedExposedSource = null;
+            }
+        };
+        _displayController.Invocations.Clear();
+        ExposedTextureCoordinateSet newSource = new ExposedTextureCoordinateSet { SourceObjectName = "Icon" };
+
+        _viewModel.UpdateExposedSources(new List<ExposedTextureCoordinateSet> { newSource }, preserveSelection: true);
+
+        _viewModel.SelectedExposedSource.ShouldBeSameAs(newSource);
+        _displayController.Verify(controller => controller.SetCurrentExposedSource(null), Times.Never);
+        _displayController.Verify(controller => controller.SetCurrentExposedSource(newSource), Times.Once);
         _displayController.Verify(controller => controller.Refresh(), Times.Once);
     }
 

@@ -8,6 +8,7 @@ using Avalonia.Layout;
 using Avalonia.VisualTree;
 using EditorTabPlugin_XNA.ViewModels;
 using Gum.Avalonia.Plugins.EditorTab;
+using Gum.Avalonia.Plugins.TextureCoordinates;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
@@ -61,6 +62,7 @@ internal sealed class CanvasHarness : IDisposable
         {
             PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
             Plugin = pluginManager.PluginContainers.Keys.OfType<AvaloniaEditorTabPlugin>().Single();
+            TextureCoordinatePlugin = pluginManager.PluginContainers.Keys.OfType<AvaloniaTextureCoordinatePlugin>().Single();
             Canvas = Plugin.CanvasControl ?? throw new InvalidOperationException("The editor tab plugin built no canvas.");
             AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
             Control tab = (Control)tabManager.AllTabs.Single(candidate => candidate.Title == "Editor").Content;
@@ -75,9 +77,10 @@ internal sealed class CanvasHarness : IDisposable
                 InitializeRenderSurface();
                 _isXnaInitialized = true;
             }
-            // The plugin sat out the fixture's new project, so it hears about it now.
-            Tree.Project.IncludeEditorTab();
+            // The canvas plugins sat out the fixture's new project, so they hear about it now.
+            Tree.Project.IncludeCanvasTabs();
             Plugin.CallProjectLoad(Tree.Project.Project);
+            TextureCoordinatePlugin.CallProjectLoad(Tree.Project.Project);
             ResetCamera();
             Frame();
         }
@@ -94,6 +97,9 @@ internal sealed class CanvasHarness : IDisposable
     public ToolProjectFixture Project => Tree.Project;
 
     public AvaloniaEditorTabPlugin Plugin { get; }
+
+    /// <summary>The Texture Coordinates tab's plugin; its tab is built when the render surface is ready, as in the tool.</summary>
+    public AvaloniaTextureCoordinatePlugin TextureCoordinatePlugin { get; }
 
     public WireframeCanvasControl Canvas { get; }
 
@@ -381,7 +387,10 @@ internal sealed class CanvasHarness : IDisposable
         ToolsUtilities.FileManager.RelativeDirectory = AppContext.BaseDirectory;
         try
         {
+            // The tool raises it on every plugin, the editor tab (a priority plugin) first. The
+            // Texture Coordinates canvas then takes over the content loader, as it does in the tool.
             Plugin.CallXnaInitialized();
+            TextureCoordinatePlugin.CallXnaInitialized();
         }
         finally
         {

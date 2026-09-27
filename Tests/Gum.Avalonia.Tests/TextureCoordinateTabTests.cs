@@ -97,6 +97,48 @@ public class TextureCoordinateTabTests
         });
     }
 
+    [SkippableFact]
+    public void ARegionEventThatRemovesTheSelector_LeavesTheFrameDrawing()
+    {
+        // A region event reaches the display controller, whose refresh can remove the selectors
+        // while the canvas is still walking them; the frame threw "Collection was modified".
+        Skip.IfNot(HasDisplay, SkipReason);
+
+        OnUiThread(() =>
+        {
+            TextureCoordinateView view = new TextureCoordinateView(new CanvasRedrawScheduler(TimeProvider.System));
+            using HeadlessWindowDriver driver = new HeadlessWindowDriver(view, 600, 500, "GumTextureCoordinateTabTests");
+            using ImageRegionCanvasControl canvasControl = view.GetVisualDescendants().OfType<ImageRegionCanvasControl>().Single();
+            using Texture2D texture = new Texture2D(view.Canvas.SystemManagers.Renderer.GraphicsDevice!, 64, 64);
+            view.Canvas.CurrentTexture = texture;
+            view.Canvas.DesiredSelectorCount = 1;
+            TextureCoordinateSelectionPlugin.RegionSelection.RectangleSelector selector = view.Canvas.RectangleSelectors[0];
+            selector.Left = 16;
+            selector.Top = 16;
+            selector.Width = 32;
+            selector.Height = 32;
+            selector.Visible = true;
+            selector.ShowHandles = true;
+            view.Canvas.EndRegionChanged += (_, _) => view.Canvas.DesiredSelectorCount = 0;
+
+            Point from = WindowPointOf(view, canvasControl, driver, 32, 32);
+            Point to = WindowPointOf(view, canvasControl, driver, 42, 32);
+            Frame(view, () => driver.Window.MouseMove(from, RawInputModifiers.None));
+            Frame(view, () => driver.Window.MouseDown(from, MouseButton.Left, RawInputModifiers.None));
+            Frame(view, () => driver.Window.MouseMove(to, RawInputModifiers.LeftMouseButton));
+            Frame(view, () => driver.Window.MouseUp(to, MouseButton.Left, RawInputModifiers.None));
+
+            view.Canvas.RectangleSelectors.Count.ShouldBe(0);
+        });
+    }
+
+    private static Point WindowPointOf(TextureCoordinateView view, ImageRegionCanvasControl canvasControl, HeadlessWindowDriver driver, float x, float y)
+    {
+        view.Canvas.SystemManagers.Renderer.Camera.WorldToScreen(x, y, out float screenX, out float screenY);
+        return canvasControl.TranslatePoint(new Point(screenX, screenY), driver.Window)
+            ?? throw new InvalidOperationException("The canvas is not in the window.");
+    }
+
     private static void Frame(TextureCoordinateView view, Action input)
     {
         input();

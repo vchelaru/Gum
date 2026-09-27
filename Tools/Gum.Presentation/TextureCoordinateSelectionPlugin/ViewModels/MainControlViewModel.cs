@@ -76,12 +76,38 @@ public class MainControlViewModel : ViewModel
 
     public void UpdateExposedSources(List<ExposedTextureCoordinateSet> sources, bool preserveSelection)
     {
-        var previouslySelected = preserveSelection ? SelectedExposedSource : null;
-        AvailableExposedSources = sources.Count > 0 ? sources : null;
-        SelectedExposedSource = sources.FirstOrDefault(s =>
-            s.SourceObjectName == previouslySelected?.SourceObjectName)
+        var previouslySelected = SelectedExposedSource;
+        var toSelect = sources.FirstOrDefault(s =>
+            preserveSelection && s.SourceObjectName == previouslySelected?.SourceObjectName)
             ?? sources.FirstOrDefault();
+
+        // A combo box bound to the list clears its selection when the list is replaced. Handing that
+        // passing null to the display controller drops the region mid-edit, so only the final
+        // selection reaches it.
+        _isUpdatingExposedSources = true;
+        try
+        {
+            AvailableExposedSources = sources.Count > 0 ? sources : null;
+            SelectedExposedSource = toSelect;
+        }
+        finally
+        {
+            _isUpdatingExposedSources = false;
+        }
+
+        if (!ReferenceEquals(previouslySelected, SelectedExposedSource))
+        {
+            ApplySelectedExposedSource();
+        }
     }
+
+    private void ApplySelectedExposedSource()
+    {
+        _displayController?.SetCurrentExposedSource(SelectedExposedSource);
+        _displayController?.Refresh();
+    }
+
+    bool _isUpdatingExposedSources;
 
     bool _isSavingSuppressed = false;
 
@@ -123,8 +149,10 @@ public class MainControlViewModel : ViewModel
                 }
                 break;
             case nameof(SelectedExposedSource):
-                _displayController?.SetCurrentExposedSource(SelectedExposedSource);
-                _displayController?.Refresh();
+                if (!_isUpdatingExposedSources)
+                {
+                    ApplySelectedExposedSource();
+                }
                 break;
         }
     }
@@ -179,28 +207,33 @@ public class MainControlViewModel : ViewModel
         }
         /////////////////////////////////////End Early Out////////////////////////////////////
 
+        // A project that never saved settings gets the defaults, not the previous project's settings.
+        TextureCoordinateSettingsModel? model = new TextureCoordinateSettingsModel();
         try
         {
             if(FileManager.FileExists(sourceFile.FullPath))
             {
                 var contents = FileManager.FromFileText(sourceFile.FullPath);
-                var model = JsonConvert.DeserializeObject<TextureCoordinateSettingsModel>(contents);
-
-                _isSavingSuppressed = true;
-
-                if (model != null)
-                {
-                    this.IsSnapToGridChecked = model.IsSnapToGridChecked;
-                    this.SelectedSnapToGridValue = model.SelectedSnapToGridValue;
-                }
-
-                _isSavingSuppressed = false;
-
+                model = JsonConvert.DeserializeObject<TextureCoordinateSettingsModel>(contents);
             }
         }
         catch(Exception ex)
         {
             _guiCommands.PrintOutput("Error loading Texture Coordinate Settings:\n" + ex.Message);
+        }
+
+        if (model != null)
+        {
+            _isSavingSuppressed = true;
+            try
+            {
+                this.IsSnapToGridChecked = model.IsSnapToGridChecked;
+                this.SelectedSnapToGridValue = model.SelectedSnapToGridValue;
+            }
+            finally
+            {
+                _isSavingSuppressed = false;
+            }
         }
 
     }
