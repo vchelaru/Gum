@@ -179,13 +179,14 @@ public class ExposeVariableServiceTests : BaseTestClass
     [Fact]
     public void HandleUnexposeVariableClick_WhenOnlyAnInheritingElementExposesTheSameName_ShowsNoDialog()
     {
-        // An inheriting element's own exposed-name entry is not an instance value, so there is nothing to clear.
+        // FancyButton exposes a different variable of its own under the same name. That is not a value
+        // for Button's variable, so there is nothing to clear.
         ComponentSave button = new ComponentSave { Name = "Button" };
         VariableSave exposed = new VariableSave { Name = "Label.Text", ExposedAsName = "LabelText" };
         ComponentSave fancyButton = new ComponentSave { Name = "FancyButton", BaseType = "Button" };
         StateSave fancyDefault = new StateSave { Name = "Default", ParentContainer = fancyButton };
         fancyButton.States.Add(fancyDefault);
-        VariableSave derivedExposed = new VariableSave { Name = "Label.Text", ExposedAsName = "LabelText" };
+        VariableSave derivedExposed = new VariableSave { Name = "FancyLabel.Text", ExposedAsName = "LabelText" };
         fancyDefault.Variables.Add(derivedExposed);
         VariableChangeResponse changes = new VariableChangeResponse();
         changes.VariableChanges.Add(new VariableChange { Container = fancyButton, State = fancyDefault, Variable = derivedExposed });
@@ -198,6 +199,33 @@ public class ExposeVariableServiceTests : BaseTestClass
         exposed.ExposedAsName.ShouldBeNull();
         fancyDefault.Variables.ShouldContain(derivedExposed);
         _dialogService.Verify(x => x.Show(It.IsAny<Action<ChoiceDialogViewModel>?>(), out It.Ref<ChoiceDialogViewModel>.IsAny), Times.Never);
+    }
+
+    [Fact]
+    public void HandleUnexposeVariableClick_ClearChosen_WhenAnInheritingElementSetsTheValue_ListsAndRemovesIt()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        VariableSave exposed = new VariableSave { Name = "Label.Text", ExposedAsName = "LabelText" };
+        ComponentSave fancyButton = new ComponentSave { Name = "FancyButton", BaseType = "Button" };
+        StateSave fancyDefault = new StateSave { Name = "Default", ParentContainer = fancyButton };
+        fancyButton.States.Add(fancyDefault);
+        VariableSave derivedValue = new VariableSave { Name = "Label.Text", Type = "string", Value = "Fancy", ExposedAsName = "LabelText" };
+        fancyDefault.Variables.Add(derivedValue);
+        VariableChangeResponse changes = new VariableChangeResponse();
+        changes.VariableChanges.Add(new VariableChange { Container = fancyButton, State = fancyDefault, Variable = derivedValue, IsInheritingElementValue = true });
+        _renameLogic
+            .Setup(x => x.GetChangesForRenamedVariable(button, "Label.Text", "LabelText"))
+            .Returns(changes);
+        List<ChoiceDialogViewModel> shown = new List<ChoiceDialogViewModel>();
+        AnswerChoiceDialog("Un-expose and clear values", shown);
+
+        _service.HandleUnexposeVariableClick(exposed, button);
+
+        shown.Single().Message.ShouldContain("FancyButton (derived)");
+        exposed.ExposedAsName.ShouldBeNull();
+        fancyDefault.Variables.ShouldNotContain(derivedValue);
+        _pluginManager.Verify(x => x.VariableSet(fancyButton, null, "LabelText", null, It.IsAny<bool>()), Times.Once);
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(It.IsAny<IEnumerable<CrossElementVariableChange>>()), Times.Once);
     }
 
     [Fact]

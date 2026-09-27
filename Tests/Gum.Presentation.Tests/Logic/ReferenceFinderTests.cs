@@ -896,6 +896,88 @@ public class ReferenceFinderTests : BaseTestClass
         result.VariableChanges[0].Container.ShouldBe(component2);
         result.VariableChanges[0].Variable.ShouldBe(exposedVariable);
         result.VariableChanges[0].Variable.SourceObject.ShouldNotBeNull();
+        result.VariableChanges[0].IsRemovableValue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetReferencesToVariable_InheritingElementsOwnValue_IsDetectedAsRemovable()
+    {
+        // FancyButton derives from Button and sets Button's custom variable Speed on itself. The value
+        // is stored unprefixed, so it is neither an instance value nor an exposed-name entry.
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        button.GetDefaultStateOrThrow().Variables.Add(new VariableSave { Name = "Speed", Type = "float", IsCustomVariable = true });
+        _project.Components.Add(button);
+
+        ComponentSave fancyButton = new ComponentSave { Name = "FancyButton", BaseType = "Button" };
+        StateSave fancyDefault = new StateSave { Name = "Default", ParentContainer = fancyButton };
+        fancyButton.States.Add(fancyDefault);
+        VariableSave derivedValue = new VariableSave { Name = "Speed", Type = "float", Value = 5f };
+        fancyDefault.Variables.Add(derivedValue);
+        _project.Components.Add(fancyButton);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            button,
+            oldFullName: "Speed",
+            oldStrippedOrExposedName: "Speed");
+
+        result.VariableChanges.Count.ShouldBe(1);
+        result.VariableChanges[0].Container.ShouldBe(fancyButton);
+        result.VariableChanges[0].State.ShouldBe(fancyDefault);
+        result.VariableChanges[0].Variable.ShouldBe(derivedValue);
+        result.VariableChanges[0].IsInheritingElementValue.ShouldBeTrue();
+        result.VariableChanges[0].IsRemovableValue.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetReferencesToVariable_InheritingElementsValueForAnExposedVariable_IsDetectedAsRemovable()
+    {
+        // Button exposes Label.Text as LabelText. When FancyButton sets LabelText, the tool stores it
+        // as Label.Text exposed as LabelText, the same name as Button's entry, so it is FancyButton's
+        // value for Button's variable rather than a variable FancyButton exposes on its own.
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        ComponentSave fancyButton = new ComponentSave { Name = "FancyButton", BaseType = "Button" };
+        StateSave fancyDefault = new StateSave { Name = "Default", ParentContainer = fancyButton };
+        fancyButton.States.Add(fancyDefault);
+        VariableSave derivedValue = new VariableSave { Name = "Label.Text", Type = "string", Value = "Fancy", ExposedAsName = "LabelText" };
+        fancyDefault.Variables.Add(derivedValue);
+        _project.Components.Add(fancyButton);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            button,
+            oldFullName: "Label.Text",
+            oldStrippedOrExposedName: "LabelText");
+
+        result.VariableChanges.Count.ShouldBe(1);
+        result.VariableChanges[0].Variable.ShouldBe(derivedValue);
+        result.VariableChanges[0].IsInheritingElementValue.ShouldBeTrue();
+        result.VariableChanges[0].IsRemovableValue.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetReferencesToVariable_InheritingElementsOwnCustomVariableWithTheSameName_IsNotDetected()
+    {
+        // FancyButton declares its own custom variable Speed. It is independent of Button's Speed, so
+        // deleting or renaming Button's leaves it alone.
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        _project.Components.Add(button);
+
+        ComponentSave fancyButton = new ComponentSave { Name = "FancyButton", BaseType = "Button" };
+        StateSave fancyDefault = new StateSave { Name = "Default", ParentContainer = fancyButton };
+        fancyButton.States.Add(fancyDefault);
+        fancyDefault.Variables.Add(new VariableSave { Name = "Speed", Type = "float", Value = 5f, IsCustomVariable = true });
+        _project.Components.Add(fancyButton);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            button,
+            oldFullName: "Speed",
+            oldStrippedOrExposedName: "Speed");
+
+        result.VariableChanges.ShouldBeEmpty();
     }
 
     [Fact]

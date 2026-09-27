@@ -214,10 +214,10 @@
 - VAR-009 Row: Make Default. tested: VariableEditScenarioTests, VariableScenarioTests
 - VAR-010 Row: Copy Qualified Variable Name. tested: VariableGridEntryTests
 - VAR-011 Row: Expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
-- VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests
+- VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-013 Row: Show on Instances
 - VAR-014 Row: Hide from Instances. tested: VariableMenuScenarioTests
-- VAR-015 Row: Delete Variable. tested: VariableMenuScenarioTests
+- VAR-015 Row: Delete Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-016 Row: Edit / Rename Variable. tested: EditVariableServiceTests
 - VAR-017 Row: copy variable reference
 - VAR-018 Composite row: Expose/Un-expose channels. tested: CompositeMemberLogicApplyTests

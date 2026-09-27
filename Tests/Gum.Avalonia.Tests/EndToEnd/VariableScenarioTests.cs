@@ -7,6 +7,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Services.Dialogs;
 using Shouldly;
 
@@ -452,6 +453,96 @@ public class VariableScenarioTests
         Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldContain(variable => variable.ExposedAsName == "LabelText");
         VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBe("OK");
         tree.SnapshotFiles().ShouldMatch(beforeUnexpose, "cancelling should leave every file as it was");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-012")]
+    [Trait("Feature", "COMBO-021")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void UnexposingAVariableADerivedElementSets_AndChoosingClear_ClearsItsValue_AndUndoRedoFollowIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        ComponentSave fancyButton = tree.Project.AddComponent("FancyButton");
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        tree.Dialogs.AnswerNextUserString("LabelText");
+        grid.PickRowMenuItem("Text", "Expose Variable");
+        tree.Click(tree.NodeFor(fancyButton));
+        grid.PickComboItem("BaseType", "Button");
+        grid.TypeAndLeave("LabelText", "Fancy");
+        fancyButton.GetDefaultStateOrThrow().Variables.ShouldContain(variable => variable.Name == "Label.Text" && variable.ExposedAsName == "LabelText");
+        tree.Click(tree.NodeFor(label));
+        ProjectFileSnapshot beforeUnexpose = tree.SnapshotFiles();
+        string? listedUsers = null;
+        tree.Dialogs.AnswerNext<ChoiceDialogViewModel>(dialog =>
+        {
+            listedUsers = dialog.Message;
+            dialog.SelectedValue = "Un-expose and clear values";
+            return true;
+        });
+
+        grid.PickRowMenuItem("Text", "Un-expose Variable LabelText (Label.Text)");
+
+        listedUsers.ShouldNotBeNull().ShouldContain("FancyButton (derived)");
+        VariableGridHarness.StoredValue(Component(tree, "FancyButton"), "LabelText").ShouldBeNull();
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "FancyButton")), "LabelText").ShouldBeNull();
+
+        tree.Undo();
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldContain(variable => variable.ExposedAsName == "LabelText");
+        VariableGridHarness.StoredValue(Component(tree, "FancyButton"), "LabelText").ShouldBe("Fancy");
+        tree.SnapshotFiles().ShouldMatch(beforeUnexpose, "one undo should restore the exposure and the derived element's value");
+
+        tree.Redo();
+        VariableGridHarness.StoredValue(Component(tree, "FancyButton"), "LabelText").ShouldBeNull();
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-015")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void DeletingAVariableADerivedElementSets_ClearsItsValue_AndUndoRedoFollowIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        ComponentSave fancyButton = tree.Project.AddComponent("FancyButton");
+        tree.Click(tree.NodeFor(button));
+        VariableGridHarness grid = tree.Grid;
+        tree.Dialogs.AnswerNext<AddVariableViewModel>(dialog =>
+        {
+            dialog.SelectedItem = "float";
+            dialog.EnteredName = "Speed";
+            return true;
+        });
+        grid.Input.Click(grid.View.AddVariableButton);
+        grid.Settle();
+        tree.Click(tree.NodeFor(fancyButton));
+        grid.PickComboItem("BaseType", "Button");
+        grid.TypeAndEnter("Speed", "5");
+        VariableGridHarness.StoredValue(Component(tree, "FancyButton"), "Speed").ShouldBe(5f);
+        tree.Click(tree.NodeFor(button));
+        ProjectFileSnapshot beforeDelete = tree.SnapshotFiles();
+
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        grid.PickRowMenuItem("Speed", "Delete Variable [Speed]");
+
+        Component(tree, "Button").GetDefaultStateOrThrow().GetVariableSave("Speed").ShouldBeNull();
+        VariableGridHarness.StoredValue(Component(tree, "FancyButton"), "Speed").ShouldBeNull();
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "FancyButton")), "Speed").ShouldBeNull();
+
+        tree.Undo();
+        Component(tree, "Button").GetDefaultStateOrThrow().GetVariableSave("Speed").ShouldNotBeNull();
+        VariableGridHarness.StoredValue(Component(tree, "FancyButton"), "Speed").ShouldBe(5f);
+        tree.SnapshotFiles().ShouldMatch(beforeDelete, "one undo should restore the variable and the derived element's value");
+
+        tree.Redo();
+        VariableGridHarness.StoredValue(Component(tree, "FancyButton"), "Speed").ShouldBeNull();
 
         tree.AssertOracles();
     }
