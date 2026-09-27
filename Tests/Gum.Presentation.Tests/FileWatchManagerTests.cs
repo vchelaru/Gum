@@ -1,14 +1,17 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Diagnostics;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -42,7 +45,9 @@ public class FileWatchManagerTests : IDisposable
         out Mock<IGuiCommands> guiCommandsMock,
         out Mock<IPluginManager> pluginManagerMock,
         out Mock<IFileWatchIgnoreList> ignoreListMock,
-        FilePath projectDirectory)
+        FilePath projectDirectory,
+        IDispatcher? dispatcher = null,
+        ICrashReporter? crashReporter = null)
     {
         guiCommandsMock = new Mock<IGuiCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
@@ -69,7 +74,33 @@ public class FileWatchManagerTests : IDisposable
             guiCommandsMock.Object,
             projectManagerMock.Object,
             fileChangeReactionLogic,
-            ignoreListMock.Object);
+            ignoreListMock.Object,
+            dispatcher ?? new SynchronousDispatcher(),
+            crashReporter);
+    }
+
+    private sealed class SynchronousDispatcher : IDispatcher
+    {
+        public void Invoke(Action action) => action();
+        public void Post(Action action) => action();
+    }
+
+    /// <summary>Stands in for the UI thread: posted work waits until the test drains it.</summary>
+    private sealed class QueuedDispatcher : IDispatcher
+    {
+        private readonly ConcurrentQueue<Action> _queue = new();
+        public void Invoke(Action action) => action();
+        public void Post(Action action) => _queue.Enqueue(action);
+        public void RunPending()
+        {
+            while (_queue.TryDequeue(out Action? action)) action();
+        }
+    }
+
+    private sealed class ThrowingDispatcher : IDispatcher
+    {
+        public void Invoke(Action action) => throw new InvalidOperationException("dispatcher shut down");
+        public void Post(Action action) => throw new InvalidOperationException("dispatcher shut down");
     }
 
     private static bool PollUntil(Func<bool> condition, int timeoutMilliseconds = 4000)
@@ -202,5 +233,111 @@ public class FileWatchManagerTests : IDisposable
             .ShouldBeFalse("an ignored file change should never be queued for flush");
 
         pluginManagerMock.Verify(p => p.ReactToFileChanged(ignoredFile), Times.Never);
+    }
+
+    [Fact]
+    public void HandleFileSystemChange_RaisedOffUiThreadWhileWatchedDirectoriesChange_DoesNotThrow()
+    {
+        // FileSystemWatcher raises events on a thread-pool thread while the UI thread replaces the
+        // watcher list on project load. Hammer both sides at once for a fixed number of events; the
+        // unfixed code threw within a few hundred of them, so a regression fails reliably.
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        var uiThread = new QueuedDispatcher();
+        var crashReporter = new Mock<ICrashReporter>();
+        FileWatchManager sut = BuildSut(out _, out _, out _, watchedDirectory, uiThread, crashReporter.Object);
+        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Texture.png");
+        var watcherThreadExceptions = new List<Exception>();
+        using var startTogether = new Barrier(2);
+        const int eventCount = 20_000;
+
+        var watcherThread = new Thread(() =>
+        {
+            startTogether.SignalAndWait();
+            for (int i = 0; i < eventCount && watcherThreadExceptions.Count == 0; i++)
+            {
+                try
+                {
+                    sut.HandleFileSystemChange(null, args);
+                }
+                catch (Exception e)
+                {
+                    watcherThreadExceptions.Add(e);
+                }
+            }
+        });
+        watcherThread.Start();
+
+        startTogether.SignalAndWait();
+        while (watcherThread.IsAlive)
+        {
+            sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+            uiThread.RunPending();
+            sut.Disable();
+        }
+        watcherThread.Join();
+
+        watcherThreadExceptions.ShouldBeEmpty();
+        // The callbacks' catch-all must not be what kept the exceptions away.
+        crashReporter.Verify(c => c.ReportRecoverable(It.IsAny<Exception>(), It.IsAny<string>()), Times.Never);
+
+        // The marshaled events still reach the queue once the UI thread runs them.
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+        sut.HandleFileSystemChange(null, args);
+        uiThread.RunPending();
+        sut.ChangedFilesWaitingForFlush.ShouldContain(new FilePath(args.FullPath));
+    }
+
+    [Fact]
+    public void HandleFileSystemChange_IgnoredWhenRaisedButUiThreadRunsAfterWindow_StaysIgnored()
+    {
+        // Gum's own save must stay ignored even when the UI thread is busy past the ignore window.
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        var uiThread = new QueuedDispatcher();
+        FileWatchManager sut = BuildSut(
+            out _, out _, out Mock<IFileWatchIgnoreList> ignoreListMock, watchedDirectory, uiThread);
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Saved.png");
+        ignoreListMock.Setup(i => i.TryGetIgnoreFileChange(It.IsAny<FilePath>())).Returns(true);
+
+        sut.HandleFileSystemChange(null, args);
+        ignoreListMock.Setup(i => i.TryGetIgnoreFileChange(It.IsAny<FilePath>())).Returns(false);
+        uiThread.RunPending();
+
+        sut.ChangedFilesWaitingForFlush.ShouldNotContain(new FilePath(args.FullPath));
+    }
+
+    [Fact]
+    public void HandleFileSystemChange_WhenReactionThrows_ReportsInsteadOfThrowing()
+    {
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        var crashReporter = new Mock<ICrashReporter>();
+        FileWatchManager sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock, out _, out Mock<IFileWatchIgnoreList> ignoreListMock,
+            watchedDirectory, crashReporter: crashReporter.Object);
+        sut.PrintFileChangesToOutput = true;
+        ignoreListMock.Setup(i => i.TryGetIgnoreFileChange(It.IsAny<FilePath>())).Returns(true);
+        var failure = new InvalidOperationException("reaction failed");
+        guiCommandsMock.Setup(g => g.PrintOutput(It.Is<string>(s => s.StartsWith("File change skipped")))).Throws(failure);
+        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Texture.png");
+
+        Should.NotThrow(() => sut.HandleFileSystemChange(null, args));
+
+        crashReporter.Verify(c => c.ReportRecoverable(failure, It.IsAny<string>()), Times.Once);
+        guiCommandsMock.Verify(g => g.PrintOutput(It.Is<string>(s => s.Contains("reaction failed"))), Times.Once);
+    }
+
+    [Fact]
+    public void HandleFileSystemChange_WhenDispatcherRejectsWork_ReportsInsteadOfThrowing()
+    {
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        var crashReporter = new Mock<ICrashReporter>();
+        FileWatchManager sut = BuildSut(
+            out _, out _, out _, watchedDirectory, new ThrowingDispatcher(), crashReporter.Object);
+        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Texture.png");
+
+        Should.NotThrow(() => sut.HandleFileSystemChange(null, args));
+
+        crashReporter.Verify(c => c.ReportRecoverable(
+            It.Is<Exception>(e => e.Message == "dispatcher shut down"), It.IsAny<string>()), Times.Once);
     }
 }
