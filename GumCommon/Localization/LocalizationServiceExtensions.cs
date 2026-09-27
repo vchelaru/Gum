@@ -43,11 +43,15 @@ public static class LocalizationServiceExtensions
 
             translatedStrings[0] = stringId;
 
+            // A row can have fewer cells than the header, e.g. when an editor drops trailing
+            // empty cells (#5095). A missing cell falls back to the ID, like a missing RESX
+            // translation does.
+            int rowCellCount = csv.Parser.Count;
             for (int i = 1; i < columnCount; i++)
             {
-                // GetField throws MissingFieldException on a short row, so null is not
-                // expected here; fall back to the ID like a missing RESX translation does.
-                translatedStrings[i] = csv.GetField(i) ?? stringId;
+                translatedStrings[i] = i < rowCellCount
+                    ? csv.GetField(i) ?? stringId
+                    : stringId;
             }
 
             entryDictionary[stringId] = translatedStrings;

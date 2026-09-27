@@ -9,7 +9,7 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Math.Geometry;
 
-public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIpso, ISetClipsChildren, IRenderTargetRenderable
+public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIpso, ISetClipsChildren, IRenderTargetRenderable, System.ICloneable
 {
     #region Fields
 
@@ -342,6 +342,21 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
     IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     #endregion
+
+    /// <summary>
+    /// Creates a copy with its own children collection, no parent, and its own line primitive,
+    /// so changing the copy's color or size leaves this rectangle unchanged.
+    /// </summary>
+    public virtual LineRectangle Clone()
+    {
+        LineRectangle clone = (LineRectangle)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        clone.mLinePrimitive = mLinePrimitive.Clone();
+        return clone;
+    }
+
+    object System.ICloneable.Clone() => Clone();
 
     public override string ToString()
     {

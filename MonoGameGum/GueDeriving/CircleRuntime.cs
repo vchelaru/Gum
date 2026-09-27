@@ -1224,6 +1224,8 @@ public class CircleRuntime : GraphicalUiElement
     /// wired against the clone, not the source.</item>
     /// <item>Re-wire the stroke's parent to the new fill so the renderer's hierarchy walk
     /// draws stroke after fill (visual order preserved).</item>
+    /// <item>Without a fill slot (no Apos.Shapes) the stroke is the contained object, so the
+    /// copy <c>base.Clone</c> made is kept as the stroke rather than rebuilt (#5197).</item>
     /// <item>Push <see cref="StrokeColor"/> through its setter so the freshly-built stroke
     /// renderable picks up the user's color (the runtime's <c>_strokeColor</c> field was
     /// MemberwiseCloned but the new slot is at its default).</item>
@@ -1233,18 +1235,24 @@ public class CircleRuntime : GraphicalUiElement
     {
         CircleRuntime toReturn = (CircleRuntime)base.Clone();
 
-        toReturn._fill = (IFilledCircleRenderable?)toReturn.mContainedObjectAsIpso;
-        toReturn._stroke = RenderableRegistry.Create<IStrokedCircleRenderable>(toReturn)
-            ?? new DefaultStrokedCircleRenderable();
-
-        if (toReturn._fill is IRenderableIpso fillIpso
-            && toReturn._stroke is IRenderableIpso strokeIpso)
+        if (_fill == null)
         {
-            strokeIpso.Parent = fillIpso;
+            // Without a fill slot (no Apos.Shapes) the contained object is the stroke, and
+            // base.Clone already copied it, including its visibility.
+            toReturn._fill = null;
+            toReturn._stroke = (IStrokedCircleRenderable)toReturn.mContainedObjectAsIpso!;
         }
-        else if (toReturn._fill == null)
+        else
         {
-            toReturn.SetContainedObject(toReturn._stroke);
+            toReturn._fill = (IFilledCircleRenderable?)toReturn.mContainedObjectAsIpso;
+            toReturn._stroke = RenderableRegistry.Create<IStrokedCircleRenderable>(toReturn)
+                ?? new DefaultStrokedCircleRenderable();
+
+            if (toReturn._fill is IRenderableIpso fillIpso
+                && toReturn._stroke is IRenderableIpso strokeIpso)
+            {
+                strokeIpso.Parent = fillIpso;
+            }
         }
 
         toReturn.StrokeColor = toReturn.StrokeColor;
