@@ -55,6 +55,9 @@ internal sealed class ToolExceptionWatch : IDisposable
         }
     }
 
+    /// <summary>Everything written to the Output tab since the watch started.</summary>
+    public string OutputWritten => _outputWritten.ToString();
+
     /// <summary>Throws when anything since the watch started logged an error or an exception.</summary>
     public void AssertClean()
     {

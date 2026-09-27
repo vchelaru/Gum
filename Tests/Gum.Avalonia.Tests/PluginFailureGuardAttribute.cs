@@ -17,7 +17,8 @@ namespace Gum.Avalonia.Tests;
 /// broke it.
 /// </summary>
 /// <remarks>
-/// After every test, each plugin the test disabled gets a fresh, enabled container, and a test that
+/// After every test, each plugin the test disabled is enabled again with its failure cleared (its
+/// StartUp does not run again), and a test that
 /// swapped <see cref="PluginManager.Plugins"/> without putting it back has the original set restored,
 /// so the next test starts with the same plugins enabled whatever ran before it. Plugins that fail
 /// while the tool first starts up are left as they are.
@@ -91,16 +92,15 @@ public sealed class PluginFailureGuardAttribute : BeforeAfterTestAttribute
             pluginManager.Plugins = _pluginsBefore;
         }
 
-        List<IPlugin> disabledByThisTest = pluginManager.PluginContainers
-            .Where(pair => !pair.Value.IsEnabled && _enabledBefore.Contains(pair.Value))
-            .Select(pair => pair.Key)
+        List<PluginContainer> disabledByThisTest = pluginManager.PluginContainers.Values
+            .Where(container => !container.IsEnabled && _enabledBefore.Contains(container))
             .ToList();
-        foreach (IPlugin plugin in disabledByThisTest)
+        foreach (PluginContainer container in disabledByThisTest)
         {
-            // A fresh container is enabled and carries no failure. The plugin's ShutDown already
-            // ran; for most plugins, the editor tab included, that is a no-op.
-            pluginManager.PluginContainers[plugin] = new PluginContainer(plugin);
-            _failedBefore.Remove(plugin.GetType().Name);
+            // Keeps the container, so a later off/on does not run StartUp on the plugin again. The
+            // plugin's ShutDown already ran; for most plugins, the editor tab included, that is a no-op.
+            container.RestoreEnabled();
+            _failedBefore.Remove(container.Plugin.GetType().Name);
         }
     }
 

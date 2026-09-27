@@ -30,9 +30,10 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
         public override void StartUp()
         {
             // Just after "Load Project...", before the first separator.
+            // Added through AddMenuEntry so it is disabled while the plugin is off.
+            _recentFilesMenuItem = AddMenuEntry(null, "File", "Load Recent");
             MenuItemModel fileMenu = Menu!.GetItem("File")!;
-            _recentFilesMenuItem = new MenuItemModel("Load Recent");
-            fileMenu.Items.Insert(System.Math.Min(2, fileMenu.Items.Count), _recentFilesMenuItem);
+            fileMenu.Items.Move(fileMenu.Items.IndexOf(_recentFilesMenuItem), System.Math.Min(2, fileMenu.Items.Count - 1));
 
             RefreshMenuItems();
 

@@ -9,7 +9,6 @@ using Gum.Plugins;
 using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Services.Dialogs;
-using GumFormsPlugin.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using ToolsUtilities;
@@ -29,7 +28,7 @@ public class DialogScenarioTests
 
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    #region New project and Forms
+    #region New project
 
     [AvaloniaFact]
     [Trait("Feature", "DLG-004")]
@@ -59,67 +58,6 @@ public class DialogScenarioTests
         project.Components.ShouldBeEmpty();
         File.Exists(Path.Combine(tree.Project.ProjectFolder, "Screens", NewProjectLogic.StartingScreenName + ".gusx")).ShouldBeTrue();
         tree.ChildTexts(tree.RootNode("Screens")).ShouldBe(new[] { NewProjectLogic.StartingScreenName });
-
-        tree.AssertOracles();
-    }
-
-    [AvaloniaFact(Skip = "#5304: the test output has no staged Forms themes")]
-    [Trait("Feature", "DLG-004")]
-    [Trait("Feature", "FILE-001")]
-    public void NewProject_WithFormsAndTheDemoScreen_ImportsTheThemesComponents()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        tree.Dialogs.AnswerNext<NewProjectDialogViewModel>(dialog =>
-        {
-            dialog.IsIncludeFormsControls = true;
-            dialog.IsIncludeDemoScreenGum = true;
-            return true;
-        });
-        tree.Dialogs.AnswerNextSaveFile(tree.Project.ProjectFilePath);
-
-        tree.PickMainMenu("File", "New Project");
-        tree.WaitUntil(() => tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the new project's starting screen");
-
-        GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
-        project.Components.ShouldNotBeEmpty("the Forms theme brings its components");
-        project.Screens.Count.ShouldBeGreaterThan(1, "the demo screen comes with the starting screen");
-        foreach (ComponentSave component in project.Components)
-        {
-            File.Exists(Path.Combine(tree.Project.ProjectFolder, "Components", component.Name.Replace('/', Path.DirectorySeparatorChar) + ".gucx"))
-                .ShouldBeTrue($"{component.Name} was saved");
-        }
-
-        tree.AssertOracles();
-    }
-
-    [AvaloniaFact(Skip = "#5304: the Forms plugin is not loaded and the test output has no staged Forms themes")]
-    [Trait("Feature", "DLG-021")]
-    public void AddForms_FromTheContentMenu_ImportsTheThemesComponents_IntoAnExistingProject()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        tree.Project.AddComponent("Card");
-        tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
-        {
-            dialog.IsIncludeDemoScreenGum = false;
-            return true;
-        });
-
-        tree.PickMainMenu("Content", "Add Forms Components");
-        tree.WaitUntil(() => tree.Project.Project.Components.Count > 1, AsyncWork, "the Forms components");
-        // The import adds its components one by one; let it finish.
-        int count = -1;
-        tree.WaitUntil(() =>
-        {
-            int now = tree.Project.Project.Components.Count;
-            bool settled = now == count;
-            count = now;
-            Thread.Sleep(50);
-            return settled;
-        }, AsyncWork, "the Forms import to finish");
-
-        tree.Project.Project.Components.ShouldContain(component => component.Name == "Card");
-        tree.Project.Project.Screens.ShouldBeEmpty("no demo screen was asked for");
-        tree.RootNode("Components").Nodes.Count.ShouldBeGreaterThan(1);
 
         tree.AssertOracles();
     }
@@ -279,6 +217,39 @@ public class DialogScenarioTests
             .Count(item => item.Header == "HTML…").ShouldBe(1, "turning the plugin back on adds its menu item once");
         tree.SnapshotFiles().ShouldMatch(start, "managing plugins is not a project edit");
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DLG-015")]
+    public void ManagePlugins_TurningAPluginOff_HidesItsTab_AndOnShowsItAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
+        tree.PickMainMenu("View", "View Animations");
+        AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations" && tab.IsVisible);
+        try
+        {
+            tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
+            {
+                PluginItemViewModel stateAnimation = dialog.Plugins.Single(plugin => plugin.DisplayText.StartsWith("State Animation Plugin", StringComparison.Ordinal));
+                stateAnimation.IsEnabled = false;
+                animations.IsVisible.ShouldBeFalse("the tab of a plugin that is off is hidden");
+                Services.GetRequiredService<Gum.Menus.MenuModel>().GetItem("View")!.Items
+                    .Single(item => item.Header == "Hide Animations" || item.Header == "View Animations")
+                    .IsEnabled.ShouldBeFalse("the menu item of a plugin that is off is disabled");
+                stateAnimation.IsEnabled = true;
+                return true;
+            });
+
+            tree.PickMainMenu("Plugins", "Manage Plugins");
+
+            animations.IsVisible.ShouldBeTrue("turning the plugin back on shows the tab it had showing");
+            tree.AssertOracles();
+        }
+        finally
+        {
+            animations.Hide();
+        }
     }
 
     [AvaloniaFact]

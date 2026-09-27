@@ -20,7 +20,7 @@
 
 ## File menu (FILE)
 
-- FILE-001 New Project. tested: NewProjectLogicTests, ProjectOracleTests, DialogScenarioTests
+- FILE-001 New Project. tested: NewProjectLogicTests, ProjectOracleTests, DialogScenarioTests, FormsAndImportScenarioTests
 - FILE-002 Load Project. tested: DialogScenarioTests
 - FILE-003 Load Recent, pick a listed project. tested: RecentFilesLogicTests
 - FILE-004 Load Recent > More... dialog. tested: LoadRecentViewModelTests, DialogScenarioTests
@@ -37,8 +37,8 @@
 
 ## Edit menu (EDIT)
 
-- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
-- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
+- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests, FormsAndImportScenarioTests
+- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests, FormsAndImportScenarioTests
 - EDIT-003 Undo/Redo enabled state follows history
 - EDIT-004 Add > Screen. tested: AddScreenDialogViewModelTests
 - EDIT-005 Add > Component. tested: AddComponentDialogViewModelTests
@@ -78,9 +78,9 @@
 - CONT-005 View Font Cache
 - CONT-006 Scan for Orphaned Code Files. tested: OrphanCodeFileReporterTests
 - CONT-007 Import > HTML. tested: ImportHtmlOptionsViewModelTests
-- CONT-008 Import > .gumx. tested: ImportFromGumxViewModelTests
+- CONT-008 Import > .gumx. tested: ImportFromGumxViewModelTests, FormsAndImportScenarioTests
 - CONT-009 Convert to JSON. tested: ConvertToJsonLogicTests
-- CONT-010 Add Forms Components. tested: GumFormsLogicTests
+- CONT-010 Add Forms Components. tested: GumFormsLogicTests, FormsAndImportScenarioTests
 
 ## Plugins and Help menus (PLUG, HELP)
 
@@ -214,10 +214,10 @@
 - VAR-009 Row: Make Default. tested: VariableEditScenarioTests, VariableScenarioTests
 - VAR-010 Row: Copy Qualified Variable Name. tested: VariableGridEntryTests
 - VAR-011 Row: Expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
-- VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests
+- VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-013 Row: Show on Instances
 - VAR-014 Row: Hide from Instances. tested: VariableMenuScenarioTests
-- VAR-015 Row: Delete Variable. tested: VariableMenuScenarioTests
+- VAR-015 Row: Delete Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-016 Row: Edit / Rename Variable. tested: EditVariableServiceTests
 - VAR-017 Row: copy variable reference
 - VAR-018 Composite row: Expose/Un-expose channels. tested: CompositeMemberLogicApplyTests
@@ -425,7 +425,7 @@
 - DLG-001 Message. tested: MessageDialogViewModelTests, AnimationScenarioTests
 - DLG-002 Get user string. tested: GetUserStringDialogViewModelTests, TreeScenarioTests, AnimationScenarioTests
 - DLG-003 Choice. tested: ChoiceDialogViewModelTests
-- DLG-004 New Project (Forms, DemoScreen options). tested: NewProjectLogicTests, DialogScenarioTests
+- DLG-004 New Project (Forms, DemoScreen options). tested: NewProjectLogicTests, DialogScenarioTests, FormsAndImportScenarioTests
 - DLG-005 Add Screen / Component / Instance / State / Category / Folder. tested: AddScreenDialogViewModelTests, TreeScenarioTests
 - DLG-006 Rename element. tested: RenameElementDialogViewModelTests, TreeScenarioTests
 - DLG-007 Rename folder. tested: RenameFolderDialogViewModelTests
@@ -442,8 +442,8 @@
 - DLG-018 Add state keyframe. tested: AnimationScenarioTests
 - DLG-019 Sub-animation selection. tested: SubAnimationSelectionDialogViewModelTests, AnimationScenarioTests
 - DLG-020 Freeze diagnostics prompt. tested: FreezeDiagnosticsPromptServiceTests
-- DLG-021 Add Forms (theme choice). tested: AddFormsViewModelTests
-- DLG-022 Import from .gumx (file or URL, subfolder, picks). tested: ImportFromGumxViewModelTests
+- DLG-021 Add Forms (theme choice). tested: AddFormsViewModelTests, FormsAndImportScenarioTests
+- DLG-022 Import from .gumx (file or URL, subfolder, picks). tested: ImportFromGumxViewModelTests, FormsAndImportScenarioTests
 - DLG-023 Standard diff details. tested: StandardDiffDetailsViewModelTests
 - DLG-024 Convert to JSON. tested: ConvertToJsonLogicTests
 - DLG-025 Import HTML options. tested: ImportHtmlOptionsViewModelTests
@@ -518,8 +518,8 @@ Cross-feature scenarios the code lists don't show. Most need a real project, a s
 - COMBO-028 Rename element with generated code, then regenerate
 - COMBO-029 Animation plays state after its variables change
 - COMBO-030 External file edit while element has unsaved change
-- COMBO-031 Import .gumx components that collide with existing names
-- COMBO-032 Add Forms twice (idempotent)
+- COMBO-031 Import .gumx components that collide with existing names. tested: FormsAndImportScenarioTests
+- COMBO-032 Add Forms twice (idempotent). tested: FormsAndImportScenarioTests
 - COMBO-033 Change localization language, then edit Text
 - COMBO-034 Font variable change, then save and `gumcli fonts`
 - COMBO-035 Convert to JSON, reload, full edit cycle
