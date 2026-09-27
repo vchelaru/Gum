@@ -369,9 +369,16 @@ public partial class GumService : IGumService
     public event Action? HotReloadCompleted;
 #endif
 
+    /// <summary>
+    /// Registers the default keyboard in <see cref="Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl"/>
+    /// so Forms controls respond to it.
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException">Gum has not been initialized, so there is no keyboard.</exception>
     public void UseKeyboardDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(FormsUtilities.Keyboard);
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(
+            FormsUtilities.Keyboard ?? throw new System.InvalidOperationException(
+                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
     }
 
     public void UseGamepadDefaults()

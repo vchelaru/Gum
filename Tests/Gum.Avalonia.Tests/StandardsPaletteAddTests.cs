@@ -131,7 +131,7 @@ public class StandardsPaletteAddTests
     }
 
     private static string? ParentOf(ElementSave element, InstanceSave instance) =>
-        element.DefaultState.GetValue($"{instance.Name}.Parent") as string;
+        element.GetDefaultStateOrThrow().GetValue($"{instance.Name}.Parent") as string;
 
     private static void Layout(Window window)
     {

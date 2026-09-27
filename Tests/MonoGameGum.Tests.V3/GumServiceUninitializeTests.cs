@@ -286,6 +286,28 @@ public class GumServiceUninitializeTests
         }
     }
 
+    [Fact]
+    public void UseKeyboardDefaults_AfterUninitialize_ThrowsWithoutRegisteringNull()
+    {
+        ICursor? savedCursor = FormsUtilities.Cursor;
+        InteractiveGue? savedPopupRoot = FrameworkElement.PopupRoot;
+        InteractiveGue? savedModalRoot = FrameworkElement.ModalRoot;
+
+        try
+        {
+            FormsUtilities.Uninitialize();
+
+            Should.Throw<InvalidOperationException>(() => global::Gum.GumService.Default.UseKeyboardDefaults());
+
+            FrameworkElement.KeyboardsForUiControl.ShouldBeEmpty();
+        }
+        finally
+        {
+            FrameworkElement.KeyboardsForUiControl.Clear();
+            RestoreFormsUtilitiesState(savedCursor, savedPopupRoot, savedModalRoot);
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Styling.ActiveStyle — issue #4626, must not survive pointing at a
     // texture LoaderManager.Self.DisposeAndClear() just disposed.
