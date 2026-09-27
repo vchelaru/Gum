@@ -43,6 +43,7 @@ internal sealed class HeadlessWindowDriver : IDisposable
             // The template was kept rather than rebuilt; hand the presenter its content back.
             presenter.ClearValue(ContentPresenter.ContentProperty);
             ReleasedPresenters.Remove(presenter);
+            ReleaseIfDropped(presenter);
         }
         Layout();
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
@@ -255,6 +256,29 @@ internal sealed class HeadlessWindowDriver : IDisposable
             }
         }
         return released;
+    }
+
+    /// <summary>
+    /// A kept template can still be rebuilt by a later layout pass (seen after the main window
+    /// hosted the view in an earlier test). Its old presenter then leaves the window still holding
+    /// the content, the new presenter cannot take it, and the view shows nothing for the rest of
+    /// the run. So a presenter that leaves the visual tree while its templated parent stays in it
+    /// lets its content go. A presenter that leaves along with its parent (the window closing, a
+    /// list recycling its container) keeps it.
+    /// </summary>
+    private static void ReleaseIfDropped(ContentPresenter presenter)
+    {
+        // Captured now: a template being replaced clears its parts' templated parent.
+        Visual? owner = presenter.TemplatedParent as Visual;
+        void Release(object? sender, VisualTreeAttachmentEventArgs e)
+        {
+            presenter.DetachedFromVisualTree -= Release;
+            if (owner?.GetVisualRoot() != null)
+            {
+                presenter.Content = null;
+            }
+        }
+        presenter.DetachedFromVisualTree += Release;
     }
 
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ContentPresenter, object> ReleasedPresenters = new();
