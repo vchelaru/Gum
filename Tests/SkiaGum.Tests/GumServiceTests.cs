@@ -103,6 +103,69 @@ public class GumServiceTests
         }
     }
 
+    // Issue #5228: a .gumpkg bundle resolves through GumBundleLoader, and LoadAnimations enumerates
+    // the bundle, the same as the MonoGame/raylib GumService. Initializing again restores the stream
+    // hook the first bundle replaced instead of stacking a second one on it.
+    [Fact]
+    public void Initialize_WithGumpkg_LoadsProjectAndAnimationsFromBundle()
+    {
+        string stagingDirectory = Path.Combine(Path.GetTempPath(), "SkiaBundleStaging_" + Path.GetRandomFileName());
+        string bundleDirectory = Path.Combine(Path.GetTempPath(), "SkiaBundle_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(stagingDirectory);
+        Directory.CreateDirectory(bundleDirectory);
+        Func<string, Stream>? hookBefore = ToolsUtilities.FileManager.CustomGetStreamFromFile;
+        try
+        {
+            string gumxPath = Path.Combine(stagingDirectory, "Proj.gumx");
+            new GumProjectSave().Save(gumxPath, saveElements: false);
+            string animationPath = Path.Combine(stagingDirectory, "Screens", "MainScreenAnimations.ganx");
+            Directory.CreateDirectory(Path.GetDirectoryName(animationPath)!);
+            var serializer = ToolsUtilities.FileManager.GetXmlSerializer(typeof(Gum.StateAnimation.SaveClasses.ElementAnimationsSave));
+            using (var writer = new StreamWriter(animationPath))
+            {
+                serializer.Serialize(writer, new Gum.StateAnimation.SaveClasses.ElementAnimationsSave());
+            }
+
+            string gumpkgPath = Path.Combine(bundleDirectory, "Proj.gumpkg");
+            using (FileStream bundleStream = File.Create(gumpkgPath))
+            {
+                Gum.Bundle.GumBundleWriter.Write(bundleStream, new[]
+                {
+                    ("Proj.gumx", File.ReadAllBytes(gumxPath)),
+                    ("Screens/MainScreenAnimations.ganx", File.ReadAllBytes(animationPath)),
+                });
+            }
+
+            using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+            GumService.Default.Initialize(surface.Canvas, 200, 100, gumpkgPath);
+
+            GumService.Default.CurrentProjectResolution.ShouldNotBeNull();
+            GumService.Default.CurrentProjectResolution!.UsedBundle.ShouldBeTrue();
+#pragma warning disable CS0618 // Type or member is obsolete
+            GumService.Default.LoadAnimations();
+#pragma warning restore CS0618
+            Gum.Managers.ObjectFinder.Self.GumProjectSave!.ElementAnimations
+                .ShouldHaveSingleItem().ElementName.ShouldBe("MainScreen");
+
+            GumService.Default.Initialize(surface.Canvas, 200, 100, gumpkgPath);
+
+            GumService.Default.CurrentProjectResolution!.PreviousHook.ShouldBe(hookBefore);
+
+            // A hook the host installs after the bundle load is the host's; re-initializing keeps it.
+            Func<string, Stream> hostHook = path => throw new FileNotFoundException(path);
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = hostHook;
+            GumService.Default.Initialize(surface.Canvas, 200, 100);
+            ToolsUtilities.FileManager.CustomGetStreamFromFile.ShouldBe(hostHook);
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = hookBefore;
+            Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
+            try { Directory.Delete(stagingDirectory, recursive: true); } catch { /* best-effort */ }
+            try { Directory.Delete(bundleDirectory, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
     // Issue #5232: the tool saves a Standard element's animations beside it, as
     // Standards/{Name}Animations.ganx, so loading must map that path back to the element name.
     [Fact]

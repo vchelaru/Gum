@@ -91,6 +91,14 @@ public abstract class GumServiceSkiaBase : IGumService
     public GumLoadResult? LastLoadResult { get; private set; }
 
     /// <summary>
+    /// The <see cref="ProjectResolution"/> produced when the current project was loaded, or
+    /// <c>null</c> if no project file has been loaded. Carries the project's
+    /// <see cref="IGumFileProvider"/> (loose directory or <c>.gumpkg</c> bundle), which
+    /// <see cref="LoadAnimations"/> enumerates.
+    /// </summary>
+    public ProjectResolution? CurrentProjectResolution { get; private set; }
+
+    /// <summary>
     /// The root container that fills the entire canvas. Elements added via
     /// <see cref="GraphicalUiElement.AddToRoot()"/>
     /// become children of this container. Null until <c>Initialize</c> is called.
@@ -303,23 +311,19 @@ public abstract class GumServiceSkiaBase : IGumService
     public void ExportSnapshot(string filePath, bool shake = true) =>
         SnapshotExporter.ExportSnapshot(Root, filePath, shake);
 
-    // Set by Initialize when a project is loaded from a loose .gumx/.gumj file, so LoadAnimations can
-    // enumerate *Animations.ganx/.ganj files from the project's own directory. This base has no
-    // .gumpkg (bundle) support, so it's always a loose-file provider. Not used by EnableHotReload's
-    // reload path -- GumHotReloadManager builds its own provider from the watched source path.
-    private IGumFileProvider? _projectFileProvider;
-
     /// <summary>
     /// Loads animations for all elements in the project by enumerating the project's
-    /// <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files from the directory the project was
-    /// loaded from.
+    /// <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files through
+    /// <see cref="CurrentProjectResolution"/>'s file provider: the loaded project's directory, or its
+    /// <c>.gumpkg</c> bundle.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Thrown if a Gum project hasn't been loaded first (via the <c>gumProjectFile</c> overload of
     /// <see cref="Initialize(SKCanvas, int, int, string)"/>).
     /// </exception>
     [Obsolete("Experimental - this API may change in future versions")]
-    public void LoadAnimations() => GumAnimationLoader.LoadAnimations(_projectFileProvider);
+    public void LoadAnimations() =>
+        GumAnimationLoader.LoadAnimations(CurrentProjectResolution?.FileProvider, CurrentProjectResolution?.UsedBundle ?? false);
 
     #endregion
 
@@ -428,16 +432,24 @@ public abstract class GumServiceSkiaBase : IGumService
         }
 
         LastLoadResult = null;
+        ReleaseProjectResolution();
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-            var gumProject = GumProjectSave.Load(gumProjectFile, out GumLoadResult loadResult);
+            // Resolve loose-vs-bundle off the file extension, the same as the MonoGame/raylib
+            // GumService: ".gumx"/".gumj" = loose, ".gumpkg" = bundle. In bundle mode this installs
+            // a CustomGetStreamFromFile hook so content loads also read from the bundle.
+            ProjectResolution projectResolution = GumBundleLoader.Resolve(gumProjectFile);
+            CurrentProjectResolution = projectResolution;
+            _installedBundleHook = projectResolution.UsedBundle ? FileManager.CustomGetStreamFromFile : null;
+            var gumProject = GumProjectSave.Load(projectResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
             loadResult.ThrowIfFailed(gumProject);
             var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
             if (localizationService != null)
             {
-                // This base loads only loose projects (.gumpkg is #5228), so there is no bundle provider.
-                ProjectLocalizationLoader.Load(gumProject, localizationService, bundleFileProvider: null, loadResult.Warnings);
+                ProjectLocalizationLoader.Load(gumProject, localizationService,
+                    projectResolution.UsedBundle ? projectResolution.FileProvider : null,
+                    loadResult.Warnings);
             }
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
@@ -452,10 +464,25 @@ public abstract class GumServiceSkiaBase : IGumService
             var gumDirectory = FileManager.GetDirectory(absolutePath);
 
             FileManager.RelativeDirectory = gumDirectory;
-            _projectFileProvider = new LooseFileGumFileProvider(gumDirectory);
         }
 
         IsInitialized = true;
+    }
+
+    // The CustomGetStreamFromFile hook the current bundle load installed, or null for a loose project.
+    private Func<string, System.IO.Stream>? _installedBundleHook;
+
+    // Drops the previous project's resolution. A bundle load replaced FileManager.CustomGetStreamFromFile,
+    // so put back the hook it composed over rather than stacking the next bundle on top of it. Skipped
+    // when the host has since installed its own hook, which is theirs to keep.
+    private void ReleaseProjectResolution()
+    {
+        if (_installedBundleHook != null && FileManager.CustomGetStreamFromFile == _installedBundleHook)
+        {
+            FileManager.CustomGetStreamFromFile = CurrentProjectResolution?.PreviousHook;
+        }
+        _installedBundleHook = null;
+        CurrentProjectResolution = null;
     }
 
     /// <summary>
