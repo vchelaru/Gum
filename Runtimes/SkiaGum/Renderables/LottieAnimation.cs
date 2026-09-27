@@ -10,8 +10,20 @@ using Gum;
 
 namespace SkiaGum.Renderables;
 
-internal class LottieAnimation : IRenderableIpso, IVisible
+internal class LottieAnimation : IRenderableIpso, IVisible, ICloneable
 {
+    /// <summary>
+    /// Creates a copy for <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/> with its own
+    /// children collection and no parent.
+    /// </summary>
+    public object Clone()
+    {
+        LottieAnimation clone = (LottieAnimation)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        return clone;
+    }
+
     public SkiaSharp.Skottie.Animation? Animation
     {
         get; set;
