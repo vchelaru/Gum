@@ -16,6 +16,19 @@ namespace RaylibGum.Tests.Renderables;
 public class RenderableCloneTests
 {
     [Fact]
+    public void LinePolygon_Clone_DoesNotSharePoints()
+    {
+        LinePolygon original = new LinePolygon();
+        original.SetPoints(new[] { new System.Numerics.Vector2(0, 0), new System.Numerics.Vector2(10, 0) });
+
+        LinePolygon clone = (LinePolygon)((ICloneable)original).Clone();
+        clone.SetPoints(new[] { new System.Numerics.Vector2(5, 5) });
+
+        original.Points.Count.ShouldBe(2);
+        clone.Points.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void NineSlice_Clone_CopiesFieldValues()
     {
         var original = new NineSlice

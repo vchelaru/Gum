@@ -333,7 +333,7 @@ public class AnimationEditorScenarioTests
         editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.5, tolerance: 0.05);
         editor.TimelineTimeBox.Text.ShouldStartWith("0.5");
         StateSave shown = editor.SelectedState.CustomCurrentStateSave.ShouldNotBeNull();
-        ((float)shown.GetValue("X")).ShouldBe(50f, tolerance: 5f);
+        shown.GetValue("X").ShouldBeOfType<float>().ShouldBe(50f, tolerance: 5f);
     }
 
     [AvaloniaFact]

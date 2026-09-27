@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using Gum.GueDeriving;
 using SkiaSharp;
 using Svg.Skia;
+using System;
 using System.Collections.ObjectModel;
 using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
@@ -11,8 +12,20 @@ using System.Drawing;
 
 namespace SkiaGum;
 
-public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate
+public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, ICloneable
 {
+    /// <summary>
+    /// Creates a copy for <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/> with its own
+    /// children collection and no parent.
+    /// </summary>
+    public object Clone()
+    {
+        VectorSprite clone = (VectorSprite)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        return clone;
+    }
+
     #region Fields/Properties
 
     public SKColor Color

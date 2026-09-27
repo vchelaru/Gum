@@ -8,14 +8,28 @@ using System.Drawing;
 
 namespace SkiaGum.Renderables;
 
-public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureCoordinate
+public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
 {
     /// <summary>
     /// Shared AnimationChain playback state. The constructor wires
     /// <see cref="AnimationChainLogic.ApplyFrame"/> to copy the active frame's
     /// texture and (UV-derived) source rectangle onto this NineSlice.
     /// </summary>
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
+
+    /// <inheritdoc/>
+    public override object Clone()
+    {
+        NineSlice clone = (NineSlice)base.Clone();
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        // An owned image would be disposed by whichever side changes texture first, so the clone
+        // builds its own. A caller-assigned image is shared, since neither side disposes it.
+        if (_ownsImage && _texture != null)
+        {
+            clone._image = SKImage.FromBitmap(_texture);
+        }
+        return clone;
+    }
 
     // Nearest-neighbour sampling. Linear filtering bleeds adjacent-section texels
     // across the boundary between two sections of the nine-slice source texture,
@@ -94,18 +108,55 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
         return AnimationLogic.AnimateSelf(secondDifference);
     }
 
+    /// <summary>
+    /// The bitmap this nine-slice draws. Setting it builds a new <see cref="Image"/> that the
+    /// nine-slice owns and disposes when it is replaced. The bitmap itself is never disposed here,
+    /// since it usually comes from the shared content cache.
+    /// </summary>
     public SKBitmap? Texture
     {
         get => _texture;
         set
         {
             _texture = value;
-            Image = value != null ? SKImage.FromBitmap(value) : null;
+            SetImage(value != null ? SKImage.FromBitmap(value) : null, ownsImage: true);
         }
     }
     private SKBitmap? _texture;
 
-    public SKImage? Image { get; set; }
+    /// <summary>
+    /// The image this nine-slice draws. An image assigned here stays owned by the caller: the
+    /// nine-slice never disposes it.
+    /// </summary>
+    public SKImage? Image
+    {
+        get => _image;
+        set => SetImage(value, ownsImage: false);
+    }
+
+    private SKImage? _image;
+    private bool _ownsImage;
+
+    private void SetImage(SKImage? image, bool ownsImage)
+    {
+        if (ReferenceEquals(image, _image))
+        {
+            return;
+        }
+        if (_ownsImage)
+        {
+            _image?.Dispose();
+        }
+        _image = image;
+        _ownsImage = ownsImage && image != null;
+    }
+
+    /// <inheritdoc/>
+    public override void Dispose()
+    {
+        SetImage(null, ownsImage: false);
+        base.Dispose();
+    }
 
     public Rectangle? SourceRectangle { get; set; }
 
@@ -139,8 +190,6 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
     /// allowing the border to be drawn larger or smaller than its source pixel size.
     /// </summary>
     public float BorderScale { get; set; } = 1f;
-
-    public object Clone() => this.MemberwiseClone();
 
     protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {

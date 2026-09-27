@@ -37,7 +37,7 @@ public class Sprite : SpriteBatchRenderableBase,
         set {  mInvalidTexture = value; }
     }
 
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
 
     public int CurrentFrameIndex
     {
@@ -1057,6 +1057,7 @@ public class Sprite : SpriteBatchRenderableBase,
         var newInstance = (Sprite)this.MemberwiseClone();
         newInstance.mParent = null;
         newInstance.mChildren = new ();
+        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
 
         return newInstance;
     }

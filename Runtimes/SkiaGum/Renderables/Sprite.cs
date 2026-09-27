@@ -9,30 +9,56 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable, IRenderTargetTextureReferencer
+public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, IRenderTargetTextureReferencer
 {
-    public object Clone()
+    /// <summary>
+    /// The bitmap this sprite draws. Setting it builds a new <see cref="Image"/> that the sprite owns
+    /// and disposes when it is replaced. The bitmap itself is never disposed here, since it usually
+    /// comes from the shared content cache.
+    /// </summary>
+    public SKBitmap? Texture
     {
-        return this.MemberwiseClone();
-    }
-    public SKBitmap? Texture 
-    { 
         get => _texture;
         set
         {
             _texture = value;
-            if(value != null)
-            {
-                Image = SKImage.FromBitmap(value);
-            }
-            else
-            {
-                Image = null;
-            }
+            SetImage(value != null ? SKImage.FromBitmap(value) : null, ownsImage: true);
         }
     }
 
-    public SKImage? Image { get; set; }
+    /// <summary>
+    /// The image this sprite draws. An image assigned here stays owned by the caller: the sprite never
+    /// disposes it.
+    /// </summary>
+    public SKImage? Image
+    {
+        get => _image;
+        set => SetImage(value, ownsImage: false);
+    }
+
+    private SKImage? _image;
+    private bool _ownsImage;
+
+    private void SetImage(SKImage? image, bool ownsImage)
+    {
+        if (ReferenceEquals(image, _image))
+        {
+            return;
+        }
+        if (_ownsImage)
+        {
+            _image?.Dispose();
+        }
+        _image = image;
+        _ownsImage = ownsImage && image != null;
+    }
+
+    /// <inheritdoc/>
+    public override void Dispose()
+    {
+        SetImage(null, ownsImage: false);
+        base.Dispose();
+    }
 
     /// <summary>
     /// The render-target container whose baked offscreen texture this sprite displays, in place of a
@@ -73,7 +99,21 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
     }
 
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
+
+    /// <inheritdoc/>
+    public override object Clone()
+    {
+        Sprite clone = (Sprite)base.Clone();
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        // An owned image would be disposed by whichever side changes texture first, so the clone
+        // builds its own. A caller-assigned image is shared, since neither side disposes it.
+        if (_ownsImage && _texture != null)
+        {
+            clone._image = SKImage.FromBitmap(_texture);
+        }
+        return clone;
+    }
 
     public Sprite()
     {

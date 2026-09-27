@@ -126,7 +126,9 @@ public abstract class GumServiceSkiaBase : IGumService
     /// controls respond to it by default without the host having to wire that up manually.
     /// </summary>
     public void UseKeyboardDefaults() =>
-        FrameworkElement.KeyboardsForUiControl.Add(FormsUtilities.Keyboard);
+        FrameworkElement.KeyboardsForUiControl.Add(
+            FormsUtilities.Keyboard ?? throw new InvalidOperationException(
+                "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
 
     /// <summary>
     /// Registers this service's <see cref="Gamepads"/> as <see cref="FrameworkElement.GamePadsForUiControl"/>,
