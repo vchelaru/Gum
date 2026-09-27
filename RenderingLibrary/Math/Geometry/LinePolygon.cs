@@ -10,7 +10,7 @@ using ToolsUtilitiesStandard.Helpers;
 
 namespace RenderingLibrary.Math.Geometry;
 
-public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
+public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso, System.ICloneable
 {
     #region Fields
 
@@ -327,5 +327,18 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
 
     void IRenderable.PreRender() { }
 
+    /// <summary>
+    /// Creates a copy with its own children collection, no parent, and its own line primitive,
+    /// so changing the copy's points or color leaves this polygon unchanged.
+    /// </summary>
+    public virtual LinePolygon Clone()
+    {
+        LinePolygon clone = (LinePolygon)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        clone.mLinePrimitive = mLinePrimitive.Clone();
+        return clone;
+    }
 
+    object System.ICloneable.Clone() => Clone();
 }

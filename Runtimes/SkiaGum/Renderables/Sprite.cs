@@ -9,12 +9,8 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable, IRenderTargetTextureReferencer
+public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, IRenderTargetTextureReferencer
 {
-    public object Clone()
-    {
-        return this.MemberwiseClone();
-    }
     public SKBitmap? Texture 
     { 
         get => _texture;
@@ -73,7 +69,15 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         }
     }
 
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
+
+    /// <inheritdoc/>
+    public override object Clone()
+    {
+        Sprite clone = (Sprite)base.Clone();
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        return clone;
+    }
 
     public Sprite()
     {

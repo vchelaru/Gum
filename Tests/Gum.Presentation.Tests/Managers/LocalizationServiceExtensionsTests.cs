@@ -38,6 +38,29 @@ public class LocalizationServiceExtensionsTests
     }
 
     [Fact]
+    public void AddDatabaseFromCsv_RowShorterThanHeader_ShouldFallBackToStringIdForMissingCells()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "String ID,English,Spanish\nT_Hello,Hello\nT_Bye,Bye,Adios\n");
+
+            LocalizationService service = new();
+            service.AddDatabaseFromCsv(path, ',');
+
+            service.CurrentLanguage = 1;
+            service.Translate("T_Hello").ShouldBe("Hello");
+            service.CurrentLanguage = 2;
+            service.Translate("T_Hello").ShouldBe("T_Hello");
+            service.Translate("T_Bye").ShouldBe("Adios");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void AddDatabaseFromCsv_SelectingTheLastLanguage_ShouldTranslateCorrectly_NotThrow()
     {
         string path = Path.GetTempFileName();

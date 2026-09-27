@@ -153,6 +153,7 @@ risk is the chance the phase changes the plan.
 ## Related
 
 - `parity-gaps.md` — WPF features the Avalonia tool lacks, each marked blocker, follow-up or dropped (2026-09-26, #5121).
+- `functionality-inventory.md` — every tool feature with a stable ID and its existing test, the source for the nightly end-to-end suite (2026-09-26, #5141).
 - `../decisions/0017-commit-to-avalonia-full-cutover.md` — the decision.
 - `../ui-decoupling-plan.md` — the groundwork plan (Phases 0–4b); its Phase 5 "bet" is this plan.
 - `../decisions/0003-…`, `0004-…`, `0005-…` — the architecture the head binds to.

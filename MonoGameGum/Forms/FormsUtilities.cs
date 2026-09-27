@@ -68,10 +68,12 @@ public class FormsUtilities
         FrameworkElement.MainCursor = cursor;
     }
 
-    // Null only before InitializeDefaults and after Uninitialize; Update throws in either window.
     static IInputReceiverKeyboard? keyboard;
 
-    public static IInputReceiverKeyboard Keyboard => keyboard!;
+    /// <summary>
+    /// The keyboard Forms reads each frame. Null before InitializeDefaults and after Uninitialize.
+    /// </summary>
+    public static IInputReceiverKeyboard? Keyboard => keyboard;
 
     /// <summary>
     /// Replaces the keyboard that Forms reads each frame, for example with a replay driver or a
