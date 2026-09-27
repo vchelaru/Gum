@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Services;
 using Gum.ToolStates;
 using Moq;
 using Shouldly;
@@ -41,7 +42,8 @@ public class RenameFolderDialogViewModelTests : BaseTestClass
             _guiCommands.Object,
             _fileLocations.Object,
             _fileCommands.Object,
-            _projectState.Object);
+            _projectState.Object,
+            new PathCaseSensitivity());
     }
 
     [Fact]
@@ -153,5 +155,92 @@ public class RenameFolderDialogViewModelTests : BaseTestClass
 
         _sut.Error.ShouldBeNull();
         folderNode.VerifySet(x => x.Text = "NewFolder", Times.Once);
+    }
+
+    // Where the file system keeps Foo and foo apart, a case-only rename onto an existing foo is a
+    // collision like any other. Returns early where no case-sensitive directory can be made.
+    [Fact]
+    public void OnAffirmative_WhenCaseOnlyDifferentFolderIsASeparateFolder_ShouldReportItExists()
+    {
+        string? tempRoot = CaseSensitiveTempDirectory.TryCreate();
+        if (tempRoot == null)
+        {
+            return;
+        }
+        try
+        {
+            string screensFolder = Path.Combine(tempRoot, "Screens") + Path.DirectorySeparatorChar;
+            Directory.CreateDirectory(screensFolder + "Foo");
+            Directory.CreateDirectory(screensFolder + "foo");
+            ScreenSave screen = new() { Name = "Foo/Title" };
+            SetUpScreensFolderRename(tempRoot, screensFolder, "Foo", screen);
+
+            _sut.Value = "foo";
+            _sut.OnAffirmative();
+
+            _sut.Error.ShouldBe("Folder foo already exists.");
+            screen.Name.ShouldBe("Foo/Title");
+            _fileCommands.Verify(x => x.MoveDirectory(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    // Where the file system keeps Foo and foo apart, renaming Foo leaves the elements in foo alone.
+    [Fact]
+    public void OnAffirmative_WhenACaseOnlyDifferentFolderExists_ShouldRenameOnlyTheRenamedFoldersElements()
+    {
+        string? tempRoot = CaseSensitiveTempDirectory.TryCreate();
+        if (tempRoot == null)
+        {
+            return;
+        }
+        try
+        {
+            string screensFolder = Path.Combine(tempRoot, "Screens") + Path.DirectorySeparatorChar;
+            Directory.CreateDirectory(screensFolder + "Foo");
+            Directory.CreateDirectory(screensFolder + "foo");
+            ScreenSave renamed = new() { Name = "Foo/Title" };
+            ScreenSave untouched = new() { Name = "foo/Options" };
+            SetUpScreensFolderRename(tempRoot, screensFolder, "Foo", renamed, untouched);
+
+            _sut.Value = "Bar";
+            _sut.OnAffirmative();
+
+            _sut.Error.ShouldBeNull();
+            renamed.Name.ShouldBe("Bar/Title");
+            untouched.Name.ShouldBe("foo/Options");
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    private void SetUpScreensFolderRename(string projectFolder, string screensFolder, string folderName, params ScreenSave[] screens)
+    {
+        GumProjectSave project = new() { FullFileName = Path.Combine(projectFolder, "Project.gumx") };
+        project.Screens.AddRange(screens);
+
+        Mock<ITreeNode> screensRoot = new();
+        screensRoot.Setup(x => x.Text).Returns("Screens");
+        screensRoot.Setup(x => x.Parent).Returns((ITreeNode?)null);
+
+        Mock<ITreeNode> folderNode = new();
+        folderNode.SetupProperty(x => x.Text, folderName);
+        folderNode.Setup(x => x.Parent).Returns(screensRoot.Object);
+        folderNode.Setup(x => x.GetFullFilePath())
+            .Returns(() => new FilePath(screensFolder + folderNode.Object.Text + Path.DirectorySeparatorChar));
+
+        string? whyNotValid = null;
+        _nameVerifier
+            .Setup(x => x.IsFolderNameValid(It.IsAny<string?>(), out whyNotValid))
+            .Returns(true);
+        _projectState.Setup(x => x.GumProjectSave).Returns(project);
+        _fileLocations.Setup(x => x.ScreensFolder).Returns(screensFolder);
+
+        _sut.FolderNode = folderNode.Object;
     }
 }
