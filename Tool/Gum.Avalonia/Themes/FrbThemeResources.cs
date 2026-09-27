@@ -254,6 +254,14 @@ public static class FrbThemeResources
         {
             yield return ("TreeViewItemBorderBrush" + state, "Frb.Brushes.Primary");
         }
+
+        // HyperlinkButton: the WPF Hyperlink style's link color in each theme (Fluent's derives from
+        // the accent, which can read poorly on either background).
+        foreach (string state in new[] { "", "PointerOver", "Pressed", "Visited", "VisitedPointerOver", "VisitedPressed" })
+        {
+            yield return ("HyperlinkButtonForeground" + state, "Frb.Brushes.Link");
+        }
+        yield return ("HyperlinkButtonForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
     }
 
     /// <summary>Builds the resource dictionary for one variant file, resolving colors against it first, then <paramref name="shared"/>.</summary>

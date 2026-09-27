@@ -147,6 +147,46 @@ public class PluginDialogTests
         window.Close();
     }
 
+    [AvaloniaTheory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    public void ImportFromGumxView_DetailsLink_UsesTheThemeLinkColor(string variantName)
+    {
+        // The button theme's white text vanished on the light tree (#5351); the link takes the
+        // palette's link color in each theme instead.
+        global::Avalonia.Styling.ThemeVariant variant = variantName == "Light"
+            ? global::Avalonia.Styling.ThemeVariant.Light
+            : global::Avalonia.Styling.ThemeVariant.Dark;
+        ImportFromGumxViewModel viewModel = CreateImportViewModel();
+        ImportTreeNodeViewModel folder = new ImportTreeNodeViewModel("Standards", "Standards");
+        ImportTreeNodeViewModel text = new ImportTreeNodeViewModel("Text", "Text", ElementItemType.Standard)
+        {
+            StandardDiffRows = new[] { new StandardDiffRowViewModel("Variable", "FontSize differs") },
+        };
+        folder.Children.Add(text);
+        viewModel.RootNodes.Add(folder);
+        viewModel.IsPreviewLoaded = true;
+
+        ImportFromGumxView view = (ImportFromGumxView)Registry.CreateView(viewModel);
+        Window window = new Window { Content = view, RequestedThemeVariant = variant };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+        try
+        {
+            global::Avalonia.Controls.TextBlock details = view.Tree.GetVisualDescendants()
+                .OfType<global::Avalonia.Controls.TextBlock>().Single(block => block.Text == "Details..." && block.DataContext == text);
+            window.TryFindResource("Frb.Brushes.Link", variant, out object? link).ShouldBeTrue();
+
+            ((global::Avalonia.Media.ISolidColorBrush)details.Foreground!).Color
+                .ShouldBe(((global::Avalonia.Media.ISolidColorBrush)link!).Color);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
     private static ImportFromGumxViewModel CreateImportViewModel() => new ImportFromGumxLogic(
         Services.GetRequiredService<IProjectState>(),
         Services.GetRequiredService<IImportLogic>(),
