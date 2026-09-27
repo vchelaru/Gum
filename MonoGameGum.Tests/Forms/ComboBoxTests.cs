@@ -29,6 +29,17 @@ public  class ComboBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void ListBox_SetToNull_ThrowsAndKeepsCurrentListBox()
+    {
+        ComboBox comboBox = new();
+        ListBox originalListBox = comboBox.ListBox;
+
+        Should.Throw<ArgumentNullException>(() => comboBox.ListBox = null!);
+
+        comboBox.ListBox.ShouldBeSameAs(originalListBox);
+    }
+
+    [Fact]
     public void Visual_HasEvents_ShouldBeTrue()
     {
         ComboBox sut = new();

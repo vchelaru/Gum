@@ -98,14 +98,20 @@ namespace SkiaGum.Renderables
                     {
                         _drawable.DrawToSurface(surface);
 
-                        var skImage = surface.Snapshot();
-
-                        Texture = RenderImageToTexture2D(skImage, graphicsDevice, colorType);
+                        Texture = SnapshotToTexture(surface,
+                            image => RenderImageToTexture2D(image, graphicsDevice, colorType));
                         NeedsUpdate = false;
                     }
                 }
             }
 #endif
+        }
+
+        // Converts a snapshot of the surface to a texture, then releases the snapshot's native memory.
+        internal static Texture2D SnapshotToTexture(SKSurface surface, Func<SKImage, Texture2D> toTexture)
+        {
+            using SKImage skImage = surface.Snapshot();
+            return toTexture(skImage);
         }
 
         public static bool PremultiplyRenderToTexture { get; set; } = false;
@@ -127,7 +133,7 @@ namespace SkiaGum.Renderables
         /// <returns>The new Texture2D instance.</returns>
         public static Texture2D RenderImageToTexture2D(SKImage image, GraphicsDevice graphicsDevice, SKColorType skiaColorType, Color? forcedColor = null)
         {
-            var pixelMap = image.PeekPixels();
+            using var pixelMap = image.PeekPixels();
             var pointer = pixelMap.GetPixels();
             var originalPixels = new byte[image.Height * pixelMap.RowBytes];
 

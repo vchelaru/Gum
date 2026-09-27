@@ -11,7 +11,7 @@ using ToolsUtilities;
 namespace RenderingLibrary.Content;
 public static class LoaderManagerExtensionMethods
 {
-    public static void Initialize(this LoaderManager loaderManager, string invalidTextureLocation, string defaultFontLocation, IServiceProvider serviceProvider, SystemManagers managers)
+    public static void Initialize(this LoaderManager loaderManager, string? invalidTextureLocation, string? defaultFontLocation, IServiceProvider serviceProvider, SystemManagers? managers)
     {
 
         CreateInvalidTextureGraphic(loaderManager, invalidTextureLocation, managers);
@@ -45,7 +45,7 @@ public static class LoaderManagerExtensionMethods
         }
     }
 
-    private static void CreateInvalidTextureGraphic(LoaderManager loaderManager, string invalidTextureLocation, SystemManagers managers)
+    private static void CreateInvalidTextureGraphic(LoaderManager loaderManager, string? invalidTextureLocation, SystemManagers? managers)
     {
         if (!string.IsNullOrEmpty(invalidTextureLocation) &&
             FileManager.FileExists(invalidTextureLocation))

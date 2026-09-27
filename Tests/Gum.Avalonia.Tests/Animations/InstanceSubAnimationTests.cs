@@ -125,7 +125,7 @@ public class InstanceSubAnimationTests
 
         editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
         {
-            dialog.AnimationContainers!.Select(container => container.Name).ShouldBe(new[] { "MainMenu (container)", "IconInstance (Icon)" });
+            dialog.AnimationContainers.ShouldNotBeNull().Select(container => container.Name).ShouldBe(new[] { "MainMenu (container)", "IconInstance (Icon)" });
             dialog.SelectedContainer = dialog.AnimationContainers.Single(container => container.InstanceSave == icon);
             dialog.SelectedAnimation = dialog.Animations.Single(animation => animation.Name == "Blink");
             return true;
@@ -191,7 +191,7 @@ public class InstanceSubAnimationTests
     {
         editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
         {
-            dialog.AnimationContainers!.Select(container => container.Name).ShouldBe(new[] { "Button (container)", "IconInstance (Icon)" });
+            dialog.AnimationContainers.ShouldNotBeNull().Select(container => container.Name).ShouldBe(new[] { "Button (container)", "IconInstance (Icon)" });
             dialog.SelectedContainer = dialog.AnimationContainers.Single(container => container.InstanceSave == icon);
             dialog.SelectedAnimation = dialog.Animations.Single(animation => animation.Name == "Blink");
             return true;

@@ -9,8 +9,20 @@ using Gum;
 
 namespace SkiaGum.Renderables;
 
-internal class CanvasRenderable : IRenderableIpso, IVisible
+internal class CanvasRenderable : IRenderableIpso, IVisible, ICloneable
 {
+    /// <summary>
+    /// Creates a copy for <see cref="Gum.Wireframe.GraphicalUiElement.Clone"/> with its own
+    /// children collection and no parent.
+    /// </summary>
+    public object Clone()
+    {
+        CanvasRenderable clone = (CanvasRenderable)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        return clone;
+    }
+
     public object? Tag { get; set; }
     public string? Name
     {
