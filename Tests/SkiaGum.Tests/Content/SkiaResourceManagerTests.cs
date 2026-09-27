@@ -66,6 +66,29 @@ public class SkiaResourceManagerTests
         }
     }
 
+    // A project saved on Windows stores SourceFile values like "Images\Button.png". Both
+    // separators must reach disk I/O as the native one: a backslash is a file-name character on
+    // macOS/Linux, and a forward slash left in a Windows path does not match the cache's key shape.
+    [Theory]
+    [InlineData("Images\\Button.png")]
+    [InlineData("Images/Button.png")]
+    public void GetAbsoluteFilePath_RelativeName_ShouldUseNativeSeparators(string resourceName)
+    {
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        try
+        {
+            FileManager.RelativeDirectory = "/game/Content/";
+
+            string path = SkiaResourceManager.GetAbsoluteFilePath(resourceName);
+
+            path.ShouldBe("/game/Content/Images/Button.png".Replace('/', Path.DirectorySeparatorChar));
+        }
+        finally
+        {
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+        }
+    }
+
     // #5111: GetSKBitmapFromUrl downloads the image and hands the stream to GetSKBitmap, which
     // must decode that stream instead of looking for the URL on disk or as an embedded resource.
     [Fact]
