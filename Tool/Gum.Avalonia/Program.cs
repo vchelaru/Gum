@@ -93,13 +93,13 @@ public static class Program
             .LogToTrace();
 
     /// <summary>
-    /// The per-user Gum settings folder (honors <see cref="FileManager.UserApplicationDataFolderOverride"/>,
-    /// e.g. the <c>--user-data</c> option, so tests and unattended runs don't touch the real one).
+    /// The per-user Gum settings folder, <see cref="FileManager.UserApplicationDataForThisApplication"/>
+    /// without its trailing separator. It honors the <c>--user-data</c> override, so tests and
+    /// unattended runs don't touch the real one.
     /// Shared with <see cref="App"/> so freeze diagnostics land next to the rest of a user's Gum data.
     /// </summary>
     internal static string GetAppDataDirectory() =>
-        FileManager.UserApplicationDataFolderOverride
-            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gum");
+        FileManager.UserApplicationDataForThisApplication.TrimEnd(Path.DirectorySeparatorChar);
 
     /// <summary>
     /// The same host shape as the WPF head: settings from the per-user Gum folder, the headless

@@ -346,6 +346,14 @@ Blue = Components/Styles.PrimaryColor.Blue
 
 <figure><img src="../../../.gitbook/assets/07_08 19 47.gif" alt=""><figcaption><p>Assigning Color expands the variables automatically</p></figcaption></figure>
 
+## Missing Reference Target (GUM0009)
+
+A variable reference can read from something the project does not have: an element that was deleted, renamed outside of Gum, or never imported, or an instance or variable that element does not have. For example, `Color = Components/Styles.Primary.FillColor` in a project with no `Styles` component. Such a reference never resolves, so the variable keeps its default value.
+
+Gum reports a **GUM0009** warning in the [Errors tab](../../editor-tab.md) for each of these lines, naming the element, the state, the line, and what it reads that is missing. `gumcli check` reports the same warning. To resolve it, add or import the missing element, or change the reference to point at one the project has.
+
+Renaming an element in Gum updates the references to it, so this usually happens after editing files outside of Gum or importing only part of another project.
+
 ## Variable References in the Property Grid
 
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.

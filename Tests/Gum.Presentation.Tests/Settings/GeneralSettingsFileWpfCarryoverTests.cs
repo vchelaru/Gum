@@ -11,22 +11,20 @@ namespace Gum.Presentation.Tests.Settings;
 /// The <c>GeneralSettings.xml</c> the WPF head wrote to the per-user Gum folder, which the Avalonia
 /// head reads on its first launch. Runs against a temp user-data folder, never the real one.
 /// </summary>
-public class GeneralSettingsFileWpfCarryoverTests : IDisposable
+public class GeneralSettingsFileWpfCarryoverTests : BaseTestClass
 {
     private readonly string _userDataFolder;
-    private readonly string? _originalOverride;
 
     public GeneralSettingsFileWpfCarryoverTests()
     {
         _userDataFolder = Path.Combine(Path.GetTempPath(), "GumPresentationTests", "GeneralSettings", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_userDataFolder);
-        _originalOverride = FileManager.UserApplicationDataFolderOverride;
         FileManager.UserApplicationDataFolderOverride = _userDataFolder;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
-        FileManager.UserApplicationDataFolderOverride = _originalOverride;
+        base.Dispose();
         Directory.Delete(_userDataFolder, recursive: true);
     }
 

@@ -21,6 +21,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0006"] = "gum-tool/project-files#missing-referenced-external-file-gum0006",
             ["GUM0007"] = "gum-tool/project-files#invalid-enum-variable-value-gum0007",
             ["GUM0008"] = "gum-tool/project-files#file-name-case-mismatch-gum0008",
+            ["GUM0009"] = "gum-tool/gum-elements/general-properties/variable-references#missing-reference-target-gum0009",
         };
     }
 
