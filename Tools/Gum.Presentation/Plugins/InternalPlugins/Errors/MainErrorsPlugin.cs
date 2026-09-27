@@ -109,8 +109,9 @@ public class MainErrorsPlugin : CorePriorityPlugin
     /// <summary>
     /// Queues one project-level pass on the UI thread; a burst of notifications (a branch switch
     /// changes many files in one flush) runs it once. Element edits don't queue one: a pass walks
-    /// the whole project, so a row an element edit adds or clears (a font's page files) updates on
-    /// the next project save, file change or load.
+    /// the whole project on the UI thread (hundreds of milliseconds for an 80-element project), so a
+    /// row an element edit adds or clears (a font's page files, an .achx's frames) updates on the
+    /// next project save, file change or load. That row is rare enough not to justify the cost.
     /// </summary>
     private void ScheduleProjectErrorRefresh()
     {
