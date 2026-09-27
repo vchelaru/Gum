@@ -83,6 +83,7 @@
   <ComponentReference Name="Meadow/Controls/Toast" />
   <ComponentReference Name="Meadow/Controls/UserControl" />
   <ComponentReference Name="Meadow/Controls/Window" />
+  <ComponentReference Name="Meadow/Elements/Divider" />
   <ComponentReference Name="Meadow/Elements/Icon" />
   <ComponentReference Name="Meadow/Styles" />
   <StandardElementReference Name="Circle" />

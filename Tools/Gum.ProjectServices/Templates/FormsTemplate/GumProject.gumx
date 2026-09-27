@@ -95,6 +95,7 @@
   <ComponentReference Name="Controls/UserControl" />
   <ComponentReference Name="Controls/Window" />
   <ComponentReference Name="Elements/CautionLines" />
+  <ComponentReference Name="Elements/Divider" />
   <ComponentReference Name="Elements/DividerHorizontal" />
   <ComponentReference Name="Elements/DividerVertical" />
   <ComponentReference Name="Elements/Icon" />

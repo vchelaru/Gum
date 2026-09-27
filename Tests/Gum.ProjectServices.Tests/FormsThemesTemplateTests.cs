@@ -67,6 +67,82 @@ public class FormsThemesTemplateTests
             .ShouldBeEmpty();
     }
 
+    private static readonly string[] AllTemplateFolders =
+    {
+        "FormsTemplate",
+        "FormsThemes/Bubblegum", "FormsThemes/DarkPro", "FormsThemes/ForestGlade", "FormsThemes/Hazard",
+        "FormsThemes/Meadow", "FormsThemes/Neon", "FormsThemes/Retro95"
+    };
+
+    public static IEnumerable<object[]> TemplateFolders => AllTemplateFolders.Select(folder => new object[] { folder });
+
+    public static IEnumerable<object[]> TemplateFoldersAndSubfolders =>
+        AllTemplateFolders.SelectMany(folder => new[]
+        {
+            new object[] { folder, "Components", GumProjectSave.ComponentExtension },
+            new object[] { folder, "Screens", GumProjectSave.ScreenExtension },
+        });
+
+    // Add Forms installs every element file on disk (FormsFileService.GetSourceDestinations) and
+    // gumcli new/add-forms install every manifest line (FormsTemplateCreator), while the tool and
+    // gumcli check only see what the .gumx references. An element in one set but not another is
+    // installed without ever being checked or seen while the theme is edited (#5348).
+    [Theory]
+    [MemberData(nameof(TemplateFoldersAndSubfolders))]
+    public void GumxReferences_ShouldMatchElementFilesOnDiskAndManifest(string templateFolder, string subfolder, string extension)
+    {
+        StandardElementsManager.Self.Initialize();
+        string templateDir = Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates",
+            templateFolder.Replace('/', Path.DirectorySeparatorChar));
+        string elementDir = Path.Combine(templateDir, subfolder);
+        GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
+
+        List<string> onDisk = Directory.GetFiles(elementDir, "*." + extension, SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(elementDir, file).Replace('\\', '/'))
+            .Select(relative => relative.Substring(0, relative.Length - extension.Length - 1))
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
+        List<string> inManifest = File.ReadAllLines(Path.Combine(templateDir, "manifest.txt"))
+            .Select(line => line.Trim())
+            .Where(line => line.StartsWith(subfolder + "/", StringComparison.Ordinal)
+                && line.EndsWith("." + extension, StringComparison.Ordinal))
+            .Select(line => line.Substring(subfolder.Length + 1, line.Length - subfolder.Length - extension.Length - 2))
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
+        List<ElementReference> references = subfolder == "Screens" ? project.ScreenReferences : project.ComponentReferences;
+        List<string> inGumx = references
+            .Select(reference => reference.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
+
+        inGumx.ShouldBe(onDisk, $"{templateFolder}/{subfolder}: .gumx references vs files on disk");
+        inManifest.ShouldBe(onDisk, $"{templateFolder}/{subfolder}: manifest.txt vs files on disk");
+    }
+
+    // Same check as "gumcli check-references": a reference whose scalar isn't materialized renders
+    // one way in the tool (which applies references) and another at runtime (which reads the scalar).
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void Load_ShouldHaveNoUnpropagatedVariableReferences(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        string templateDir = Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates",
+            templateFolder.Replace('/', Path.DirectorySeparatorChar));
+        GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            new ReferencePropagationService().Detect(project).Elements
+                .Select(entry => entry.Element.Name)
+                .ShouldBeEmpty();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
     private static string FindRepoRoot()
     {
         string current = AppContext.BaseDirectory;

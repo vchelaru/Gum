@@ -83,6 +83,7 @@
   <ComponentReference Name="Hazard/Controls/Toast" />
   <ComponentReference Name="Hazard/Controls/UserControl" />
   <ComponentReference Name="Hazard/Controls/Window" />
+  <ComponentReference Name="Hazard/Elements/Divider" />
   <ComponentReference Name="Hazard/Elements/Icon" />
   <ComponentReference Name="Hazard/Styles" />
   <StandardElementReference Name="Circle" />

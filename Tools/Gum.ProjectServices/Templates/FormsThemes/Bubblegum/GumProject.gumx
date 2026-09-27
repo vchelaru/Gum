@@ -83,6 +83,7 @@
   <ComponentReference Name="Bubblegum/Controls/Toast" />
   <ComponentReference Name="Bubblegum/Controls/UserControl" />
   <ComponentReference Name="Bubblegum/Controls/Window" />
+  <ComponentReference Name="Bubblegum/Elements/Divider" />
   <ComponentReference Name="Bubblegum/Elements/Icon" />
   <ComponentReference Name="Bubblegum/Styles" />
   <StandardElementReference Name="Circle" />

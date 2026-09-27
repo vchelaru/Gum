@@ -92,8 +92,6 @@ GumProject.gumx
 Screens/DemoScreenGum.gusx
 Screens/DemoScreenGumAnimations.ganx
 Screens/KeyboardScreenGum.gusx
-Screens/NewScreen1Gum.gusx
-Screens/PolygonScreenGum.gusx
 Screens/StylesScreen.gusx
 Standards/Circle.gutx
 Standards/Component.gutx

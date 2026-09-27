@@ -84,6 +84,7 @@
   <ComponentReference Name="DarkPro/Controls/Toast" />
   <ComponentReference Name="DarkPro/Controls/UserControl" />
   <ComponentReference Name="DarkPro/Controls/Window" />
+  <ComponentReference Name="DarkPro/Elements/Divider" />
   <ComponentReference Name="DarkPro/Elements/Icon" />
   <ComponentReference Name="DarkPro/Styles" />
   <StandardElementReference Name="Circle" />
