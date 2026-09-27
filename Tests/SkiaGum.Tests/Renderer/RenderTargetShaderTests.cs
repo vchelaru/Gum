@@ -262,6 +262,44 @@ half4 main(float2 coord) {
         }
     }
 
+    // #5221: a shader packed in a .gumpkg bundle exists only behind FileManager.CustomGetStreamFromFile.
+    // The project-relative candidate must still be chosen, or the resolver gets a bare path that
+    // no longer points into the project.
+    [Fact]
+    public void SourceShaderFile_PassesProjectRelativePathToResolver_WhenShaderIsOnlyReachableThroughTheStreamHook()
+    {
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "HookShaderTest_" + Guid.NewGuid().ToString("N"))
+            + Path.DirectorySeparatorChar;
+        string expectedPath = projectDirectory + "Grayscale.sksl";
+        string previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
+        Func<string, Stream>? previousHook = ToolsUtilities.FileManager.CustomGetStreamFromFile;
+        string? resolvedPath = null;
+        try
+        {
+            ToolsUtilities.FileManager.RelativeDirectory = projectDirectory;
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = requestedPath =>
+                requestedPath == expectedPath
+                    ? new MemoryStream(System.Text.Encoding.UTF8.GetBytes(GrayscaleSksl))
+                    : throw new FileNotFoundException(requestedPath, requestedPath);
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
+            {
+                resolvedPath = path;
+                return SKRuntimeEffect.CreateShader(GrayscaleSksl, out _);
+            };
+            ContainerRuntime container = new() { IsRenderTarget = true };
+
+            container.SourceShaderFile = "Grayscale.sksl";
+
+            resolvedPath.ShouldBe(expectedPath);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
+            ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
+        }
+    }
+
     private static SKBitmap BuildTwoColorTexture()
     {
         SKBitmap bitmap = new(40, 40);

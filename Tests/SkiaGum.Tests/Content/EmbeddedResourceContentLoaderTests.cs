@@ -64,6 +64,68 @@ public class EmbeddedResourceContentLoaderTests
         loaded.ShouldBeNull();
     }
 
+    // #5221: a .gumpkg bundle, zip-backed asset store or mobile host serves content only through
+    // FileManager.CustomGetStreamFromFile. Every Skia content type must read through that hook, as the
+    // MonoGame and raylib loaders do, instead of probing the real disk and then embedded resources.
+    [Theory]
+    [InlineData("image.png")]
+    [InlineData("vector.svg")]
+    [InlineData("animation.json")]
+    [InlineData("font.ttf")]
+    public void LoadContent_WhenFileIsOnlyReachableThroughTheStreamHook_ShouldLoadFromTheHook(string fileName)
+    {
+        byte[] contentBytes = CreateContentBytes(fileName);
+        string offDiskDirectory = "NotOnDisk_" + Guid.NewGuid().ToString("N");
+        string offDiskPath = Path.Combine(Path.GetTempPath(), offDiskDirectory, fileName);
+        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
+
+        try
+        {
+            FileManager.CustomGetStreamFromFile = requestedPath =>
+                requestedPath.Contains(offDiskDirectory)
+                    ? new MemoryStream(contentBytes)
+                    : throw new FileNotFoundException($"Unexpected read of '{requestedPath}'.", requestedPath);
+
+            EmbeddedResourceContentLoader loader = new EmbeddedResourceContentLoader();
+
+            object? loaded = Path.GetExtension(fileName) switch
+            {
+                ".png" => loader.LoadContent<SKBitmap>(offDiskPath),
+                ".svg" => loader.LoadContent<Svg.Skia.SKSvg>(offDiskPath),
+                ".json" => loader.LoadContent<SkiaSharp.Skottie.Animation>(offDiskPath),
+                _ => loader.LoadContent<SKTypeface>(offDiskPath),
+            };
+
+            loaded.ShouldNotBeNull();
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
+    private static byte[] CreateContentBytes(string fileName)
+    {
+        switch (Path.GetExtension(fileName))
+        {
+            case ".png":
+                using (SKBitmap source = new SKBitmap(2, 2))
+                using (SKImage image = SKImage.FromBitmap(source))
+                using (SKData encoded = image.Encode(SKEncodedImageFormat.Png, 100))
+                {
+                    return encoded.ToArray();
+                }
+            case ".svg":
+                return System.Text.Encoding.UTF8.GetBytes(
+                    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"4\" height=\"4\"><rect width=\"4\" height=\"4\" fill=\"red\"/></svg>");
+            case ".json":
+                return System.Text.Encoding.UTF8.GetBytes(
+                    "{\"v\":\"5.7.0\",\"fr\":30,\"ip\":0,\"op\":30,\"w\":4,\"h\":4,\"layers\":[]}");
+            default:
+                return File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "TestFont.ttf"));
+        }
+    }
+
     [Fact]
     public void TryLoadContent_ForUnsupportedType_ShouldReturnDefaultWithoutThrowing()
     {
