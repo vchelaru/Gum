@@ -8,7 +8,7 @@ using System.Drawing;
 
 namespace SkiaGum.Renderables;
 
-public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureCoordinate
+public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
 {
     /// <summary>
     /// Shared AnimationChain playback state. The constructor wires
@@ -139,8 +139,6 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
     /// allowing the border to be drawn larger or smaller than its source pixel size.
     /// </summary>
     public float BorderScale { get; set; } = 1f;
-
-    public object Clone() => this.MemberwiseClone();
 
     protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {
