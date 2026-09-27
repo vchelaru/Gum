@@ -18,9 +18,6 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 /// The head's own States tab (the singleton state tree view) in a headless window with the main
 /// window's app-wide hotkeys, over the project a <see cref="ProjectTreeHarness"/> owns. Rows are
 /// clicked and right-clicked, the "+" buttons pressed and keys sent with the tree focused.
-/// Create it (first use of <see cref="ProjectTreeHarness.States"/>) before selecting a behavior:
-/// hosted while a behavior is selected, its window hit-tests nothing and the driver fails with the
-/// compositor-race message.
 /// </summary>
 internal sealed class StatesTabHarness : IDisposable
 {
@@ -34,7 +31,7 @@ internal sealed class StatesTabHarness : IDisposable
         _throwIfCrashed = throwIfCrashed;
         View = ((AvaloniaTabManager)Services.GetRequiredService<ITabManager>()).AllTabs
             .Select(tab => tab.Content).OfType<AvaloniaStateTreeView>().Single();
-        _driver = new HeadlessWindowDriver(View, width: 360, height: 700, framesFolderName: "GumStatesTab", contentOutlivesTest: true);
+        _driver = new HeadlessWindowDriver(View, width: 360, height: 700, framesFolderName: "GumStatesTab");
         AppWideWindowInput.RouteHotkeys(_driver.Window,
             Services.GetRequiredService<IHotkeyManager>(),
             Services.GetRequiredService<AvaloniaModifierKeyState>());

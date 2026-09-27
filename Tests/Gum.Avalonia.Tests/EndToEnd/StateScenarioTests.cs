@@ -225,10 +225,10 @@ public class StateScenarioTests
     public void TheMarkers_ShowWhichStatesSetTheSelectionAndWhichTheSelectedBehaviorRequires()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
-        StatesTabHarness states = tree.States;
         tree.Dialogs.AnswerNextUserString("Clickable");
         tree.RightClick(tree.RootNode("Behaviors"));
         tree.PickMenu("Add Behavior");
+        StatesTabHarness states = tree.States;
         tree.Dialogs.AnswerNext<AddCategoryDialogViewModel>(dialog => { dialog.Value = "Looks"; return true; });
         states.ClickNewCategory();
         tree.Dialogs.AnswerNext<AddStateDialogViewModel>(dialog => { dialog.Value = "Pressed"; return true; });
