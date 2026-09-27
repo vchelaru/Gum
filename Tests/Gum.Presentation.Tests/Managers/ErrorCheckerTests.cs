@@ -3,6 +3,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.ProjectServices;
+using Gum.Services;
 using Moq;
 using Shouldly;
 
@@ -18,7 +19,7 @@ public class ErrorCheckerTests : BaseTestClass
         IHeadlessErrorChecker headlessErrorChecker = new HeadlessErrorChecker(typeResolver);
         Mock<IPluginManager> mockPluginManager = new Mock<IPluginManager>();
         IErrorDocsRegistry errorDocsRegistry = new ErrorDocsRegistry();
-        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry);
+        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry, Mock.Of<IFileSystemRevealService>());
     }
 
     [Fact]
@@ -82,7 +83,7 @@ public class ErrorCheckerTests : BaseTestClass
             .Callback<List<ErrorViewModel>, object?>(
                 (list, _) => list.Add(new ErrorViewModel { Message = "plugin error" }));
         IErrorDocsRegistry errorDocsRegistry = new ErrorDocsRegistry();
-        ErrorChecker sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry);
+        ErrorChecker sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry, Mock.Of<IFileSystemRevealService>());
 
         ErrorViewModel[] errors = sut.GetErrorsFor(component, project);
 
@@ -105,6 +106,30 @@ public class ErrorCheckerTests : BaseTestClass
         checkedElement.ShouldBe(component);
         reported.ShouldBe(returned);
         reported.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void GetProjectErrors_OffersToShowTheFile_WhenTheErrorNamesOne()
+    {
+        GumProjectSave project = new GumProjectSave();
+        string filePath = "C:/Game/Localization/strings.csv";
+        Mock<IHeadlessErrorChecker> headlessErrorChecker = new Mock<IHeadlessErrorChecker>();
+        headlessErrorChecker.Setup(c => c.GetProjectErrors(project)).Returns(new[]
+        {
+            new ErrorResult { ElementName = "(project)", Code = "GUM0008", Message = "case", FilePath = filePath },
+            new ErrorResult { ElementName = "(project)", Message = "no file" },
+        });
+        Mock<IFileSystemRevealService> revealService = new Mock<IFileSystemRevealService>();
+        ErrorChecker sut = new ErrorChecker(headlessErrorChecker.Object, new Mock<IPluginManager>().Object,
+            new ErrorDocsRegistry(), revealService.Object);
+
+        ErrorViewModel[] errors = sut.GetProjectErrors(project);
+
+        errors.Length.ShouldBe(2);
+        errors[0].HelpUrl.ShouldNotBeNull();
+        errors[1].HasAction.ShouldBeFalse();
+        errors[0].ActionCommand!.Execute(null);
+        revealService.Verify(r => r.RevealFile(filePath), Times.Once);
     }
 
     [Fact]

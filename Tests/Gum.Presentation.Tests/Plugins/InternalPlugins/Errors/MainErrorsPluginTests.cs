@@ -9,6 +9,7 @@ using Gum.Plugins.Errors;
 using Gum.Services;
 using Gum.ToolStates;
 using Moq;
+using Shouldly;
 
 namespace Gum.Presentation.Tests.Plugins.InternalPlugins.Errors;
 
@@ -26,6 +27,8 @@ public class MainErrorsPluginTests : BaseTestClass
     private readonly GumProjectSave _project;
     private readonly ScreenSave _screen;
     private readonly MainErrorsPlugin _plugin;
+    private readonly List<Action> _posted = new();
+    private AllErrorsViewModel _viewModel = null!;
 
     public MainErrorsPluginTests()
     {
@@ -38,7 +41,12 @@ public class MainErrorsPluginTests : BaseTestClass
 
         Mock<ITabManager> tabManager = new();
         tabManager.Setup(t => t.AddControl(It.IsAny<object>(), "Errors", It.IsAny<TabLocation>()))
+            .Callback<object, string, TabLocation>((content, _, _) => _viewModel = (AllErrorsViewModel)content)
             .Returns(Mock.Of<IPluginTab>());
+        _errorChecker.Setup(c => c.GetProjectErrors(It.IsAny<GumProjectSave>()))
+            .Returns(new ErrorViewModel[0]);
+        Mock<IDispatcher> dispatcher = new();
+        dispatcher.Setup(d => d.Post(It.IsAny<Action>())).Callback<Action>(_posted.Add);
 
         _plugin = new MainErrorsPlugin(
             _errorChecker.Object,
@@ -46,7 +54,8 @@ public class MainErrorsPluginTests : BaseTestClass
             _selectedState.Object,
             Mock.Of<IClipboardService>(),
             Mock.Of<IFileSystemRevealService>(),
-            _projectState.Object)
+            _projectState.Object,
+            dispatcher.Object)
         {
             TabManager = tabManager.Object,
         };
@@ -106,5 +115,43 @@ public class MainErrorsPluginTests : BaseTestClass
         }
 
         _errorChecker.Verify(c => c.GetErrorsFor(_screen, _project), Times.Once);
+    }
+
+    /// <summary>
+    /// Project-level rows (#5262) come from a pass over the whole project: it runs once per burst of
+    /// load, save and file-change notifications, and a selection change reuses its result.
+    /// </summary>
+    [Fact]
+    public void ProjectErrors_RunOncePerBurst_AndStayListedAcrossSelectionChanges()
+    {
+        ErrorViewModel projectError = new ErrorViewModel { Code = "GUM0008", Message = "Strings.csv" };
+        _errorChecker.Setup(c => c.GetProjectErrors(_project)).Returns(new[] { projectError });
+
+        _plugin.CallProjectLoad(_project);
+        _plugin.CallProjectSave(_project);
+        _plugin.CallReactToFileChanged(new ToolsUtilities.FilePath("C:/Game/strings.csv"));
+        _posted.ShouldHaveSingleItem().Invoke();
+        _plugin.CallElementSelected(_screen);
+        _plugin.CallElementSelected(null);
+
+        _errorChecker.Verify(c => c.GetProjectErrors(_project), Times.Once);
+        _viewModel.Errors.ShouldBe(new[] { projectError });
+
+        _plugin.CallReactToFileChanged(new ToolsUtilities.FilePath("C:/Game/strings.csv"));
+        _posted.Count.ShouldBe(2, "a notification after the pass ran queues another");
+    }
+
+    [Fact]
+    public void ProjectLoad_DropsThePreviousProjectsRows_BeforeItsPassRuns()
+    {
+        _errorChecker.Setup(c => c.GetProjectErrors(_project))
+            .Returns(new[] { new ErrorViewModel { Code = "GUM0008", Message = "old project" } });
+        _plugin.CallProjectLoad(_project);
+        _posted.Single().Invoke();
+
+        _plugin.CallProjectLoad(_project);
+        _plugin.CallElementSelected(_screen);
+
+        _viewModel.Errors.ShouldBeEmpty();
     }
 }

@@ -18,6 +18,12 @@ public class ErrorResult
     /// </summary>
     public string? Code { get; set; }
 
+    /// <summary>
+    /// Full path of the file on disk this error is about, when there is one (the on-disk spelling
+    /// of a GUM0008 file). Lets a tool offer to show the file.
+    /// </summary>
+    public string? FilePath { get; set; }
+
     public ErrorResult()
     {
         ElementName = string.Empty;
