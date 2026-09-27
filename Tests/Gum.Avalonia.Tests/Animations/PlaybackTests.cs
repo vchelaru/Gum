@@ -111,7 +111,7 @@ public class PlaybackTests
         editor.ViewModel.IsPlaying.ShouldBeFalse();
         editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.2, tolerance: 0.001);
         StateSave shown = editor.SelectedState.CustomCurrentStateSave.ShouldNotBeNull();
-        ((float)shown.GetValue("X")).ShouldBe(100f, tolerance: 0.01f);
+        shown.GetValue("X").ShouldBeOfType<float>().ShouldBe(100f, tolerance: 0.01f);
     }
 
     [AvaloniaFact]

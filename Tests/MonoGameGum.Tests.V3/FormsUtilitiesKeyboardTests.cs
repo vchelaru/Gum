@@ -18,7 +18,7 @@ public class FormsUtilitiesKeyboardTests
     [Fact]
     public void SetKeyboard_InstallsInstanceOnFormsUtilitiesKeyboardAndFrameworkElementMainKeyboard()
     {
-        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard.ShouldNotBeNull();
         StubKeyboard stubKeyboard = new StubKeyboard();
 
         try
@@ -37,7 +37,7 @@ public class FormsUtilitiesKeyboardTests
     [Fact]
     public void SetKeyboard_Null_Throws()
     {
-        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard.ShouldNotBeNull();
 
         Should.Throw<ArgumentNullException>(() => FormsUtilities.SetKeyboard(null!));
 
@@ -47,7 +47,7 @@ public class FormsUtilitiesKeyboardTests
     [Fact]
     public void SetKeyboard_WhenPreviousKeyboardIsInKeyboardsForUiControl_ReplacesIt()
     {
-        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard.ShouldNotBeNull();
         StubKeyboard firstKeyboard = new StubKeyboard();
         StubKeyboard secondKeyboard = new StubKeyboard();
         StubKeyboard otherKeyboard = new StubKeyboard();
@@ -73,7 +73,7 @@ public class FormsUtilitiesKeyboardTests
     [Fact]
     public void SetKeyboard_WhenPreviousKeyboardIsNotInKeyboardsForUiControl_DoesNotAddIt()
     {
-        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard.ShouldNotBeNull();
         StubKeyboard stubKeyboard = new StubKeyboard();
 
         try
@@ -92,7 +92,7 @@ public class FormsUtilitiesKeyboardTests
     [Fact]
     public void UseKeyboardDefaults_AfterSetKeyboard_RegistersInstalledKeyboard()
     {
-        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard.ShouldNotBeNull();
         StubKeyboard stubKeyboard = new StubKeyboard();
 
         try
@@ -115,7 +115,7 @@ public class FormsUtilitiesKeyboardTests
     public void FocusedTextBox_AfterUpdate_ReceivesCharactersFromInstalledKeyboard()
     {
         global::Gum.GumService gumService = global::Gum.GumService.Default;
-        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard.ShouldNotBeNull();
         StubKeyboard stubKeyboard = new StubKeyboard { StringTyped = "hi" };
 
         try
