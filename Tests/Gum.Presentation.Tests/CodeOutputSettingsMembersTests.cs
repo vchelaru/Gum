@@ -71,23 +71,24 @@ public class CodeOutputSettingsMembersTests
     }
 
     [Fact]
-    public void CodeProjectRoot_GetsATrailingSlash_AndReportsTheChange()
+    public void CodeProjectRoot_GetsANativeTrailingSeparator_AndReportsTheChange()
     {
+        // A literal "\" appended on macOS/Linux would be a file-name character there.
         _sut.ProjectSettings = new CodeOutputProjectSettings();
         int changes = 0;
         _sut.SettingsChanged += (_, _) => changes++;
 
         Member("Code Project Root").SetValue("Code/Project", SetPropertyCommitType.Full);
 
-        _sut.ProjectSettings.CodeProjectRoot.ShouldBe("Code/Project\\");
+        _sut.ProjectSettings.CodeProjectRoot.ShouldBe("Code/Project" + Path.DirectorySeparatorChar);
         changes.ShouldBe(1);
     }
 
     [Fact]
     public void CodeProjectRoot_FromAnAbsoluteFolder_IsStoredRelativeToTheProject_OnEveryOS()
     {
-        // A folder picker returns an OS-native absolute path with no trailing separator; on macOS
-        // and Linux the setter still appends "\", which must not break the relative path.
+        // A folder picker returns an OS-native absolute path with no trailing separator, which
+        // the setter appends before making the path relative.
         string root = Path.Combine(Path.GetTempPath(), "GumCodeRootTest");
         string projectDirectory = Path.Combine(root, "Content", "GumProject") + Path.DirectorySeparatorChar;
         _projectState.Setup(state => state.ProjectDirectory).Returns(projectDirectory);

@@ -592,14 +592,7 @@ public partial class GumService : IGumService
                 var projectDirectory = FileManager.GetDirectory(gumProject.FullFileName!);
                 var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
 
-                var resolvedPaths = new List<string>();
-                foreach (var relative in localizationFiles)
-                {
-                    if (!string.IsNullOrEmpty(relative))
-                    {
-                        resolvedPaths.Add(projectDirectory + relative);
-                    }
-                }
+                var resolvedPaths = ResolveLocalizationFilePaths(projectDirectory, localizationFiles);
 
                 // Policy mirrors the tool's FileCommands.LoadLocalizationFile:
                 //   0 paths -> no-op
@@ -720,6 +713,24 @@ public partial class GumService : IGumService
         bool useLinearFiltering = string.Equals(gumProject?.TextureFilter, "Linear", StringComparison.Ordinal);
 
         ApplyTextureFilterPlatform(useLinearFiltering);
+    }
+
+    /// <summary>
+    /// Joins each non-empty project-relative localization path onto <paramref name="projectDirectory"/>,
+    /// with native separators. A project saved on Windows stores these paths with backslashes, which
+    /// macOS/Linux read as part of the file name.
+    /// </summary>
+    internal static List<string> ResolveLocalizationFilePaths(string projectDirectory, IEnumerable<string?> relativePaths)
+    {
+        var resolvedPaths = new List<string>();
+        foreach (var relative in relativePaths)
+        {
+            if (!string.IsNullOrEmpty(relative))
+            {
+                resolvedPaths.Add(FileManager.Standardize(projectDirectory + relative, preserveCase: true));
+            }
+        }
+        return resolvedPaths;
     }
 
     private void ApplyStandardElementDefaults(GumProjectSave gumProject)

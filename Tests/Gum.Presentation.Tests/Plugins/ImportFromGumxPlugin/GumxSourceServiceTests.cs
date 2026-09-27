@@ -46,6 +46,31 @@ public class GumxSourceServiceTests
     }
 
     [Fact]
+    public async Task FetchFromLocalFolder_BackslashRelativePath_ReadsTheFileOnEveryOS()
+    {
+        // A source project saved on Windows can name files with backslashes. On macOS/Linux a
+        // backslash is a file-name character, so the local read must convert it, as the URL
+        // branch already does.
+        string sourceBase = Path.Combine(Path.GetTempPath(), "GumxSourceServiceTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(sourceBase, "Components"));
+        try
+        {
+            File.WriteAllText(Path.Combine(sourceBase, "Components", "Button.gucx"), "element text");
+            File.WriteAllBytes(Path.Combine(sourceBase, "Components", "Icon.png"), new byte[] { 1, 2, 3 });
+
+            string? text = await _sut.FetchElementTextAsync("Components\\Button.gucx", sourceBase);
+            byte[]? bytes = await _sut.FetchBinaryAsync("Components\\Icon.png", sourceBase);
+
+            text.ShouldBe("element text");
+            bytes.ShouldBe(new byte[] { 1, 2, 3 });
+        }
+        finally
+        {
+            Directory.Delete(sourceBase, recursive: true);
+        }
+    }
+
+    [Fact]
     public void GetSourceBase_LocalPath_ReturnsContainingDirectory()
     {
         string path = Path.Combine("C:", "SomeFolder", "SubFolder", "Project.gumx");

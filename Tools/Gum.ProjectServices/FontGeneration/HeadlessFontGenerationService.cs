@@ -281,7 +281,10 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             if (!string.IsNullOrEmpty(bmfc.FontFile) && !Path.IsPathRooted(bmfc.FontFile))
             {
-                bmfc.FontFile = Path.GetFullPath(Path.Combine(projectDirectory, bmfc.FontFile));
+                // A project saved on Windows stores backslashes, which are file-name characters on
+                // macOS/Linux.
+                bmfc.FontFile = Path.GetFullPath(Path.Combine(projectDirectory,
+                    bmfc.FontFile.Replace('\\', Path.DirectorySeparatorChar)));
             }
         }
 
