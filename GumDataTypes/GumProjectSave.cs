@@ -934,8 +934,13 @@ public class GumProjectSave
         }
     }
 
-    private static int CompareNames(string? first, string? second) =>
-        string.Compare(first, second, StringComparison.CurrentCulture);
+    /// <summary>
+    /// The order of every name-sorted list Gum saves (project references, state variables).
+    /// Culture-independent, so a project saves identically on every machine. Invariant rather
+    /// than ordinal because it matches the en-US order existing projects were saved in.
+    /// </summary>
+    public static int CompareNames(string? first, string? second) =>
+        string.Compare(first, second, StringComparison.InvariantCulture);
 
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026",

@@ -82,6 +82,79 @@ $"chars count=223\r\n";
         clone.ShouldNotBeNull();
     }
 
+    [Fact]
+    public void Clone_ShouldNotKeepTheSourcesRenderTargetOrHooks()
+    {
+        // A shared render target would be redrawn with the clone's text, or disposed by the clone
+        // when its size changes, while the source still draws it; the hooks call back into the
+        // source's runtime (#5205).
+        FieldInfo textureField = typeof(Text).GetField("mTextureToRender", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        FieldInfo refreshField = typeof(Text).GetField("mNeedsBitmapFontRefresh", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        Texture2D texture = (Texture2D)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(Texture2D));
+        Text original = new();
+        textureField.SetValue(original, texture);
+        refreshField.SetValue(original, false);
+        original.OnPreRender = () => { };
+        original.OnGlyphGrowthCheck = () => { };
+
+        Text clone = original.Clone();
+
+        textureField.GetValue(clone).ShouldBeNull();
+        refreshField.GetValue(clone).ShouldBe(true);
+        clone.OnPreRender.ShouldBeNull();
+        clone.OnGlyphGrowthCheck.ShouldBeNull();
+        textureField.GetValue(original).ShouldBeSameAs(texture);
+    }
+
+    [Fact]
+    public void Clone_ShouldKeepMeasuredSize_WhenSourceHasRendered()
+    {
+        // Rendering clears the pre-render size and measures from the render target instead, which
+        // the clone drops, so the clone must measure itself.
+        FieldInfo preRenderWidthField = typeof(Text).GetField("mPreRenderWidth", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 10, lineHeight: 20));
+        font.SetFontPattern(256, 256);
+        Text original = new() { BitmapFont = font, Width = null };
+        original.RawText = "AB";
+        float originalWidth = original.WrappedTextWidth;
+        preRenderWidthField.SetValue(original, null);
+
+        Text clone = original.Clone();
+
+        originalWidth.ShouldBeGreaterThan(0);
+        clone.WrappedTextWidth.ShouldBe(originalWidth);
+    }
+
+    [Fact]
+    public void Clone_ShouldNotShareWrappedTextOrInlineVariables()
+    {
+        Text original = new();
+        original.RawText = "Original";
+
+        Text clone = original.Clone();
+        clone.RawText = "Changed";
+        clone.InlineVariables.Add(new InlineVariable { VariableName = "FontScale", Value = 2f, StartIndex = 0, CharacterCount = 1 });
+
+        original.WrappedText.ShouldBe(new[] { "Original" });
+        original.InlineVariables.ShouldBeEmpty();
+        clone.WrappedText.ShouldBe(new[] { "Changed" });
+    }
+
+    [Fact]
+    public void Clone_ShouldWireTextHooksToTheClone()
+    {
+        // The Text renderable's hooks call back into its runtime, so a clone must not keep calling
+        // the source runtime's oversampling and glyph-growth checks (#5205).
+        TextRuntime original = new();
+
+        TextRuntime clone = (TextRuntime)original.Clone();
+
+        Text cloneText = (Text)clone.RenderableComponent!;
+        cloneText.OnPreRender!.Target.ShouldBeSameAs(clone);
+        cloneText.OnGlyphGrowthCheck!.Target.ShouldBeSameAs(clone);
+        ((Text)original.RenderableComponent!).OnPreRender!.Target.ShouldBeSameAs(original);
+    }
+
     #endregion
 
     #region Color

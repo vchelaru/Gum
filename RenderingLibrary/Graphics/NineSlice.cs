@@ -456,6 +456,12 @@ public class NineSlice : SpriteBatchRenderableBase,
         get { return mSprites[(int)NineSliceSections.TopLeft].Height; }
     }
 
+    /// <summary>
+    /// A legacy hand-assigned animation, applied by <see cref="AnimationActivity"/>, which
+    /// <c>SpriteManager</c> does not call for nine-slices; animation chains use
+    /// <see cref="AnimationLogic"/> instead. Cloning copies it only when it implements
+    /// <see cref="ICloneable"/>; otherwise the clone shares this instance.
+    /// </summary>
     public IAnimation? Animation
     {
         get;
@@ -1273,13 +1279,19 @@ public class NineSlice : SpriteBatchRenderableBase,
             newInstance.mSprites[i] = mSprites[i].Clone();
         }
         newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
+        // IAnimation has no clone contract: copy an implementation that opts in through
+        // ICloneable, and share any other one, since it may hold state that cannot be copied safely.
+        if (Animation is ICloneable cloneableAnimation)
+        {
+            newInstance.Animation = (IAnimation)cloneableAnimation.Clone();
+        }
 
         return newInstance;
     }
 
     public void AnimationActivity(double currentTime)
     {
-        // SpriteManager.Activity only calls this when Animation is set.
+        // SpriteManager.Activity does not call this for nine-slices; the caller must.
         if (Animate && Animation != null)
         {
             Animation.AnimationActivity(currentTime);

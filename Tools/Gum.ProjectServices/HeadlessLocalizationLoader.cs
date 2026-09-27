@@ -38,7 +38,9 @@ public class HeadlessLocalizationLoader : IHeadlessLocalizationLoader
         {
             if (!string.IsNullOrEmpty(relative))
             {
-                resolvedPaths.Add(Path.Combine(projectDirectory, relative));
+                // A project saved on Windows stores backslashes, which are file-name characters on
+                // macOS/Linux.
+                resolvedPaths.Add(Path.Combine(projectDirectory, relative.Replace('\\', Path.DirectorySeparatorChar)));
             }
         }
 

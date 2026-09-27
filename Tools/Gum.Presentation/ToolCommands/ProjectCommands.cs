@@ -62,9 +62,8 @@ public class ProjectCommands : ICopyPasteProjectCommands
         _standardElementsManagerGumTool.FixCustomTypeConverters(screenSave);
         var gumProject = _projectManager.GetLoadedProject();
         gumProject.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
-        gumProject.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
         gumProject.Screens.Add(screenSave);
-        gumProject.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+        gumProject.SortElementsAndReferencesByName();
 
 
         _fileCommands.TryAutoSaveProject();
@@ -90,9 +89,8 @@ public class ProjectCommands : ICopyPasteProjectCommands
     {
         var gumProject = _projectState.GetLoadedProject();
         gumProject.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-        gumProject.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
         gumProject.Components.Add(componentSave);
-        gumProject.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
+        gumProject.SortElementsAndReferencesByName();
 
 
         _fileCommands.TryAutoSaveProject();

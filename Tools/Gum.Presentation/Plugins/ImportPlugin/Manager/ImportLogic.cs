@@ -87,13 +87,9 @@ public class ImportLogic : IImportLogic
             return null;
         }
 
-        var elementReferences = project.ComponentReferences;
-        elementReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-        elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-        var components = project.Components;
-        components.Add(componentSave);
-        components.Sort((first, second) => first.Name.CompareTo(second.Name));
+        project.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
+        project.Components.Add(componentSave);
+        project.SortElementsAndReferencesByName();
 
         componentSave.InitializeDefaultAndComponentVariables();
         _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
@@ -226,13 +222,9 @@ public class ImportLogic : IImportLogic
                 : (int)GumProjectSave.GumxVersions.InitialVersion;
             var behaviorSave = BehaviorReference.DeserializeBehavior(filePath.FullPath, behaviorVersion);
 
-            var behaviorReferences = project.BehaviorReferences;
-            behaviorReferences.Add(new BehaviorReference { Name = behaviorSave.Name });
-            behaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            var behaviors = project.Behaviors;
-            behaviors.Add(behaviorSave);
-            behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+            project.BehaviorReferences.Add(new BehaviorReference { Name = behaviorSave.Name });
+            project.Behaviors.Add(behaviorSave);
+            project.SortElementsAndReferencesByName();
 
             behaviorSave.Initialize();
 

@@ -564,7 +564,9 @@ public class CodeGenerator
             }
         }
 
-        return neededUsings.OrderBy(item => item).ToList();
+        // Invariant so every machine generates the same order; not ordinal, to keep the order
+        // existing generated files were written in.
+        return neededUsings.OrderBy(item => item, StringComparer.InvariantCulture).ToList();
     }
 
     #endregion
@@ -3993,7 +3995,7 @@ public class CodeGenerator
             }
             else
             {
-                var categoryFieldName = char.ToLower(category.Name[0]) + category.Name.Substring(1);
+                var categoryFieldName = char.ToLowerInvariant(category.Name[0]) + category.Name.Substring(1);
                 if(categoryFieldName.StartsWith("@"))
                 {
                     // remove "@" because we'll have an underscore
@@ -4045,7 +4047,7 @@ public class CodeGenerator
         {
             var propertyName = $"{categoryName}State";
 
-            var fieldName = char.ToLower(propertyName[0]) + propertyName.Substring(1);
+            var fieldName = char.ToLowerInvariant(propertyName[0]) + propertyName.Substring(1);
 
             if(fieldName.StartsWith("@"))
             {
@@ -4714,9 +4716,13 @@ public class CodeGenerator
         }
         else
         {
-            return value?.ToString();
+            // Invariant: some cultures write a negative sign as U+2212, which is not valid C#.
+            return ToInvariantString(value);
         }
     }
+
+    private static string? ToInvariantString(object? value) =>
+        value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
 
     private string? VariableValueToXamarinFormsCodeValue(object? value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeGenerationContext context)
     {
@@ -4756,11 +4762,11 @@ public class CodeGenerator
             {
                 if (AdjustPixelValuesForDensity)
                 {
-                    return $"(int)({asInt} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
+                    return $"(int)({asInt.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
                 }
                 else
                 {
-                    return asInt.ToString();
+                    return asInt.ToString(CultureInfo.InvariantCulture);
                 }
             }
         }
@@ -4849,7 +4855,7 @@ public class CodeGenerator
             }
         }
 
-        return value?.ToString();
+        return ToInvariantString(value);
     }
     
     private string? TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)

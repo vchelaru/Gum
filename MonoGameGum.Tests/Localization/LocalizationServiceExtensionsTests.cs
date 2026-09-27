@@ -122,6 +122,29 @@ public class LocalizationServiceExtensionsTests : IDisposable
         _service.Languages.Count.ShouldBe(2);
     }
 
+    // A project saved on Windows stores "Localization\Strings.resx". On macOS/Linux a backslash is
+    // a file-name character, so this only fails there when the path is not normalized.
+    [Fact]
+    public void AddResxDatabase_FilePath_ShouldLoadBaseAndSatellite_WhenPathUsesBackslashes()
+    {
+        _tempDirectory = CreateTempDirectory();
+        string localizationDirectory = Path.Combine(_tempDirectory, "Localization");
+        Directory.CreateDirectory(localizationDirectory);
+        WriteResxFile(Path.Combine(localizationDirectory, "Strings.resx"), new Dictionary<string, string>
+        {
+            { "T_Cancel", "Cancel" }
+        });
+        WriteResxFile(Path.Combine(localizationDirectory, "Strings.es.resx"), new Dictionary<string, string>
+        {
+            { "T_Cancel", "Cancelar" }
+        });
+
+        _service.AddResxDatabase(_tempDirectory + Path.DirectorySeparatorChar + "Localization\\Strings.resx");
+
+        _service.CurrentLanguage = 2;
+        _service.Translate("T_Cancel").ShouldBe("Cancelar");
+    }
+
     [Fact]
     public void AddResxDatabase_FilePath_ShouldTranslateToSatelliteLanguage()
     {
