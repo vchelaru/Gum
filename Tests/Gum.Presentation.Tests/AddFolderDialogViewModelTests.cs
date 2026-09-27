@@ -47,6 +47,34 @@ public class AddFolderDialogViewModelTests
     }
 
     [Fact]
+    public void OnAffirmative_CreatesAFolderNamedExactlyTheValue()
+    {
+        // A backslash is a legal file name character on macOS and Linux, so a path ending in "\"
+        // creates a folder named "NewFolder\" there. Fails only on those systems.
+        string parent = Path.Combine(Path.GetTempPath(), "GumAddFolderTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(parent);
+        try
+        {
+            string? whyNotValid = null;
+            _nameVerifier
+                .Setup(x => x.IsFolderNameValid(It.IsAny<string?>(), out whyNotValid))
+                .Returns(true);
+            Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
+            folderNode.Setup(x => x.GetFullFilePath()).Returns(new ToolsUtilities.FilePath(parent + "/"));
+            _selectedState.Setup(x => x.SelectedTreeNode).Returns(folderNode.Object);
+
+            _viewModel.Value = "NewFolder";
+            _viewModel.OnAffirmative();
+
+            Directory.GetDirectories(parent).Select(Path.GetFileName).ShouldBe(new[] { "NewFolder" });
+        }
+        finally
+        {
+            Directory.Delete(parent, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Validate_ReturnsNameVerifierError_WhenNameIsInvalid()
     {
         string? whyNotValid = "A folder with this name already exists.";

@@ -15,7 +15,8 @@ namespace Gum.Localization;
 /// <remarks>
 /// Policy mirrors the tool's <c>FileCommands.LoadLocalizationFile</c>: one file dispatches by
 /// extension, several files must all be <c>.resx</c> (the service has no merge API for CSV), and
-/// anything else is skipped with a warning.
+/// anything else is skipped with a warning. Paths may use either separator: bundle lookups use
+/// forward slashes, loose-file paths use native separators.
 /// </remarks>
 public static class ProjectLocalizationLoader
 {
@@ -32,10 +33,7 @@ public static class ProjectLocalizationLoader
     public static void Load(GumProjectSave project, ILocalizationService service,
         IGumFileProvider? bundleFileProvider, ICollection<string> warnings)
     {
-        List<string> relativePaths = project.LocalizationFiles
-            .Where(path => !string.IsNullOrEmpty(path))
-            .Select(path => path.Replace('\\', '/'))
-            .ToList();
+        List<string> relativePaths = ToRelativePaths(project.LocalizationFiles);
         if (relativePaths.Count == 0)
         {
             return;
@@ -54,7 +52,7 @@ public static class ProjectLocalizationLoader
             {
                 using Stream stream = bundleFileProvider != null
                     ? bundleFileProvider.OpenRead(relativePath)
-                    : FileManager.GetStreamForFile(projectDirectory + relativePath);
+                    : FileManager.GetStreamForFile(ToLooseFilePath(projectDirectory, relativePath));
                 service.AddCsvDatabase(stream);
             }
             return;
@@ -73,14 +71,14 @@ public static class ProjectLocalizationLoader
         {
             bool exists = bundleFileProvider != null
                 ? bundleFileProvider.Exists(relativePath)
-                : File.Exists(projectDirectory + relativePath);
+                : File.Exists(ToLooseFilePath(projectDirectory, relativePath));
             if (exists)
             {
                 existingPaths.Add(relativePath);
             }
             else
             {
-                warnings.Add($"Localization: file not found, skipping: {projectDirectory + relativePath}");
+                warnings.Add($"Localization: file not found, skipping: {ToLooseFilePath(projectDirectory, relativePath)}");
             }
         }
 
@@ -91,6 +89,24 @@ public static class ProjectLocalizationLoader
         }
     }
 
+    /// <summary>
+    /// The non-empty entries of <paramref name="localizationFiles"/> with forward slashes, the form
+    /// bundle entries are keyed by. A project saved on Windows stores backslashes.
+    /// </summary>
+    internal static List<string> ToRelativePaths(IEnumerable<string?> localizationFiles) =>
+        localizationFiles
+            .Where(path => !string.IsNullOrEmpty(path))
+            .Select(path => path!.Replace('\\', '/'))
+            .ToList();
+
+    /// <summary>
+    /// Joins a project-relative path onto <paramref name="projectDirectory"/> with native separators.
+    /// Loose paths go to File.Exists and Directory.GetFiles, and macOS/Linux read a backslash as part
+    /// of the file name.
+    /// </summary>
+    internal static string ToLooseFilePath(string projectDirectory, string relativePath) =>
+        FileManager.Standardize(projectDirectory + relativePath, preserveCase: true);
+
     private static bool IsResx(string path) =>
         string.Equals(Path.GetExtension(path), ".resx", StringComparison.OrdinalIgnoreCase);
 
@@ -100,7 +116,7 @@ public static class ProjectLocalizationLoader
         if (bundleFileProvider == null)
         {
             // Loose files: the path overload discovers satellites with Directory.GetFiles.
-            service.AddResxDatabase(relativePaths.Select(path => projectDirectory + path), onWarning);
+            service.AddResxDatabase(relativePaths.Select(path => ToLooseFilePath(projectDirectory, path)), onWarning);
             return;
         }
 

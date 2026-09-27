@@ -6,6 +6,7 @@ using Gum.Wireframe;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Moq;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -814,6 +815,35 @@ public class TextBoxTests : BaseTestClass
         int visibleSelectionCount = selection.Parent!.Children
             .Count(item => item.Name == "SelectionInstance" && item.Visible);
         visibleSelectionCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SelectionLength_ShouldParentEachLineSelectionToSelectionParent_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+        textBox.Text = "line1\nline2\nline3";
+        NineSliceRuntime selection = textBox.Visual.Find<NineSliceRuntime>("SelectionInstance")!;
+        GraphicalUiElement selectionParent = selection.Parent!;
+
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 14;
+        textBox.SelectionLength = 0;
+        textBox.SelectionLength = 14;
+
+        List<GraphicalUiElement> selections = selectionParent.Children
+            .Where(item => item.Name == "SelectionInstance")
+            .ToList();
+        selections.Count.ShouldBe(3, "because reselecting reuses the per-line clones instead of adding more");
+        foreach (GraphicalUiElement lineSelection in selections)
+        {
+            lineSelection.Parent.ShouldBe(selectionParent);
+            ((IRenderableIpso)lineSelection.RenderableComponent!).Parent
+                .ShouldBe(((IRenderableIpso)selection.RenderableComponent!).Parent);
+        }
+        selections.Select(item => item.Y).Distinct().Count().ShouldBe(3,
+            "because each line's selection sits on its own line");
     }
 
     [Fact]

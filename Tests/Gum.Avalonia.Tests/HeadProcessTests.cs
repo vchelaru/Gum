@@ -81,6 +81,19 @@ public class HeadProcessTests
         File.Exists(scratch.Screenshot).ShouldBeTrue();
     }
 
+    [SkippableFact]
+    public async Task RebuildFontsWithoutAProject_ReportsUsageAndFails()
+    {
+        Skip.IfNot(CanRunTheHead, SkipReason);
+        using ScratchProject scratch = ScratchProject.Create();
+
+        HeadRun run = await RunHead("--user-data", scratch.UserData, "--rebuildfonts");
+
+        run.ExitCode.ShouldBe(1, run.Errors);
+        run.Errors.ShouldContain("--rebuildfonts requires a project file");
+        run.Errors.ShouldNotContain("Startup failed");
+    }
+
     private static async Task<HeadRun> RunHead(params string[] arguments)
     {
         string configuration = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).Parent!.Name;

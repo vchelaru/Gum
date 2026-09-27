@@ -39,19 +39,13 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
         defaultStates["Container"].Variables.First(item => item.Name == "ContainedType").CustomTypeConverter =
             new AvailableContainedTypeConverter();
 
-        defaultStates["Component"].Variables
-            .Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null, _selectedState) });
-
+        // Also gives the Component standard's State variable its states drop-down.
         foreach (var state in defaultStates.Values)
         {
             SetPreferredDisplayers(state);
         }
 
-
-
-
         RefreshStateVariablesThroughPlugins();
-
     }
 
     public void SetPreferredDisplayers(StateSave state)

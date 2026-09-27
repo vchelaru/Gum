@@ -11,8 +11,9 @@ using Xunit;
 namespace MonoGameGum.Tests.Localization;
 
 /// <summary>
-/// Bundle-mode loading, where RESX satellites come from the bundle's entries instead of a directory.
-/// Loose-mode loading is covered end to end by GumServiceLocalizationAutoLoadTests.
+/// Bundle-mode loading, where RESX satellites come from the bundle's entries instead of a directory,
+/// and path separators in both modes. Loose-mode loading is covered end to end by
+/// GumServiceLocalizationAutoLoadTests.
 /// </summary>
 public class ProjectLocalizationLoaderTests
 {
@@ -52,6 +53,47 @@ public class ProjectLocalizationLoaderTests
 
         warnings.ShouldHaveSingleItem().ShouldContain("not all are .resx");
         service.HasDatabase.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Load_from_bundle_finds_a_file_saved_with_windows_separators()
+    {
+        GumProjectSave project = ProjectWithLocalizationFiles("Text\\Strings.resx");
+        IGumFileProvider bundle = BundleWith(
+            ("Text/Strings.resx", Resx("T_Hello", "Hello")),
+            ("Text/Strings.es.resx", Resx("T_Hello", "Hola")));
+        LocalizationService service = new LocalizationService();
+        List<string> warnings = new List<string>();
+
+        ProjectLocalizationLoader.Load(project, service, bundle, warnings);
+
+        warnings.ShouldBeEmpty();
+        service.CurrentLanguage = 2;
+        service.Translate("T_Hello").ShouldBe("Hola");
+    }
+
+    // A project saved on Windows stores "Localization\Strings.resx". A loose path goes straight to
+    // File.Exists and Directory.GetFiles, so both separators must come out as the native one:
+    // a backslash is a file-name character on macOS/Linux.
+    [Theory]
+    [InlineData("Localization\\Strings.resx")]
+    [InlineData("Localization/Strings.resx")]
+    public void Loose_file_paths_use_native_separators(string storedPath)
+    {
+        string projectDirectory = "/game/Content/GumProject/";
+
+        string relativePath = ProjectLocalizationLoader.ToRelativePaths(new[] { storedPath }).ShouldHaveSingleItem();
+        string loosePath = ProjectLocalizationLoader.ToLooseFilePath(projectDirectory, relativePath);
+
+        loosePath.ShouldBe("/game/Content/GumProject/Localization/Strings.resx".Replace('/', System.IO.Path.DirectorySeparatorChar));
+    }
+
+    [Fact]
+    public void ToRelativePaths_skips_empty_entries()
+    {
+        List<string> relativePaths = ProjectLocalizationLoader.ToRelativePaths(new[] { "", null, "Strings.csv" });
+
+        relativePaths.ShouldBe(new[] { "Strings.csv" });
     }
 
     private static GumProjectSave ProjectWithLocalizationFiles(params string[] files)
