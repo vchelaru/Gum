@@ -142,6 +142,41 @@ public class MainErrorsPluginTests : BaseTestClass
         _posted.Count.ShouldBe(2, "a notification after the pass ran queues another");
     }
 
+    /// <summary>
+    /// An element edit, even one that changes a font or .achx reference, doesn't queue a project
+    /// pass: the pass walks the whole project on the UI thread, and the rare row such an edit adds or
+    /// clears waits for the next save, file change or load (#5271).
+    /// </summary>
+    [Theory]
+    [InlineData("VariableSet")]
+    [InlineData("InstanceAdd")]
+    [InlineData("InstanceDelete")]
+    [InlineData("ElementReloaded")]
+    public void AnElementEdit_DoesNotQueueAProjectPass(string notification)
+    {
+        _selectedState.Setup(s => s.SelectedElement).Returns(_screen);
+        InstanceSave instance = new InstanceSave { Name = "Label", BaseType = "Text", ParentContainer = _screen };
+
+        switch (notification)
+        {
+            case "VariableSet":
+                _plugin.CallVariableSet(_screen, instance, "Label.Font", "Arial", isFullCommit: true);
+                break;
+            case "InstanceAdd":
+                _plugin.CallInstanceAdd(_screen, instance);
+                break;
+            case "InstanceDelete":
+                _plugin.CallInstanceDelete(_screen, instance);
+                break;
+            case "ElementReloaded":
+                _plugin.CallElementReloaded(_screen);
+                break;
+        }
+
+        _posted.ShouldBeEmpty();
+        _errorChecker.Verify(c => c.GetProjectErrors(It.IsAny<GumProjectSave>()), Times.Never);
+    }
+
     [Fact]
     public void ProjectLoad_DropsThePreviousProjectsRows_BeforeItsPassRuns()
     {
