@@ -1,11 +1,11 @@
 ﻿using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Tests.Harness;
-using Gum.Plugins;
 using Gum.Services.Dialogs;
 using Gum.ProjectServices.FontGeneration;
 using Gum.Services;
 using Gum.Settings;
+using GumTestSupport;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -23,8 +23,9 @@ public static class HeadTestServices
     /// <summary>Builds the container.</summary>
     public static ServiceProvider Build()
     {
-        string settingsPath = Path.Combine(Path.GetTempPath(), "GumAvaloniaTests", Guid.NewGuid().ToString("N"), "appsettings.json");
-        Directory.CreateDirectory(Path.GetDirectoryName(settingsPath)!);
+        // The per-user folder is already this process's own temp folder (TestAppDataFolder), so
+        // services that save there by default, such as the plugin enablement store, need no override.
+        string settingsPath = Path.Combine(TestAppDataFolder.Path, "appsettings.json");
         File.WriteAllText(settingsPath, "{}");
 
         IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -41,10 +42,6 @@ public static class HeadTestServices
         services.AddGumAvalonia();
         // Real generation runs on a thread-pool task that can outlive its test (#5097).
         services.Replace(ServiceDescriptor.Singleton<IFontFileGenerator, NoOpFontFileGenerator>());
-        // Its default file is fixed when it is built, under the per-user folder of the test host,
-        // which every test run on the machine shares: a plugin a test turns off would stay off.
-        services.Replace(ServiceDescriptor.Singleton<IPluginEnablementStore>(
-            new PluginEnablementStore(Path.Combine(Path.GetDirectoryName(settingsPath)!, "GumPluginSettings.xml"))));
         // A harness scripts the dialogs that services built once for the whole run open.
         services.AddSingleton<AvaloniaDialogService>();
         services.Replace(ServiceDescriptor.Singleton<IDialogService>(provider =>
