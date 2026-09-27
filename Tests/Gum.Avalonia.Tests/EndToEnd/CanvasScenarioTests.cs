@@ -108,8 +108,8 @@ public class CanvasScenarioTests
             canvas.SavedValue(button, "Box.X").ShouldBe(80f);
             canvas.SavedValue(button, "Box.Y").ShouldBe(70f);
 
-            // Mostly sideways with Shift held: only X changes. Shift is pressed once the drag has
-            // started, since Shift on the press itself adds to the selection instead of moving.
+            // Mostly sideways with Shift held: only X changes. Shift pressed once the drag has
+            // started locks the axis too.
             canvas.PressButton(canvas.WindowPointOf(110, 90));
             canvas.DragTo(canvas.WindowPointOf(130, 93));
             canvas.HoldKey(Key.LeftShift, PhysicalKey.ShiftLeft, RawInputModifiers.Shift);
@@ -124,9 +124,46 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact(Skip = "#5258: Shift held before the press clears the selection instead of starting an axis-locked move")]
+    [SkippableFact]
+    [Trait("Feature", "CANV-002")]
     [Trait("Feature", "CANV-006")]
-    public void ShiftHeldBeforeTheDrag_LocksTheMoveToAnAxis()
+    public void ShiftHeldBeforeTheDrag_LocksTheMoveToAnAxis_OnASelectedInstance_AndAddsOtherwise()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            InstanceSave box = canvas.AddInstance(button, "Box", "Rectangle", x: 40, y: 40, width: 60, height: 40);
+            InstanceSave other = canvas.AddInstance(button, "Other", "Rectangle", x: 200, y: 40, width: 60, height: 40);
+            canvas.Tree.Click(canvas.Tree.NodeFor(box));
+
+            canvas.HoldKey(Key.LeftShift, PhysicalKey.ShiftLeft, RawInputModifiers.Shift);
+            canvas.Drag(canvas.WindowPointOf(70, 60), canvas.WindowPointOf(110, 66), RawInputModifiers.Shift);
+            canvas.ReleaseKey(Key.LeftShift, PhysicalKey.ShiftLeft);
+
+            canvas.Project.SelectedState.SelectedInstance.ShouldBeSameAs(box, canvas.Describe());
+            canvas.SavedValue(button, "Box.X").ShouldBe(80f);
+            canvas.SavedValue(button, "Box.Y").ShouldBe(40f);
+
+            // A Shift click on the selected instance leaves the selection alone.
+            canvas.HoldKey(Key.LeftShift, PhysicalKey.ShiftLeft, RawInputModifiers.Shift);
+            canvas.Click(canvas.WindowPointOf(100, 50), RawInputModifiers.Shift);
+            canvas.ReleaseKey(Key.LeftShift, PhysicalKey.ShiftLeft);
+            canvas.Project.SelectedState.SelectedInstances.ShouldBe(new[] { box });
+
+            // Shift on an instance that isn't selected still adds it, by a drag as by a click.
+            canvas.HoldKey(Key.LeftShift, PhysicalKey.ShiftLeft, RawInputModifiers.Shift);
+            canvas.Drag(canvas.WindowPointOf(230, 60), canvas.WindowPointOf(250, 70), RawInputModifiers.Shift);
+            canvas.ReleaseKey(Key.LeftShift, PhysicalKey.ShiftLeft);
+            canvas.Project.SelectedState.SelectedInstances.ShouldBe(new[] { box, other }, ignoreOrder: true, canvas.Describe());
+            canvas.SavedValue(button, "Other.X").ShouldBe(200f);
+
+            canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
+    [Trait("Feature", "CANV-005")]
+    public void CtrlOrAltHeldBeforeTheDrag_StillMovesTheSelectedInstance()
     {
         OnCanvas(canvas =>
         {
@@ -134,13 +171,21 @@ public class CanvasScenarioTests
             InstanceSave box = canvas.AddInstance(button, "Box", "Rectangle", x: 40, y: 40, width: 60, height: 40);
             canvas.Tree.Click(canvas.Tree.NodeFor(box));
 
-            canvas.HoldKey(Key.LeftShift, PhysicalKey.ShiftLeft, RawInputModifiers.Shift);
-            canvas.Drag(canvas.WindowPointOf(70, 60), canvas.WindowPointOf(110, 66), RawInputModifiers.Shift);
-            canvas.ReleaseKey(Key.LeftShift, PhysicalKey.ShiftLeft);
+            canvas.HoldKey(Key.LeftCtrl, PhysicalKey.ControlLeft, RawInputModifiers.Control);
+            canvas.Drag(canvas.WindowPointOf(70, 60), canvas.WindowPointOf(90, 70), RawInputModifiers.Control);
+            canvas.ReleaseKey(Key.LeftCtrl, PhysicalKey.ControlLeft);
 
-            canvas.Project.SelectedState.SelectedInstance.ShouldBeSameAs(box);
+            canvas.Project.SelectedState.SelectedInstance.ShouldBeSameAs(box, canvas.Describe());
+            canvas.SavedValue(button, "Box.X").ShouldBe(60f);
+            canvas.SavedValue(button, "Box.Y").ShouldBe(50f);
+
+            canvas.HoldKey(Key.LeftAlt, PhysicalKey.AltLeft, RawInputModifiers.Alt);
+            canvas.Drag(canvas.WindowPointOf(80, 60), canvas.WindowPointOf(100, 70), RawInputModifiers.Alt);
+            canvas.ReleaseKey(Key.LeftAlt, PhysicalKey.AltLeft);
+
+            canvas.Project.SelectedState.SelectedInstance.ShouldBeSameAs(box, canvas.Describe());
             canvas.SavedValue(button, "Box.X").ShouldBe(80f);
-            canvas.SavedValue(button, "Box.Y").ShouldBe(40f);
+            canvas.SavedValue(button, "Box.Y").ShouldBe(60f);
 
             canvas.AssertOracles();
         });
