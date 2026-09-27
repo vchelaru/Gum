@@ -50,5 +50,11 @@ public interface IRenameLogic
 
     void ApplyVariableRenameChanges(VariableChangeResponse changes, string oldStrippedOrExposedName, string newStrippedOrExposedName, HashSet<ElementSave> elementsNeedingSave);
 
+    /// <summary>
+    /// Rewrites the name in each VariableReferences line, replacing only the name so the line keeps
+    /// the rest of its text and spacing as typed.
+    /// </summary>
+    void ApplyVariableReferenceRenames(IEnumerable<VariableReferenceChange> referenceChanges, string oldStrippedOrExposedName, string newStrippedOrExposedName, HashSet<ElementSave> elementsNeedingSave);
+
     #endregion
 }

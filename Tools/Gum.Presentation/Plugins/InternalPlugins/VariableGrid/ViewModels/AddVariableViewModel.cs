@@ -52,6 +52,7 @@ public class AddVariableViewModel : DialogViewModel
     private readonly IFileCommands _fileCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly IPluginManager _pluginManager;
+    private readonly IRenameLogic _renameLogic;
 
     public List<string> AvailableTypes
     {
@@ -111,7 +112,8 @@ public class AddVariableViewModel : DialogViewModel
         IFileCommands fileCommands,
         INameVerifier nameVerifier,
         ISelectedState selectedState,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IRenameLogic renameLogic)
     {
         _guiCommands = guiCommands;
         _undoManager = undoManager;
@@ -120,6 +122,7 @@ public class AddVariableViewModel : DialogViewModel
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
         _pluginManager = pluginManager;
+        _renameLogic = renameLogic;
 
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
@@ -308,52 +311,13 @@ public class AddVariableViewModel : DialogViewModel
             ApplyChangesToInstances(derived, oldName, newName, type);
         }
 
-        ApplyVariableReferenceChanges(changes, newName, oldName, elementsToSave);
+        _renameLogic.ApplyVariableReferenceRenames(changes.VariableReferenceChanges, oldName, newName, elementsToSave);
 
         foreach (var elementToSave in elementsToSave)
         {
             _fileCommands.TryAutoSaveElement(elementToSave);
         }
 
-    }
-
-    public void ApplyVariableReferenceChanges(VariableChangeResponse changes, string newName, string oldName, HashSet<ElementSave> elementsToSave)
-    {
-        foreach (var referenceChange in changes.VariableReferenceChanges)
-        {
-            var elementWithReference = referenceChange.Container;
-            var variableList = referenceChange.VariableReferenceList;
-
-            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString() ?? string.Empty;
-
-            // This could be on the left or right side, so check either
-            var leftAndRight = oldLine.Split('=').Select(item => item.Trim()).ToArray();
-
-            if (referenceChange.ChangedSide is Logic.SideOfEquals.Left or Logic.SideOfEquals.Both)
-            {
-                if (leftAndRight[0] == oldName)
-                {
-                    leftAndRight[0] = newName;
-                }
-            }
-
-            if (referenceChange.ChangedSide is Logic.SideOfEquals.Right or Logic.SideOfEquals.Both)
-            {
-                if (leftAndRight[1] == oldName)
-                {
-                    leftAndRight[1] = newName;
-                }
-                if (leftAndRight[1].EndsWith("." + oldName))
-                {
-                    var lengthToTrim = oldName.Length;
-                    var newLength = leftAndRight[1].Length - lengthToTrim;
-                    leftAndRight[1] = leftAndRight[1].Substring(0, newLength) + newName;
-                }
-            }
-            variableList.ValueAsIList[referenceChange.LineIndex] = $"{leftAndRight[0]}={leftAndRight[1]}";
-
-            elementsToSave.Add(referenceChange.Container);
-        }
     }
 
     private void ApplyChangesToInstances(ElementSave element, string oldName, string newName, string type)

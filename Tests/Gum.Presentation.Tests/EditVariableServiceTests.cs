@@ -3,12 +3,10 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
-using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Undo;
 using Moq;
-using Moq.AutoMock;
 using Shouldly;
 
 namespace Gum.Presentation.Tests;
@@ -39,17 +37,12 @@ public class EditVariableServiceTests : BaseTestClass
             .Setup(x => x.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()))
             .Returns("NewExposedName");
 
-        // RenameExposedVariable invokes the injected AddVariableViewModel factory to re-use its
-        // variable-reference rename logic, so supply a usable instance via the factory.
-        var addVariableVm = new AutoMocker().CreateInstance<AddVariableViewModel>();
-
         _service = new EditVariableService(
             _renameLogic.Object,
             _dialogService.Object,
             _guiCommands.Object,
             _fileCommands.Object,
-            _undoManager.Object,
-            () => addVariableVm);
+            _undoManager.Object);
 
         ObjectFinder.Self.GumProjectSave = new GumProjectSave();
     }

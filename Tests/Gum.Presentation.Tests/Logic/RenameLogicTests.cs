@@ -82,4 +82,50 @@ public class RenameLogicTests
         capturedOptions.Validator.ShouldNotBeNull();
         capturedOptions.Validator!("Invalid@Name").ShouldBe("bad name");
     }
+
+    [Theory]
+    [InlineData("Height = Components/Button.LabelWidth", SideOfEquals.Right, "Height = Components/Button.TextWidth")]
+    [InlineData("LabelWidth=Other.Width", SideOfEquals.Left, "TextWidth=Other.Width")]
+    [InlineData("LabelWidth = Other.Count == 0 ? 1 : 2", SideOfEquals.Left, "TextWidth = Other.Count == 0 ? 1 : 2")]
+    public void ApplyVariableRenameChanges_ReferenceLine_ReplacesOnlyTheName(string line, SideOfEquals side, string expected)
+    {
+        ComponentSave panel = new ComponentSave { Name = "Panel" };
+        VariableListSave<string> references = new VariableListSave<string> { Name = "VariableReferences" };
+        references.Value.Add(line);
+        VariableChangeResponse changes = new VariableChangeResponse();
+        changes.VariableReferenceChanges.Add(new VariableReferenceChange
+        {
+            Container = panel,
+            VariableReferenceList = references,
+            LineIndex = 0,
+            ChangedSide = side
+        });
+        HashSet<ElementSave> elementsNeedingSave = new HashSet<ElementSave>();
+
+        _renameLogic.ApplyVariableRenameChanges(changes, "LabelWidth", "TextWidth", elementsNeedingSave);
+
+        references.Value.ShouldBe(new[] { expected });
+        elementsNeedingSave.ShouldBe(new ElementSave[] { panel });
+    }
+
+    [Fact]
+    public void ApplyElementReferences_ReferenceLine_KeepsItsSpacing()
+    {
+        ComponentSave button = new ComponentSave { Name = "PrimaryButton" };
+        ComponentSave panel = new ComponentSave { Name = "Panel" };
+        VariableListSave<string> references = new VariableListSave<string> { Name = "VariableReferences" };
+        references.Value.Add("Height=Components/Button.Width");
+        ElementReferences changes = new ElementReferences();
+        changes.VariableReferenceChanges.Add(new VariableReferenceChange
+        {
+            Container = panel,
+            VariableReferenceList = references,
+            LineIndex = 0,
+            ChangedSide = SideOfEquals.Right
+        });
+
+        _renameLogic.ApplyElementReferences(changes, button, "Button");
+
+        references.Value.ShouldBe(new[] { "Height=Components/PrimaryButton.Width" });
+    }
 }
