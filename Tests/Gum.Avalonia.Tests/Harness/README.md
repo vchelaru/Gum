@@ -33,6 +33,14 @@ so the next window re-applies every template while the old template presenters s
 view's content; the driver releases them before hosting and again on dispose. Without it the second
 test fails with "already has a visual parent".
 
+A template the new window keeps gets its content back, but a later layout pass can still rebuild it:
+after the main window has hosted the Project tab (`HeadCompositionTests`), the tree's `ScrollViewer`
+keeps its template through the first layout and rebuilds it in the second (why it waits is not traced). The driver makes each
+presenter it hands content back to let go of it when it leaves the visual tree; otherwise the
+content stays on the dropped presenter, the tree realizes no rows, and every later tree test in
+the process fails (#5264). This depends on which test classes ran first, so it looks random;
+`HeadlessWindowDriverTests` rebuilds the template on purpose.
+
 Use the head's singleton manager and view rather than building a second one: everything the tool
 routes to the tab (`IGuiCommands.RefreshVariables`, plugin events) reaches the singleton only.
 
