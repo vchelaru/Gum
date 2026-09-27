@@ -69,4 +69,11 @@ public sealed class SpriteRuntime : GraphicalUiElement
         SetContainedObject(sprite);
         _cached = sprite;
     }
+
+    public override GraphicalUiElement Clone()
+    {
+        SpriteRuntime toReturn = (SpriteRuntime)base.Clone();
+        toReturn._cached = null;
+        return toReturn;
+    }
 }

@@ -3,8 +3,10 @@ using System.IO;
 using System.Linq;
 using Gum;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -96,6 +98,49 @@ public class GumServiceTests
             // ObjectFinder.Self.GumProjectSave is process-wide static state (no BaseTestClass/Dispose
             // hook in this test project to reset it) -- leaving it set here would fail an unrelated
             // "no project loaded" test in another class.
+            Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
+            try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
+    // Issue #5232: the tool saves a Standard element's animations beside it, as
+    // Standards/{Name}Animations.ganx, so loading must map that path back to the element name.
+    [Fact]
+    public void LoadAnimations_FindsAnimationSavedBesideStandardElement()
+    {
+        string sourceDirectory = Path.Combine(Path.GetTempPath(), "SkiaLoadStandardAnimationsTests_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            GumProjectSave projectToSave = new GumProjectSave();
+            StandardElementSave container = new StandardElementSave { Name = "Container" };
+            container.States.Add(new StateSave { Name = "Default", ParentContainer = container });
+            projectToSave.StandardElements.Add(container);
+            projectToSave.StandardElementReferences.Add(new ElementReference { Name = "Container", ElementType = ElementType.Standard });
+            string gumxPath = Path.Combine(sourceDirectory, "Proj.gumx");
+            projectToSave.Save(gumxPath, saveElements: true);
+
+            var animations = new Gum.StateAnimation.SaveClasses.ElementAnimationsSave();
+            animations.Animations.Add(new Gum.StateAnimation.SaveClasses.AnimationSave { Name = "Pulse" });
+            var serializer = ToolsUtilities.FileManager.GetXmlSerializer(typeof(Gum.StateAnimation.SaveClasses.ElementAnimationsSave));
+            using (var writer = new StreamWriter(Path.Combine(sourceDirectory, ElementReference.StandardSubfolder, "ContainerAnimations.ganx")))
+            {
+                serializer.Serialize(writer, animations);
+            }
+
+            using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+            GumService.Default.Initialize(surface.Canvas, 200, 100, gumxPath);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            GumService.Default.LoadAnimations();
+#pragma warning restore CS0618
+
+            StandardElementSave loadedContainer = Gum.Managers.ObjectFinder.Self.GetStandardElement("Container")!;
+            GraphicalUiElement visual = GumRuntime.ElementSaveExtensions.ToGraphicalUiElement(loadedContainer, SystemManagers.Default, addToManagers: false);
+            visual.GetAnimation("Pulse").ShouldNotBeNull();
+        }
+        finally
+        {
             Gum.Managers.ObjectFinder.Self.GumProjectSave = null;
             try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
         }

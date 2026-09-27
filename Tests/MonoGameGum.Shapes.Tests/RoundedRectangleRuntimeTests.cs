@@ -7,11 +7,6 @@ namespace MonoGameGum.Shapes.Tests;
 // Per-corner radii were Skia-only until Apos.Shapes 0.6.9 exposed CornerRadii. These tests guard
 // the Apos-side parity wiring: the runtime exposes the four nullable Custom* properties and
 // forwards each to the underlying RoundedRectangle renderable.
-//
-// Clone parity is intentionally not covered — the Apos RoundedRectangle renderable doesn't
-// implement ICloneable, so any runtime Clone call throws before reaching the new properties.
-// That's a pre-existing gap and unrelated to per-corner radii; themes instantiate visuals via
-// `new`, not Clone, so this doesn't block.
 public class RoundedRectangleRuntimeTests
 {
     [Fact]

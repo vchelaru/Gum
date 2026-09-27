@@ -954,12 +954,7 @@ public class ObjectFinder : IObjectFinder
     /// </summary>
     public string GetQualifiedElementName(ElementSave element)
     {
-        var prefix =
-            element is ScreenSave ? "Screens/" :
-            element is ComponentSave ? "Components/" :
-            "Standards/";
-
-        return prefix + element.Name;
+        return ElementReference.GetQualifiedName(element, element.Name);
     }
 
     /// <summary>

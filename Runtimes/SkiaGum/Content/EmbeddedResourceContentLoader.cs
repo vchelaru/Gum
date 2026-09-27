@@ -1,5 +1,6 @@
 ﻿using RenderingLibrary.Content;
 using SkiaSharp;
+using SkiaSharp.Skottie;
 using SKSvg = Svg.Skia.SKSvg;
 
 namespace SkiaGum.Content
@@ -27,6 +28,11 @@ namespace SkiaGum.Content
             else if (typeof(T) == typeof(SKBitmap))
             {
                 return (T)(object)LoadSKBitmap(contentName);
+            }
+            else if (typeof(T) == typeof(Animation))
+            {
+                var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
+                return (T?)(object?)SkiaResourceManager.GetLottieAnimation(modifiedContentName);
             }
             else
 

@@ -781,6 +781,18 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         shape.OnPreRender = PreRender;
     }
 
+    public override GraphicalUiElement Clone()
+    {
+        AposShapeRuntime toReturn = (AposShapeRuntime)base.Clone();
+        // The cloned shape drops OnPreRender, so hook it to the clone or the clone's stroke width
+        // and antialiasing never reach its shape.
+        if (toReturn.RenderableComponent is RenderableShapeBase shape)
+        {
+            shape.OnPreRender = toReturn.PreRender;
+        }
+        return toReturn;
+    }
+
     /// <summary>
     /// Applies StrokeWidthUnits to the contained renderable's StrokeWidth before rendering.
     ///
