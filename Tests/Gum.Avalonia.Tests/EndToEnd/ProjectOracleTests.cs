@@ -1,5 +1,6 @@
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
+using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -25,6 +26,26 @@ public class ProjectOracleTests
         using ProjectTreeHarness tree = new ProjectTreeHarness();
 
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void ATabAScenarioLeftShowing_IsHiddenAgainWhenTheHarnessIsDisposed()
+    {
+        AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
+        AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations");
+        animations.Hide();
+
+        using (ProjectTreeHarness tree = new ProjectTreeHarness())
+        {
+            ComponentSave button = tree.Project.AddComponent("Button");
+            File.WriteAllText(Path.Combine(tree.Project.ProjectFolder, "Components", "ButtonAnimations.ganx"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<ElementAnimationsSave>\r\n  <Animations />\r\n</ElementAnimationsSave>");
+            tree.Click(tree.RootNode("Components"));
+            tree.Click(tree.NodeFor(button));
+            animations.IsVisible.ShouldBeTrue("selecting an element with an animation file shows the tab");
+        }
+
+        animations.IsVisible.ShouldBeFalse("the tab outlives the test, and showing would break the next one's View Animations");
     }
 
     [AvaloniaFact]

@@ -265,29 +265,22 @@ public class DialogScenarioTests
         AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
         tree.PickMainMenu("View", "View Animations");
         AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations" && tab.IsVisible);
-        try
+        tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
         {
-            tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
-            {
-                PluginItemViewModel stateAnimation = dialog.Plugins.Single(plugin => plugin.DisplayText.StartsWith("State Animation Plugin", StringComparison.Ordinal));
-                stateAnimation.IsEnabled = false;
-                animations.IsVisible.ShouldBeFalse("the tab of a plugin that is off is hidden");
-                Services.GetRequiredService<Gum.Menus.MenuModel>().GetItem("View")!.Items
-                    .Single(item => item.Header == "Hide Animations" || item.Header == "View Animations")
-                    .IsEnabled.ShouldBeFalse("the menu item of a plugin that is off is disabled");
-                stateAnimation.IsEnabled = true;
-                return true;
-            });
+            PluginItemViewModel stateAnimation = dialog.Plugins.Single(plugin => plugin.DisplayText.StartsWith("State Animation Plugin", StringComparison.Ordinal));
+            stateAnimation.IsEnabled = false;
+            animations.IsVisible.ShouldBeFalse("the tab of a plugin that is off is hidden");
+            Services.GetRequiredService<Gum.Menus.MenuModel>().GetItem("View")!.Items
+                .Single(item => item.Header == "Hide Animations" || item.Header == "View Animations")
+                .IsEnabled.ShouldBeFalse("the menu item of a plugin that is off is disabled");
+            stateAnimation.IsEnabled = true;
+            return true;
+        });
 
-            tree.PickMainMenu("Plugins", "Manage Plugins");
+        tree.PickMainMenu("Plugins", "Manage Plugins");
 
-            animations.IsVisible.ShouldBeTrue("turning the plugin back on shows the tab it had showing");
-            tree.AssertOracles();
-        }
-        finally
-        {
-            animations.Hide();
-        }
+        animations.IsVisible.ShouldBeTrue("turning the plugin back on shows the tab it had showing");
+        tree.AssertOracles();
     }
 
     [AvaloniaFact]
@@ -301,35 +294,28 @@ public class DialogScenarioTests
         AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
         AvaloniaPluginTab tab = tabs.AllTabs.Single(candidate => candidate.Title == "Project Properties");
         ProjectPropertiesViewModel properties = (ProjectPropertiesViewModel)((global::Avalonia.Controls.Control)tab.Content).DataContext!;
-        try
-        {
-            tree.PickMainMenu("Edit", "Properties");
-            tab.IsVisible.ShouldBeTrue();
+        tree.PickMainMenu("Edit", "Properties");
+        tab.IsVisible.ShouldBeTrue();
 
-            properties.RestrictToUnitValues = true;
-            properties.ShowLocalization = !properties.ShowLocalization;
-            bool showLocalization = properties.ShowLocalization;
-            properties.FontSpacingHorizontal = 2;
-            properties.FontSpacingVertical = 3;
-            tree.WaitUntil(() => SavedProject(tree).FontSpacingVertical == 3, AsyncWork, "the font spacing to save");
+        properties.RestrictToUnitValues = true;
+        properties.ShowLocalization = !properties.ShowLocalization;
+        bool showLocalization = properties.ShowLocalization;
+        properties.FontSpacingHorizontal = 2;
+        properties.FontSpacingVertical = 3;
+        tree.WaitUntil(() => SavedProject(tree).FontSpacingVertical == 3, AsyncWork, "the font spacing to save");
 
-            GumProjectSave saved = SavedProject(tree);
-            saved.RestrictToUnitValues.ShouldBeTrue();
-            saved.ShowLocalizationInGum.ShouldBe(showLocalization);
-            (saved.FontSpacingHorizontal, saved.FontSpacingVertical).ShouldBe((2, 3));
+        GumProjectSave saved = SavedProject(tree);
+        saved.RestrictToUnitValues.ShouldBeTrue();
+        saved.ShowLocalizationInGum.ShouldBe(showLocalization);
+        (saved.FontSpacingHorizontal, saved.FontSpacingVertical).ShouldBe((2, 3));
 
-            // What the tab's Close button calls (ProjectPropertiesViewTests).
-            properties.RequestClose();
-            tab.IsVisible.ShouldBeFalse();
+        // What the tab's Close button calls (ProjectPropertiesViewTests).
+        properties.RequestClose();
+        tab.IsVisible.ShouldBeFalse();
 
-            tree.AssertOracles();
-            // The reload refilled the tab from the saved file.
-            (properties.RestrictToUnitValues, properties.FontSpacingHorizontal, properties.FontSpacingVertical).ShouldBe((true, 2, 3));
-        }
-        finally
-        {
-            tab.Hide();
-        }
+        tree.AssertOracles();
+        // The reload refilled the tab from the saved file.
+        (properties.RestrictToUnitValues, properties.FontSpacingHorizontal, properties.FontSpacingVertical).ShouldBe((true, 2, 3));
     }
 
     #endregion
