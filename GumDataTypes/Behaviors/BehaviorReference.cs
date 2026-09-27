@@ -35,16 +35,20 @@ namespace Gum.DataTypes.Behaviors
         public string? DefaultImplementationOverride;
 
         /// <summary>
-        /// Returns the relative path to this behavior's backing file. When <see cref="SourcePath"/>
-        /// is set it always wins (verbatim, whatever extension it carries); otherwise the conventional
-        /// <c>Behaviors/{Name}</c> path is built using <paramref name="isJsonFormat"/> to pick
-        /// <see cref="JsonExtension"/> or <see cref="Extension"/>.
+        /// Returns the relative path to this behavior's backing file, with forward slashes. When
+        /// <see cref="SourcePath"/> is set it always wins (whatever extension it carries); otherwise the
+        /// conventional <c>Behaviors/{Name}</c> path is built using <paramref name="isJsonFormat"/> to
+        /// pick <see cref="JsonExtension"/> or <see cref="Extension"/>.
         /// </summary>
+        /// <remarks>
+        /// A project saved on Windows stores <see cref="SourcePath"/> with backslashes, which macOS
+        /// and Linux read as part of the file name, so they are converted here for every caller.
+        /// </remarks>
         public string GetRelativeFilePath(bool isJsonFormat = false)
         {
             return string.IsNullOrEmpty(SourcePath)
                 ? Subfolder + "/" + Name + "." + (isJsonFormat ? JsonExtension : Extension)
-                : SourcePath;
+                : SourcePath!.Replace('\\', '/');
         }
 
         public BehaviorSave ToBehaviorSave(string projectRoot, int projectVersion = 1, bool isJsonFormat = false)
