@@ -6,3 +6,4 @@
 
 F:System.Environment.SpecialFolder.ApplicationData;Use FileManager.UserApplicationDataForThisApplication, which honors --user-data and the test override.
 F:System.Environment.SpecialFolder.LocalApplicationData;Use FileManager.UserApplicationDataForThisApplication, which honors --user-data and the test override.
+P:ToolsUtilities.FileManager.UserApplicationData;Use FileManager.UserApplicationDataForThisApplication, which honors --user-data and the test override.

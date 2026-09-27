@@ -31,7 +31,11 @@ public class ToolUserDataFolderGuardTests
         };
 
         string repoRoot = FindRepoRoot();
-        string[] roots = { "Gum", "Tool", "Tools", "DataUi.Core", "AvaloniaDataUi" };
+        string[] roots =
+        {
+            "Gum", "Tool", "Tools", "DataUi.Core", "AvaloniaDataUi",
+            "InputLibrary", "XnaAndWinforms", "FlatRedBall.SpecializedXnaControls",
+        };
         Regex windowsTarget = new Regex(@"<TargetFrameworks?>[^<]*-windows");
         Regex banListInclude = new Regex(@"<AdditionalFiles\s+Include=""([^""]*BannedSymbols\.ToolUserData\.txt)""");
 
