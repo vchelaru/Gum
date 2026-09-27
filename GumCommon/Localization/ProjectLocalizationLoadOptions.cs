@@ -25,10 +25,4 @@ public class ProjectLocalizationLoadOptions
     /// Receives a string ID defined in more than one RESX file. The files still load.
     /// </summary>
     public Action<string>? OnWarning { get; set; }
-
-    /// <summary>
-    /// Replaces the CSV parser for a loose (non-bundle) CSV file, given its full path. <c>null</c>
-    /// uses <see cref="LocalizationServiceExtensions.AddCsvDatabase"/>.
-    /// </summary>
-    public Action<ILocalizationService, string>? LoadLooseCsvFile { get; set; }
 }

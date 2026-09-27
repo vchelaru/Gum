@@ -34,7 +34,6 @@ public class FileCommands : IFileCommands
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
     private readonly IRecycleBinService _recycleBinService;
-    private readonly ICsvLocalizationLoader _csvLocalizationLoader;
     private readonly IPathCaseSensitivity _pathCaseSensitivity;
     // Lazy: NewProjectLogic saves through IFileCommands, so a direct reference would be a
     // construction cycle.
@@ -53,7 +52,6 @@ public class FileCommands : IFileCommands
         IProjectState projectState,
         IPluginManager pluginManager,
         IRecycleBinService recycleBinService,
-        ICsvLocalizationLoader csvLocalizationLoader,
         Lazy<INewProjectLogic> newProjectLogic,
         IPathCaseSensitivity pathCaseSensitivity)
     {
@@ -70,7 +68,6 @@ public class FileCommands : IFileCommands
         _projectState = projectState;
         _pluginManager = pluginManager;
         _recycleBinService = recycleBinService;
-        _csvLocalizationLoader = csvLocalizationLoader;
 
     }
 
@@ -448,15 +445,13 @@ public class FileCommands : IFileCommands
         {
             try
             {
-                // The policy is shared with gumcli and the runtime; skipped files are errors in the
-                // Output tab, string ID collisions are output, and CSV uses the tool's parser.
+                // The policy and parsers are shared with gumcli and the runtime; skipped files are
+                // errors in the Output tab and string ID collisions are output.
                 ProjectLocalizationLoader.Load(gumProject, projectDirectory, _localizationService,
                     new ProjectLocalizationLoadOptions
                     {
                         OnSkipped = _outputManager.AddError,
                         OnWarning = _outputManager.AddOutput,
-                        LoadLooseCsvFile = (service, filePath) =>
-                            _csvLocalizationLoader.AddDatabaseFromCsv(service, filePath, ','),
                     });
 
                 _localizationService.CurrentLanguage = gumProject.CurrentLanguageIndex;

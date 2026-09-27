@@ -86,8 +86,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
-		<!-- LocalizationServiceExtensions loads localization databases from CSV. CsvLibrary is plain net10.0. -->
-		<ProjectReference Include="..\..\Gum\CsvLibrary\CsvLibrary.csproj" />
 		<!-- VariableReferenceLogic parses VariableReferences lines with Roslyn (GetAssignmentSyntax)
 		     and evaluates them via EvaluatedSyntax. GumExpressions has no WPF/WinForms dependency
 		     and already pulls in Microsoft.CodeAnalysis.CSharp transitively. -->

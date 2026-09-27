@@ -1,4 +1,5 @@
 using CsvHelper;
+using CsvHelper.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,7 +17,23 @@ public static class LocalizationServiceExtensions
     public static void AddCsvDatabase(this ILocalizationService service, Stream stream)
     {
         using var reader = new StreamReader(stream);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        // Hand-edited CSVs often have spaces after commas and quotes inside an unquoted cell
+        // (He said "hi"). Trim outside quotes and keep such quotes literally. A quoted cell with
+        // unescaped inner quotes is still an error, since its text can't be recovered.
+        CsvConfiguration configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            TrimOptions = TrimOptions.Trim,
+            WhiteSpaceChars = new[] { ' ', '\t' },
+            BadDataFound = args =>
+            {
+                if (args.Field.TrimStart(' ', '\t').StartsWith("\"", StringComparison.Ordinal))
+                {
+                    throw new BadDataException(args.Field, args.RawRecord, args.Context,
+                        $"Malformed quoted CSV cell: {args.Field}");
+                }
+            },
+        };
+        using var csv = new CsvReader(reader, configuration);
 
         csv.Read();
         csv.ReadHeader();
@@ -35,7 +52,8 @@ public static class LocalizationServiceExtensions
             // would alias every blank-ID row to the same key (last-write-wins)
             // and cause empty Text values to translate to leaked content.
             // See issue #2685.
-            if (string.IsNullOrWhiteSpace(stringId))
+            // A "//" ID marks a comment row.
+            if (string.IsNullOrWhiteSpace(stringId) || stringId!.StartsWith("//", StringComparison.Ordinal))
             {
                 continue;
             }

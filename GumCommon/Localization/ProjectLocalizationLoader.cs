@@ -104,7 +104,7 @@ public static class ProjectLocalizationLoader
         else
         {
             // Only a single file gets here: several files are all RESX by now.
-            LoadCsv(service, existingPaths[0], projectDirectory, options);
+            LoadCsv(service, existingPaths[0], projectDirectory, bundleFileProvider);
         }
     }
 
@@ -130,23 +130,16 @@ public static class ProjectLocalizationLoader
         string.Equals(Path.GetExtension(path), ".resx", StringComparison.OrdinalIgnoreCase);
 
     private static void LoadCsv(ILocalizationService service, string relativePath, string projectDirectory,
-        ProjectLocalizationLoadOptions options)
+        IGumFileProvider? bundleFileProvider)
     {
-        if (options.BundleFileProvider != null)
+        if (bundleFileProvider != null)
         {
-            using Stream bundleStream = options.BundleFileProvider.OpenRead(relativePath);
+            using Stream bundleStream = bundleFileProvider.OpenRead(relativePath);
             service.AddCsvDatabase(bundleStream);
             return;
         }
 
-        string looseFilePath = ToLooseFilePath(projectDirectory, relativePath);
-        if (options.LoadLooseCsvFile != null)
-        {
-            options.LoadLooseCsvFile(service, looseFilePath);
-            return;
-        }
-
-        using Stream stream = FileManager.GetStreamForFile(looseFilePath);
+        using Stream stream = FileManager.GetStreamForFile(ToLooseFilePath(projectDirectory, relativePath));
         service.AddCsvDatabase(stream);
     }
 

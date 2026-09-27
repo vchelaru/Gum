@@ -27,6 +27,64 @@ public class LocalizationServiceExtensionsTests : IDisposable
     }
 
     [Fact]
+    public void AddCsvDatabase_CommentRow_ShouldBeSkipped()
+    {
+        string csv = "String ID,English\n//Menu strings,x\n  // indented note,y\nT_Hello,Hello\n";
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        _service.AddCsvDatabase(stream);
+
+        _service.Keys.ShouldBe(new[] { "T_Hello" });
+    }
+
+    [Fact]
+    public void AddCsvDatabase_DuplicateId_ShouldKeepLastRow()
+    {
+        string csv = "String ID,English\nT_Hello,First\nT_Hello,Second\n";
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        _service.AddCsvDatabase(stream);
+
+        _service.CurrentLanguage = 1;
+        _service.Translate("T_Hello").ShouldBe("Second");
+    }
+
+    [Fact]
+    public void AddCsvDatabase_MalformedQuotedCell_ShouldThrow()
+    {
+        string csv = "String ID,English\nT_Say,\"He said \"hi\" there\"\n";
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        Should.Throw<CsvHelper.BadDataException>(() => _service.AddCsvDatabase(stream));
+    }
+
+    [Fact]
+    public void AddCsvDatabase_QuoteInsideUnquotedCell_ShouldBeKeptLiterally()
+    {
+        string csv = "String ID,English,Spanish\nT_Say,He said \"hi\",Dijo \"hola\"\n";
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        _service.AddCsvDatabase(stream);
+
+        _service.CurrentLanguage = 1;
+        _service.Translate("T_Say").ShouldBe("He said \"hi\"");
+        _service.CurrentLanguage = 2;
+        _service.Translate("T_Say").ShouldBe("Dijo \"hola\"");
+    }
+
+    [Fact]
+    public void AddCsvDatabase_RowLongerThanHeader_ShouldIgnoreExtraCells()
+    {
+        string csv = "String ID,English\nT_Hello,Hello,extra\n";
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        _service.AddCsvDatabase(stream);
+
+        _service.Keys.ShouldBe(new[] { "T_Hello" });
+        _service.Languages.ShouldBe(new[] { "English" });
+    }
+
+    [Fact]
     public void AddCsvDatabase_ShouldHandleMultipleLanguages()
     {
         var csv = "StringId,English,Spanish,French\nT_Hello,Hello,Hola,Bonjour\n";
@@ -97,6 +155,21 @@ public class LocalizationServiceExtensionsTests : IDisposable
 
         _service.Translate("T_OK").ShouldBe("OK");
         _service.Translate("T_Cancel").ShouldBe("Cancelar");
+    }
+
+    [Fact]
+    public void AddCsvDatabase_WhitespaceAroundCells_ShouldBeTrimmedOutsideQuotes()
+    {
+        string csv = "String ID, English ,\tSpanish\nT_Hello , Hello ,\" Hola \"\n";
+        using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        _service.AddCsvDatabase(stream);
+
+        _service.Languages.ShouldBe(new[] { "English", "Spanish" });
+        _service.CurrentLanguage = 1;
+        _service.Translate("T_Hello").ShouldBe("Hello");
+        _service.CurrentLanguage = 2;
+        _service.Translate("T_Hello").ShouldBe(" Hola ");
     }
 
     [Fact]
