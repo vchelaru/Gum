@@ -148,9 +148,19 @@ public sealed class App : Application
             StartupTiming.Mark("InitializeGum complete");
             ApplyStartupSelection();
             ApplyThemeOverride();
-            if (_services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
+            ICommandLineManager commandLine = _services.GetRequiredService<ICommandLineManager>();
+            if (commandLine.ShouldExitImmediately)
             {
-                desktop.Shutdown();
+                // A script running a command-line option sees why it didn't run, and a failure code.
+                if (commandLine.UsageError is { } usageError)
+                {
+                    Console.Error.WriteLine(usageError);
+                    desktop.Shutdown(1);
+                }
+                else
+                {
+                    desktop.Shutdown();
+                }
                 return UnattendedStartupOutcome.ExitRequested;
             }
         }
