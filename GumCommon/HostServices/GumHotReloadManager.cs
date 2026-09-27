@@ -66,12 +66,17 @@ public class GumHotReloadManager : IGumHotReloadManager
     private readonly Action<GumProjectSave> _applyProjectTextureFilter;
     private readonly Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> _loadAnimationsFromProvider;
     private readonly Action<string> _disposeCachedAsset;
+    private readonly Func<DateTime> _utcNow;
 
     private string _projectSourcePath = "";
     private string _binGumDirectory = "";
     private FileSystemWatcher? _watcher;
-    private volatile bool _pendingReload;
+    // The watcher thread writes these and the game thread reads and clears them, always together
+    // under _pendingReloadLock, so Update never sees a pending change with an older timestamp and
+    // a change recorded while Update decides is not cleared unseen.
+    private bool _pendingReload;
     private DateTime _lastChangeTime;
+    private readonly object _pendingReloadLock = new object();
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
 
@@ -95,10 +100,21 @@ public class GumHotReloadManager : IGumHotReloadManager
         Action<GumProjectSave> applyProjectTextureFilter,
         Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> loadAnimationsFromProvider,
         Action<string> disposeCachedAsset)
+        : this(applyProjectTextureFilter, loadAnimationsFromProvider, disposeCachedAsset, () => DateTime.UtcNow)
+    {
+    }
+
+    // Takes the clock so tests can pin the debounce without waiting on real time.
+    internal GumHotReloadManager(
+        Action<GumProjectSave> applyProjectTextureFilter,
+        Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> loadAnimationsFromProvider,
+        Action<string> disposeCachedAsset,
+        Func<DateTime> utcNow)
     {
         _applyProjectTextureFilter = applyProjectTextureFilter;
         _loadAnimationsFromProvider = loadAnimationsFromProvider;
         _disposeCachedAsset = disposeCachedAsset;
+        _utcNow = utcNow;
     }
 
     /// <inheritdoc/>
@@ -139,47 +155,41 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <inheritdoc/>
     public void Update(IEnumerable<GraphicalUiElement> roots)
     {
-        if (_pendingReload && (DateTime.UtcNow - _lastChangeTime) >= TimeSpan.FromMilliseconds(200))
+        DateTime now = _utcNow();
+        lock (_pendingReloadLock)
         {
-            System.Diagnostics.Debug.WriteLine(
-                $"[HotReload] PerformReload firing, elapsedSinceLastChange=" +
-                $"{(DateTime.UtcNow - _lastChangeTime).TotalMilliseconds:0}ms");
+            if (!_pendingReload || (now - _lastChangeTime) < TimeSpan.FromMilliseconds(200))
+            {
+                return;
+            }
             _pendingReload = false;
-            PerformReload(roots);
         }
+        PerformReload(roots);
     }
 
-    private void HandleFileChange(object sender, FileSystemEventArgs e)
+    private void HandleFileChange(object sender, FileSystemEventArgs e) => NotifyFileChanged(e.FullPath);
+
+    // Called from the watcher's thread-pool thread; internal so tests can drive it without a
+    // FileSystemWatcher.
+    internal void NotifyFileChanged(string fullPath)
     {
-        var extension = Path.GetExtension(e.FullPath).ToLowerInvariant();
-
-        long size = -1;
-        string mtime = "-";
-        try
-        {
-            if (File.Exists(e.FullPath))
-            {
-                size = new FileInfo(e.FullPath).Length;
-                mtime = File.GetLastWriteTimeUtc(e.FullPath).ToString("HH:mm:ss.fff");
-            }
-        }
-        catch { }
-        System.Diagnostics.Debug.WriteLine(
-            $"[HotReload] event={e.ChangeType} file={Path.GetFileName(e.FullPath)} ext={extension} " +
-            $"size={size} mtime={mtime} now={DateTime.UtcNow:HH:mm:ss.fff}");
-
+        string extension = Path.GetExtension(fullPath).ToLowerInvariant();
         if (IsWatchedExtension(extension))
         {
             if (extension == ".fnt")
             {
                 lock (_fontFileLock)
                 {
-                    _changedFontFiles.Add(e.FullPath);
+                    _changedFontFiles.Add(fullPath);
                 }
             }
 
-            _pendingReload = true;
-            _lastChangeTime = DateTime.UtcNow;
+            DateTime now = _utcNow();
+            lock (_pendingReloadLock)
+            {
+                _lastChangeTime = now;
+                _pendingReload = true;
+            }
         }
     }
 
@@ -271,14 +281,6 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         CopyAndUnloadChangedFonts();
 
-        var gumxMtime = File.Exists(_projectSourcePath)
-            ? File.GetLastWriteTimeUtc(_projectSourcePath).ToString("HH:mm:ss.fff")
-            : "-";
-        var gumxSize = File.Exists(_projectSourcePath) ? new FileInfo(_projectSourcePath).Length : -1;
-        System.Diagnostics.Debug.WriteLine(
-            $"[HotReload] loading gumx={Path.GetFileName(_projectSourcePath)} " +
-            $"size={gumxSize} mtime={gumxMtime}");
-
         GumProjectSave newProject = GumProjectSave.Load(_projectSourcePath);
         newProject.Initialize();
         ObjectFinder.Self.GumProjectSave = newProject;
@@ -287,20 +289,6 @@ public class GumHotReloadManager : IGumHotReloadManager
         // (issue #3199). On XNALIKE this takes effect on the next Draw; on raylib it affects
         // textures loaded after this point (already-cached textures keep their prior filter).
         _applyProjectTextureFilter(newProject);
-
-        foreach (var element in newProject.AllElements)
-        {
-            var defaultState = element.DefaultState;
-            if (defaultState?.Variables == null) continue;
-            foreach (var v in defaultState.Variables)
-            {
-                if (v.Name == "BackInnerBorder.Width")
-                {
-                    System.Diagnostics.Debug.WriteLine(
-                        $"[HotReload]   {element.Name}.{v.Name} = {v.Value}");
-                }
-            }
-        }
 
         // Reload animations from the source project directory (loose files on disk) by enumerating
         // its *Animations.ganx files. Hot reload only ever runs against a real filesystem, so a
@@ -311,12 +299,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
         _loadAnimationsFromProvider(newProject, animationProvider);
 
-        System.Diagnostics.Debug.WriteLine(
-            $"[HotReload] rootList.Count = {rootList.Count}");
-
         ApplyDiff(rootList, newProject, ISystemManagers.Default!);
-
-        System.Diagnostics.Debug.WriteLine("[HotReload] DONE");
 
         ReloadCompleted?.Invoke();
     }
