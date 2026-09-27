@@ -108,6 +108,36 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
         parent.X.ShouldBe(75f);
     }
 
+    [Fact]
+    public void ApplyVariableReferences_WithoutCustomEvaluator_ResolvesStandardElementReference()
+    {
+        GumProjectSave project = new GumProjectSave();
+        StandardElementSave container = new StandardElementSave { Name = "Container" };
+        StateSave containerState = new StateSave { Name = "Default", ParentContainer = container };
+        containerState.Variables.Add(new VariableSave
+        {
+            Name = "Width",
+            Value = 150f,
+            Type = "float",
+            SetsValue = true
+        });
+        container.States.Add(containerState);
+        project.StandardElements.Add(container);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ContainerRuntime parent = new ContainerRuntime();
+        parent.Width = 0;
+
+        StateSave state = BuildStateWithVariableReference(
+            "Width = Standards/Container.Width",
+            null,
+            ("Width", 0f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        parent.Width.ShouldBe(150f);
+    }
+
     #endregion
 
     #region InstanceScoped

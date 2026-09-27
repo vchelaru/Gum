@@ -26,13 +26,7 @@ public class ReferenceFinder : IReferenceFinder
             return changes;
         }
 
-        string qualifiedOldName = element switch
-        {
-            ScreenSave => $"Screens/{elementName}",
-            ComponentSave => $"Components/{elementName}",
-            StandardElementSave => $"Standards/{elementName}",
-            _ => elementName
-        };
+        string qualifiedOldName = ElementReference.GetQualifiedName(element, elementName);
 
         foreach (var screen in project.Screens)
         {
@@ -235,12 +229,10 @@ public class ReferenceFinder : IReferenceFinder
         // Search all other elements for cross-component qualified references
         // e.g. "Width = Components/ComponentA.Sprite.Width" in ComponentB
         var project = _projectProvider.GumProjectSave;
-        string? qualifiedElementPrefix = containerElement switch
-        {
-            ComponentSave => $"Components/{containerElement.Name}",
-            ScreenSave => $"Screens/{containerElement.Name}",
-            _ => null
-        };
+        // Standard elements have no instances, so there is nothing to qualify for them.
+        string? qualifiedElementPrefix = containerElement is StandardElementSave
+            ? null
+            : ElementReference.GetQualifiedName(containerElement, containerElement.Name);
 
         if (qualifiedElementPrefix != null && project != null)
         {

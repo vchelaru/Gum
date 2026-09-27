@@ -615,20 +615,15 @@ public class DeleteLogic : IDeleteLogic
             if (duplicateNames.Contains(instanceSave.Name))
             {
                 var parent = instanceSave.ParentContainer;
-                var typePrefix = parent is ScreenSave ? "Screens" : "Components";
+                var typePrefix = parent is ScreenSave ? ElementReference.ScreenSubfolder : ElementReference.ComponentSubfolder;
                 return $"{typePrefix}/{parent?.Name}/{instanceSave.Name}";
             }
             return instanceSave.Name;
         }
-        if (item is ScreenSave screenSave)
-        {
-            return duplicateNames.Contains(screenSave.Name)
-                ? $"Screens/{screenSave.Name}" : screenSave.Name;
-        }
         if (item is ElementSave elementSave)
         {
             return duplicateNames.Contains(elementSave.Name)
-                ? $"Components/{elementSave.Name}" : elementSave.Name;
+                ? ElementReference.GetQualifiedName(elementSave, elementSave.Name) : elementSave.Name;
         }
         if (item is BehaviorSave behaviorSave)
         {

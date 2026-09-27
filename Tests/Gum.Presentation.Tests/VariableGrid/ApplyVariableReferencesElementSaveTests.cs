@@ -100,6 +100,34 @@ public class ApplyVariableReferencesElementSaveTests : BaseTestClass
         screen.DefaultState.GetValue("Width").ShouldBe(300f);
     }
 
+    [Fact]
+    public void ApplyVariableReferences_CrossElementStandardReference_ResolvesValue()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        StandardElementSave container = new StandardElementSave { Name = "Container" };
+        StateSave containerState = new StateSave { Name = "Default", ParentContainer = container };
+        containerState.Variables.Add(new VariableSave
+        {
+            Name = "Width",
+            Value = 150f,
+            Type = "float",
+            SetsValue = true
+        });
+        container.States.Add(containerState);
+        project.StandardElements.Add(container);
+
+        ScreenSave screen = BuildScreenWithReference(
+            "Width = Standards/Container.Width",
+            ("Width", 0f, "float"));
+        project.Screens.Add(screen);
+
+        screen.ApplyVariableReferences(screen.DefaultState);
+
+        screen.DefaultState.GetValue("Width").ShouldBe(150f);
+    }
+
     #endregion
 
     #region ExpressionEvaluation

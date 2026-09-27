@@ -481,11 +481,7 @@ namespace GumRuntime
             foreach (var element in allElements)
             {
                 dependsOn[element] = new List<ElementSave>();
-                string? qualifiedName = GetQualifiedName(element);
-                if (qualifiedName != null)
-                {
-                    elementsByQualifiedName[qualifiedName] = element;
-                }
+                elementsByQualifiedName[ElementReference.GetQualifiedName(element, element.Name)] = element;
             }
 
             // Scan variable references to find cross-element dependencies
@@ -605,24 +601,6 @@ namespace GumRuntime
                     }
                 }
             }
-        }
-
-
-        private static string? GetQualifiedName(ElementSave element)
-        {
-            if (element is ScreenSave)
-            {
-                return "Screens/" + element.Name;
-            }
-            else if (element is ComponentSave)
-            {
-                return "Components/" + element.Name;
-            }
-            else if (element is StandardElementSave)
-            {
-                return "Standards/" + element.Name;
-            }
-            return null;
         }
 
         /// <summary>
@@ -1361,34 +1339,37 @@ namespace GumRuntime
 
                 var elementNameToFind = right.Substring(0, firstDot);
 
-                if (elementNameToFind.StartsWith("Components/"))
+                ElementSave? element = null;
+                if (TryStripPrefix(elementNameToFind, ElementReference.ComponentSubfolder, out var componentName))
                 {
-                    var stripped = elementNameToFind.Substring("Components/".Length);
-
-                    var element = ObjectFinder.Self.GetComponent(stripped);
-
-                    if (element != null)
-                    {
-                        stateSave = GetRightSide(ref right, firstDot, element);
-                    }
+                    element = ObjectFinder.Self.GetComponent(componentName);
                 }
-                else if (elementNameToFind.StartsWith("Screens/"))
+                else if (TryStripPrefix(elementNameToFind, ElementReference.ScreenSubfolder, out var screenName))
                 {
-                    var stripped = elementNameToFind.Substring("Screens/".Length);
+                    element = ObjectFinder.Self.GetScreen(screenName);
+                }
+                else if (TryStripPrefix(elementNameToFind, ElementReference.StandardSubfolder, out var standardName))
+                {
+                    element = ObjectFinder.Self.GetStandardElement(standardName);
+                }
 
-                    var element = ObjectFinder.Self.GetScreen(stripped);
-
-                    if (element != null)
-                    {
-                        stateSave = GetRightSide(ref right, firstDot, element);
-                    }
+                if (element != null)
+                {
+                    stateSave = GetRightSide(ref right, firstDot, element);
                 }
             }
-            else
+        }
+
+        private static bool TryStripPrefix(string qualifiedElementName, string subfolder, out string elementName)
+        {
+            var prefix = subfolder + "/";
+            if (qualifiedElementName.StartsWith(prefix))
             {
-                
+                elementName = qualifiedElementName.Substring(prefix.Length);
+                return true;
             }
-
+            elementName = string.Empty;
+            return false;
         }
 
         private static StateSave GetRightSide(ref string right, int firstDot, ElementSave element)

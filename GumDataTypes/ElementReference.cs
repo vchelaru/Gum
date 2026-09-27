@@ -27,6 +27,24 @@ namespace Gum.DataTypes
         public const string ComponentSubfolder = "Components";
         public const string StandardSubfolder = "Standards";
 
+        /// <summary>
+        /// Returns the project subfolder that holds elements of <paramref name="element"/>'s type:
+        /// Screens, Components or Standards.
+        /// </summary>
+        public static string GetSubfolder(ElementSave element) =>
+            element is ScreenSave ? ScreenSubfolder :
+            element is ComponentSave ? ComponentSubfolder :
+            StandardSubfolder;
+
+        /// <summary>
+        /// Returns the project-qualified name of an element of <paramref name="element"/>'s type named
+        /// <paramref name="elementName"/>, such as <c>Components/MyComp</c>. Variable references use this
+        /// form for their element segment. Pass a name other than <c>element.Name</c> to qualify an old
+        /// name during a rename.
+        /// </summary>
+        public static string GetQualifiedName(ElementSave element, string elementName) =>
+            GetSubfolder(element) + "/" + elementName;
+
         public ElementType ElementType
         {
             get;

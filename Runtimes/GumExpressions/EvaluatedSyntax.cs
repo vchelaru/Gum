@@ -645,10 +645,10 @@ public class EvaluatedSyntax
             }
             else
             {
-                text = text
-                    .Replace("Components/", "global::Components.")
-                    .Replace("Screens/", "global::Screens.")
-                    .Replace("Standards/", "global::Standards.");
+                foreach (var subfolder in ElementSubfolders)
+                {
+                    text = text.Replace(subfolder + "/", "global::" + subfolder + ".");
+                }
             }
 
             builder.Append(text);
@@ -871,29 +871,37 @@ public class EvaluatedSyntax
 
     public static string ConvertToSlashSyntax(string cSharp)
     {
-        var convertedText = cSharp.Replace('\u1234', '/')
-            .Replace("global::Components.", "Components/")
-            .Replace("global::Screens.", "Screens/")
-            .Replace("global::Standards.", "Standards/");
+        var convertedText = cSharp.Replace('\u1234', '/');
+        foreach (var subfolder in ElementSubfolders)
+        {
+            convertedText = convertedText.Replace("global::" + subfolder + ".", subfolder + "/");
+        }
 
         return convertedText;
     }
+
+    /// <summary>
+    /// The element-type folders a variable reference can qualify an element with, e.g. the
+    /// <c>Components</c> in <c>Components/Button.Width</c>.
+    /// </summary>
+    private static readonly string[] ElementSubfolders =
+    {
+        ElementReference.ComponentSubfolder,
+        ElementReference.ScreenSubfolder,
+        ElementReference.StandardSubfolder
+    };
 
     public static void ConvertGlobalToElementNameWithSlashes(string rightSideToEvaluate, out string? elementName, out string? elementType)
     {
         elementName = null;
         elementType = null;
-        if (rightSideToEvaluate.StartsWith("global::Components."))
+        foreach (var subfolder in ElementSubfolders)
         {
-            elementType = "Components";
-        }
-        else if (rightSideToEvaluate.StartsWith("global::Screens."))
-        {
-            elementType = "Screens";
-        }
-        else if (rightSideToEvaluate.StartsWith("global::Standards."))
-        {
-            elementType = "Standards";
+            if (rightSideToEvaluate.StartsWith("global::" + subfolder + "."))
+            {
+                elementType = subfolder;
+                break;
+            }
         }
         if (elementType != null)
         {

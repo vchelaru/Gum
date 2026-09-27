@@ -775,6 +775,33 @@ public class ReferenceFinderTests : BaseTestClass
     }
 
     [Fact]
+    public void GetReferencesToVariable_VariableReferenceRightSideOnStandardElement_IsDetected()
+    {
+        // Label references a variable on the Text standard element: "Width = Standards/Text.MyVar".
+        // Finding references for MyVar on Text should resolve the right side against Text.
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        text.States.Add(new StateSave { Name = "Default", ParentContainer = text });
+        _project.StandardElements.Add(text);
+
+        ComponentSave label = new ComponentSave { Name = "Label" };
+        StateSave labelState = new StateSave { Name = "Default", ParentContainer = label };
+        label.States.Add(labelState);
+        VariableListSave<string> varRefList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varRefList.Value.Add("Width = Standards/Text.MyVar");
+        labelState.VariableLists.Add(varRefList);
+        _project.Components.Add(label);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            text,
+            oldFullName: "MyVar",
+            oldStrippedOrExposedName: "MyVar");
+
+        result.VariableReferenceChanges.Count.ShouldBe(1);
+        result.VariableReferenceChanges[0].Container.ShouldBe(label);
+        result.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
+    }
+
+    [Fact]
     public void GetReferencesToVariable_InstanceValueOverride_IsDetected()
     {
         // Component1 has a custom variable Variable1. Screen1 has an instance of Component1 with

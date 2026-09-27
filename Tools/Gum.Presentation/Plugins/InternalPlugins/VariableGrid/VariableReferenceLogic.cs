@@ -596,21 +596,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
                                 var simplifiedRightSide = rightSide;
 
-                                var instanceElementQualified = instanceElement.Name;
-                                if (instanceElement is ComponentSave)
-                                {
-                                    instanceElementQualified = "Components/" + instanceElementQualified;
-                                }
-                                else if (instanceElement is ScreenSave)
-                                {
-                                    instanceElementQualified = "Screens/" + instanceElementQualified;
-                                }
-                                else if (instanceElement is StandardElementSave)
-                                {
-                                    instanceElementQualified = "StandardElements/" + instanceElementQualified;
-                                }
+                                var instanceElementQualified = ObjectFinder.Self.GetQualifiedElementName(instanceElement);
 
-                                if (rightSide.StartsWith(instanceElementQualified))
+                                if (rightSide.StartsWith(instanceElementQualified + "."))
                                 {
                                     simplifiedRightSide = rightSide.Substring(instanceElementQualified.Length
                                         // +1 to take off the period before the variable name

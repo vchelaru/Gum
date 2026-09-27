@@ -276,9 +276,7 @@ public class GumProjectDependencyWalker
                 {
                     continue;
                 }
-                string? subfolder = instanceElement is ComponentSave ? "Components"
-                    : instanceElement is StandardElementSave ? "Standards"
-                    : null;
+                string? subfolder = instanceElement is ScreenSave ? null : ElementReference.GetSubfolder(instanceElement);
                 if (subfolder != null)
                 {
                     core.Add(NormalizeRelative(subfolder + "/" + instanceElement.Name + "." + GetElementExtension(instanceElement, isJsonFormat)));
@@ -347,9 +345,7 @@ public class GumProjectDependencyWalker
                     if (includeCore && !string.IsNullOrEmpty(instance.BaseType)
                         && elementsByName!.TryGetValue(instance.BaseType, out ElementSave? instanceElement))
                     {
-                        string? subfolder = instanceElement is ComponentSave ? "Components"
-                            : instanceElement is StandardElementSave ? "Standards"
-                            : null;
+                        string? subfolder = instanceElement is ScreenSave ? null : ElementReference.GetSubfolder(instanceElement);
                         if (subfolder != null)
                         {
                             string relative = NormalizeRelative(subfolder + "/" + instanceElement.Name + "." + GetElementExtension(instanceElement, isJsonFormat));
