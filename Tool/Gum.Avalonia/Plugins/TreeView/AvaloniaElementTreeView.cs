@@ -145,6 +145,15 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     /// <summary>The (X) button inside the search box that clears it, for tests.</summary>
     internal Button SearchClearButton => _searchClearButton;
 
+    /// <summary>The search box, for tests.</summary>
+    internal TextBox SearchBox => _searchBox;
+
+    /// <summary>The "Include Variables" search option, for tests.</summary>
+    internal CheckBox IncludeVariablesCheckBox => _deepSearch;
+
+    /// <summary>The search results list shown in place of the tree while searching, for tests.</summary>
+    internal ListBox SearchResults => _results;
+
     /// <summary>The element tree, for tests.</summary>
     internal AvaloniaGumTreeView Tree => _tree;
 

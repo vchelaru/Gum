@@ -6,9 +6,10 @@ namespace Gum.Avalonia.Canvas;
 
 /// <summary>
 /// One canvas's share of the Avalonia head's graphics device (<see cref="HeadlessDeviceGame"/>),
-/// reference-counted so every canvas draws on the same device and shares the runtime's texture
-/// cache, plus a render target sized to whatever the canvas last asked for. The counterpart of
-/// the WPF head's window-handle-based <c>SharedRenderDeviceHost</c>.
+/// which is created on first use and kept for the life of the process, so every canvas draws on
+/// the same device and shares the runtime's texture cache, plus a render target sized to whatever
+/// the canvas last asked for. The counterpart of the WPF head's window-handle-based
+/// <c>SharedRenderDeviceHost</c>.
 /// </summary>
 public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
 {
@@ -21,14 +22,14 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
     private HeadlessDeviceGame? _game;
     private RenderTarget2D? _renderTarget;
 
-    /// <summary>Whether any host currently holds the shared device. For tests.</summary>
-    internal static bool IsSharedDeviceCreated
+    /// <summary>How many hosts currently hold the shared device. For tests.</summary>
+    internal static int ReferenceCount
     {
         get
         {
             lock (_gate)
             {
-                return _referenceCount > 0;
+                return _referenceCount;
             }
         }
     }
@@ -96,16 +97,13 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
         {
             return;
         }
-        HeadlessDeviceGame game = _game;
         _game = null;
+        // The device outlives its last host on purpose: disposing it runs SDL_Quit and tears down
+        // the GL context, which can block forever under Xvfb and Mesa (#5259). The OS reclaims it
+        // at process exit.
         lock (_gate)
         {
             _referenceCount--;
-            if (_referenceCount == 0)
-            {
-                game.Dispose();
-                _shared.Clear();
-            }
         }
     }
 }

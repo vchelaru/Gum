@@ -29,11 +29,7 @@ public class CanvasHostTests
 
     private static bool HasDisplay => TestEnvironment.CanCreateDeviceInProcess("GUM_RUN_CANVAS_DEVICE_TESTS");
 
-    // The shared KNI GL device belongs to the thread that created it, and the head creates it on
-    // the Avalonia UI thread, so device tests run there too instead of on an xunit worker.
-    private static void OnUiThread(Action action) =>
-        HeadlessUnitTestSession.GetOrStartForAssembly(typeof(CanvasHostTests).Assembly)
-            .Dispatch(action, CancellationToken.None).GetAwaiter().GetResult();
+    private static void OnUiThread(Action action) => DeviceTestThread.Run(action);
 
     private sealed class ClearingClient : IRenderTargetFrameClient
     {
@@ -101,15 +97,41 @@ public class CanvasHostTests
         });
     }
 
+    // #5259: disposing the device runs SDL_Quit and tears down the GL context, which sometimes
+    // never returns under Xvfb and Mesa. The device lives for the process, so releasing the last
+    // host must leave it for the next one.
+    [SkippableFact]
+    public void ReleasingTheLastHost_KeepsTheSharedDevice()
+    {
+        Skip.IfNot(HasDisplay, SkipReason);
+
+        OnUiThread(() =>
+        {
+            GraphicsDevice device;
+            using (GameRenderDeviceHost first = new GameRenderDeviceHost())
+            {
+                device = first.GraphicsDevice;
+            }
+            GameRenderDeviceHost.ReferenceCount.ShouldBe(0);
+
+            using GameRenderDeviceHost second = new GameRenderDeviceHost();
+
+            second.GraphicsDevice.ShouldBeSameAs(device);
+            device.IsDisposed.ShouldBeFalse();
+        });
+    }
+
     // Plugin StartUp builds the canvas control long before anything renders, and a machine
     // without GL cannot even attempt device creation safely (see the class remarks), so the
     // control must stay device-free until it first draws or is asked for the device.
     [AvaloniaFact]
     public void Control_DoesNotCreateTheDevice_UntilItIsUsed()
     {
+        int referencesBefore = GameRenderDeviceHost.ReferenceCount;
+
         using AvaloniaGraphicsDeviceControl control = new AvaloniaGraphicsDeviceControl(new CanvasRedrawScheduler(TimeProvider.System));
 
-        GameRenderDeviceHost.IsSharedDeviceCreated.ShouldBeFalse();
+        GameRenderDeviceHost.ReferenceCount.ShouldBe(referencesBefore);
     }
 
     // The bitmap needs the Avalonia platform, which the UI thread session provides.

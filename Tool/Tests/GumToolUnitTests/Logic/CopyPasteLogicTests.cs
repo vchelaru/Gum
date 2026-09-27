@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Messages;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -49,6 +50,8 @@ public class CopyPasteLogicTests : BaseTestClass
         var projectCommands = _mocker.CreateInstance<ProjectCommands>();
         _mocker.Use<ICopyPasteProjectCommands>(projectCommands);
 
+        // A mocked manager would refuse every paste as circular.
+        _mocker.Use<ICircularReferenceManager>(new CircularReferenceManager(ObjectFinder.Self));
         _copyPasteLogic = _mocker.CreateInstance<CopyPasteLogic>();
 
         _selectedState = _mocker.GetMock<ISelectedState>();
