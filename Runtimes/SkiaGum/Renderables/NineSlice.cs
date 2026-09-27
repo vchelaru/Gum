@@ -22,13 +22,6 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
     {
         NineSlice clone = (NineSlice)base.Clone();
         clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
-        return clone;
-    }
-
-    /// <inheritdoc/>
-    public override object Clone()
-    {
-        NineSlice clone = (NineSlice)base.Clone();
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
         if (_ownsImage && _texture != null)

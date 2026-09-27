@@ -106,13 +106,6 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     {
         Sprite clone = (Sprite)base.Clone();
         clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
-        return clone;
-    }
-
-    /// <inheritdoc/>
-    public override object Clone()
-    {
-        Sprite clone = (Sprite)base.Clone();
         // An owned image would be disposed by whichever side changes texture first, so the clone
         // builds its own. A caller-assigned image is shared, since neither side disposes it.
         if (_ownsImage && _texture != null)
