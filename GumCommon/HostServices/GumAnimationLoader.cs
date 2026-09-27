@@ -148,6 +148,11 @@ public static class GumAnimationLoader
     private static readonly string[] AnimationFileSuffixes =
         { ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: false), ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: true) };
 
+    // The folders the tool saves element files (and their animation sidecars) under.
     private static readonly string[] AnimationCategoryFolders =
-        { "Screens/", "Components/", "StandardElements/" };
+    {
+        ElementReference.ScreenSubfolder + "/",
+        ElementReference.ComponentSubfolder + "/",
+        ElementReference.StandardSubfolder + "/"
+    };
 }
