@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.ProjectServices;
+using Gum.Services;
 using Shouldly;
 using Xunit;
 
@@ -20,7 +21,7 @@ public class PreviewGumxProjectionServiceTests
         string gumxPath = "/MyGame/GumProject.gumx";
         GumProjectSave project = new GumProjectSave { FullFileName = gumxPath };
         FakeConvertService convertService = new FakeConvertService(resultProjectFilePath: "/Temp/SomeHash/GumProject.gumj");
-        PreviewGumxProjectionService service = new PreviewGumxProjectionService(convertService);
+        PreviewGumxProjectionService service = new PreviewGumxProjectionService(convertService, new PathCaseSensitivity());
 
         PreviewGumxProjection projection = service.Project(project);
 
@@ -37,7 +38,7 @@ public class PreviewGumxProjectionServiceTests
         // change if both writes land in the directory it is already watching.
         GumProjectSave project = new GumProjectSave { FullFileName = "/MyGame/GumProject.gumx" };
         FakeConvertService convertService = new FakeConvertService(resultProjectFilePath: "unused");
-        PreviewGumxProjectionService service = new PreviewGumxProjectionService(convertService);
+        PreviewGumxProjectionService service = new PreviewGumxProjectionService(convertService, new PathCaseSensitivity());
 
         service.Project(project);
         string firstOutputDirectory = convertService.LastOutputDirectory!;
@@ -45,6 +46,38 @@ public class PreviewGumxProjectionServiceTests
         string secondOutputDirectory = convertService.LastOutputDirectory!;
 
         firstOutputDirectory.ShouldBe(secondOutputDirectory);
+    }
+
+    // Where the file system keeps Proj.gumx and proj.gumx apart, they are two projects, and each
+    // preview must watch its own copy. Returns early where no case-sensitive directory can be made.
+    [Fact]
+    public void Project_ForTwoProjectsWhoseNamesDifferOnlyByCase_UsesSeparateOutputDirectories()
+    {
+        string? folder = CaseSensitiveTempDirectory.TryCreate();
+        if (folder == null)
+        {
+            return;
+        }
+        try
+        {
+            string upperPath = System.IO.Path.Combine(folder, "Proj.gumx");
+            string lowerPath = System.IO.Path.Combine(folder, "proj.gumx");
+            System.IO.File.WriteAllText(upperPath, string.Empty);
+            System.IO.File.WriteAllText(lowerPath, string.Empty);
+            FakeConvertService convertService = new FakeConvertService(resultProjectFilePath: "unused");
+            PreviewGumxProjectionService service = new PreviewGumxProjectionService(convertService, new PathCaseSensitivity());
+
+            service.Project(new GumProjectSave { FullFileName = upperPath });
+            string upperOutputDirectory = convertService.LastOutputDirectory!;
+            service.Project(new GumProjectSave { FullFileName = lowerPath });
+            string lowerOutputDirectory = convertService.LastOutputDirectory!;
+
+            lowerOutputDirectory.ShouldNotBe(upperOutputDirectory);
+        }
+        finally
+        {
+            System.IO.Directory.Delete(folder, recursive: true);
+        }
     }
 
     private class FakeConvertService : IConvertProjectToJsonService

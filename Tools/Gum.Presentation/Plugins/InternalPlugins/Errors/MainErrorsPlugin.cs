@@ -69,26 +69,15 @@ public class MainErrorsPlugin : CorePriorityPlugin
 
     private void HandleErrorRefreshRequest(RequestErrorRefreshMessage message)
     {
-        var element = _selectedState.SelectedElement;
-
-        /////////////////////Early Out/////////////////////
-        if(element == null)
-        {
-            return;
-        }
-        ///////////////////End Early Out///////////////////
-
         if (message.RequestingPlugin != null)
         {
+            // Plugin rows are project-wide, so they refresh whatever is selected (#5272).
             _viewModel.Errors.RemoveAll(item => item.OwnerPlugin == message.RequestingPlugin);
-
-            var errors = _errorChecker.GetErrorsFor(element, message.RequestingPlugin);
-
-            _viewModel.Errors.AddRange(errors);
+            _viewModel.Errors.AddRange(_errorChecker.GetPluginErrors(message.RequestingPlugin));
         }
         else
         {
-            UpdateErrorsForElement(element);
+            UpdateErrorsForElement(_selectedState.SelectedElement);
         }
     }
 
@@ -215,6 +204,10 @@ public class MainErrorsPlugin : CorePriorityPlugin
             _viewModel.Errors.Add(item);
         }
         foreach (var item in _projectErrors)
+        {
+            _viewModel.Errors.Add(item);
+        }
+        foreach (var item in _errorChecker.GetPluginErrors())
         {
             _viewModel.Errors.Add(item);
         }

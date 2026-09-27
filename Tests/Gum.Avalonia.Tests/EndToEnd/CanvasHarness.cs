@@ -238,9 +238,7 @@ internal sealed class CanvasHarness : IDisposable
 
     /// <summary>
     /// With <paramref name="button"/> held, moves to <paramref name="to"/> in <paramref name="steps"/>
-    /// even moves; by default moves of 10 to 20 pixels. The canvas ignores a drag until it has gone
-    /// more than 6 pixels from the press and drops the movement before that, so a first move of 6
-    /// pixels or less is lost.
+    /// even moves; by default moves of 10 to 20 pixels.
     /// </summary>
     public void DragTo(Point to, RawInputModifiers modifiers = RawInputModifiers.None, int? steps = null, MouseButton button = MouseButton.Left)
     {

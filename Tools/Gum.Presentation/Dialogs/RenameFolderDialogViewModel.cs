@@ -4,6 +4,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using ToolsUtilities;
@@ -21,6 +22,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly IFileLocations _fileLocations;
     private readonly IFileCommands _fileCommands;
     private readonly IProjectState _projectState;
+    private readonly IPathCaseSensitivity _pathCaseSensitivity;
 
     public ITreeNode? FolderNode { get => Get<ITreeNode?>(); set => Set(value); }
 
@@ -30,7 +32,8 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         IGuiCommands guiCommands,
         IFileLocations fileLocations,
         IFileCommands fileCommands,
-        IProjectState projectState)
+        IProjectState projectState,
+        IPathCaseSensitivity pathCaseSensitivity)
     {
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
@@ -38,6 +41,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         _fileLocations = fileLocations;
         _fileCommands = fileCommands;
         _projectState = projectState;
+        _pathCaseSensitivity = pathCaseSensitivity;
         PreSelect = true;
 
         PropertyChanged += (_, args) =>
@@ -61,12 +65,13 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
             return;
         }
 
-        // see if it already exists. Directory.Exists is case-insensitive on Windows/macOS, so a
-        // rename that only changes casing (e.g. "GameMenuScreens" -> "gamemenuscreens") would
-        // otherwise be misdiagnosed as colliding with itself and get blocked entirely.
+        // see if it already exists. Where the file system ignores case (Windows, default macOS), a
+        // rename that only changes casing (e.g. "GameMenuScreens" -> "gamemenuscreens") finds the
+        // folder itself, so it isn't a collision. Where it doesn't (Linux), foo is its own folder.
         FilePath newFullPath = FileManager.GetDirectory(oldFullPath.FullPath) + Value + "\\";
+        StringComparison pathComparison = _pathCaseSensitivity.GetComparison(oldFullPath.FullPath);
         bool isSameFolderDifferentCase =
-            string.Equals(oldFullPath.FullPath, newFullPath.FullPath, StringComparison.OrdinalIgnoreCase);
+            string.Equals(oldFullPath.FullPath, newFullPath.FullPath, pathComparison);
         if (!isSameFolderDifferentCase && Directory.Exists(newFullPath.FullPath))
         {
             Error = $"Folder {Value} already exists.";
@@ -100,10 +105,10 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
             var screensCopy = project.Screens.ToArray();
             foreach (var screen in screensCopy)
             {
-                if (screen.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
+                if (screen.Name.StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/"), pathComparison))
                 {
                     string oldVaue = screen.Name;
-                    string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length).Replace("\\", "/");
+                    string newName = (newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length)).Replace("\\", "/");
 
                     screen.Name = newName;
                     _renameLogic.HandleRename(screen, (InstanceSave?)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
@@ -115,7 +120,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
             var componentsCopy = project.Components.ToArray();
             foreach (var component in componentsCopy)
             {
-                if (component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
+                if (component.Name.StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/"), pathComparison))
                 {
                     string oldVaue = component.Name;
                     string newName = (newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length)).Replace("\\", "/");

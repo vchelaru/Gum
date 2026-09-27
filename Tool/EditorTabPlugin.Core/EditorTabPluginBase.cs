@@ -323,7 +323,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
 
         IPreviewGumxProjectionService previewGumxProjectionService =
-            new PreviewGumxProjectionService(new ConvertProjectToJsonService(fileWatchIgnoreList));
+            new PreviewGumxProjectionService(new ConvertProjectToJsonService(fileWatchIgnoreList), new PathCaseSensitivity());
         _previewLauncher = new PreviewLauncher(
             _selectedState,
             _projectManager,

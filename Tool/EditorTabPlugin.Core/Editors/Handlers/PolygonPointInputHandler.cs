@@ -133,10 +133,11 @@ public class PolygonPointInputHandler : InputHandlerBase
     {
         if (_grabbedIndex == null) return;
 
-        var cursor = Context.Cursor;
-        if (cursor.XChange == 0 && cursor.YChange == 0) return;
+        float xChange = Context.GrabbedState.DragXChange;
+        float yChange = Context.GrabbedState.DragYChange;
+        if (xChange == 0 && yChange == 0) return;
 
-        MoveGrabbedPoint(cursor);
+        MoveGrabbedPoint(xChange, yChange);
     }
 
     protected override void OnRelease()
@@ -256,7 +257,8 @@ public class PolygonPointInputHandler : InputHandlerBase
         return newIndex;
     }
 
-    private void MoveGrabbedPoint(IGumCursorState cursor)
+    // xChange/yChange are in screen pixels.
+    private void MoveGrabbedPoint(float xChange, float yChange)
     {
         var linePolygon = SelectedLinePolygon;
         if (linePolygon == null || _grabbedIndex == null) return;
@@ -272,8 +274,8 @@ public class PolygonPointInputHandler : InputHandlerBase
         var upVector = new Vector3(rotationMatrix.M21, rotationMatrix.M22, rotationMatrix.M23);
 
         var change = new Vector2(
-            cursor.XChange * rightVector.X + cursor.YChange * upVector.X,
-            cursor.XChange * rightVector.Y + cursor.YChange * upVector.Y) / zoom;
+            xChange * rightVector.X + yChange * upVector.X,
+            xChange * rightVector.Y + yChange * upVector.Y) / zoom;
 
         pointAtIndex.X += change.X;
         pointAtIndex.Y += change.Y;

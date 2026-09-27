@@ -11,7 +11,7 @@ namespace Gum.Managers;
 
 /// <summary>
 /// Tool-side error checker that delegates core error-checking logic to
-/// <see cref="IHeadlessErrorChecker"/> and appends plugin-contributed errors.
+/// <see cref="IHeadlessErrorChecker"/> and collects the project-wide plugin-contributed errors.
 /// </summary>
 public class ErrorChecker : IErrorChecker
 {
@@ -48,18 +48,6 @@ public class ErrorChecker : IErrorChecker
                 list.Add(ToViewModel(errorResult));
             }
 
-            _pluginManager.FillWithErrors(list);
-
-            foreach (var vm in list)
-            {
-                if (vm.Code != null && vm.HelpUrl == null)
-                {
-                    vm.HelpUrl = _errorDocsRegistry.GetUrl(vm.Code);
-                }
-            }
-
-            ApplyDefaultElementName(list, element);
-
             ErrorViewModel[] errors = list.ToArray();
             ErrorsChecked?.Invoke(element, errors);
             return errors;
@@ -78,40 +66,29 @@ public class ErrorChecker : IErrorChecker
         return list.ToArray();
     }
 
-    public ErrorViewModel[] GetErrorsFor(ElementSave? element, PluginBase plugin)
+    public ErrorViewModel[] GetPluginErrors(PluginBase? plugin = null)
     {
         var list = new List<ErrorViewModel>();
 
-        if (element != null)
+        ObjectFinder.Self.EnableCache();
+        try
         {
-            ObjectFinder.Self.EnableCache();
-            try
-            {
-                _pluginManager.FillWithErrors(list, plugin);
-            }
-            finally
-            {
-                ObjectFinder.Self.DisableCache();
-            }
+            _pluginManager.FillWithErrors(list, plugin);
+        }
+        finally
+        {
+            ObjectFinder.Self.DisableCache();
+        }
 
-            ApplyDefaultElementName(list, element);
+        foreach (var vm in list)
+        {
+            if (vm.Code != null && vm.HelpUrl == null)
+            {
+                vm.HelpUrl = _errorDocsRegistry.GetUrl(vm.Code);
+            }
         }
 
         return list.ToArray();
-    }
-
-    // Plugin-contributed errors don't always know which element they belong to (e.g. a check that
-    // isn't scoped to the selected element). Falling back to the selected element keeps every row
-    // in the tab equally useful to copy, even when the plugin itself set no ElementName.
-    private static void ApplyDefaultElementName(List<ErrorViewModel> list, ElementSave element)
-    {
-        foreach (var vm in list)
-        {
-            if (string.IsNullOrEmpty(vm.ElementName))
-            {
-                vm.ElementName = element.Name;
-            }
-        }
     }
 
     private ErrorViewModel ToViewModel(ErrorResult errorResult)

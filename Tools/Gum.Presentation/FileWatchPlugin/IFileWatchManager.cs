@@ -16,6 +16,5 @@ public interface IFileWatchManager
     void EnableWithDirectories(HashSet<FilePath> directories);
     void Disable();
     void IgnoreNextChangeUntil(FilePath filePath, DateTime? time = null);
-    void ClearIgnoredFiles();
     void Flush();
 }

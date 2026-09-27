@@ -154,27 +154,55 @@ public class GrabbedState
 
     /// <summary>
     /// Returns whether the cursor has moved enough from the initial grab point to start applying movement/sizing.
-    /// This is initially false to prevent accidental movement when clicking on an object.
+    /// This is initially false to prevent accidental movement when clicking on an object, and stays
+    /// true once the drag has started, even if the cursor comes back near the grab point.
     /// </summary>
     public bool HasMovedEnough
     {
         get
         {
-            float pixelsToMoveBeforeApplying = 6;
+            const float pixelsToMoveBeforeApplying = 6;
             var cursor = _cursor;
 
-            bool toReturn = false;
-
-            if (cursor.PrimaryDown)
+            if (!cursor.PrimaryDown)
             {
-                toReturn |=
-                    Math.Abs(cursor.X - CursorPushScreenX) > pixelsToMoveBeforeApplying ||
-                    Math.Abs(cursor.Y - CursorPushScreenY) > pixelsToMoveBeforeApplying;
-
-
+                return false;
             }
 
-            return toReturn;
+            return _hasDragStarted ||
+                Math.Abs(cursor.X - CursorPushScreenX) > pixelsToMoveBeforeApplying ||
+                Math.Abs(cursor.Y - CursorPushScreenY) > pixelsToMoveBeforeApplying;
+        }
+    }
+
+    /// <summary>
+    /// The cursor movement, in screen pixels, a drag applies this frame. Set by
+    /// <see cref="BeginDragFrame"/>.
+    /// </summary>
+    public float DragXChange { get; private set; }
+    public float DragYChange { get; private set; }
+
+    // Set once the drag leaves the dead zone and cleared on push, so the dead zone only
+    // applies before the drag starts.
+    private bool _hasDragStarted;
+
+    /// <summary>
+    /// Sets <see cref="DragXChange"/>/<see cref="DragYChange"/> for this drag frame. The first
+    /// frame gets the whole offset since the push, including the movement inside the dead zone
+    /// that was not applied, so the grabbed point stays under the cursor.
+    /// </summary>
+    public void BeginDragFrame()
+    {
+        if (_hasDragStarted)
+        {
+            DragXChange = _cursor.XChange;
+            DragYChange = _cursor.YChange;
+        }
+        else
+        {
+            DragXChange = _cursor.X - CursorPushScreenX;
+            DragYChange = _cursor.Y - CursorPushScreenY;
+            _hasDragStarted = true;
         }
     }
 
@@ -196,6 +224,10 @@ public class GrabbedState
 
         AccumulatedXOffset = 0;
         AccumulatedYOffset = 0;
+
+        _hasDragStarted = false;
+        DragXChange = 0;
+        DragYChange = 0;
 
         TrueComponentPositionOffset = Vector2.Zero;
         TrueComponentSizeOffset = Vector2.Zero;

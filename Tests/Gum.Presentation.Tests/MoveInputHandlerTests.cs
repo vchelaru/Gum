@@ -1,5 +1,6 @@
 using Gum.DataTypes.Variables;
 using Gum.Input;
+using Gum.Managers;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Gum.Wireframe.Editors.Handlers;
@@ -82,5 +83,33 @@ public class MoveInputHandlerTests
 
         claimed.ShouldBeFalse();
         sut.IsActive.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void HandlePush_WithShiftHeld_ClaimsTheMove_OnlyOverASelectedBody(bool isOverSelectedBody, bool shouldClaim)
+    {
+        // #5258: Shift is both multi-select and axis lock. Over the selection it starts an
+        // axis-locked move; over anything else it is left to the marquee to add to the selection.
+        var selectionManager = new Mock<ISelectionManager>();
+        selectionManager.SetupGet(s => s.IsOverBody).Returns(true);
+        selectionManager.SetupGet(s => s.IsOverSelectedBody).Returns(isOverSelectedBody);
+        var selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(s => s.SelectedStateSave).Returns(new StateSave());
+        var hotkeyManager = new Mock<IHotkeyManager>();
+        KeyCombination shift = KeyCombination.Shift();
+        hotkeyManager.SetupGet(h => h.MultiSelect).Returns(shift);
+        hotkeyManager.Setup(h => h.IsPressedInControl(shift)).Returns(true);
+        var context = EditorContextTestHelper.Create(
+            selectedState: selectedState.Object,
+            selectionManager: selectionManager.Object,
+            hotkeyManager: hotkeyManager.Object);
+        var sut = new MoveInputHandler(context);
+
+        bool claimed = sut.HandlePush(0f, 0f);
+
+        claimed.ShouldBe(shouldClaim);
+        sut.IsActive.ShouldBe(shouldClaim);
     }
 }
