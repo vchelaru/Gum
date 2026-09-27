@@ -112,14 +112,11 @@ Gum keeps its settings, including the last project and the recent project list, 
 
 ## Older releases (the WPF tool)
 
-Releases up to and including [September 2, 2026](https://github.com/vchelaru/Gum/releases/tag/Release_September_02_2026) are the older Windows-only WPF tool, distributed as `Gum.zip` with `Gum.exe` inside. That release stays downloadable if you need it, for example for a plugin that has not been migrated yet (see [Plugins](../plugins/README.md)), but it does not receive new features. Its WINE setup scripts for Linux and macOS are kept at that release's tag ([setup\_gum\_linux.sh](https://github.com/vchelaru/Gum/blob/Release_September_02_2026/setup_gum_linux.sh), [setup\_gum\_mac.sh](https://github.com/vchelaru/Gum/blob/Release_September_02_2026/setup_gum_mac.sh)); the native downloads above replace them.
+Releases up to and including [September 2, 2026](https://github.com/vchelaru/Gum/releases/tag/Release_September_02_2026) are the older Windows-only WPF tool, distributed as `Gum.zip` with `Gum.exe` inside. That release stays downloadable if you need it, but it does not receive new features. Its WINE setup scripts for Linux and macOS are kept at that release's tag ([setup\_gum\_linux.sh](https://github.com/vchelaru/Gum/blob/Release_September_02_2026/setup_gum_linux.sh), [setup\_gum\_mac.sh](https://github.com/vchelaru/Gum/blob/Release_September_02_2026/setup_gum_mac.sh)); the native downloads above replace them.
 
 ## Known issues
 
-* Plugins built only for the older WPF tool do not load. The **Plugins** dialog lists them as not supported. See [Plugins](../plugins/README.md) for how to migrate one.
 * The command-line tool (`gumcli`) is included in the `GumCli` folder beside the tool, but only the tool's own **Export as SVG** uses it so far.
 * Gum is not signed on Windows or notarized on macOS, which is why the steps above are needed.
-* Dropping a `.gumx` or `.gumj` project file onto the Gum window does not open it. Use **File** > **Load Project...** instead.
-* The back and forward buttons on a mouse do not step through selection history. Use Alt+Left and Alt+Right instead.
 
 Please report anything else you find on the [Gum GitHub issues page](https://github.com/vchelaru/Gum/issues), along with your operating system.
