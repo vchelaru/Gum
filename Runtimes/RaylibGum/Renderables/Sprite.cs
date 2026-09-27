@@ -453,7 +453,15 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         return segments;
     }
 
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
+
+    /// <inheritdoc/>
+    public override InvisibleRenderable Clone()
+    {
+        Sprite clone = (Sprite)base.Clone();
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        return clone;
+    }
 
     // Convenience pass-throughs to AnimationLogic, mirroring the MonoGame Sprite renderable
     // (RenderingLibrary/Graphics/Sprite.cs) so shared code such as
