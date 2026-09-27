@@ -239,7 +239,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
             foreach (var state in ownerAsElement!.AllStates)
             {
-                state.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                state.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
             }
         }
 

@@ -35,7 +35,7 @@ public static class StateSaveExtensionMethods
         {
             variable.FixEnumerations();
         }
-        stateSave.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
+        stateSave.Variables.Sort((a, b) => GumProjectSave.CompareNames(a.Name, b.Name));
     }
 
     /// <summary>
@@ -636,7 +636,7 @@ public static class StateSaveExtensionMethods
                     variableSave.Name = exposedVariableSourceName;
                 }
 
-                stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                stateSave.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
             }
 
 
