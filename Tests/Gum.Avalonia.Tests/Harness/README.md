@@ -11,6 +11,45 @@ depend on the tab.
 | `ScriptedDialogService.cs` | Answers dialogs from a queue, file pickers included (`AnswerNextOpenFile`, `AnswerNextSaveFile`); an unanswered dialog fails the test instead of hanging. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
 
+## PR screenshots
+
+A tool UI PR gets a before/after table from screenshot tests. `PrScreenshot.cs` shows a dialog view
+model in the head's `DialogWindow` (`ShowDialog`) or any control in a plain window (`Show`), with an
+optional light or dark theme; the returned `ScreenshotWindow` pumps frames, finds and clicks
+controls, hovers one for its tooltip (`HoverForToolTip`, a real-time wait), and saves a PNG.
+`PrScreenshot.SaveWindow` captures a window another harness owns, such as `CanvasHarness.Input.Window`.
+`ManagePluginsScreenshotTests` is the example:
+
+```csharp
+[Trait("Category", PrScreenshot.Category)]
+public class ManagePluginsScreenshotTests
+{
+    [SkippableFact]
+    public void ManagePlugins() => PrScreenshot.Run(() =>
+    {
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
+        window.Save("manage-plugins-dark");
+    });
+}
+```
+
+`PrScreenshot.Run` skips the test unless `GUM_SCREENSHOT_DIR` names an output folder, so CI and
+`Tools/verify.ps1` report it as skipped. A save fails when the window shows the user's profile
+folder or user name in a path; feed the view made-up paths. Then:
+
+```
+pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests [-DryRun]
+```
+
+It renders the tests here (after) and in a reused sibling worktree at `origin/main` (before, `-Base`
+to change, `-NoBefore` for new UI), copying the screenshot tests into it, so they must compile
+against the base. It uploads the PNGs to the `pr-screenshots` branch under `pr-<num>/` and writes
+the table into the PR body between `pr-screenshots` markers, replacing it on a rerun. `-DryRun`
+leaves the PNGs and the proposed body in `%TEMP%\gum-pr-screenshots\pr-<num>\` and changes nothing
+on GitHub.
+
+## App-wide window wiring
+
 A test window does not get the main window's app-wide hotkeys (Ctrl+Z, Ctrl+Plus) or its UI font
 size on its own. Give it the main window's own wiring: `AppWideWindowInput.RouteHotkeys` and
 `AppWideWindowInput.FollowBaseFontSize` (dispose the latter). `UiFontSizeEndToEndTests` shows both.
