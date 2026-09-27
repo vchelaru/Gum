@@ -90,7 +90,8 @@ public static class CheckCommand
         {
             element = e.ElementName,
             message = e.Message,
-            severity = e.Severity.ToString()
+            severity = e.Severity.ToString(),
+            code = e.Code
         });
 
         Console.WriteLine(JsonSerializer.Serialize(output, JsonOptions));
