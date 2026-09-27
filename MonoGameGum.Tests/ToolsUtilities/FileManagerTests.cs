@@ -124,6 +124,8 @@ public class FileManagerTests : IDisposable
         hookPaths.Count.ShouldBe(2);
         hookPaths[1].ShouldBe(hookPaths[0]);
         hookPaths[0].ShouldNotContain("..");
+        // Case must survive normalization; Linux and macOS CI read files case-sensitively.
+        hookPaths[0].ShouldEndWith(Path.DirectorySeparatorChar + "Shared" + Path.DirectorySeparatorChar + "X.behx", Case.Sensitive);
     }
 
     [Fact]
