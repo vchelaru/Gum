@@ -44,7 +44,7 @@ public class NineSlice : SpriteBatchRenderableBase,
     /// (<see cref="AnimationChains"/>, <see cref="CurrentChainName"/>,
     /// <see cref="Animate"/>, ...) forward through this object.
     /// </summary>
-    public AnimationChainLogic AnimationLogic { get; }
+    public AnimationChainLogic AnimationLogic { get; private set; }
 
     public int CurrentFrameIndex
     {
@@ -1265,6 +1265,14 @@ public class NineSlice : SpriteBatchRenderableBase,
         var newInstance = (NineSlice)this.MemberwiseClone();
         newInstance.mParent = null;
         newInstance.mChildren = new ();
+        // The section sprites hold this nine-slice's textures and colors, so the clone needs its
+        // own; otherwise its texture or color changes would show on the source.
+        newInstance.mSprites = new Sprite[mSprites.Length];
+        for (int i = 0; i < mSprites.Length; i++)
+        {
+            newInstance.mSprites[i] = mSprites[i].Clone();
+        }
+        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
 
         return newInstance;
     }

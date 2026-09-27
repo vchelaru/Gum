@@ -22,7 +22,7 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
     /// <see cref="AnimationChainLogic.ApplyFrame"/> to copy the active frame's
     /// texture and (UV-derived) source rectangle onto this NineSlice.
     /// </summary>
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
 
     // Convenience pass-throughs to AnimationLogic, mirroring the MonoGame NineSlice renderable
     // (RenderingLibrary/Graphics/NineSlice.cs) so shared code such as
@@ -107,6 +107,7 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
         var newInstance = (NineSlice)this.MemberwiseClone();
         ((IRenderableIpso)newInstance).SetParentDirect(null);
         newInstance._children = new();
+        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
         return newInstance;
     }
 
