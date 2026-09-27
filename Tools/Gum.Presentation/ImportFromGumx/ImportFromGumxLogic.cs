@@ -1,5 +1,4 @@
 using Gum.Commands;
-using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services;
@@ -21,22 +20,19 @@ public class ImportFromGumxLogic
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
-    private readonly IOutputManager _outputManager;
 
     public ImportFromGumxLogic(
         IProjectState projectState,
         IImportLogic importLogic,
         IFileCommands fileCommands,
         IDialogService dialogService,
-        IDispatcher dispatcher,
-        IOutputManager outputManager)
+        IDispatcher dispatcher)
     {
         _projectState = projectState;
         _importLogic = importLogic;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
         _dispatcher = dispatcher;
-        _outputManager = outputManager;
     }
 
     /// <summary>
@@ -52,7 +48,7 @@ public class ImportFromGumxLogic
     {
         GumxSourceService sourceService = new();
         GumxDependencyResolver dependencyResolver = new();
-        GumxImportService importService = new(_importLogic, _projectState, _fileCommands, sourceService, _outputManager);
+        GumxImportService importService = new(_importLogic, _projectState, _fileCommands, sourceService);
 
         return new ImportFromGumxViewModel(
             sourceService,

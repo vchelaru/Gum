@@ -601,6 +601,8 @@ public class ImportFromGumxViewModel : DialogViewModel
         var differingStandardNames = new HashSet<string>(deps.DifferingStandards.Select(s => s.Name));
         var diffsByName = deps.DifferingStandardDiffs
             .ToDictionary(kvp => kvp.Key.Name, kvp => kvp.Value);
+        var usersByName = deps.DifferingStandardUsers
+            .ToDictionary(kvp => kvp.Key.Name, kvp => kvp.Value);
         foreach (ImportTreeNodeViewModel item in _allLeafItems.Where(i => i.ElementType == ElementItemType.Standard))
         {
             bool shouldBeExplicit = differingStandardNames.Contains(item.FullName)
@@ -609,6 +611,11 @@ public class ImportFromGumxViewModel : DialogViewModel
             item.InclusionState = shouldBeExplicit ? InclusionState.Explicit : InclusionState.NotIncluded;
             item.StandardDiffRows = diffsByName.TryGetValue(item.FullName, out StandardComparisonResult? comparison)
                 ? BuildDiffRows(comparison)
+                : null;
+            // Required standards stay checked (a recompute re-checks them anyway), so the row says
+            // why instead of letting an uncheck silently bounce back.
+            item.RequiredReason = usersByName.TryGetValue(item.FullName, out IReadOnlyList<string>? users)
+                ? $"Used by {string.Join(", ", users)}; Standards are always imported with the components and screens that use them."
                 : null;
             item.PropertyChanged += OnItemPropertyChanged;
         }

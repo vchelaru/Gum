@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.ProjectServices;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -40,7 +41,8 @@ public class GumxDependencyResolver : IGumxDependencyResolver
         var objectFinder = new ObjectFinder { GumProjectSave = source };
 
         var allTransitiveComponents = new Dictionary<string, ComponentSave>();
-        var referencedStandardNames = new HashSet<string>();
+        // Standard name -> the names of the elements that use it.
+        var standardUsers = new Dictionary<string, SortedSet<string>>();
         var behaviorNames = new HashSet<string>();
 
         // A component a variable reference reads from is a dependency too, and brings its own, so
@@ -66,7 +68,12 @@ public class GumxDependencyResolver : IGumxDependencyResolver
                 }
                 else if (refElement is StandardElementSave)
                 {
-                    referencedStandardNames.Add(refElement.Name);
+                    if (!standardUsers.TryGetValue(refElement.Name, out var users))
+                    {
+                        users = new SortedSet<string>(StringComparer.Ordinal);
+                        standardUsers[refElement.Name] = users;
+                    }
+                    users.Add(element.Name);
                 }
             }
 
@@ -112,28 +119,21 @@ public class GumxDependencyResolver : IGumxDependencyResolver
             .ToDictionary(s => s.Name, s => s);
         var destinationStandardsByName = destination.StandardElements
             .ToDictionary(s => s.Name, s => s);
-        foreach (var standardName in referencedStandardNames)
+        foreach (var (standardName, users) in standardUsers)
         {
             if (!sourceStandardsByName.TryGetValue(standardName, out var sourceStandard)) continue;
 
-            if (destinationStandardsByName.TryGetValue(standardName, out var destStandard))
+            // Not in destination at all — include it with a synthesized "differs" result
+            // so the dialog can still surface the row (with no per-variable detail).
+            StandardComparisonResult comparison =
+                destinationStandardsByName.TryGetValue(standardName, out var destStandard)
+                    ? _standardComparer.Compare(sourceStandard, destStandard)
+                    : new StandardComparisonResult { HasDifferences = true };
+            if (comparison.HasDifferences)
             {
-                StandardComparisonResult comparison = _standardComparer.Compare(sourceStandard, destStandard);
-                if (comparison.HasDifferences)
-                {
-                    result.DifferingStandards.Add(sourceStandard);
-                    result.DifferingStandardDiffs[sourceStandard] = comparison;
-                }
-            }
-            else
-            {
-                // Not in destination at all — include it with a synthesized "differs" result
-                // so the dialog can still surface the row (with no per-variable detail).
                 result.DifferingStandards.Add(sourceStandard);
-                result.DifferingStandardDiffs[sourceStandard] = new StandardComparisonResult
-                {
-                    HasDifferences = true
-                };
+                result.DifferingStandardDiffs[sourceStandard] = comparison;
+                result.DifferingStandardUsers[sourceStandard] = users.ToList();
             }
         }
 

@@ -40,6 +40,13 @@ public class DependencySet
     /// </remarks>
     public Dictionary<StandardElementSave, StandardComparisonResult> DifferingStandardDiffs { get; }
         = new Dictionary<StandardElementSave, StandardComparisonResult>();
+
+    /// <summary>
+    /// For every entry in <see cref="DifferingStandards"/>, the names of the selected or transitive
+    /// elements that use it, sorted, so the dialog can say why the Standard is imported.
+    /// </summary>
+    public Dictionary<StandardElementSave, IReadOnlyList<string>> DifferingStandardUsers { get; }
+        = new Dictionary<StandardElementSave, IReadOnlyList<string>>();
 }
 
 /// <summary>
