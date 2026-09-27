@@ -1,11 +1,11 @@
-using Gum;
+using Gum.Localization;
 using Shouldly;
 using System.IO;
 using Xunit;
 
 namespace MonoGameGum.Tests.Localization;
 
-public class GumServiceLocalizationPathTests
+public class ProjectLocalizationLoaderTests
 {
     // A project saved on Windows stores "Localization\Strings.resx". The resolved path goes straight
     // to File.Exists and Directory.GetFiles, so both separators must come out as the native one:
@@ -17,7 +17,7 @@ public class GumServiceLocalizationPathTests
     {
         string projectDirectory = "/game/Content/GumProject/";
 
-        var resolved = GumService.ResolveLocalizationFilePaths(projectDirectory, new[] { relativePath });
+        var resolved = ProjectLocalizationLoader.ResolveLocalizationFilePaths(projectDirectory, new[] { relativePath });
 
         resolved.ShouldBe(new[]
         {
@@ -28,7 +28,7 @@ public class GumServiceLocalizationPathTests
     [Fact]
     public void ResolveLocalizationFilePaths_ShouldSkipEmptyEntries()
     {
-        var resolved = GumService.ResolveLocalizationFilePaths("/game/", new[] { "", null, "Strings.csv" });
+        var resolved = ProjectLocalizationLoader.ResolveLocalizationFilePaths("/game/", new[] { "", null, "Strings.csv" });
 
         resolved.ShouldBe(new[] { "/game/Strings.csv".Replace('/', Path.DirectorySeparatorChar) });
     }

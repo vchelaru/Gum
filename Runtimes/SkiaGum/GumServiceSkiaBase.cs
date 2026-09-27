@@ -9,6 +9,8 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Gum.GueDeriving;
+using Gum.Localization;
+using SkiaGum;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
@@ -31,12 +33,62 @@ namespace Gum;
 
 public abstract class GumServiceSkiaBase : IGumService
 {
+    private readonly LanguageChangeSubscription _languageChangeSubscription;
+
+    protected GumServiceSkiaBase()
+    {
+        // Same wiring as the MonoGame/raylib GumService constructor: a language switch
+        // re-translates live text that was assigned through the localized Text path.
+        _languageChangeSubscription = new LanguageChangeSubscription(RefreshLocalization);
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
+        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
+
+        GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
+        {
+            string? key = CustomSetPropertyOnRenderable.TryGetLocalizationKey(element);
+            if (key != null)
+            {
+                element.SetProperty("Text", key);
+            }
+        };
+    }
+
+    /// <summary>
+    /// The service used to translate text assigned through the localized <c>Text</c> path.
+    /// Created by <c>Initialize</c> unless one was assigned to
+    /// <see cref="CustomSetPropertyOnRenderable.LocalizationService"/> first.
+    /// </summary>
+    public ILocalizationService LocalizationService => CustomSetPropertyOnRenderable.LocalizationService;
+
+    /// <summary>
+    /// Re-translates all live text on <see cref="Root"/>, <see cref="PopupRoot"/> and
+    /// <see cref="ModalRoot"/> using the current language on <see cref="LocalizationService"/>.
+    /// Runs automatically when <see cref="ILocalizationService.CurrentLanguage"/> changes.
+    /// </summary>
+    /// <remarks>
+    /// Text assigned via <c>SetTextNoTranslate</c> is skipped. Programmatic strings assigned via the
+    /// localized <c>Text</c> property are re-translated, so dynamic values get the "(loc)" missing-key
+    /// suffix on language change unless they are assigned via the no-translate API.
+    /// </remarks>
+    public void RefreshLocalization()
+    {
+        Root?.RefreshLocalization();
+        PopupRoot?.RefreshLocalization();
+        ModalRoot?.RefreshLocalization();
+    }
+
     /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
     /// like <see cref="GraphicalUiElement.AddToRoot()"/>
     /// to guard against calls made before Initialize.
     /// </summary>
     public bool IsInitialized { get; private set; }
+
+    /// <summary>
+    /// Result of the most recent project load performed by <c>Initialize</c>, including
+    /// non-fatal warnings such as localization file collisions. Null when no project was loaded.
+    /// </summary>
+    public GumLoadResult? LastLoadResult { get; private set; }
 
     /// <summary>
     /// The root container that fills the entire canvas. Elements added via
@@ -353,9 +405,23 @@ public abstract class GumServiceSkiaBase : IGumService
         Root.AddToManagers(SystemManagers.Default);
         Root.UpdateLayout();
 
+        // InitializeDefaults already added PopupRoot and ModalRoot to the main layer, so Root
+        // landed above them. Move it to the bottom, as the MonoGame/raylib GumService does, so
+        // popups and modals draw over the screen.
+        var mainLayer = SystemManagers.Default.Renderer.MainLayer;
+        if (Root.RenderableComponent is IRenderableIpso rootRenderable)
+        {
+            mainLayer.Remove(rootRenderable);
+            mainLayer.Insert(0, rootRenderable);
+        }
+
+        LastLoadResult = null;
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-            var gumProject = GumProjectSave.Load(gumProjectFile);
+            var gumProject = GumProjectSave.Load(gumProjectFile, out GumLoadResult loadResult);
+            LastLoadResult = loadResult;
+            loadResult.ThrowIfFailed(gumProject);
+            ProjectLocalizationLoader.Load(gumProject, CustomSetPropertyOnRenderable.LocalizationService, loadResult.Warnings);
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
             // Overrides the code-only defaults registered above with the project's own

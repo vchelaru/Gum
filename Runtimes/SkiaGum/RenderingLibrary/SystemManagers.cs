@@ -120,6 +120,10 @@ namespace RenderingLibrary
                 Topten.RichTextKit.FontMapper.Default = new SkiaGum.Content.Fonts.GumFontMapper();
             }
 
+            // Same default as the MonoGame/raylib SystemManagers, so a loaded project's
+            // localization files have a service to load into. ??= keeps a service the host
+            // assigned before Initialize.
+            CustomSetPropertyOnRenderable.LocalizationService ??= new Gum.Localization.LocalizationService();
 
         }
 

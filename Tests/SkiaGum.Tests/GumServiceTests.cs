@@ -6,6 +6,7 @@ using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaSharp;
 
@@ -138,6 +139,25 @@ public class GumServiceTests
         GumService.Default.Initialize(surface.Canvas, 200, 100);
 
         FrameworkElement.DefaultFormsTemplates.ShouldContainKey(typeof(Button));
+    }
+
+    // PopupRoot and ModalRoot are added to the main layer by FormsUtilities.InitializeDefaults,
+    // before Root. The MonoGame/raylib GumService moves Root to the bottom of the layer so popups
+    // (ComboBox dropdowns, menus) and modals draw above the screen instead of under it.
+    [Fact]
+    public void Initialize_ShouldDrawRootBelowPopupAndModalRoots()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+        var renderables = SystemManagers.Default.Renderer.MainLayer.Renderables;
+        int rootIndex = renderables.IndexOf(GumService.Default.Root.RenderableComponent as IRenderableIpso);
+        int popupIndex = renderables.IndexOf(GumService.Default.PopupRoot.RenderableComponent as IRenderableIpso);
+        int modalIndex = renderables.IndexOf(GumService.Default.ModalRoot.RenderableComponent as IRenderableIpso);
+
+        rootIndex.ShouldBe(0);
+        popupIndex.ShouldBeGreaterThan(rootIndex);
+        modalIndex.ShouldBeGreaterThan(rootIndex);
     }
 
     [Fact]
