@@ -1,6 +1,8 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Diagnostics;
 using Gum.Managers;
+using Gum.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,6 +13,17 @@ using ToolsUtilities;
 
 namespace Gum.Logic.FileWatch;
 
+/// <summary>
+/// Owns the tool's <see cref="FileSystemWatcher"/>s and queues external file changes for
+/// <see cref="Flush"/>.
+/// </summary>
+/// <remarks>
+/// Watchers raise events on thread-pool threads, but everything here (the watcher list, the
+/// debounce timestamp, the project model that the reappearance check reads) belongs to the UI
+/// thread. Each watcher callback therefore only posts its work through <see cref="IDispatcher"/>.
+/// An exception from a callback is reported instead of escaping, because one escaping a
+/// thread-pool thread ends the process.
+/// </remarks>
 public class FileWatchManager : IFileWatchManager
 {
     #region Fields/Properties
@@ -36,6 +49,8 @@ public class FileWatchManager : IFileWatchManager
     private readonly IProjectManager _projectManager;
     private readonly FileChangeReactionLogic _fileChangeReactionLogic;
     private readonly IFileWatchIgnoreList _ignoreList;
+    private readonly IDispatcher _dispatcher;
+    private readonly ICrashReporter? _crashReporter;
 
     public bool PrintFileChangesToOutput { get; set; }
 
@@ -56,12 +71,17 @@ public class FileWatchManager : IFileWatchManager
         IGuiCommands guiCommands,
         IProjectManager projectManager,
         FileChangeReactionLogic fileChangeReactionLogic,
-        IFileWatchIgnoreList ignoreList)
+        IFileWatchIgnoreList ignoreList,
+        IDispatcher dispatcher,
+        // Only the Avalonia head registers a crash reporter; without one, errors go to Output only.
+        ICrashReporter? crashReporter = null)
     {
         _guiCommands = guiCommands;
         _projectManager = projectManager;
         _fileChangeReactionLogic = fileChangeReactionLogic;
         _ignoreList = ignoreList;
+        _dispatcher = dispatcher;
+        _crashReporter = crashReporter;
     }
 
     public void EnableWithDirectories(HashSet<FilePath> directories)
@@ -119,8 +139,8 @@ public class FileWatchManager : IFileWatchManager
             // ... but it's needed for file names on PNG
             | NotifyFilters.FileName;
 
-        fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
-        fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
+        fileSystemWatcher.Deleted += HandleFileSystemDelete;
+        fileSystemWatcher.Changed += HandleFileSystemChange;
         // Gum files get deleted and then created, rather than changed
         fileSystemWatcher.Created += HandleFileSystemChange;
         fileSystemWatcher.Renamed += HandleRename;
@@ -137,7 +157,59 @@ public class FileWatchManager : IFileWatchManager
         fileSystemWatchers.Clear();
     }
 
-    private void HandleRename(object? sender, RenamedEventArgs e)
+    // Watcher-thread entry points: each only hands its event to the UI thread.
+    internal void HandleRename(object? sender, RenamedEventArgs e)
+        => RunOnUiThread(isOnIgnoreList => ReactToRename(e, isOnIgnoreList), e.FullPath);
+
+    internal void HandleFileSystemDelete(object? sender, FileSystemEventArgs e)
+        => RunOnUiThread(isOnIgnoreList => ReactToDelete(e, isOnIgnoreList), e.FullPath);
+
+    internal void HandleFileSystemChange(object? sender, FileSystemEventArgs e)
+        => RunOnUiThread(isOnIgnoreList => ReactToChangeOrCreate(e, isOnIgnoreList), e.FullPath);
+
+    private void RunOnUiThread(Action<bool> reaction, string path)
+    {
+        try
+        {
+            // The ignore window is measured from when the event fired, so read it here: checked on
+            // a UI thread busy past the window, Gum's own save would reload as an external edit.
+            // The ignore list is thread-safe.
+            bool isOnIgnoreList = _ignoreList.TryGetIgnoreFileChange(new FilePath(path));
+            _dispatcher.Post(() =>
+            {
+                try
+                {
+                    reaction(isOnIgnoreList);
+                }
+                catch (Exception e)
+                {
+                    ReportCallbackException(e, path);
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            // The ignore check or Post itself failed (e.g. the dispatcher is shutting down). This is
+            // still the watcher thread, so the exception must not propagate.
+            ReportCallbackException(e, path);
+        }
+    }
+
+    private void ReportCallbackException(Exception exception, string path)
+    {
+        try
+        {
+            _crashReporter?.ReportRecoverable(exception, "File watch");
+            _guiCommands.PrintOutput($"Error handling file change for {path}:\n{exception}");
+        }
+        catch
+        {
+            // Reporting is the last line of defense on a watcher thread. If it fails as well there
+            // is nowhere left to report to, and rethrowing would end the process.
+        }
+    }
+
+    private void ReactToRename(RenamedEventArgs e, bool isOnIgnoreList)
     {
         var fileName = new FilePath(e.FullPath);
         // Atomic-save pattern: editors (Vim, JetBrains, some VS Code modes) and
@@ -151,11 +223,11 @@ public class FileWatchManager : IFileWatchManager
             or "ganx" or "ganj" or "behx" or "behj" or "fnt"
             or "achx" or "achj" or "gif" or "tga" or "bmp")
         {
-            HandleFileSystemChange(fileName);
+            HandleFileSystemChange(fileName, isOnIgnoreList);
         }
     }
 
-    private void HandleFileSystemDelete(object? sender, FileSystemEventArgs e)
+    private void ReactToDelete(FileSystemEventArgs e, bool isOnIgnoreList)
     {
         var fileName = new FilePath(e.FullPath);
         // Detect deletion of an element file so the tool can flag the element's source as missing
@@ -165,7 +237,7 @@ public class FileWatchManager : IFileWatchManager
         // left unhandled, as before.
         if (IsElementFileExtension(fileName))
         {
-            HandleFileSystemChange(fileName);
+            HandleFileSystemChange(fileName, isOnIgnoreList);
         }
     }
 
@@ -181,7 +253,7 @@ public class FileWatchManager : IFileWatchManager
             || extension == GumProjectSave.StandardJsonExtension;
     }
 
-    private void HandleFileSystemChange(object? sender, FileSystemEventArgs e)
+    private void ReactToChangeOrCreate(FileSystemEventArgs e, bool isOnIgnoreList)
     {
         var fileName = new FilePath(e.FullPath);
         var extension = fileName.Extension;
@@ -192,7 +264,7 @@ public class FileWatchManager : IFileWatchManager
         // for some reason if we include created here, we'll get double-adds for XML files like screens...
         if (e.ChangeType != WatcherChangeTypes.Created || !isGum)
         {
-            HandleFileSystemChange(fileName);
+            HandleFileSystemChange(fileName, isOnIgnoreList);
         }
         // ...except when the Created file is the reappearance of an element we previously flagged
         // missing (issue #3367). A restore (e.g. Explorer's undo-delete) fires only a Created - no
@@ -200,13 +272,13 @@ public class FileWatchManager : IFileWatchManager
         // elements keeps normal saves (which Gum ignore-lists anyway) on the suppressed path.
         else if (_fileChangeReactionLogic.IsReappearanceOfMissingSourceElement(fileName))
         {
-            HandleFileSystemChange(fileName);
+            HandleFileSystemChange(fileName, isOnIgnoreList);
         }
     }
 
-    private void HandleFileSystemChange(FilePath fileName)
+    private void HandleFileSystemChange(FilePath fileName, bool isOnIgnoreList)
     {
-        bool wasIgnored = _ignoreList.TryGetIgnoreFileChange(fileName);
+        bool wasIgnored = isOnIgnoreList;
         string? skipReason = wasIgnored ? "on ignore list" : null;
 
         if(!wasIgnored && IsTransientTempFile(fileName))

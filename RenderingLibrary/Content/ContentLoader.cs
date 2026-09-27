@@ -206,30 +206,22 @@ public sealed class ContentLoader : IContentLoader
         }
 
 #if XNALIKE && !FRB
-        // On desktop OSes File.Exists is authoritative, so we can detect a missing file up front and
-        // return null instead of falling into File.OpenRead, which throws (and is caught) once per
-        // missing file on every wireframe rebuild. Those throws are cheap at runtime, but they produce
-        // a first-chance exception per missing file; with a debugger attached that makes selecting a
-        // screen full of missing files take tens of seconds in the Gum tool (issue #3075). We skip the
-        // shortcut when an XnaContentManager is present (it can alias a content-pipeline asset that has
-        // no loose file on disk) and on non-desktop platforms (web/mobile resolve files through
-        // TitleContainer or a host stream hook, where File.Exists is not authoritative). Mirrors the
-        // desktop guard in Renderer.Initialize.
+        // On desktop OSes we can detect a missing file up front and return null instead of falling
+        // into GetStreamForFile, which throws (and is caught) once per missing file on every wireframe
+        // rebuild. Those throws are cheap at runtime, but they produce a first-chance exception per
+        // missing file; with a debugger attached that makes selecting a screen full of missing files
+        // take tens of seconds in the Gum tool (issue #3075). FileManager.FileExists checks the same
+        // places GetStreamForFile reads from: disk, the macOS .app Resources folder (#731) and
+        // FileManager.CustomGetStreamFromFile, so a file served only by a .gumpkg bundle or a host's
+        // asset zip still loads (#5225). We skip the shortcut when an XnaContentManager is
+        // present (it can alias a content-pipeline asset that has no loose file on disk) and on
+        // non-desktop platforms, where GetStreamForFile goes straight to the hook. Mirrors the desktop
+        // guard in Renderer.Initialize.
         bool canCheckFileExists = OperatingSystem.IsWindows()
             || OperatingSystem.IsLinux()
             || OperatingSystem.IsMacOS();
 
-        bool existsOnDisk = System.IO.File.Exists(fileNameStandardized);
-        if (!existsOnDisk && OperatingSystem.IsMacOS())
-        {
-            // In a macOS .app bundle, content ships in Contents/Resources/ rather than next to the
-            // executable, so a file missing at the exe-relative path may still exist there. Don't bail
-            // early in that case; GetStreamForFile below performs the same rebase when opening (issue #731).
-            string? resourcesPath = FileManager.GetMacOSBundleResourcesPath(fileNameStandardized, FileManager.ExeLocation);
-            existsOnDisk = resourcesPath != null && System.IO.File.Exists(resourcesPath);
-        }
-
-        if (canCheckFileExists && XnaContentManager == null && !existsOnDisk)
+        if (canCheckFileExists && XnaContentManager == null && !FileManager.FileExists(fileNameStandardized))
         {
             return null;
         }

@@ -287,6 +287,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
     public void ApplyInstanceReferences(InstanceReferences changes, string newName, string oldName, HashSet<ElementSave> elementsToSave)
     {
+        var undoChanges = new List<CrossElementVariableChange>();
+
         foreach (var (container, variable) in changes.ParentVariablesInOtherElements)
         {
             if (variable.Value is string value)
@@ -294,11 +296,23 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                 var dotIndex = value.IndexOf(".");
                 if (dotIndex >= 0 && value.Substring(dotIndex + 1) == oldName)
                 {
+                    var owningState = container.AllStates.FirstOrDefault(item => item.Variables.Contains(variable));
+                    var undoChange = owningState == null ? null : CrossElementVariableChange.CaptureBefore(container, owningState, variable);
+
                     variable.Value = value.Substring(0, dotIndex + 1) + newName;
                     elementsToSave.Add(container);
+
+                    if (undoChange != null)
+                    {
+                        undoChange.CaptureAfter(variable);
+                        undoChanges.Add(undoChange);
+                    }
                 }
             }
         }
+
+        // One undo change per list, captured before its first line is rewritten.
+        var listUndoChanges = new Dictionary<VariableListSave, CrossElementVariableChange>();
 
         foreach (var referenceChange in changes.VariableReferenceChanges)
         {
@@ -306,6 +320,15 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                 elementsToSave.Add(referenceChange.Container);
 
             var variableList = referenceChange.VariableReferenceList;
+            if (referenceChange.Container != null && !listUndoChanges.ContainsKey(variableList))
+            {
+                var owningState = referenceChange.Container.AllStates.FirstOrDefault(item => item.VariableLists.Contains(variableList));
+                if (owningState != null)
+                {
+                    listUndoChanges[variableList] = CrossElementVariableChange.CaptureBefore(referenceChange.Container, owningState, variableList);
+                }
+            }
+
             var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString();
             if (oldLine == null) continue;
 
@@ -349,6 +372,16 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
             variableList.ValueAsIList[referenceChange.LineIndex] = $"{leftSide} = {rightSide}";
         }
+
+        foreach (var (variableList, undoChange) in listUndoChanges)
+        {
+            undoChange.CaptureAfter(variableList);
+            undoChanges.Add(undoChange);
+        }
+
+        // Recorded into the rename's undo action (HandleRename holds the lock); the renamed element's
+        // own lines are also restored by its snapshot, which leaves those changes nothing to replay.
+        _undoManager.Value.RecordCrossElementVariableChanges(undoChanges);
     }
 
     #endregion
@@ -446,6 +479,11 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
             if (shouldContinue)
             {
+                // An instance rename rewrites references on other elements; the lock gathers those
+                // into the same undo action as the rename (#5248). The undo system replays element
+                // renames through this method, so only instance renames take it.
+                using var undoLock = instance != null ? _undoManager.Value.RequestLock() : null;
+
                 if (elementSave != null)
                 {
                     RenameAllReferencesTo(elementSave, instance, oldName);
@@ -585,61 +623,17 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                     }
                 }
 
-                var renamedDefaultChildContainer = false;
                 foreach (var state in _selectedState.SelectedElement.AllStates)
                 {
                     var variable = state.Variables.FirstOrDefault(item => item.Name == "DefaultChildContainer");
 
-                    if (variable?.Value as string != null)
+                    if (variable?.Value as string == oldName)
                     {
-                        var value = variable.Value as string;
-                        if (value == oldName)
-                        {
-                            variable.Value = newName;
-                            renamedDefaultChildContainer = true;
-                        }
+                        variable!.Value = newName;
                     }
                 }
-
-                if (renamedDefaultChildContainer)
-                {
-                    var elementsToConsider = ObjectFinder.Self.GetElementsReferencing(elementSave);
-
-                    foreach (var elementToCheckParent in elementsToConsider)
-                    {
-                        var shouldSaveElement = false;
-
-                        foreach (var state in elementToCheckParent.AllStates)
-                        {
-                            foreach (var variable in state.Variables)
-                            {
-                                if (variable.GetRootName() == "Parent" && variable.Value is string value && value.Contains("."))
-                                {
-                                    var valueBeforeDot = value.Substring(0, value.IndexOf("."));
-                                    var valueAfterDot = value.Substring(value.IndexOf(".") + 1);
-                                    if (valueAfterDot == oldName)
-                                    {
-                                        // let's be safe, see if the instance is of the type elementSave
-                                        var parentInstance = elementToCheckParent.GetInstance(valueBeforeDot);
-                                        // A Parent can name an instance that no longer exists.
-                                        var parentInstanceElement = parentInstance == null ? null : ObjectFinder.Self.GetElementSave(parentInstance);
-                                        if (parentInstance != null && parentInstanceElement == elementSave)
-                                        {
-                                            variable.Value = parentInstance.Name + "." + newName;
-                                            shouldSaveElement = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (shouldSaveElement)
-                        {
-                            _fileCommands.TryAutoSaveElement(elementToCheckParent);
-                        }
-
-                    }
-                }
-
+                // Parent values in other elements that point at the renamed instance are rewritten
+                // by ApplyInstanceReferences, which also records them for undo.
             }
         }
     }

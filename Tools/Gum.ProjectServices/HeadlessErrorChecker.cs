@@ -100,6 +100,30 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         return errors;
     }
 
+    /// <inheritdoc/>
+    public IReadOnlyList<ErrorResult> GetProjectErrors(GumProjectSave project)
+    {
+        // The element checks own the GUM0008 rows for element files and the files elements
+        // reference; running only those two checks finds the paths to skip.
+        var caseMismatchPaths = new HashSet<string>(StringComparer.Ordinal);
+
+        ObjectFinder.Self.GumProjectSave = project;
+        ObjectFinder.Self.EnableCache();
+        try
+        {
+            foreach (var element in project.AllElements)
+            {
+                GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths);
+                GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths);
+            }
+            return GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
+        }
+        finally
+        {
+            ObjectFinder.Self.DisableCache();
+        }
+    }
+
     /// <summary>
     /// Internal version that skips ObjectFinder setup (already done by caller).
     /// </summary>
@@ -673,7 +697,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             Code = "GUM0008",
             Severity = loadsHere ? ErrorSeverity.Warning : ErrorSeverity.Error,
             Message = $"{referencedFrom} references \"{relativePath}\", but the file on disk is named " +
-                $"\"{onDiskPath}\". The names must match exactly on case-sensitive file systems."
+                $"\"{onDiskPath}\". The names must match exactly on case-sensitive file systems.",
+            FilePath = Path.Combine(projectRootDirectory, onDiskPath)
         };
         return true;
     }

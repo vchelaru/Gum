@@ -14,4 +14,11 @@ public interface IErrorChecker
 
     ErrorViewModel[] GetErrorsFor(ElementSave? element, GumProjectSave project);
     ErrorViewModel[] GetErrorsFor(ElementSave? element, PluginBase plugin);
+
+    /// <summary>
+    /// The errors that belong to the project rather than an element (see
+    /// <see cref="Gum.ProjectServices.IHeadlessErrorChecker.GetProjectErrors"/>). Walks the whole
+    /// project; does not raise <see cref="ErrorsChecked"/>.
+    /// </summary>
+    ErrorViewModel[] GetProjectErrors(GumProjectSave project);
 }

@@ -29,13 +29,20 @@ public class MainErrorsPlugin : CorePriorityPlugin
     private readonly IClipboardService _clipboardService;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IProjectState _projectState;
+    private readonly IDispatcher _dispatcher;
     private AllErrorsViewModel _viewModel = null!;
+
+    // The project-level rows (#5262), listed whatever is selected. Finding them walks the whole
+    // project, so they are cached here and refreshed only on load, save and file changes.
+    private ErrorViewModel[] _projectErrors = [];
+    private bool _isProjectErrorRefreshPending;
 
     #endregion
 
     [ImportingConstructor]
     public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState,
-        IClipboardService clipboardService, IFileSystemRevealService fileSystemRevealService, IProjectState projectState)
+        IClipboardService clipboardService, IFileSystemRevealService fileSystemRevealService, IProjectState projectState,
+        IDispatcher dispatcher)
     {
         _errorChecker = errorChecker;
         _messenger = messenger;
@@ -43,6 +50,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
         _clipboardService = clipboardService;
         _fileSystemRevealService = fileSystemRevealService;
         _projectState = projectState;
+        _dispatcher = dispatcher;
     }
 
     public override void StartUp()
@@ -96,6 +104,42 @@ public class MainErrorsPlugin : CorePriorityPlugin
         this.VariableSet += HandleVariableSet;
         this.VariableRemovedFromCategory += HandleVariableRemovedFromCategory;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+
+        this.ProjectLoad += HandleProjectLoad;
+        this.AfterProjectSave += _ => ScheduleProjectErrorRefresh();
+        this.ReactToFileChanged += _ => ScheduleProjectErrorRefresh();
+    }
+
+    private void HandleProjectLoad(GumProjectSave project)
+    {
+        // The previous project's rows must not show while the new project's pass is queued.
+        _projectErrors = [];
+        ScheduleProjectErrorRefresh();
+    }
+
+    /// <summary>
+    /// Queues one project-level pass on the UI thread; a burst of notifications (a branch switch
+    /// changes many files in one flush) runs it once. Element edits don't queue one: a pass walks
+    /// the whole project, so a row an element edit adds or clears (a font's page files) updates on
+    /// the next project save, file change or load.
+    /// </summary>
+    private void ScheduleProjectErrorRefresh()
+    {
+        if (_isProjectErrorRefreshPending)
+        {
+            return;
+        }
+        _isProjectErrorRefreshPending = true;
+        _dispatcher.Post(RefreshProjectErrors);
+    }
+
+    private void RefreshProjectErrors()
+    {
+        _isProjectErrorRefreshPending = false;
+        _projectErrors = _projectState.GumProjectSave is { } project
+            ? _errorChecker.GetProjectErrors(project)
+            : [];
+        UpdateErrorsForElement(_selectedState.SelectedElement);
     }
 
     private void HandleVariableRemovedFromCategory(string variableName, StateSaveCategory category)
@@ -167,6 +211,10 @@ public class MainErrorsPlugin : CorePriorityPlugin
         var errors = _errorChecker.GetErrorsFor(element, project);
 
         foreach (var item in errors)
+        {
+            _viewModel.Errors.Add(item);
+        }
+        foreach (var item in _projectErrors)
         {
             _viewModel.Errors.Add(item);
         }

@@ -62,8 +62,36 @@ public class GumFontMapperTests
     }
 
     /// <summary>
-    /// #4515: a host hook that doesn't carry this font must not hide a copy on disk, since
-    /// FileManager routes exclusively to the hook once one is installed.
+    /// #5255: a stale loose font next to a .gumpkg must not shadow the bundled one. The loose copy
+    /// here is not a font, so only the hook's bytes can register.
+    /// </summary>
+    [Fact]
+    public void RegisterFontFile_WhenHookAndLooseFileBothHaveTheFont_LoadsFromTheHook()
+    {
+        byte[] fontBytes = File.ReadAllBytes(FixtureTtfPath);
+        string loosePath = Path.Combine(
+            AppContext.BaseDirectory, "Assets", "Fonts", "HookWins_" + Guid.NewGuid().ToString("N") + ".ttf");
+        File.WriteAllText(loosePath, "stale loose copy, not a font");
+        Func<string, Stream>? previousHook = ToolsUtilities.FileManager.CustomGetStreamFromFile;
+
+        try
+        {
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = requestedPath => new MemoryStream(fontBytes);
+
+            string? familyKey = GumFontMapper.RegisterFontFile(loosePath);
+
+            familyKey.ShouldNotBeNullOrEmpty();
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
+            try { File.Delete(loosePath); } catch { /* best-effort */ }
+        }
+    }
+
+    /// <summary>
+    /// #4515: a host hook that doesn't carry this font must not hide a copy on disk; disk is the
+    /// fallback when the hook misses.
     /// </summary>
     [Fact]
     public void RegisterFontFile_WhenTheHookDoesNotHaveTheFontButDiskDoes_ReturnsNonNullFamilyKey()
