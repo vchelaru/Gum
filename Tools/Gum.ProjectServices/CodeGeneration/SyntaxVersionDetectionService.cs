@@ -97,8 +97,10 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             // Combine through the Path APIs rather than string concatenation: projectDirectory
             // may or may not end in a separator, and a raw concat like "dir" + "./" produces
             // "dir./" — a literal (nonexistent) directory name on macOS/Linux, though Windows
-            // silently trims the trailing dot.
-            codeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory, codeProjectRoot));
+            // silently trims the trailing dot. A root saved on Windows uses backslashes, which are
+            // file-name characters on macOS/Linux, so they become the native separator first.
+            codeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory,
+                codeProjectRoot.Replace('\\', Path.DirectorySeparatorChar)));
         }
 
         string? csprojPath = FindCsprojInDirectory(codeProjectRoot);
