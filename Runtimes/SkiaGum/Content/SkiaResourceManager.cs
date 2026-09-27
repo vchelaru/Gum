@@ -37,10 +37,9 @@ public static class SkiaResourceManager
 
     private static void CacheSvg(string resourceName)
     {
-        var absoluteFile = GetAbsoluteFilePath(resourceName);
-        if(System.IO.File.Exists(absoluteFile))
+        using Stream? fileStream = TryOpenFile(resourceName);
+        if (fileStream != null)
         {
-            using var fileStream = System.IO.File.OpenRead(absoluteFile);
             SKSvg svg = new SKSvg();
             svg.Load(fileStream);
             svgCache[resourceName] = svg;
@@ -86,7 +85,7 @@ public static class SkiaResourceManager
 
     private static void CacheAnimation(string resourceName)
     {
-        using (Stream stream = GetManifestResourceStream(
+        using (Stream stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
             resourceName, ResourceAssembly))
         {
             Animation? animation = null;
@@ -147,7 +146,8 @@ public static class SkiaResourceManager
     /// <summary>
     /// Returns the cached bitmap for <paramref name="resourceName"/>, loading it on first use.
     /// When <paramref name="stream"/> is given, the bitmap is decoded from it; otherwise it is
-    /// loaded from disk or, failing that, from an embedded resource.
+    /// loaded through <see cref="FileManager.GetStreamForFile"/> (disk or the host's stream hook) or,
+    /// failing that, from an embedded resource.
     /// </summary>
     /// <exception cref="InvalidDataException"><paramref name="stream"/> does not hold a decodable image.</exception>
     public static SKBitmap GetSKBitmap(string resourceName, Stream? stream = null)
@@ -190,23 +190,32 @@ public static class SkiaResourceManager
 
     private static void CacheSKImage(string resourceName)
     {
+        using var stream = TryOpenFile(resourceName) ?? GetManifestResourceStream(
+            resourceName, ResourceAssembly);
+        skBitmapCache[resourceName] = SKBitmap.Decode(stream);
+    }
+
+    /// <summary>
+    /// Opens <paramref name="resourceName"/> through <see cref="FileManager.GetStreamForFile"/>, the
+    /// seam the MonoGame and raylib loaders read through, so a host's
+    /// <see cref="FileManager.CustomGetStreamFromFile"/> (a .gumpkg bundle, a zip, a mobile asset
+    /// store) is honored. Returns null when neither disk nor the hook has the file, leaving the
+    /// caller to fall back to embedded resources.
+    /// </summary>
+    private static Stream? TryOpenFile(string resourceName)
+    {
         var absoluteFile = GetAbsoluteFilePath(resourceName);
+        // A loose file wins: once a hook is installed GetStreamForFile reads only through it, and a
+        // hook that serves just its bundle would otherwise hide files that exist on disk.
         if (System.IO.File.Exists(absoluteFile))
         {
-            using var fileStream = System.IO.File.OpenRead(absoluteFile);
-            var decoded = SKBitmap.Decode(fileStream);
-            skBitmapCache[resourceName] = decoded;
+            return System.IO.File.OpenRead(absoluteFile);
         }
-        else
-        {
-
-            using (var stream = GetManifestResourceStream(
-            resourceName, ResourceAssembly))
-            {
-                var decoded = SKBitmap.Decode(stream);
-                skBitmapCache[resourceName] = decoded;
-            }
-        }
+        // FileExists probes the hook (and the macOS .app Resources folder), so a missing file costs
+        // no first-chance exception.
+        return FileManager.FileExists(absoluteFile)
+            ? FileManager.GetStreamForFile(absoluteFile)
+            : null;
     }
 
 
@@ -232,7 +241,7 @@ public static class SkiaResourceManager
     public static SKTypeface GetTypeface(string typefaceName)
     {
         //Do not enclose this stream in a using block: https://stackoverflow.com/questions/48061401/drawtext-in-canvas-skiasharp-text-does-not-display
-        Stream stream = GetManifestResourceStream(
+        Stream stream = TryOpenFile(typefaceName) ?? GetManifestResourceStream(
             typefaceName, ResourceAssembly);
 
         var typeface = SKTypeface.FromStream(stream);
@@ -336,16 +345,15 @@ public static class SkiaResourceManager
                 message += "\nThis assembly contains no embedded resource files.";
             }
 
-            // The disk-first branch (CacheSKImage / CacheSvg) already tried
-            // FileManager.RelativeDirectory + name (or the bare absolute name);
-            // landing here means that path also didn't exist on disk. Surface
-            // both possibilities so the caller can fix whichever fits their setup
-            // — earlier versions of this message only mentioned the embedded path.
+            // TryOpenFile already tried FileManager.RelativeDirectory + name (or the bare
+            // absolute name) on disk and through FileManager.CustomGetStreamFromFile; landing
+            // here means neither had it. Surface both possibilities so the caller can fix
+            // whichever fits their setup.
             message +=
-                $"\n\nCacheSKImage/CacheSvg also tried loading from disk before falling through to this assembly. " +
+                $"\n\nThe file was also looked for on disk and through FileManager.CustomGetStreamFromFile before falling through to this assembly. " +
                 $"At this call, FileManager.RelativeDirectory was \"{FileManager.RelativeDirectory}\". " +
                 $"Two ways to fix it:" +
-                $"\n  - File-on-disk: confirm the file exists at FileManager.RelativeDirectory + name, " +
+                $"\n  - File: confirm the file exists (or your CustomGetStreamFromFile hook serves it) at FileManager.RelativeDirectory + name, " +
                 $"or at the absolute path if you passed one. Loose-file content is the typical setup " +
                 $"for the SilkNet / standalone Skia samples." +
                 $"\n  - Embedded resource: mark the file as <EmbeddedResource> in the assembly that " +
