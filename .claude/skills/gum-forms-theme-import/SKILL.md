@@ -93,10 +93,9 @@ unprefixed. Without this, importing a second theme into the same project silentl
 first theme's entire Components/Screens tree (`GetSourceDestinations` maps every theme file to an
 identical unnamespaced destination with `overwrite: true`).
 
-**A file that exists on disk but isn't referenced in the theme's own `.gumx` still gets copied and
-imported** — `GetSourceDestinations` walks every `.gucx`/`.behx` file under the theme folder, not
-just the ones listed as a `ComponentReference`/`BehaviorReference`. A rename pass built only from
-the `.gumx`'s reference list misses these orphans, leaving a stale un-prefixed `<Name>` that
+**Add Forms copies every file in the theme folder.** A theme component must be listed in its
+`.gumx`, or check, codegen and the tool never see it (enforced by `FormsThemesTemplateTests`).
+A rename pass built only from the `.gumx`'s reference list misses any orphan file, leaving a stale un-prefixed `<Name>` that
 duplicates or collides with the correctly-renamed content. Verify by scanning physical files
 directly (`Directory.GetFiles(..., SearchOption.AllDirectories)`), not `project.AllElements`, which
 only reflects what's registered.
