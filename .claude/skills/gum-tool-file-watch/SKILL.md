@@ -18,14 +18,16 @@ Three cooperating classes handle the full pipeline — all three now live in the
 ## Change Pipeline
 
 ```
-FileSystemWatcher event (background thread)
+FileSystemWatcher event (watcher thread)
     ↓
-FileWatchManager.HandleFileSystemChange()
-    - Checks ignore list (count-based and time-based)
+FileWatchManager.RunOnUiThread()
+    - Checks the ignore list, then posts the reaction through IDispatcher
+    ↓
+Posted reaction (UI thread)
     - Verifies file's directory is being watched
     - Adds to ChangedFilesWaitingForFlush, records LastFileChange
     ↓
-PeriodicUiTimer (2s interval, Program.cs)
+PeriodicUiTimer (2s interval, GumStartupSequence.cs)
     - Calls FileWatchManager.Flush() every 2 seconds
     ↓
 Flush() early-outs if TimeToNextFlush > 0 (waits 2s after last change)
@@ -74,7 +76,7 @@ currently-selected one (e.g. a cascading delete affecting other elements' instan
 - `AnimationCollectionViewModelManager.cs` — animation save
 - `TextureCoordinateSelectionPlugin` — sprite sheet edits
 
-A separate `changesToIgnore` dictionary supports count-based ignoring (decrement on each event), but it is rarely used; the time-based `timedChangesToIgnore` is the primary mechanism.
+The ignore list (`FileWatchIgnoreList`) is time-based only.
 
 ## ReactToFileChanged Extension Dispatch
 
@@ -106,25 +108,26 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 
 **Rename for PNG, CSV, and RESX**: `HandleRename` routes renames for `.png`, `.csv`, and `.resx`. Many editors (Vim, JetBrains, some VS Code modes) use an atomic-save pattern — write to a temp file, then rename it over the target — so rename events must be handled for these types to avoid silently missing external edits.
 
-**Delete does nothing**: `HandleFileSystemDelete` has no implementation — file deletions are not reacted to.
+**Delete only reacts for element files**: `ReactToDelete` queues a deleted element file like a change, so the flush can flag the element's source as missing. Other deletes are ignored.
 
 **Flush debounce is cumulative**: `TimeToNextFlush = (LastFileChange + 2s) - Now`. Every new file change resets `LastFileChange`, pushing the flush window out by another 2 seconds. Rapid successive changes delay flushing until things settle.
 
-**`IsFlushing` prevents re-entry but not concurrent queuing**: The background `FileSystemWatcher` thread can still add to `ChangedFilesWaitingForFlush` while a flush is in progress (the lock protects the queue). Files added during a flush are picked up on the next flush cycle.
+**Watcher callbacks only check the ignore list, then post to the UI thread**: `HandleFileSystemChange`/`HandleRename`/`HandleFileSystemDelete` run on a watcher thread and hand their work to the UI thread through `IDispatcher`. New callback code goes inside the posted reaction; anything else runs off the UI thread against UI-owned state.
 
-**FileWatchManager is a singleton**: Registered in `Gum/Services/Builder.cs` as both `FileWatchManager` and `IFileWatchManager`.
+**FileWatchManager is a singleton**: Registered in `Tools/Gum.Presentation/Services/GumCoreServiceCollectionExtensions.cs` as both `FileWatchManager` and `IFileWatchManager`.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `Tools/Gum.Presentation/FileWatchPlugin/FileWatchManager.cs` | Core watcher, queue, ignore list, flush |
+| `Tools/Gum.Presentation/FileWatchPlugin/FileWatchManager.cs` | Core watcher, queue, flush |
+| `Tools/Gum.Presentation/FileWatchPlugin/FileWatchIgnoreList.cs` | Time-based ignore list |
 | `Tools/Gum.Presentation/FileWatchPlugin/FileWatchLogic.cs` | Computes watched directories, enables/disables watcher |
 | `Tools/Gum.Presentation/FileWatchPlugin/FileWatchPluginController.cs` | WPF-free reactions (project/variable events, debug-panel display refresh) extracted from the plugin |
 | `Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs` | Dispatches flushed files to reload handlers |
 | `Tools/Gum.Presentation/FileWatchPlugin/MainFileWatchPlugin.cs` | Plugin entry point (shared by both heads); owns tab/menu-item wiring only |
-| `Gum/Services/PeriodicUiTimer.cs` | UI-thread-safe periodic timer used for both flush and display |
-| `Gum/Program.cs` (lines ~144–157) | Creates the 2s flush timer and calls `fileWatchManager.Flush()` |
+| `Tools/Gum.Presentation/Services/PeriodicUiTimer.cs` | UI-thread-safe periodic timer used for both flush and display |
+| `Tools/Gum.Presentation/Startup/GumStartupSequence.cs` | Creates the 2s flush timer and calls `fileWatchManager.Flush()` |
 | `Tools/Gum.Presentation/Commands/FileCommands.cs` | Calls `IgnoreNextChangeUntil` before saving elements |
 | `Tools/Gum.Presentation/Managers/ProjectManager.cs` | Calls `IgnoreNextChangeUntil` before saving project |
-| `Gum/Services/Fonts/FontManager.cs` | Calls `IgnoreNextChangeUntil` before generating fonts |
+| `Tools/Gum.Presentation/Services/Fonts/FontManager.cs` | Calls `IgnoreNextChangeUntil` before generating fonts |

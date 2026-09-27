@@ -48,6 +48,8 @@ GumService.Default.Uninitialize()
 
 `FormsUtilities.Uninitialize()` is `internal`; tests access it via `InternalsVisibleTo`.
 
+**Skia differs:** `GumServiceSkiaBase` (`Runtimes/SkiaGum/GumServiceSkiaBase.cs`) wires the runtime-type registrations and property/renderable delegates once per process, so its `Uninitialize` keeps them and removes only what the loaded project added. Clearing them the way MonoGame does leaves a later `Initialize` without them.
+
 ## Roots
 
 | Property | Purpose |

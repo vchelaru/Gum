@@ -65,7 +65,7 @@ The tool stores `LocalizationFiles` — a `List<string>` of project-relative pat
 
 **UI:** `ProjectPropertiesViewModel` exposes `LocalizationFiles` with `PreferredDisplayer = typeof(MultiFileDisplay)` — a list editor with Add/Remove/Up/Down buttons that composes `FilePickingLogic`.
 
-**Runtime auto-load:** `GumService.InitializeInternal` applies the same policy and exposes collision warnings on `GumService.Default.LastLoadResult.Warnings` (no Output tab available in games).
+**Runtime auto-load:** `ProjectLocalizationLoader.Load` (`GumCommon/Localization/ProjectLocalizationLoader.cs`) applies the same policy for both the MonoGame and Skia `GumService`, and collision warnings surface on `GumService.Default.LastLoadResult.Warnings` (no Output tab available in games).
 
 **File watching:** `FileChangeReactionLogic.IsLocalizationFileThatShouldTriggerReload(changedFile, IEnumerable<FilePath> baseFiles)` returns true if the changed file matches any base path in the list OR any base's satellite (`{BaseName}.*.resx` in the same directory). A single-file overload is preserved as the inner loop body.
 
@@ -155,7 +155,8 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 - `Gum/Plugins/InternalPlugins/ProjectPropertiesWindowPlugin/` — Language dropdown + `LocalizationFiles` list editor UI
 - `WpfDataUi/Controls/MultiFileDisplay.xaml(.cs)` — `IDataUi` control for `List<string>` file-path lists; composes `FilePickingLogic`
 - `WpfDataUi/Controls/FilePickingLogic.cs` — shared file-dialog/relative-path plumbing (pattern like `TextBoxDisplayLogic`)
-- `MonoGameGum/GumService.cs` — runtime auto-load of `.gumx` `LocalizationFiles`; collision warnings surface on `GumLoadResult.Warnings`; `RefreshLocalization()` walks the three roots; constructor wires the `RefreshLocalizationOnElementAction` delegate and subscribes to `LocalizationServiceChanged`
+- `GumCommon/Localization/ProjectLocalizationLoader.cs` — runtime auto-load of `.gumx` `LocalizationFiles`, called by `MonoGameGum/GumService.cs` and `Runtimes/SkiaGum/GumServiceSkiaBase.cs`
+- `MonoGameGum/GumService.cs` — `RefreshLocalization()` walks the three roots; constructor wires the `RefreshLocalizationOnElementAction` delegate and subscribes to `LocalizationServiceChanged`
 - `GumRuntime/GraphicalUiElement.cs` — `RefreshLocalization()` recursion + `RefreshLocalizationOnElementAction` static delegate hook
 - `MonoGameGum.Tests/Localization/RefreshLocalizationTests.cs` — runtime language-switch tests (Forms controls, BBCode-from-translation, TextNoTranslate survival, popup/modal roots)
 - `MonoGameGum/GueDeriving/TextRuntime.cs` — `Text` property and `SetTextNoTranslate` method

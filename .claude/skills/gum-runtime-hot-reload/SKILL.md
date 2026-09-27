@@ -15,13 +15,13 @@ User-facing docs: `docs/code/hot-reload.md`. User docs are the source of truth f
 
 | File | Purpose |
 |------|---------|
-| `MonoGameGum/GumHotReloadManager.cs` | `IGumHotReloadManager` + `GumHotReloadManager` |
-| `MonoGameGum/GumService.cs` | `EnableHotReload`, per-frame `Update`, `Uninitialize` stop |
+| `GumCommon/HostServices/GumHotReloadManager.cs` | `IGumHotReloadManager` + `GumHotReloadManager`; host-specific steps (texture filter, animation load, cache eviction) come in as constructor delegates |
+| `MonoGameGum/GumService.cs`, `Runtimes/SkiaGum/GumServiceSkiaBase.cs` | `EnableHotReload`, per-frame `Update`, `Uninitialize` stop |
 | `docs/code/hot-reload.md` | Public documentation |
 
 ## Platform Gating
 
-The entire file is wrapped in `#if !IOS && !ANDROID`. The `EnableHotReload` method on `GumService` is likewise gated. File compiles for MonoGame, KNI, FNA (under `XNALIKE`) and Raylib — namespace switches via `#if`. Any new API surface must respect both gates.
+The entire file is wrapped in `#if !IOS && !ANDROID`. The `EnableHotReload` method on `GumService` is likewise gated. The file is shared by every runtime through `GumCommon`. Any new API surface must respect both gates.
 
 ## Source vs Bin Paths — Critical Distinction
 

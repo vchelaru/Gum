@@ -41,7 +41,7 @@ Before writing a single line of the unified file, diff these across all three pl
 - **Constructor defaults.** `DefaultWidth`, `DefaultHeight`, `DefaultColor`, initial `Width/Height`, initial `Text`, `Font`, etc. If one platform defaults to 50×50 and another to 0×0, that's a bug in one of them — decide which.
 - **Renderable type.** Skia ColoredRectangleRuntime uses `RoundedRectangle` while MG/Raylib use `SolidRectangle`. Changing the renderable class affects draw order, batching, and clip behavior. Preserve per-platform unless the user explicitly signs off on unifying.
 - **Property coverage.** If platform A exposes `Alpha`/`BlendState`/`MaxLettersToShow` and platform B doesn't, decide whether B should gain it (via the underlying renderable's capability, e.g. `Color.A` on Raylib) or stay gated under `#if`.
-- **`Clone()` override.** Some per-platform versions reset cached renderable fields, others don't. Missing a `Clone()` override leaks a stale `mContainedX` pointer after cloning. Add it to all unified runtimes.
+- **`Clone()` override.** A `Clone` built on `MemberwiseClone` shares every reference by default. Reset parent, children, event subscribers, binding state and cached renderable fields (`mContainedX`), and copy owned helpers. Add the override to all unified runtimes; the `Clone_*` tests in `MonoGameGum.Tests/Runtimes/GraphicalUiElementTests.cs` guard this.
 - **`AddToManagers()` obsolete wrapper.** Present on MG, often absent on Raylib/Skia. Should usually be added everywhere for API parity.
 - **`NotifyPropertyChanged` on setters.** MG typically has it, Raylib/Skia often don't. Usually safe to add everywhere (binding/data-flow consumers benefit).
 

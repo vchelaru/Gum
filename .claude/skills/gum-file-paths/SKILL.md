@@ -19,6 +19,13 @@ reports "nothing changed" for exactly the rename it needs to detect.
 `FileManager.RemoveDotDotSlash` does the conversion. A hardcoded `Contains("/bin/")` check therefore
 matches on Unix and is dead on Windows. This bites production code, not just test assertions.
 
+## Saved paths use backslashes
+
+Project files saved on Windows store relative paths with `\`, which is a legal file-name character on
+macOS and Linux. Convert every saved path through `FilePath` or `FileManager.Standardize` before disk
+I/O, and check existence with `FileManager.FileExists`, not `File.Exists`. Content loads
+(`FileManager.GetStreamForFile`) ask `FileManager.CustomGetStreamFromFile` first, then fall back to disk.
+
 ## `..` is collapsed, `.` is not
 
 A `CodeProjectRoot` of `"./"` yields paths like `C:\Proj\.\Screens\X.cs`, which never compare equal to

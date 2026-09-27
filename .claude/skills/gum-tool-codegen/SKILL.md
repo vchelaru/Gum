@@ -81,6 +81,8 @@ Both files live on disk outside the `.gumx`, so a change to an element's identit
 
 **RequestCodeGenerationMessage** -- External systems (like FlatRedBall editor integration) can trigger codegen via this CommunityToolkit.Mvvm message.
 
+**Culture-independent output** -- Generated code must be identical on every machine, so sorting, casing and number formatting in the generators use the invariant culture (`CultureInfo.InvariantCulture`, `StringComparison.Ordinal`/`InvariantCulture`, `ToUpperInvariant`).
+
 **C# name compliance** -- `CodeGenerationNameVerifier` prefixes C# keywords with `@`, leading digits with `_`, and replaces spaces with `_`.
 
 **RenameService** -- When elements are renamed in the tool, updates generated code file names and internal references.
