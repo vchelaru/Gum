@@ -275,6 +275,27 @@ internal sealed class VariableGridHarness : IDisposable
         Settle();
     }
 
+    /// <summary>The header strip of the category named <paramref name="categoryName"/>; a click collapses or expands it.</summary>
+    public Border CategoryHeader(string categoryName)
+    {
+        _driver.Layout();
+        return Grid.GetVisualDescendants().OfType<DataUiCategoryView>()
+            .Select(view => view.Header)
+            .FirstOrDefault(header => header.GetVisualDescendants().OfType<TextBlock>().Any(text => text.Text == categoryName))
+            ?? throw new InvalidOperationException($"The grid shows no {categoryName} category; it shows [{string.Join(", ", ShownCategoryNames())}].");
+    }
+
+    /// <summary>Right-clicks the category named <paramref name="categoryName"/> and picks <paramref name="header"/>.</summary>
+    public void PickCategoryMenuItem(string categoryName, string header)
+    {
+        _driver.RightClick(CategoryHeader(categoryName));
+        _driver.PickContextMenuItem(header);
+        Settle();
+    }
+
+    /// <summary>The list of a behavior's variables, shown while a behavior is selected.</summary>
+    public ListBox BehaviorVariables => View.GetVisualDescendants().OfType<ListBox>().Single();
+
     /// <summary>The headers of <paramref name="memberName"/>'s right-click menu.</summary>
     public List<string> RowMenu(string memberName)
     {

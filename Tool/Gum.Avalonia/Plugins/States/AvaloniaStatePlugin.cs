@@ -10,6 +10,7 @@ using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 
 namespace Gum.Avalonia.Plugins.States;
 
@@ -24,9 +25,9 @@ public class AvaloniaStatePlugin : StateTreePluginBase
     public AvaloniaStatePlugin(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands,
         IElementCommands elementCommands, IEditCommands editCommands, IDialogService dialogService,
         IHotkeyManager hotkeyManager, IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        ICopyPasteLogic copyPasteLogic)
+        ICopyPasteLogic copyPasteLogic, IUndoManager undoManager)
         : base(selectedState, guiCommands, fileCommands, elementCommands, editCommands, dialogService,
-            hotkeyManager, variableInCategoryPropagationLogic, copyPasteLogic)
+            hotkeyManager, variableInCategoryPropagationLogic, copyPasteLogic, undoManager)
     {
     }
 

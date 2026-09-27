@@ -9,6 +9,7 @@ using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.StatePlugin;
@@ -24,9 +25,9 @@ public class MainStatePlugin : StateTreePluginBase
     public MainStatePlugin(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands,
         IElementCommands elementCommands, IEditCommands editCommands, IDialogService dialogService,
         IHotkeyManager hotkeyManager, IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        ICopyPasteLogic copyPasteLogic)
+        ICopyPasteLogic copyPasteLogic, IUndoManager undoManager)
         : base(selectedState, guiCommands, fileCommands, elementCommands, editCommands, dialogService,
-            hotkeyManager, variableInCategoryPropagationLogic, copyPasteLogic)
+            hotkeyManager, variableInCategoryPropagationLogic, copyPasteLogic, undoManager)
     {
     }
 

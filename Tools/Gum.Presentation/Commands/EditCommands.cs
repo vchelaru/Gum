@@ -261,8 +261,7 @@ public class EditCommands : IEditCommands
 
         //////////////////End Early Out /////////////////////
 
-
-
+        using var undoLock = _undoManager.RequestLock();
 
         oldCategory.States.Remove(stateToMove);
         newCategory.States.Add(stateToMove);

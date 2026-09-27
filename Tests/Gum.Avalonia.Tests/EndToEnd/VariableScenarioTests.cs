@@ -1,14 +1,23 @@
+using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.VisualTree;
+using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Plugins.VariableGrid;
+using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Managers;
+using Gum.Plugins.Behaviors;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using Gum.ProjectServices.FontGeneration;
 using Gum.Services.Dialogs;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
@@ -644,6 +653,350 @@ public class VariableScenarioTests
     }
 
     #endregion
+
+    #region What the tab shows
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-003")]
+    [Trait("Feature", "VAR-004")]
+    [Trait("Feature", "VAR-005")]
+    [Trait("Feature", "VAR-034")]
+    [Trait("Feature", "STATE-018")]
+    public void FilteringAndCollapsing_ChangeWhichRowsShow_AndWriteNoFile()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        int allRows = grid.ShownMemberNames().Count;
+
+        // Categories come in a fixed order, each with its own header color.
+        List<string> categories = grid.ShownCategoryNames();
+        categories.IndexOf("Position").ShouldBeLessThan(categories.IndexOf("Dimensions"));
+        categories.IndexOf("Dimensions").ShouldBeLessThan(categories.IndexOf("Text"));
+        grid.Grid.Categories.Single(category => category.Name == "Position").HeaderColor
+            .ShouldNotBe(grid.Grid.Categories.Single(category => category.Name == "Dimensions").HeaderColor);
+
+        tree.Press(Key.E, PhysicalKey.E, RawInputModifiers.Control);
+        grid.Settle();
+        grid.View.FilterTextBox.IsFocused.ShouldBeTrue();
+        grid.Input.Window.KeyTextInput("wid");
+        grid.Settle();
+        grid.ShownMemberNames().ShouldNotBeEmpty();
+        grid.ShownMemberNames().ShouldAllBe(name => name.Contains("Wid", StringComparison.OrdinalIgnoreCase));
+
+        grid.Input.Press(Key.Escape, PhysicalKey.Escape);
+        grid.View.FilterTextBox.Text.ShouldBeNullOrEmpty();
+        grid.ShownMemberNames().Count.ShouldBe(allRows);
+
+        grid.Input.Click(grid.CategoryHeader("Position"));
+        try
+        {
+            grid.Grid.Categories.Single(category => category.Name == "Position").IsExpanded.ShouldBeFalse();
+            // The collapse is remembered by name across selections.
+            tree.Click(tree.NodeFor(Component(tree, "Button")));
+            tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single()));
+            grid.Grid.Categories.Single(category => category.Name == "Position").IsExpanded.ShouldBeFalse();
+        }
+        finally
+        {
+            // The expansion memory is shared by every grid for the rest of the run.
+            grid.Input.Click(grid.CategoryHeader("Position"));
+        }
+        grid.Grid.Categories.Single(category => category.Name == "Position").IsExpanded.ShouldBeTrue();
+
+        tree.SnapshotFiles().ShouldMatch(start, "filtering and collapsing should write nothing");
+        tree.AssertOracles();
+    }
+
+    #endregion
+
+    #region Instance rows
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-006")]
+    [Trait("Feature", "VAR-007")]
+    [Trait("Feature", "VAR-026")]
+    [Trait("Feature", "VAR-027")]
+    [Trait("Feature", "VAR-028")]
+    [Trait("Feature", "VAR-029")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void ScrubbingMultiSelectingAndPickingParentStateAndType_OnInstances_SaveEachEdit_AndUndoRedoFollowThem()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave icon = tree.Project.AddComponent("Icon");
+        StateSaveCategory looks = tree.Project.AddCategory(icon, "Looks");
+        tree.Project.AddState(icon, looks, "Big");
+        tree.Project.AddState(icon, looks, "Small");
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Project.AddInstance(button, "Holder", "Container");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        InstanceSave caption = tree.Project.AddInstance(button, "Caption", "Text");
+        InstanceSave iconInstance = tree.Project.AddInstance(button, "IconInstance", "Icon");
+        InstanceSave thing = tree.Project.AddInstance(button, "Thing", "Container");
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        grid.TypeAndEnter("X", "10");
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        TextBlock xLabel = grid.Editor<TextBoxDisplay>("X").GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "X");
+        global::Avalonia.Point from = grid.Input.CenterOf(xLabel);
+        grid.Input.Drag(from, new global::Avalonia.Point(from.X + 20, from.Y), steps: 4);
+        grid.Settle();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.X").ShouldBe(30f);
+
+        tree.Click(tree.NodeFor(caption), RawInputModifiers.Control);
+        tree.SelectedState.SelectedInstances.Count().ShouldBe(2);
+        grid.TypeAndEnter("Y", "8");
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Y").ShouldBe(8f);
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Caption.Y").ShouldBe(8f);
+
+        tree.Click(tree.NodeFor(label));
+        grid.PickComboItem("Parent", "Holder");
+        tree.Click(tree.NodeFor(iconInstance));
+        grid.PickComboItem("LooksState", "Small");
+        tree.Click(tree.NodeFor(thing));
+        grid.ShownMemberNames().ShouldNotContain("Thing.Text");
+        grid.PickComboItem("BaseType", "Text");
+        grid.ShownMemberNames().ShouldContain("Thing.Text");
+
+        ComponentSave saved = grid.ReadSaved(Component(tree, "Button"));
+        VariableGridHarness.StoredValue(saved, "Label.X").ShouldBe(30f);
+        VariableGridHarness.StoredValue(saved, "Caption.Y").ShouldBe(8f);
+        VariableGridHarness.StoredValue(saved, "Label.Parent").ShouldBe("Holder");
+        VariableGridHarness.StoredValue(saved, "IconInstance.LooksState").ShouldBe("Small");
+        saved.Instances.Single(instance => instance.Name == "Thing").BaseType.ShouldBe("Text");
+
+        tree.Undo();
+        Component(tree, "Button").Instances.Single(instance => instance.Name == "Thing").BaseType.ShouldBe("Container");
+        tree.Undo();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "IconInstance.LooksState").ShouldBeNull();
+        tree.Undo();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Parent").ShouldBeNull();
+        tree.Undo();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Y").ShouldBeNull();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Caption.Y").ShouldBeNull();
+        tree.Undo();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.X").ShouldBe(10f);
+        tree.SnapshotFiles().ShouldMatch(start, "undoing every edit should restore the files");
+
+        for (int i = 0; i < 5; i++)
+        {
+            tree.Redo();
+        }
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.X").ShouldBe(30f);
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Caption.Y").ShouldBe(8f);
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "IconInstance.LooksState").ShouldBe("Small");
+        Component(tree, "Button").Instances.Single(instance => instance.Name == "Thing").BaseType.ShouldBe("Text");
+
+        tree.AssertOracles();
+    }
+
+    #endregion
+
+    #region Row and category menus
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-013")]
+    [Trait("Feature", "VAR-014")]
+    [Trait("Feature", "VAR-016")]
+    [Trait("Feature", "VAR-018")]
+    [Trait("Feature", "VAR-019")]
+    [Trait("Feature", "VAR-020")]
+    [Trait("Feature", "VAR-021")]
+    [Trait("Feature", "VAR-032")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void RenamingHidingExposingAndPastingVariables_FollowIntoInstances_AndUndoRedoFollowThem()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        VariableGridHarness grid = ExposeLabelTextAndUseButtonInTitle(tree);
+        grid.TypeAndLeave("LabelText", "OK");
+        InstanceSave caption = tree.Project.AddInstance(Component(tree, "Button"), "Caption", "Text");
+        tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single(instance => instance.Name == "Label")));
+        grid.TypeAndEnter("X", "10");
+        grid.TypeAndEnter("Y", "20");
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Dialogs.AnswerNextUserString("Caption");
+        grid.PickRowMenuItem("Text", "Rename Variable [LabelText]");
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables.ShouldContain(variable => variable.ExposedAsName == "Caption");
+        VariableGridHarness.StoredValue(grid.ReadSaved(Screen(tree, "Title")), "OkButton.Caption").ShouldBe("OK");
+
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        tree.Dialogs.AnswerNext<AddVariableViewModel>(dialog => { dialog.SelectedItem = "float"; dialog.EnteredName = "Speed"; return true; });
+        grid.Input.Click(grid.View.AddVariableButton);
+        grid.Settle();
+        string? duplicateError = null;
+        tree.Dialogs.AnswerNext<AddVariableViewModel>(dialog =>
+        {
+            dialog.SelectedItem = "float";
+            dialog.EnteredName = "Speed";
+            duplicateError = dialog.ErrorMessage;
+            return false;
+        });
+        grid.Input.Click(grid.View.AddVariableButton);
+        grid.Settle();
+        duplicateError.ShouldNotBeNullOrEmpty();
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables.Count(variable => variable.Name == "Speed").ShouldBe(1);
+
+        grid.PickRowMenuItem("Speed", "Hide from Instances");
+        tree.Click(tree.NodeFor(Screen(tree, "Title").Instances.Single()));
+        grid.ShownMemberNames().ShouldNotContain(name => name.EndsWith("Speed", StringComparison.Ordinal));
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        grid.PickRowMenuItem("Speed", "Show on Instances");
+        tree.Click(tree.NodeFor(Screen(tree, "Title").Instances.Single()));
+        grid.ShownMemberNames().ShouldContain(name => name.EndsWith("Speed", StringComparison.Ordinal));
+
+        tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single(instance => instance.Name == "Label")));
+        tree.Dialogs.AnswerNext<ExposeColorDialogViewModel>(_ => true);
+        grid.PickRowMenuItem("Color", "Expose Color");
+        Component(tree, "Button").GetDefaultStateOrThrow().Variables
+            .Where(variable => variable.Name is "Label.Red" or "Label.Green" or "Label.Blue")
+            .ShouldAllBe(variable => !string.IsNullOrEmpty(variable.ExposedAsName));
+
+        grid.PickCategoryMenuItem("Position", "Copy Values");
+        tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single(instance => instance.Name == "Caption")));
+        grid.PickCategoryMenuItem("Position", "Paste Values");
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Caption.X").ShouldBe(10f);
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Caption.Y").ShouldBe(20f);
+
+        // Button's history: paste, expose, show, hide, add, rename (which also rewrote Title).
+        for (int i = 0; i < 6; i++)
+        {
+            tree.Undo();
+        }
+        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.LabelText").ShouldBe("OK");
+        tree.SnapshotFiles().ShouldMatch(start, "undoing every step should restore the files");
+
+        for (int i = 0; i < 6; i++)
+        {
+            tree.Redo();
+        }
+        VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.Caption").ShouldBe("OK");
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Caption.X").ShouldBe(10f);
+        Component(tree, "Button").GetDefaultStateOrThrow().GetVariableSave("Speed").ShouldNotBeNull();
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-021")]
+    [Trait("Feature", "VAR-022")]
+    [Trait("Feature", "VAR-023")]
+    [Trait("Feature", "VAR-031")]
+    [Trait("Feature", "VAR-033")]
+    public void ABehaviorsVariables_AreAddedEditedRequiredAndDeleted()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Dialogs.AnswerNextUserString("Clickable");
+        tree.RightClick(tree.RootNode("Behaviors"));
+        tree.PickMenu("Add Behavior");
+        VariableGridHarness grid = tree.Grid;
+        ((DataUiGrid)grid.View.BehaviorGrid).Categories.SelectMany(category => category.Members).Select(member => member.Name)
+            .ShouldContain("DefaultImplementation");
+
+        tree.Dialogs.AnswerNext<AddVariableViewModel>(dialog => { dialog.SelectedItem = "bool"; dialog.EnteredName = "IsEnabled"; return true; });
+        grid.Input.Click(grid.View.AddVariableButton);
+        grid.Settle();
+        Behavior(tree).RequiredVariables.Variables.Select(variable => variable.Name).ShouldBe(new[] { "IsEnabled" });
+
+        tree.Dialogs.AnswerNext<AddVariableViewModel>(dialog => { dialog.EnteredName = "IsActive"; return true; });
+        PickBehaviorVariableMenuItem(grid, "IsEnabled", "Edit Variable");
+        Behavior(tree).RequiredVariables.Variables.Select(variable => variable.Name).ShouldBe(new[] { "IsActive" });
+
+        // A component using the behavior reports the variable it lacks until it adds it.
+        tree.Project.AddComponent("Button");
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        BehaviorsViewModel behaviors = BehaviorsTab();
+        behaviors.EditCommand.Execute(null);
+        behaviors.AllBehaviors.Single(item => item.Name == "Clickable").IsChecked = true;
+        behaviors.ConfirmEditCommand.Execute(null);
+        tree.ThrowIfCrashed();
+        Component(tree, "Button").Behaviors.Select(reference => reference.BehaviorName).ShouldBe(new[] { "Clickable" });
+        grid.Settle();
+        grid.ViewModel.HasErrors.ShouldBeTrue();
+        grid.ViewModel.ErrorInformation.ShouldNotBeNull().ShouldContain("IsActive");
+        tree.Dialogs.AnswerNext<AddVariableViewModel>(dialog => { dialog.SelectedItem = "bool"; dialog.EnteredName = "IsActive"; return true; });
+        grid.Input.Click(grid.View.AddVariableButton);
+        grid.Settle();
+        grid.ViewModel.HasErrors.ShouldBeFalse();
+
+        tree.Click(tree.RootNode("Behaviors").Nodes.Single());
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        PickBehaviorVariableMenuItem(grid, "IsActive", "Delete Variable");
+        Behavior(tree).RequiredVariables.Variables.ShouldBeEmpty();
+        File.ReadAllText(Path.Combine(tree.Project.ProjectFolder, "Behaviors", "Clickable.behx")).ShouldNotContain("IsActive");
+
+        tree.AssertOracles();
+    }
+
+    #endregion
+
+    #region References and fonts
+
+    [AvaloniaFact]
+    [Trait("Feature", "VAR-025")]
+    [Trait("Feature", "VAR-030")]
+    [Trait("Feature", "EDIT-001")]
+    public void F12OnAReference_SelectsItsSource_AndAFontSizeChange_AsksForTheFont()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Project.AddComponent("Panel");
+        // Fonts are made for the elements that use the edited one.
+        tree.Project.AddInstance(tree.Project.AddScreen("Title"), "OkButton", "Button");
+        tree.Click(tree.NodeFor(Component(tree, "Panel")));
+        VariableGridHarness grid = tree.Grid;
+        grid.TypeLinesAndApply("VariableReferences", "Width = Components/Button.Width");
+
+        TextBox references = grid.Editor<StringListTextBoxDisplay>("VariableReferences").EditorTextBox;
+        grid.Input.Click(references);
+        references.CaretIndex = 0;
+        grid.Input.Press(Key.F12, PhysicalKey.F12);
+        grid.Settle();
+        tree.SelectedState.SelectedElement.ShouldBeSameAs(Component(tree, "Button"));
+
+        tree.Click(tree.NodeFor(label));
+        ProjectFileSnapshot beforeFont = tree.SnapshotFiles();
+        NoOpFontFileGenerator fonts = (NoOpFontFileGenerator)TestAppBuilder.Services.GetRequiredService<IFontFileGenerator>();
+        lock (fonts.RequestedFntPaths)
+        {
+            fonts.RequestedFntPaths.Clear();
+        }
+        grid.TypeAndEnter("FontSize", "37");
+        tree.WaitUntil(() => { lock (fonts.RequestedFntPaths) { return fonts.RequestedFntPaths.Any(path => path.Contains("37")); } },
+            TimeSpan.FromSeconds(10), "a font of size 37 to be asked for");
+
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(beforeFont, "undoing the font size should restore the files");
+        tree.AssertOracles();
+    }
+
+    #endregion
+
+    private static void PickBehaviorVariableMenuItem(VariableGridHarness grid, string variableName, string header)
+    {
+        grid.Settle();
+        ListBoxItem row = grid.BehaviorVariables.GetVisualDescendants().OfType<ListBoxItem>()
+            .Single(item => (item.DataContext as VariableSave)?.Name == variableName);
+        grid.Input.Click(row);
+        grid.Input.RightClick(row);
+        grid.Input.PickContextMenuItem(header);
+        grid.Settle();
+    }
+
+    private static BehaviorSave Behavior(ProjectTreeHarness tree) => tree.Project.Project.Behaviors.Single();
+
+    /// <summary>The view model behind the head's Behaviors tab.</summary>
+    private static BehaviorsViewModel BehaviorsTab() =>
+        ((AvaloniaTabManager)TestAppBuilder.Services.GetRequiredService<ITabManager>()).AllTabs
+            .Select(tab => tab.Content is Control view ? view.DataContext : tab.Content)
+            .OfType<BehaviorsViewModel>().Single();
 
     private static ScreenSave Screen(ProjectTreeHarness tree, string name) =>
         tree.Project.Project.Screens.Single(screen => screen.Name == name);

@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.PropertyGridHelpers.Converters;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -156,6 +157,51 @@ public class UndoManagerTests : BaseTestClass
 
         component.Behaviors.Count.ShouldBe(0);
         component.Categories.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void PerformUndo_WithACategorySelected_RestoresTheDefaultStatesVariables()
+    {
+        // Adding a category also adds its <Category>State variable to the default state, and the
+        // Add Category dialog leaves the new category (no state) selected.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        StateSaveCategory category = new StateSaveCategory { Name = "Looks" };
+        _undoManager.RecordState();
+        _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(category);
+
+        component.Categories.Add(category);
+        component.GetDefaultStateOrThrow().Variables.Add(new VariableSave { Name = "LooksState", Type = "Looks", SetsValue = true });
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.Categories.ShouldBeEmpty();
+        component.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PerformUndo_OfADefaultStateEdit_KeepsTheCategoryVariablesStateConverter()
+    {
+        // Undo copies the default state's variables from a serialized snapshot, which has no
+        // converters; the <Category>State variable's converter lists the category's states.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.Categories.Add(new StateSaveCategory { Name = "Looks" });
+        StateSave defaultState = component.GetDefaultStateOrThrow();
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "LooksState",
+            Type = "Looks",
+            SetsValue = true,
+            CustomTypeConverter = new AvailableStatesConverter("Looks", _selectedState.Object),
+        });
+        _undoManager.RecordState();
+
+        defaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.GetDefaultStateOrThrow().GetVariableSave("LooksState").ShouldNotBeNull()
+            .CustomTypeConverter.ShouldBeOfType<AvailableStatesConverter>();
     }
 
     [Fact]

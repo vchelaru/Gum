@@ -701,20 +701,8 @@ public class ElementCommands : IElementCommands
         // instances use this variable to determine if a variable
         // should be shown.
         if (objectToAddTo is ElementSave elementToAddTo)
-        {              
-            elementToAddTo.GetDefaultStateOrThrow().Variables.Add(new VariableSave()
-            {
-                Name = category.Name + "State",
-                // We used to set the type with the word "State" appended but why? Gum seems to not do this everywhere, and this can add confusion, so let's omit the "State" suffix
-                Type = category.Name,
-                Value = null,
-                // Was previously guarded by "#if GUM" from when this class lived in Gum.csproj (which
-                // always defines GUM), making the guard always-true and effectively dead. AvailableStatesConverter
-                // already lives in Gum.Presentation, so this assignment is unconditional now that the class does too.
-                CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState)
-            });
-
-            elementToAddTo.GetDefaultStateOrThrow().Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
+        {
+            AddCategoryStateVariable(elementToAddTo, category.Name);
         }
         else if(objectToAddTo is BehaviorSave behaviorSave)
         {
@@ -735,6 +723,26 @@ public class ElementCommands : IElementCommands
         _fileCommands.TryAutoSaveCurrentObject();
 
         return category;
+    }
+
+    /// <inheritdoc/>
+    public void AddCategoryStateVariable(ElementSave element, string categoryName)
+    {
+        StateSave defaultState = element.GetDefaultStateOrThrow();
+        if (defaultState.Variables.Any(variable => variable.Name == categoryName + "State"))
+        {
+            return;
+        }
+        defaultState.Variables.Add(new VariableSave()
+        {
+            Name = categoryName + "State",
+            // We used to set the type with the word "State" appended but why? Gum seems to not do this everywhere, and this can add confusion, so let's omit the "State" suffix
+            Type = categoryName,
+            Value = null,
+            CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(categoryName, _selectedState)
+        });
+
+        defaultState.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
     }
 
     #endregion
