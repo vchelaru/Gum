@@ -68,6 +68,39 @@ public class SkiaRuntimeCloneTests
         cloneRenderable.Children.ShouldNotBeSameAs(originalRenderable.Children);
     }
 
+    [Theory]
+    [MemberData(nameof(RuntimeNames))]
+    public void Clone_ShouldNotKeepReferencesToSourceRenderables(string runtimeName)
+    {
+        GraphicalUiElement original = Create(runtimeName);
+        Type runtimeType = original.GetType();
+        // Runtimes cache their renderable lazily, so read every property to fill those caches.
+        foreach (System.Reflection.PropertyInfo property in runtimeType.GetProperties())
+        {
+            if (property.GetIndexParameters().Length == 0 && property.CanRead)
+            {
+                try { property.GetValue(original); } catch { }
+            }
+        }
+
+        GraphicalUiElement clone = original.Clone();
+
+        for (Type? type = runtimeType; type != null && type != typeof(object); type = type.BaseType)
+        {
+            foreach (System.Reflection.FieldInfo field in type.GetFields(
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly))
+            {
+                object? originalValue = field.GetValue(original);
+                if (originalValue is IRenderable)
+                {
+                    field.GetValue(clone).ShouldNotBeSameAs(originalValue,
+                        $"because {type.Name}.{field.Name} on the clone would write to the source's renderable");
+                }
+            }
+        }
+    }
+
     [Fact]
     public void Clone_LineGridRuntime_ShouldCopyCellSizeIndependently()
     {

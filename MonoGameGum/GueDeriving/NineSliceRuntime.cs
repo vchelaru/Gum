@@ -356,6 +356,12 @@ public class NineSliceRuntime : InteractiveGue
     [Obsolete("Use the AddToRoot extension method instead (e.g. myNineSlice.AddToRoot()).")]
     public new void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
+    public override GraphicalUiElement Clone()
+    {
+        NineSliceRuntime toReturn = (NineSliceRuntime)base.Clone();
+        toReturn._containedNineSlice = null;
+        return toReturn;
+    }
 
     public NineSliceRuntime(bool fullInstantiation = true)
     {
