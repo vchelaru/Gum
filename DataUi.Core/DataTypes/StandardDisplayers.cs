@@ -23,7 +23,7 @@ public static class StandardDisplayers
     /// <summary>A drop-down of the member's custom options or enum values.</summary>
     public sealed class ComboBox { private ComboBox() { } }
 
-    /// <summary>A drop-down that also accepts typed text.</summary>
+    /// <summary>A drop-down that also accepts typed text. WPF head only; the Avalonia grid has no control for it.</summary>
     public sealed class EditableComboBox { private EditableComboBox() { } }
 
     /// <summary>An editable list for list-typed members.</summary>
@@ -32,7 +32,7 @@ public static class StandardDisplayers
     /// <summary>A slider plus a text field, for bounded numbers.</summary>
     public sealed class Slider { private Slider() { } }
 
-    /// <summary>A text field with minus and plus buttons.</summary>
+    /// <summary>A text field with minus and plus buttons. WPF head only; the Avalonia grid has no control for it.</summary>
     public sealed class PlusMinus { private PlusMinus() { } }
 
     /// <summary>A dial plus a text field for an angle.</summary>
@@ -47,6 +47,6 @@ public static class StandardDisplayers
     /// <summary>Multi-line text edited as a list of strings, one per line.</summary>
     public sealed class StringList { private StringList() { } }
 
-    /// <summary>One labeled numeric field per channel of a composite member.</summary>
+    /// <summary>One labeled numeric field per channel of a composite member. WPF head only; the Avalonia grid has no control for it.</summary>
     public sealed class InlineChannels { private InlineChannels() { } }
 }

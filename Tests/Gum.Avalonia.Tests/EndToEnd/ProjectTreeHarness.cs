@@ -380,6 +380,13 @@ internal sealed class ProjectTreeHarness : IDisposable
     /// </summary>
     public IDataTransfer BeginDrag(GumTreeNode node) => BeginDragFrom(RowFor(node));
 
+    /// <summary>Drags <paramref name="source"/> onto <paramref name="target"/>'s row and drops it at <paramref name="fraction"/> of the row (<see cref="DropOn"/>).</summary>
+    public DragDropEffects Drag(GumTreeNode source, GumTreeNode target, double fraction = 0.5)
+    {
+        BeginDrag(source);
+        return DropOn(target, fraction);
+    }
+
     /// <summary>
     /// Presses <paramref name="source"/> (a Standards palette chip) and moves past the drag threshold.
     /// Returns the data it put on the drag.

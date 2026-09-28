@@ -239,6 +239,13 @@ namespace RenderingLibrary
             {
                 "Arc" => new Arc(),
                 "Canvas" => new CanvasRenderable(),
+                // A component whose runtime is an InteractiveGue with no renderable (every Forms
+                // DefaultFromFile*Runtime) gets its renderable here, by walking to its base type.
+                // Without these arms a Container-based component had no renderable, so its
+                // Children was the read-only empty collection and adding a child threw (#5406).
+                // Mirrors FallbackRenderableFactory's Container/Component arm.
+                "Container" => new InvisibleRenderable(),
+                "Component" => new InvisibleRenderable(),
                 "Circle" => new Circle(),
                 "ColoredCircle" => new Circle(),
                 "ColoredRectangle" => new SolidRectangle(),

@@ -1273,7 +1273,8 @@ public abstract class TextBoxBase :
             // set both.
             Visual.SetProperty(CategoryName, FocusedStateName);
         }
-        else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null 
+        // A render-only host (SkiaGum) has no cursor, so nothing can hover the text box there.
+        else if (cursor != null && cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null
             //&& Visual.HasCursorOver(cursor)
             && cursor.VisualOver == Visual
             )

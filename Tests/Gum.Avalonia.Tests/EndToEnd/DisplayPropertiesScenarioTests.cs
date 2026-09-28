@@ -15,6 +15,7 @@ using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
@@ -244,6 +245,55 @@ public class DisplayPropertiesScenarioTests
         tree.SnapshotFiles().ShouldMatch(start, "undoing the added point should restore the files");
 
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-004")]
+    public void NullableBoolEditor_OnABehaviorsBoolQuestionFormsProperty_SavesTrueFalseAndNone_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Dialogs.AnswerNextUserString("Toggleable");
+        tree.RightClick(tree.RootNode("Behaviors"));
+        tree.PickMenu("Add Behavior");
+        // The tool has no gesture that declares a Forms property, so this one stands for a .behx
+        // written by hand. It is the one bool? row the grid shows with NullableBool: a bool? element
+        // variable gets a type converter whose options turn its row into a combo box.
+        BehaviorSave toggleable = tree.Project.Project.Behaviors.Single();
+        toggleable.FormsProperties.Add(new VariableSave { Name = "IsToggled", Type = "bool?" });
+        Services.GetRequiredService<Gum.Commands.IFileCommands>().TryAutoSaveBehavior(toggleable);
+        button.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "Toggleable" });
+        tree.Project.SaveAndReload();
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        VariableGridHarness grid = tree.Grid;
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        ClickOption(grid, "True");
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "IsToggled").ShouldBe(true);
+
+        ClickOption(grid, "False");
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "IsToggled").ShouldBe(false);
+
+        ClickOption(grid, "None");
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "IsToggled").ShouldBeNull();
+        OptionButton(grid, "None").IsChecked.ShouldBe(true);
+
+        tree.Undo();
+        OptionButton(grid, "False").IsChecked.ShouldBe(true, "undo shows the restored value");
+        tree.Undo();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the three picks should restore the files");
+
+        tree.AssertOracles();
+
+        static RadioButton OptionButton(VariableGridHarness grid, string option) =>
+            grid.Editor<NullableBoolDisplay>("IsToggled").GetVisualDescendants().OfType<RadioButton>().Single(button => button.Content as string == option);
+
+        static void ClickOption(VariableGridHarness grid, string option)
+        {
+            grid.Input.Click(OptionButton(grid, option));
+            grid.Settle();
+        }
     }
 
     #endregion

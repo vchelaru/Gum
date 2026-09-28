@@ -214,43 +214,54 @@ public class SetVariableLogic : ISetVariableLogic
 
             if(response.Succeeded)
             {
-                if (parentElement != null && currentState != null)
+                // The undo is recorded when this lock is released, after the plugins have reacted:
+                // a plugin's edit to the element (the inheritance plugin replacing the inherited
+                // instances after a BaseType change) belongs to the same undo step. While it is
+                // held, a refresh that reselects cannot move the undo baseline past the change.
+                UndoLock? undoLock = null;
+                try
                 {
-                    string qualifiedName = unqualifiedMember;
-                    if (instance != null)
+                    if (parentElement != null && currentState != null)
                     {
-                        qualifiedName = $"{instance.Name}.{unqualifiedMember}";
+                        string qualifiedName = unqualifiedMember;
+                        if (instance != null)
+                        {
+                            qualifiedName = $"{instance.Name}.{unqualifiedMember}";
+                        }
+
+                        _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave,
+                            isFullCommit);
+
+                        _variableInCategoryPropagationLogic.PropagateVariablesInCategory(qualifiedName, parentElement,
+                            // This code used to not specify the category, so it defaulted to the selected category.
+                            // I'm maintaining this behavior but I'm not sure if it's what should happen - maybe we should
+                            // serach for the owner category of the state?
+                            _selectedState.SelectedStateCategorySave);
+
+                        if (recordUndo)
+                        {
+                            undoLock = _undoManager.RequestLock();
+                        }
+
+                        // Structural grid changes (rebuilding the tree view / category list, which adds
+                        // or removes rows) must wait for a committed value: doing them on an intermediate
+                        // scrub tick (e.g. dragging the StrokeWidth label) destroys the control being
+                        // dragged, breaking mouse capture. The full commit on release performs the rebuild.
+                        if (refresh && isFullCommit)
+                        {
+                            RefreshInResponseToVariableChange(unqualifiedMember, parentElement, instance);
+                        }
                     }
 
-                    _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave,
-                        isFullCommit);
-
-                    _variableInCategoryPropagationLogic.PropagateVariablesInCategory(qualifiedName, parentElement,
-                        // This code used to not specify the category, so it defaulted to the selected category.
-                        // I'm maintaining this behavior but I'm not sure if it's what should happen - maybe we should
-                        // serach for the owner category of the state?
-                        _selectedState.SelectedStateCategorySave);
-
-                    // Need to record undo before refreshing and reselecting the UI
-                    if (recordUndo)
-                    {
-                        _undoManager.RecordUndo();
-                    }
-
-                    // Structural grid changes (rebuilding the tree view / category list, which adds
-                    // or removes rows) must wait for a committed value: doing them on an intermediate
-                    // scrub tick (e.g. dragging the StrokeWidth label) destroys the control being
-                    // dragged, breaking mouse capture. The full commit on release performs the rebuild.
-                    if (refresh && isFullCommit)
-                    {
-                        RefreshInResponseToVariableChange(unqualifiedMember, parentElement, instance);
-                    }
+                    // see comment by ReactToChangedMember about why we make this call here
+                    // Also this should happen after we update the wireframe so that plugins like
+                    // the texture window which depend on the wireframe will have the correct values
+                    _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue, isFullCommit);
                 }
-
-                // see comment by ReactToChangedMember about why we make this call here
-                // Also this should happen after we update the wireframe so that plugins like
-                // the texture window which depend on the wireframe will have the correct values
-                _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue, isFullCommit);
+                finally
+                {
+                    undoLock?.Dispose();
+                }
             }
 
             // This used to only check if values have changed. However, this can cause problems

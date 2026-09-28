@@ -97,11 +97,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     object? mRecordedSelectedContainer;
 
     /// <summary>
-    /// The parent of the selected node when the selection was recorded. A refresh can move the
-    /// selected node itself (a Parent change reparents it in place), which is no selection change,
-    /// so this is how the restore knows to scroll it back into view.
+    /// Where the selected node sat (its parent and its index among its siblings) when the selection
+    /// was recorded. A refresh can move the selected node itself (a Parent change reparents it, a
+    /// reorder moves it among its siblings), which is no selection change, so this is how the
+    /// restore knows to scroll it back into view.
     /// </summary>
     GumTreeNode? _recordedSelectedNodeParent;
+    int _recordedSelectedNodeIndex = -1;
 
     /// <summary>
     /// The full set of selected instances captured at record time when more than one
@@ -1084,7 +1086,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // Record the full multi-selection so a tree refresh can restore every selected
         // instance rather than collapsing to the single primary one (issue #2954).
         _recordedSelectedInstances = _selectedState.SelectedInstances.ToList();
-        _recordedSelectedNodeParent = _view?.Selection.SelectedNode?.Parent;
+        GumTreeNode? selectedNode = _view?.Selection.SelectedNode;
+        _recordedSelectedNodeParent = selectedNode?.Parent;
+        _recordedSelectedNodeIndex = IndexAmongSiblings(selectedNode);
     }
 
     public void SelectRecordedSelection()
@@ -1119,9 +1123,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     GumTreeNode node = (GumTreeNode)desiredNode;
                     bool wasSelected = Selection.SelectedNode == node;
                     Select(node);
-                    if (wasSelected && node.Parent != _recordedSelectedNodeParent)
+                    if (wasSelected &&
+                        (node.Parent != _recordedSelectedNodeParent || IndexAmongSiblings(node) != _recordedSelectedNodeIndex))
                     {
-                        // Still selected, but the refresh moved it.
+                        // Still selected, but the refresh moved it (reparented or reordered).
                         EnsureVisibleUnlessSuppressed(node);
                     }
                 }
@@ -1421,6 +1426,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 Selection.CallAfterClickSelect(treeNodes[0]);
             }
         }
+    }
+
+    private int IndexAmongSiblings(GumTreeNode? node)
+    {
+        if (node == null)
+        {
+            return -1;
+        }
+        GumTreeNodeCollection siblings = node.Parent?.Nodes ?? View.Nodes;
+        return siblings.IndexOf(node);
     }
 
     /// <summary>

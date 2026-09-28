@@ -1543,6 +1543,12 @@ public class CopyPasteLogic : ICopyPasteLogic
         MovedInstanceReference[] droppedReferences =
             _movedInstanceReferenceDropper.DropReferencesBrokenByMove(sourceElement, instance, descendants);
 
+        // The replacement takes the promoted instance's place among the instances that stay,
+        // since the instance order is the draw order.
+        int replacementIndex = sourceElement.Instances
+            .TakeWhile(item => item != instance)
+            .Count(item => !descendants.Contains(item));
+
         // The delete below strips everything that names the instance, but the replacement keeps its
         // name, so capture what still applies to it and re-apply it afterward.
         List<(StateSave State, VariableSave Variable)> keptVariables =
@@ -1566,7 +1572,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             BaseType = component.Name,
             ParentContainer = sourceElement,
         };
-        sourceElement.Instances.Add(replacement);
+        sourceElement.Instances.Insert(Math.Min(replacementIndex, sourceElement.Instances.Count), replacement);
 
         foreach ((StateSave state, VariableSave variable) in keptVariables)
         {

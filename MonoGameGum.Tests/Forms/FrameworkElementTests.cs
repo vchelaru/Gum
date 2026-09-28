@@ -19,6 +19,34 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class FrameworkElementTests : BaseTestClass
 {
+    // Issue #5406: a render-only host (SkiaGum, headless SVG export) has no cursor. Every control
+    // with a default visual must still construct and toggle its enabled state there.
+    [Fact]
+    public void Constructor_WithNoMainCursor_ShouldNotThrowForAnyDefaultFormsControl()
+    {
+        FrameworkElement.MainCursor = null!;
+        List<string> failures = new();
+
+        foreach (Type controlType in FrameworkElement.DefaultFormsTemplates.Keys.ToList())
+        {
+            try
+            {
+                // OptionalParamBinding covers ctors whose only parameters are optional (RadioButton's groupName).
+                FrameworkElement control = (FrameworkElement)Activator.CreateInstance(controlType,
+                    System.Reflection.BindingFlags.CreateInstance | System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.OptionalParamBinding,
+                    binder: null, args: Array.Empty<object>(), culture: null)!;
+                control.IsEnabled = false;
+                control.IsEnabled = true;
+            }
+            catch (Exception exception)
+            {
+                failures.Add($"{controlType.Name}: {exception.GetBaseException().GetType().Name} {exception.GetBaseException().Message}");
+            }
+        }
+
+        failures.ShouldBeEmpty();
+    }
 
     #region AddToRoot
     [Fact]

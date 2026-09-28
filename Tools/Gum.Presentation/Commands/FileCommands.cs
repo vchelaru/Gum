@@ -176,8 +176,15 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveBehavior(BehaviorSave behavior)
     {
-        if(_projectManager.AutoSave && behavior != null)
+        if (behavior == null)
         {
+            return;
+        }
+        // As for elements, a successful save clears the mark.
+        _unsavedChangesTracker.MarkUnsaved(behavior);
+        if (_projectManager.AutoSave)
+        {
+            _undoManager.Value.RecordUndo();
             ForceSaveBehavior(behavior);
         }
     }
@@ -220,6 +227,11 @@ public class FileCommands : IFileCommands
     /// <returns>Whether a save occurred.</returns>
     public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
     {
+        // A successful save clears the mark (ProjectManager.SaveProject).
+        if (_projectState.GumProjectSave is { } project)
+        {
+            _unsavedChangesTracker.MarkUnsaved(project);
+        }
         if (_projectManager.AutoSave && !_projectManager.HaveErrorsOccurredLoadingProject)
         {
             ForceSaveProject(forceSaveContainedElements);
@@ -252,6 +264,22 @@ public class FileCommands : IFileCommands
         }
 
         _outputManager.AddOutput("Saved Gum project to " + _projectState.GumProjectSave.FullFileName);
+
+        if (forceSaveContainedElements)
+        {
+            // The project save writes no behaviors, so with Auto Save off a behavior edit would
+            // otherwise never reach disk (#5387). Only here, where the user saves everything: the
+            // re-save a project gets on load must not rewrite behavior files other projects share.
+            // A linked behavior's save re-saves the project, so iterate a copy.
+            foreach (BehaviorSave behavior in _projectState.GumProjectSave.Behaviors.ToList())
+            {
+                if (behavior != null && !behavior.IsSourceFileMissing)
+                {
+                    ForceSaveBehavior(behavior);
+                }
+            }
+        }
+
         CreateDefaultFontCharacterFile();
     }
 
@@ -474,7 +502,9 @@ public class FileCommands : IFileCommands
             }
         }
 
-        _guiCommands.RefreshVariables();
+        // Forced: the database decides whether Text rows are a text box or a combo of string
+        // IDs, and an unforced refresh keeps the rows of an unchanged selection.
+        _guiCommands.RefreshVariables(force: true);
         LocalizationLoaded?.Invoke();
     }
 
@@ -489,8 +519,6 @@ public class FileCommands : IFileCommands
         else
         {
             bool succeeded = true;
-
-            _undoManager.Value.RecordUndo();
 
             bool doesProjectNeedToSave = false;
             bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
@@ -584,7 +612,7 @@ public class FileCommands : IFileCommands
                 if (succeeded)
                 {
                     _outputManager.AddOutput("Saved " + behavior + " to " + fileName);
-                    //PluginManager.Self.AfterBehaviorSave(behavior);
+                    _unsavedChangesTracker.MarkSaved(behavior);
 
                     if (isLinkedBehavior)
                     {

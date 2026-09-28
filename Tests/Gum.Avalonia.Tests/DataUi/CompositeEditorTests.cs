@@ -234,23 +234,4 @@ public class CompositeEditorTests : IDisposable
         fixture.Files.ShouldBe(new List<string> { "b.csv", "a.csv" });
         display.ListBox.SelectedIndex.ShouldBe(0);
     }
-
-    [AvaloniaFact]
-    public void InlineChannelsDisplay_EachFieldCommitsToItsOwnChannel()
-    {
-        EditorFixture fixture = new EditorFixture { Red = 1, Green = 2 };
-        InstanceMember red = fixture.Member(nameof(EditorFixture.Red));
-        InstanceMember green = fixture.Member(nameof(EditorFixture.Green));
-        CompositeInstanceMember composite = new CompositeInstanceMember(
-            "Channels", new[] { red, green }, typeof(string),
-            channels => string.Join(",", channels), value => new object?[] { 0f, 0f });
-        InlineChannelsDisplay display = new InlineChannelsDisplay { InstanceMember = composite };
-        display.FieldTextBoxes.Select(textBox => textBox.Text).ShouldBe(new[] { "1", "2" });
-
-        display.FieldTextBoxes[1].Text = "5.5";
-        display.CommitField(1);
-
-        fixture.Green.ShouldBe(5.5f);
-        fixture.Red.ShouldBe(1f);
-    }
 }

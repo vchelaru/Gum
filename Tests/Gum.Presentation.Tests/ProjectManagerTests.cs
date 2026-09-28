@@ -780,6 +780,32 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void SaveProject_ForgetsTheProjectsUnsavedChanges()
+    {
+        StandardElementsManager.Self.Initialize();
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+        _projectManager.CreateNewProject();
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumSaveProjectUnsavedTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(tempDir);
+        GumProjectSave project = _projectManager.GumProjectSave!;
+        project.FullFileName = Path.Combine(tempDir, "Project.gumx");
+        _unsavedChangesTracker.MarkUnsaved(project);
+        _retryService
+            .Setup(r => r.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()))
+            .Callback<Action, int>((action, _) => action());
+        try
+        {
+            _projectManager.SaveProject(forceSaveContainedElements: false).ShouldBeTrue();
+
+            _unsavedChangesTracker.HasAnyUnsavedChanges(project).ShouldBeFalse();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void RecreateMissingStandardElements_PromptsToRecreate_ForMissingBuiltInStandard()
     {
         // A built-in standard (Sprite) lives in StandardElementsManager's defaults, so the tool can

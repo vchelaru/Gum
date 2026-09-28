@@ -171,6 +171,29 @@ public class SkiaGumSvgExportServiceTests : IDisposable
         svg.ShouldNotBeNullOrEmpty();
     }
 
+    // Issue #5406: Forms-template components whose visuals parent a child to an instance with no
+    // container renderable threw "Cannot modify the empty collection" during ToGraphicalUiElement.
+    [Theory]
+    [InlineData("Controls/ButtonStandard")]
+    [InlineData("Controls/CheckBox")]
+    [InlineData("Controls/TextBox")]
+    public void ExportSvg_FormsTemplateComponent_ShouldSucceed(string elementName)
+    {
+        string projectPath = Path.Combine(_tempDirectory, "FormsProject", "FormsProject.gumx");
+        new FormsTemplateCreator().Create(projectPath);
+        string outputPath = Path.Combine(_tempDirectory, "forms.svg");
+
+        SvgExportResult result = new SkiaGumSvgExportService().ExportSvg(new SvgExportRequest
+        {
+            ProjectPath = projectPath,
+            ElementName = elementName,
+            OutputPath = outputPath,
+        });
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        DrawElementTags.Any(File.ReadAllText(outputPath).Contains).ShouldBeTrue();
+    }
+
     private string ExportScreenWithInstance(string baseType, params VariableSave[] instanceVariables) =>
         ExportScreenWithInstance(baseType, standardsToSeed: null, instanceVariables);
 

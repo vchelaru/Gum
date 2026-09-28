@@ -71,8 +71,8 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - A list's own arrow-key navigation runs before a bubbling `KeyDown` handler and marks the event
   handled whatever the modifiers, so an Alt+arrow hotkey on a `ListBox` needs
   `AddHandler(KeyDownEvent, ..., RoutingStrategies.Tunnel)`.
-- `window.CaptureRenderedFrame()` returns a bitmap of a headless window (the test app runs Skia, not
-  the headless stub); save it as a PNG and read it to check what a view actually drew.
+- Read pixels only through `HeadlessWindowDriver` (`PixelAt`, `PixelsAlong`, `SaveFrame`), never
+  `window.CaptureRenderedFrame()` directly: a single render tick can return the previous frame.
 - `Gum.Avalonia.Tests` runs one Avalonia app for the whole assembly
   (`AvaloniaTestIsolation(PerAssembly)` in `TestAppBuilder.cs`); keep it. A test that changes
   app-level state (`Application.Current.Resources`, theme, accent) restores it. A window a test
