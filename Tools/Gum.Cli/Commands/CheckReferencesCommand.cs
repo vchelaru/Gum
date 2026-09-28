@@ -98,7 +98,7 @@ public static class CheckReferencesCommand
 
     private static string? GetElementSavePath(string projectDirectory, ElementSave element, bool isJsonFormat)
     {
-        string subfolder = element switch
+        string? subfolder = element switch
         {
             ScreenSave => ElementReference.ScreenSubfolder,
             ComponentSave => ElementReference.ComponentSubfolder,
@@ -143,7 +143,7 @@ public static class CheckReferencesCommand
         bool isJsonFormat = GumProjectSave.IsJsonFormat(projectFilePath);
         foreach (ElementSave element in modified)
         {
-            string elementPath = GetElementSavePath(projectDirectory, element, isJsonFormat);
+            string? elementPath = GetElementSavePath(projectDirectory, element, isJsonFormat);
             if (!string.IsNullOrEmpty(elementPath))
             {
                 element.Save(elementPath, useCompact);

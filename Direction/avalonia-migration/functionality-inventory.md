@@ -27,7 +27,7 @@
 - FILE-005 Save Project
 - FILE-006 Save All
 - FILE-007 Export > Export as Image
-- FILE-008 Export > Export to SVG. tested: SvgExportMenuLogicTests
+- FILE-008 Export > Export to SVG. tested: SvgExportMenuLogicTests, FileMenuScenarioTests
 - FILE-009 Auto-save after each edit. tested: UndoManagerTests, VariableScenarioTests
 - FILE-010 Last project reopens on launch
 - FILE-011 Legacy project upgrades on load. tested: OldProjectLoadTests

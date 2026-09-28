@@ -261,6 +261,36 @@ public class FileMenuScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "FILE-008")]
+    public void ExportToSvg_WritesAnSvgOfTheSelectedElement()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        tree.Project.AddInstance(card, "Box", "Rectangle");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(card));
+        string folder = Path.Combine(Path.GetTempPath(), "GumFileMenuScenarios", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        string svg = Path.Combine(folder, "Card.svg");
+        try
+        {
+            tree.Dialogs.AnswerNextSaveFile(svg);
+
+            tree.PickMainMenu("File", "Export", "Export Card to SVG");
+
+            File.Exists(svg).ShouldBeTrue(tree.OutputWritten);
+            File.ReadAllText(svg).ShouldContain("<svg");
+            tree.OutputWritten.ShouldContain("SVG written to: " + svg);
+        }
+        finally
+        {
+            TryDeleteFolder(folder);
+        }
+
+        tree.AssertOracles();
+    }
+
     [SkippableFact]
     [Trait("Feature", "FILE-007")]
     public void ExportAsImage_WritesTheCanvasToAPng_AndPutsTheEditorsGuidesBack() =>

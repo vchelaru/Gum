@@ -51,7 +51,7 @@ internal class SvgExportCommand : ISvgExportCommand
         string? gumCliPath = FindGumCliPath();
         if (gumCliPath == null)
         {
-            _guiCommands.PrintOutput("Could not find gumcli. Expected in GumCli subfolder next to Gum.exe.");
+            _guiCommands.PrintOutput($"SVG export needs gumcli, which was not found at {ExpectedGumCliPath}.");
             return;
         }
 
@@ -61,14 +61,14 @@ internal class SvgExportCommand : ISvgExportCommand
 
     /// <summary>
     /// Locates the bundled gumcli's managed assembly, expected at <c>GumCli/gumcli.dll</c> next to
-    /// the tool (published framework-dependent - see build-and-release.yml). Returns null if it
+    /// the tool (staged framework-dependent by the head's StageGumCli build target). Returns null if it
     /// does not exist. Virtual so tests can supply a deterministic result.
     /// </summary>
-    protected virtual string? FindGumCliPath()
-    {
-        string cliPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GumCli", "gumcli.dll");
-        return File.Exists(cliPath) ? cliPath : null;
-    }
+    protected virtual string? FindGumCliPath() =>
+        File.Exists(ExpectedGumCliPath) ? ExpectedGumCliPath : null;
+
+    private static string ExpectedGumCliPath =>
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GumCli", "gumcli.dll");
 
     /// <summary>
     /// Runs gumcli's SVG export in-process and prints the result. Loads <paramref name="gumCliPath"/>

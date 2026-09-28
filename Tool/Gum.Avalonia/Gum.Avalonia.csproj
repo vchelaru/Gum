@@ -91,6 +91,9 @@
 		<!-- The Animations tab's neutral core; this head adds the Avalonia view (Plugins/StateAnimation). -->
 		<ProjectReference Include="..\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj" />
 		<ProjectReference Include="..\..\AvaloniaDataUi\AvaloniaDataUi.csproj" />
+		<!-- Not compiled against (gumcli runs isolated, see StageGumCli below); referenced so it is
+		     restored and built with the head. -->
+		<ProjectReference Include="..\..\Tools\Gum.Cli\Gum.Cli.csproj" ReferenceOutputAssembly="false" Private="false" AdditionalProperties="$(GumCliProperties)" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -143,5 +146,30 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
 	</ItemGroup>
+
+	<!--
+		File > Export to SVG loads GumCli/gumcli.dll from beside the tool (SvgExportCommand), so every
+		build of the head stages gumcli there, framework-dependent, and a publish of the head takes that
+		folder along. This is the only place the GumCli layout is defined: the release workflow's
+		`dotnet publish` of the head and the test project's copy of the head's output both get it here.
+		The ProjectReference above restores and builds gumcli with the head (never self-contained: it
+		runs in the head's process on the head's runtime); StageGumCli then publishes that build with
+		NoBuild into the folder.
+	-->
+	<PropertyGroup>
+		<GumCliProject>$(MSBuildThisFileDirectory)..\..\Tools\Gum.Cli\Gum.Cli.csproj</GumCliProject>
+		<GumCliProperties>SelfContained=false</GumCliProperties>
+	</PropertyGroup>
+
+	<Target Name="StageGumCli" AfterTargets="Build">
+		<MSBuild Projects="$(GumCliProject)" Targets="Publish" Properties="$(GumCliProperties);NoBuild=true;PublishDir=$([System.IO.Path]::Combine('$(ProjectDir)', '$(OutDir)'))GumCli/" />
+	</Target>
+
+	<Target Name="PublishGumCli" AfterTargets="ComputeResolvedFilesToPublishList">
+		<ItemGroup>
+			<_StagedGumCliFile Include="$(OutDir)GumCli/**/*" />
+			<ResolvedFileToPublish Include="@(_StagedGumCliFile)" RelativePath="GumCli/%(_StagedGumCliFile.RecursiveDir)%(_StagedGumCliFile.Filename)%(_StagedGumCliFile.Extension)" CopyToPublishDirectory="PreserveNewest" />
+		</ItemGroup>
+	</Target>
 
 </Project>
