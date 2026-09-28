@@ -163,7 +163,10 @@ public abstract class PluginBase : IPlugin
     /// </summary>
     public event Action<ElementSave>? ElementImported;
     /// <summary>
-    /// Raised when an element is duplicated. First argument is the old element, second is the new.
+    /// Raised when an element is duplicated, before the new element is added to the project, so a
+    /// plugin can copy the element's sidecar files (animations, code settings) in time for
+    /// <see cref="ElementAdd"/> handlers to see them. First argument is the old element, second is
+    /// the new.
     /// </summary>
     public event Action<ElementSave, ElementSave>? ElementDuplicate;
     public event Action<ElementSave>? ElementReloaded;

@@ -181,6 +181,45 @@ public class FormsAndImportScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "DLG-023")]
+    public void ImportGumx_AStandardThatDiffersFromTheProjects_ShowsItsDifferences_AndCancelChangesNothing()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.Standard("Text").GetDefaultStateOrThrow().SetValue("FontSize", 99, "int");
+        tree.SaveAll();
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        using TempThemeCopy source = new TempThemeCopy("Standard");
+        tree.Dialogs.AnswerNextOpenFile(source.ProjectFile);
+        string title = "";
+        string shown = "";
+        tree.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            dialog.BrowseCommand.Execute(null);
+            tree.WaitUntil(() => dialog.IsPreviewLoaded, AsyncWork, "the .gumx preview");
+            // Differences are listed for the standards the picked elements bring in.
+            Leaf(dialog, "Controls/ButtonStandard").IsChecked = true;
+            ImportTreeNodeViewModel text = Leaf(dialog, "Text");
+            tree.WaitUntil(() => text.HasStandardDiffRows, AsyncWork, "the preview to list Text's differences");
+            // What the row's differences button runs.
+            dialog.ShowStandardDiffCommand.Execute(text);
+            return false;
+        });
+        tree.Dialogs.AnswerNextInWindow<StandardDiffDetailsViewModel>(window =>
+        {
+            title = window.Title ?? "";
+            shown = window.Text();
+            window.Click(window.AffirmativeButton);
+        });
+
+        tree.PickMainMenu("Content", "Import", ".gumx…");
+
+        title.ShouldStartWith("Text");
+        shown.ShouldContain("FontSize");
+        tree.SnapshotFiles().ShouldMatch(start, "cancelling the import changes no file");
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "CONT-008")]
     [Trait("Feature", "EDIT-001")]
     [Trait("Feature", "EDIT-002")]

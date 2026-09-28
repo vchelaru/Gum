@@ -105,6 +105,31 @@ public class EditTrackingTextBoxTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public void Enter_WhoseCommitMovesFocus_RequestsNoSecondCommit()
+    {
+        // A commit on Enter can open a dialog (a read-only file, copy a file into the project?),
+        // which takes focus while the editor's Enter handler is still running.
+        (Window window, EditTrackingTextBox field, TextBox elsewhere) = Show("1");
+        int requests = 0;
+        field.EditCommitRequested += (_, _) => requests++;
+        // As an editor registers its Enter commit: a tunnel handler added after the field is built.
+        field.AddHandler(InputElement.KeyDownEvent, (_, e) =>
+        {
+            if (e.Key == Key.Enter)
+            {
+                elsewhere.Focus();
+            }
+        }, RoutingStrategies.Tunnel);
+        field.Focus();
+        window.KeyTextInput("5");
+
+        window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+
+        requests.ShouldBe(0);
+        window.Close();
+    }
+
     private static (Window Window, EditTrackingTextBox Field, TextBox Elsewhere) Show(string text)
     {
         EditTrackingTextBox field = new EditTrackingTextBox { Text = text };
