@@ -214,6 +214,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         this.ElementSelected += HandleElementSelected;
         this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element));
         this.ElementAdd += HandleElementAdd;
+        this.ElementDuplicate += (oldElement, newElement) => _elementSettingsManager.CopySettings(oldElement, newElement);
         this.ElementDelete += HandleElementDeleted;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
 
@@ -293,7 +294,15 @@ public abstract class CodeOutputPluginBase : PluginBase
     private void HandleElementAdd(ElementSave element)
     {
         HandleRefreshAndExport();
-        GenerateCodeForElement(showPopups: false, element);
+
+        // The new element's own settings, not the tab's: the tab still shows whichever element was
+        // selected before, and its Generated File Name would send this element's code into that file.
+        // A duplicate's settings were already copied by ElementDuplicate, which fires before the add.
+        CodeOutputElementSettings settings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
+        if (settings.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange)
+        {
+            GenerateCodeForElement(showPopups: false, element, settings);
+        }
     }
 
     private void LoadCodeSettingsFile(ElementSave? element) => _controller?.LoadCodeSettingsFile(element);

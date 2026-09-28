@@ -1270,6 +1270,9 @@ public class CopyPasteLogic : ICopyPasteLogic
             toAdd.Name = StringFunctions.IncrementNumberAtEnd(toAdd.Name);
         }
 
+        // Before the add, so the copy's sidecar files exist when ElementAdd handlers run.
+        _copyPastePluginNotifier.ElementDuplicate(CopiedData.CopiedElement, toAdd);
+
         if (toAdd is ScreenSave screenToAdd)
         {
             _projectCommands.AddScreen(screenToAdd);
@@ -1280,8 +1283,6 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
 
         _selectedState.SelectedElement = toAdd;
-
-        _copyPastePluginNotifier.ElementDuplicate(CopiedData.CopiedElement, toAdd);
 
         _fileCommands.TryAutoSaveElement(toAdd);
         _fileCommands.TryAutoSaveProject();

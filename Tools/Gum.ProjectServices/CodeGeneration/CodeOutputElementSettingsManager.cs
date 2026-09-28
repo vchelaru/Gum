@@ -31,6 +31,31 @@ public class CodeOutputElementSettingsManager
     }
 
     /// <summary>
+    /// Gives a duplicated element the source element's settings. The Generated File Name override is
+    /// cleared, since keeping it would make both elements generate into the same file. Does nothing
+    /// when the source has no settings file.
+    /// </summary>
+    public void CopySettings(ElementSave source, ElementSave copy)
+    {
+        FilePath? sourceFile = GetCodeSettingsFilePath(source);
+        FilePath? copyFile = GetCodeSettingsFilePath(copy);
+        if (sourceFile == null || copyFile == null || !sourceFile.Exists())
+        {
+            return;
+        }
+
+        CodeOutputElementSettings settings = LoadOrCreateSettingsFor(source);
+        settings.GeneratedFileName = string.Empty;
+
+        // A paste into a folder can land before the copy's own XML has created that folder.
+        if (copyFile.GetDirectoryContainingThis() is { } directory)
+        {
+            System.IO.Directory.CreateDirectory(directory.FullPath);
+        }
+        WriteSettingsForElement(copy, settings);
+    }
+
+    /// <summary>
     /// Gets the path to the element's .codsj settings file, which sits alongside the element's XML,
     /// or null when the element has no resolvable XML path. Public so delete/rename reconciliation
     /// outside this assembly can move or remove the file along with the element.
