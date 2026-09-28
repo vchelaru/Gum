@@ -1,4 +1,6 @@
-﻿using Gum.Managers;
+﻿using System;
+using Gum.DataTypes;
+using Gum.Managers;
 using Gum.ToolStates;
 using Gum.Commands;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -23,14 +25,8 @@ public class CommonControlLogic
         _setVariableLogic = setVariableLogic;
     }
 
-    bool SelectionInheritsFromText()
-    {
-        if(_selectedState.SelectedInstance != null)
-        {
-            return ObjectFinder.Self.GetRootStandardElementSave(_selectedState.SelectedInstance)?.Name == "Text";
-        }
-        return false;
-    }
+    static bool InheritsFromText(InstanceSave instance) =>
+        ObjectFinder.Self.GetRootStandardElementSave(instance)?.Name == "Text";
     public void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits, float value = 0f)
     {
         if(value == 0f)
@@ -42,10 +38,9 @@ public class CommonControlLogic
         SetAndCallReact("XOrigin", alignment, "HorizontalAlignment");
         SetAndCallReact("XUnits", xUnits, typeof(Gum.Managers.PositionUnitType).Name);
 
-        if (SelectionInheritsFromText())
-        {
-            SetAndCallReact("HorizontalAlignment", alignment, "HorizontalAlignment");
-        }
+        // Decided per instance: a mixed selection aligns each Text's text and gives the other
+        // instances no HorizontalAlignment, which they do not use.
+        SetAndCallReact("HorizontalAlignment", alignment, "HorizontalAlignment", InheritsFromText);
 
     }
 
@@ -60,14 +55,20 @@ public class CommonControlLogic
         SetAndCallReact("YOrigin", alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
         SetAndCallReact("YUnits", yUnits, typeof(PositionUnitType).Name);
 
-        if (SelectionInheritsFromText())
-        {
-            SetAndCallReact("VerticalAlignment", alignment, "VerticalAlignment");
-        }
+        // Decided per instance, as for HorizontalAlignment above.
+        SetAndCallReact("VerticalAlignment", alignment, "VerticalAlignment", InheritsFromText);
 
     }
 
-    public void SetAndCallReact(string unqualified, object value, string typeName)
+    public void SetAndCallReact(string unqualified, object value, string typeName) =>
+        SetAndCallReact(unqualified, value, typeName, instanceFilter: null);
+
+    /// <summary>
+    /// Writes the variable on each selected instance that is unlocked and passes
+    /// <paramref name="instanceFilter"/>. With no instance selected it writes the element's own
+    /// variable, but only without a filter, since a filter marks an instance-only variable.
+    /// </summary>
+    private void SetAndCallReact(string unqualified, object value, string typeName, Func<InstanceSave, bool>? instanceFilter)
     {
         // The Alignment tab is only shown while a state is selected.
         if (_selectedState.SelectedStateSave is not { } state)
@@ -81,7 +82,7 @@ public class CommonControlLogic
             handledByInstance = true;
             // A locked instance keeps its position and size. It still counts as handled so the
             // write does not fall through to the element.
-            if (instance.Locked)
+            if (instance.Locked || instanceFilter?.Invoke(instance) == false)
             {
                 continue;
             }
@@ -105,7 +106,7 @@ public class CommonControlLogic
             ResumeSetVariablePersistOptions();
         }
 
-        if(!handledByInstance)
+        if(!handledByInstance && instanceFilter == null)
         {
             if (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null)
             {
