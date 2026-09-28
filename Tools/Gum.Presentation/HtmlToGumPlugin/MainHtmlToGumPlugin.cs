@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -50,7 +49,11 @@ public class MainHtmlToGumPlugin : PluginBase
         _selectedState = selectedState;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
+        ProcessRunner = new HtmlConverterProcessRunner();
     }
+
+    /// <summary>Runs Node.js and the converter; a test replaces it to stand in for the converter.</summary>
+    internal IHtmlConverterProcessRunner ProcessRunner { get; set; }
 
     public override string FriendlyName => "HTML to Gum";
     public override Version Version => new(0, 3, 0);
@@ -120,7 +123,7 @@ public class MainHtmlToGumPlugin : PluginBase
             return;
         }
 
-        if (!TryFindNode(out string nodePath, out string nodeHint))
+        if (!ProcessRunner.TryFindNode(out string nodePath, out string nodeHint))
         {
             _dialogService.ShowMessage(
                 "Node.js was not found on PATH.\n\n" +
@@ -165,7 +168,7 @@ public class MainHtmlToGumPlugin : PluginBase
                 ReportStatus("Installing converter dependencies (first run only)…");
                 (string shell, string shellArguments) = ShellCommand.Build("npm install");
                 (int installExitCode, string installStdout, string installStderr) = await recorder
-                    .MeasureAsync("npm install", () => RunProcessAsync(
+                    .MeasureAsync("npm install", () => ProcessRunner.RunAsync(
                         shell, shellArguments, converterDir, progress))
                     .ConfigureAwait(true);
 
@@ -189,7 +192,7 @@ public class MainHtmlToGumPlugin : PluginBase
 
             ReportStatus($"{(useTs ? "tsx convert.ts" : "node convert.mjs")} → {screenName}");
             (int exitCode, string stdout, string stderr) = await recorder
-                .MeasureAsync("converter process", () => RunProcessAsync(nodePath, args, converterDir, progress))
+                .MeasureAsync("converter process", () => ProcessRunner.RunAsync(nodePath, args, converterDir, progress))
                 .ConfigureAwait(true);
 
             if (exitCode != 0)
@@ -320,87 +323,6 @@ public class MainHtmlToGumPlugin : PluginBase
             sb.AppendLine(string.Join("\n", tail));
         }
         return sb.ToString();
-    }
-
-    private static bool TryFindNode(out string nodePath, out string hint)
-    {
-        nodePath = "node";
-        hint = "";
-        try
-        {
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = "node",
-                Arguments = "-v",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-            };
-            using Process? proc = Process.Start(psi);
-            if (proc is null)
-            {
-                hint = "Process.Start returned null.";
-                return false;
-            }
-            string output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit(5000);
-            if (proc.ExitCode != 0)
-            {
-                hint = $"node -v exited {proc.ExitCode}.";
-                return false;
-            }
-            hint = $"Found {output}";
-            return true;
-        }
-        catch (Exception ex)
-        {
-            hint = ex.Message;
-            return false;
-        }
-    }
-
-    private static Task<(int exitCode, string stdout, string stderr)> RunProcessAsync(
-        string fileName, string arguments, string workingDirectory, IProgress<string> progress)
-    {
-        return Task.Run(() =>
-        {
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                WorkingDirectory = workingDirectory,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-            };
-
-            using Process proc = Process.Start(psi)
-                ?? throw new InvalidOperationException("Failed to start node.");
-
-            StringBuilder stdout = new StringBuilder();
-            StringBuilder stderr = new StringBuilder();
-            proc.OutputDataReceived += (_, ev) =>
-            {
-                if (ev.Data is null) return;
-                stdout.AppendLine(ev.Data);
-                string line = ev.Data.Trim();
-                if (line.Length > 0 && line.Length < 120)
-                {
-                    progress.Report(line);
-                }
-            };
-            proc.ErrorDataReceived += (_, ev) =>
-            {
-                if (ev.Data is null) return;
-                stderr.AppendLine(ev.Data);
-            };
-            proc.BeginOutputReadLine();
-            proc.BeginErrorReadLine();
-            proc.WaitForExit();
-            return (proc.ExitCode, stdout.ToString(), stderr.ToString());
-        });
     }
 
     private static string SummarizeConverterLog(string stdout, int maxLines = 12)

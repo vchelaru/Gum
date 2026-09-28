@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
@@ -64,6 +65,80 @@ public class DragDropScenarioTests
         button.DefaultState.GetValue("B.Parent").ShouldBe("Panel");
         button.DefaultState.GetValue("C.Parent").ShouldBe("Panel");
         tree.ChildTexts(tree.NodeFor(button.GetInstance("Panel")!)).ShouldBe(new[] { "A", "C", "B" });
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DRAG-008")]
+    public void DropIndicator_ShowsWhereTheDropLands_BeforeIntoFirstChildAndAfter()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Project.AddInstance(button, "A", "Rectangle");
+        tree.Project.AddInstance(button, "B", "Rectangle");
+        tree.Project.AddInstance(button, "Panel", "Container");
+        tree.Project.AddInstance(button, "X", "Rectangle");
+        tree.Drag(tree.NodeFor(button.GetInstance("X")!), tree.NodeFor(button.GetInstance("Panel")!));
+        tree.Click(tree.NodeFor(button));
+        GumTreeNode a = tree.NodeFor(button.GetInstance("A")!);
+        GumTreeNode panel = tree.NodeFor(button.GetInstance("Panel")!);
+        GumTreeNode x = tree.NodeFor(button.GetInstance("X")!);
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        const double indentPerLevel = 16;
+
+        tree.BeginDrag(tree.NodeFor(button.GetInstance("B")!));
+
+        // The top of A's row: a line along its top edge, flush with its highlight, and Button washed as the parent.
+        tree.DragOver(a, fraction: 0.1).ShouldBe(DragDropEffects.Move);
+        Rect aRow = tree.RowHighlightBounds(a);
+        Rect line = tree.DropIndicatorBounds.ShouldNotBeNull();
+        line.Left.ShouldBe(aRow.Left, tolerance: 1.5);
+        line.Center.Y.ShouldBe(aRow.Top, tolerance: 2);
+        tree.DropParentHighlightBounds.ShouldNotBeNull().Top.ShouldBe(tree.RowHighlightBounds(tree.NodeFor(button)).Top, tolerance: 1.5);
+
+        // The middle of Panel's row: an outline around the row, no separate parent wash.
+        tree.DragOver(panel, fraction: 0.5).ShouldBe(DragDropEffects.Move);
+        Rect panelRow = tree.RowHighlightBounds(panel);
+        Rect outline = tree.DropIndicatorBounds.ShouldNotBeNull();
+        outline.Left.ShouldBe(panelRow.Left, tolerance: 1.5);
+        outline.Top.ShouldBe(panelRow.Top, tolerance: 2);
+        outline.Height.ShouldBeGreaterThan(line.Height);
+        tree.DropParentHighlightBounds.ShouldBeNull();
+
+        // The bottom of the expanded Panel: its first child, so the line is one level in and Panel is washed.
+        tree.DragOver(panel, fraction: 0.9).ShouldBe(DragDropEffects.Move);
+        Rect firstChild = tree.DropIndicatorBounds.ShouldNotBeNull();
+        firstChild.Left.ShouldBe(panelRow.Left + indentPerLevel, tolerance: 1.5);
+        firstChild.Center.Y.ShouldBe(panelRow.Bottom, tolerance: 2);
+        tree.DropParentHighlightBounds.ShouldNotBeNull().Top.ShouldBe(panelRow.Top, tolerance: 1.5);
+
+        // The bottom of X, which has no children: after it, at X's own level.
+        tree.DragOver(x, fraction: 0.9).ShouldBe(DragDropEffects.Move);
+        Rect xRow = tree.RowHighlightBounds(x);
+        Rect after = tree.DropIndicatorBounds.ShouldNotBeNull();
+        after.Left.ShouldBe(xRow.Left, tolerance: 1.5);
+        after.Center.Y.ShouldBe(xRow.Bottom, tolerance: 2);
+
+        // Over the dragged row itself: nothing to drop on, and no indicator.
+        tree.DragOver(tree.NodeFor(button.GetInstance("B")!), fraction: 0.5).ShouldBe(DragDropEffects.None);
+        tree.DropIndicatorBounds.ShouldBeNull();
+
+        tree.CancelDrag();
+        tree.DropIndicatorBounds.ShouldBeNull();
+        tree.DropParentHighlightBounds.ShouldBeNull();
+        tree.SnapshotFiles().ShouldMatch(start, "a cancelled drag changes no file");
+
+        // Dropped where the first-child line showed: B becomes Panel's first child.
+        tree.BeginDrag(tree.NodeFor(button.GetInstance("B")!));
+        tree.DropOn(panel, fraction: 0.9).ShouldBe(DragDropEffects.Move);
+        button.DefaultState!.GetValue("B.Parent").ShouldBe("Panel");
+        tree.ChildTexts(tree.NodeFor(button.GetInstance("Panel")!)).ShouldBe(new[] { "B", "X" });
+        tree.DropIndicatorBounds.ShouldBeNull();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the drop should restore the files");
+        tree.Redo();
+        tree.ChildTexts(tree.NodeFor(button.GetInstance("Panel")!)).ShouldBe(new[] { "B", "X" });
 
         tree.AssertOracles();
     }
