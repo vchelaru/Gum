@@ -34,13 +34,19 @@ Use this per-component shape inside a license group:
     <name> — <copyright holder>
         <project / repo URL>
         NuGet: <package id>, <package id>, <Prefix>.*
+        Embedded: <file name>
         [optional note, e.g. native binary vs. managed wrapper]
+
+A vendored binary that no NuGet package brings in (an .exe/.dll/.so/.dylib
+embedded as a resource in one of Gum's own assemblies) goes on an "Embedded:"
+line instead of a "NuGet:" line.
 
 ThirdPartyNoticesCoverageTests (Gum.Avalonia.Tests, for Gum.deps.json) and
 the matching test in Gum.Cli.Tests (for gumcli.deps.json) fail when a package
 in the shipped dependency graph is not named on a "NuGet:" line. Microsoft.*,
 System.* and runtime.* packages are covered by the .NET entry and are not
-checked individually.
+checked individually. The same tests fail when a Gum assembly in the package
+embeds an .exe/.dll/.so/.dylib resource that no "Embedded:" line names.
 
 Note the distinction between a package's declared NuGet license and what it
 actually carries: a managed wrapper may be MIT while the native binary it
@@ -281,6 +287,18 @@ raylib (native: raylib.dll / libraylib) — Copyright (c) 2013-2026 Ramon
 Raylib-cs — Copyright (C) 2018-2025 raylib-cs
     https://github.com/raylib-cs/raylib-cs
     NuGet: Raylib-cs
+
+AngelCode Bitmap Font Generator (BMFont, native: bmfont.exe) — Copyright (c)
+    2004-2025 Andreas Jonsson
+    https://www.angelcode.com/products/bmfont/
+    Embedded: bmfont.exe
+    Embedded in Gum.ProjectServices.dll (tool and GumCli) and extracted on
+    first use to generate bitmap fonts; runs on Windows only. The executable
+    statically links zlib 1.2.8 (Copyright (C) 1995-2013 Jean-loup Gailly and
+    Mark Adler, zlib License), libpng 1.6.19 (Copyright (c) 1998-2015 Glenn
+    Randers-Pehrson et al., libpng License) and the Independent JPEG Group's
+    libjpeg (IJG License). This software is based in part on the work of the
+    Independent JPEG Group.
 
 --------------------------------------------------------------------------------
 University of Illinois/NCSA Open Source License (LLVM Release License)
@@ -1048,6 +1066,12 @@ GNU Lesser General Public License v2.1 (vkd3d-shader):
 GNU Library General Public License v2 (OpenAL Soft):
     https://www.gnu.org/licenses/old-licenses/lgpl-2.0.txt
     https://github.com/kcat/openal-soft/blob/master/COPYING
+
+libpng License (libpng 1.6.19, inside bmfont.exe):
+    http://www.libpng.org/pub/png/src/libpng-LICENSE.txt
+
+Independent JPEG Group License (libjpeg, inside bmfont.exe):
+    https://jpegclub.org/reference/libjpeg-license/
 
 Bitstream Vera / DejaVu Fonts License (DejaVu Sans Mono):
     https://dejavu-fonts.github.io/License.html
