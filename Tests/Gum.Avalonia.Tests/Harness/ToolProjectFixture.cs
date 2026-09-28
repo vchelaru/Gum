@@ -83,7 +83,18 @@ internal sealed class ToolProjectFixture : IDisposable
     public GumProjectSave Project { get; private set; }
 
     /// <summary>The project file's full path.</summary>
-    public string ProjectFilePath { get; }
+    public string ProjectFilePath { get; private set; }
+
+    /// <summary>
+    /// Follows the tool to the project file it now edits in the same folder (Convert to JSON opens
+    /// the .gumj it wrote), so <see cref="SaveAndReload"/> and the oracles use that file.
+    /// </summary>
+    public void FollowProjectFile(string projectFilePath)
+    {
+        ProjectFilePath = projectFilePath;
+        Project = Services.GetRequiredService<IProjectManager>().GumProjectSave
+            ?? throw new InvalidOperationException("The tool has no project loaded.");
+    }
 
     /// <summary>The folder <see cref="Project"/> lives in.</summary>
     public string ProjectFolder { get; }

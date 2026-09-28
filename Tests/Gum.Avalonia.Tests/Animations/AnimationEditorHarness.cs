@@ -106,6 +106,9 @@ internal sealed class AnimationEditorHarness : IDisposable
     /// <summary>The View menu entry this harness's plugin added ("View Animations" / "Hide Animations").</summary>
     public MenuItemModel ViewMenuItem => _menuItemAdded ?? throw new InvalidOperationException("The plugin added no View menu entry.");
 
+    /// <summary>The temp project, for another tab's harness over the same project (the Variables tab).</summary>
+    public ToolProjectFixture Fixture => _fixture;
+
     /// <summary>The scripted dialogs; queue an answer before the gesture that opens one.</summary>
     public ScriptedDialogService Dialogs => _fixture.Dialogs;
 
