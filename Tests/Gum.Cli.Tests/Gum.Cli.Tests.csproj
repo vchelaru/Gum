@@ -29,4 +29,10 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- ThirdPartyNoticesCoverageTests checks gumcli.deps.json against the notices file. -->
+  <ItemGroup>
+    <Compile Include="..\Shared\ThirdPartyNoticesCoverage.cs" Link="Shared\ThirdPartyNoticesCoverage.cs" />
+    <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

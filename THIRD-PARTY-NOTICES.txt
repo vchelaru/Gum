@@ -3,41 +3,51 @@ THIRD-PARTY NOTICES
 ================================================================================
 
 The Gum UI tool is distributed under the MIT License (see the root LICENSE
-file). The Gum UI tool and the Gum command-line tool also redistribute the
-third-party components listed below, which are provided under their own
-licenses. Those licenses are reproduced (or referenced) here to satisfy their
-attribution / notice requirements.
+file). The Gum release packages (Gum-win-x64.zip, Gum-linux-x64.tar.xz,
+Gum-osx-x64.tar.xz, Gum-osx-arm64.tar.xz) contain the Avalonia tool, the
+GumPreview runtime host (Preview-Aot/), the Gum command-line tool (GumCli/),
+the tool plugins (Plugins/) and the Forms theme content (Content/). They also
+redistribute the third-party components listed below, which are provided under
+their own licenses. Those licenses are reproduced (or referenced) here to
+satisfy their attribution / notice requirements.
 
-This file documents components that ship as binaries in the *tool* distribution
-(the editor and the CLI). The runtime NuGet packages Gum publishes
-(Gum.MonoGame, KniGum, FnaGum, Gum.SkiaSharp, Gum.Raylib, etc.) declare their
-own third-party dependencies through NuGet; those are fetched and governed by
-their own licenses on the consumer's machine and are not bundled by Gum. In
-particular, the FreeType font-generation chain is tool-only and never reaches
-the runtime packages, so games consuming the runtime packages take on no
-obligation from it.
+This file documents components that ship in the *tool* distribution. The
+runtime NuGet packages Gum publishes (Gum.MonoGame, KniGum, FnaGum,
+Gum.SkiaSharp, Gum.Raylib, etc.) declare their own third-party dependencies
+through NuGet; those are fetched and governed by their own licenses on the
+consumer's machine and are not bundled by Gum. In particular, the FreeType
+font-generation chain is tool-only and never reaches the runtime packages, so
+games consuming the runtime packages take on no obligation from it.
 
 --------------------------------------------------------------------------------
 HOW TO ADD A NEW COMPONENT
 --------------------------------------------------------------------------------
 When you add a dependency that is redistributed with the Gum tool (a NuGet
 package or vendored DLL whose managed assembly or native binary ends up in the
-build output), add it to the appropriate license group below. If it introduces
-a license not already represented, add that license's full text (or a canonical
-reference for long, well-known licenses) to the "LICENSE TEXTS" section.
+release package), add it to the appropriate license group below and list its
+NuGet package ID(s) on the entry's "NuGet:" line. If it introduces a license
+not already represented, add that license's full text (or a canonical reference
+for long, well-known licenses) to the "LICENSE TEXTS" section.
 
 Use this per-component shape inside a license group:
 
     <name> — <copyright holder>
         <project / repo URL>
+        NuGet: <package id>, <package id>, <Prefix>.*
         [optional note, e.g. native binary vs. managed wrapper]
+
+ThirdPartyNoticesCoverageTests (Gum.Avalonia.Tests, for Gum.deps.json) and
+the matching test in Gum.Cli.Tests (for gumcli.deps.json) fail when a package
+in the shipped dependency graph is not named on a "NuGet:" line. Microsoft.*,
+System.* and runtime.* packages are covered by the .NET entry and are not
+checked individually.
 
 Note the distinction between a package's declared NuGet license and what it
 actually carries: a managed wrapper may be MIT while the native binary it
 bundles is under a different license. Credit the binary's real license, not
-just the wrapper's nuspec value. The canonical examples below are SkiaSharp
-(MIT wrapper / BSD-3 native Skia) and FreeTypeSharp (MIT wrapper / FreeType-
-License native FreeType).
+just the wrapper's nuspec value. Examples below: SkiaSharp (MIT wrapper /
+BSD-3 native Skia), FreeTypeSharp (MIT wrapper / FreeType-License native
+FreeType), ShadowDusk.HLSL (MIT wrapper / LGPL-2.1 native vkd3d-shader).
 
 ================================================================================
 COMPONENT INVENTORY (grouped by license)
@@ -46,77 +56,143 @@ COMPONENT INVENTORY (grouped by license)
 --------------------------------------------------------------------------------
 MIT License
 --------------------------------------------------------------------------------
-.NET runtime & Microsoft libraries — © Microsoft Corporation / .NET Foundation
+.NET runtime & Microsoft libraries — © .NET Foundation and Contributors /
+    Microsoft Corporation
     https://github.com/dotnet
-    Covers Roslyn (Microsoft.CodeAnalysis.*), Microsoft.Extensions.*,
-    Microsoft.CSharp, Microsoft.Win32.SystemEvents, Microsoft.Xaml.Behaviors.Wpf,
-    and the System.* libraries shipped alongside the tool (System.CodeDom,
-    System.Collections.Immutable, System.ComponentModel.Composition,
-    System.Drawing.Common, System.Management, System.Reflection.Metadata,
-    System.Reflection.MetadataLoadContext, System.Resources.Extensions,
-    System.Text.Json, System.Text.Encodings.Web, and related packages).
+    NuGet: Microsoft.*, System.*, runtime.*
+    The release packages are self-contained, so they carry the .NET runtime
+    (coreclr, the shared framework System.* / Microsoft.* assemblies and their
+    native helpers). Also covers Roslyn (Microsoft.CodeAnalysis.*, in GumCli),
+    Microsoft.Extensions.*, System.CommandLine, System.ComponentModel.Composition
+    and System.Reflection.MetadataLoadContext. The .NET runtime's own third-party
+    notices (code it incorporates from other projects) are published at:
+        https://github.com/dotnet/runtime/blob/main/THIRD-PARTY-NOTICES.TXT
 
-BrotliSharpLib — © 2017-2019 master131
+Avalonia — Copyright (c) AvaloniaUI OÜ
+    https://github.com/AvaloniaUI/Avalonia
+    NuGet: Avalonia, Avalonia.Controls.ColorPicker, Avalonia.Desktop,
+        Avalonia.Fonts.Inter, Avalonia.FreeDesktop, Avalonia.Native,
+        Avalonia.Remote.Protocol, Avalonia.Skia, Avalonia.Themes.Fluent,
+        Avalonia.Win32, Avalonia.X11
+    Includes the native libAvaloniaNative.dylib (macOS). Avalonia's own
+    third-party notices (code it incorporates from WPF, the Silverlight
+    Toolkit and others) are published at:
+        https://github.com/AvaloniaUI/Avalonia/blob/master/NOTICE.md
+    Avalonia.Fonts.Inter embeds the Inter font (SIL OFL 1.1, see below).
+
+Apos.Shapes / Apos.Shapes.KNI — Copyright (c) 2021 Jean-David Moisan
+    https://github.com/Apostolique/Apos.Shapes
+    NuGet: Apos.Shapes, Apos.Shapes.KNI
+
+BrotliSharpLib — Copyright (c) 2017-2019 master131
     https://github.com/master131/BrotliSharpLib
+    NuGet: BrotliSharpLib
 
-CommunityToolkit.Mvvm — © .NET Foundation and Contributors
+CommunityToolkit.Mvvm — (c) .NET Foundation and Contributors
     https://github.com/CommunityToolkit/dotnet
-
-ControlzEx — © 2015-2025 Jan Karger, Bastian Schmidt, James Willock
-    https://github.com/ControlzEx/ControlzEx
-
-DynamicExpresso.Core — © Davide Icardi
-    https://github.com/dynamicexpresso/DynamicExpresso
+    NuGet: CommunityToolkit.Mvvm
 
 ExCSS — © Tyler Brinks
     https://github.com/TylerBrinks/ExCSS
+    NuGet: ExCSS
+    (Copyright line not retrieved: the package declares no copyright and the
+    holder above is carried over from the previous version of this file.)
 
-FlatRedBall.InterpolationCore — © FlatRedBall, LLC
+FlatRedBall.InterpolationCore — Copyright (c) 2016 FlatRedBall, LLC
     https://github.com/vchelaru/FlatRedBall
+    NuGet: FlatRedBall.InterpolationCore
 
-FluentIcons.Wpf / FluentIcons.Common — © FluentIcons contributors
+FluentIcons.Avalonia / FluentIcons.Common — Copyright (c) 2022 davidxuang
     https://github.com/davidxuang/FluentIcons
+    NuGet: FluentIcons.Avalonia, FluentIcons.Common
+    Embeds the Fluent UI System Icons font — Copyright (c) 2020 Microsoft
+    Corporation, MIT (https://github.com/microsoft/fluentui-system-icons).
 
-FreeTypeSharp — © 2024 ryancheung
+FreeTypeSharp — Copyright 2024 ryancheung
     https://github.com/ryancheung/FreeTypeSharp
+    NuGet: FreeTypeSharp
     Managed binding only. The native FreeType binary it bundles is under the
     FreeType License (see below).
 
 HarfBuzzSharp / SkiaSharp.HarfBuzz — © Microsoft Corporation
     https://github.com/mono/SkiaSharp
+    NuGet: HarfBuzzSharp, HarfBuzzSharp.NativeAssets.Linux,
+        HarfBuzzSharp.NativeAssets.macOS, HarfBuzzSharp.NativeAssets.Win32,
+        HarfBuzzSharp.NativeAssets.WebAssembly, SkiaSharp.HarfBuzz
     Managed bindings. The native HarfBuzz binary (libHarfBuzzSharp) is under the
-    "Old MIT" HarfBuzz license, which is MIT-compatible.
+    "Old MIT" HarfBuzz license, which is MIT-compatible; its notices ship in
+    the package's THIRD-PARTY-NOTICES.txt.
 
-KernSmith / KernSmith.Rasterizers.FreeType — © 2026 KernSmith contributors
-    (Jeremy Swartwood)
+KernSmith / KernSmith.Rasterizers.FreeType — Copyright (c) 2026 KernSmith
+    contributors (Jeremy Swartwood)
     https://github.com/kaltinril/KernSmith
+    NuGet: KernSmith, KernSmith.Rasterizers.FreeType
 
-MaterialDesignThemes.Wpf / MaterialDesignColors — © MaterialDesignInXAML
-    https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit
+MicroCom.Runtime — Copyright (c) 2021 Nikita Tsukanov
+    https://github.com/kekekeks/MicroCom
+    NuGet: MicroCom.Runtime
 
-Microsoft.AppCenter / .Analytics / .Crashes — © Microsoft Corporation
-    https://aka.ms/telgml
+MonoGame.Extended / KNI.Extended — Copyright (c) 2015-2024 MonoGame.Extended
+    contributors
+    https://github.com/craftworkgames/MonoGame.Extended
+    NuGet: MonoGame.Extended, KNI.Extended
 
-Newtonsoft.Json — © 2008 James Newton-King
+Newtonsoft.Json — Copyright (c) 2008 James Newton-King
     https://www.newtonsoft.com/json
+    NuGet: Newtonsoft.Json
 
-PixiEditor.ColorPicker — © PixiEditor Organization
-    https://github.com/PixiEditor/ColorPicker
+NVorbis — Copyright (c) 2020 Andrew Ward
+    https://github.com/NVorbis/NVorbis
+    NuGet: NVorbis
 
-SharpCompress — © 2025 Adam Hathcock
+ShadowDusk (Compiler / Core / GLSL / HLSL) — Copyright (c) 2026 ShadowDusk
+    Contributors
+    https://github.com/kaltinril/ShadowDusk
+    NuGet: ShadowDusk.Compiler, ShadowDusk.Core, ShadowDusk.GLSL,
+        ShadowDusk.HLSL
+    Managed code only. ShadowDusk.HLSL bundles the native vkd3d-shader library
+    (LGPL-2.1-or-later, see below).
+
+SharpCompress — Copyright (c) 2025 Adam Hathcock
     https://github.com/adamhathcock/sharpcompress
+    NuGet: SharpCompress
 
-SharpDX (SharpDX.*) — © 2010-2016 Alexandre Mutel
-    http://sharpdx.org/
+SharpGen.Runtime / SharpGen.Runtime.COM — (c) 2010-2017 Alexandre Mutel,
+    2017-2023 Jeremy Koritzinsky
+    https://github.com/SharpGenTools/SharpGenTools
+    NuGet: SharpGen.Runtime, SharpGen.Runtime.COM
 
-ShimSkiaSharp / Svg.Model / Svg.Skia — © Wiesław Šoltés
+ShimSkiaSharp / Svg.Model / Svg.Skia — Copyright © Wiesław Šoltés
     https://github.com/wieslawsoltes/Svg.Skia
+    NuGet: ShimSkiaSharp, Svg.Model, Svg.Skia
     (Svg.Custom, from the same project, is under Ms-PL — see below.)
 
-SkiaSharp / SkiaSharp.Skottie / SkiaSharp.Extended — © Microsoft Corporation
+SkiaSharp (+ Extended / Resources / SceneGraph / Skottie) — Copyright (c)
+    2015-2016 Xamarin, Inc.; Copyright (c) 2017-2018 Microsoft Corporation
     https://github.com/mono/SkiaSharp
+    NuGet: SkiaSharp, SkiaSharp.Extended, SkiaSharp.Resources,
+        SkiaSharp.SceneGraph, SkiaSharp.Skottie, SkiaSharp.NativeAssets.Linux,
+        SkiaSharp.NativeAssets.macOS, SkiaSharp.NativeAssets.Win32,
+        SkiaSharp.NativeAssets.WebAssembly
     Managed bindings. The native Skia binary (libSkiaSharp) is under the
     BSD-3-Clause license (see below).
+
+TextCopy — Copyright (c) 2018 Simon Cropp
+    https://github.com/CopyText/TextCopy
+    NuGet: TextCopy
+
+Tmds.DBus.Protocol — Copyright 2006 Alp Toker, 2010 Other Contributors,
+    2016 Tom Deseyn
+    https://github.com/tmds/Tmds.DBus
+    NuGet: Tmds.DBus.Protocol
+
+Vortice.Windows (D3DCompiler / DirectX / Dxc) and Vortice.Mathematics —
+    Copyright (c) Amer Koleci and Contributors
+    https://github.com/amerkoleci/Vortice.Windows
+    NuGet: Vortice.D3DCompiler, Vortice.DirectX, Vortice.Dxc,
+        Vortice.Mathematics
+    Managed bindings. Vortice.Dxc also carries the native DirectX Shader
+    Compiler (dxcompiler / dxil, see below).
 
 --------------------------------------------------------------------------------
 FreeType License (FTL) — a BSD-style license with a credit clause
@@ -137,75 +213,169 @@ Required credit (per the FTL):
 --------------------------------------------------------------------------------
 BSD-3-Clause License
 --------------------------------------------------------------------------------
-SharpVectors (SharpVectors.*) — © 2010-2025 Elinam LLC
-    https://github.com/ElinamLLC/SharpVectors
-
 Skia (native graphics engine, bundled by SkiaSharp as libSkiaSharp) —
     © Google Inc. and contributors
     https://skia.org
 
+ANGLE (native OpenGL ES implementation, av_libglesv2.dll, Windows only) —
+    Copyright 2018 The ANGLE Project Authors. All rights reserved.
+    https://github.com/AvaloniaUI/angle
+    NuGet: Avalonia.Angle.Windows.Natives
+
 --------------------------------------------------------------------------------
 Microsoft Public License (Ms-PL)
 --------------------------------------------------------------------------------
-KNI (nkast.Xna.Framework.*, nkast.Kni.Platform.*) — © Konstantin (nkast) and
-    KNI contributors
+KNI (nkast.Xna.Framework.*, nkast.Kni.Platform.*) — Copyright © 2014-2025
+    Nick Kastellanos; portions Copyright © 2009-2021 The MonoGame Team
     https://github.com/kniengine/kni
-    The XNA-compatible runtime the Gum tool uses for rendering.
+    NuGet: nkast.Xna.Framework, nkast.Xna.Framework.*, nkast.Kni.Platform.*
+    The XNA-compatible runtime the Gum tool uses for rendering. The platform
+    package also bundles native SDL2 (zlib) and OpenAL Soft (soft_oal,
+    LGPL-2.0-or-later) — see those groups below.
 
-Xceed Extended WPF Toolkit (Community Edition, v2.6) — © 2007-2015 Xceed
-    Software Inc.
-    https://github.com/xceedsoftware/wpftoolkit
-    Vendored DLLs: Xceed.Wpf.Toolkit, Xceed.Wpf.DataGrid, Xceed.Wpf.AvalonDock
-    (+ AvalonDock themes). This is the Ms-PL-era community edition; later 4.x
-    releases moved to a different Xceed community license and are not used here.
+MonoGame (DesktopGL) — Copyright © 2009-2026 MonoGame Foundation, Inc
+    https://github.com/MonoGame/MonoGame
+    NuGet: MonoGame.Framework.DesktopGL
+    Used by GumPreview and GumCli. Native SDL2 and OpenAL come from
+    MonoGame.Library.SDL / MonoGame.Library.OpenAL (see below).
 
 Svg.Custom — © Wiesław Šoltés
     https://github.com/wieslawsoltes/Svg.Skia
+    NuGet: Svg.Custom
 
 --------------------------------------------------------------------------------
 Apache License 2.0
 --------------------------------------------------------------------------------
-SQLitePCLRaw (SQLitePCLRaw.*) — © 2014-2024 SourceGear, LLC
-    https://github.com/ericsink/SQLitePCL.raw
-    The managed wrapper is Apache-2.0; the native SQLite engine it bundles
-    (libe_sqlite3 / e_sqlite3) is in the public domain (see below).
-
-CsvHelper — © 2009-2024 Josh Close
+CsvHelper — Copyright © 2009-2024 Josh Close
     https://joshclose.github.io/CsvHelper/
+    NuGet: CsvHelper
     Dual-licensed "MS-PL OR Apache-2.0"; used here under Apache-2.0.
 
---------------------------------------------------------------------------------
-GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)
---------------------------------------------------------------------------------
-Fizzler — © 2009 Atif Aziz, Colin Ramsay; portions © 2008 Novell, Inc.
-    https://github.com/atifaziz/Fizzler
-    A CSS-selector engine pulled in transitively via Svg.Custom / Svg.Skia.
-    Distributed as a separate, dynamically-linked assembly (Fizzler.dll) that
-    a recipient may replace. The full LGPL-3.0 text (which incorporates the
-    GNU GPL v3.0 by reference) is available at:
-        https://www.gnu.org/licenses/lgpl-3.0.txt
-        https://www.gnu.org/licenses/gpl-3.0.txt
+SPIRV-Cross (native spirv-cross library) — The Khronos Group Inc. and
+    SPIRV-Cross contributors
+    https://github.com/KhronosGroup/SPIRV-Cross
+    NuGet: Silk.NET.SPIRV.Cross.Native
+    (Copyright line not retrieved: the upstream LICENSE file is the bare
+    Apache-2.0 text and names no copyright holder.)
+
+Topten.RichTextKit — Copyright © 2019 Topten Software. All Rights Reserved.
+    https://github.com/toptensoftware/RichTextKit
+    NuGet: Topten.RichTextKit
+    Used by GumCli (SkiaGum). The shipped build is Gum's patched fork
+    (0.4.167-gumfix.1).
 
 --------------------------------------------------------------------------------
-Code Project Open License (CPOL) 1.02
+zlib License
 --------------------------------------------------------------------------------
-TargaImage — © 2008 David Polomis ("Paloma")
-    https://www.codeproject.com/Articles/31702/NET-Targa-Image-Reader
-    Vendored TGA image loader (TargaImage.dll). The full CPOL 1.02 text is
-    available at:
-        https://www.codeproject.com/info/cpol10.aspx
+SDL2 (native: SDL2.dll / libSDL2) — Copyright (C) 1997-2025 Sam Lantinga
+    <slouken@libsdl.org>
+    https://www.libsdl.org
+    NuGet: MonoGame.Library.SDL
+    Also bundled by nkast.Kni.Platform.SDL2.GL (see KNI above).
+
+raylib (native: raylib.dll / libraylib) — Copyright (c) 2013-2026 Ramon
+    Santamaria (@raysan5)
+    https://github.com/raysan5/raylib
+    Bundled by Raylib-cs; used by GumCli.
+
+Raylib-cs — Copyright (C) 2018-2025 raylib-cs
+    https://github.com/raylib-cs/raylib-cs
+    NuGet: Raylib-cs
+
+--------------------------------------------------------------------------------
+University of Illinois/NCSA Open Source License (LLVM Release License)
+--------------------------------------------------------------------------------
+DirectX Shader Compiler (native dxcompiler.dll / libdxcompiler) — Copyright
+    (c) Microsoft Corporation; portions Copyright (c) 2003-2015 University of
+    Illinois at Urbana-Champaign. All rights reserved.
+    https://github.com/microsoft/DirectXShaderCompiler
+    Bundled by Vortice.Dxc (and, on macOS, by ShadowDusk.HLSL). The upstream
+    LICENSE.TXT also lists third-party code distributed with LLVM:
+        https://github.com/microsoft/DirectXShaderCompiler/blob/main/LICENSE.TXT
+    dxil.dll (Windows, bundled by Vortice.Dxc) is the DXIL signing library
+    from the same release. Its separate redistribution terms were NOT
+    retrieved for this file and are unverified.
+
+--------------------------------------------------------------------------------
+GNU Lesser General Public License (LGPL)
+--------------------------------------------------------------------------------
+Each LGPL component below is distributed as a separate, dynamically-loaded
+library that a recipient may replace with their own build.
+
+Fizzler — Copyright © 2009 Atif Aziz, Colin Ramsay. All rights reserved.
+    Portions Copyright © 2008 Novell, Inc.
+    https://github.com/atifaziz/Fizzler
+    NuGet: Fizzler
+    LGPL-3.0-or-later. A CSS-selector engine pulled in transitively via
+    Svg.Custom / Svg.Skia (Fizzler.dll).
+
+vkd3d-shader (native: libvkd3d-shader) — Copyright 2016-2025 the Vkd3d
+    project authors
+    https://gitlab.winehq.org/wine/vkd3d
+    Bundled by ShadowDusk.HLSL. LGPL-2.1-or-later. Built unmodified from the
+    vkd3d 2.1 release (https://dl.winehq.org/vkd3d/source/vkd3d-2.1.tar.xz);
+    build recipes: https://github.com/kaltinril/ShadowDusk
+
+OpenAL Soft (native: soft_oal.dll / openal.dll / libopenal) — OpenAL Soft
+    contributors (Christopher Robinson et al.)
+    https://github.com/kcat/openal-soft
+    NuGet: MonoGame.Library.OpenAL
+    Also bundled by nkast.Kni.Platform.SDL2.GL (soft_oal). LGPL-2.0-or-later
+    per the upstream COPYING file (GNU Library General Public License v2).
+    Portions are under the BSD-3-Clause license:
+        Copyright (c) 2015, Archontis Politis
+        Copyright (c) 2019, Anis A. Hireche
+        Copyright (c) 2019, Christopher Robinson
+    (from the MonoGame.Library.OpenAL package's LICENSE file; the BSD-3-Clause
+    text is reproduced below).
+
+--------------------------------------------------------------------------------
+SIL Open Font License 1.1 (fonts)
+--------------------------------------------------------------------------------
+Each Forms theme font ships beside its own copyright/license file in
+Content/FormsThemes/<Theme>/Fonts/, as the OFL requires:
+    Nunito — Copyright 2014 The Nunito Project Authors
+    DM Mono — Copyright 2020 The DM Mono Project Authors
+    Fraunces — Copyright 2018 The Fraunces Project Authors
+    Saira Condensed — Copyright 2016 The Saira Project Authors
+    Baloo 2 — Copyright 2019 The Baloo 2 Project Authors
+    Quicksand — Copyright 2011 The Quicksand Project Authors
+    Orbitron — Copyright 2018 The Orbitron Project Authors
+    Share Tech Mono — Copyright (c) 2012, Carrois Type Design, Ralph du Carrois
+    Liberation Sans — Digitized data copyright (c) 2010 Google Corporation;
+        Copyright (c) 2012 Red Hat, Inc.
+
+Inter — Copyright (c) 2016 The Inter Project Authors
+    https://github.com/rsms/inter
+    Embedded in Avalonia.Fonts.Inter.dll (the tool's UI font).
+
+--------------------------------------------------------------------------------
+Bitstream Vera / DejaVu Fonts License
+--------------------------------------------------------------------------------
+DejaVu Sans Mono — Copyright (c) 2003 Bitstream, Inc.; Arev glyphs Copyright
+    (c) 2006 Tavmjong Bah; DejaVu changes are in the public domain.
+    https://dejavu-fonts.github.io
+    Ships in every Forms theme's Fonts/ folder beside its full license text
+    (DejaVuSansMono-LICENSE.txt).
 
 --------------------------------------------------------------------------------
 Public Domain
 --------------------------------------------------------------------------------
-StbImageSharp / StbImageWriteSharp — StbSharp
+StbImageSharp / StbImageWriteSharp / StbTrueTypeSharp — StbSharp
     https://github.com/StbSharp/StbImageSharp
     https://github.com/StbSharp/StbImageWriteSharp
-    Released into the public domain (C# ports of Sean Barrett's stb libraries).
+    https://github.com/StbSharp/StbTrueTypeSharp
+    NuGet: StbImageSharp, StbImageWriteSharp, StbTrueTypeSharp
+    Released into the public domain (C# ports of Sean Barrett's stb
+    libraries); StbImageSharp's README states "Public Domain or MIT".
 
-SQLite (native engine, bundled by SQLitePCLRaw as libe_sqlite3 / e_sqlite3)
-    https://www.sqlite.org
-    The SQLite source code is in the public domain.
+--------------------------------------------------------------------------------
+Unverified
+--------------------------------------------------------------------------------
+Pre-rendered bitmap fonts in Content/ (FontCache/*.fnt + .png) generated from
+Arial (Content/Fonts/Font18Arial_o1 and the Standard theme's FontCache),
+Wasco Sans and Titillium Web. These are rasterized glyph images, not font software; their
+licensing position was not verified for this file.
 
 
 ================================================================================
@@ -707,6 +877,159 @@ Apache License, Version 2.0
    limitations under the License.
 
 ================================================================================
+zlib License (applies to the zlib-licensed components above)
+================================================================================
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+
+================================================================================
+University of Illinois/NCSA Open Source License (DirectX Shader Compiler)
+================================================================================
+
+Copyright (c) 2003-2015 University of Illinois at Urbana-Champaign.
+All rights reserved.
+
+Developed by:
+
+    LLVM Team
+
+    University of Illinois at Urbana-Champaign
+
+    http://llvm.org
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal with
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimers.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimers in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the names of the LLVM Team, University of Illinois at
+      Urbana-Champaign, nor the names of its contributors may be used to
+      endorse or promote products derived from this Software without specific
+      prior written permission.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE
+SOFTWARE.
+
+================================================================================
+SIL Open Font License, Version 1.1 (applies to the OFL fonts above)
+================================================================================
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded, 
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+================================================================================
 Other licenses (referenced by URL)
 ================================================================================
 
@@ -715,5 +1038,15 @@ GNU Lesser General Public License v3.0 (Fizzler):
     (incorporates the GNU General Public License v3.0:
     https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Code Project Open License (CPOL) 1.02 (TargaImage):
-    https://www.codeproject.com/info/cpol10.aspx
+GNU Lesser General Public License v2.1 (vkd3d-shader):
+    https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt
+    (the full text also ships in the ShadowDusk.HLSL package's
+    THIRD-PARTY-NOTICES.txt)
+
+GNU Library General Public License v2 (OpenAL Soft):
+    https://www.gnu.org/licenses/old-licenses/lgpl-2.0.txt
+    https://github.com/kcat/openal-soft/blob/master/COPYING
+
+Bitstream Vera / DejaVu Fonts License (DejaVu Sans Mono):
+    https://dejavu-fonts.github.io/License.html
+    (full text ships beside the font as DejaVuSansMono-LICENSE.txt)
