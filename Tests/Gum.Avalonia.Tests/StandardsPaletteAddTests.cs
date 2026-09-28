@@ -160,6 +160,8 @@ public class StandardsPaletteAddTests
     private static void Click(Window window, Control control, RawInputModifiers modifiers)
     {
         Point point = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
+        // A real pointer moves onto what it clicks; headless drops a press on a second chip that no move reached.
+        window.MouseMove(point, modifiers);
         window.MouseDown(point, MouseButton.Left, modifiers);
         window.MouseUp(point, MouseButton.Left, modifiers);
         Dispatcher.UIThread.RunJobs();

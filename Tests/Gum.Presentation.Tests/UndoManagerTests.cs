@@ -55,6 +55,10 @@ public class UndoManagerTests : BaseTestClass
         {
             Store[element] = FileManager.CloneSaveObject(animations);
         }
+
+        public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
+        {
+        }
     }
 
     public UndoManagerTests()

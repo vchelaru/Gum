@@ -604,6 +604,34 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public async Task LoadProjectAsync_ByFilePath_AfterALoadWhoseDeserializeFinishedBeforeItWasAwaited_LoadsAgain()
+    {
+        // A busy machine can finish the background deserialize before the load awaits it; the load
+        // then runs to the end synchronously. The next load must still happen, not be ignored as
+        // "already in progress".
+        string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
+        _projectManager.RunOffCallingThread = work => Task.FromResult(work());
+
+        try
+        {
+            await _projectManager.LoadProjectAsync(gumxPath);
+            GumProjectSave firstLoaded = _projectManager.GumProjectSave.ShouldNotBeNull();
+
+            await _projectManager.LoadProjectAsync(gumxPath);
+
+            _projectManager.GumProjectSave.ShouldNotBeSameAs(firstLoaded);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+
+        _guiCommands.Verify(
+            g => g.PrintOutput(It.Is<string>(m => m.Contains("already in progress"))),
+            Times.Never);
+    }
+
+    [Fact]
     public void AskUserForProjectNameIfNecessary_ShowsSaveDialogAcceptingBothXmlAndJsonProjects()
     {
         SetCurrentProject(new GumProjectSave());

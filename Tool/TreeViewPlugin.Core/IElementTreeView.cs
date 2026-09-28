@@ -121,7 +121,7 @@ public interface IElementTreeView
     event Action? DragEnded;
 
     /// <summary>
-    /// Raised when a palette chip is Ctrl-clicked or its "add to current" menu item chosen: add an
+    /// Raised when a palette chip is clicked or its "add to current" menu item chosen: add an
     /// instance of the standard type at the add destination.
     /// </summary>
     event Action<string>? AddStandardToCurrentRequested;

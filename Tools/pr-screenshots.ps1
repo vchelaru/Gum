@@ -157,7 +157,6 @@ $repoName = (gh repo view --json nameWithOwner -q .nameWithOwner)
 if ($LASTEXITCODE -ne 0) { throw 'gh repo view failed; is gh signed in?' }
 
 Write-Host "After: $repo"
-# No @() around the call: the function already returns an array, and @() would nest it.
 $afterPngs = Invoke-Screenshots $repo (Join-Path $outRoot 'after')
 
 $beforePngs = @()
