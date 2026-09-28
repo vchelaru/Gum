@@ -13,3 +13,5 @@ T:Microsoft.Win32.Registry;The registry is Windows-only. Put OS-specific detecti
 T:Microsoft.Win32.RegistryKey;The registry is Windows-only. Put OS-specific detection behind a seam implemented by the head.
 T:System.Runtime.InteropServices.DllImportAttribute;P/Invoke belongs in a per-OS file in the head, not in shared code.
 T:System.Runtime.InteropServices.LibraryImportAttribute;P/Invoke belongs in a per-OS file in the head, not in shared code.
+P:ToolsUtilities.FilePath.Standardized;Lowercased, so file I/O through it misses on a case-sensitive file system. Use FullPath for I/O and == to compare FilePaths.
+P:ToolsUtilities.FilePath.StandardizedNoPathNoExtension;Lowercased, so file I/O through it misses on a case-sensitive file system. Use CaseSensitiveNoPathNoExtension.
