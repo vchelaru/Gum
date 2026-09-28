@@ -34,7 +34,6 @@ namespace Gum.Avalonia.Shell;
 public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
 {
     private readonly ShellViewModel _shell;
-    private readonly WindowPlacementTracker _placement;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IClipboardService _clipboardService;
     private readonly TextBlock _statusText;
@@ -75,7 +74,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         IDialogService dialogService)
     {
         _shell = shell;
-        _placement = new WindowPlacementTracker(this, shell, layoutSettings, () => IsInBackground);
+        _ = new WindowPlacementTracker(this, shell, layoutSettings, () => IsInBackground);
         _fileSystemRevealService = fileSystemRevealService;
         _clipboardService = clipboardService;
         DataContext = shell;
@@ -147,7 +146,14 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         Content = root;
         ApplyResizeBorderMargin(panel);
 
-        Opened += (_, _) => RestoreSavedPlacement();
+        Opened += (_, _) =>
+        {
+            if (IsInBackground)
+            {
+                // Showing the window puts it back at 0,0 on Windows, so place it again once it is open.
+                Position = BackgroundPosition;
+            }
+        };
         PropertyChanged += (_, e) =>
         {
             if (e.Property == WindowStateProperty)
@@ -245,9 +251,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         _logo.Source = new global::Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri("avares://Gum/" + logoFile)));
     }
 
-    /// <summary>Shows a startup failure in place of the panels, so an unattended run captures it.</summary>
-    public void ShowStartupFailure(Exception exception) => Content = new StartupFailurePanel(exception);
-
     void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message) => Close();
 
     /// <summary>
@@ -262,21 +265,5 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         WindowStartupLocation = WindowStartupLocation.Manual;
         WindowState = WindowState.Normal;
         Position = BackgroundPosition;
-    }
-
-    /// <summary>
-    /// Moves and sizes the window to the placement saved by the last session; runs when the window
-    /// opens. A window shown with <see cref="ShowInBackground"/> goes back off-screen instead.
-    /// </summary>
-    public void RestoreSavedPlacement()
-    {
-        if (IsInBackground)
-        {
-            // Showing the window puts it back at 0,0 on Windows, so place it again once it is open.
-            Position = BackgroundPosition;
-            return;
-        }
-
-        _placement.Restore();
     }
 }

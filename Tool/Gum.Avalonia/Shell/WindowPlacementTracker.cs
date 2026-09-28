@@ -10,8 +10,8 @@ namespace Gum.Avalonia.Shell;
 
 /// <summary>
 /// Keeps a window's placement in <see cref="ShellViewModel"/> as the user moves, resizes or
-/// maximizes it, and applies the placement the last session saved. The shell view model writes it
-/// to the layout settings at teardown.
+/// maximizes it, and applies the placement the last session saved when the window opens. The shell
+/// view model writes it to the layout settings at teardown.
 /// </summary>
 public sealed class WindowPlacementTracker
 {
@@ -22,7 +22,7 @@ public sealed class WindowPlacementTracker
 
     /// <param name="isSuspended">
     /// True while the window's placement is not the user's (an unattended run parks it off-screen),
-    /// so moves and resizes are not recorded.
+    /// so moves and resizes are not recorded and the saved placement is not applied.
     /// </param>
     public WindowPlacementTracker(Window window, ShellViewModel shell, IWritableOptions<LayoutSettings> layoutSettings, Func<bool> isSuspended)
     {
@@ -31,6 +31,13 @@ public sealed class WindowPlacementTracker
         _layoutSettings = layoutSettings;
         _isSuspended = isSuspended;
 
+        window.Opened += (_, _) =>
+        {
+            if (!_isSuspended())
+            {
+                Restore();
+            }
+        };
         window.PositionChanged += (_, _) =>
         {
             if (IsTracking)
@@ -60,9 +67,9 @@ public sealed class WindowPlacementTracker
 
     /// <summary>
     /// Moves and sizes the window to the saved placement, clamped onto the screen it lands on, or
-    /// centers it when nothing has been saved yet. Call once the window is open.
+    /// centers it when nothing has been saved yet. Runs when the window opens.
     /// </summary>
-    public void Restore()
+    private void Restore()
     {
         WindowSettings saved = _layoutSettings.CurrentValue.MainWindow;
         PixelPoint probe = saved.Left is double left && saved.Top is double top ? new PixelPoint((int)left, (int)top) : _window.Position;
