@@ -543,6 +543,8 @@ internal sealed class ProjectTreeHarness : IDisposable
         {
             // The head's panel outlives the test; a search left in it would hide the next test's tree.
             View.ClearSearchText();
+            // So is its menu; one left open by a failed test would be open in the next.
+            View.ContextMenu.Close();
             View.IncludeVariablesCheckBox.IsChecked = false;
             foreach (KeyValuePair<AvaloniaPluginTab, bool> tab in _tabVisibilityAtStart)
             {
