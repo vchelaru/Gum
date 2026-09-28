@@ -590,9 +590,10 @@ public class EditCommands : IEditCommands
                 newScreen.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newScreen);
 
-                _projectCommands.AddScreen(newScreen);
-
+                // Before the add, so the copy's sidecar files exist when ElementAdd handlers run.
                 _pluginManager.ElementDuplicate(element, newScreen);
+
+                _projectCommands.AddScreen(newScreen);
             }
         }
         else if (element is ComponentSave elementAsComponent)
@@ -629,9 +630,10 @@ public class EditCommands : IEditCommands
                 newComponent.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newComponent);
 
-                _projectCommands.AddComponent(newComponent);
-
+                // Before the add, so the copy's sidecar files exist when ElementAdd handlers run.
                 _pluginManager.ElementDuplicate(element, newComponent);
+
+                _projectCommands.AddComponent(newComponent);
             }
         }
 
