@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Gum.Bundle;
+using Gum.DataTypes;
+using Gum.Localization;
 using Shouldly;
 using ToolsUtilities;
 
@@ -80,4 +82,67 @@ public class MacOSBundleResourcesFallbackTests : IDisposable
         resolution.UsedBundle.ShouldBeTrue();
         resolution.FileProvider.Exists("Project.gumx").ShouldBeTrue();
     }
+
+    [Fact]
+    public void Resolve_ShouldRootLooseProviderAtResources_WhenGumxSitsDirectlyInResources()
+    {
+        // Contents/MacOS/ exists, so the provider's own "root is missing" fallback never fires (#5451).
+        File.WriteAllText(Path.Combine(_resourcesDirectory, "Project.gumx"), "<GumProjectSave />");
+        string animationFile = Path.Combine(_resourcesDirectory, "Screens", "MainScreenAnimations.ganx");
+        Directory.CreateDirectory(Path.GetDirectoryName(animationFile)!);
+        File.WriteAllText(animationFile, "<ElementAnimationsSave />");
+
+        ProjectResolution resolution = GumBundleLoader.Resolve(Path.Combine(_macOsDirectory, "Project.gumx"));
+
+        resolution.FileProvider.EnumerateFiles("*Animations.ganx").ToList()
+            .ShouldBe(new List<string> { "Screens/MainScreenAnimations.ganx" });
+    }
+
+    [Fact]
+    public void GumProjectSaveLoad_ShouldReadGumxFromResources_WhenPathIsUnderMacOS()
+    {
+        string gumxInResources = Path.Combine(_resourcesDirectory, "Content", "Project.gumx");
+        Directory.CreateDirectory(Path.GetDirectoryName(gumxInResources)!);
+        File.WriteAllText(gumxInResources, "<GumProjectSave />");
+
+        GumProjectSave? project = GumProjectSave.Load(
+            Path.Combine(_macOsDirectory, "Content", "Project.gumx"), out GumLoadResult result);
+
+        result.ErrorMessage.ShouldBeNullOrEmpty();
+        project.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ProjectLocalizationLoader_ShouldLoadLooseResxAndSatellitesFromResources_WhenProjectIsUnderMacOS()
+    {
+        string localizationDirectory = Path.Combine(_resourcesDirectory, "Content", "Localization");
+        Directory.CreateDirectory(localizationDirectory);
+        File.WriteAllText(Path.Combine(localizationDirectory, "Strings.resx"), ResxWith("Hello"));
+        File.WriteAllText(Path.Combine(localizationDirectory, "Strings.fr.resx"), ResxWith("Bonjour"));
+        GumProjectSave project = new GumProjectSave();
+        project.LocalizationFiles.Add("Localization/Strings.resx");
+        LocalizationService service = new LocalizationService();
+        List<string> skipped = new List<string>();
+
+        ProjectLocalizationLoader.Load(project, Path.Combine(_macOsDirectory, "Content"), service,
+            new ProjectLocalizationLoadOptions { OnSkipped = skipped.Add });
+
+        skipped.ShouldBeEmpty();
+        service.Keys.ShouldContain("T_Greeting");
+        service.Languages.ShouldContain("fr");
+    }
+
+    [Fact]
+    public void AddResxDatabase_ShouldReadResxFromResources_WhenPathIsUnderMacOS()
+    {
+        File.WriteAllText(Path.Combine(_resourcesDirectory, "Strings.resx"), ResxWith("Hello"));
+        LocalizationService service = new LocalizationService();
+
+        service.AddResxDatabase(new[] { Path.Combine(_macOsDirectory, "Strings.resx") });
+
+        service.Keys.ShouldContain("T_Greeting");
+    }
+
+    private static string ResxWith(string greeting) =>
+        $"<root><data name=\"T_Greeting\"><value>{greeting}</value></data></root>";
 }
