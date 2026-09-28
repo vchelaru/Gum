@@ -4,6 +4,7 @@ using ConvertToJsonPlugin;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.ProjectServices.FontGeneration;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -214,6 +215,120 @@ public class ContentMenuScenarioTests
 
         tree.SnapshotFiles().ShouldMatch(start, "an import that stopped changes no file");
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "CONT-007")]
+    [Trait("Feature", "DLG-026")]
+    public void ImportHtml_ImportsTheConvertedScreenAndItsImages_SelectsIt_AndShowsTheResult()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        string folder = Path.Combine(Path.GetTempPath(), "GumHtmlImportScenario", Guid.NewGuid().ToString("N"));
+        string converter = Path.Combine(folder, "Converter");
+        Directory.CreateDirectory(converter);
+        File.WriteAllText(Path.Combine(converter, "convert.mjs"), "");
+        string page = Path.Combine(folder, "landing-page.html");
+        File.WriteAllText(page, "<html><body><h1>Hi</h1></body></html>");
+        byte[] logo = { 0x89, 0x50, 0x4E, 0x47, 1, 2, 3 };
+        FakeHtmlConverter fake = new FakeHtmlConverter(titleText: "Welcome", logo);
+        MainHtmlToGumPlugin plugin = Services.GetRequiredService<PluginManager>().InitializedPlugins.OfType<MainHtmlToGumPlugin>().Single();
+        IHtmlConverterProcessRunner originalRunner = plugin.ProcessRunner;
+        string? originalConverter = Environment.GetEnvironmentVariable("HTMLTOGUM_CONVERTER");
+        string resultMessage = "";
+        string resultDetails = "";
+        string? resultTitle = null;
+        try
+        {
+            Environment.SetEnvironmentVariable("HTMLTOGUM_CONVERTER", converter);
+            plugin.ProcessRunner = fake;
+            tree.Dialogs.AnswerNextOpenFile(page);
+            tree.Dialogs.AnswerNextInWindow<ImportHtmlOptionsViewModel>(window =>
+            {
+                ImportHtmlOptionsViewModel options = (ImportHtmlOptionsViewModel)window.Window.DataContext!;
+                window.Click(window.Find<Button>(button => button.Command == options.BrowseCommand));
+                window.Click(window.AffirmativeButton);
+            });
+            tree.Dialogs.AnswerNextInWindow<ImportHtmlResultViewModel>(window =>
+            {
+                resultTitle = window.Title;
+                resultMessage = window.Text();
+                window.ClickButton("Show details ▾");
+                resultDetails = window.Find<TextBox>(box => box.IsEffectivelyVisible).Text ?? "";
+                window.Click(window.AffirmativeButton);
+            });
+            tree.PickMainMenu("Content", "Import", "HTML…");
+            tree.WaitUntil(() => resultTitle != null, AsyncWork, "the import's result dialog");
+        }
+        finally
+        {
+            plugin.ProcessRunner = originalRunner;
+            Environment.SetEnvironmentVariable("HTMLTOGUM_CONVERTER", originalConverter);
+            TryDeleteFolder(folder);
+        }
+
+        tree.Dialogs.Messages.ShouldBeEmpty();
+        fake.ConverterArguments.ShouldContain(page);
+        ScreenSave imported = ObjectFinder.Self.GumProjectSave!.Screens.ShouldHaveSingleItem();
+        imported.Name.ShouldBe("landing_page");
+        imported.Instances.ShouldHaveSingleItem().Name.ShouldBe("Title");
+        tree.SelectedState.SelectedScreen.ShouldBe(imported);
+        tree.ChildTexts(tree.RootNode("Screens")).ShouldBe(new[] { "landing_page" });
+        File.ReadAllBytes(Path.Combine(tree.Project.ProjectFolder, "Images", "logo.png")).ShouldBe(logo);
+        File.Exists(Path.Combine(tree.Project.ProjectFolder, "Screens", "landing_page.gusx")).ShouldBeTrue();
+        resultMessage.ShouldContain("Imported and selected screen \"landing_page\".");
+        resultTitle.ShouldBe("Import HTML");
+        resultDetails.ShouldContain("converted Welcome");
+
+        // Adding a whole screen records no undo step.
+        ProjectFileSnapshot afterImport = tree.SnapshotFiles();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(afterImport, "undo after an import should leave the files alone");
+        tree.AssertOracles();
+    }
+
+    // Stands in for Node.js and converter/convert.mjs: writes the screen and an image into the
+    // staging folder the plugin passes with --out, as the converter does.
+    private sealed class FakeHtmlConverter : IHtmlConverterProcessRunner
+    {
+        private readonly string _titleText;
+        private readonly byte[] _logo;
+
+        public FakeHtmlConverter(string titleText, byte[] logo)
+        {
+            _titleText = titleText;
+            _logo = logo;
+            ConverterArguments = "";
+        }
+
+        public string ConverterArguments { get; private set; }
+
+        public bool TryFindNode(out string nodePath, out string hint)
+        {
+            nodePath = "node";
+            hint = "Found v22 (fake)";
+            return true;
+        }
+
+        public Task<(int exitCode, string stdout, string stderr)> RunAsync(
+            string fileName, string arguments, string workingDirectory, IProgress<string> progress)
+        {
+            ConverterArguments = arguments;
+            System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(
+                arguments, "\" (\\S+) \\d+ \\d+ --out=\"([^\"]+)\"");
+            match.Success.ShouldBeTrue($"the converter's arguments should name the screen and --out: {arguments}");
+            string screenName = match.Groups[1].Value;
+            string stageDir = match.Groups[2].Value;
+            Directory.CreateDirectory(Path.Combine(stageDir, "Screens"));
+            File.WriteAllText(Path.Combine(stageDir, "Screens", screenName + ".gusx"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<ScreenSave xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
+                $"  <Name>{screenName}</Name>\n" +
+                "  <Instance>\n    <Name>Title</Name>\n    <BaseType>Text</BaseType>\n    <DefinedByBase>false</DefinedByBase>\n  </Instance>\n" +
+                "</ScreenSave>\n");
+            Directory.CreateDirectory(Path.Combine(stageDir, "Images"));
+            File.WriteAllBytes(Path.Combine(stageDir, "Images", "logo.png"), _logo);
+            return Task.FromResult((0, $"converted {_titleText}\n", ""));
+        }
     }
 
     // Lets posted and async menu work run out.

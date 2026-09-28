@@ -19,7 +19,8 @@ public class ScreenImportService : IScreenImportService
         project.Screens.Add(screenSave);
         project.SortElementsAndReferencesByName();
 
-        screenSave.Initialize(null);
+        // As project load does: a screen file with no states gets the screen defaults as its default state.
+        screenSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
 
         return ScreenImportResult.Ok(screenSave);
     }
