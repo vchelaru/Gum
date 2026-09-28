@@ -125,7 +125,7 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
         _animationVmFactory = () => new ElementAnimationsViewModel(
             _nameVerifier, _dialogService, _animationCollectionViewModelManager!, _renameManager!,
             _selectedState, _wireframeObjectManager, _outputManager, _animationFilePathService,
-            CreateUiTimer(), _keyframeClipboard);
+            CreateUiTimer(), _keyframeClipboard, PlaybackClock);
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
             _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
         _renameManager = new RenameManager(
@@ -146,6 +146,9 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
 
     /// <summary>A UI-thread timer for playback; each call returns a new one.</summary>
     protected abstract IUiTimer CreateUiTimer();
+
+    /// <summary>The clock playback measures the time between timer ticks with; tests substitute a manual one.</summary>
+    protected virtual TimeProvider PlaybackClock => TimeProvider.System;
 
     #endregion
 

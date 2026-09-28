@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using StateAnimationPlugin.Validation;
 using Gum.Managers;
@@ -30,7 +29,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     const int mTimerFrequencyInMs = 20;
 
     private readonly IUiTimer _playTimer;
-    private readonly Stopwatch _playbackStopwatch;
+    private readonly TimeProvider _playbackClock;
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
@@ -200,7 +199,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager,
         ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager,
         IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUiTimer playTimer,
-        IKeyframeClipboard? keyframeClipboard = null)
+        IKeyframeClipboard? keyframeClipboard = null, TimeProvider? playbackClock = null)
     {
         // The plugin shares one clipboard across the view models it creates; on its own (tests) a
         // view model keeps a clipboard of its own.
@@ -213,7 +212,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
 
-        _playbackStopwatch = Stopwatch.StartNew();
+        _playbackClock = playbackClock ?? TimeProvider.System;
         _playTimer = playTimer;
         _playTimer.Tick += HandlePlayTimerTick;
 
@@ -572,20 +571,20 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     }
 
-    double? lastPlayTimerTickTime;
+    private long? _lastPlayTimerTickTimestamp;
     private void HandlePlayTimerTick()
     {
-        var currentTime = _playbackStopwatch.Elapsed.TotalSeconds;
+        long currentTimestamp = _playbackClock.GetTimestamp();
 
+        double increaseInValue = AnimationSpeedMultiplier * (mTimerFrequencyInMs / 1000.0);
 
-        var increaseInValue = AnimationSpeedMultiplier * (mTimerFrequencyInMs /1000.0);
-
-        if(lastPlayTimerTickTime != null)
+        if (_lastPlayTimerTickTimestamp != null)
         {
-            increaseInValue = AnimationSpeedMultiplier * (currentTime - lastPlayTimerTickTime.Value);
+            increaseInValue = AnimationSpeedMultiplier *
+                _playbackClock.GetElapsedTime(_lastPlayTimerTickTimestamp.Value, currentTimestamp).TotalSeconds;
         }
 
-        lastPlayTimerTickTime = currentTime;
+        _lastPlayTimerTickTimestamp = currentTimestamp;
 
         var newValue = DisplayedAnimationTime + increaseInValue;
 
@@ -615,7 +614,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             if (Set(value))
             {
-                lastPlayTimerTickTime = null;
+                _lastPlayTimerTickTimestamp = null;
                 if (value)
                 {
                     _playTimer.Start(TimeSpan.FromMilliseconds(mTimerFrequencyInMs));

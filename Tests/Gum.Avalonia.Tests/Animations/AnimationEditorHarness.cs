@@ -297,38 +297,39 @@ internal sealed class AnimationEditorHarness : IDisposable
         }
     }
 
+    /// <summary>The time one playback tick covers, matching the tab's timer interval.</summary>
+    public static readonly TimeSpan PlaybackFrame = TimeSpan.FromMilliseconds(20);
+
     /// <summary>
-    /// Lets real time pass while pumping the dispatcher, so playback timers tick; synchronous, since
-    /// an awaiting test needs a nested dispatcher frame the headless session does not always allow.
+    /// Plays <paramref name="duration"/> of playback time, one <see cref="PlaybackFrame"/> tick at a
+    /// time, pumping the dispatcher after each. Time is the harness's clock, not the wall clock, so
+    /// the result does not depend on how fast the machine runs the loop.
     /// </summary>
     public void Wait(TimeSpan duration)
     {
-        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        while (stopwatch.Elapsed < duration)
+        for (TimeSpan played = TimeSpan.Zero; played < duration; played += PlaybackFrame)
         {
-            Thread.Sleep(10);
             FireTimers();
             Dispatcher.UIThread.RunJobs();
         }
         Layout();
     }
 
-    /// <summary>Raises a tick on every running playback timer, as the dispatcher would.</summary>
+    /// <summary>Advances the playback clock one <see cref="PlaybackFrame"/> and raises a tick on every running playback timer.</summary>
     public void FireTimers()
     {
+        Plugin.Clock.Advance(PlaybackFrame);
         foreach (ManualUiTimer timer in Plugin.Timers.ToList())
         {
             timer.Fire();
         }
     }
 
-    /// <summary>Pumps the dispatcher until <paramref name="condition"/> holds or <paramref name="timeout"/> passes.</summary>
+    /// <summary>Plays ticks as <see cref="Wait"/> does until <paramref name="condition"/> holds or <paramref name="timeout"/> of playback time passes.</summary>
     public bool WaitUntil(Func<bool> condition, TimeSpan timeout)
     {
-        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        while (!condition() && stopwatch.Elapsed < timeout)
+        for (TimeSpan played = TimeSpan.Zero; !condition() && played < timeout; played += PlaybackFrame)
         {
-            Thread.Sleep(10);
             FireTimers();
             Dispatcher.UIThread.RunJobs();
         }

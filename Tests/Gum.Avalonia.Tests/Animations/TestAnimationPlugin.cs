@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum;
 using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Plugins.StateAnimation;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
@@ -41,7 +42,7 @@ internal sealed class ManualUiTimer : IUiTimer
     }
 }
 
-/// <summary>The head's Animations plugin with the harness's manual playback timers.</summary>
+/// <summary>The head's Animations plugin with the harness's manual playback timers and clock.</summary>
 internal sealed class TestAnimationPlugin : AvaloniaStateAnimationPlugin
 {
     public TestAnimationPlugin(
@@ -66,6 +67,12 @@ internal sealed class TestAnimationPlugin : AvaloniaStateAnimationPlugin
 
     /// <summary>Every timer handed to a view model, so the harness can fire them.</summary>
     public List<ManualUiTimer> Timers { get; } = new List<ManualUiTimer>();
+
+    /// <summary>The clock playback reads, so played time depends only on what the harness advances.</summary>
+    public ManualTimeProvider Clock { get; } = new ManualTimeProvider();
+
+    /// <inheritdoc/>
+    protected override TimeProvider PlaybackClock => Clock;
 
     /// <inheritdoc/>
     protected override IUiTimer CreatePlaybackTimer()

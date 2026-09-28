@@ -22,7 +22,7 @@ to a folder before running; scenarios that call `SaveFrame` write there (default
 |---|---|
 | `AnimationEditorHarness.cs` | Hosts the tab (its own plugin instance on the head's real service graph) and adds the animation-specific pieces: project builders with states to key, lookups into the tab's controls, playback timing, sidecar reads. Its gesture and pixel methods forward to `Input`. |
 | `../Harness/` | The shared pieces (`../Harness/README.md`): `ToolProjectFixture` for the temp project and cleanup, `HeadlessWindowDriver` (`Input`) for the window, input and pixel reads, `ScriptedDialogService` for the dialogs the tab and the tool open. An unanswered dialog fails the test instead of hanging. |
-| `TestAnimationPlugin.cs` | The head's plugin with manual playback timers the harness fires, so playback does not depend on dispatcher timers. |
+| `TestAnimationPlugin.cs` | The head's plugin with manual playback timers and a manual clock, both driven by the harness, so playback depends on neither dispatcher timers nor the wall clock. |
 | `*Tests.cs` | One file per area: editor basics, animation list, reload, timeline interaction, instance sub-animations, element lifecycle, playback, keyframe editing, errors, tab lifecycle, JSON projects, detail column, external changes. |
 
 ## Write a scenario
@@ -61,7 +61,7 @@ Rules that keep scenarios honest:
 - For tool events the tab reacts to (rename, delete, undo, file changes), call the same entry the
   tool calls: `PluginManager.ElementRename`, `IDeleteLogic.Remove` under `UndoManager.RequestLock`,
   `UndoManager.PerformUndo`, `Plugin.CallReactToFileChanged`.
-- Anything that needs real time (playback) goes through `Wait` or `WaitUntil`, never `await`.
+- Playback goes through `Wait` or `WaitUntil`, never `await` or `Thread.Sleep`. They advance the harness's clock one 20 ms tick at a time, so a duration is playback time, not wall time, and a slow machine gets the same result.
 - An end-to-end scenario (inventory-tagged, in `../EndToEnd/AnimationScenarioTests.cs`) calls
   `StartScenario()` after its setup and ends with `AssertOracles()`; see `../Harness/README.md`.
 - Call `ThrowIfPluginFailed` after an event that could throw inside the plugin: the plugin manager
