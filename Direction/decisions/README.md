@@ -39,4 +39,4 @@ re-litigating it.
 | [0016](0016-cross-element-undo-transactions-for-cascading-deletes.md) | Cross-element undo transactions for cascading deletes | Accepted | 2026-09-09 |
 | [0017](0017-commit-to-avalonia-full-cutover.md) | Commit to a full Avalonia cutover for the Gum tool | Accepted | 2026-09-09 |
 | [0018](0018-external-wpf-plugins-break-at-avalonia-cutover.md) | External WPF plugins break at the Avalonia cutover, with notice | Accepted | 2026-09-10 |
-| [0019](0019-end-to-end-regression-suite.md) | An end-to-end regression suite, run per PR and nightly | Proposed | 2026-09-28 |
+| [0019](0019-end-to-end-regression-suite.md) | An end-to-end regression suite, run per PR and nightly | Accepted | 2026-09-28 |

@@ -1,6 +1,6 @@
 # 0019. An end-to-end regression suite, run per PR and nightly
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-28
 - **Deciders:** Victor Chelaru, Claude
 
