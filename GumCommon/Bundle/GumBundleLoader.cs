@@ -159,9 +159,10 @@ public static class GumBundleLoader
 
     private static Stream? TryOpenBundle(string bundlePath)
     {
-        if (File.Exists(bundlePath))
+        Stream? diskStream = FileManager.TryOpenFromDisk(bundlePath);
+        if (diskStream != null)
         {
-            return File.OpenRead(bundlePath);
+            return diskStream;
         }
 
         if (FileManager.CustomGetStreamFromFile == null)
