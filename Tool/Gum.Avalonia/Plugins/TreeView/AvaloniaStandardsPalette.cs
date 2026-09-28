@@ -16,9 +16,9 @@ namespace Gum.Avalonia.Plugins.TreeView;
 
 /// <summary>
 /// The Standards chip palette pinned below the element tree when the
-/// UseStandardsPalette setting is on. Each chip is a standard type that can be dragged onto the
-/// tree or canvas, Ctrl+clicked to add it to the current element, or right-clicked for more. The
-/// counterpart of the WPF <c>StandardsPaletteView</c>.
+/// UseStandardsPalette setting is on. Each chip is a standard type that can be clicked to add it to
+/// the current element, dragged onto the tree or canvas, or right-clicked for more. The counterpart
+/// of the WPF <c>StandardsPaletteView</c>.
 /// </summary>
 public sealed class AvaloniaStandardsPalette : Border
 {
@@ -42,7 +42,7 @@ public sealed class AvaloniaStandardsPalette : Border
     private readonly List<string> _currentTypeNames;
     private string? _selectedTypeName;
 
-    /// <summary>Called with the standard type when "Add to current ..." is chosen on a chip.</summary>
+    /// <summary>Called with the standard type when a chip is clicked or "Add to current ..." is chosen on it.</summary>
     public Action<string>? AddToCurrentRequested { get; set; }
 
     /// <summary>Called with the standard type when "Edit defaults..." is chosen on a chip.</summary>
@@ -72,7 +72,7 @@ public sealed class AvaloniaStandardsPalette : Border
         });
         header.Children.Add(new TextBlock
         {
-            Text = "drag onto tree or canvas",
+            Text = "click or drag to add",
             FontSize = 10,
             FontStyle = FontStyle.Italic,
             Opacity = 0.6,
@@ -157,7 +157,7 @@ public sealed class AvaloniaStandardsPalette : Border
             Child = content,
         };
         chip.SizeChanged += (_, e) => name.IsVisible = e.NewSize.Width >= IconOnlyBelowWidth;
-        ToolTip.SetTip(chip, $"Drag onto a Screen/Component or the canvas to add a {typeName}.\nCtrl+click to add it to the current Screen/Component.\nCtrl+Shift+click to add it as a child of the current selection.\nRight-click for more options.");
+        ToolTip.SetTip(chip, $"Click to add a {typeName} to the current Screen/Component (inside the selected container, if any).\nDrag onto a Screen/Component or the canvas to add it there.\nRight-click for more options.");
         chip.PointerEntered += (_, _) => chip.BorderBrush = PrimaryBrush;
         chip.PointerExited += (_, _) => ApplySelectionVisual(chip, _selectedTypeName == typeName);
         chip.ContextMenu = CreateChipContextMenu(typeName);
@@ -176,18 +176,28 @@ public sealed class AvaloniaStandardsPalette : Border
             {
                 return;
             }
-            // Ctrl+click (Cmd+click on macOS), with or without Shift, adds an instance of this standard
-            // at the add destination without dragging.
-            if (e.KeyModifiers.HasCommand())
-            {
-                AddToCurrentRequested?.Invoke(typeName);
-                e.Handled = true;
-                return;
-            }
             pressed = true;
             startPoint = e.GetPosition(null);
         };
-        chip.PointerReleased += (_, _) => pressed = false;
+        // A left release that no drag took is a click: it adds an instance of this standard at the
+        // add destination, as "Add to ..." does. Starting a drag clears pressed, so the release that
+        // ends one adds nothing, and with no Screen/Component open the click is ignored, as that
+        // menu item is disabled then.
+        chip.PointerReleased += (_, e) =>
+        {
+            bool isClick = pressed && e.InitialPressMouseButton == MouseButton.Left
+                && new Rect(chip.Bounds.Size).Contains(e.GetPosition(chip));
+            pressed = false;
+            if (isClick)
+            {
+                if (CurrentElementNameProvider?.Invoke() != null)
+                {
+                    AddToCurrentRequested?.Invoke(typeName);
+                }
+                e.Handled = true;
+            }
+        };
+        chip.PointerCaptureLost += (_, _) => pressed = false;
         chip.PointerMoved += async (_, e) =>
         {
             if (!pressed || !e.GetCurrentPoint(chip).Properties.IsLeftButtonPressed)
