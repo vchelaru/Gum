@@ -42,6 +42,18 @@ public class CrashReporterTests : IDisposable
     }
 
     [Fact]
+    public void LogRecoverable_WritesLog_WithoutTellingTheUser()
+    {
+        CrashReporter reporter = new CrashReporter(_directory, "1.0", _notifications.Add);
+
+        string? logPath = reporter.LogRecoverable(new InvalidOperationException("quiet"), "Unobserved task");
+
+        logPath.ShouldNotBeNull();
+        File.ReadAllText(logPath).ShouldContain("quiet");
+        _notifications.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void ReportRecoverable_SecondError_IsLoggedWithoutAnotherMessage()
     {
         CrashReporter reporter = new CrashReporter(_directory, "1.0", _notifications.Add);

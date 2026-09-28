@@ -96,6 +96,9 @@ public static class Program
     public static AppBuilder BuildAvaloniaApp(IServiceProvider services, HeadOptions options) =>
         AppBuilder.Configure(() => new App(services, options))
             .UsePlatformDetect()
+            // Gum sets a NativeMenu only on macOS, so exporting one over DBus on Linux does nothing
+            // except call a registrar many desktops (Cinnamon, GNOME) don't have.
+            .With(new X11PlatformOptions { UseDBusMenu = false })
             .WithInterFont()
             .LogToTrace();
 

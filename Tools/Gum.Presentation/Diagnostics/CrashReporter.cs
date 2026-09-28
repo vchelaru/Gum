@@ -71,6 +71,15 @@ public sealed class CrashReporter : ICrashReporter
     }
 
     /// <inheritdoc/>
+    public string? LogRecoverable(Exception exception, string source)
+    {
+        lock (_lock)
+        {
+            return TryWriteLog(RecoverablePrefix, exception, source, ignoreCap: false);
+        }
+    }
+
+    /// <inheritdoc/>
     public string? ReportFatal(Exception exception, string source)
     {
         lock (_lock)

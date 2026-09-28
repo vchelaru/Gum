@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Gum.Diagnostics;
+using Tmds.DBus.Protocol;
 
 namespace Gum.Avalonia.Diagnostics;
 
@@ -26,7 +28,7 @@ public static class UnhandledExceptionHooks
     {
         EventHandler<UnobservedTaskExceptionEventArgs> onUnobservedTask = (_, e) =>
         {
-            reporter.ReportRecoverable(e.Exception, "Unobserved task");
+            ReportUnobservedTask(reporter, e.Exception);
             e.SetObserved();
         };
         UnhandledExceptionEventHandler onAppDomain = (_, e) =>
@@ -51,6 +53,22 @@ public static class UnhandledExceptionHooks
             TaskScheduler.UnobservedTaskException -= onUnobservedTask;
             AppDomain.CurrentDomain.UnhandledException -= onAppDomain;
         });
+    }
+
+    // Avalonia's Linux desktop integration (global menu, file portal, IME) makes fire-and-forget
+    // DBus calls that fault when the desktop doesn't provide the service, such as Cinnamon having
+    // no AppMenu registrar. Gum doesn't depend on them, so they are logged without a dialog.
+    internal static void ReportUnobservedTask(ICrashReporter reporter, AggregateException exception)
+    {
+        bool isOnlyDBus = exception.Flatten().InnerExceptions.All(inner => inner is DBusException);
+        if (isOnlyDBus)
+        {
+            reporter.LogRecoverable(exception, "Unobserved task");
+        }
+        else
+        {
+            reporter.ReportRecoverable(exception, "Unobserved task");
+        }
     }
 
     /// <summary>
