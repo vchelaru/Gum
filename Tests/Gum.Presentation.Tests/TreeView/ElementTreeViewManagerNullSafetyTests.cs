@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.ViewModels;
 using Moq;
@@ -36,17 +37,19 @@ public class ElementTreeViewManagerNullSafetyTests : BaseTestClass
     }
 
     [Fact]
-    public void FilterText_WithNoProjectLoaded_DoesNotThrow()
+    public void FilterText_WithNoProjectLoaded_ShowsNoResults()
     {
         AutoMocker mocker = new AutoMocker();
         (ElementTreeViewManager manager, _) = CreateManager(mocker);
         mocker.GetMock<IProjectState>().Setup(x => x.GumProjectSave).Returns((GumProjectSave?)null);
 
         Should.NotThrow(() => manager.FilterText = "Button");
+
+        mocker.GetMock<IElementTreeView>().Verify(x => x.ShowSearchResults(null), Times.Once);
     }
 
     [Fact]
-    public void ViewInExplorer_OnStandardElementOfUnsavedProject_DoesNotThrowOrReveal()
+    public void ViewInExplorer_OnStandardElementOfUnsavedProject_ShowsAMessageAndDoesNotReveal()
     {
         AutoMocker mocker = new AutoMocker();
         (ElementTreeViewManager manager, GumTreeNodeCollection nodes) = CreateManager(mocker);
@@ -70,6 +73,7 @@ public class ElementTreeViewManagerNullSafetyTests : BaseTestClass
 
         Should.NotThrow(() => viewInExplorer.Action!());
 
+        mocker.GetMock<IDialogService>().Verify(x => x.ShowMessage("The project must be saved before its files can be shown.", It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
         mocker.GetMock<IFileSystemRevealService>().Verify(x => x.RevealFile(It.IsAny<string>()), Times.Never);
     }
 }
