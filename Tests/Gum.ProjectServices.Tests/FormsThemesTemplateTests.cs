@@ -168,6 +168,41 @@ public class FormsThemesTemplateTests
         }
     }
 
+    // GumFormsPlugin stages every file in a template folder into the release, so anything that is not
+    // project content (an executable, a stray tool config with a personal path) ships to users (#5441).
+    // FontCache holds generated fonts (.bmfc/.fnt/.png); everywhere else only project content is allowed.
+    private static readonly HashSet<string> AllowedContentExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".gumx", ".gumfcs", ".gucx", ".gusx", ".gutx", ".behx", ".ganx", ".codsj",
+        ".png", ".ttf", ".txt", ".gitignore"
+    };
+
+    private static readonly HashSet<string> AllowedFontCacheExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".bmfc", ".fnt", ".png"
+    };
+
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void TemplateFiles_ShouldOnlyBeProjectContent(string templateFolder)
+    {
+        string templateDir = GetTemplateDir(templateFolder);
+        string fontCacheDir = Path.Combine(templateDir, "FontCache") + Path.DirectorySeparatorChar;
+
+        List<string> unexpected = Directory.GetFiles(templateDir, "*", SearchOption.AllDirectories)
+            .Where(file =>
+            {
+                HashSet<string> allowed = file.StartsWith(fontCacheDir, StringComparison.Ordinal)
+                    ? AllowedFontCacheExtensions
+                    : AllowedContentExtensions;
+                return !allowed.Contains(Path.GetExtension(file));
+            })
+            .Select(file => Path.GetRelativePath(templateDir, file).Replace('\\', '/'))
+            .ToList();
+
+        unexpected.ShouldBeEmpty($"{templateFolder}: files that are not project content");
+    }
+
     private static string GetTemplateDir(string templateFolder) =>
         Path.Combine(FindRepoRoot(), "Tools", "Gum.ProjectServices", "Templates",
             templateFolder.Replace('/', Path.DirectorySeparatorChar));

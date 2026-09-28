@@ -5,6 +5,7 @@
 * [Introduction](README.md)
   * [For Figma Users](gum-tool/readme/for-figma-users.md)
 * [Setup](gum-tool/setup/README.md)
+  * [Opening Gum on macOS](gum-tool/setup/opening-gum-on-macos.md)
   * [Running from Source](gum-tool/setup/running-from-source.md)
 * [Showcase](gum-tool/showcase.md)
 * [Tutorials and Examples](gum-tool/tutorials-and-examples/README.md)

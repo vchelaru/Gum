@@ -164,6 +164,9 @@ internal sealed class CanvasHarness : IDisposable
     /// <summary>The toolbar's zoom-in button, the "+" right of the zoom combo box.</summary>
     public Button ZoomInButton => Toolbar.SizedButtons[1];
 
+    /// <summary>The toolbar's "Preview in runtime" button.</summary>
+    public Button PreviewButton => Toolbar.PreviewButton;
+
     private EditorToolbar Toolbar => Plugin.Toolbar ?? throw new InvalidOperationException("The editor tab has no toolbar.");
 
     /// <summary>The toolbar's font scale "-" button.</summary>

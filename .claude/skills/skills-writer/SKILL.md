@@ -90,6 +90,8 @@ Only write after the user confirms (e.g. "looks good", "apply it", "go ahead"). 
 
 **Exception:** the user explicitly asked you to apply a specific skill change in the same message — treat that as pre-approved only for what they described. Still show anything beyond that scope before writing.
 
+**Corrections need no approval.** Fixing text that is wrong, or that a code change made untrue (a moved file, a renamed symbol, a behavior that no longer holds), is applied directly and mentioned afterwards. Only net-new additions wait for approval.
+
 ## File Structure
 
 Minimum skill is a single `SKILL.md` with YAML frontmatter:
@@ -156,6 +158,7 @@ Write skills in plain English. Short sentences, small words, no jargon, no inven
 - **In-flight migration / refactor state** — what's done *now*, what blocks what, what's left, "X is already headless," "Y can't move until Z." This inverts to false the moment the work lands. Skills hold *timeless* structure only; transient progress belongs in the ephemeral working ledger, and durable design *direction* belongs in the relevant ADR (`Direction/decisions/`), not the skill.
 - **War stories — "Issue #N: X happened" framing, even for a landmine that never expires.** State the rule in pure present-tense, timeless form. The test: could this sentence be true independent of which issue surfaced it? If so, cut the issue reference.
 - Anything derivable from a quick grep or general C# / .NET knowledge.
+- **One-off rules.** A rule for a situation that may never come up again (a single asset regeneration, one migration step) stays in the PR or issue. A skill holds only problems that recur.
 - Stale every commit (TODOs, in-flight migrations).
 
 Push back and suggest `CLAUDE.md` or a code comment if the request fails this test.

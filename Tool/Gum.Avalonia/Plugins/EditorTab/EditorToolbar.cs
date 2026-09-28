@@ -110,7 +110,7 @@ internal sealed class EditorToolbar : DockPanel
         previewIconHost.Children.Add(previewIcon);
         previewIconHost.Children.Add(previewSpinner);
 
-        Button previewButton = new Button
+        PreviewButton = new Button
         {
             Classes = { GumChromeStyles.FlatButtonClass },
             Content = previewIconHost,
@@ -122,12 +122,15 @@ internal sealed class EditorToolbar : DockPanel
             [!Button.CommandProperty] = new Binding(nameof(EditorViewModel.PreviewCommand)),
             [ToolTip.TipProperty] = "Preview in runtime",
         };
-        previewButton.Click += (_, _) => ShowPreviewLaunchSpinner(previewIcon, previewSpinner, previewSpinnerRotation);
-        SetDock(previewButton, global::Avalonia.Controls.Dock.Right);
+        PreviewButton.Click += (_, _) => ShowPreviewLaunchSpinner(previewIcon, previewSpinner, previewSpinnerRotation);
+        SetDock(PreviewButton, global::Avalonia.Controls.Dock.Right);
 
-        Children.Add(previewButton);
+        Children.Add(PreviewButton);
         Children.Add(panel);
     }
+
+    /// <summary>The "Preview in runtime" button at the right end.</summary>
+    internal Button PreviewButton { get; }
 
     /// <summary>The zoom and font scale +/- buttons, whose width follows the UI base font size.</summary>
     internal IReadOnlyList<Button> SizedButtons => _sizedButtons;
