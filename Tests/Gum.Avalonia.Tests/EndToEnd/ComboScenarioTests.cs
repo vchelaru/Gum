@@ -338,7 +338,7 @@ public class ComboScenarioTests
         AddObject(tree, Component(tree, "Button"), "Text", "Label");
         tree.Drag(tree.NodeFor(Component(tree, "Button")), tree.NodeFor(Screen(tree, "Title")));
         List<string> before = FontsGumcliWouldGenerate(tree.Project.ProjectFilePath);
-        before.ShouldNotContain(path => path.Contains("37"));
+        before.ShouldNotContain(path => Path.GetFileName(path).Contains("37"));
 
         // A bigger, bold Label, saved as the tool saves each edit.
         tree.Click(tree.NodeFor(Instance(Component(tree, "Button"), "Label")));
@@ -350,7 +350,7 @@ public class ComboScenarioTests
         VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Label.IsBold").ShouldBe(true);
 
         List<string> after = FontsGumcliWouldGenerate(tree.Project.ProjectFilePath);
-        after.ShouldContain(path => path.Contains("37") && path.Contains("Bold"), customMessage: string.Join(", ", after));
+        after.ShouldContain(path => Path.GetFileName(path).Contains("37") && Path.GetFileName(path).Contains("Bold"), customMessage: string.Join(", ", after));
         after.ShouldAllBe(path => path.StartsWith(Path.Combine(tree.Project.ProjectFolder, "FontCache"), StringComparison.OrdinalIgnoreCase));
 
         tree.Undo();
@@ -471,7 +471,7 @@ public class ComboScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "COMBO-030")]
-    public void AnElementFileEditedOutsideTheTool_WhileTheElementHasEdits_IsReloadedAndLaterUndoKeepsTheOutsideEdit()
+    public void AnElementFileEditedOutsideTheTool_WhileTheElementHasUnsavedEdits_AsksWhichToKeep_AndEachAnswerDoesWhatItSays()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         tree.Project.AddComponent("Button");
@@ -482,33 +482,51 @@ public class ComboScenarioTests
         string buttonFile = Path.Combine(tree.Project.ProjectFolder, "Components", "Button.gucx");
         FileChangeReactionLogic fileChanges = TestAppBuilder.Services.GetRequiredService<FileChangeReactionLogic>();
         IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        string prompt = FileChangeReactionLogic.BuildUnsavedChangesPromptMessage("Button", "Components/Button.gucx");
 
-        // Another program (a text editor, a merge) changes Label's width to 95 while the tool has
-        // an edit to Button it has not saved yet.
         bool autoSave = projectManager.AutoSave;
         try
         {
             projectManager.AutoSave = false;
+
+            // Another program changes Label's width to 95 while X = 7 is unsaved; "Keep my
+            // changes" leaves the tool's version, and the next save writes it over the file.
             grid.TypeAndEnter("X", "7");
             File.ReadAllText(buttonFile).ShouldNotContain("Label.X");
             File.WriteAllText(buttonFile, File.ReadAllText(buttonFile).Replace(">80</Value>", ">95</Value>"));
+            tree.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
             fileChanges.ReactToFileChanged(new FilePath(buttonFile));
             tree.ThrowIfCrashed();
+            tree.Dialogs.Messages.Last().ShouldBe(prompt);
+            VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.X").ShouldBe(7f);
+            VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Width").ShouldBe(80f);
+            tree.SaveAll();
+            VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Label.X").ShouldBe(7f);
+            VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Label.Width").ShouldBe(80f);
+
+            // Same again with "Reload from disk": the file's 95 replaces the unsaved Y = 3.
+            tree.Click(tree.NodeFor(Instance(Component(tree, "Button"), "Label")));
+            grid.TypeAndEnter("Y", "3");
+            File.WriteAllText(buttonFile, File.ReadAllText(buttonFile).Replace(">80</Value>", ">95</Value>"));
+            tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+            fileChanges.ReactToFileChanged(new FilePath(buttonFile));
+            tree.ThrowIfCrashed();
+            tree.Dialogs.Messages.Last().ShouldBe(prompt);
         }
         finally
         {
             projectManager.AutoSave = autoSave;
         }
 
-        // The file on disk is what the tool shows after the reload. The unsaved X is dropped
-        // without asking (#5379).
         ComponentSave button = Component(tree, "Button");
         VariableGridHarness.StoredValue(button, "Label.Width").ShouldBe(95f);
+        VariableGridHarness.StoredValue(button, "Label.X").ShouldBe(7f);
+        VariableGridHarness.StoredValue(button, "Label.Y").ShouldBeNull();
         tree.SelectedState.SelectedElement.ShouldBeSameAs(button);
         tree.ChildTexts(tree.NodeFor(button)).ShouldBe(new[] { "Label" });
 
-        // The next edit is saved over the outside change without losing it, and undoing that
-        // edit does not bring back what was there before the outside change.
+        // With Auto Save back on, the next edit is saved over the reloaded file without losing
+        // the outside change, and undoing it does not bring back what was there before.
         tree.Click(tree.NodeFor(Instance(button, "Label")));
         grid.FieldText("Width").ShouldBe("95");
         grid.TypeAndEnter("Height", "33");
@@ -516,7 +534,6 @@ public class ComboScenarioTests
         VariableGridHarness.StoredValue(grid.ReadSaved(button), "Label.Height").ShouldBe(33f);
         tree.Undo();
         VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Height").ShouldBeNull();
-        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Width").ShouldBe(95f);
         VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Label.Width").ShouldBe(95f);
         tree.Redo();
         VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Label.Height").ShouldBe(33f);
