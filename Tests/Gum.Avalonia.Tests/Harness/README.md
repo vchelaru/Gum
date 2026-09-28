@@ -90,8 +90,8 @@ host it. The shared application keeps each control's template across windows.
 
 The regression pass from #5141: scenarios that drive whole tool features with real input, tagged
 with the IDs of `Direction/avalonia-migration/functionality-inventory.md`
-(`[Trait("Feature", "TREE-043")]`) and `[Trait("Category", "EndToEnd")]`, so a nightly run can
-select them and per-PR CI can later leave them out.
+(`[Trait("Feature", "TREE-043")]`) and `[Trait("Category", "EndToEnd")]`, so the nightly run
+(`.github/workflows/e2e-nightly.yaml`) can select them. Per-PR CI runs them too (ADR-0019).
 
 ```
 dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
