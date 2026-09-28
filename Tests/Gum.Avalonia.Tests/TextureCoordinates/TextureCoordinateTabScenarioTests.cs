@@ -1,5 +1,12 @@
 using Avalonia;
 using Gum.DataTypes;
+using Gum.Avalonia.Shell;
+using Gum.Dialogs;
+using Gum.Managers;
+using Gum.Plugins.PropertiesWindowPlugin;
+using Microsoft.Extensions.DependencyInjection;
+using RenderingLibrary.Graphics;
+using RenderingLibrary.Math.Geometry;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests.TextureCoordinates;
@@ -190,6 +197,59 @@ public class TextureCoordinateTabScenarioTests
 
             tab.Editor.AssertOracles();
         });
+    }
+
+    [SkippableFact]
+    [Trait("Feature", "TEX-007")]
+    public void Background_FollowsTheThemesCheckerColors_AndTheProjectsCheckerSetting()
+    {
+        OnTab(tab =>
+        {
+            ComponentSave button = tab.Project.AddComponent("Button");
+            string atlas = tab.AddTextureFile("Atlas.png");
+            InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
+            tab.Select(icon);
+            IThemingService theming = TestAppBuilder.Services.GetRequiredService<IThemingService>();
+            System.Drawing.Color? originalCheckerA = theming.CheckerA;
+            ProjectPropertiesViewModel properties = ProjectProperties();
+            bool originalChecker = properties.ShowCheckerBackground;
+            SolidRectangle solid = tab.Canvas.SystemManagers.ShapeManager.SolidRectangles.Single(shape => shape.Name == "Background Solid Color");
+            Sprite checker = tab.Canvas.SystemManagers.SpriteManager.Sprites.Single(sprite => sprite.Name == "Background checkerboard Sprite");
+            System.Drawing.Color picked = System.Drawing.Color.FromArgb(255, 12, 34, 56);
+            try
+            {
+                checker.Visible.ShouldBe(properties.ShowCheckerBackground, tab.Describe());
+                solid.Color.ShouldBe(theming.EffectiveSettings.CheckerA);
+
+                tab.Project.Dialogs.AnswerNext<ThemingDialogViewModel>(dialog =>
+                {
+                    dialog.CheckerAColor = picked;
+                    return true;
+                });
+                tab.Tree.PickMainMenu("View", "Theming");
+                tab.Frame();
+                solid.Color.ShouldBe(picked, "the tab's background takes the theme's checker color");
+
+                properties.ShowCheckerBackground = !originalChecker;
+                tab.Frame();
+                checker.Visible.ShouldBe(!originalChecker, "the project's checker setting shows or hides the checkerboard here too");
+            }
+            finally
+            {
+                properties.ShowCheckerBackground = originalChecker;
+                theming.CheckerA = originalCheckerA;
+            }
+
+            checker.Visible.ShouldBe(originalChecker);
+            tab.Editor.AssertOracles();
+        });
+    }
+
+    private static ProjectPropertiesViewModel ProjectProperties()
+    {
+        AvaloniaTabManager tabs = (AvaloniaTabManager)TestAppBuilder.Services.GetRequiredService<ITabManager>();
+        AvaloniaPluginTab tab = tabs.AllTabs.Single(candidate => candidate.Title == "Project Properties");
+        return (ProjectPropertiesViewModel)((global::Avalonia.Controls.Control)tab.Content).DataContext!;
     }
 
     private static void OnTab(Action<TextureCoordinateTabHarness> scenario)

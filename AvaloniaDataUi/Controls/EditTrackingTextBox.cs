@@ -24,8 +24,15 @@ public class EditTrackingTextBox : TextBox
         _shownText = string.Empty;
         AddHandler(PastingFromClipboardEvent, HandlePastingFromClipboard, RoutingStrategies.Bubble);
         AddHandler(CuttingToClipboardEvent, HandleCuttingToClipboard, RoutingStrategies.Bubble);
-        // Runs after the editors' own Enter handlers (tunnel), which have committed by then.
-        AddHandler(KeyDownEvent, HandleKeyDownAfterEditors, RoutingStrategies.Bubble, handledEventsToo: true);
+    }
+
+    static EditTrackingTextBox()
+    {
+        // A class handler runs before the editors' own Enter handlers (instance, tunnel), so the
+        // text counts as committed before that commit runs: a commit that opens a dialog moves focus
+        // away while it is still running, and leaving the field must not commit the same text again.
+        KeyDownEvent.AddClassHandler<EditTrackingTextBox>((field, e) => field.HandleEnterBeforeEditors(e),
+            RoutingStrategies.Tunnel, handledEventsToo: true);
     }
 
     /// <inheritdoc/>
@@ -155,7 +162,7 @@ public class EditTrackingTextBox : TextBox
         }
     }
 
-    private void HandleKeyDownAfterEditors(object? sender, KeyEventArgs e)
+    private void HandleEnterBeforeEditors(KeyEventArgs e)
     {
         if (e.Key == Key.Enter && !AcceptsReturn)
         {

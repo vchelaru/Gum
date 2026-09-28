@@ -94,6 +94,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Help > Third-Party Licenses opens this copy; the licenses of what the tool redistributes ship with it. -->
+		<None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- The editor's default bitmap font and the missing-texture placeholder, shared with the WPF head. -->
 		<None Include="..\..\Gum\Content\TestFont.fnt" Link="Content\TestFont.fnt" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\TestFont_0.png" Link="Content\TestFont_0.png" CopyToOutputDirectory="PreserveNewest" />
