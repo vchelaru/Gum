@@ -1,0 +1,18 @@
+<Project>
+	<!--
+		ShadowDusk.HLSL depends on Vortice.Dxc, which ships DXC's DXIL signing library beside
+		dxcompiler. The head only compiles render-target shaders for OpenGL, where DXC emits SPIR-V and
+		ShadowDusk's reflection-only DXIL compile passes -Vd, so the signing library is never used.
+		On Windows DXC runs fine without dxil.dll, so it is left out and the release doesn't
+		redistribute it (issue #5427). libdxil.so stays: on Linux, Vortice.Dxc's library resolver only
+		loads libdxcompiler.so after loading libdxil.so successfully.
+		Removed before copy and deps.json generation so both stay consistent. Imported by the head and
+		by Gum.Avalonia.Tests, whose shader tests then prove the compile works without it.
+	-->
+	<Target Name="ExcludeDxilSigningLibrary" AfterTargets="ResolvePackageAssets">
+		<ItemGroup>
+			<RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)" Condition="'%(Filename)%(Extension)' == 'dxil.dll'" />
+			<NativeCopyLocalItems Remove="@(NativeCopyLocalItems)" Condition="'%(Filename)%(Extension)' == 'dxil.dll'" />
+		</ItemGroup>
+	</Target>
+</Project>
