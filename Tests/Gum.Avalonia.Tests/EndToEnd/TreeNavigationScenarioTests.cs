@@ -1,8 +1,12 @@
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.VisualTree;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Menus;
 using Gum.ViewModels;
@@ -339,6 +343,52 @@ public class TreeNavigationScenarioTests
         tree.SnapshotFiles().ShouldMatch(added, "undoing the reparent should restore the files");
         tree.Redo();
         tree.NodeFor(Instance(list, sprite.Name)).Parent.ShouldBeSameAs(tree.NodeFor(Instance(list, "Box")));
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "TREE-047")]
+    [Trait("Feature", "TREE-049")]
+    [Trait("Feature", "KEY-016")]
+    public void ReorderingAnInstance_KeepsItsRowScrolledIntoView()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave list = tree.Project.AddComponent("List");
+        for (int i = 0; i < 150; i++)
+        {
+            tree.Project.AddInstance(list, "Item" + i, "Rectangle");
+        }
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(list));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        ScrollViewer scroller = tree.View.Tree.GetVisualDescendants().OfType<ScrollViewer>().First();
+
+        // Scrolled to the bottom, the key press first brings the row back in at the top edge,
+        // where moving it up one row takes it out of view unless the reorder scrolls again.
+        InstanceSave upper = Instance(list, "Item10");
+        tree.SelectedState.SelectedInstance = upper;
+        tree.Input.Layout();
+        scroller.Offset = new Vector(0, scroller.Extent.Height);
+        tree.IsScrolledIntoView(tree.NodeFor(upper)).ShouldBeFalse("the row starts scrolled away");
+        tree.Press(Key.Up, PhysicalKey.ArrowUp, RawInputModifiers.Alt);
+        list.Instances.IndexOf(upper).ShouldBe(9);
+        tree.SelectedState.SelectedInstance.ShouldBeSameAs(upper);
+        tree.IsScrolledIntoView(tree.NodeFor(upper)).ShouldBeTrue("Alt+Up keeps the moved row in view");
+
+        // Send to Back (what the canvas menu calls) moves the row far from where it was.
+        InstanceSave lower = Instance(list, "Item100");
+        tree.SelectedState.SelectedInstance = lower;
+        tree.Input.Layout();
+        tree.IsScrolledIntoView(tree.NodeFor(lower)).ShouldBeTrue();
+        Services.GetRequiredService<IReorderLogic>().MoveSelectedInstanceToBack();
+        list.Instances.IndexOf(lower).ShouldBe(0);
+        tree.SelectedState.SelectedInstance.ShouldBeSameAs(lower);
+        tree.IsScrolledIntoView(tree.NodeFor(lower)).ShouldBeTrue("Send to Back keeps the moved row in view");
+
+        tree.Undo();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing every reorder should restore the files");
 
         tree.AssertOracles();
     }
