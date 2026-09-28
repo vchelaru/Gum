@@ -79,6 +79,12 @@ public class CommonControlLogic
         foreach(var instance in _selectedState.SelectedInstances)
         {
             handledByInstance = true;
+            // A locked instance keeps its position and size. It still counts as handled so the
+            // write does not fall through to the element.
+            if (instance.Locked)
+            {
+                continue;
+            }
             string GetVariablePrefix()
             {
                 string prefixInternal = "";
