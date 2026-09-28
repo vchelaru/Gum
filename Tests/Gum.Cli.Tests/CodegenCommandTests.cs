@@ -148,6 +148,30 @@ public class CodegenCommandTests : IDisposable
     }
 
     [Fact]
+    public void Codegen_GeneratedCodeFolder_WritesAndPrintsTheFolderUnderCodeProjectRoot()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "Output/",
+              "GeneratedCodeFolder": "Gum/Generated",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        string expectedFolder = Path.Combine(_tempDirectory, "Output", "Gum", "Generated") + Path.DirectorySeparatorChar;
+        result.StandardOutput.ShouldContain("Generating code into " + expectedFolder);
+        File.Exists(Path.Combine(expectedFolder, "StandardElements.Generated.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void Codegen_WhenProjectHasLocalizationCsv_GeneratedCodeContainsApplyLocalization()
     {
         string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
