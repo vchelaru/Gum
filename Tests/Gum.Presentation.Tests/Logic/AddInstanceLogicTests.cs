@@ -63,6 +63,18 @@ public class AddInstanceLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void AddInstance_IntoElement_LocksUndoOnThatElement()
+    {
+        // A drop can target an element that is not selected; the lock must capture that element's
+        // baseline, or the add records no undo there.
+        _mocker.GetMock<IUndoManager>().Setup(x => x.RequestLock(_component)).Returns((UndoLock)null!);
+
+        _sut.AddInstance(_text, _container);
+
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RequestLock(_component), Times.Once);
+    }
+
+    [Fact]
     public void AddInstance_UnderInstance_ParentsToItAndRaisesParentChanged()
     {
         InstanceSave? added = _sut.AddInstance(_text, _container, name: "Label");
