@@ -979,12 +979,9 @@ public class VariableScenarioTests
         tree.Click(tree.NodeFor(label));
         ProjectFileSnapshot beforeFont = tree.SnapshotFiles();
         NoOpFontFileGenerator fonts = (NoOpFontFileGenerator)TestAppBuilder.Services.GetRequiredService<IFontFileGenerator>();
-        lock (fonts.RequestedFntPaths)
-        {
-            fonts.RequestedFntPaths.Clear();
-        }
+        int requestedBefore = fonts.RequestedFntPaths().Count;
         grid.TypeAndEnter("FontSize", "37");
-        tree.WaitUntil(() => { lock (fonts.RequestedFntPaths) { return fonts.RequestedFntPaths.Any(path => path.Contains("37")); } },
+        tree.WaitUntil(() => fonts.RequestedFntPaths().Skip(requestedBefore).Any(path => path.Contains("37")),
             TimeSpan.FromSeconds(10), "a font of size 37 to be asked for");
 
         tree.Undo();

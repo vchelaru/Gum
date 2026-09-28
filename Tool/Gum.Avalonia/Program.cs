@@ -31,7 +31,7 @@ public static class Program
         StartupTiming.Mark("Main entry");
         HeadOptions options = HeadOptions.Parse(args);
         // Before anything reads or writes a per-user file.
-        FileManager.UserApplicationDataFolderOverride = options.UserDataFolder;
+        ApplyUserDataFolder(options);
         if (options.ExitAfterSeconds is double exitAfterSeconds)
         {
             _exitDeadline = UnattendedExitDeadline.Start(UnattendedExitDeadline.For(exitAfterSeconds), ForceExit);
@@ -63,6 +63,13 @@ public static class Program
         host.StopAsync().GetAwaiter().GetResult();
         return exitCode;
     }
+
+    /// <summary>
+    /// Points every per-user file (settings, recent projects, crash logs) at <c>--user-data</c>'s
+    /// folder, or at the user's own folder when the option is absent.
+    /// </summary>
+    internal static void ApplyUserDataFolder(HeadOptions options) =>
+        FileManager.UserApplicationDataFolderOverride = options.UserDataFolder;
 
     // Killed rather than Environment.Exit: the generic host's ProcessExit handler waits for the host
     // to be disposed, which never happens while Main is stuck.

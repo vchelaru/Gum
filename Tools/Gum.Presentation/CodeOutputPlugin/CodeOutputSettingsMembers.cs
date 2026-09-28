@@ -129,6 +129,12 @@ public class CodeOutputSettingsMembers
         RebuildRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Forgets the Manual choice when a project opens: it is not saved, so it belonged to the
+    /// project that was open, and a project with no code settings is offered setup again.
+    /// </summary>
+    public void HandleProjectLoaded() => HasClickedManualSetup = false;
+
     #region Project-wide members
 
     private InstanceMember CreateCodeProjectRootMember()
