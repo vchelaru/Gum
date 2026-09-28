@@ -531,16 +531,10 @@ public class DragDropManagerTests : BaseTestClass
     [Fact]
     public void OnFilesDroppedInTreeView_ShouldNotThrow_WhenNoTreeNodeIsUnderCursor()
     {
-        // Repro for #4480: IPluginManager.GetTreeNodeOver() legitimately returns null when no
-        // plugin reports a tree node under the drop cursor (e.g. dropping directly on a Screen's
-        // own tree node rather than a folder). OnFilesDroppedInTreeView called
-        // .IsTopScreenContainerTreeNode() on that null result without a guard, throwing a
+        // Repro for #4480: a drop can land on no row. OnFilesDroppedInTreeView called
+        // .IsTopScreenContainerTreeNode() on that null target without a guard, throwing a
         // NullReferenceException instead of just no-op'ing like it does for any other drop target.
-        _mocker.GetMock<IPluginManager>()
-            .Setup(x => x.GetTreeNodeOver())
-            .Returns((ITreeNode?)null);
-
-        Should.NotThrow(() => _dragDropManager.OnFilesDroppedInTreeView(new[] { "C:/project/CharacterA.achj" }));
+        Should.NotThrow(() => _dragDropManager.OnFilesDroppedInTreeView(new[] { "C:/project/CharacterA.achj" }, targetTreeNode: null));
     }
 
     [Fact]

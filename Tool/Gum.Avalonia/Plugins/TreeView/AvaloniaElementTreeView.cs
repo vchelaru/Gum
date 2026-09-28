@@ -386,7 +386,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
             TreeDragPayload.SetTags(new[] { item.BackingObject });
             DataTransfer data = new DataTransfer();
             data.Add(DataTransferItem.Create(AvaloniaDragFormats.TreeNodes, "tags"));
-            await DragDrop.DoDragDropAsync(e, data, DragDropEffects.Copy);
+            await AvaloniaDragSource.Start(e, data, DragDropEffects.Copy);
         }
         catch (Exception)
         {
