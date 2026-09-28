@@ -13,6 +13,7 @@ using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Shell;
 using Gum.Wireframe;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -412,6 +413,54 @@ public class CanvasMenuAndToolbarScenarioTests
             canvas.Wireframe.RefreshAll(forceLayout: true);
             canvas.Frame();
             canvas.Input.AnyPixelNear(strokeArea, 30, IsWhite).ShouldBeTrue("the Skia line should draw");
+
+            canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
+    public void MissingSinglePixelTextureFile_FallsBackToTheWhitePixel_SoFillsStillDraw()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            canvas.AddInstance(button, "Fill", "Rectangle", x: 100, y: 100, width: 100, height: 60);
+            Fill(canvas, button, "Fill");
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            Point fillCenter = canvas.WindowPointOf(150, 130);
+            canvas.Frame();
+            IsWhite(canvas.Input.PixelAt(fillCenter)).ShouldBeTrue(canvas.Describe());
+
+            ProjectPropertiesViewModel properties = Properties();
+            (string File, int? Left, int? Top, int? Right, int? Bottom) original = (properties.SinglePixelTextureFile,
+                properties.SinglePixelTextureLeft, properties.SinglePixelTextureTop,
+                properties.SinglePixelTextureRight, properties.SinglePixelTextureBottom);
+            try
+            {
+                properties.SinglePixelTextureLeft = 0;
+                properties.SinglePixelTextureTop = 0;
+                properties.SinglePixelTextureRight = 1;
+                properties.SinglePixelTextureBottom = 1;
+                Renderer renderer = Renderer.Self;
+                Texture2D? before = renderer.TryGetSinglePixelTexture();
+                properties.SinglePixelTextureFile = "MissingPixel.png";
+
+                Texture2D? texture = renderer.TryGetSinglePixelTexture();
+                texture.ShouldNotBeNull("a missing file should fall back to the white pixel");
+                texture.ShouldNotBeSameAs(before, "setting the file should refresh the texture");
+                (texture.Width, texture.Height).ShouldBe((1, 1));
+                renderer.SinglePixelSourceRectangle.ShouldBeNull();
+                canvas.Frame();
+                IsWhite(canvas.Input.PixelAt(fillCenter)).ShouldBeTrue("the fill should still draw");
+            }
+            finally
+            {
+                properties.SinglePixelTextureFile = original.File;
+                properties.SinglePixelTextureLeft = original.Left;
+                properties.SinglePixelTextureTop = original.Top;
+                properties.SinglePixelTextureRight = original.Right;
+                properties.SinglePixelTextureBottom = original.Bottom;
+            }
 
             canvas.AssertOracles();
         });
