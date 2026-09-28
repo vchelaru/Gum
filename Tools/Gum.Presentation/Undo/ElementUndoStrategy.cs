@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.PropertyGridHelpers.Converters;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using System;
@@ -320,7 +321,10 @@ public class ElementUndoStrategy : IUndoStrategy
         StateSave? oldState, ElementSave oldElement, string? categoryName, string? stateName,
         ElementAnimationsSave? oldAnimations, ElementAnimationsSave? newAnimations)
     {
-        bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldState, newState) == false;
+        // The uncategorized states too, not just the selected one: adding, renaming or deleting a
+        // category changes the default state's <Category>State variable while the category is selected.
+        bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldState, newState) == false ||
+            FileManager.AreSaveObjectsEqual(oldElement.States, newElement.States) == false;
         bool doStateCategoriesDiffer =
             FileManager.AreSaveObjectsEqual(oldElement.Categories, newElement.Categories) == false;
         bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Instances, newElement.Instances) == false;
@@ -908,6 +912,11 @@ public class ElementUndoStrategy : IUndoStrategy
             }
         }
 
+        if (propagateNameChanges && (elementInUndoSnapshot.States != null || elementInUndoSnapshot.Categories != null))
+        {
+            RestoreCategoryStateConverters(toApplyTo);
+        }
+
         if(elementInUndoSnapshot.Behaviors != null)
         {
             AddAndRemoveBehaviors(elementInUndoSnapshot.Behaviors, toApplyTo.Behaviors, toApplyTo);
@@ -966,6 +975,26 @@ public class ElementUndoStrategy : IUndoStrategy
         }
 
         return addedAndRemovedInstances;
+    }
+
+    /// <summary>
+    /// Snapshots are serialized copies, which drop each "&lt;Category&gt;State" variable's converter
+    /// (the list of the category's states); put it back on the variables an undo restored.
+    /// </summary>
+    private void RestoreCategoryStateConverters(ElementSave element)
+    {
+        StateSave? defaultState = element.DefaultState;
+        if (defaultState == null)
+        {
+            return;
+        }
+        foreach (StateSaveCategory category in element.Categories)
+        {
+            if (defaultState.GetVariableSave(category.Name + "State") is { CustomTypeConverter: null } variable)
+            {
+                variable.CustomTypeConverter = new AvailableStatesConverter(category.Name, _selectedState);
+            }
+        }
     }
 
     void ApplyStateVariables(StateSave undoStateSave, StateSave toApplyTo, ElementSave parent)

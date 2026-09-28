@@ -18,6 +18,7 @@ using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Moq;
 using Shouldly;
 
@@ -222,7 +223,8 @@ public class StateTreeViewTests
             Mock.Of<IDialogService>(),
             guiCommands.Object,
             Mock.Of<IFileCommands>(),
-            copyPasteLogic.Object);
+            copyPasteLogic.Object,
+            Mock.Of<IUndoManager>());
         StateTreeKeyboardHandler keyboardHandler = new StateTreeKeyboardHandler(
             rightClickService, hotkeyManager.Object, selectedState.Object, copyPasteLogic.Object);
         controller = new StateTreeController(

@@ -9,6 +9,7 @@ using Gum.Logic;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.ViewModels;
 using ToolsUtilities;
 
@@ -31,6 +32,7 @@ public class StateTreeRightClickViewModel
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly ICopyPasteLogic _copyPasteLogic;
+    private readonly IUndoManager _undoManager;
 
     public StateTreeRightClickViewModel(
         ISelectedState selectedState,
@@ -39,7 +41,8 @@ public class StateTreeRightClickViewModel
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        ICopyPasteLogic copyPasteLogic)
+        ICopyPasteLogic copyPasteLogic,
+        IUndoManager undoManager)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -48,6 +51,7 @@ public class StateTreeRightClickViewModel
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _copyPasteLogic = copyPasteLogic;
+        _undoManager = undoManager;
     }
 
     /// <summary>
@@ -245,6 +249,7 @@ public class StateTreeRightClickViewModel
 
         if (list != null && list.Contains(state))
         {
+            using var undoLock = _undoManager.RequestLock();
             int oldIndex = list.IndexOf(state);
 
             if (direction == -1 && GetIfCanMoveUp(state, _selectedState.SelectedStateCategorySave))
@@ -353,6 +358,7 @@ public class StateTreeRightClickViewModel
         }
         ////////End Early Out///////////////
 
+        using var undoLock = _undoManager.RequestLock();
         StateSave newState = selectedStateSave.Clone();
 
         // A behavior's states have no element, so their ParentContainer stays null.
@@ -403,6 +409,7 @@ public class StateTreeRightClickViewModel
             return;
         }
 
+        using var undoLock = _undoManager.RequestLock();
         category.States.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
 
         _guiCommands.RefreshStateTreeView();

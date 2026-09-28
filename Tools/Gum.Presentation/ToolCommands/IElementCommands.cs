@@ -52,6 +52,13 @@ public interface IElementCommands
 
     StateSaveCategory AddCategory(IStateContainer objectToAddTo, string name);
 
+    /// <summary>
+    /// Adds the "<paramref name="categoryName"/>State" variable to <paramref name="element"/>'s default
+    /// state unless it has one. Instances use it to show the category's state; loading a project adds
+    /// any that are missing.
+    /// </summary>
+    void AddCategoryStateVariable(ElementSave element, string categoryName);
+
     #endregion
 
     #region Behavior

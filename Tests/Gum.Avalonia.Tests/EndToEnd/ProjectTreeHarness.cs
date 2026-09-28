@@ -33,6 +33,7 @@ internal sealed class ProjectTreeHarness : IDisposable
     private readonly ToolExceptionWatch _exceptions;
     private readonly Dictionary<AvaloniaPluginTab, bool> _tabVisibilityAtStart;
     private VariableGridHarness? _grid;
+    private StatesTabHarness? _states;
 
     public ProjectTreeHarness()
     {
@@ -83,6 +84,12 @@ internal sealed class ProjectTreeHarness : IDisposable
     /// use. Select through the tree (<see cref="Click"/>) and undo with <see cref="Undo"/>, as a user does.
     /// </summary>
     public VariableGridHarness Grid => _grid ??= new VariableGridHarness(Project);
+
+    /// <summary>
+    /// The head's States tab over the same project, in a window of its own, created on first use.
+    /// It follows the element selected through the tree.
+    /// </summary>
+    public StatesTabHarness States => _states ??= new StatesTabHarness(ThrowIfCrashed);
 
 
     #region Finding nodes
@@ -330,6 +337,7 @@ internal sealed class ProjectTreeHarness : IDisposable
                 tab.Key.IsVisible = tab.Value;
             }
             _grid?.Dispose();
+            _states?.Dispose();
             _driver.Dispose();
         }
         finally

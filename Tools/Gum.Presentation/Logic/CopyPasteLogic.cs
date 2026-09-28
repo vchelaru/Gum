@@ -469,6 +469,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
 
         targetElement.Categories.Add(newCategory);
+        _elementCommands.AddCategoryStateVariable(targetElement, newCategory.Name);
 
         var targetInstanceNames = new HashSet<string>(targetElement.Instances.Select(item => item.Name));
         var missingInstanceNames = newCategory.States

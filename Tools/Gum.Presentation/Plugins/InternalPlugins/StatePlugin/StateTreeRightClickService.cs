@@ -5,6 +5,7 @@ using Gum.Logic;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.ViewModels;
 
 namespace Gum.Managers;
@@ -26,7 +27,8 @@ public class StateTreeRightClickService : IStateTreeViewRightClickService
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        ICopyPasteLogic copyPasteLogic)
+        ICopyPasteLogic copyPasteLogic,
+        IUndoManager undoManager)
     {
         _viewModel = new StateTreeRightClickViewModel(
             selectedState,
@@ -35,7 +37,8 @@ public class StateTreeRightClickService : IStateTreeViewRightClickService
             dialogService,
             guiCommands,
             fileCommands,
-            copyPasteLogic);
+            copyPasteLogic,
+            undoManager);
         MenuItems = Array.Empty<ContextMenuItemViewModel>();
     }
 

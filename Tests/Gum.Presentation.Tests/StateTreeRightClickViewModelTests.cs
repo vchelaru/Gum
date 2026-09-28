@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.ViewModels;
 using Moq;
 using Shouldly;
@@ -48,7 +49,8 @@ public class StateTreeRightClickViewModelTests
             _dialogService.Object,
             _guiCommands.Object,
             _fileCommands.Object,
-            _copyPasteLogic.Object);
+            _copyPasteLogic.Object,
+            Mock.Of<IUndoManager>());
     }
 
     [Fact]

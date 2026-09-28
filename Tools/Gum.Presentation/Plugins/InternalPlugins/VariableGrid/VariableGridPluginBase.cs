@@ -63,6 +63,16 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         this.AfterUndo += HandleAfterUndo;
         this.VariableSet += HandleVariableSet;
         this.FocusVariableFilter += HandleFocusVariableFilter;
+        this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+    }
+
+    private void HandleBehaviorReferencesChanged(ElementSave element)
+    {
+        // The grid's error banner lists the variables the element's behaviors require.
+        if (element == _selectedState.SelectedElement)
+        {
+            _propertyGridManager.RefreshEntireGrid(force: true);
+        }
     }
 
     private void HandleFocusVariableFilter()

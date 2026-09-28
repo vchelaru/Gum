@@ -8,6 +8,7 @@ using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 
 namespace Gum.Plugins.InternalPlugins.StatePlugin;
 
@@ -26,7 +27,7 @@ public abstract class StateTreePluginBase : PluginBase, IPriorityPlugin
     protected StateTreePluginBase(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands,
         IElementCommands elementCommands, IEditCommands editCommands, IDialogService dialogService,
         IHotkeyManager hotkeyManager, IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        ICopyPasteLogic copyPasteLogic)
+        ICopyPasteLogic copyPasteLogic, IUndoManager undoManager)
     {
         RightClickService = new StateTreeRightClickService(
             selectedState,
@@ -35,7 +36,8 @@ public abstract class StateTreePluginBase : PluginBase, IPriorityPlugin
             dialogService,
             guiCommands,
             fileCommands,
-            copyPasteLogic);
+            copyPasteLogic,
+            undoManager);
         KeyboardHandler = new StateTreeKeyboardHandler(RightClickService, hotkeyManager, selectedState, copyPasteLogic);
         _controller = new StateTreeController(
             RightClickService,
