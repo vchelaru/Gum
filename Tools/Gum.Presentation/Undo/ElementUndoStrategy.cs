@@ -737,7 +737,7 @@ public class ElementUndoStrategy : IUndoStrategy
                 continue;
             }
 
-            bool didChange = change.BeforeList != null && change.AfterList != null
+            bool didChange = change.BeforeList != null || change.AfterList != null
                 ? ApplyCrossElementVariableListChange(state,
                     isUndo ? change.AfterList : change.BeforeList,
                     isUndo ? change.BeforeList : change.AfterList)
@@ -822,17 +822,34 @@ public class ElementUndoStrategy : IUndoStrategy
     }
 
     /// <summary>
-    /// Replaces the entries of the list in <paramref name="state"/> named like <paramref name="from"/>
-    /// with those of <paramref name="to"/>. Skipped unless the list still holds exactly what the action
-    /// left, so an edit made since is never overwritten. Returns whether anything changed.
+    /// Moves one variable list in <paramref name="state"/> from <paramref name="from"/> to
+    /// <paramref name="to"/> (null meaning absent). Restoring a removed list is skipped if one with that
+    /// name exists again; removing or modifying one is skipped unless it still holds exactly what the
+    /// action left, so an edit made since is never overwritten. Returns whether anything changed.
     /// </summary>
-    private static bool ApplyCrossElementVariableListChange(StateSave state, VariableListSave from, VariableListSave to)
+    private static bool ApplyCrossElementVariableListChange(StateSave state, VariableListSave? from, VariableListSave? to)
     {
-        var existing = state.VariableLists.FirstOrDefault(list => list.Name == from.Name);
+        var existing = state.VariableLists.FirstOrDefault(list => list.Name == (from ?? to)!.Name);
+
+        if (from == null)
+        {
+            if (existing != null)
+            {
+                return false;
+            }
+            state.VariableLists.Add(to!.Clone());
+            return true;
+        }
 
         if (existing == null || !existing.ValueAsIList.Cast<object>().SequenceEqual(from.ValueAsIList.Cast<object>()))
         {
             return false;
+        }
+
+        if (to == null)
+        {
+            state.VariableLists.Remove(existing);
+            return true;
         }
 
         existing.ValueAsIList.Clear();

@@ -321,10 +321,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             new NineSliceCoordinateRefresher(),
             new PreciseHitTester());
 
-        _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService);
+        _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
+        _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService, _backgroundManager);
         _singlePixelTextureService = new SinglePixelTextureService();
         _fileDropTargetFilter = new FileDropTargetFilter();
-        _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
 
         IPreviewGumxProjectionService previewGumxProjectionService =

@@ -102,7 +102,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IRenameLogic _renameLogic;
     private readonly IOutputManager _outputManager;
-    private readonly IMovedInstanceReferenceFinder _movedInstanceReferenceFinder;
+    private readonly IMovedInstanceReferenceDropper _movedInstanceReferenceDropper;
 
     // The screen or component the last cut took, which the next paste on a folder moves. Null when
     // the last copy or cut was anything else, or the cut element was already moved.
@@ -132,10 +132,10 @@ public class CopyPasteLogic : ICopyPasteLogic
         ICircularReferenceManager circularReferenceManager,
         IRenameLogic renameLogic,
         IOutputManager outputManager,
-        IMovedInstanceReferenceFinder movedInstanceReferenceFinder
+        IMovedInstanceReferenceDropper movedInstanceReferenceDropper
         )
     {
-        _movedInstanceReferenceFinder = movedInstanceReferenceFinder;
+        _movedInstanceReferenceDropper = movedInstanceReferenceDropper;
         _renameLogic = renameLogic;
         _outputManager = outputManager;
         _circularReferenceManager = circularReferenceManager;
@@ -1529,7 +1529,9 @@ public class CopyPasteLogic : ICopyPasteLogic
     /// <summary>
     /// Phase 2 of <see cref="CreateComponentFromInstance"/>: removes the promoted instance and all
     /// its descendants from the source element and drops in a single instance of the new component,
-    /// preserving the original instance's name and parent-relative position. Recorded as one undo.
+    /// preserving the original instance's name, its parent-relative position and what the element's
+    /// other states set on it. References that stop applying are dropped and listed in Output.
+    /// Recorded as one undo.
     /// </summary>
     private void ReplaceSubtreeWithComponentInstance(InstanceSave instance, ElementSave sourceElement,
         StateSave sourceDefault, List<InstanceSave> descendants, ComponentSave component)
@@ -1537,12 +1539,9 @@ public class CopyPasteLogic : ICopyPasteLogic
         // The undo lock is taken by the caller (CreateComponentFromInstance) so that AddComponent's
         // selection change is also covered — see the comment there.
 
-        // The instance's position was NOT moved to the component root, so capture it before the
-        // delete (which strips the instance's variables) and re-apply it to the replacement.
-        List<VariableSave> positionalVariables = sourceDefault.Variables
-            .Where(item => item.SourceObject == instance.Name && PositionalRootNames.Contains(item.GetRootName()))
-            .Select(item => item.Clone())
-            .ToList();
+        // Runs while the moved instances are still in the element, so their references still resolve.
+        MovedInstanceReference[] droppedReferences =
+            _movedInstanceReferenceDropper.DropReferencesBrokenByMove(sourceElement, instance, descendants);
 
         // The replacement takes the promoted instance's place among the instances that stay,
         // since the instance order is the draw order.
@@ -1550,8 +1549,16 @@ public class CopyPasteLogic : ICopyPasteLogic
             .TakeWhile(item => item != instance)
             .Count(item => !descendants.Contains(item));
 
-        MovedInstanceReference[] brokenReferences =
-            _movedInstanceReferenceFinder.GetReferencesBrokenByMove(sourceElement, instance, descendants);
+        // The delete below strips everything that names the instance, but the replacement keeps its
+        // name, so capture what still applies to it and re-apply it afterward.
+        List<(StateSave State, VariableSave Variable)> keptVariables =
+            GetVariablesKeptByReplacement(instance, sourceElement, sourceDefault, descendants);
+        List<(StateSave State, VariableListSave List)> keptLists = sourceElement.AllStates
+            .Where(state => state != sourceDefault)
+            .SelectMany(state => state.VariableLists
+                .Where(item => item.SourceObject == instance.Name)
+                .Select(item => (state, item.Clone())))
+            .ToList();
 
         foreach (InstanceSave descendant in descendants)
         {
@@ -1567,10 +1574,15 @@ public class CopyPasteLogic : ICopyPasteLogic
         };
         sourceElement.Instances.Insert(Math.Min(replacementIndex, sourceElement.Instances.Count), replacement);
 
-        foreach (VariableSave positionalVariable in positionalVariables)
+        foreach ((StateSave state, VariableSave variable) in keptVariables)
         {
-            sourceDefault.Variables.RemoveAll(item => item.Name == positionalVariable.Name);
-            sourceDefault.Variables.Add(positionalVariable);
+            state.Variables.RemoveAll(item => item.Name == variable.Name);
+            state.Variables.Add(variable);
+        }
+        foreach ((StateSave state, VariableListSave list) in keptLists)
+        {
+            state.VariableLists.RemoveAll(item => item.Name == list.Name);
+            state.VariableLists.Add(list);
         }
 
         _copyPastePluginNotifier.InstanceAdd(sourceElement, replacement);
@@ -1584,22 +1596,60 @@ public class CopyPasteLogic : ICopyPasteLogic
         _guiCommands.RefreshElementTreeView(sourceElement);
         _selectedState.SelectedInstance = replacement;
 
-        ReportBrokenReferences(brokenReferences, component);
+        ReportDroppedReferences(droppedReferences, component);
     }
 
-    private void ReportBrokenReferences(MovedInstanceReference[] brokenReferences, ComponentSave component)
+    /// <summary>
+    /// Copies of the variables in <paramref name="sourceElement"/> that still apply to the replacement
+    /// instance: its position (the rest of its default state became the component root's), what the
+    /// other states set on it, and values outside the subtree that name it, such as a Parent set in
+    /// another state.
+    /// </summary>
+    private static List<(StateSave State, VariableSave Variable)> GetVariablesKeptByReplacement(InstanceSave instance,
+        ElementSave sourceElement, StateSave sourceDefault, List<InstanceSave> descendants)
     {
-        if (brokenReferences.Length == 0)
+        HashSet<string> insideNames = new HashSet<string>(descendants.Select(item => item.Name), StringComparer.Ordinal)
+        {
+            instance.Name
+        };
+        List<(StateSave State, VariableSave Variable)> kept = new List<(StateSave State, VariableSave Variable)>();
+        foreach (StateSave state in sourceElement.AllStates)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                string rootName = variable.GetRootName();
+                bool isOnInstance = variable.SourceObject == instance.Name &&
+                    (state != sourceDefault || PositionalRootNames.Contains(rootName));
+                bool namesInstance = !insideNames.Contains(variable.SourceObject ?? "") &&
+                    (rootName == "Parent" || rootName == "RenderTargetTextureSource") &&
+                    variable.Value is string value &&
+                    (value == instance.Name || value.StartsWith(instance.Name + ".", StringComparison.Ordinal));
+                if (isOnInstance || namesInstance)
+                {
+                    kept.Add((state, variable.Clone()));
+                }
+            }
+        }
+        return kept;
+    }
+
+    private void ReportDroppedReferences(MovedInstanceReference[] droppedReferences, ComponentSave component)
+    {
+        if (droppedReferences.Length == 0)
         {
             return;
         }
-        string movedNames = string.Join(", ", brokenReferences.Select(item => item.MovedInstanceName).Distinct());
+        string movedNames = string.Join(", ", droppedReferences.Select(item => item.MovedInstanceName).Distinct());
         StringBuilder message = new StringBuilder();
-        message.Append($"{movedNames} moved into {component.Name}, so these references no longer apply:");
-        foreach (MovedInstanceReference reference in brokenReferences)
+        message.Append($"{movedNames} moved into {component.Name}, so these references were dropped:");
+        foreach (MovedInstanceReference reference in droppedReferences)
         {
             message.AppendLine();
             message.Append($"  {reference.Description}");
+            if (reference.KeptValue != null)
+            {
+                message.Append($", kept {reference.KeptValue}");
+            }
         }
         _outputManager.AddOutput(message.ToString());
     }

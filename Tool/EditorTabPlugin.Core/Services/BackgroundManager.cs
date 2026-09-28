@@ -97,6 +97,22 @@ internal class BackgroundManager : IRecipient<ThemeChangedMessage>, IDisposable
         return texture;
     }
 
+    /// <summary>
+    /// Hides the solid background color and the checkerboard, for a frame that must show only the
+    /// element (Export as Image). Takes effect immediately, not on the next <see cref="Activity"/>,
+    /// because that frame's update has already run by the time the export asks.
+    /// </summary>
+    public bool IsHiddenForExport
+    {
+        get => _isHiddenForExport;
+        set
+        {
+            _isHiddenForExport = value;
+            ApplyVisibility();
+        }
+    }
+    private bool _isHiddenForExport;
+
     public void Activity()
     {
         if (_backgroundSprite == null)
@@ -104,7 +120,18 @@ internal class BackgroundManager : IRecipient<ThemeChangedMessage>, IDisposable
             throw new InvalidOperationException("BackgroundManager.Initialize must be called before Activity");
         }
 
-        _backgroundSprite.Visible = _wireframeCommands.IsBackgroundGridVisible;
+        ApplyVisibility();
+    }
+
+    private void ApplyVisibility()
+    {
+        if (_backgroundSolidColor == null || _backgroundSprite == null)
+        {
+            return;
+        }
+
+        _backgroundSolidColor.Visible = !_isHiddenForExport;
+        _backgroundSprite.Visible = !_isHiddenForExport && _wireframeCommands.IsBackgroundGridVisible;
     }
 
     private void ApplyThemingSettings(IEffectiveThemeSettings settings)

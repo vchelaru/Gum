@@ -2,6 +2,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.VariableGrid;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
@@ -264,30 +265,58 @@ public class FileMenuScenarioTests
     [SkippableFact]
     [Trait("Feature", "FILE-007")]
     public void ExportAsImage_WritesTheCanvasToAPng_AndPutsTheEditorsGuidesBack() =>
-        ExportButtonAsImage((canvas, image, box) =>
+        ExportButtonAsImage(inRenderTarget: false, gridOverlay: false, (canvas, image, box) =>
         {
             (image.Width, image.Height).ShouldBe(((int)canvas.Canvas.Bounds.Width, (int)canvas.Canvas.Bounds.Height), "the whole canvas is exported");
             SkiaSharp.SKColor background = image.GetPixel(image.Width - 5, image.Height - 5);
-            box.ShouldContain(pixel => pixel != background, "the rectangle is drawn over the background");
+            PixelsOf(image, box, inside: true).ShouldContain(pixel => pixel != background, "the rectangle is drawn over the background");
         });
 
-    [SkippableFact(Skip = "#5384: the editor's solid background rectangle fills the exported image")]
+    // The export shows only the element: the editor's solid background color and checkerboard are
+    // left out, and so is the snap grid overlay, including when the element draws through its own
+    // render target.
+    [SkippableTheory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
     [Trait("Feature", "FILE-007")]
-    public void ExportAsImage_LeavesTheBackgroundTransparent() =>
-        ExportButtonAsImage((_, image, _) =>
-            image.GetPixel(image.Width - 5, image.Height - 5).Alpha.ShouldBe((byte)0, "nothing but the element is drawn"));
+    public void ExportAsImage_LeavesTheBackgroundTransparent(bool inRenderTarget, bool gridOverlay) =>
+        ExportButtonAsImage(inRenderTarget, gridOverlay, (_, image, box) =>
+        {
+            PixelsOf(image, box, inside: false).ShouldAllBe(pixel => pixel.Alpha == 0, "nothing but the element is drawn");
+            PixelsOf(image, box, inside: true).ShouldContain(pixel => pixel.Alpha == 255, "the rectangle is still drawn");
+        });
 
     // Exports a Button holding a rectangle at (20, 20, 60 x 40) through File > Export > Export as
-    // Image, checks the canvas guides come back, and hands the image and the rectangle's pixels on.
-    private static void ExportButtonAsImage(Action<CanvasHarness, SkiaSharp.SKBitmap, List<SkiaSharp.SKColor>> check)
+    // Image, checks the canvas guides come back, and hands the image and the rectangle's bounds in
+    // image pixels on. With inRenderTarget the rectangle sits in a container drawn as a render target;
+    // with gridOverlay the snap grid is drawn on the canvas, as when the project snaps to a grid.
+    private static void ExportButtonAsImage(bool inRenderTarget, bool gridOverlay, Action<CanvasHarness, SkiaSharp.SKBitmap, SkiaSharp.SKRectI> check)
     {
         Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
         CanvasHarness.OnUiThread(() =>
         {
             using CanvasHarness canvas = new CanvasHarness();
             ComponentSave button = canvas.Project.AddComponent("Button");
-            canvas.AddInstance(button, "Box", "Rectangle", x: 20, y: 20, width: 60, height: 40);
+            if (inRenderTarget)
+            {
+                // The holder matches the box so its dotted outline (the project's Show Outlines)
+                // lands on the box's own edge.
+                canvas.AddInstance(button, "Holder", "Container", x: 20, y: 20, width: 60, height: 40);
+                canvas.AddInstance(button, "Box", "Rectangle", x: 0, y: 0, width: 60, height: 40);
+                button.DefaultState!.SetValue("Holder.IsRenderTarget", true, "bool");
+                button.DefaultState.SetValue("Box.Parent", "Holder", "string");
+                canvas.Tree.SaveAll();
+                Services.GetRequiredService<IGuiCommands>().RefreshElementTreeView(button);
+                canvas.Wireframe.RefreshAll(forceLayout: true);
+            }
+            else
+            {
+                canvas.AddInstance(button, "Box", "Rectangle", x: 20, y: 20, width: 60, height: 40);
+            }
             canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            Gum.Commands.IWireframeCommands wireframeCommands = Services.GetRequiredService<Gum.Commands.IWireframeCommands>();
+            wireframeCommands.IsGridOverlayVisible = gridOverlay;
             canvas.Frame();
             WireframeGuides before = WireframeGuides.Take();
             string folder = Path.Combine(Path.GetTempPath(), "GumFileMenuScenarios", Guid.NewGuid().ToString("N"));
@@ -301,23 +330,19 @@ public class FileMenuScenarioTests
                 canvas.Frame();
 
                 File.Exists(png).ShouldBeTrue(canvas.Describe());
-                WireframeGuides.Take().ShouldBe(before, "the rulers, bounds, background and highlights come back");
+                WireframeGuides.Take().ShouldBe(before, "the rulers, bounds, background, highlights and grid come back");
                 using SkiaSharp.SKBitmap image = SkiaSharp.SKBitmap.Decode(png);
                 global::Avalonia.Point origin = global::Avalonia.VisualExtensions.TranslatePoint(canvas.Canvas, default, canvas.Input.Window)!.Value;
                 global::Avalonia.Point topLeft = canvas.WindowPointOf(20, 20);
                 global::Avalonia.Point bottomRight = canvas.WindowPointOf(80, 60);
-                List<SkiaSharp.SKColor> box = new List<SkiaSharp.SKColor>();
-                for (int x = (int)(topLeft.X - origin.X); x <= (int)(bottomRight.X - origin.X); x++)
-                {
-                    for (int y = (int)(topLeft.Y - origin.Y); y <= (int)(bottomRight.Y - origin.Y); y++)
-                    {
-                        box.Add(image.GetPixel(x, y));
-                    }
-                }
+                SkiaSharp.SKRectI box = new SkiaSharp.SKRectI(
+                    (int)(topLeft.X - origin.X), (int)(topLeft.Y - origin.Y),
+                    (int)(bottomRight.X - origin.X), (int)(bottomRight.Y - origin.Y));
                 check(canvas, image, box);
             }
             finally
             {
+                wireframeCommands.IsGridOverlayVisible = false;
                 TryDeleteFolder(folder);
             }
 
@@ -325,13 +350,33 @@ public class FileMenuScenarioTests
         });
     }
 
-    private sealed record WireframeGuides(bool Rulers, bool CanvasBounds, bool Background, bool Highlights)
+    // The pixels inside box (edges included), or those more than 2 pixels outside it, which leaves
+    // the rectangle's antialiased edge out of both.
+    private static List<SkiaSharp.SKColor> PixelsOf(SkiaSharp.SKBitmap image, SkiaSharp.SKRectI box, bool inside)
+    {
+        List<SkiaSharp.SKColor> pixels = new List<SkiaSharp.SKColor>();
+        for (int x = 0; x < image.Width; x++)
+        {
+            for (int y = 0; y < image.Height; y++)
+            {
+                bool isInside = x >= box.Left && x <= box.Right && y >= box.Top && y <= box.Bottom;
+                bool isOutside = x < box.Left - 2 || x > box.Right + 2 || y < box.Top - 2 || y > box.Bottom + 2;
+                if (inside ? isInside : isOutside)
+                {
+                    pixels.Add(image.GetPixel(x, y));
+                }
+            }
+        }
+        return pixels;
+    }
+
+    private sealed record WireframeGuides(bool Rulers, bool CanvasBounds, bool Background, bool Highlights, bool GridOverlay)
     {
         public static WireframeGuides Take()
         {
             Gum.Commands.IWireframeCommands commands = Services.GetRequiredService<Gum.Commands.IWireframeCommands>();
             return new WireframeGuides(commands.AreRulersVisible, commands.AreCanvasBoundsVisible,
-                commands.IsBackgroundGridVisible, commands.AreHighlightsVisible);
+                commands.IsBackgroundGridVisible, commands.AreHighlightsVisible, commands.IsGridOverlayVisible);
         }
     }
 

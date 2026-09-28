@@ -2,6 +2,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Services.Dialogs;
 using Shouldly;
@@ -792,7 +793,7 @@ public class TreeScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "TREE-032")]
-    public void CreateComponent_ReportsAReferenceFromOutsideToAMovedChild_AndOneUndoRestoresIt()
+    public void CreateComponent_DropsAReferenceFromOutsideToAMovedChild_KeepingItsValue_AndOneUndoRestoresIt()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         ComponentSave button = tree.Project.AddComponent("Button");
@@ -801,6 +802,7 @@ public class TreeScenarioTests
         InstanceSave caption = tree.Project.AddInstance(button, "Caption", "Text");
         tree.Click(tree.NodeFor(label));
         tree.Grid.PickComboItem("Parent", "Box");
+        tree.Grid.TypeAndEnter("X", "12");
         tree.Click(tree.NodeFor(caption));
         tree.Grid.TypeLinesAndApply("VariableReferences", "X = Label.X");
         tree.Click(tree.NodeFor(Component(tree, "Button").Instances.First(instance => instance.Name == "Box")));
@@ -809,14 +811,49 @@ public class TreeScenarioTests
         tree.RightClick(tree.NodeFor(Component(tree, "Button").Instances.First(instance => instance.Name == "Box")));
         tree.PickMenu("Create Component");
 
-        tree.OutputWritten.ShouldContain("Label moved into BoxComponent");
-        tree.OutputWritten.ShouldContain("Button (Default): Caption.VariableReferences line \"X=Label.X\"");
+        tree.OutputWritten.ShouldContain("Label moved into BoxComponent, so these references were dropped:");
+        tree.OutputWritten.ShouldContain("Button (Default): Caption.VariableReferences line \"X=Label.X\", kept Caption.X = 12");
+        Component(tree, "Button").GetDefaultStateOrThrow().VariableLists.ShouldNotContain(list => list.Name == "Caption.VariableReferences");
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Caption.X").ShouldBe(12f);
 
         tree.Undo();
 
         Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Box", "Label", "Caption" }, ignoreOrder: true);
         Component(tree, "Button").Instances.Single(instance => instance.Name == "Box").BaseType.ShouldBe("Container");
         VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Parent").ShouldBe("Box");
+        Component(tree, "Button").GetDefaultStateOrThrow().VariableLists.Single(list => list.Name == "Caption.VariableReferences")
+            .ValueAsIList.Cast<string>().ShouldBe(new[] { "X=Label.X" });
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "TREE-032")]
+    public void CreateComponent_KeepsWhatOtherStatesSetOnThePromotedInstance()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Project.AddInstance(button, "Box", "Container");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Click(tree.NodeFor(label));
+        tree.Grid.PickComboItem("Parent", "Box");
+        StateSaveCategory look = tree.Project.AddCategory(button, "Look");
+        StateSave hidden = tree.Project.AddState(button, look, "Hidden");
+        hidden.SetValue("Box.Visible", false, "bool");
+        hidden.SetValue("Label.Red", 10, "int");
+
+        tree.Click(tree.NodeFor(Component(tree, "Button").Instances.First(instance => instance.Name == "Box")));
+        tree.Dialogs.AnswerNext<CreateComponentDialogViewModel>(dialog => { dialog.IsCheckboxChecked = true; return true; });
+        tree.RightClick(tree.NodeFor(Component(tree, "Button").Instances.First(instance => instance.Name == "Box")));
+        tree.PickMenu("Create Component");
+
+        StateSave hiddenAfter = Component(tree, "Button").Categories.Single().States.Single();
+        hiddenAfter.GetValue("Box.Visible").ShouldBe(false);
+        hiddenAfter.GetValue("Label.Red").ShouldBeNull();
+        tree.OutputWritten.ShouldContain("Button (Hidden): Label.Red = 10");
+
+        tree.Undo();
+
+        Component(tree, "Button").Categories.Single().States.Single().GetValue("Label.Red").ShouldBe(10);
         tree.AssertOracles();
     }
 

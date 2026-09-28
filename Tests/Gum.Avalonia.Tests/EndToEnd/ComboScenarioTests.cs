@@ -296,7 +296,7 @@ public class ComboScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5377: Create Component leaves a reference from outside the promoted subtree pointing at an instance the element no longer has")]
+    [AvaloniaFact]
     [Trait("Feature", "COMBO-026")]
     public void PromotingAParentInstanceToAComponent_LeavesNoReferenceToAnInstanceThatMovedIntoIt()
     {
@@ -318,8 +318,11 @@ public class ComboScenarioTests
         tree.RightClick(tree.NodeFor(Instance(Screen(tree, "Menu"), "Box")));
         tree.PickMenu("Create Component");
 
-        // Label now lives inside BoxComponent, so Menu's reference to it can never apply.
+        // Label now lives inside BoxComponent, so Menu's reference to it is dropped and the value
+        // it resolved to stays.
         VariableGridHarness.StoredValue(Screen(tree, "Menu"), "Caption.X").ShouldBe(5f);
+        (Screen(tree, "Menu").GetDefaultStateOrThrow().GetVariableListSave("Caption.VariableReferences")?.ValueAsIList?.Cast<string>()
+            ?? Enumerable.Empty<string>()).ShouldNotContain(line => line.Contains("Label.X"));
         ProjectOracles.AssertCheckClean(tree.Project.ProjectFilePath);
         tree.AssertOracles();
     }
