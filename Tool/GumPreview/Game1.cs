@@ -132,24 +132,23 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-        GumService.Default.Draw();
-        base.Draw(gameTime);
-
         if (_unattended != null && _unattended.TryClaimCapture())
         {
             FinishUnattended();
         }
+
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumService.Default.Draw();
+        base.Draw(gameTime);
     }
 
-    // Runs after drawing and before the frame is presented, so the back buffer holds this frame.
     private void FinishUnattended()
     {
         if (_screenshotPath != null)
         {
             try
             {
-                SaveBackBuffer(_screenshotPath);
+                SaveFrame(_screenshotPath);
             }
             catch (Exception exception)
             {
@@ -163,26 +162,37 @@ public class Game1 : Game
         Exit();
     }
 
-    private void SaveBackBuffer(string path)
+    // Draws a frame into an offscreen target of the canvas size and saves it. The window's own
+    // back buffer can't be used: on the first frame its drawable may not have been resized to the
+    // project's canvas yet, and a window partly off the screen doesn't keep every pixel.
+    private void SaveFrame(string path)
     {
-        int width = GraphicsDevice.PresentationParameters.BackBufferWidth;
-        int height = GraphicsDevice.PresentationParameters.BackBufferHeight;
+        int width = (int)GraphicalUiElement.CanvasWidth;
+        int height = (int)GraphicalUiElement.CanvasHeight;
+        using RenderTarget2D target = new RenderTarget2D(GraphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+        GraphicsDevice.SetRenderTarget(target);
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumService.Default.Draw();
+        GraphicsDevice.SetRenderTarget(null);
+
+        // Blending leaves partial alpha where translucent content was drawn; the window shows the
+        // frame opaque, so the PNG is too.
         Color[] pixels = new Color[width * height];
-        GraphicsDevice.GetBackBufferData(pixels);
+        target.GetData(pixels);
         for (int i = 0; i < pixels.Length; i++)
         {
             pixels[i].A = 255;
         }
+        using Texture2D opaque = new Texture2D(GraphicsDevice, width, height);
+        opaque.SetData(pixels);
 
         string? directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(directory))
         {
             Directory.CreateDirectory(directory);
         }
-        using Texture2D texture = new Texture2D(GraphicsDevice, width, height);
-        texture.SetData(pixels);
         using FileStream stream = File.Create(path);
-        texture.SaveAsPng(stream, width, height);
+        opaque.SaveAsPng(stream, width, height);
     }
 
     private void FailUnattended(string? message)
