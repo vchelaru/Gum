@@ -376,6 +376,12 @@ internal sealed class ProjectTreeHarness : IDisposable
     /// </summary>
     public IDataTransfer BeginDrag(GumTreeNode node) => BeginDragFrom(RowFor(node));
 
+    /// <summary>
+    /// Presses <paramref name="source"/> (a Standards palette chip) and moves past the drag threshold.
+    /// Returns the data it put on the drag.
+    /// </summary>
+    public IDataTransfer BeginDrag(Control source) => BeginDragFrom(source);
+
     /// <summary>The data on the drag under way, for a drop somewhere else (the canvas).</summary>
     public IDataTransfer CurrentDrag => _dragData ?? throw new InvalidOperationException("No drag was started.");
 
