@@ -243,17 +243,14 @@
 - DISP-001 TextBox. tested: TextBoxDisplayLogicTests, VariableScenarioTests
 - DISP-002 MultiLineTextBox. tested: PropertyGridManagerStringDisplayerTests, VariableScenarioTests
 - DISP-003 CheckBox. tested: SimpleEditorTests, VariableScenarioTests
-- DISP-004 NullableBool. tested: SimpleEditorTests
+- DISP-004 NullableBool, on a behavior's `bool?` Forms property. tested: SimpleEditorTests, DisplayPropertiesScenarioTests
 - DISP-005 ComboBox. tested: SimpleEditorTests, VariableScenarioTests
-- DISP-006 EditableComboBox. tested: SimpleEditorTests
 - DISP-007 ListBox. tested: CompositeEditorTests
 - DISP-008 Slider. tested: SimpleEditorTests
-- DISP-009 PlusMinus. tested: SimpleEditorTests
 - DISP-010 AngleSelector. tested: CompositeEditorTests
 - DISP-011 FileSelection. tested: FilePickingTests
 - DISP-012 MultiFile. tested: CompositeEditorTests
 - DISP-013 StringList. tested: CompositeEditorTests, VariableScenarioTests
-- DISP-014 InlineChannels. tested: InlineChannelsDisplayLogicTests
 - DISP-015 ToggleButtonOption. tested: CompositeEditorTests
 - DISP-016 Color (picker and hex). tested: CompactColorPickerTests, VariableScenarioTests
 - DISP-017 CornerRadius (linked/unlinked). tested: VariablesTabTests
