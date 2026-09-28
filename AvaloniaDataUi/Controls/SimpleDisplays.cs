@@ -131,6 +131,7 @@ public class NullableBoolDisplay : DataUiDisplayBase
     private readonly RadioButton _falseButton;
     private readonly RadioButton _nullButton;
     private readonly TextBlock _hint;
+    private RadioButton? _checkedButton;
 
     /// <summary>Builds the displayer.</summary>
     public NullableBoolDisplay()
@@ -186,37 +187,42 @@ public class NullableBoolDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
-        switch (valueOnInstance as bool?)
+        RadioButton button = (valueOnInstance as bool?) switch
         {
-            case true:
-                _trueButton.IsChecked = true;
-                break;
-            case false:
-                _falseButton.IsChecked = true;
-                break;
-            default:
-                _nullButton.IsChecked = true;
-                break;
-        }
+            true => _trueButton,
+            false => _falseButton,
+            _ => _nullButton,
+        };
+        button.IsChecked = true;
+        _checkedButton = button;
         return ApplyValueResult.Success;
     }
 
     /// <inheritdoc/>
     public override ApplyValueResult TryGetValueOnUi(out object? value)
     {
-        value = _trueButton.IsChecked == true ? true
-            : _falseButton.IsChecked == true ? false
-            : null;
+        value = ValueOf(_checkedButton);
         return ApplyValueResult.Success;
     }
 
     private void HandleRadioChanged(object? sender, RoutedEventArgs e)
     {
-        if (!SuppressSettingProperty && sender is RadioButton { IsChecked: true })
+        if (sender is RadioButton { IsChecked: true } button)
         {
-            this.TrySetValueOnInstance();
+            // The group unchecks the previous option only after this handler runs, so read the
+            // value from the button just checked, not from whichever button reads as checked first.
+            _checkedButton = button;
+            if (!SuppressSettingProperty)
+            {
+                this.TrySetValueOnInstance();
+            }
         }
     }
+
+    private bool? ValueOf(RadioButton? button) =>
+        button == _trueButton ? true
+        : button == _falseButton ? false
+        : null;
 }
 
 /// <summary>
@@ -413,16 +419,6 @@ public class ComboBoxDisplay : DataUiDisplayBase
         // Only the default state is tinted, matching the WPF combo box.
         DataUiValueStateBrushes.ApplyBackground(_comboBox,
             InstanceMember?.IsDefault == true ? DataUiValueState.Default : DataUiValueState.Custom);
-    }
-}
-
-/// <summary>A <see cref="ComboBoxDisplay"/> that is always editable.</summary>
-public class EditableComboBoxDisplay : ComboBoxDisplay
-{
-    /// <summary>Builds the displayer.</summary>
-    public EditableComboBoxDisplay()
-    {
-        IsEditable = true;
     }
 }
 
@@ -655,133 +651,5 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     {
         _minValueText.Text = (_minValue * _sliderLogic.DisplayedValueMultiplier).ToString();
         _maxValueText.Text = (_maxValue * _sliderLogic.DisplayedValueMultiplier).ToString();
-    }
-}
-
-/// <summary>A number field between minus and plus buttons; Ctrl steps by 5.</summary>
-public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
-{
-    private readonly TextBoxDisplayLogic _logic;
-    private readonly Grid _grid;
-    private readonly TextBlock _label;
-    private readonly EditTrackingTextBox _textBox;
-    private readonly TextBlock _hint;
-    private ApplyValueResult? _lastApplyValueResult;
-    private KeyModifiers _lastPressModifiers;
-
-    /// <summary>Builds the displayer.</summary>
-    public PlusMinusTextBox()
-    {
-        _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4, 4, 4, 0), VerticalAlignment = VerticalAlignment.Center };
-        _textBox = new EditTrackingTextBox { Width = 60, HorizontalContentAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-        _textBox.EditCommitRequested += (_, _) =>
-        {
-            _lastApplyValueResult = _logic!.TryApplyToInstance();
-            RefreshEnabledState();
-        };
-        Button minus = CreateStepButton("-", -1);
-        Button plus = CreateStepButton("+", 1);
-        _hint = CreateHintTextBlock();
-
-        StackPanel field = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(3, 0) };
-        field.Children.Add(minus);
-        field.Children.Add(_textBox);
-        field.Children.Add(plus);
-
-        _grid = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("100,*"),
-            RowDefinitions = new RowDefinitions("Auto,Auto"),
-        };
-        Grid.SetColumn(field, 1);
-        Grid.SetRow(_hint, 1);
-        Grid.SetColumnSpan(_hint, 2);
-        _grid.Children.Add(_label);
-        _grid.Children.Add(field);
-        _grid.Children.Add(_hint);
-        Content = _grid;
-
-        _logic = AvaloniaDataUiTextBox.CreateLogic(this, _textBox);
-    }
-
-    /// <summary>The text field, for tests.</summary>
-    internal TextBox TextBox => _textBox;
-
-    /// <inheritdoc/>
-    protected override void OnInstanceMemberChanged()
-    {
-        _logic.InstanceMember = InstanceMember;
-        _lastApplyValueResult = null;
-        _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
-    }
-
-    /// <inheritdoc/>
-    public override void Refresh(bool forceRefreshEvenIfFocused = false)
-    {
-        if (InstanceMember == null)
-        {
-            return;
-        }
-
-        if (_textBox.IsFocused && !forceRefreshEvenIfFocused && !InstanceMember.IsDefault)
-        {
-            return;
-        }
-
-        SuppressSettingProperty = true;
-        _logic.RefreshDisplay(out _);
-        _label.Text = InstanceMember.DisplayName;
-        RefreshHint(_hint);
-        RefreshEnabledState();
-        SuppressSettingProperty = false;
-    }
-
-    /// <inheritdoc/>
-    public void SetToDefault()
-    {
-        _logic.HasUserChangedAnything = false;
-        _textBox.AcceptText();
-    }
-
-    /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
-    {
-        _textBox.Text = _logic.ConvertNumberToString(valueOnInstance);
-        return ApplyValueResult.Success;
-    }
-
-    /// <inheritdoc/>
-    public override ApplyValueResult TryGetValueOnUi(out object? value) => _logic.TryGetValueOnUi(out value);
-
-    /// <summary>Steps the value by <paramref name="direction"/> (times 5 with Ctrl) and commits it.</summary>
-    internal void Step(int direction, bool isCtrlDown)
-    {
-        if (TryGetValueOnUi(out object? value) != ApplyValueResult.Success)
-        {
-            return;
-        }
-
-        object newValue = _logic.GetValueInDirection(isCtrlDown ? direction * 5 : direction, value!);
-        TrySetValueOnUi(newValue);
-        _lastApplyValueResult = _logic.TryApplyToInstance();
-    }
-
-    private Button CreateStepButton(string text, int direction)
-    {
-        Button button = new Button
-        {
-            Content = text,
-            Width = 22,
-            Padding = new Thickness(0),
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-        };
-        button.AddHandler(PointerPressedEvent, (_, e) => _lastPressModifiers = e.KeyModifiers, RoutingStrategies.Tunnel);
-        button.Click += (_, _) => Step(direction, _lastPressModifiers.HasCommand());
-        return button;
-    }
-
-    private void RefreshEnabledState()
-    {
-        SetIsEditable(_lastApplyValueResult != ApplyValueResult.NotSupported && InstanceMember?.IsReadOnly != true);
     }
 }

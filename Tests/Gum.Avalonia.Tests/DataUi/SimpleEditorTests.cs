@@ -200,7 +200,7 @@ public class SimpleEditorTests
         EditorFixture fixture = new EditorFixture { Text = "start" };
         InstanceMember member = fixture.Member(nameof(EditorFixture.Text));
         member.CustomOptions = new List<object> { "start", "other" };
-        EditableComboBoxDisplay display = new EditableComboBoxDisplay { InstanceMember = member };
+        ComboBoxDisplay display = new ComboBoxDisplay { IsEditable = true, InstanceMember = member };
 
         display.ComboBox.Text = "typed";
         display.TrySetValueOnInstance();
@@ -220,19 +220,6 @@ public class SimpleEditorTests
         display.HandleSliderCommitted();
 
         fixture.Number.ShouldBe(0.6f, 0.0001f);
-    }
-
-    [AvaloniaFact]
-    public void PlusMinusTextBox_StepsByOneOrFiveWithCtrl()
-    {
-        EditorFixture fixture = new EditorFixture { Count = 3 };
-        PlusMinusTextBox display = new PlusMinusTextBox { InstanceMember = fixture.Member(nameof(EditorFixture.Count)) };
-
-        display.Step(1, isCtrlDown: false);
-        fixture.Count.ShouldBe(4);
-
-        display.Step(-1, isCtrlDown: true);
-        fixture.Count.ShouldBe(-1);
     }
 
     [AvaloniaFact]

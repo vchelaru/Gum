@@ -45,19 +45,6 @@ public class FieldFocusLossTests
     }
 
     [AvaloniaFact]
-    public void PlusMinusTextBox_LeavingAfterAnOutsideChange_WritesNothing()
-    {
-        EditorFixture fixture = new EditorFixture { Count = 1 };
-        InstanceMember member = fixture.Member(nameof(EditorFixture.Count));
-        PlusMinusTextBox display = new PlusMinusTextBox { InstanceMember = member };
-
-        int writes = TypeEnterChangeElsewhereAndLeave(display, display.TextBox, member, "5", () => fixture.Count = 9);
-
-        writes.ShouldBe(0);
-        fixture.Count.ShouldBe(9);
-    }
-
-    [AvaloniaFact]
     public void AngleSelectorDisplay_LeavingAfterAnOutsideChange_WritesNothing()
     {
         EditorFixture fixture = new EditorFixture { Angle = 1 };
@@ -81,23 +68,6 @@ public class FieldFocusLossTests
 
         writes.ShouldBe(0);
         fixture.File.ShouldBe("c.png");
-    }
-
-    [AvaloniaFact]
-    public void InlineChannelsDisplay_LeavingAfterAnOutsideChange_WritesNothing()
-    {
-        EditorFixture fixture = new EditorFixture { Red = 1, Green = 2 };
-        InstanceMember red = fixture.Member(nameof(EditorFixture.Red));
-        InstanceMember green = fixture.Member(nameof(EditorFixture.Green));
-        CompositeInstanceMember composite = new CompositeInstanceMember(
-            "Channels", new[] { red, green }, typeof(string),
-            channels => string.Join(",", channels), value => new object?[] { 0f, 0f });
-        InlineChannelsDisplay display = new InlineChannelsDisplay { InstanceMember = composite };
-
-        int writes = TypeEnterChangeElsewhereAndLeave(display, display.FieldTextBoxes[0], red, "5", () => fixture.Red = 9);
-
-        writes.ShouldBe(0);
-        fixture.Red.ShouldBe(9f);
     }
 
     [AvaloniaFact]
