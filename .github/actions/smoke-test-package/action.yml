@@ -1,0 +1,57 @@
+name: Smoke-test a release package
+description: >
+  Extracts one Gum release package the way a user would, opens a copy of the Forms sample in the
+  packaged Gum unattended (--exit-after, --select, --screenshot), runs the packaged gumcli check and
+  fonts on that copy, and launches the Native AOT GumPreview. Linux runs on Xvfb with Mesa, Windows
+  on Mesa llvmpipe dropped next to the executables, macOS on the runner's own display. Uploads the
+  screenshot and logs as smoke-<rid>. The logic is .github/scripts/smoke-test-package.sh, which also
+  runs locally. Check out the repo first.
+inputs:
+  rid:
+    description: Runtime identifier of the package (win-x64, linux-x64, osx-x64, osx-arm64).
+    required: true
+  dist:
+    description: Folder holding Gum-<rid>.zip or .tar.xz and its .sha256.
+    default: dist
+  sample:
+    description: Gum project folder to copy and open.
+    default: Samples/GumFormsSample/MonoGameGumFormsSample/Content/FormsGumProject
+runs:
+  using: composite
+  steps:
+    - name: Install Xvfb and Mesa (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0 file
+
+    - name: Extract the package
+      shell: bash
+      run: bash .github/scripts/smoke-test-package.sh --extract "${{ inputs.rid }}" "${{ inputs.dist }}" "$RUNNER_TEMP/gum-smoke-${{ inputs.rid }}/package"
+
+    # The runner has no GPU and Windows' own opengl32.dll is GL 1.1; SDL loads opengl32.dll from the
+    # executable's folder first, so Mesa there gives Gum's canvas and GumPreview a GL 3.3 context.
+    - name: Install Mesa llvmpipe next to the executables (Windows)
+      if: runner.os == 'Windows'
+      uses: ./.github/actions/install-mesa-llvmpipe
+      with:
+        dest-dirs: |
+          ${{ runner.temp }}\gum-smoke-${{ inputs.rid }}\package
+          ${{ runner.temp }}\gum-smoke-${{ inputs.rid }}\package\Preview-Aot
+
+    - name: Launch the packaged Gum, gumcli and GumPreview
+      shell: bash
+      # Mesa reads these on Linux and Windows; macOS ignores them.
+      env:
+        LIBGL_ALWAYS_SOFTWARE: '1'
+        GALLIUM_DRIVER: llvmpipe
+      run: bash .github/scripts/smoke-test-package.sh "${{ inputs.rid }}" "${{ inputs.dist }}" "${{ inputs.sample }}" smoke-out --launch-preview
+
+    - name: Upload screenshot and logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: smoke-${{ inputs.rid }}
+        path: smoke-out/
+        if-no-files-found: ignore

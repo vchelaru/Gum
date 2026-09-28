@@ -1,6 +1,6 @@
 name: Release Tool
 
-# When to execute (This means manual trigger only)
+# Releases are manual (workflow_dispatch); pull requests only build and smoke-test the packages.
 on:
   workflow_dispatch:
     inputs:
@@ -10,6 +10,17 @@ on:
         options: [release, prerelease, test]   # test = draft
         default: test
         required: true
+  # A PR that touches packaging builds and smoke-tests every package (#5465) without releasing:
+  # the build job, which tags and creates the release, runs on workflow_dispatch only.
+  pull_request:
+    paths:
+      - .github/workflows/build-and-release.yml
+      - .github/actions/smoke-test-package/**
+      - .github/scripts/smoke-test-package.sh
+      - Tool/Gum.Avalonia/Gum.Avalonia.csproj
+      - Tool/Gum.Avalonia/Packaging/**
+      - Tool/GumPreview/GumPreview.csproj
+      - Tools/Gum.Cli/Gum.Cli.csproj
 
 permissions:
   contents: write
@@ -145,9 +156,19 @@ jobs:
           name: avalonia-${{ matrix.rid }}
           path: dist/
 
+      # Launch-tests the package just built, so a broken package fails the release instead of
+      # reaching users (#5465).
+      - name: Smoke-test the package
+        timeout-minutes: 20
+        uses: ./.github/actions/smoke-test-package
+        with:
+          rid: ${{ matrix.rid }}
+
   build:
     # The Avalonia packages are the release, so a failed one fails the release.
     needs: publish-avalonia
+    # Releasing is manual only; pull requests stop after the packages are smoke-tested.
+    if: github.event_name == 'workflow_dispatch'
     # Which OS to run on
     runs-on: windows-latest
 
