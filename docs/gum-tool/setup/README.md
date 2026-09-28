@@ -33,12 +33,14 @@ Gum is not signed, so Windows shows the "Windows protected your PC" popup the fi
 {% tab title="macOS" %}
 1. Double-click the `.tar.xz` file for your Mac to extract `Gum.app`.
 2. Move `Gum.app` into your **Applications** folder.
-3. Open a terminal and allow the app to run. Gum is not notarized by Apple, so macOS blocks it until you do this once:
+3. Allow Gum to run. Gum is not notarized by Apple, so macOS blocks it until you approve it once. The quickest way is to run this in Terminal:
 
     ```sh
     xattr -dr com.apple.quarantine /Applications/Gum.app
     ```
 4. Open Gum from **Applications** or Launchpad.
+
+To approve Gum through **System Settings** instead, or if macOS asks for access to your folders, see [Opening Gum on macOS](opening-gum-on-macos.md).
 {% endtab %}
 
 {% tab title="Linux" %}
