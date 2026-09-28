@@ -262,34 +262,41 @@ public class FileMenuScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact]
+    // Normal builds leave gumcli out (Gum.Cli is not in Gum.slnx); CI publishes it into the test
+    // output's GumCli folder, where the export looks for it, before running these tests.
+    [SkippableFact]
     [Trait("Feature", "FILE-008")]
     public void ExportToSvg_WritesAnSvgOfTheSelectedElement()
     {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        ComponentSave card = tree.Project.AddComponent("Card");
-        tree.Project.AddInstance(card, "Box", "Rectangle");
-        tree.SaveAll();
-        tree.Click(tree.NodeFor(card));
-        string folder = Path.Combine(Path.GetTempPath(), "GumFileMenuScenarios", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        string svg = Path.Combine(folder, "Card.svg");
-        try
+        Skip.IfNot(File.Exists(Path.Combine(AppContext.BaseDirectory, "GumCli", "gumcli.dll")),
+            "gumcli is not in the test output's GumCli folder; publish Tools/Gum.Cli there (--self-contained false -o <test output>/GumCli) to run this");
+        DeviceTestThread.Run(() =>
         {
-            tree.Dialogs.AnswerNextSaveFile(svg);
+            using ProjectTreeHarness tree = new ProjectTreeHarness();
+            ComponentSave card = tree.Project.AddComponent("Card");
+            tree.Project.AddInstance(card, "Box", "Rectangle");
+            tree.SaveAll();
+            tree.Click(tree.NodeFor(card));
+            string folder = Path.Combine(Path.GetTempPath(), "GumFileMenuScenarios", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+            string svg = Path.Combine(folder, "Card.svg");
+            try
+            {
+                tree.Dialogs.AnswerNextSaveFile(svg);
 
-            tree.PickMainMenu("File", "Export", "Export Card to SVG");
+                tree.PickMainMenu("File", "Export", "Export Card to SVG");
 
-            File.Exists(svg).ShouldBeTrue(tree.OutputWritten);
-            File.ReadAllText(svg).ShouldContain("<svg");
-            tree.OutputWritten.ShouldContain("SVG written to: " + svg);
-        }
-        finally
-        {
-            TryDeleteFolder(folder);
-        }
+                File.Exists(svg).ShouldBeTrue(tree.OutputWritten);
+                File.ReadAllText(svg).ShouldContain("<svg");
+                tree.OutputWritten.ShouldContain("SVG written to: " + svg);
+            }
+            finally
+            {
+                TryDeleteFolder(folder);
+            }
 
-        tree.AssertOracles();
+            tree.AssertOracles();
+        });
     }
 
     [SkippableFact]

@@ -40,11 +40,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <!--
-    The end-to-end scenarios run the tool as it ships, so the test output gets the folders the
-    head's output has: Plugins/<Name>/, Content/FormsThemes/ and GumCli/. All are copied from the
-    head's output, where each plugin's own post-build and the head's StageGumCli target staged them
-    (those are the one place the layout is defined). Only the referenced plugins are copied, all rebuilt by this build, so a
-    stale DLL left in the head's folder never reaches a test; the folders are emptied first.
+    The end-to-end scenarios run the tool as it ships, so the test output gets the two folders the
+    head's output has: Plugins/<Name>/ and Content/FormsThemes/. Both are copied from the head's
+    output, where each plugin's own post-build staged them (that post-build is the one place the
+    layout is defined). Only the referenced plugins are copied, all rebuilt by this build, so a
+    stale DLL left in the head's folder never reaches a test; both folders are emptied first.
   -->
   <Target Name="StageHeadPlugins" AfterTargets="Build">
     <PropertyGroup>
@@ -56,15 +56,12 @@
         <PluginName>%(_HeadPluginProject.Filename)</PluginName>
       </_HeadPluginFile>
       <_HeadFormsThemeFile Include="$(AvaloniaHeadOutDir)Content/FormsThemes/**/*" />
-      <_HeadGumCliFile Include="$(AvaloniaHeadOutDir)GumCli/**/*" />
     </ItemGroup>
-    <Error Condition="!Exists('$(AvaloniaHeadOutDir)GumCli/gumcli.dll')" Text="gumcli is not staged in $(AvaloniaHeadOutDir)GumCli; the head's StageGumCli target should have put it there." />
     <Error Condition="!Exists('$(AvaloniaHeadOutDir)Plugins/%(_HeadPluginProject.Filename)/%(_HeadPluginProject.Filename).dll')" Text="%(_HeadPluginProject.Filename) is not staged in $(AvaloniaHeadOutDir)Plugins; its post-build should have put it there." />
     <Error Condition="'@(_HeadFormsThemeFile)' == ''" Text="No Forms themes were staged in $(AvaloniaHeadOutDir)Content/FormsThemes; GumFormsPlugin's post-build should have put them there." />
-    <RemoveDir Directories="$(OutDir)Plugins;$(OutDir)Content/FormsThemes;$(OutDir)GumCli" />
+    <RemoveDir Directories="$(OutDir)Plugins;$(OutDir)Content/FormsThemes" />
     <Copy SourceFiles="@(_HeadPluginFile)" DestinationFolder="$(OutDir)Plugins/%(PluginName)/%(RecursiveDir)" />
     <Copy SourceFiles="@(_HeadFormsThemeFile)" DestinationFolder="$(OutDir)Content/FormsThemes/%(RecursiveDir)" />
-    <Copy SourceFiles="@(_HeadGumCliFile)" DestinationFolder="$(OutDir)GumCli/%(RecursiveDir)" />
   </Target>
   <ItemGroup>
     <!-- Per-process temp folder for the tool's per-user files (#5337). -->

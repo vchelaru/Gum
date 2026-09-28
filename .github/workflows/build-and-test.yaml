@@ -81,6 +81,10 @@ jobs:
           dotnet-version: 10.0.x
       - name: Build Gum (Gum.slnx, the Avalonia tool and its plugins)
         run: dotnet build Gum.slnx --configuration Release --verbosity quiet -p:WarningLevel=0
+      # Export to SVG runs GumCli/gumcli.dll from beside the tool. Gum.Cli is kept out of Gum.slnx, so
+      # publish it into the test output the way the release package ships it; FILE-008 skips without it.
+      - name: Publish gumcli into the Gum.Avalonia.Tests output
+        run: dotnet publish Tools/Gum.Cli/Gum.Cli.csproj --configuration Release --self-contained false --verbosity quiet -p:WarningLevel=0 -o Tests/Gum.Avalonia.Tests/bin/Release/net10.0/GumCli
       # The runners have no GPU, so the KNI device tests (CanvasHostTests, TextureCoordinateTab*,
       # CanvasScenarioTests) skip themselves here
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.

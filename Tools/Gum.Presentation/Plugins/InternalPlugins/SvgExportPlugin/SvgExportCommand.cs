@@ -61,7 +61,7 @@ internal class SvgExportCommand : ISvgExportCommand
 
     /// <summary>
     /// Locates the bundled gumcli's managed assembly, expected at <c>GumCli/gumcli.dll</c> next to
-    /// the tool (staged framework-dependent by the head's StageGumCli build target). Returns null if it
+    /// the tool (release packages only: build-and-release.yml publishes it framework-dependent). Returns null if it
     /// does not exist. Virtual so tests can supply a deterministic result.
     /// </summary>
     protected virtual string? FindGumCliPath() =>
