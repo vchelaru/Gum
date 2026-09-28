@@ -45,7 +45,8 @@ internal sealed class ProjectTreeHarness : IDisposable
     private IDataTransfer? _dragData;
     private IPointer? _dragPointer;
 
-    public ProjectTreeHarness()
+    /// <param name="projectFileName">The project's file name; a .gumj name makes a JSON project.</param>
+    public ProjectTreeHarness(string projectFileName = "Harness.gumx")
     {
         ToolStartup.EnsureInitialized();
         TreeManager = Services.GetRequiredService<ElementTreeViewManager>();
@@ -54,7 +55,7 @@ internal sealed class ProjectTreeHarness : IDisposable
         // the Animations tab, so Dispose puts each tab back as it was.
         _tabVisibilityAtStart = ((AvaloniaTabManager)Services.GetRequiredService<ITabManager>()).AllTabs
             .ToDictionary(tab => tab, tab => tab.IsVisible);
-        Project = new ToolProjectFixture("GumProjectTree");
+        Project = new ToolProjectFixture("GumProjectTree", projectFileName);
         _exceptions = new ToolExceptionWatch();
         try
         {

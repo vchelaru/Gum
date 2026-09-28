@@ -11,8 +11,9 @@ namespace Gum.Avalonia.Tests.Harness;
 /// </summary>
 internal sealed class ScriptedDialogService : IDialogService
 {
-    private readonly Queue<Func<DialogViewModel, bool>> _dialogAnswers;
-    private readonly Queue<MessageDialogResult> _messageAnswers;
+    // A null answer means the dialog was answered in its own window, which already closed it.
+    private readonly Queue<Func<DialogViewModel, bool?>> _dialogAnswers;
+    private readonly Queue<Func<MessageDialogViewModel, MessageDialogResult>> _messageAnswers;
     private readonly Queue<string?> _userStrings;
     private readonly List<string> _messages;
     private readonly Queue<List<string>?> _openFiles;
@@ -20,8 +21,8 @@ internal sealed class ScriptedDialogService : IDialogService
 
     public ScriptedDialogService()
     {
-        _dialogAnswers = new Queue<Func<DialogViewModel, bool>>();
-        _messageAnswers = new Queue<MessageDialogResult>();
+        _dialogAnswers = new Queue<Func<DialogViewModel, bool?>>();
+        _messageAnswers = new Queue<Func<MessageDialogViewModel, MessageDialogResult>>();
         _userStrings = new Queue<string?>();
         _messages = new List<string>();
         _openFiles = new Queue<List<string>?>();
@@ -42,8 +43,49 @@ internal sealed class ScriptedDialogService : IDialogService
             : throw new InvalidOperationException($"Expected a {typeof(T).Name} dialog but the code opened a {viewModel.GetType().Name}."));
     }
 
+    /// <summary>
+    /// Queues the answer to the next dialog of type <typeparamref name="T"/>, given in the head's own
+    /// dialog window and view: <paramref name="interact"/> clicks, types and presses keys in it until
+    /// it closes. A window it leaves open fails the test.
+    /// </summary>
+    public void AnswerNextInWindow<T>(Action<DialogWindowDriver> interact) where T : DialogViewModel
+    {
+        _dialogAnswers.Enqueue(viewModel =>
+        {
+            if (viewModel is not T)
+            {
+                throw new InvalidOperationException($"Expected a {typeof(T).Name} dialog but the code opened a {viewModel.GetType().Name}.");
+            }
+            AnswerInWindow(viewModel, interact);
+            return null;
+        });
+    }
+
     /// <summary>Queues the button the user presses on the next message box.</summary>
-    public void AnswerNextMessage(MessageDialogResult result) => _messageAnswers.Enqueue(result);
+    public void AnswerNextMessage(MessageDialogResult result) => _messageAnswers.Enqueue(_ => result);
+
+    /// <summary>
+    /// Queues the answer to the next message box, given in the head's own message window: the
+    /// window closes with what <paramref name="interact"/> presses in it.
+    /// </summary>
+    public void AnswerNextMessageInWindow(Action<DialogWindowDriver> interact) =>
+        _messageAnswers.Enqueue(viewModel => AnswerInWindow(viewModel, interact) switch
+        {
+            true => MessageDialogResult.Affirmative,
+            false => MessageDialogResult.Negative,
+            _ => MessageDialogResult.Canceled,
+        });
+
+    private static bool? AnswerInWindow(DialogViewModel viewModel, Action<DialogWindowDriver> interact)
+    {
+        using DialogWindowDriver window = new DialogWindowDriver(viewModel);
+        interact(window);
+        if (window.IsOpen)
+        {
+            throw new InvalidOperationException($"The {viewModel.GetType().Name} window is still open after the scripted input.");
+        }
+        return window.Result;
+    }
 
     /// <summary>Queues the text the user types into the next text prompt, or null for Cancel.</summary>
     public void AnswerNextUserString(string? value) => _userStrings.Enqueue(value);
@@ -56,7 +98,16 @@ internal sealed class ScriptedDialogService : IDialogService
         {
             throw new InvalidOperationException($"No answer was queued for the message \"{message}\".");
         }
-        return _messageAnswers.Dequeue();
+        // As the head's dialog service builds it.
+        style ??= MessageDialogStyle.Ok;
+        MessageDialogViewModel viewModel = new MessageDialogViewModel
+        {
+            AffirmativeText = style.AffirmativeText,
+            NegativeText = style.NegativeText,
+            Title = title,
+            Message = message,
+        };
+        return _messageAnswers.Dequeue()(viewModel);
     }
 
     /// <inheritdoc/>
@@ -71,8 +122,12 @@ internal sealed class ScriptedDialogService : IDialogService
         // affirmative command's CanExecute gate applies here too.
         bool? closedWith = null;
         dialogViewModel.RequestClose += (_, result) => closedWith = result;
-        bool pressOk = _dialogAnswers.Dequeue()(dialogViewModel);
-        if (pressOk)
+        bool? answer = _dialogAnswers.Dequeue()(dialogViewModel);
+        if (answer == null)
+        {
+            return closedWith == true;
+        }
+        if (answer == true)
         {
             if (!dialogViewModel.AffirmativeCommand.CanExecute(null))
             {
