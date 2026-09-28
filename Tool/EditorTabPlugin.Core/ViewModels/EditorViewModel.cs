@@ -209,7 +209,15 @@ public partial class EditorViewModel : ViewModel, IZoomController
         get => Get<CustomCanvasSize>();
         set
         {
-            if(Set(value ?? DefaultCanvasSizes[0]))
+            // A combo box pushes null when its items are replaced and its selection is not in the new
+            // list. That is not a choice, so keep the current size: substituting one here raises the
+            // change while the combo is still applying its new items, so it misses it and stays blank
+            // when the load then selects that same size (#5374).
+            if (value == null)
+            {
+                return;
+            }
+            if(Set(value))
             {
                 RefreshCanvasSize();
 
