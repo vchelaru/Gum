@@ -24,7 +24,8 @@ public class ScreenshotServiceTests : BaseTestClass
             selectionManager: null!,
             _wireframeCommands.Object,
             _guiCommands.Object,
-            _dialogService.Object);
+            _dialogService.Object,
+            backgroundManager: null!);
     }
 
     [Fact]

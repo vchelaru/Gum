@@ -1,3 +1,4 @@
+using EditorTabPlugin_XNA.Services;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.Plugins.BaseClasses;
@@ -6,7 +7,6 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using System;
 using System.ComponentModel.Composition;
-using System.Security.Cryptography;
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable - this never gets disposed
@@ -19,17 +19,20 @@ internal class ScreenshotService
     private readonly IWireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
+    private readonly BackgroundManager _backgroundManager;
 
     public ScreenshotService(
         SelectionManager selectionManager,
         IWireframeCommands wireframeCommands,
         IGuiCommands guiCommands,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        BackgroundManager backgroundManager)
     {
         _selectionManager = selectionManager;
         _wireframeCommands = wireframeCommands;
         _guiCommands = guiCommands;
         _dialogService = dialogService;
+        _backgroundManager = backgroundManager;
     }
 
     /// <summary>
@@ -52,8 +55,8 @@ internal class ScreenshotService
 
     bool wereCanvasBoundsVisible;
     bool wereRulersVisible;
-    bool wasBackgroundVisible;
     bool wereHighlightsVisible;
+    bool wasGridOverlayVisible;
 
     public void HandleBeforeRender()
     {
@@ -65,24 +68,33 @@ internal class ScreenshotService
                 _wireframeCommands.AreRulersVisible;
             wereCanvasBoundsVisible =
                 _wireframeCommands.AreCanvasBoundsVisible;
-            wasBackgroundVisible =
-                _wireframeCommands.IsBackgroundGridVisible;
             wereHighlightsVisible =
                 _wireframeCommands.AreHighlightsVisible;
+            wasGridOverlayVisible =
+                _wireframeCommands.IsGridOverlayVisible;
 
 
             _wireframeCommands.AreRulersVisible = false;
             _wireframeCommands.AreCanvasBoundsVisible = false;
-            _wireframeCommands.IsBackgroundGridVisible = false;
+            // The export is the element alone on a transparent background.
+            _backgroundManager.IsHiddenForExport = true;
             _wireframeCommands.AreHighlightsVisible = false;
+            _wireframeCommands.IsGridOverlayVisible = false;
 
             _selectionManager.SelectedGue = null;
 
             var width = graphicsDevice.Viewport.Width;
             var height = graphicsDevice.Viewport.Height;
 
+            // PreserveContents: an element drawn through its own render target switches targets
+            // mid-frame, and a DiscardContents target comes back filled with the driver's discard
+            // color instead of the transparent clear below.
             renderTarget = new Microsoft.Xna.Framework.Graphics.RenderTarget2D(
-                graphicsDevice, width, height);
+                graphicsDevice, width, height, mipMap: false,
+                Microsoft.Xna.Framework.Graphics.SurfaceFormat.Color,
+                Microsoft.Xna.Framework.Graphics.DepthFormat.None,
+                preferredMultiSampleCount: 0,
+                Microsoft.Xna.Framework.Graphics.RenderTargetUsage.PreserveContents);
 
             graphicsDevice.SetRenderTarget(renderTarget);
 
@@ -115,8 +127,9 @@ internal class ScreenshotService
 
             _wireframeCommands.AreRulersVisible = wereRulersVisible;
             _wireframeCommands.AreCanvasBoundsVisible = wereCanvasBoundsVisible;
-            _wireframeCommands.IsBackgroundGridVisible = wasBackgroundVisible;
+            _backgroundManager.IsHiddenForExport = false;
             _wireframeCommands.AreHighlightsVisible = wereHighlightsVisible;
+            _wireframeCommands.IsGridOverlayVisible = wasGridOverlayVisible;
 
         }
     }
