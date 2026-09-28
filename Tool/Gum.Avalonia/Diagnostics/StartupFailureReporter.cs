@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using Avalonia.Controls;
+using Gum.Avalonia.Shell;
 
 namespace Gum.Avalonia.Diagnostics;
 
@@ -21,6 +23,14 @@ public sealed class StartupFailureReporter
     {
         _showInWindow = showInWindow;
         _error = error;
+    }
+
+    /// <summary>Creates a reporter that shows the failure in place of <paramref name="window"/>'s content.</summary>
+    /// <param name="window">The main window.</param>
+    /// <param name="error">Where the failure is written, normally stderr.</param>
+    public StartupFailureReporter(ContentControl window, TextWriter error)
+        : this(exception => window.Content = new StartupFailurePanel(exception), error)
+    {
     }
 
     /// <summary>

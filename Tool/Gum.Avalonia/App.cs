@@ -109,12 +109,7 @@ public sealed class App : Application
 
             desktop.Exit += (_, _) =>
             {
-                List<Action> teardownActions = new List<Action>();
-                messenger.Send(new ApplicationTeardownMessage(teardownActions));
-                foreach (Action action in teardownActions)
-                {
-                    action();
-                }
+                new ApplicationTeardown(messenger).Run();
                 canvasInputHook.Dispose();
                 _freezeDiagnostics.EndSessionCleanly();
             };
@@ -123,7 +118,7 @@ public sealed class App : Application
             {
                 messenger.Send<ApplicationStartupMessage>();
                 TaskCompletionSource<UnattendedStartupOutcome> startup = new TaskCompletionSource<UnattendedStartupOutcome>();
-                StartupFailureReporter failureReporter = new StartupFailureReporter(window.ShowStartupFailure, Console.Error);
+                StartupFailureReporter failureReporter = new StartupFailureReporter(window, Console.Error);
                 Dispatcher.UIThread.Post(() => _ = SignalStartupAsync(startup, desktop, failureReporter), DispatcherPriority.Background);
                 if (_options.ExitAfterSeconds is double seconds)
                 {

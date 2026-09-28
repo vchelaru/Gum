@@ -67,29 +67,20 @@ public class HeadCompositionTests
     }
 
     [AvaloniaFact]
-    public void MainWindow_ShownInBackground_OpensOffScreenUnactivated_AndIgnoresTheSavedPlacement()
+    public void MainWindow_ShownInBackground_OpensOffScreenUnactivated()
     {
         // An unattended run (--exit-after) must not take focus or cover the user's windows (#5133).
         // Not shown: the container's one MainWindow may already have been shown and closed by
-        // another test, so this drives what the Opened handler runs. A closed window has no
-        // platform position to read back, so the off-screen position itself is not asserted.
+        // another test. A closed window has no platform position to read back, so the off-screen
+        // position itself is not asserted. MainWindowScenarioTests covers the saved placement
+        // staying unapplied while the window is in the background.
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
-        LayoutSettings layout = TestAppBuilder.Services.GetRequiredService<IWritableOptions<LayoutSettings>>().CurrentValue;
-        WindowSettings previous = layout.MainWindow;
-        layout.MainWindow = new WindowSettings(Width: 900, Height: 700, Top: 100, Left: 100, IsMaximized: true);
-        try
-        {
-            window.ShowInBackground();
-            window.RestoreSavedPlacement();
 
-            window.ShowActivated.ShouldBeFalse();
-            window.WindowState.ShouldBe(WindowState.Normal);
-            window.WindowStartupLocation.ShouldBe(WindowStartupLocation.Manual);
-        }
-        finally
-        {
-            layout.MainWindow = previous;
-        }
+        window.ShowInBackground();
+
+        window.ShowActivated.ShouldBeFalse();
+        window.WindowState.ShouldBe(WindowState.Normal);
+        window.WindowStartupLocation.ShouldBe(WindowStartupLocation.Manual);
     }
 
     [AvaloniaFact]
