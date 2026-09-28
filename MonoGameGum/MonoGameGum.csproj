@@ -39,6 +39,16 @@
 
 	</PropertyGroup>
 
+	<!-- Compile-time Native AOT guard (#5460): a new unannotated caller of FileManager's XML methods
+	     (XmlSerializer) or another dynamic-code API reports IL3050 here, not only in a consumer's AOT
+	     publish. Not IsAotCompatible: that also sets IsTrimmable, which changes how consumers' trimmed
+	     publishes treat this assembly. The analyzers need net7.0+; every TFM here is net8.0+ and the
+	     condition keeps it that way. -->
+	<PropertyGroup Condition="'$(TargetFramework)' != '' AND $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+		<EnableAotAnalyzer>true</EnableAotAnalyzer>
+		<EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="$(TargetFramework.Contains('ios'))">
 		<DefineConstants>$(DefineConstants);IOS</DefineConstants>
 	</PropertyGroup>
