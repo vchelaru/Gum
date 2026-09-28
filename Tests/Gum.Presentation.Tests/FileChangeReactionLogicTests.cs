@@ -1,5 +1,6 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -12,6 +13,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using ToolsUtilities;
 using Xunit;
 
@@ -324,17 +326,110 @@ public class FileChangeReactionLogicTests : BaseTestClass
         }
     }
 
+    [Theory]
+    [InlineData(MessageDialogResult.Negative, 0)]
+    [InlineData(MessageDialogResult.Affirmative, 1)]
+    public void ReactToFileChanged_ShouldAskBeforeReloadingTheProject_WhenAnElementInItHasUnsavedChanges(
+        MessageDialogResult answer, int expectedLoads)
+    {
+        // #5388: a project reload replaces every element, dropping any unsaved edit.
+        Mock<IDialogService> dialogServiceMock = new Mock<IDialogService>();
+        dialogServiceMock
+            .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(answer);
+        UnsavedChangesTracker tracker = new UnsavedChangesTracker();
+        FileChangeReactionLogic sut = BuildReloadSut(dialogServiceMock.Object, tracker,
+            out _, out _, out Mock<IFileCommands> fileCommandsMock, out string tempDir, out GumProjectSave project);
+        fileCommandsMock.Setup(f => f.LoadProjectAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        tracker.MarkUnsaved(component);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(project.FullFileName));
+
+            dialogServiceMock.Verify(d => d.ShowMessage(
+                It.Is<string>(m => m.Contains(FileChangeReactionLogic.ProjectPromptName) && m.Contains("Project.gumx")),
+                FileChangeReactionLogic.UnsavedChangesPromptTitle, It.IsAny<MessageDialogStyle?>()), Times.Once);
+            fileCommandsMock.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Exactly(expectedLoads));
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReloadTheProjectWithoutAsking_WhenNothingIsUnsaved()
+    {
+        Mock<IDialogService> dialogServiceMock = new Mock<IDialogService>();
+        FileChangeReactionLogic sut = BuildReloadSut(dialogServiceMock.Object, new UnsavedChangesTracker(),
+            out _, out _, out Mock<IFileCommands> fileCommandsMock, out string tempDir, out GumProjectSave project);
+        fileCommandsMock.Setup(f => f.LoadProjectAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        project.Components.Add(new ComponentSave { Name = "MyButton" });
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(project.FullFileName));
+
+            dialogServiceMock.Verify(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
+            fileCommandsMock.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldAskAndKeepTheBehavior_WhenItHasUnsavedChangesAndTheUserKeepsThem()
+    {
+        // #5388: a behavior reload replaces the behavior, dropping its unsaved edits.
+        Mock<IDialogService> dialogServiceMock = new Mock<IDialogService>();
+        dialogServiceMock
+            .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Negative);
+        UnsavedChangesTracker tracker = new UnsavedChangesTracker();
+        FileChangeReactionLogic sut = BuildReloadSut(dialogServiceMock.Object, tracker,
+            out Mock<IGuiCommands> guiCommandsMock, out _, out _, out string tempDir, out GumProjectSave project);
+        BehaviorSave behavior = new BehaviorSave { Name = "Clickable" };
+        project.Behaviors.Add(behavior);
+        tracker.MarkUnsaved(behavior);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(Path.Combine(tempDir, "Behaviors", "Clickable.behx")));
+
+            dialogServiceMock.Verify(d => d.ShowMessage(It.Is<string>(m => m.Contains("Clickable")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+            project.Behaviors.ShouldBe(new[] { behavior });
+            tracker.HasUnsavedChanges(behavior).ShouldBeTrue();
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Never);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
     private static FileChangeReactionLogic BuildReloadSut(
         IDialogService dialogService,
         IUnsavedChangesTracker tracker,
         out Mock<IGuiCommands> guiCommandsMock,
         out Mock<IPluginManager> pluginManagerMock,
         out string tempDir,
+        out GumProjectSave project) =>
+        BuildReloadSut(dialogService, tracker, out guiCommandsMock, out pluginManagerMock, out _, out tempDir, out project);
+
+    private static FileChangeReactionLogic BuildReloadSut(
+        IDialogService dialogService,
+        IUnsavedChangesTracker tracker,
+        out Mock<IGuiCommands> guiCommandsMock,
+        out Mock<IPluginManager> pluginManagerMock,
+        out Mock<IFileCommands> fileCommandsMock,
+        out string tempDir,
         out GumProjectSave project)
     {
         FileChangeReactionLogic sut = BuildSut(
             out guiCommandsMock,
-            out Mock<IFileCommands> fileCommandsMock,
+            out fileCommandsMock,
             out pluginManagerMock,
             out Mock<IProjectState> projectStateMock,
             out _,

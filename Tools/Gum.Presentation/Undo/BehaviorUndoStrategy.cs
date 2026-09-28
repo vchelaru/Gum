@@ -257,13 +257,19 @@ public class BehaviorUndoStrategy : IUndoStrategy
 
     /// <summary>
     /// Moves each behavior's history onto the behavior of the same name in <paramref name="reloaded"/>,
-    /// the same project reopened, when the reload left it unchanged; drops the rest.
+    /// the same project reopened, when the reload left it unchanged; drops the rest. Only behaviors
+    /// still in <paramref name="previous"/> carry over: one a reload from disk replaced left its
+    /// history behind, and would match the same reloaded behavior as its replacement.
     /// </summary>
-    public void CarryOverTo(GumProjectSave reloaded)
+    public void CarryOverTo(GumProjectSave previous, GumProjectSave reloaded)
     {
         List<KeyValuePair<BehaviorSave, BehaviorHistory>> carried = new List<KeyValuePair<BehaviorSave, BehaviorHistory>>();
         foreach (KeyValuePair<BehaviorSave, BehaviorHistory> pair in _behaviorUndos)
         {
+            if (!previous.Behaviors.Contains(pair.Key))
+            {
+                continue;
+            }
             BehaviorSave? match = reloaded.Behaviors.FirstOrDefault(behavior => behavior.Name == pair.Key.Name);
             if (match != null && FileManager.AreSaveObjectsEqual(CloneBehavior(pair.Key), CloneBehavior(match)))
             {

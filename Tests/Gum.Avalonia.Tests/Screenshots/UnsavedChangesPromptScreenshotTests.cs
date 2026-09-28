@@ -6,8 +6,8 @@ using Gum.Services.Dialogs;
 namespace Gum.Avalonia.Tests.Screenshots;
 
 /// <summary>
-/// The prompt shown when an element file changes on disk while the element has unsaved edits
-/// (#5379), for a PR's screenshot table
+/// The prompt shown when an element, behavior or project file changes on disk while it has unsaved
+/// edits (#5379, #5388), for a PR's screenshot table
 /// (<c>Tools/pr-screenshots.ps1 -Filter UnsavedChangesPromptScreenshotTests -NoBefore</c>).
 /// </summary>
 [Trait("Category", PrScreenshot.Category)]
@@ -18,16 +18,29 @@ public class UnsavedChangesPromptScreenshotTests
     {
         foreach ((ThemeVariant theme, string suffix) in new[] { (ThemeVariant.Light, "light"), (ThemeVariant.Dark, "dark") })
         {
-            MessageDialogStyle style = FileChangeReactionLogic.CreateUnsavedChangesPromptStyle();
-            MessageDialogViewModel viewModel = new MessageDialogViewModel
-            {
-                Title = FileChangeReactionLogic.UnsavedChangesPromptTitle,
-                Message = FileChangeReactionLogic.BuildUnsavedChangesPromptMessage("Button", "Components/Button.gucx"),
-                AffirmativeText = style.AffirmativeText,
-                NegativeText = style.NegativeText,
-            };
-            using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, theme);
-            window.Save($"unsaved-changes-prompt-{suffix}");
+            Save("Button", "Components/Button.gucx", theme, $"unsaved-changes-prompt-{suffix}");
         }
     });
+
+    /// <summary>The same prompt before a behavior or the whole project reloads (#5388).</summary>
+    [SkippableFact]
+    public void UnsavedChangesPromptForBehaviorAndProject() => PrScreenshot.Run(() =>
+    {
+        Save("Clickable", "Behaviors/Clickable.behx", ThemeVariant.Light, "unsaved-changes-prompt-behavior");
+        Save(FileChangeReactionLogic.ProjectPromptName, "MyGame.gumx", ThemeVariant.Light, "unsaved-changes-prompt-project");
+    });
+
+    private static void Save(string name, string relativeFile, ThemeVariant theme, string fileName)
+    {
+        MessageDialogStyle style = FileChangeReactionLogic.CreateUnsavedChangesPromptStyle();
+        MessageDialogViewModel viewModel = new MessageDialogViewModel
+        {
+            Title = FileChangeReactionLogic.UnsavedChangesPromptTitle,
+            Message = FileChangeReactionLogic.BuildUnsavedChangesPromptMessage(name, relativeFile),
+            AffirmativeText = style.AffirmativeText,
+            NegativeText = style.NegativeText,
+        };
+        using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, theme);
+        window.Save(fileName);
+    }
 }

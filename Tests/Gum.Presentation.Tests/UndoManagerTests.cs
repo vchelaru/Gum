@@ -840,6 +840,70 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleProjectLoaded_AfterABehaviorWasReloadedFromDisk_CarriesOnlyTheLiveBehaviorsHistory()
+    {
+        // Reloading one behavior replaces its object in the project and leaves the replaced
+        // object's history behind; both then match the reloaded project's behavior by name.
+        BehaviorSave replaced = new BehaviorSave { Name = "Clickable" };
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Behaviors.Add(replaced);
+        _undoManager.HandleProjectLoaded(loaded);
+        // The reload reads the file as it was before the edit below.
+        BehaviorSave live = FileManager.CloneSaveObject(replaced);
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(replaced);
+        _undoManager.RecordBehaviorState();
+        replaced.Categories.Add(new StateSaveCategory { Name = "Live" });
+        _undoManager.RecordBehaviorUndo();
+        loaded.Behaviors.Remove(replaced);
+        loaded.Behaviors.Add(live);
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(live);
+        _undoManager.RecordBehaviorState();
+        live.Categories.Add(new StateSaveCategory { Name = "Live" });
+        _undoManager.RecordBehaviorUndo();
+
+        GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        BehaviorSave reloadedBehavior = FileManager.CloneSaveObject(live);
+        reloaded.Behaviors.Add(reloadedBehavior);
+        _undoManager.HandleProjectLoaded(reloaded);
+
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(reloadedBehavior);
+        _undoManager.PerformUndo();
+        reloadedBehavior.Categories.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void HandleProjectLoaded_AfterAnElementWasReloadedFromDisk_CarriesOnlyTheLiveElementsHistory()
+    {
+        ComponentSave replaced = _selectedState.Object.SelectedComponent!;
+        replaced.Name = "Card";
+        GumProjectSave loaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        loaded.Components.Add(replaced);
+        _undoManager.HandleProjectLoaded(loaded);
+        // The reload reads the file as it was before the edit below.
+        ComponentSave live = FileManager.CloneSaveObject(replaced);
+        live.States.ForEach(state => state.ParentContainer = live);
+        _undoManager.RecordState();
+        replaced.DefaultState.SetValue("X", 5f);
+        _undoManager.RecordUndo();
+        loaded.Components.Remove(replaced);
+        loaded.Components.Add(live);
+        SelectComponent(live);
+        _undoManager.RecordState();
+        live.DefaultState.SetValue("X", 5f);
+        _undoManager.RecordUndo();
+
+        GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+        ComponentSave reloadedCard = FileManager.CloneSaveObject(live);
+        reloadedCard.States.ForEach(state => state.ParentContainer = reloadedCard);
+        reloaded.Components.Add(reloadedCard);
+        _undoManager.HandleProjectLoaded(reloaded);
+
+        SelectComponent(reloadedCard);
+        _undoManager.PerformUndo();
+        reloadedCard.DefaultState.GetValue("X").ShouldBeNull();
+    }
+
+    [Fact]
     public void HandleProjectLoaded_AnElementWhoseFileIsUnchanged_KeepsItsHistoryOnlyWhileItsAnimationsAreToo()
     {
         ComponentSave card = _selectedState.Object.SelectedComponent!;

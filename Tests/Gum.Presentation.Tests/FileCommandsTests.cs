@@ -659,6 +659,60 @@ public class FileCommandsTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void TryAutoSaveBehavior_ShouldLeaveTheBehaviorUnsaved_WhenAutoSaveIsOff_UntilItIsSaved()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _projectManager.Setup(p => p.AutoSave).Returns(false);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Behaviors"));
+        BehaviorSave clickable = new() { Name = "Clickable" };
+
+        _fileCommands.TryAutoSaveBehavior(clickable);
+
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "Clickable.behx")).ShouldBeFalse();
+        _unsavedChangesTracker.HasUnsavedChanges(clickable).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ForceSaveProject_ShouldWriteEveryBehavior_OnlyWhenSavingAll(bool saveAll)
+    {
+        // #5387: the project save writes no behaviors, so Save All has to.
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        _projectManager.Setup(p => p.SaveProject(saveAll)).Returns(true);
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Behaviors"));
+        BehaviorSave clickable = new() { Name = "Clickable" };
+        BehaviorSave deletedOnDisk = new() { Name = "Gone", IsSourceFileMissing = true };
+        _gumProject.Behaviors.Add(clickable);
+        _gumProject.Behaviors.Add(deletedOnDisk);
+        _unsavedChangesTracker.MarkUnsaved(clickable);
+
+        _fileCommands.ForceSaveProject(forceSaveContainedElements: saveAll);
+
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "Clickable.behx")).ShouldBe(saveAll);
+        _unsavedChangesTracker.HasUnsavedChanges(clickable).ShouldBe(!saveAll);
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "Gone.behx")).ShouldBeFalse();
+        _mocker.GetMock<IDialogService>().Verify(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
+    }
+
+    [Fact]
+    public void TryAutoSaveProject_ShouldLeaveTheProjectUnsaved_WhenAutoSaveIsOff()
+    {
+        _projectManager.Setup(p => p.AutoSave).Returns(false);
+
+        _fileCommands.TryAutoSaveProject().ShouldBeFalse();
+
+        _unsavedChangesTracker.HasAnyUnsavedChanges(_gumProject).ShouldBeTrue();
+        _projectManager.Verify(p => p.SaveProject(It.IsAny<bool>()), Times.Never);
+    }
+
     #region Helpers
 
     private static string CreateResxContent(Dictionary<string, string> entries)
