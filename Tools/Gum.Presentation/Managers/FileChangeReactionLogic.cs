@@ -311,7 +311,7 @@ namespace Gum.Managers
         {
             try
             {
-                await _fileCommands.LoadProjectAsync(file.Standardized);
+                await _fileCommands.LoadProjectAsync(file.FullPath);
             }
             catch (Exception ex)
             {
@@ -364,7 +364,7 @@ namespace Gum.Managers
             {
                 try
                 {
-                    var contents = FileManager.FromFileText(innerFile.Standardized);
+                    var contents = FileManager.FromFileText(innerFile.FullPath);
 
                     var font = new ParsedFontFile(contents);
 

@@ -372,7 +372,8 @@ public class FileChangeReactionLogicTests : BaseTestClass
             sut.ReactToFileChanged(new FilePath(project.FullFileName!));
 
             dialogServiceMock.Verify(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
-            fileCommandsMock.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Once);
+            // The file's own casing: a lowercased path is another file on a case-sensitive file system.
+            fileCommandsMock.Verify(f => f.LoadProjectAsync(new FilePath(project.FullFileName!).FullPath), Times.Once);
         }
         finally
         {
@@ -507,7 +508,7 @@ public class FileChangeReactionLogicTests : BaseTestClass
 
         sut.ReactToFileChanged(changedFile);
 
-        fileCommandsMock.Verify(f => f.LoadProjectAsync(changedFile.Standardized), Times.Once);
+        fileCommandsMock.Verify(f => f.LoadProjectAsync(changedFile.FullPath), Times.Once);
     }
 
     [Fact]
