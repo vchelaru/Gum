@@ -281,9 +281,18 @@ public class DisplayPropertiesScenarioTests
         properties.PickComboItem("TextureFilter", nameof(TextureFilter.Linear));
         properties.ClickCheckBox("RestrictFileNamesForAndroid");
         properties.ClickCheckBox("AutoSizeFontOutputs");
-        FontGeneratorType generator = properties.ViewModel.FontGenerator == FontGeneratorType.KernSmith ? FontGeneratorType.BmFont : FontGeneratorType.KernSmith;
-        properties.PickComboItem("FontGenerator", generator.ToString());
-        tree.WaitUntil(() => SavedProject(tree).FontGenerator == generator, AsyncWork, "the font generator to save");
+        if (OperatingSystem.IsWindows())
+        {
+            FontGeneratorType generator = properties.ViewModel.FontGenerator == FontGeneratorType.KernSmith ? FontGeneratorType.BmFont : FontGeneratorType.KernSmith;
+            properties.PickComboItem("FontGenerator", generator.ToString());
+            tree.WaitUntil(() => SavedProject(tree).FontGenerator == generator, AsyncWork, "the font generator to save");
+        }
+        else
+        {
+            // bmfont.exe runs only on Windows, so elsewhere the row is read-only and KernSmith is used.
+            properties.Row("FontGenerator").GetVisualDescendants().OfType<ComboBox>().Single().IsEffectivelyEnabled.ShouldBeFalse();
+            tree.WaitUntil(() => SavedProject(tree).AutoSizeFontOutputs != new GumProjectSave().AutoSizeFontOutputs, AsyncWork, "the font outputs setting to save");
+        }
 
         GumProjectSave saved = SavedProject(tree);
         (saved.DefaultCanvasWidth, saved.DefaultCanvasHeight).ShouldBe((1024, 600));
@@ -779,6 +788,10 @@ public class DisplayPropertiesScenarioTests
         public void PickComboItem(string name, string item)
         {
             ComboBox combo = Row(name).GetVisualDescendants().OfType<ComboBox>().Single();
+            if (!combo.IsEffectivelyEnabled)
+            {
+                throw new InvalidOperationException($"The {name} combo is disabled; a user cannot pick from it.");
+            }
             combo.IsDropDownOpen = true;
             Input.Layout();
             combo.SelectedItem = combo.Items.Cast<object?>().FirstOrDefault(candidate => candidate?.ToString() == item)
