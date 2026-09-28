@@ -206,7 +206,7 @@ public sealed class AvaloniaStandardsPalette : Border
             {
                 DataTransfer data = new DataTransfer();
                 data.Add(DataTransferItem.Create(AvaloniaDragFormats.StandardElementName, typeName));
-                await DragDrop.DoDragDropAsync(e, data, DragDropEffects.Copy);
+                await AvaloniaDragSource.Start(e, data, DragDropEffects.Copy);
             }
             catch (Exception)
             {

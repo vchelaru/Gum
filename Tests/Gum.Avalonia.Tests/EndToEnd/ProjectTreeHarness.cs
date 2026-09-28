@@ -1,6 +1,10 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Services;
@@ -37,6 +41,9 @@ internal sealed class ProjectTreeHarness : IDisposable
     private readonly Dictionary<AvaloniaPluginTab, bool> _tabVisibilityAtStart;
     private VariableGridHarness? _grid;
     private StatesTabHarness? _states;
+    private TaskCompletionSource<DragDropEffects>? _drag;
+    private IDataTransfer? _dragData;
+    private IPointer? _dragPointer;
 
     public ProjectTreeHarness()
     {
@@ -105,6 +112,11 @@ internal sealed class ProjectTreeHarness : IDisposable
     /// <summary>The node showing <paramref name="element"/>.</summary>
     public GumTreeNode NodeFor(ElementSave element) =>
         TreeManager.GetTreeNodeFor(element) ?? throw new InvalidOperationException($"The tree shows no node for {element.Name}.");
+
+    /// <summary>The node showing <paramref name="behavior"/> under Behaviors.</summary>
+    public GumTreeNode NodeFor(Gum.DataTypes.Behaviors.BehaviorSave behavior) =>
+        RootNode("Behaviors").Nodes.SingleOrDefault(node => node.Tag == behavior)
+        ?? throw new InvalidOperationException($"The tree shows no node for the behavior {behavior.Name}.");
 
     /// <summary>The node showing <paramref name="instance"/> in its element.</summary>
     public GumTreeNode NodeFor(InstanceSave instance)
@@ -348,6 +360,120 @@ internal sealed class ProjectTreeHarness : IDisposable
 
     #endregion
 
+    #region Dragging
+
+    // Headless Avalonia has no drag source, so the harness stands in for the platform's drag loop
+    // (AvaloniaDragSource.Start): the tree starts the drag itself once the pointer passes its drag
+    // threshold, the harness delivers the platform's drag events where it is dropped (DropOn here,
+    // or CanvasHarness.DropOnCanvas), and EndDrag finishes the loop. As on a desktop, no pointer
+    // move reaches the windows while the drag is under way, and the drag loop takes the button's
+    // release: the pressed row loses the pointer capture instead of seeing the button come up.
+
+    /// <summary>
+    /// Presses <paramref name="node"/>'s row and moves past the drag threshold, which drags it (with
+    /// the rest of the selection when it is part of one). Returns the data the tree put on the drag.
+    /// </summary>
+    public IDataTransfer BeginDrag(GumTreeNode node) => BeginDragFrom(RowFor(node));
+
+    /// <summary>The data on the drag under way, for a drop somewhere else (the canvas).</summary>
+    public IDataTransfer CurrentDrag => _dragData ?? throw new InvalidOperationException("No drag was started.");
+
+    /// <summary>Presses the search result showing <paramref name="display"/> and drags it. Returns the data on the drag.</summary>
+    public IDataTransfer BeginSearchResultDrag(string display)
+    {
+        _driver.Layout();
+        ListBoxItem row = View.SearchResults.GetVisualDescendants().OfType<ListBoxItem>()
+            .SingleOrDefault(item => (item.DataContext as SearchItemViewModel)?.Display == display)
+            ?? throw new InvalidOperationException($"No search result shows \"{display}\"; they are [{string.Join(", ", SearchResultTexts())}].");
+        return BeginDragFrom(row);
+    }
+
+    private IDataTransfer BeginDragFrom(Control row)
+    {
+        Point point = _driver.CenterOf(row);
+        AvaloniaDragSource.Start = (_, data, _) =>
+        {
+            _dragData = data;
+            _drag = new TaskCompletionSource<DragDropEffects>();
+            return _drag.Task;
+        };
+        EventHandler<PointerPressedEventArgs> recordPointer = (_, e) => _dragPointer = e.Pointer;
+        _driver.Window.AddHandler(InputElement.PointerPressedEvent, recordPointer, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _driver.Window.MouseMove(point, RawInputModifiers.None);
+        _driver.Window.MouseDown(point, MouseButton.Left, RawInputModifiers.None);
+        _driver.Window.RemoveHandler(InputElement.PointerPressedEvent, recordPointer);
+        _driver.Window.MouseMove(point + new Point(10, 0), RawInputModifiers.LeftMouseButton);
+        _driver.Layout();
+        _exceptions.ThrowIfCrashed();
+        return _dragData ?? throw new InvalidOperationException("Moving past the drag threshold started no drag.");
+    }
+
+    /// <summary>
+    /// Carries the drag over <paramref name="target"/>'s row and drops it there, at
+    /// <paramref name="fraction"/> of the row's height (under a quarter drops before the row, over
+    /// three quarters after it, in between into it), then ends it. Returns the effect the tree
+    /// reported while the drag was over the row.
+    /// </summary>
+    public DragDropEffects DropOn(GumTreeNode target, double fraction = 0.5)
+    {
+        IDataTransfer data = _dragData ?? throw new InvalidOperationException("No drag was started.");
+        Control row = RowFor(target);
+        Point topLeft = row.TranslatePoint(new Point(0, 0), _driver.Window) ?? throw new InvalidOperationException($"{target.Text}'s row is not in the window.");
+        Point point = new Point(topLeft.X + row.Bounds.Width / 2, topLeft.Y + row.Bounds.Height * fraction);
+        DragDropEffects reported = DeliverDrop(point, data, DragDropEffects.Move | DragDropEffects.Copy);
+        EndDrag(reported);
+        return reported;
+    }
+
+    /// <summary>
+    /// Ends the drag as the platform's loop does once it is dropped (or cancelled, with
+    /// <see cref="DragDropEffects.None"/>): the tree clears the drag, and the pressed row loses
+    /// the pointer.
+    /// </summary>
+    public void EndDrag(DragDropEffects effect)
+    {
+        TaskCompletionSource<DragDropEffects> drag = _drag ?? throw new InvalidOperationException("No drag was started.");
+        _drag = null;
+        _dragData = null;
+        drag.SetResult(effect);
+        _driver.Layout();
+        _dragPointer?.Capture(null);
+        _dragPointer = null;
+        _driver.Layout();
+        AvaloniaDragSource.RestorePlatform();
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>
+    /// Carries files from the file manager over <paramref name="target"/>'s row and drops them
+    /// there. Returns the effect the tree reported while the drag was over the row.
+    /// </summary>
+    public DragDropEffects DropFilesOn(GumTreeNode target, IDataTransfer files) =>
+        DeliverDrop(_driver.CenterOf(RowFor(target)), files, DragDropEffects.Copy);
+
+    private DragDropEffects DeliverDrop(Point point, IDataTransfer data, DragDropEffects allowed)
+    {
+        DragDropEffects reported = DragDropEffects.None;
+        EventHandler<DragEventArgs> record = (_, e) => reported = e.DragEffects;
+        _driver.Window.AddHandler(DragDrop.DragOverEvent, record, handledEventsToo: true);
+        try
+        {
+            _driver.Window.DragDrop(point, RawDragEventType.DragEnter, data, allowed);
+            _driver.Window.DragDrop(point, RawDragEventType.DragOver, data, allowed);
+            _driver.Layout();
+            _driver.Window.DragDrop(point, RawDragEventType.Drop, data, allowed);
+            _driver.Layout();
+        }
+        finally
+        {
+            _driver.Window.RemoveHandler(DragDrop.DragOverEvent, record);
+        }
+        _exceptions.ThrowIfCrashed();
+        return reported;
+    }
+
+    #endregion
+
     /// <summary>Fails at once when a gesture made anywhere in the tool crashed.</summary>
     public void ThrowIfCrashed() => _exceptions.ThrowIfCrashed();
 
@@ -410,6 +536,12 @@ internal sealed class ProjectTreeHarness : IDisposable
         }
         finally
         {
+            // A test that failed mid-drag must not leave the shared tree waiting on its drag loop.
+            _drag?.TrySetResult(DragDropEffects.None);
+            _dragPointer?.Capture(null);
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaDragSource.RestorePlatform();
+            TreeDragPayload.Clear();
             _exceptions.Dispose();
             Project.Dispose();
             TreeManager.RefreshUi();

@@ -185,6 +185,14 @@ internal sealed class HeadlessWindowDriver : IDisposable
         return ReadPixel(frame, (int)point.X, (int)point.Y);
     }
 
+    /// <summary>The rendered colors of the <paramref name="count"/> pixels from <paramref name="start"/> rightwards, from one frame.</summary>
+    public List<Color> PixelsAlong(Point start, int count)
+    {
+        Layout();
+        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
+        return Enumerable.Range(0, count).Select(offset => ReadPixel(frame, (int)start.X + offset, (int)start.Y)).ToList();
+    }
+
     /// <summary>True when any pixel within <paramref name="radius"/> of <paramref name="center"/> satisfies <paramref name="matches"/>.</summary>
     public bool AnyPixelNear(Point center, int radius, Func<Color, bool> matches)
     {

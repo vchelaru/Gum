@@ -160,7 +160,24 @@ internal sealed class CanvasHarness : IDisposable
     }
 
     /// <summary>The toolbar's zoom-in button, the "+" right of the zoom combo box.</summary>
-    public Button ZoomInButton => (Plugin.Toolbar ?? throw new InvalidOperationException("The editor tab has no toolbar.")).SizedButtons[1];
+    public Button ZoomInButton => Toolbar.SizedButtons[1];
+
+    private EditorToolbar Toolbar => Plugin.Toolbar ?? throw new InvalidOperationException("The editor tab has no toolbar.");
+
+    /// <summary>The toolbar's font scale "-" button.</summary>
+    public Button FontScaleDecreaseButton => Toolbar.SizedButtons[2];
+
+    /// <summary>The toolbar's font scale "+" button.</summary>
+    public Button FontScaleIncreaseButton => Toolbar.SizedButtons[3];
+
+    /// <summary>The toolbar's canvas size combo box (Project Default, 480p, 720p...).</summary>
+    public ComboBox CanvasSizeComboBox => Toolbar.GetVisualDescendants().OfType<ComboBox>()
+        .Single(combo => combo.ItemsSource == Editor.CustomCanvasSizes);
+
+    public CheckBox SnapToGridCheckBox => Toolbar.GetVisualDescendants().OfType<CheckBox>().Single();
+
+    /// <summary>The toolbar's Grid Size box (the combo boxes hold text boxes of their own).</summary>
+    public TextBox GridSizeBox => Toolbar.GetVisualDescendants().OfType<TextBox>().Single(box => box.FindAncestorOfType<ComboBox>() == null);
 
     /// <summary>The thumb of the canvas's scroll bar running along <paramref name="orientation"/>.</summary>
     public Thumb ScrollBarThumb(Orientation orientation) =>
@@ -309,7 +326,7 @@ internal sealed class CanvasHarness : IDisposable
     /// as the platform delivers a drag from the Standards palette or the file manager. Returns the
     /// effect the canvas reported while the drag was over it.
     /// </summary>
-    public DragDropEffects DropOnCanvas(Point point, DataTransfer data)
+    public DragDropEffects DropOnCanvas(Point point, IDataTransfer data)
     {
         DragDropEffects reported = DragDropEffects.None;
         EventHandler<DragEventArgs> record = (_, e) => reported = e.DragEffects;
@@ -328,6 +345,53 @@ internal sealed class CanvasHarness : IDisposable
             _driver.Window.RemoveHandler(DragDrop.DragOverEvent, record);
         }
         return reported;
+    }
+
+    /// <summary>Right-clicks the canvas at <paramref name="point"/>, which opens its menu when an instance is selected.</summary>
+    public void RightClick(Point point)
+    {
+        MoveTo(point);
+        _driver.Window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
+        Frame();
+        _driver.Window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
+        Frame();
+    }
+
+    public ContextMenu ContextMenu => Plugin.CanvasContextMenu;
+
+    /// <summary>The headers of the open canvas menu's items (separators excluded).</summary>
+    public List<string> MenuHeaders() => ContextMenu.Items.OfType<MenuItem>().Select(item => item.Header?.ToString() ?? "").ToList();
+
+    /// <summary>
+    /// Picks the item at <paramref name="path"/> in the open canvas menu, one header per level
+    /// ("Add child object to 'Box'", "Rectangle"), as a click on it does.
+    /// </summary>
+    public void PickMenu(params string[] path)
+    {
+        if (!ContextMenu.IsOpen)
+        {
+            throw new InvalidOperationException("No canvas menu is open.");
+        }
+        IEnumerable<object?> items = ContextMenu.Items;
+        MenuItem? item = null;
+        foreach (string header in path)
+        {
+            List<MenuItem> candidates = items.OfType<MenuItem>().ToList();
+            item = candidates.SingleOrDefault(candidate => candidate.Header?.ToString() == header)
+                ?? throw new InvalidOperationException($"The menu has no \"{header}\"; it has [{string.Join(", ", candidates.Select(candidate => candidate.Header))}].");
+            items = item.Items;
+        }
+        // The menu's popup is its own top level, which the window's pointer input does not reach.
+        item!.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
+        ContextMenu.Close();
+        Frame();
+    }
+
+    /// <summary>The rendered colors of the <paramref name="count"/> window pixels right of <paramref name="start"/>.</summary>
+    public List<global::Avalonia.Media.Color> PixelsAlong(Point start, int count)
+    {
+        Frame();
+        return _driver.PixelsAlong(start, count);
     }
 
     /// <summary>Ctrl+Z on the canvas, handled app-wide as in the main window.</summary>
