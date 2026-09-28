@@ -296,7 +296,7 @@ public class SetVariableLogicTests : BaseTestClass
 
         response.Succeeded.ShouldBeFalse();
         mocker.GetMock<Gum.Undo.IUndoManager>()
-            .Verify(x => x.RecordUndo(), Times.Never());
+            .Verify(x => x.RequestLock(), Times.Never());
     }
 
     [Fact]
@@ -329,7 +329,29 @@ public class SetVariableLogicTests : BaseTestClass
 
         response.Succeeded.ShouldBeTrue();
         mocker.GetMock<Gum.Undo.IUndoManager>()
-            .Verify(x => x.RecordUndo(), Times.Once());
+            .Verify(x => x.RequestLock(), Times.Once());
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldRecordTheUndo_AfterPluginsReact()
+    {
+        // A plugin's reaction to the change belongs to the same undo step: after an element's
+        // BaseType changes, the inheritance plugin replaces the inherited instances, and undoing
+        // the change must bring them back.
+        ComponentSave component = new ComponentSave { Name = "IconButton" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        List<string> order = new List<string>();
+        mocker.GetMock<Gum.Undo.IUndoManager>()
+            .Setup(x => x.RequestLock())
+            .Returns(() => new Gum.Undo.UndoLock(() => order.Add("undo recorded")));
+        mocker.GetMock<IPluginManager>()
+            .Setup(x => x.VariableSet(component, null, "BaseType", "Container", true))
+            .Callback(() => order.Add("plugins reacted"));
+
+        _setVariableLogic.ReactToPropertyValueChanged("BaseType", "Container", component, null, state, refresh: false);
+
+        order.ShouldBe(new[] { "plugins reacted", "undo recorded" });
     }
 
     [Fact]

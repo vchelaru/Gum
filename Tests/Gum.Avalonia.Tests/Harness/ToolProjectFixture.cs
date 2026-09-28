@@ -83,7 +83,18 @@ internal sealed class ToolProjectFixture : IDisposable
     public GumProjectSave Project { get; private set; }
 
     /// <summary>The project file's full path.</summary>
-    public string ProjectFilePath { get; }
+    public string ProjectFilePath { get; private set; }
+
+    /// <summary>
+    /// Follows the tool to the project file it now edits in the same folder (Convert to JSON opens
+    /// the .gumj it wrote), so <see cref="SaveAndReload"/> and the oracles use that file.
+    /// </summary>
+    public void FollowProjectFile(string projectFilePath)
+    {
+        ProjectFilePath = projectFilePath;
+        Project = Services.GetRequiredService<IProjectManager>().GumProjectSave
+            ?? throw new InvalidOperationException("The tool has no project loaded.");
+    }
 
     /// <summary>The folder <see cref="Project"/> lives in.</summary>
     public string ProjectFolder { get; }
@@ -140,6 +151,7 @@ internal sealed class ToolProjectFixture : IDisposable
     public void SaveAndReload()
     {
         IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        GumProjectSave before = Project;
         Services.GetRequiredService<IFileCommands>().ForceSaveProject(forceSaveContainedElements: true);
         Task load = projectManager.LoadProjectAsync(new FilePath(ProjectFilePath));
         // [AvaloniaFact] tests stay synchronous; the load posts work to the UI thread it waits on.
@@ -151,6 +163,12 @@ internal sealed class ToolProjectFixture : IDisposable
         load.GetAwaiter().GetResult();
         Dispatcher.UIThread.RunJobs();
         Project = projectManager.GumProjectSave ?? throw new InvalidOperationException("The reload left no project loaded.");
+        if (ReferenceEquals(Project, before))
+        {
+            // The tool ignores a load while another is in progress; every later load would be ignored too.
+            throw new InvalidOperationException(
+                $"The reload was ignored because another project load is still in progress ({(projectManager as ProjectManager)?.InFlightLoadProjectTask?.Status}).");
+        }
     }
 
     /// <summary>
@@ -178,12 +196,16 @@ internal sealed class ToolProjectFixture : IDisposable
     /// <summary>Clears the selection and the project, and restores the dialogs and per-user folder.</summary>
     public void Dispose()
     {
+        // A test that failed waiting on a load leaves it running; it must finish here, against
+        // this fixture, not replace the next test's project when that test pumps the UI thread.
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        bool loadFinished = WaitForLoad((projectManager as ProjectManager)?.InFlightLoadProjectTask, TimeSpan.FromSeconds(60));
         try
         {
             SelectedState.SelectedInstance = null;
             SelectedState.SelectedElement = null;
             // The temp folder goes away below, so the tool must not keep a project that points into it.
-            Services.GetRequiredService<IProjectManager>().CreateNewProject();
+            projectManager.CreateNewProject();
             ObjectFinder.Self.GumProjectSave = null;
         }
         finally
@@ -199,6 +221,25 @@ internal sealed class ToolProjectFixture : IDisposable
         {
             // A file watcher may still hold the folder; the temp folder is cleaned up later.
         }
+        if (!loadFinished)
+        {
+            throw new TimeoutException("A project load started during the test never finished; it will replace a later test's project.");
+        }
+    }
+
+    private static bool WaitForLoad(Task? load, TimeSpan timeout)
+    {
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (load is { IsCompleted: false })
+        {
+            if (stopwatch.Elapsed > timeout)
+            {
+                return false;
+            }
+            Thread.Sleep(10);
+            Dispatcher.UIThread.RunJobs();
+        }
+        return true;
     }
 
     private void Restore()

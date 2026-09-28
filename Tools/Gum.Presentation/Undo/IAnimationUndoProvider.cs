@@ -26,6 +26,13 @@ public interface IAnimationUndoProvider
     /// the element to having no animations.
     /// </summary>
     void ApplyAnimations(ElementSave element, ElementAnimationsSave animations);
+
+    /// <summary>
+    /// Removes the keyframes of <paramref name="element"/> that play an animation of the instance
+    /// named <paramref name="instanceName"/>, and saves. Called by Create Component for instances that
+    /// moved out of the element. The caller holds an undo lock, so the change joins that record.
+    /// </summary>
+    void RemoveKeyframesPlaying(ElementSave element, string instanceName);
 }
 
 /// <summary>

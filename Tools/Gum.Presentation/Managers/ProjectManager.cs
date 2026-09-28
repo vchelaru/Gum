@@ -42,11 +42,18 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // would corrupt state. A call that arrives while one is in flight is ignored, not queued.
     private Task? _inFlightLoadProjectTask;
 
+    /// <summary>
+    /// Runs the project deserialize off the calling thread. Tests replace it to reproduce a
+    /// deserialize that finishes before the load awaits it.
+    /// </summary>
+    internal Func<Func<GumProjectSave?>, Task<GumProjectSave?>> RunOffCallingThread { get; set; } = work => Task.Run(work);
+
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IElementCommands> _elementCommands;
     private readonly IDialogService _dialogService;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly ILastProjectLoadMarker _lastProjectLoadMarker;
+    private readonly IUnsavedChangesTracker _unsavedChangesTracker;
     private readonly IGuiCommands _guiCommands;
     private readonly Lazy<IFileCommands> _fileCommands;
     private readonly IMessenger _messenger;
@@ -147,8 +154,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         Lazy<INewProjectLogic> newProjectLogic,
         IFileSystemRevealService fileSystemRevealService,
         IProjectOpenRequestRouter projectOpenRequests,
-        ILastProjectLoadMarker lastProjectLoadMarker)
+        ILastProjectLoadMarker lastProjectLoadMarker,
+        IUnsavedChangesTracker unsavedChangesTracker)
     {
+        _unsavedChangesTracker = unsavedChangesTracker;
         _lastProjectLoadMarker = lastProjectLoadMarker;
         _newProjectLogic = newProjectLogic;
         _projectOpenRequests = projectOpenRequests;
@@ -305,28 +314,22 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // made public so that File commands can access this function
     public Task LoadProjectAsync(FilePath fileName)
     {
-        if (_inFlightLoadProjectTask != null)
+        // Ask the task, not a field cleared on completion: a load can run to the end before this
+        // method stores its task (the deserialize finished before it was awaited), and a clear in
+        // its own finally would then be overwritten, ignoring every later load.
+        if (_inFlightLoadProjectTask is { IsCompleted: false })
         {
             _guiCommands.PrintOutput(
                 $"Ignoring request to load \"{fileName}\" because a project load is already in progress.");
             return Task.CompletedTask;
         }
 
-        _inFlightLoadProjectTask = LoadProjectCoreAsync(fileName);
+        _inFlightLoadProjectTask = LoadProjectUnguardedAsync(fileName);
         return _inFlightLoadProjectTask;
     }
 
-    private async Task LoadProjectCoreAsync(FilePath fileName)
-    {
-        try
-        {
-            await LoadProjectUnguardedAsync(fileName);
-        }
-        finally
-        {
-            _inFlightLoadProjectTask = null;
-        }
-    }
+    /// <summary>The last project load started; complete when no load is in progress.</summary>
+    internal Task? InFlightLoadProjectTask => _inFlightLoadProjectTask;
 
     private async Task LoadProjectUnguardedAsync(FilePath fileName)
     {
@@ -344,7 +347,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             // it off the calling thread so it doesn't block the UI while it runs. Everything else in
             // this method stays on whatever thread resumes after the await (the UI thread, for a
             // caller with a synchronization context) since it touches live tool state.
-            _gumProjectSave = await Task.Run(() => GumProjectSave.Load(fileName.FullPath, out result));
+            _gumProjectSave = await RunOffCallingThread(() => GumProjectSave.Load(fileName.FullPath, out result));
         }
 
         if (_gumProjectSave != null && _gumProjectSave.Version > GumProjectSave.NativeVersion)
@@ -674,6 +677,15 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
     }
 
+    // GumProjectSave.Save skips a missing-source element, so its edits are still only in memory.
+    private void MarkSavedIfWritten(ElementSave element)
+    {
+        if (!element.IsSourceFileMissing)
+        {
+            _unsavedChangesTracker.MarkSaved(element);
+        }
+    }
+
     public bool SaveProject(bool forceSaveContainedElements = false)
     {
         bool succeeded = false;
@@ -738,14 +750,17 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     {
                         foreach (var screenSave in project.Screens)
                         {
+                            MarkSavedIfWritten(screenSave);
                             _pluginManager.AfterSavingElementSave(screenSave);
                         }
                         foreach (var componentSave in project.Components)
                         {
+                            MarkSavedIfWritten(componentSave);
                             _pluginManager.AfterSavingElementSave(componentSave);
                         }
                         foreach (var standardElementSave in project.StandardElements)
                         {
+                            MarkSavedIfWritten(standardElementSave);
                             _pluginManager.AfterSavingElementSave(standardElementSave);
                         }
                     }

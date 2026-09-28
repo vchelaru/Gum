@@ -241,6 +241,13 @@ public class AnimationTabController
     public void HandleElementDuplicate(ElementSave oldElement, ElementSave newElement)
     {
         _duplicateService.HandleDuplicate(oldElement, newElement);
+
+        // Adding the copy selected it before its sidecar existed, so the tab holds an empty set of
+        // animations for it, which the next save would write over the copied file.
+        if (ViewModel?.Element == newElement)
+        {
+            RefreshViewModel(forceReload: true);
+        }
     }
 
     /// <summary>Wired to <c>PluginBase.ElementRename</c>: propagates the rename into keyframe references.</summary>
@@ -265,6 +272,38 @@ public class AnimationTabController
         if (_selectedState.SelectedElement != null)
         {
             _renameManager.HandleRename(instanceSave, oldName, ViewModel!);
+        }
+    }
+
+    /// <summary>
+    /// Implements <c>IAnimationUndoProvider.RemoveKeyframesPlaying</c>: drops the keyframes of
+    /// <paramref name="element"/> that play one of <paramref name="instanceName"/>'s animations
+    /// (<c>Label.FadeIn</c>), from the tab when it shows the element, otherwise from its animation file.
+    /// </summary>
+    public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
+    {
+        if (ViewModel?.Element == element)
+        {
+            string prefix = instanceName + ".";
+            foreach (AnimationViewModel animation in ViewModel.Animations)
+            {
+                List<AnimatedKeyframeViewModel> playsInstance = animation.Keyframes
+                    .Where(keyframe => keyframe.AnimationName?.StartsWith(prefix, StringComparison.Ordinal) == true)
+                    .ToList();
+                foreach (AnimatedKeyframeViewModel keyframe in playsInstance)
+                {
+                    // Removing a keyframe saves through HandleDataChange.
+                    animation.Keyframes.Remove(keyframe);
+                }
+            }
+            return;
+        }
+
+        ElementAnimationsSave? save = _animationCollectionViewModelManager.GetElementAnimationsSave(element);
+        int removedCount = save?.Animations.Sum(animation => animation.Animations.RemoveAll(item => item.SourceObject == instanceName)) ?? 0;
+        if (removedCount > 0)
+        {
+            _animationCollectionViewModelManager.SaveElementAnimations(element, save!);
         }
     }
 

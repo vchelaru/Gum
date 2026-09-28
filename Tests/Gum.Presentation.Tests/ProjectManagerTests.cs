@@ -9,6 +9,7 @@ using Gum;
 using Gum.CommandLine;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
@@ -46,6 +47,7 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IFileSystemRevealService> _fileSystemRevealService;
     private readonly Mock<IProjectOpenRequestRouter> _projectOpenRequests;
     private readonly Mock<ILastProjectLoadMarker> _lastProjectLoadMarker;
+    private readonly UnsavedChangesTracker _unsavedChangesTracker;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
@@ -68,6 +70,7 @@ public class ProjectManagerTests : BaseTestClass
         _fileSystemRevealService = new Mock<IFileSystemRevealService>();
         _projectOpenRequests = new Mock<IProjectOpenRequestRouter>();
         _lastProjectLoadMarker = new Mock<ILastProjectLoadMarker>();
+        _unsavedChangesTracker = new UnsavedChangesTracker();
 
         _projectManager = new ProjectManager(
             _selectedState.Object,
@@ -87,7 +90,8 @@ public class ProjectManagerTests : BaseTestClass
             new Lazy<INewProjectLogic>(() => _newProjectLogic.Object),
             _fileSystemRevealService.Object,
             _projectOpenRequests.Object,
-            _lastProjectLoadMarker.Object);
+            _lastProjectLoadMarker.Object,
+            _unsavedChangesTracker);
     }
 
     [Fact]
@@ -600,6 +604,34 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public async Task LoadProjectAsync_ByFilePath_AfterALoadWhoseDeserializeFinishedBeforeItWasAwaited_LoadsAgain()
+    {
+        // A busy machine can finish the background deserialize before the load awaits it; the load
+        // then runs to the end synchronously. The next load must still happen, not be ignored as
+        // "already in progress".
+        string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
+        _projectManager.RunOffCallingThread = work => Task.FromResult(work());
+
+        try
+        {
+            await _projectManager.LoadProjectAsync(gumxPath);
+            GumProjectSave firstLoaded = _projectManager.GumProjectSave.ShouldNotBeNull();
+
+            await _projectManager.LoadProjectAsync(gumxPath);
+
+            _projectManager.GumProjectSave.ShouldNotBeSameAs(firstLoaded);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+
+        _guiCommands.Verify(
+            g => g.PrintOutput(It.Is<string>(m => m.Contains("already in progress"))),
+            Times.Never);
+    }
+
+    [Fact]
     public void AskUserForProjectNameIfNecessary_ShowsSaveDialogAcceptingBothXmlAndJsonProjects()
     {
         SetCurrentProject(new GumProjectSave());
@@ -705,6 +737,41 @@ public class ProjectManagerTests : BaseTestClass
 
             missing.ShouldBeEmpty(
                 $"Standards missing a .gutx file after the project's first save: {string.Join(", ", missing)}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SaveProject_WithContainedElements_ForgetsTheUnsavedChangesOfEveryElementItWrote()
+    {
+        StandardElementsManager.Self.Initialize();
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+        _projectManager.CreateNewProject();
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumSaveAllUnsavedTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(Path.Combine(tempDir, "Components"));
+        GumProjectSave project = _projectManager.GumProjectSave!;
+        project.FullFileName = Path.Combine(tempDir, "Project.gumx");
+        ComponentSave button = new ComponentSave { Name = "Button", BaseType = "Container" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        ComponentSave deletedOnDisk = new ComponentSave { Name = "Gone", BaseType = "Container", IsSourceFileMissing = true };
+        deletedOnDisk.States.Add(new StateSave { Name = "Default", ParentContainer = deletedOnDisk });
+        project.Components.Add(button);
+        project.Components.Add(deletedOnDisk);
+        _unsavedChangesTracker.MarkUnsaved(button);
+        _unsavedChangesTracker.MarkUnsaved(deletedOnDisk);
+        _retryService
+            .Setup(r => r.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()))
+            .Callback<Action, int>((action, _) => action());
+        try
+        {
+            _projectManager.SaveProject(forceSaveContainedElements: true).ShouldBeTrue();
+
+            _unsavedChangesTracker.HasUnsavedChanges(button).ShouldBeFalse();
+            // A missing-source element is not written, so its edits are still only in memory.
+            _unsavedChangesTracker.HasUnsavedChanges(deletedOnDisk).ShouldBeTrue();
         }
         finally
         {

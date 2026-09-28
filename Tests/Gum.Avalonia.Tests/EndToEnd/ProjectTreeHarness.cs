@@ -344,7 +344,11 @@ internal sealed class ProjectTreeHarness : IDisposable
         {
             if (stopwatch.Elapsed > timeout)
             {
-                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}].");
+                // A load still running, or one that never started, is the first thing to rule out.
+                IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+                Task? load = (projectManager as ProjectManager)?.InFlightLoadProjectTask;
+                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}]. " +
+                    $"Last project load: {load?.Status.ToString() ?? "none"}; open project: {projectManager.GumProjectSave?.FullFileName ?? "none"}.");
             }
             Thread.Sleep(10);
             _driver.Layout();
@@ -375,6 +379,19 @@ internal sealed class ProjectTreeHarness : IDisposable
     /// the rest of the selection when it is part of one). Returns the data the tree put on the drag.
     /// </summary>
     public IDataTransfer BeginDrag(GumTreeNode node) => BeginDragFrom(RowFor(node));
+
+    /// <summary>Drags <paramref name="source"/> onto <paramref name="target"/>'s row and drops it at <paramref name="fraction"/> of the row (<see cref="DropOn"/>).</summary>
+    public DragDropEffects Drag(GumTreeNode source, GumTreeNode target, double fraction = 0.5)
+    {
+        BeginDrag(source);
+        return DropOn(target, fraction);
+    }
+
+    /// <summary>
+    /// Presses <paramref name="source"/> (a Standards palette chip) and moves past the drag threshold.
+    /// Returns the data it put on the drag.
+    /// </summary>
+    public IDataTransfer BeginDrag(Control source) => BeginDragFrom(source);
 
     /// <summary>The data on the drag under way, for a drop somewhere else (the canvas).</summary>
     public IDataTransfer CurrentDrag => _dragData ?? throw new InvalidOperationException("No drag was started.");

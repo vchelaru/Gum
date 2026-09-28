@@ -373,27 +373,6 @@ public class DisplayPropertiesScenarioTests
         });
     }
 
-    [AvaloniaFact(Skip = "#5383: Render Text Character By Character is neither saved nor applied")]
-    [Trait("Feature", "PROP-009")]
-    public void RenderTextCharacterByCharacter_Checked_IsSavedAndSurvivesTheTabRefilling()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        using (ProjectPropertiesTab properties = new ProjectPropertiesTab(tree))
-        {
-            bool before = properties.ViewModel.RenderTextCharacterByCharacter;
-            properties.ClickCheckBox("RenderTextCharacterByCharacter");
-            properties.ViewModel.RenderTextCharacterByCharacter.ShouldBe(!before);
-        }
-
-        tree.Project.SaveAndReload();
-        using (ProjectPropertiesTab properties = new ProjectPropertiesTab(tree))
-        {
-            properties.Editor<CheckBoxDisplay>("RenderTextCharacterByCharacter").CheckBox.IsChecked.ShouldNotBe(new ProjectPropertiesViewModel().RenderTextCharacterByCharacter);
-        }
-
-        tree.AssertOracles();
-    }
-
     [AvaloniaFact]
     [Trait("Feature", "PROP-001")]
     public void AutoSave_TurnedOff_LeavesEditsUnsaved_UntilSaveAll_AndOnSavesAgain()
@@ -549,7 +528,6 @@ public class DisplayPropertiesScenarioTests
     #region Standards palette
 
     [AvaloniaFact]
-    [Trait("Feature", "PAL-001")]
     [Trait("Feature", "PAL-003")]
     public void EditDefaults_OnAChip_SelectsTheStandard_HighlightsTheChip_AndItsGridEditsTheDefault()
     {
@@ -577,6 +555,102 @@ public class DisplayPropertiesScenarioTests
 
         tree.Click(tree.NodeFor(button));
         Chip(tree, "Text").BorderBrush.ShouldBe(Chip(tree, "Sprite").BorderBrush, "selecting a component clears the highlight");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_AddsItToTheSelectedElement_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Click(tree.NodeFor(button));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Input.Click(Chip(tree, "Sprite"));
+        tree.ThrowIfCrashed();
+
+        InstanceSave added = Component(tree, "Button").Instances.ShouldHaveSingleItem();
+        added.BaseType.ShouldBe("Sprite");
+        ParentOf(Component(tree, "Button"), added).ShouldBeNull();
+        tree.SelectedState.SelectedInstance.ShouldBeSameAs(added);
+        SavedComponent(tree, "Button").Instances.ShouldHaveSingleItem().Name.ShouldBe(added.Name);
+
+        tree.Undo();
+        Component(tree, "Button").Instances.ShouldBeEmpty();
+        tree.SnapshotFiles().ShouldMatch(start, "one undo should take back the click's add");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_WithAContainerInstanceSelected_AddsItInsideTheContainer_AndUndoRestoresTheFiles()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave holder = tree.Project.AddInstance(button, "Holder", "Container");
+        tree.Click(tree.NodeFor(holder));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Input.Click(Chip(tree, "Text"));
+        tree.ThrowIfCrashed();
+
+        InstanceSave added = Component(tree, "Button").Instances.Single(instance => instance.BaseType == "Text");
+        ParentOf(Component(tree, "Button"), added).ShouldBe("Holder");
+        ParentOf(SavedComponent(tree, "Button"), SavedComponent(tree, "Button").Instances.Single(instance => instance.Name == added.Name)).ShouldBe("Holder");
+
+        tree.Undo();
+        Component(tree, "Button").Instances.ShouldHaveSingleItem().Name.ShouldBe("Holder");
+        tree.SnapshotFiles().ShouldMatch(start, "one undo should take back the click's add");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_WithNoScreenOrComponentSelected_DoesNothing_LikeTheDisabledMenuItem()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Input.RightClick(Chip(tree, "Text"));
+        tree.Input.PickContextMenuItem("Edit defaults...");
+        tree.SelectedState.SelectedElement.ShouldBeSameAs(tree.Project.Standard("Text"));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Input.Click(Chip(tree, "Sprite"));
+        tree.ThrowIfCrashed();
+
+        tree.Dialogs.Messages.ShouldBeEmpty("a click with nowhere to add is ignored, not an error");
+        Component(tree, "Button").Instances.ShouldBeEmpty();
+        tree.SnapshotFiles().ShouldMatch(start, "the click should change nothing");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
+    [Trait("Feature", "PAL-004")]
+    public void DraggingAChip_OnlyDrops_AndDoesNotAlsoAddToTheSelectedElement()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        ComponentSave card = tree.Project.AddComponent("Card");
+        tree.Click(tree.NodeFor(button));
+        Point chipCenter = tree.Input.CenterOf(Chip(tree, "Text"));
+
+        tree.BeginDrag(Chip(tree, "Text"));
+        tree.DropOn(tree.NodeFor(card));
+        // Whether or not the platform's drag loop swallows it, a release back over the chip after
+        // a drag is not a click.
+        tree.Input.Window.MouseUp(chipCenter, MouseButton.Left, RawInputModifiers.None);
+        tree.Input.Layout();
+        tree.ThrowIfCrashed();
+
+        // The drop selects what it added, so a click's add would land in Card as a second instance.
+        Component(tree, "Button").Instances.ShouldBeEmpty();
+        Component(tree, "Card").Instances.ShouldHaveSingleItem("the release that ends a drag must not also add").BaseType.ShouldBe("Text");
 
         tree.AssertOracles();
     }
@@ -664,6 +738,9 @@ public class DisplayPropertiesScenarioTests
 
     private static ComponentSave SavedComponent(ProjectTreeHarness tree, string name) =>
         SavedProject(tree).Components.Single(component => component.Name == name);
+
+    private static string? ParentOf(ElementSave element, InstanceSave instance) =>
+        element.GetDefaultStateOrThrow().GetValue($"{instance.Name}.Parent") as string;
 
     private static GumProjectSave SavedProject(ProjectTreeHarness tree) =>
         GumProjectSave.Load(tree.Project.ProjectFilePath, out _) ?? throw new InvalidOperationException("The project file did not load.");

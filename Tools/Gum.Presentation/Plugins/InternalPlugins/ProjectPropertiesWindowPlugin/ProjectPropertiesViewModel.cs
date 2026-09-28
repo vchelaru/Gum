@@ -74,12 +74,6 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value); 
     }
 
-    public bool RenderTextCharacterByCharacter
-    {
-        get => Get<bool>(); 
-        set => Set(value); 
-    }
-
     public List<string> LocalizationFiles
     {
         get
