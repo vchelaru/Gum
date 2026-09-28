@@ -159,13 +159,15 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly ICanvasDisplayScale _canvasDisplayScale;
     private readonly IPluginManager _pluginManager;
     private IWireframeEditorFactory _wireframeEditorFactory;
-    private readonly IPreviewLauncher _previewLauncher;
+    private readonly PreviewLauncher _previewLauncher;
     private readonly EditorRenderableFactory _editorRenderableFactory;
 
     // Suppresses the redundant second wireframe rebuild when selecting an element forces its
     // default state (state event rebuilds) and then fires the element event for the same element.
     private readonly WireframeRefreshCoordinator _wireframeRefreshCoordinator = new();
 
+    /// <summary>What the Preview toolbar button launches.</summary>
+    internal PreviewLauncher PreviewLauncher => _previewLauncher;
 
     // This is used to punch through the selected and go back up to the top. More info here:
     // https://github.com/vchelaru/Gum/issues/1810
@@ -334,7 +336,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _projectManager,
             _outputManager,
             previewGumxProjectionService,
-            AppContext.BaseDirectory,
+            new PreviewProcessStarter(AppContext.BaseDirectory),
             isSortByBatchKey: () => ReferenceEquals(Renderer.SiblingOrdering, BatchKeyGroupedOrderer.Instance));
 
         _editorViewModel = new EditorViewModel(

@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -43,7 +46,7 @@ public class PreviewLauncherTests : IDisposable
     }
 
     private PreviewLauncher CreateLauncher() =>
-        new PreviewLauncher(_selectedState.Object, _projectManager.Object, _outputManager.Object, _previewGumxProjectionService.Object, _headBaseDirectory, () => _isSortByBatchKey);
+        new PreviewLauncher(_selectedState.Object, _projectManager.Object, _outputManager.Object, _previewGumxProjectionService.Object, new PreviewProcessStarter(_headBaseDirectory), () => _isSortByBatchKey);
 
     [Fact]
     public void BuildMessage_WhenActivate_SetsTheActivateFlag()
@@ -213,5 +216,50 @@ public class PreviewLauncherTests : IDisposable
         CreateLauncher().PushSelection(new ScreenSave { Name = "MainMenu" });
 
         _outputManager.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void Launch_WhileThePreviewRuns_PushesTheSelectionWithActivate_InsteadOfStartingAgain()
+    {
+        GumProjectSave project = new GumProjectSave { FullFileName = "/MyGame/GumProject.gumj" };
+        _projectManager.SetupGet(p => p.GumProjectSave).Returns(project);
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(new ScreenSave { Name = "MainMenu" });
+        RecordingPreviewStarter starter = new RecordingPreviewStarter("/Preview/GumPreview");
+        PreviewLauncher launcher = CreateLauncher();
+        launcher.ProcessStarter = starter;
+
+        launcher.Launch();
+        launcher.Launch();
+
+        starter.Started.Count.ShouldBe(1);
+        List<string> arguments = starter.Started[0].ArgumentList.ToList();
+        string selectionFile = arguments[arguments.IndexOf("--selection-file") + 1];
+        PreviewSelectionMessage? pushed = PreviewSelectionMessage.TryParse(File.ReadAllLines(selectionFile));
+        File.Delete(selectionFile);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("MainMenu");
+        pushed.Activate.ShouldBeTrue();
+    }
+
+    private sealed class RecordingPreviewStarter : IPreviewProcessStarter, IPreviewProcess
+    {
+        private readonly string _executablePath;
+
+        public RecordingPreviewStarter(string executablePath)
+        {
+            _executablePath = executablePath;
+        }
+
+        public List<ProcessStartInfo> Started { get; } = new List<ProcessStartInfo>();
+
+        public bool HasExited => false;
+
+        public ResolvedPreviewExecutable? Resolve() => new ResolvedPreviewExecutable(_executablePath, IsNativeAot: false);
+
+        public IPreviewProcess? Start(ProcessStartInfo startInfo)
+        {
+            Started.Add(startInfo);
+            return this;
+        }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -35,7 +34,7 @@ namespace Gum.Avalonia.Shell;
 public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
 {
     private readonly ShellViewModel _shell;
-    private readonly IWritableOptions<LayoutSettings> _layoutSettings;
+    private readonly WindowPlacementTracker _placement;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IClipboardService _clipboardService;
     private readonly TextBlock _statusText;
@@ -76,7 +75,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         IDialogService dialogService)
     {
         _shell = shell;
-        _layoutSettings = layoutSettings;
+        _placement = new WindowPlacementTracker(this, shell, layoutSettings, () => IsInBackground);
         _fileSystemRevealService = fileSystemRevealService;
         _clipboardService = clipboardService;
         DataContext = shell;
@@ -149,13 +148,10 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         ApplyResizeBorderMargin(panel);
 
         Opened += (_, _) => RestoreSavedPlacement();
-        PositionChanged += (_, _) => { if (WindowState == WindowState.Normal && !IsInBackground) { _shell.Left = Position.X; _shell.Top = Position.Y; } };
-        SizeChanged += (_, _) => { if (WindowState == WindowState.Normal && !IsInBackground) { _shell.Width = Bounds.Width; _shell.Height = Bounds.Height; } };
         PropertyChanged += (_, e) =>
         {
             if (e.Property == WindowStateProperty)
             {
-                _shell.WindowState = WindowState == WindowState.Maximized ? GumWindowState.Maximized : GumWindowState.Normal;
                 ApplyResizeBorderMargin(panel);
             }
             else if (e.Property == OffScreenMarginProperty)
@@ -250,18 +246,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     }
 
     /// <summary>Shows a startup failure in place of the panels, so an unattended run captures it.</summary>
-    public void ShowStartupFailure(Exception exception)
-    {
-        Content = new ScrollViewer
-        {
-            Content = new TextBlock
-            {
-                Text = "Startup failed:\n\n" + exception,
-                TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
-                Margin = new Thickness(16),
-            },
-        };
-    }
+    public void ShowStartupFailure(Exception exception) => Content = new StartupFailurePanel(exception);
 
     void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message) => Close();
 
@@ -292,23 +277,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             return;
         }
 
-        WindowSettings saved = _layoutSettings.CurrentValue.MainWindow;
-        PixelPoint probe = saved.Left is double left && saved.Top is double top ? new PixelPoint((int)left, (int)top) : Position;
-        Screen? screen = Screens.ScreenFromPoint(probe) ?? Screens.Primary;
-        Rectangle workingArea = screen == null
-            ? new Rectangle(0, 0, (int)WindowSettings.DefaultWidth, (int)WindowSettings.DefaultHeight)
-            : new Rectangle(screen.WorkingArea.X, screen.WorkingArea.Y, screen.WorkingArea.Width, screen.WorkingArea.Height);
-
-        _shell.LoadWindowSettings(saved, workingArea);
-        if (_shell.IsFirstLaunch)
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            return;
-        }
-
-        Position = new PixelPoint((int)_shell.Left, (int)_shell.Top);
-        Width = _shell.Width;
-        Height = _shell.Height;
-        WindowState = _shell.WindowState == GumWindowState.Maximized ? WindowState.Maximized : WindowState.Normal;
+        _placement.Restore();
     }
 }

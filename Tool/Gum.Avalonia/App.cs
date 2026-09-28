@@ -143,41 +143,40 @@ public sealed class App : Application
     private async Task<UnattendedStartupOutcome> RunStartupAsync(IClassicDesktopStyleApplicationLifetime desktop,
         StartupFailureReporter failureReporter)
     {
-        try
-        {
-            await new GumStartupSequence(_services, _services.GetRequiredService<AvaloniaHeadStartup>()).RunAsync();
-            StartupTiming.Mark("InitializeGum complete");
-            ApplyStartupSelection();
-            ApplyThemeOverride();
-            ICommandLineManager commandLine = _services.GetRequiredService<ICommandLineManager>();
-            if (commandLine.ShouldExitImmediately)
-            {
-                // A script running a command-line option sees why it didn't run, and a failure code.
-                if (commandLine.UsageError is { } usageError)
-                {
-                    Console.Error.WriteLine(usageError);
-                    desktop.Shutdown(1);
-                }
-                else
-                {
-                    desktop.Shutdown();
-                }
-                return UnattendedStartupOutcome.ExitRequested;
-            }
-        }
-        catch (Exception exception)
-        {
-            failureReporter.Report(exception);
-            return UnattendedStartupOutcome.Failed;
-        }
+        UnattendedStartupOutcome outcome = await new HeadStartupRun(failureReporter).RunAsync(() => RunStartupStepsAsync(desktop));
 
         // Nobody is there to answer in an unattended run, and the modal would hold up its exit.
-        if (_options.ExitAfterSeconds == null)
+        if (outcome == UnattendedStartupOutcome.Ready && _options.ExitAfterSeconds == null)
         {
             PromptForUnreportedFreezeDiagnostics();
             _services.GetService<ICrashReporter>()?.PromptForPreviousCrash();
         }
-        return UnattendedStartupOutcome.Ready;
+        return outcome;
+    }
+
+    private async Task<UnattendedStartupOutcome> RunStartupStepsAsync(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        await new GumStartupSequence(_services, _services.GetRequiredService<AvaloniaHeadStartup>()).RunAsync();
+        StartupTiming.Mark("InitializeGum complete");
+        ApplyStartupSelection();
+        ApplyThemeOverride();
+        ICommandLineManager commandLine = _services.GetRequiredService<ICommandLineManager>();
+        if (!commandLine.ShouldExitImmediately)
+        {
+            return UnattendedStartupOutcome.Ready;
+        }
+
+        // A script running a command-line option sees why it didn't run, and a failure code.
+        if (commandLine.UsageError is { } usageError)
+        {
+            Console.Error.WriteLine(usageError);
+            desktop.Shutdown(1);
+        }
+        else
+        {
+            desktop.Shutdown();
+        }
+        return UnattendedStartupOutcome.ExitRequested;
     }
 
     // --exit-after is the upper bound (#5170): the run captures and exits once startup has finished
