@@ -134,6 +134,12 @@ internal sealed class ToolExceptionWatch : IDisposable
             return null;
         }
 
+        public string? LogRecoverable(Exception exception, string source)
+        {
+            Reports.Add((exception, source));
+            return null;
+        }
+
         public string? ReportFatal(Exception exception, string source)
         {
             Reports.Add((exception, source));
