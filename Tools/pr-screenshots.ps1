@@ -77,7 +77,8 @@ function Invoke-Screenshots([string]$root, [string]$outDir) {
     }
     $pngs = @(Get-ChildItem -Path $outDir -Filter *.png -File)
     if ($pngs.Count -eq 0) { throw "No screenshot was written by the tests matching '$testFilter' in $root." }
-    return $pngs
+    # The comma keeps a single PNG an array; PowerShell would unroll it to a lone FileInfo.
+    return ,$pngs
 }
 
 # The base checkout: a reused sibling worktree detached at $Base, with this branch's screenshot

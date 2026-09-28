@@ -51,6 +51,8 @@ public class ProjectPropertiesGridPresenterTests
                      nameof(ProjectPropertiesViewModel.AvailableLanguages),
                      // No languages are loaded, so there is no language to pick.
                      nameof(ProjectPropertiesViewModel.LanguageName),
+                     // Removed setting that was never saved or applied (#5383).
+                     "RenderTextCharacterByCharacter",
                  })
         {
             grid.GetInstanceMember(hidden).ShouldBeNull(hidden);
