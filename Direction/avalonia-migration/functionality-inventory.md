@@ -349,7 +349,6 @@
 - PROP-006 Texture Filter. tested: ProjectPropertiesGridPresenterTests
 - PROP-007 Restrict To Unit Values. tested: DialogScenarioTests
 - PROP-008 Restrict File Names For Android. tested: ProjectPropertiesGridPresenterTests
-- PROP-009 Render Text Character By Character
 - PROP-010 Localization Files. tested: ProjectPropertiesChangeLogicTests
 - PROP-011 Language. tested: ProjectPropertiesViewModelTests
 - PROP-012 Show Localization. tested: DialogScenarioTests

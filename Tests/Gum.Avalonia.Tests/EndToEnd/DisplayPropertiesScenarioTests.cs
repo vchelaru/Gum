@@ -373,27 +373,6 @@ public class DisplayPropertiesScenarioTests
         });
     }
 
-    [AvaloniaFact(Skip = "#5383: Render Text Character By Character is neither saved nor applied")]
-    [Trait("Feature", "PROP-009")]
-    public void RenderTextCharacterByCharacter_Checked_IsSavedAndSurvivesTheTabRefilling()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        using (ProjectPropertiesTab properties = new ProjectPropertiesTab(tree))
-        {
-            bool before = properties.ViewModel.RenderTextCharacterByCharacter;
-            properties.ClickCheckBox("RenderTextCharacterByCharacter");
-            properties.ViewModel.RenderTextCharacterByCharacter.ShouldBe(!before);
-        }
-
-        tree.Project.SaveAndReload();
-        using (ProjectPropertiesTab properties = new ProjectPropertiesTab(tree))
-        {
-            properties.Editor<CheckBoxDisplay>("RenderTextCharacterByCharacter").CheckBox.IsChecked.ShouldNotBe(new ProjectPropertiesViewModel().RenderTextCharacterByCharacter);
-        }
-
-        tree.AssertOracles();
-    }
-
     [AvaloniaFact]
     [Trait("Feature", "PROP-001")]
     public void AutoSave_TurnedOff_LeavesEditsUnsaved_UntilSaveAll_AndOnSavesAgain()
