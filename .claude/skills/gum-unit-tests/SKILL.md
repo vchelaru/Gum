@@ -73,13 +73,13 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   `AddHandler(KeyDownEvent, ..., RoutingStrategies.Tunnel)`.
 - `window.CaptureRenderedFrame()` returns a bitmap of a headless window (the test app runs Skia, not
   the headless stub); save it as a PNG and read it to check what a view actually drew.
-- A window that renders and hit-tests nothing for a whole test (a click that "did not land") is
-  Avalonia 11.3's headless host racing a finalizer on the lazily created `Dispatcher.UIThread`
-  during per-test setup; about one test in a hundred. Rerun it. Classify it from the failure message
-  and rerun that one test, never the suite: a repeated full-suite run, or a baseline run on `main`
-  for comparison, costs minutes and tells you nothing the message doesn't. Details and the harness's
-  fail-fast check: `Tests/Gum.Avalonia.Tests/Animations/README.md`. Never add thread-pool work
-  that reaches into Avalonia (timers, continuations) to a test or a plugin's StartUp.
+- `Gum.Avalonia.Tests` runs one Avalonia app for the whole assembly
+  (`AvaloniaTestIsolation(PerAssembly)` in `TestAppBuilder.cs`); keep it. A test that changes
+  app-level state (`Application.Current.Resources`, theme, accent) restores it. A window a test
+  builds itself needs render tick, `RunJobs()`, render tick before it hit-tests anything;
+  `HeadlessWindowDriver` does this. A window that hit-tests nothing is a regression, not a flake.
+  Details: `Tests/Gum.Avalonia.Tests/Animations/README.md`. Never add thread-pool work that reaches
+  into Avalonia (timers, continuations) to a test or a plugin's StartUp.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame,
   and the headless session sometimes throws `PlatformNotSupportedException` from `PushFrame`. To
   let a `DispatcherTimer` tick, loop `Thread.Sleep(10)` + `Dispatcher.UIThread.RunJobs()` for the
