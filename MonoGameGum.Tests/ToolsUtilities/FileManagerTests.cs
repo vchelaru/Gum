@@ -14,9 +14,11 @@ public class FileManagerTests : IDisposable
 {
     private readonly Func<string, Stream>? _previousHook = FileManager.CustomGetStreamFromFile;
     private readonly CultureInfo _previousCulture = CultureInfo.CurrentCulture;
+    private readonly bool? _previousIsMobileOverride = FileManager.IsMobileOverride;
 
     public void Dispose()
     {
+        FileManager.IsMobileOverride = _previousIsMobileOverride;
         FileManager.CustomGetStreamFromFile = _previousHook;
         CultureInfo.CurrentCulture = _previousCulture;
     }
@@ -43,6 +45,16 @@ public class FileManagerTests : IDisposable
             .ShouldBe("dll");
         // A dot in a folder name, with no extension on the file itself, still has none.
         FileManager.GetExtension(@"C:\folder.with.dots\FileWithNoExtension").ShouldBe("");
+    }
+
+    // Android and iOS file systems are case-sensitive and use '/', so a lowercased,
+    // backslashed app directory names a folder that does not exist on the device.
+    [Fact]
+    public void ExeLocation_OnMobile_ShouldPreserveTheAppDirectoryCaseAndSeparators()
+    {
+        FileManager.IsMobileOverride = true;
+
+        FileManager.ExeLocation.ShouldBe(AppContext.BaseDirectory);
     }
 
     [Fact]

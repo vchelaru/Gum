@@ -54,8 +54,11 @@ namespace ToolsUtilities
             {
                 if (IsMobile)
                 {
-                    // Assembly.GetExecutingAssembly().Location returns empty string in single-file published apps.
-                    return AppContext.BaseDirectory.ToLower().Replace("/", "\\");
+                    // Returned as-is: the device file system is case-sensitive and uses '/', so a
+                    // lowercased or backslashed copy names a directory that does not exist. Content
+                    // loads never go through this value on mobile; they use "./"-marked relative paths
+                    // that TitleContainer resolves inside the app package.
+                    return AppContext.BaseDirectory;
                 }
                 else
                 {
