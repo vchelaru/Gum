@@ -59,6 +59,10 @@ public class VariableCategoryCopyPasteUndoTests : BaseTestClass
         public void ApplyAnimations(ElementSave element, ElementAnimationsSave animations)
         {
         }
+
+        public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
+        {
+        }
     }
 
     public VariableCategoryCopyPasteUndoTests()

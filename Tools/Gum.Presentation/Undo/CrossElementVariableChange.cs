@@ -52,7 +52,8 @@ public class CrossElementVariableChange
     public VariableListSave? BeforeList { get; set; }
 
     /// <summary>
-    /// A copy of the variable list after the change. Null for a variable change.
+    /// A copy of the variable list after the change, or null when the change removed it. Null for a
+    /// variable change.
     /// </summary>
     public VariableListSave? AfterList { get; set; }
 
@@ -86,8 +87,8 @@ public class CrossElementVariableChange
     }
 
     /// <summary>
-    /// Copies <paramref name="list"/> as <see cref="BeforeList"/>. Call before modifying the list, then
-    /// <see cref="CaptureAfter(VariableListSave)"/> once it is done.
+    /// Copies <paramref name="list"/> as <see cref="BeforeList"/>. Call before the change; a removal
+    /// needs nothing more, a modification calls <see cref="CaptureAfter(VariableListSave)"/> once it is done.
     /// </summary>
     public static CrossElementVariableChange CaptureBefore(ElementSave container, StateSave state, VariableListSave list)
     {

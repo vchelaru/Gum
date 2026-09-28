@@ -190,7 +190,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();
-        services.AddSingleton<IMovedInstanceReferenceFinder, MovedInstanceReferenceFinder>();
+        services.AddSingleton<IMovedInstanceReferenceDropper, MovedInstanceReferenceDropper>();
         services.AddSingleton<RenameLogic>();
         services.AddSingleton<IRenameLogic>(provider => provider.GetRequiredService<RenameLogic>());
         // IUndoRenameLogic: narrow headless rename port (ADR-0005 Phase 3). Resolves to the same RenameLogic singleton.
