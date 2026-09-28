@@ -7,6 +7,7 @@ using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Plugins.VariableGrid;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -16,6 +17,7 @@ using Gum.Managers;
 using Gum.Plugins.Behaviors;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.ProjectServices.FontGeneration;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -939,10 +941,12 @@ public class VariableScenarioTests
     #region References and fonts
 
     [AvaloniaFact]
+    [Trait("Feature", "VAR-010")]
+    [Trait("Feature", "VAR-017")]
     [Trait("Feature", "VAR-025")]
     [Trait("Feature", "VAR-030")]
     [Trait("Feature", "EDIT-001")]
-    public void F12OnAReference_SelectsItsSource_AndAFontSizeChange_AsksForTheFont()
+    public void ACopiedVariableName_BecomesAReference_F12OnItSelectsItsSource_AndAFontSizeChange_AsksForTheFont()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         ComponentSave button = tree.Project.AddComponent("Button");
@@ -950,9 +954,20 @@ public class VariableScenarioTests
         tree.Project.AddComponent("Panel");
         // Fonts are made for the elements that use the edited one.
         tree.Project.AddInstance(tree.Project.AddScreen("Title"), "OkButton", "Button");
-        tree.Click(tree.NodeFor(Component(tree, "Panel")));
+        RecordingClipboardService clipboard = (RecordingClipboardService)TestAppBuilder.Services.GetRequiredService<IClipboardService>();
+        clipboard.Clear();
+        tree.Click(tree.NodeFor(label));
         VariableGridHarness grid = tree.Grid;
-        grid.TypeLinesAndApply("VariableReferences", "Width = Components/Button.Width");
+        grid.PickRowMenuItem("X", "Copy Qualified Variable Name");
+        clipboard.LastText.ShouldBe("Components/Button.Label.X");
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+        grid.PickRowMenuItem("Width", "Copy Qualified Variable Name");
+        clipboard.LastText.ShouldBe("Components/Button.Width");
+        grid.TypeAndEnter("Width", "90");
+
+        tree.Click(tree.NodeFor(Component(tree, "Panel")));
+        grid.TypeLinesAndApply("VariableReferences", "Width = " + clipboard.LastText);
+        VariableGridHarness.StoredValue(Component(tree, "Panel"), "Width").ShouldBe(90f);
 
         TextBox references = grid.Editor<StringListTextBoxDisplay>("VariableReferences").EditorTextBox;
         grid.Input.Click(references);
