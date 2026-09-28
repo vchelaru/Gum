@@ -289,12 +289,6 @@ public static class SkiaResourceManager
         if(IsInitialized == false)
         {
             IsInitialized = true;
-
-            foreach (int i in Enum.GetValues(typeof(TypefaceType)))
-            {
-                // don't do anything, this isn't standardized...
-                //CacheTypeface(i);
-            }
         }
 
         // Only if the user explicitly changed the resource:
