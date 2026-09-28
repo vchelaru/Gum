@@ -163,6 +163,13 @@ internal sealed class HeadlessWindowDriver : IDisposable
         Layout();
     }
 
+    /// <summary>Types <paramref name="text"/> into whatever has keyboard focus, without clicking anything first.</summary>
+    public void TypeText(string text)
+    {
+        Window.KeyTextInput(text);
+        Layout();
+    }
+
     /// <summary>Types <paramref name="text"/> over <paramref name="box"/>'s text and presses Enter.</summary>
     public void TypeAndEnter(TextBox box, string text)
     {

@@ -240,6 +240,7 @@ public class StandardMenuModelBuilder
         if (_selectedState.SelectedBehavior != null && _selectedState.SelectedBehaviorVariable != null)
         {
             _editCommands.RemoveBehaviorVariable(_selectedState.SelectedBehavior, _selectedState.SelectedBehaviorVariable);
+            RefreshUI();
         }
     }
 

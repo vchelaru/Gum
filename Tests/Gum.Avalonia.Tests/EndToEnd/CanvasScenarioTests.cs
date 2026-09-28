@@ -26,6 +26,7 @@ public class CanvasScenarioTests
     [SkippableFact]
     [Trait("Feature", "CANV-001")]
     [Trait("Feature", "CANV-002")]
+    [Trait("Feature", "TREE-007")]
     public void Click_SelectsTheInstanceUnderIt_ShiftClickAdds_AndEmptyCanvasSelectsTheElement()
     {
         OnCanvas(canvas =>
@@ -37,6 +38,8 @@ public class CanvasScenarioTests
 
             canvas.Click(canvas.WindowPointOf(230, 40));
             canvas.Project.SelectedState.SelectedInstance.ShouldBeSameAs(right, canvas.Describe());
+            // The tree follows a selection made on the canvas.
+            canvas.Tree.View.Selection.SelectedNodes.ShouldBe(new[] { canvas.Tree.NodeFor(right) });
 
             // Quick enough to be a double click if position were ignored.
             canvas.Click(canvas.WindowPointOf(50, 40));
@@ -46,6 +49,7 @@ public class CanvasScenarioTests
             canvas.Click(canvas.WindowPointOf(230, 40), RawInputModifiers.Shift);
             canvas.ReleaseKey(Key.LeftShift, PhysicalKey.ShiftLeft);
             canvas.Project.SelectedState.SelectedInstances.ShouldBe(new[] { left, right }, ignoreOrder: true);
+            canvas.Tree.View.Selection.SelectedNodes.ShouldBe(new[] { canvas.Tree.NodeFor(left), canvas.Tree.NodeFor(right) }, ignoreOrder: true);
 
             canvas.Click(canvas.WindowPointOf(500, 400));
             canvas.Project.SelectedState.SelectedInstance.ShouldBeNull();
