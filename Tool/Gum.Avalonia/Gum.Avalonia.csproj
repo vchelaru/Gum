@@ -144,6 +144,4 @@
 		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
 	</ItemGroup>
 
-	<Import Project="..\ExcludeDxilSigningLibrary.targets" />
-
 </Project>

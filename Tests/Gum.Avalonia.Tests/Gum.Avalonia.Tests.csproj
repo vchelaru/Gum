@@ -68,7 +68,4 @@
     <Compile Include="..\Shared\**\*.cs" Link="Shared\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <!-- Same dxil exclusion as the head, so the shader tests run the way the head ships (#5427). -->
-  <Import Project="..\..\Tool\ExcludeDxilSigningLibrary.targets" />
-
 </Project>
