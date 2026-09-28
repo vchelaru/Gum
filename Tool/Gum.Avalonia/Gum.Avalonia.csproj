@@ -92,8 +92,8 @@
 		<ProjectReference Include="..\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj" />
 		<ProjectReference Include="..\..\AvaloniaDataUi\AvaloniaDataUi.csproj" />
 		<!-- Not compiled against (gumcli runs isolated, see StageGumCli below); referenced so it is
-		     restored and built with the head. -->
-		<ProjectReference Include="..\..\Tools\Gum.Cli\Gum.Cli.csproj" ReferenceOutputAssembly="false" Private="false" AdditionalProperties="$(GumCliProperties)" />
+		     restored with the head. StageGumCli builds it. -->
+		<ProjectReference Include="..\..\Tools\Gum.Cli\Gum.Cli.csproj" ReferenceOutputAssembly="false" Private="false" BuildReference="false" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -152,16 +152,18 @@
 		build of the head stages gumcli there, framework-dependent, and a publish of the head takes that
 		folder along. This is the only place the GumCli layout is defined: the release workflow's
 		`dotnet publish` of the head and the test project's copy of the head's output both get it here.
-		The ProjectReference above restores and builds gumcli with the head (never self-contained: it
-		runs in the head's process on the head's runtime); StageGumCli then publishes that build with
-		NoBuild into the folder.
+		The ProjectReference above only puts gumcli in the head's restore. StageGumCli builds it with the
+		head's configuration (a solution build would put a reference outside the solution on Debug),
+		never self-contained since it runs on the head's runtime, then publishes that build into the
+		folder.
 	-->
 	<PropertyGroup>
 		<GumCliProject>$(MSBuildThisFileDirectory)..\..\Tools\Gum.Cli\Gum.Cli.csproj</GumCliProject>
-		<GumCliProperties>SelfContained=false</GumCliProperties>
+		<GumCliProperties>Configuration=$(Configuration);SelfContained=false</GumCliProperties>
 	</PropertyGroup>
 
 	<Target Name="StageGumCli" AfterTargets="Build">
+		<MSBuild Projects="$(GumCliProject)" Targets="Build" Properties="$(GumCliProperties)" />
 		<MSBuild Projects="$(GumCliProject)" Targets="Publish" Properties="$(GumCliProperties);NoBuild=true;PublishDir=$([System.IO.Path]::Combine('$(ProjectDir)', '$(OutDir)'))GumCli/" />
 	</Target>
 
