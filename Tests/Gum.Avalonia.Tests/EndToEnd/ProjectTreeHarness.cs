@@ -347,7 +347,7 @@ internal sealed class ProjectTreeHarness : IDisposable
                 object? inFlight = typeof(ProjectManager).GetField("_inFlightLoadProjectTask", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
                     .GetValue(Services.GetRequiredService<IProjectManager>());
                 string inFlightState = inFlight is Task task ? $"task status={task.Status}" : "null";
-                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}]. DIAG5402 inFlight={inFlightState} project={Services.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName} openFilesLeft={(Dialogs.GetType().GetField("_openFiles", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(Dialogs) is System.Collections.ICollection c ? c.Count : -1)}");
+                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}]. DIAG5402 inFlight={inFlightState} project={Services.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName} log=[{string.Join(" || ", ProjectManager.Diag5402Log)}] openFilesLeft={(Dialogs.GetType().GetField("_openFiles", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(Dialogs) is System.Collections.ICollection c ? c.Count : -1)}");
             }
             Thread.Sleep(10);
             _driver.Layout();

@@ -1,0 +1,28 @@
+# TEMPORARY diagnostic workflow for #5402; removed before merge.
+name: Diag 5402
+
+on:
+  push:
+    branches: [5402-macos-load-timeout]
+
+jobs:
+  Repeat-Avalonia-Head-macOS:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet build Gum.slnx --configuration Release --verbosity quiet -p:WarningLevel=0
+      - name: Run the suite three times
+        run: |
+          for i in 1 2 3; do
+            echo "=== pass $i"
+            dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build 2>&1 | grep -a "DIAG5402\|\[FAIL\]\|Error Message\|Waited\|Failed!\|Passed!" | cut -c1-6000 || true
+          done

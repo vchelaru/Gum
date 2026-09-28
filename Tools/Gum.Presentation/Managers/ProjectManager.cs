@@ -305,6 +305,13 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // made public so that File commands can access this function
     public Task LoadProjectAsync(FilePath fileName)
     {
+        // DIAG5402 (temporary)
+        string diagCaller = string.Join(" < ", (new System.Diagnostics.StackTrace().GetFrames() ?? Array.Empty<System.Diagnostics.StackFrame>())
+            .Select(frame => frame.GetMethod())
+            .Where(method => method?.DeclaringType?.Namespace?.StartsWith("Gum") == true && method.DeclaringType != typeof(ProjectManager))
+            .Take(4)
+            .Select(method => method!.DeclaringType!.Name + "." + method.Name));
+        DiagLog($"load {fileName.FullPath} thread={Environment.CurrentManagedThreadId} guard={(_inFlightLoadProjectTask == null ? "null" : _inFlightLoadProjectTask.Status.ToString())} from {diagCaller}");
         if (_inFlightLoadProjectTask != null)
         {
             _guiCommands.PrintOutput(
@@ -313,7 +320,20 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
 
         _inFlightLoadProjectTask = LoadProjectCoreAsync(fileName);
+        DiagLog($"  started, status on return={_inFlightLoadProjectTask.Status}");
         return _inFlightLoadProjectTask;
+    }
+
+    // DIAG5402 (temporary)
+    public static readonly System.Collections.Concurrent.ConcurrentQueue<string> Diag5402Log = new();
+
+    private static void DiagLog(string line)
+    {
+        Diag5402Log.Enqueue($"{DateTime.Now:HH:mm:ss.fff} {line}");
+        while (Diag5402Log.Count > 30)
+        {
+            Diag5402Log.TryDequeue(out _);
+        }
     }
 
     private async Task LoadProjectCoreAsync(FilePath fileName)
@@ -325,6 +345,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         finally
         {
             _inFlightLoadProjectTask = null;
+            DiagLog($"  finished {fileName.FullPath} thread={Environment.CurrentManagedThreadId}");
         }
     }
 
