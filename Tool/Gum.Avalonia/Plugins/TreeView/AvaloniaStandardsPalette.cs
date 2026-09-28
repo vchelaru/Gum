@@ -180,7 +180,9 @@ public sealed class AvaloniaStandardsPalette : Border
             startPoint = e.GetPosition(null);
         };
         // A left release that no drag took is a click: it adds an instance of this standard at the
-        // add destination. Starting a drag clears pressed, so the release that ends one adds nothing.
+        // add destination, as "Add to ..." does. Starting a drag clears pressed, so the release that
+        // ends one adds nothing, and with no Screen/Component open the click is ignored, as that
+        // menu item is disabled then.
         chip.PointerReleased += (_, e) =>
         {
             bool isClick = pressed && e.InitialPressMouseButton == MouseButton.Left
@@ -188,7 +190,10 @@ public sealed class AvaloniaStandardsPalette : Border
             pressed = false;
             if (isClick)
             {
-                AddToCurrentRequested?.Invoke(typeName);
+                if (CurrentElementNameProvider?.Invoke() != null)
+                {
+                    AddToCurrentRequested?.Invoke(typeName);
+                }
                 e.Handled = true;
             }
         };

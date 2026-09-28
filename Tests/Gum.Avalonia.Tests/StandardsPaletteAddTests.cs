@@ -147,6 +147,8 @@ public class StandardsPaletteAddTests
 
     private static void ClickChip(Window window, string typeName, RawInputModifiers modifiers)
     {
+        // The last add grew the tree above the palette; lay out first, as a real click follows a render.
+        Layout(window);
         // The chip is the innermost Border around the type name's TextBlock.
         Border chip = window.GetVisualDescendants()
             .OfType<AvaloniaStandardsPalette>().Single()

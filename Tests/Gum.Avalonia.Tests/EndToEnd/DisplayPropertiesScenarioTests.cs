@@ -610,6 +610,27 @@ public class DisplayPropertiesScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "PAL-001")]
+    public void ClickOnAChip_WithNoScreenOrComponentSelected_DoesNothing_LikeTheDisabledMenuItem()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        tree.Input.RightClick(Chip(tree, "Text"));
+        tree.Input.PickContextMenuItem("Edit defaults...");
+        tree.SelectedState.SelectedElement.ShouldBeSameAs(tree.Project.Standard("Text"));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        tree.Input.Click(Chip(tree, "Sprite"));
+        tree.ThrowIfCrashed();
+
+        tree.Dialogs.Messages.ShouldBeEmpty("a click with nowhere to add is ignored, not an error");
+        Component(tree, "Button").Instances.ShouldBeEmpty();
+        tree.SnapshotFiles().ShouldMatch(start, "the click should change nothing");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PAL-001")]
     [Trait("Feature", "PAL-004")]
     public void DraggingAChip_OnlyDrops_AndDoesNotAlsoAddToTheSelectedElement()
     {
