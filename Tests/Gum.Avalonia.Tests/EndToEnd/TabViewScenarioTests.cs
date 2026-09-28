@@ -220,6 +220,52 @@ public class TabViewScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "TAB-008")]
+    public void AlignmentButtons_OnAMixedTextAndContainerSelection_SetTextAlignmentOnlyOnTheText()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        InstanceSave panel = tree.Project.AddInstance(card, "Panel", "Container");
+        InstanceSave label = tree.Project.AddInstance(card, "Label", "Text");
+        tree.SaveAll();
+        tree.Click(tree.NodeFor(card));
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+        using HeadlessWindowDriver alignment = HostTab("Alignment");
+
+        // Container first: the Text still gets its text alignment.
+        tree.Click(tree.NodeFor(panel));
+        tree.Click(tree.NodeFor(label), RawInputModifiers.Control);
+        tree.SelectedState.SelectedInstances.Count().ShouldBe(2);
+        alignment.Click(ButtonWithTip(alignment, "Anchor Right"));
+        tree.ThrowIfCrashed();
+        ComponentSave saved = tree.Grid.ReadSaved(card);
+        SavedEnum(saved, "Label.XUnits").ShouldBe((int)PositionUnitType.PixelsFromRight);
+        SavedEnum(saved, "Label.HorizontalAlignment").ShouldBe((int)global::RenderingLibrary.Graphics.HorizontalAlignment.Right);
+        SavedEnum(saved, "Label.VerticalAlignment").ShouldBe((int)global::RenderingLibrary.Graphics.VerticalAlignment.Center);
+        SavedEnum(saved, "Panel.XUnits").ShouldBe((int)PositionUnitType.PixelsFromRight);
+        VariableGridHarness.StoredValue(saved, "Panel.HorizontalAlignment").ShouldBeNull();
+        VariableGridHarness.StoredValue(saved, "Panel.VerticalAlignment").ShouldBeNull();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the anchor restores the files");
+
+        // Text first: the Container gets no text alignment.
+        tree.Click(tree.NodeFor(label));
+        tree.Click(tree.NodeFor(panel), RawInputModifiers.Control);
+        tree.SelectedState.SelectedInstances.Count().ShouldBe(2);
+        alignment.Click(ButtonWithTip(alignment, "Anchor Bottom"));
+        tree.ThrowIfCrashed();
+        saved = tree.Grid.ReadSaved(card);
+        SavedEnum(saved, "Label.VerticalAlignment").ShouldBe((int)global::RenderingLibrary.Graphics.VerticalAlignment.Bottom);
+        SavedEnum(saved, "Panel.YUnits").ShouldBe((int)PositionUnitType.PixelsFromBottom);
+        VariableGridHarness.StoredValue(saved, "Panel.HorizontalAlignment").ShouldBeNull();
+        VariableGridHarness.StoredValue(saved, "Panel.VerticalAlignment").ShouldBeNull();
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "undoing the anchor restores the files");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "TAB-011")]
     [Trait("Feature", "VIEW-008")]
     public void BehaviorsTab_ShowsForAComponent_AndEditChecksABehaviorOnAndOff()
