@@ -52,21 +52,20 @@
 
 ## View menu and shell (VIEW)
 
-- VIEW-001 Theming dialog. tested: ThemingDialogViewModelTests
-- VIEW-002 Standards palette toggle. tested: ElementTreeViewManagerStandardsPaletteTests
-- VIEW-003 Hide Tools / Show Tools. tested: HideShowToolsLogicTests
-- VIEW-004 View Hotkeys toggles tab. tested: MainHotkeyPluginTests
-- VIEW-005 Show File Watch
-- VIEW-006 View Animations toggles tab. tested: TabLifecycleTests
-- VIEW-007 Move a tab to another dock area. tested: TabDockingLogicTests
-- VIEW-008 Tab auto-selects on relevant selection. tested: TabAutoSelectLogicTests
+- VIEW-001 Theming dialog. tested: ThemingDialogViewModelTests, TabViewScenarioTests
+- VIEW-002 Standards palette toggle. tested: ElementTreeViewManagerStandardsPaletteTests, TabViewScenarioTests
+- VIEW-003 Hide Tools / Show Tools. tested: HideShowToolsLogicTests, TabViewScenarioTests
+- VIEW-004 View Hotkeys toggles tab. tested: MainHotkeyPluginTests, TabViewScenarioTests
+- VIEW-005 Show File Watch. tested: TabViewScenarioTests
+- VIEW-006 View Animations toggles tab. tested: TabLifecycleTests, TabViewScenarioTests
+- VIEW-008 Tab auto-selects on relevant selection. tested: TabAutoSelectLogicTests, TabViewScenarioTests
 - VIEW-009 Window size and position persist. tested: WindowSettingsLogicTests
-- VIEW-010 Title shows project and unsaved state. tested: ShellTitlePluginTests
-- VIEW-011 UI font size scales panels. tested: UiFontSizeEndToEndTests
-- VIEW-012 Light and dark theme. tested: ThemeResourceTests
-- VIEW-013 Accent color. tested: AccentPaletteTests
-- VIEW-014 macOS native menu with About Gum. tested: NativeMenuBuilderTests
-- VIEW-015 Mouse back/forward step selection history. tested: AppWideWindowGesturesTests
+- VIEW-010 Title shows project and unsaved state. tested: ShellTitlePluginTests, TabViewScenarioTests
+- VIEW-011 UI font size scales panels. tested: UiFontSizeEndToEndTests, TabViewScenarioTests
+- VIEW-012 Light and dark theme. tested: ThemeResourceTests, TabViewScenarioTests
+- VIEW-013 Accent color. tested: AccentPaletteTests, TabViewScenarioTests
+- VIEW-014 macOS native menu with About Gum. tested: NativeMenuBuilderTests, TabViewScenarioTests
+- VIEW-015 Mouse back/forward step selection history. tested: AppWideWindowGesturesTests, TabViewScenarioTests
 - VIEW-016 Startup failure shows error panel
 
 ## Content menu (CONT)
@@ -205,38 +204,38 @@
 
 - VAR-001 Edit a text value. tested: VariableEditScenarioTests, VariableScenarioTests
 - VAR-002 Edit commits on focus loss. tested: VariableFocusLossScenarioTests, VariableScenarioTests
-- VAR-003 Filter box. tested: VariableFilterServiceTests
-- VAR-004 Escape clears filter. tested: VariablesTabTests
-- VAR-005 Category collapse
-- VAR-006 Label drag scrubs number. tested: LabelDragScrubLogicTests
-- VAR-007 Multi-select edit. tested: MultiSelectCommitLogicTests
+- VAR-003 Filter box. tested: VariableFilterServiceTests, VariableScenarioTests
+- VAR-004 Escape clears filter. tested: VariablesTabTests, VariableScenarioTests
+- VAR-005 Category collapse. tested: VariableScenarioTests
+- VAR-006 Label drag scrubs number. tested: LabelDragScrubLogicTests, VariableScenarioTests
+- VAR-007 Multi-select edit. tested: MultiSelectCommitLogicTests, VariableScenarioTests
 - VAR-008 State banner shows edited state. tested: StateEditingIndicatorServiceTests, VariableScenarioTests
 - VAR-009 Row: Make Default. tested: VariableEditScenarioTests, VariableScenarioTests
-- VAR-010 Row: Copy Qualified Variable Name. tested: VariableGridEntryTests
+- VAR-010 Row: Copy Qualified Variable Name. tested: VariableGridEntryTests, VariableScenarioTests
 - VAR-011 Row: Expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
-- VAR-013 Row: Show on Instances
-- VAR-014 Row: Hide from Instances. tested: VariableMenuScenarioTests
+- VAR-013 Row: Show on Instances. tested: VariableScenarioTests
+- VAR-014 Row: Hide from Instances. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-015 Row: Delete Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
-- VAR-016 Row: Edit / Rename Variable. tested: EditVariableServiceTests
-- VAR-017 Row: copy variable reference
-- VAR-018 Composite row: Expose/Un-expose channels. tested: CompositeMemberLogicApplyTests
-- VAR-019 Category: Copy Values. tested: VariableCategoryCopyPasteServiceTests
-- VAR-020 Category: Paste Values. tested: VariableCategoryCopyPasteUndoTests
-- VAR-021 Add Variable button. tested: AddVariableButtonVisibilityLogicTests
-- VAR-022 Behavior variable: Edit Variable. tested: VariableGridMainControlViewModelTests
-- VAR-023 Behavior variable: Delete Variable. tested: DeleteVariableServiceTests
+- VAR-016 Row: Edit / Rename Variable. tested: EditVariableServiceTests, VariableScenarioTests
+- VAR-017 Row: copy variable reference. tested: VariableScenarioTests
+- VAR-018 Composite row: Expose/Un-expose channels. tested: CompositeMemberLogicApplyTests, VariableScenarioTests
+- VAR-019 Category: Copy Values. tested: VariableCategoryCopyPasteServiceTests, VariableScenarioTests
+- VAR-020 Category: Paste Values. tested: VariableCategoryCopyPasteUndoTests, VariableScenarioTests
+- VAR-021 Add Variable button. tested: AddVariableButtonVisibilityLogicTests, VariableScenarioTests
+- VAR-022 Behavior variable: Edit Variable. tested: VariableGridMainControlViewModelTests, VariableScenarioTests
+- VAR-023 Behavior variable: Delete Variable. tested: DeleteVariableServiceTests, VariableScenarioTests
 - VAR-024 Variable references (VariableReferences row). tested: VariableReferenceLogicTests, VariableScenarioTests
-- VAR-025 F12 on reference goes to source
-- VAR-026 Parent dropdown. tested: AvailableParentsTypeConverterTests
-- VAR-027 State dropdown on instance. tested: StateReferencingInstanceMemberTests
-- VAR-028 Base type change. tested: ElementSaveDisplayerBaseTypeChangeTests
-- VAR-029 Hidden vars by type/version. tested: ShapeVariableExclusionLogicTests
-- VAR-030 Font value change regenerates font. tested: FontTypeConverterTests
-- VAR-031 Behavior-required rows. tested: BehaviorShowingLogicTests
-- VAR-032 Duplicate variable warning
-- VAR-033 Error row for bad value. tested: ErrorCheckOncePerEditTests
-- VAR-034 Ctrl+E focuses filter. tested: PropertyGridManagerTests
+- VAR-025 F12 on reference goes to source. tested: VariableScenarioTests
+- VAR-026 Parent dropdown. tested: AvailableParentsTypeConverterTests, VariableScenarioTests
+- VAR-027 State dropdown on instance. tested: StateReferencingInstanceMemberTests, VariableScenarioTests
+- VAR-028 Base type change. tested: ElementSaveDisplayerBaseTypeChangeTests, VariableScenarioTests
+- VAR-029 Hidden vars by type/version. tested: ShapeVariableExclusionLogicTests, VariableScenarioTests
+- VAR-030 Font value change regenerates font. tested: FontTypeConverterTests, VariableScenarioTests
+- VAR-031 Behavior-required rows. tested: BehaviorShowingLogicTests, VariableScenarioTests
+- VAR-032 Duplicate variable warning. tested: VariableScenarioTests
+- VAR-033 Error row for bad value. tested: ErrorCheckOncePerEditTests, VariableScenarioTests
+- VAR-034 Ctrl+E focuses filter. tested: PropertyGridManagerTests, VariableScenarioTests
 
 ## Grid displayers (DISP)
 
@@ -268,23 +267,23 @@
 ## States tab (STATE)
 
 - STATE-001 Select a state. tested: StateTreeViewModelTests, VariableScenarioTests
-- STATE-002 "+ New category" button
-- STATE-003 Add State. tested: StateTreeRightClickViewModelTests
-- STATE-004 Add Category. tested: AddCategoryDialogViewModelTests
-- STATE-005 Paste Category. tested: StateTreeRightClickViewModelTests
-- STATE-006 Rename state. tested: RenameLogicTests
-- STATE-007 Delete state. tested: CrossElementStateUndoTests
-- STATE-008 Duplicate state. tested: StateTreeRightClickViewModelTests
-- STATE-009 Set state variables to default. tested: StateTreeRightClickViewModelTests
-- STATE-010 Move Up / Move Down. tested: StateTreeRightClickViewModelTests
-- STATE-011 Move to category. tested: StateTreeRightClickViewModelTests
-- STATE-012 Rename category. tested: RenameLogicTests
-- STATE-013 Sort category alphabetically. tested: StateTreeRightClickViewModelTests
-- STATE-014 Copy category. tested: StateTreeKeyboardHandlerTests
-- STATE-015 Delete category. tested: CrossElementStateUndoTests
-- STATE-016 Keyboard: Delete, F2, Ctrl+C/V, Alt+Up/Down. tested: StateTreeKeyboardHandlerTests
-- STATE-017 Edited-state and behavior-required markers
-- STATE-018 Category color and sort. tested: CategorySortAndColorLogicTests
+- STATE-002 "+ New category" button. tested: StateScenarioTests
+- STATE-003 Add State. tested: StateTreeRightClickViewModelTests, StateScenarioTests
+- STATE-004 Add Category. tested: AddCategoryDialogViewModelTests, StateScenarioTests
+- STATE-005 Paste Category. tested: StateTreeRightClickViewModelTests, StateScenarioTests
+- STATE-006 Rename state. tested: RenameLogicTests, StateScenarioTests
+- STATE-007 Delete state. tested: CrossElementStateUndoTests, StateScenarioTests
+- STATE-008 Duplicate state. tested: StateTreeRightClickViewModelTests, StateScenarioTests
+- STATE-009 Set state variables to default. tested: StateTreeRightClickViewModelTests, StateScenarioTests
+- STATE-010 Move Up / Move Down. tested: StateTreeRightClickViewModelTests, StateScenarioTests
+- STATE-011 Move to category. tested: StateTreeRightClickViewModelTests, StateScenarioTests
+- STATE-012 Rename category. tested: RenameLogicTests, StateScenarioTests
+- STATE-013 Sort category alphabetically. tested: StateTreeRightClickViewModelTests, StateScenarioTests
+- STATE-014 Copy category. tested: StateTreeKeyboardHandlerTests, StateScenarioTests
+- STATE-015 Delete category. tested: CrossElementStateUndoTests, StateScenarioTests
+- STATE-016 Keyboard: Delete, F2, Ctrl+C/V, Alt+Up/Down. tested: StateTreeKeyboardHandlerTests, StateScenarioTests
+- STATE-017 Edited-state and behavior-required markers. tested: StateScenarioTests
+- STATE-018 Category color and sort. tested: CategorySortAndColorLogicTests, VariableScenarioTests
 
 ## Animations tab (ANIM)
 
@@ -320,25 +319,25 @@
 
 ## Code tab (CODE)
 
-- CODE-001 Preview generated code. tested: CodeWindowViewModelTests
-- CODE-002 Generate button. tested: CodeOutputTabTests
-- CODE-003 Manual / Auto generation. tested: CodeOutputTabControllerTests
-- CODE-004 Code Project Root. tested: CodeOutputSettingsMembersTests
-- CODE-005 Output Library. tested: CodeOutputSettingsMembersTests
-- CODE-006 Object Instantiation Type. tested: CodeOutputSettingsMembersTests
-- CODE-007 Project-wide using statements. tested: CodeOutputSettingsMembersTests
-- CODE-008 Root Namespace / Append Folder. tested: CodeOutputSettingsMembersTests
-- CODE-009 Default Screen Base. tested: CodeOutputSettingsMembersTests
-- CODE-010 Adjust pixel values for density. tested: CodeOutputSettingsMembersTests
-- CODE-011 Base types ignored
-- CODE-012 Generate DataTypes code. tested: CodeOutputSettingsMembersTests
-- CODE-013 Element: Generation Behavior. tested: CodeOutputSettingsMembersTests
-- CODE-014 Element: Using statements / Namespace. tested: CodeOutputSettingsMembersTests
-- CODE-015 Element: Generated File Name. tested: CodeOutputSettingsMembersTests
-- CODE-016 Element: Localize Element. tested: CodeGeneratorLocalizeTextTests
-- CODE-017 Auto setup on first generate. tested: CodeGenerationAutoSetupServiceTests
-- CODE-018 Rename element renames code files. tested: RenameServiceTests
-- CODE-019 Delete element offers code delete. tested: CodeOutputPluginDeleteOptionsTests
+- CODE-001 Preview generated code. tested: CodeWindowViewModelTests, CodeGenScenarioTests
+- CODE-002 Generate button. tested: CodeOutputTabTests, CodeGenScenarioTests
+- CODE-003 Manual / Auto generation. tested: CodeOutputTabControllerTests, CodeGenScenarioTests
+- CODE-004 Code Project Root. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-005 Output Library. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-006 Object Instantiation Type. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-007 Project-wide using statements. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-008 Root Namespace / Append Folder. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-009 Default Screen Base. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-010 Adjust pixel values for density. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-011 Base types ignored. tested: CodeGenScenarioTests
+- CODE-012 Generate DataTypes code. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-013 Element: Generation Behavior. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-014 Element: Using statements / Namespace. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-015 Element: Generated File Name. tested: CodeOutputSettingsMembersTests, CodeGenScenarioTests
+- CODE-016 Element: Localize Element. tested: CodeGeneratorLocalizeTextTests, CodeGenScenarioTests
+- CODE-017 Auto setup on first generate. tested: CodeGenerationAutoSetupServiceTests, CodeGenScenarioTests
+- CODE-018 Rename element renames code files. tested: RenameServiceTests, CodeGenScenarioTests
+- CODE-019 Delete element offers code delete. tested: CodeOutputPluginDeleteOptionsTests, CodeGenScenarioTests
 
 ## Project Properties (PROP)
 
@@ -364,20 +363,20 @@
 
 ## Other tabs (TAB)
 
-- TAB-001 Output: log lines. tested: MainOutputViewModelTests
-- TAB-002 Output: Clear. tested: ToolPanelViewsTests
-- TAB-003 Errors: list and count. tested: AllErrorsViewModelTests
-- TAB-004 Errors: click selects source. tested: ErrorsTabTests
-- TAB-005 Errors: Copy / Copy All
-- TAB-006 History: undo list. tested: UndosViewModelTests
-- TAB-007 History: click entry
-- TAB-008 Alignment: anchor buttons
-- TAB-009 Alignment: dock buttons
-- TAB-010 Alignment: size to children
-- TAB-011 Behaviors: edit component behaviors. tested: BehaviorsViewModelTests
-- TAB-012 Hotkeys: list bindings. tested: HotkeyViewModelTests
-- TAB-013 File Watch: list and print toggle. tested: FileWatchViewModelTests
-- TAB-014 Performance: sort and cull options. tested: PerformanceViewModelTests
+- TAB-001 Output: log lines. tested: MainOutputViewModelTests, TabViewScenarioTests
+- TAB-002 Output: Clear. tested: ToolPanelViewsTests, TabViewScenarioTests
+- TAB-003 Errors: list and count. tested: AllErrorsViewModelTests, TabViewScenarioTests
+- TAB-004 Errors: click selects source. tested: ErrorsTabTests, TabViewScenarioTests
+- TAB-005 Errors: Copy / Copy All. tested: TabViewScenarioTests
+- TAB-006 History: undo list. tested: UndosViewModelTests, TabViewScenarioTests
+- TAB-007 History: click entry. tested: TabViewScenarioTests
+- TAB-008 Alignment: anchor buttons. tested: TabViewScenarioTests
+- TAB-009 Alignment: dock buttons. tested: TabViewScenarioTests
+- TAB-010 Alignment: size to children. tested: TabViewScenarioTests
+- TAB-011 Behaviors: edit component behaviors. tested: BehaviorsViewModelTests, TabViewScenarioTests
+- TAB-012 Hotkeys: list bindings. tested: HotkeyViewModelTests, TabViewScenarioTests
+- TAB-013 File Watch: list and print toggle. tested: FileWatchViewModelTests, TabViewScenarioTests
+- TAB-014 Performance: sort and cull options. tested: PerformanceViewModelTests, TabViewScenarioTests
 
 ## Hotkeys (KEY)
 
@@ -389,7 +388,7 @@
 - KEY-006 Ctrl+D duplicate. tested: TreeScenarioTests
 - KEY-007 Delete. tested: TreeScenarioTests
 - KEY-008 F2 rename. tested: HotkeyManagerTests, TreeScenarioTests
-- KEY-009 F12 go to definition
+- KEY-009 F12 go to definition. tested: TabViewScenarioTests
 - KEY-010 Ctrl+F search
 - KEY-011 Ctrl+E variable filter. tested: PropertyGridManagerTests
 - KEY-012 Arrow nudge 1px. tested: HotkeyManagerNudgeTests, CanvasScenarioTests
@@ -397,9 +396,9 @@
 - KEY-014 Ctrl+arrow move camera. tested: CameraControllerTests, CanvasScenarioTests
 - KEY-015 Ctrl+plus / minus zoom. tested: CameraControllerTests, CanvasScenarioTests
 - KEY-016 Alt+Up / Alt+Down reorder. tested: TreeScenarioTests
-- KEY-017 Alt+Left / Alt+Right selection history. tested: SelectionHistoryTests
-- KEY-018 Ctrl+? show hotkeys. tested: MainHotkeyPluginTests
-- KEY-019 Key mapping to Avalonia gestures. tested: AvaloniaKeyMappingTests
+- KEY-017 Alt+Left / Alt+Right selection history. tested: SelectionHistoryTests, TabViewScenarioTests
+- KEY-018 Ctrl+? show hotkeys. tested: MainHotkeyPluginTests, TabViewScenarioTests
+- KEY-019 Key mapping to Avalonia gestures. tested: AvaloniaKeyMappingTests, TabViewScenarioTests
 
 ## Drag and drop (DRAG)
 
@@ -453,36 +452,36 @@
 
 ## Head command line (CLI)
 
-- CLI-001 Positional project path opens it. tested: CommandLineManagerTests
-- CLI-002 `--exit-after`. tested: HeadOptionsTests
-- CLI-003 `--screenshot`. tested: HeadProcessTests
-- CLI-004 `--select Element[#Instance]`. tested: HeadProcessTests
-- CLI-005 `--theme light|dark`
-- CLI-006 `--zoom-to-fit`. tested: HeadOptionsTests
-- CLI-007 `--user-data`. tested: HeadOptionsTests
-- CLI-008 `--rebuildfonts`. tested: CommandLineManagerTests
-- CLI-009 `--generatecode`. tested: CommandLineManagerTests
-- CLI-010 OS file activation opens project. tested: FileActivationHandlerTests
-- CLI-011 `GUM_ECHO_OUTPUT` echoes output
+- CLI-001 Positional project path opens it. tested: CommandLineManagerTests, HeadCommandLineScenarioTests
+- CLI-002 `--exit-after`. tested: HeadOptionsTests, HeadCommandLineScenarioTests
+- CLI-003 `--screenshot`. tested: HeadProcessTests, HeadCommandLineScenarioTests
+- CLI-004 `--select Element[#Instance]`. tested: HeadProcessTests, HeadCommandLineScenarioTests
+- CLI-005 `--theme light|dark`. tested: HeadCommandLineScenarioTests
+- CLI-006 `--zoom-to-fit`. tested: HeadOptionsTests, HeadCommandLineScenarioTests
+- CLI-007 `--user-data`. tested: HeadOptionsTests, HeadCommandLineScenarioTests
+- CLI-008 `--rebuildfonts`. tested: CommandLineManagerTests, HeadCommandLineScenarioTests
+- CLI-009 `--generatecode`. tested: CommandLineManagerTests, HeadCommandLineScenarioTests
+- CLI-010 OS file activation opens project. tested: FileActivationHandlerTests, HeadCommandLineScenarioTests
+- CLI-011 `GUM_ECHO_OUTPUT` echoes output. tested: HeadCommandLineScenarioTests
 
 ## gumcli (GCLI)
 
-- GCLI-001 `new`. tested: NewCommandTests
-- GCLI-002 `check`. tested: CheckCommandTests
-- GCLI-003 `check-references`. tested: CheckReferencesCommandTests
-- GCLI-004 `codegen`. tested: CodegenCommandTests
-- GCLI-005 `codegen-init`. tested: CodegenInitCommandTests
-- GCLI-006 `fonts`. tested: FontsCommandTests
-- GCLI-007 `add-forms`. tested: AddFormsCommandTests
-- GCLI-008 `convert-to-json`. tested: ConvertToJsonCommandTests
-- GCLI-009 `screenshot`. tested: ScreenshotCommandTests
-- GCLI-010 `diff-screenshots`. tested: DiffScreenshotsCommandTests
-- GCLI-011 `diff-standards`. tested: DiffStandardsCommandTests
-- GCLI-012 `import-screen`. tested: ImportScreenCommandTests
-- GCLI-013 `pack`. tested: PackCommandTests
-- GCLI-014 `resave`. tested: ResaveCommandTests
-- GCLI-015 `svg`. tested: SvgCommandTests
-- GCLI-016 `stage-forms-behaviors`. tested: StageFormsBehaviorsCommandTests
+- GCLI-001 `new`. tested: NewCommandTests, GumCliScenarioTests
+- GCLI-002 `check`. tested: CheckCommandTests, GumCliScenarioTests
+- GCLI-003 `check-references`. tested: CheckReferencesCommandTests, GumCliScenarioTests
+- GCLI-004 `codegen`. tested: CodegenCommandTests, GumCliScenarioTests
+- GCLI-005 `codegen-init`. tested: CodegenInitCommandTests, GumCliScenarioTests
+- GCLI-006 `fonts`. tested: FontsCommandTests, GumCliScenarioTests
+- GCLI-007 `add-forms`. tested: AddFormsCommandTests, GumCliScenarioTests
+- GCLI-008 `convert-to-json`. tested: ConvertToJsonCommandTests, GumCliScenarioTests
+- GCLI-009 `screenshot`. tested: ScreenshotCommandTests, GumCliScenarioTests
+- GCLI-010 `diff-screenshots`. tested: DiffScreenshotsCommandTests, GumCliScenarioTests
+- GCLI-011 `diff-standards`. tested: DiffStandardsCommandTests, GumCliScenarioTests
+- GCLI-012 `import-screen`. tested: ImportScreenCommandTests, GumCliScenarioTests
+- GCLI-013 `pack`. tested: PackCommandTests, GumCliScenarioTests
+- GCLI-014 `resave`. tested: ResaveCommandTests, GumCliScenarioTests
+- GCLI-015 `svg`. tested: SvgCommandTests, GumCliScenarioTests
+- GCLI-016 `stage-forms-behaviors`. tested: StageFormsBehaviorsCommandTests, GumCliScenarioTests
 
 ## Combinations (COMBO)
 
