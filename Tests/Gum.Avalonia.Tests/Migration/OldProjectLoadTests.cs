@@ -91,7 +91,7 @@ public class OldProjectLoadTests : IDisposable
 
         projectManager.HaveErrorsOccurredLoadingProject.ShouldBeFalse();
         GumProjectSave loaded = projectManager.GumProjectSave!;
-        loaded.Version.ShouldBe(1, $"DIAG5402 log=[{string.Join(" || ", ProjectManager.Diag5402Log)}]");
+        loaded.Version.ShouldBe(1);
         AssertPanelValues(loaded);
 
         // What is on disk now, after any re-save on load.

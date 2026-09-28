@@ -343,11 +343,11 @@ internal sealed class ProjectTreeHarness : IDisposable
         {
             if (stopwatch.Elapsed > timeout)
             {
-                // DIAG5402 (temporary)
-                object? inFlight = typeof(ProjectManager).GetField("_inFlightLoadProjectTask", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
-                    .GetValue(Services.GetRequiredService<IProjectManager>());
-                string inFlightState = inFlight is Task task ? $"task status={task.Status}" : "null";
-                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}]. DIAG5402 inFlight={inFlightState} project={Services.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName} log=[{string.Join(" || ", ProjectManager.Diag5402Log)}] openFilesLeft={(Dialogs.GetType().GetField("_openFiles", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(Dialogs) is System.Collections.ICollection c ? c.Count : -1)}");
+                // A load still running, or one that never started, is the first thing to rule out.
+                IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+                Task? load = (projectManager as ProjectManager)?.InFlightLoadProjectTask;
+                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}]. " +
+                    $"Last project load: {load?.Status.ToString() ?? "none"}; open project: {projectManager.GumProjectSave?.FullFileName ?? "none"}.");
             }
             Thread.Sleep(10);
             _driver.Layout();
