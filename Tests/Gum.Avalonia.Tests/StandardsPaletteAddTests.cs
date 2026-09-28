@@ -147,8 +147,6 @@ public class StandardsPaletteAddTests
 
     private static void ClickChip(Window window, string typeName, RawInputModifiers modifiers)
     {
-        // The last add grew the tree above the palette; lay out first, as a real click follows a render.
-        Layout(window);
         // The chip is the innermost Border around the type name's TextBlock.
         Border chip = window.GetVisualDescendants()
             .OfType<AvaloniaStandardsPalette>().Single()
@@ -162,6 +160,8 @@ public class StandardsPaletteAddTests
     private static void Click(Window window, Control control, RawInputModifiers modifiers)
     {
         Point point = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
+        // A real pointer moves onto what it clicks; headless drops a press on a second chip that no move reached.
+        window.MouseMove(point, modifiers);
         window.MouseDown(point, MouseButton.Left, modifiers);
         window.MouseUp(point, MouseButton.Left, modifiers);
         Dispatcher.UIThread.RunJobs();
