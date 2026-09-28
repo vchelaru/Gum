@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using ToolsUtilities;
 
 namespace Gum.Bundle;
 
@@ -22,8 +23,12 @@ public class LooseFileGumFileProvider : IGumFileProvider
         {
             throw new ArgumentNullException(nameof(rootDirectory));
         }
-        _rootDirectory = rootDirectory;
-        _normalizedRoot = Path.GetFullPath(rootDirectory).Replace('\\', '/').TrimEnd('/');
+        // A root anchored on a macOS .app's Contents/MacOS/ is served from Contents/Resources/ when
+        // only the latter exists (#5415).
+        string fullRoot = Path.GetFullPath(rootDirectory);
+        string? resolvedRoot = Directory.Exists(fullRoot) ? null : FileManager.ResolveExistingDirectoryPath(fullRoot);
+        _rootDirectory = resolvedRoot ?? rootDirectory;
+        _normalizedRoot = Path.GetFullPath(_rootDirectory).Replace('\\', '/').TrimEnd('/');
     }
 
     /// <inheritdoc/>

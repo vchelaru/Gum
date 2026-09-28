@@ -90,8 +90,8 @@ host it. The shared application keeps each control's template across windows.
 
 The regression pass from #5141: scenarios that drive whole tool features with real input, tagged
 with the IDs of `Direction/avalonia-migration/functionality-inventory.md`
-(`[Trait("Feature", "TREE-043")]`) and `[Trait("Category", "EndToEnd")]`, so a nightly run can
-select them and per-PR CI can later leave them out.
+(`[Trait("Feature", "TREE-043")]`) and `[Trait("Category", "EndToEnd")]`, so the nightly run
+(`.github/workflows/e2e-nightly.yaml`) can select them. Per-PR CI runs them too (ADR-0019).
 
 ```
 dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
@@ -115,6 +115,7 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `DialogWindowScenarioTests.cs` | Dialogs answered in their own window and view (`AnswerNextInWindow`): rename folder, create component, delete (Y/N keys), view references, expose color, add variable, the read-only file choice, the freeze diagnostics prompt. |
 | `FileMenuScenarioTests.cs`, `ContentMenuScenarioTests.cs` | The File menu (save with auto-save off, Load Recent, reopening the last project on launch, legacy and JSON projects, external file changes, Export as Image) and the Content menu (file references, font cache, orphaned code scan, Convert to JSON, HTML import options, and the HTML import itself with `MainHtmlToGumPlugin.ProcessRunner` swapped for a stand-in converter, since CI has no Node.js guarantee). A project with no watched folders reacts to no file change: reload it first (`SaveAndReload`); the test calls `IFileWatchManager.Flush` where the tool's timer would. |
 | `CodeTabHarness.cs`, `CodeGenScenarioTests.cs` | The head's Code tab in its own window beside a `ProjectTreeHarness`: settings rows, Generate, and the generated files read back from disk. |
+| `MainWindowScenarioTests.cs` | The main window's placement across two launches (two real hosts over one temp user-data folder) and the startup failure panel. The container's `MainWindow` cannot be shown again, so each hosts the window's own wiring (`WindowPlacementTracker`, `HeadStartupRun`, `StartupFailurePanel`) in a plain window. The Preview toolbar button's scenario is in `CanvasMenuAndToolbarScenarioTests`, with `PreviewLauncher.ProcessStarter` swapped for a stand-in so no GumPreview opens. |
 | `HeadCommandLineScenarioTests.cs` | The head's command line without a window: `HeadOptions` and `CommandLineManager` parse a launch line, and the test hands what they read to the services startup uses. gumcli's process-level scenarios are in `Tests/Gum.Cli.Tests/EndToEnd/`. |
 | `ComboScenarioTests.cs`, `ComboCanvasScenarioTests.cs` | Long workflows across tabs (inherit, rebase, promote, drag between elements, codegen after moves and renames, Convert to JSON, outside file edits). Each undoes every element back to its starting files (`UndoEverything`) and redoes to the finished ones. A scenario that follows the tool to another project file (Convert to JSON) calls `ToolProjectFixture.FollowProjectFile` so the oracles read that file. |
 | `DisplayPropertiesScenarioTests.cs` | The grid's editors on real rows (slider, angle, file, list, toggles, corner radius, remove button), the Project Properties tab hosted in its own window and edited through its grid, and the Standards palette's chips (menu, drop on a tree row, drop on the canvas). A guide that changes rendering is checked with pixel reads of the canvas window. |

@@ -202,23 +202,10 @@ namespace ToolsUtilities
                 }
                 else
                 {
-                    if (File.Exists(fileName))
+                    if (ResolveExistingFilePath(fileName) != null)
                     {
                         return true;
                     }
-
-#if NET6_0_OR_GREATER
-                    // macOS .app bundles ship loose content in Contents/Resources/ rather than next to
-                    // the executable in Contents/MacOS/, so probe the rebased path as well (issue #731).
-                    if (System.OperatingSystem.IsMacOS())
-                    {
-                        string? resourcesPath = GetMacOSBundleResourcesPath(fileName, ExeLocation);
-                        if (resourcesPath != null && File.Exists(resourcesPath))
-                        {
-                            return true;
-                        }
-                    }
-#endif
 
                     // A host (e.g. Gum's own bundle loader, or a game-installed asset zip)
                     // may resolve files that aren't on the real filesystem. Probe through
@@ -916,27 +903,71 @@ namespace ToolsUtilities
             }
         }
 
-        private static Stream? TryOpenFromDisk(string fileName)
+        /// <summary>
+        /// Opens <paramref name="fileName"/> from disk, falling back to the macOS <c>.app</c>
+        /// <c>Contents/Resources/</c> copy (see <see cref="ResolveExistingFilePath"/>). Returns
+        /// <see langword="null"/> when neither exists. Does not consult <see cref="CustomGetStreamFromFile"/>.
+        /// </summary>
+        public static Stream? TryOpenFromDisk(string fileName)
         {
-            if (File.Exists(fileName))
+            string? path = ResolveExistingFilePath(fileName);
+            return path == null ? null : File.OpenRead(path);
+        }
+
+        /// <summary>
+        /// Returns <paramref name="path"/> if the file exists, otherwise its macOS <c>.app</c>
+        /// <c>Contents/Resources/</c> equivalent if that exists, otherwise <see langword="null"/>.
+        /// Every runtime read of content from disk goes through this so the bundle fallback lives
+        /// in one place (issues #731, #5415).
+        /// </summary>
+        public static string? ResolveExistingFilePath(string path) => ResolveExisting(path, File.Exists);
+
+        /// <summary>
+        /// The directory counterpart of <see cref="ResolveExistingFilePath"/>.
+        /// </summary>
+        public static string? ResolveExistingDirectoryPath(string path) => ResolveExisting(path, Directory.Exists);
+
+        private static string? ResolveExisting(string path, Func<string, bool> exists)
+        {
+            if (exists(path))
             {
-                return File.OpenRead(fileName);
+                return path;
             }
 
-#if NET6_0_OR_GREATER
             // In a macOS .app bundle the executable is in Contents/MacOS/ but loose content ships in
-            // Contents/Resources/. Gum anchored fileName on the executable directory, so if it isn't
-            // there, retry against the bundle's Resources directory (issue #731).
-            if (System.OperatingSystem.IsMacOS())
+            // Contents/Resources/, so a path anchored on the executable directory is retried there.
+            string? exeDirectory = MacOSBundleExecutableDirectory;
+            if (exeDirectory != null)
             {
-                string? resourcesPath = GetMacOSBundleResourcesPath(fileName, ExeLocation);
-                if (resourcesPath != null && File.Exists(resourcesPath))
+                string? resourcesPath = GetMacOSBundleResourcesPath(path, exeDirectory);
+                if (resourcesPath != null && exists(resourcesPath))
                 {
-                    return File.OpenRead(resourcesPath);
+                    return resourcesPath;
                 }
             }
-#endif
             return null;
+        }
+
+        /// <summary>
+        /// Replaces the executable directory used for the macOS bundle fallback, on any OS. Tests
+        /// set it to a fake <c>Contents/MacOS/</c> folder; null restores the real behavior.
+        /// </summary>
+        internal static string? MacOSBundleExecutableDirectoryOverride { get; set; }
+
+        private static string? MacOSBundleExecutableDirectory
+        {
+            get
+            {
+                if (MacOSBundleExecutableDirectoryOverride != null)
+                {
+                    return MacOSBundleExecutableDirectoryOverride;
+                }
+#if NET6_0_OR_GREATER
+                return System.OperatingSystem.IsMacOS() ? ExeLocation : null;
+#else
+                return null;
+#endif
+            }
         }
 
 #if NET5_0_OR_GREATER
