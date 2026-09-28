@@ -72,9 +72,12 @@ public class MenuStripStateLogic
 
         string removeVariableHeader;
         bool removeVariableEnabled;
-        if (_selectedState.SelectedBehaviorVariable != null)
+        // The recorded variable outlives a removal and a move to another element, so it counts only
+        // while the selected behavior still has it.
+        if (_selectedState.SelectedBehaviorVariable is { } behaviorVariable
+            && _selectedState.SelectedBehavior?.RequiredVariables.Variables.Contains(behaviorVariable) == true)
         {
-            removeVariableHeader = _selectedState.SelectedBehaviorVariable.ToString();
+            removeVariableHeader = behaviorVariable.ToString();
             removeVariableEnabled = true;
         }
         else

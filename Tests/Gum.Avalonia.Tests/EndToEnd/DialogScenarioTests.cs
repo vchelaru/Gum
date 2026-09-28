@@ -1,5 +1,6 @@
 using Avalonia.Headless.XUnit;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.DataTypes;
 using Gum.Dialogs;
@@ -8,6 +9,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -173,6 +175,7 @@ public class DialogScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "DLG-015")]
+    [Trait("Feature", "PLUG-001")]
     public void ManagePlugins_ListsTheLoadedPlugins_AndOkChangesNothing()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -195,6 +198,7 @@ public class DialogScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "DLG-015")]
+    [Trait("Feature", "PLUG-002")]
     public void ManagePlugins_TurningAPluginOffAndOnAgain_AddsItsMenuItemOnce()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
@@ -284,10 +288,127 @@ public class DialogScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "PLUG-001")]
+    [Trait("Feature", "PLUG-003")]
+    [Trait("Feature", "PLUG-006")]
+    public void ManagePlugins_InItsWindow_ListsEveryPluginRunning_AndTheFolderScanNamesEachStagedPlugin()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
+        RecordingClipboardService clipboard = (RecordingClipboardService)Services.GetRequiredService<IClipboardService>();
+        clipboard.Clear();
+        List<string> stagedPlugins = Directory.GetDirectories(PluginManager.PluginFolder).Select(Path.GetFileName).Select(name => name + ".dll").ToList()!;
+        List<(string Text, bool? IsChecked)> rows = new List<(string, bool?)>();
+        string scan = "";
+        tree.Dialogs.AnswerNextInWindow<PluginsDialogViewModel>(window =>
+        {
+            rows.AddRange(window.FindAll<global::Avalonia.Controls.CheckBox>().Select(box => (box.Content as string ?? "", box.IsChecked)));
+            window.Click(window.Find<global::Avalonia.Controls.TabItem>(tab => tab.Header as string == "Folder scan"));
+            scan = window.Find<global::Avalonia.Controls.TextBox>().Text ?? "";
+            PluginsDialogViewModel plugins = (PluginsDialogViewModel)window.Window.DataContext!;
+            window.Click(window.Find<global::Avalonia.Controls.Button>(button => button.Command == plugins.CopyDiagnosticsCommand));
+            window.Click(window.AffirmativeButton);
+        });
+
+        tree.PickMainMenu("Plugins", "Manage Plugins");
+
+        rows.Count.ShouldBe(pluginManager.PluginContainers.Count, "every plugin the tool composed has a row");
+        rows.ShouldAllBe(row => row.IsChecked == true, "every plugin is running");
+        pluginManager.PluginContainers.Values.ShouldAllBe(container => container.FailureDetails == null);
+        stagedPlugins.ShouldNotBeEmpty();
+        foreach (string plugin in stagedPlugins)
+        {
+            scan.ShouldContain("    " + plugin, customMessage: $"the scan lists {plugin} as holding plugins");
+        }
+        scan.ShouldContain(" 0 failed to load)");
+        clipboard.LastText.ShouldBe(scan, "Copy puts the scan on the clipboard");
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PLUG-004")]
+    public void AddSkiaStandardElements_AddsTheShapeStandardsToTheProjectAndDisk()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        List<string> before = projectManager.GumProjectSave!.StandardElements.Select(standard => standard.Name).ToList();
+
+        tree.PickMainMenu("Plugins", "Add Skia Standard Elements");
+
+        List<string> added = projectManager.GumProjectSave!.StandardElements.Select(standard => standard.Name).Except(before).ToList();
+        added.ShouldBe(new[] { "Arc", "Canvas", "Line", "LottieAnimation", "Svg" }, ignoreOrder: true);
+        foreach (string name in added)
+        {
+            File.Exists(Path.Combine(tree.Project.ProjectFolder, "Standards", name + ".gutx")).ShouldBeTrue($"{name} was saved");
+        }
+        File.ReadAllText(tree.Project.ProjectFilePath).ShouldContain("<StandardElementReference Name=\"Arc\" />");
+
+        tree.AssertOracles();
+    }
+
+    #endregion
+
+    #region Help menu
+
+    [AvaloniaFact]
+    [Trait("Feature", "HELP-001")]
+    [Trait("Feature", "DLG-027")]
+    public void About_ShowsTheVersion_AndTheCopyGestureCopiesIt()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        string shown = "";
+        string? copied = null;
+        tree.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            shown = window.Text();
+            window.PressCopy();
+            copied = window.ClipboardText();
+            window.Press(global::Avalonia.Input.Key.Enter, global::Avalonia.Input.PhysicalKey.Enter);
+        });
+
+        tree.PickMainMenu("Help", "About...");
+
+        shown.ShouldContain("Gum version ");
+        copied.ShouldNotBeNull().ShouldStartWith("Gum version ");
+        shown.ShouldContain(copied!);
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "HELP-002")]
+    [Trait("Feature", "HELP-003")]
+    [Trait("Feature", "HELP-004")]
+    public void HelpLinks_AskForTheLicensesShippedWithTheTool_TheDocs_AndTheSettingsFolder()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        RecordingFileSystemRevealService reveal = (RecordingFileSystemRevealService)Services.GetRequiredService<IFileSystemRevealService>();
+        reveal.Clear();
+        string notices = Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt");
+
+        tree.PickMainMenu("Help", "Third-Party Licenses...");
+        tree.PickMainMenu("Help", "View Docs (https://docs.flatredball.com/gum)");
+        tree.PickMainMenu("Help", "Open Settings Folder...");
+
+        reveal.Requests.ShouldBe(new[]
+        {
+            "OpenFile: " + notices,
+            "OpenUrl: https://docs.flatredball.com/gum",
+            "OpenFolder: " + FileManager.UserApplicationDataForThisApplication,
+        });
+        File.ReadAllText(notices).ShouldContain("THIRD-PARTY NOTICES", customMessage: "the notices ship beside the tool");
+        // The test run's own settings folder, never the user's real one.
+        FileManager.UserApplicationDataForThisApplication.ShouldStartWith(Path.GetTempPath());
+    }
+
+    #endregion
+
+    #region Project properties
+
+    [AvaloniaFact]
     [Trait("Feature", "PROP-007")]
     [Trait("Feature", "PROP-012")]
     [Trait("Feature", "PROP-015")]
     [Trait("Feature", "PROP-019")]
+    [Trait("Feature", "EDIT-012")]
     public void ProjectProperties_FromTheEditMenu_SaveEachChangeIntoTheProjectFile_AndCloseHidesTheTab()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

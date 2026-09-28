@@ -103,7 +103,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
-          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=head-process.trx" --results-directory TestResults --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests"
+          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=head-process.trx" --results-directory TestResults --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests|FullyQualifiedName~CanvasMenuAndToolbarScenarioTests|FullyQualifiedName~DragDropScenarioTests"
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
       - name: Gum.Presentation.Tests (shared logic on every OS)

@@ -5,7 +5,7 @@ namespace Gum.Avalonia.Services;
 
 /// <summary>
 /// The in-process drag formats this head's drag sources and drop targets agree on. Payloads that
-/// are not strings (tree nodes) travel in <see cref="Gum.Plugins.InternalPlugins.TreeView.TreeDragPayload"/>;
+/// are not strings (tree nodes) travel in <see cref="TreeDragPayload"/>;
 /// the data transfer carries only a marker.
 /// </summary>
 public static class AvaloniaDragFormats

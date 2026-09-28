@@ -50,7 +50,7 @@ public class ComboCanvasScenarioTests
 
             // The lock is about where it sits on the canvas: dragging its row below Other in the
             // tree still reorders it.
-            tree.Drag(tree.NodeFor(Instance(button, "Box")), tree.NodeFor(Instance(button, "Other")), rowFraction: 0.9);
+            tree.Drag(tree.NodeFor(Instance(button, "Box")), tree.NodeFor(Instance(button, "Other")), fraction: 0.9);
             button.Instances.Select(instance => instance.Name).ShouldBe(new[] { "Other", "Box" });
             Instance(button, "Box").Locked.ShouldBeTrue();
             canvas.SavedValue(button, "Box.X").ShouldBe(40f);

@@ -163,6 +163,13 @@ internal sealed class HeadlessWindowDriver : IDisposable
         Layout();
     }
 
+    /// <summary>Types <paramref name="text"/> into whatever has keyboard focus, without clicking anything first.</summary>
+    public void TypeText(string text)
+    {
+        Window.KeyTextInput(text);
+        Layout();
+    }
+
     /// <summary>Types <paramref name="text"/> over <paramref name="box"/>'s text and presses Enter.</summary>
     public void TypeAndEnter(TextBox box, string text)
     {
@@ -173,16 +180,21 @@ internal sealed class HeadlessWindowDriver : IDisposable
     /// <summary>The rendered color at <paramref name="point"/> in the window.</summary>
     public Color PixelAt(Point point)
     {
-        Layout();
-        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
+        using WriteableBitmap frame = CaptureLatestFrame();
         return ReadPixel(frame, (int)point.X, (int)point.Y);
+    }
+
+    /// <summary>The rendered colors of the <paramref name="count"/> pixels from <paramref name="start"/> rightwards, from one frame.</summary>
+    public List<Color> PixelsAlong(Point start, int count)
+    {
+        using WriteableBitmap frame = CaptureLatestFrame();
+        return Enumerable.Range(0, count).Select(offset => ReadPixel(frame, (int)start.X + offset, (int)start.Y)).ToList();
     }
 
     /// <summary>True when any pixel within <paramref name="radius"/> of <paramref name="center"/> satisfies <paramref name="matches"/>.</summary>
     public bool AnyPixelNear(Point center, int radius, Func<Color, bool> matches)
     {
-        Layout();
-        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
+        using WriteableBitmap frame = CaptureLatestFrame();
         for (int y = (int)center.Y - radius; y <= (int)center.Y + radius; y++)
         {
             for (int x = (int)center.X - radius; x <= (int)center.X + radius; x++)
@@ -200,6 +212,22 @@ internal sealed class HeadlessWindowDriver : IDisposable
         return false;
     }
 
+    /// <summary>
+    /// The window as of everything done so far. The compositor keeps one frame in flight: while a
+    /// committed frame waits to be rendered and acknowledged, a newer change (a canvas pushing its
+    /// next bitmap) is held back, so a single render tick can show the frame before it. Whether a
+    /// frame is in flight here depends on timing, so a lone tick reads a stale frame only sometimes,
+    /// mostly on slow CI runners. The first tick renders any frame in flight, the jobs
+    /// acknowledge it and send the latest one, and the capture's own tick renders that.
+    /// </summary>
+    private WriteableBitmap CaptureLatestFrame()
+    {
+        Layout();
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        Dispatcher.UIThread.RunJobs();
+        return Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
+    }
+
     private static Color ReadPixel(WriteableBitmap frame, int x, int y)
     {
         using ILockedFramebuffer buffer = frame.Lock();
@@ -213,10 +241,9 @@ internal sealed class HeadlessWindowDriver : IDisposable
     /// <summary>Renders the window and saves it as a PNG for a person to look at; returns the path.</summary>
     public string SaveFrame(string name)
     {
-        Layout();
         Directory.CreateDirectory(_framesFolder);
         string path = Path.Combine(_framesFolder, name + ".png");
-        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
+        using WriteableBitmap frame = CaptureLatestFrame();
         frame.Save(path);
         return path;
     }

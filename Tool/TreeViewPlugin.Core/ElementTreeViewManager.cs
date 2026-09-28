@@ -97,6 +97,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     object? mRecordedSelectedContainer;
 
     /// <summary>
+    /// The parent of the selected node when the selection was recorded. A refresh can move the
+    /// selected node itself (a Parent change reparents it in place), which is no selection change,
+    /// so this is how the restore knows to scroll it back into view.
+    /// </summary>
+    GumTreeNode? _recordedSelectedNodeParent;
+
+    /// <summary>
     /// The full set of selected instances captured at record time when more than one
     /// instance is selected. Used to restore a multi-selection after a tree refresh so
     /// it does not collapse to the single primary instance.
@@ -362,7 +369,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (e.Files != null)
         {
-            _dragDropManager.OnFilesDroppedInTreeView(e.Files);
+            _dragDropManager.OnFilesDroppedInTreeView(e.Files, e.TargetNode);
         }
         else if (e.StandardElementTypeName is { } standardTypeName
             && GetChipDropTargetNode(e.TargetNode) is { } targetNode
@@ -1077,6 +1084,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // Record the full multi-selection so a tree refresh can restore every selected
         // instance rather than collapsing to the single primary one (issue #2954).
         _recordedSelectedInstances = _selectedState.SelectedInstances.ToList();
+        _recordedSelectedNodeParent = _view?.Selection.SelectedNode?.Parent;
     }
 
     public void SelectRecordedSelection()
@@ -1108,7 +1116,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     // the equality check in the _selectedState setter short-circuits (i.e.
                     // the instance was never un-assigned, so assigning it again fires no events
                     // and the tree node is never updated to reflect the new node).
-                    Select((GumTreeNode)desiredNode);
+                    GumTreeNode node = (GumTreeNode)desiredNode;
+                    bool wasSelected = Selection.SelectedNode == node;
+                    Select(node);
+                    if (wasSelected && node.Parent != _recordedSelectedNodeParent)
+                    {
+                        // Still selected, but the refresh moved it.
+                        EnsureVisibleUnlessSuppressed(node);
+                    }
                 }
                 else
                 {
@@ -1440,6 +1455,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             AddAndRemoveScreensComponentsStandardsAndBehaviors();
 
+            // A removed folder or element takes its selected descendants out of the tree with it.
+            Selection.PruneDetachedSelection();
         }
         SelectRecordedSelection();
         _collapseToggleService.RestoreExpandedPaths(RootTreeNodes, expandedPaths);

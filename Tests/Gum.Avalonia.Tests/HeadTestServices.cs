@@ -50,6 +50,8 @@ public static class HeadTestServices
             new SwitchableDialogService(provider.GetRequiredService<AvaloniaDialogService>())));
         // The headless app has no main window to copy to; the recorder keeps what was copied.
         services.Replace(ServiceDescriptor.Singleton<IClipboardService, RecordingClipboardService>());
+        // View in explorer, Open Settings Folder and the Help links would start a real file manager or browser.
+        services.Replace(ServiceDescriptor.Singleton<IFileSystemRevealService, RecordingFileSystemRevealService>());
         ServiceProvider provider = services.BuildServiceProvider();
         // The plugin host and a few not-yet-drained services still reach the container through the locator.
         Locator.Register(provider);

@@ -56,6 +56,8 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     private WireframeCanvasControl? _canvasControl;
     private EditorToolbar? _toolbar;
     private readonly ContextMenu _contextMenu = new ContextMenu();
+    private static readonly TimeSpan ContextMenuFrameWait = TimeSpan.FromMilliseconds(250);
+    private bool _isContextMenuPending;
 
     [ImportingConstructor]
     public AvaloniaEditorTabPlugin(
@@ -109,7 +111,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
         {
             if (e.GetCurrentPoint(_canvasControl).Properties.IsRightButtonPressed)
             {
-                ShowCanvasContextMenu();
+                ShowCanvasContextMenuAfterNextFrame();
             }
         }, global::Avalonia.Interactivity.RoutingStrategies.Bubble, handledEventsToo: true);
         _canvasControl.AddHandler(InputElement.KeyDownEvent, (_, e) =>
@@ -131,6 +133,29 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
             e.Handled = true;
         });
         return _canvasControl.Core;
+    }
+
+    // The canvas reads the right press on its next frame, which selects what is under the pointer,
+    // so the menu opens after that frame and is for that selection. A menu opened at the press takes
+    // the pointer before the canvas sees the button down, and acts on the previous selection. A
+    // canvas that is not drawing (a failed frame retries slowly) still gets its menu, after a
+    // short wait; presses while one menu is pending open no second one.
+    private async void ShowCanvasContextMenuAfterNextFrame()
+    {
+        if (_isContextMenuPending)
+        {
+            return;
+        }
+        _isContextMenuPending = true;
+        try
+        {
+            await Task.WhenAny(_canvasControl!.NextFramePresentedAsync(), Task.Delay(ContextMenuFrameWait));
+            ShowCanvasContextMenu();
+        }
+        finally
+        {
+            _isContextMenuPending = false;
+        }
     }
 
     /// <inheritdoc/>
@@ -195,6 +220,9 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
 
     /// <summary>The wireframe canvas, for tests; null until the editor tab is built.</summary>
     internal WireframeCanvasControl? CanvasControl => _canvasControl;
+
+    /// <summary>The canvas's right-click menu, for tests.</summary>
+    internal ContextMenu CanvasContextMenu => _contextMenu;
 
     /// <inheritdoc/>
     protected override void OnUiBaseFontSizeChanged(double size) => _toolbar?.UpdateButtonSizes(size);

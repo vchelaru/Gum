@@ -563,6 +563,29 @@ public class CopyPasteRenameScenarioTests
     }
 
     [AvaloniaFact]
+    public void RenamingAComponentWithAnimations_ByCasingOnly_KeepsItsAnimationFile()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        StateSaveCategory looks = tree.Project.AddCategory(button, "Looks");
+        tree.Project.AddState(button, looks, "Pressed");
+        string components = Path.Combine(tree.Project.ProjectFolder, "Components");
+        File.WriteAllText(Path.Combine(components, "ButtonAnimations.ganx"), AnimationFileWithKeyframe("Looks/Pressed"));
+        tree.Click(tree.RootNode("Components"));
+        tree.Click(tree.NodeFor(Component(tree, "Button")));
+
+        tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "BUTTON"; return true; });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+
+        Component(tree, "BUTTON").ShouldNotBeNull();
+        Directory.GetFiles(components, "*Animations.ganx").Select(Path.GetFileName).ShouldBe(new[] { "BUTTONAnimations.ganx" });
+        File.ReadAllText(Path.Combine(components, "BUTTONAnimations.ganx")).ShouldContain("<StateName>Looks/Pressed</StateName>");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "TREE-027")]
     public void DuplicatingAComponentWithStatesAndAnimations_CopiesBoth()
     {

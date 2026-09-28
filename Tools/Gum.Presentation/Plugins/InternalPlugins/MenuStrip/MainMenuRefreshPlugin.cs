@@ -30,8 +30,19 @@ public class MainMenuRefreshPlugin : CorePriorityPlugin
         BehaviorSelected += HandleBehaviorSelected;
         InstanceSelected += HandleInstanceSelected;
         BehaviorVariableSelected += HandleBehaviorVariableSelected;
+        // Edit > Remove names the selected state or category.
+        ReactToStateSaveSelected += HandleStateSelected;
+        ReactToStateSaveCategorySelected += HandleCategorySelected;
+        // A deleted behavior variable must drop out of Edit > Remove.
+        VariableDelete += HandleVariableDelete;
         AfterUndo += HandleAfterUndo;
     }
+
+    private void HandleVariableDelete(ElementSave? element, string variableName) => _menuBuilder.RefreshUI();
+
+    private void HandleStateSelected(StateSave? state) => _menuBuilder.RefreshUI();
+
+    private void HandleCategorySelected(StateSaveCategory? category) => _menuBuilder.RefreshUI();
 
     private void HandleAfterUndo() => _menuBuilder.RefreshUI();
 

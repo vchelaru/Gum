@@ -585,7 +585,7 @@ public class ComboScenarioTests
 
     #region Locked instances
 
-    [AvaloniaFact(Skip = "#5378: the Alignment tab moves and resizes a locked instance")]
+    [AvaloniaFact]
     [Trait("Feature", "COMBO-036")]
     public void TheAlignmentTab_LeavesALockedInstanceWhereItIs()
     {
@@ -720,8 +720,7 @@ public class ComboScenarioTests
         File.ReadAllText(code.CodeFile("Components/Button.Generated.cs")).ShouldContain("partial class Button");
         File.ReadAllText(Path.Combine(components, "Button.codsj")).ShouldContain("System.Numerics");
 
-        // Duplicate: the copy has Button's states and animations. Its element code settings are
-        // typed again, since a duplicate does not copy them yet (#5376).
+        // Duplicate: the copy has Button's states, animations and element code settings.
         tree.Dialogs.AnswerNextUserString("ButtonCopy");
         tree.RightClick(tree.NodeFor(Component(tree, "Button")));
         tree.PickMenu("Duplicate Button");
@@ -730,8 +729,7 @@ public class ComboScenarioTests
         copy.Instances.Select(instance => instance.Name).ShouldBe(new[] { "Label" });
         File.ReadAllText(Path.Combine(components, "ButtonCopyAnimations.ganx")).ShouldContain("<StateName>Looks/Pressed</StateName>");
         code.Select(copy);
-        code.PickComboItem("Generation Behavior", "GenerateManually");
-        code.TypeAndLeave("Using Statements", "using System.Numerics;");
+        code.Member("Using Statements").Value.ShouldBe("using System.Numerics;");
         code.ClickGenerate();
         string copyCode = File.ReadAllText(code.CodeFile("Components/ButtonCopy.Generated.cs"));
         copyCode.ShouldContain("partial class ButtonCopy");
@@ -779,7 +777,7 @@ public class ComboScenarioTests
         code.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5376: duplicating an element does not copy its element code settings (.codsj)")]
+    [AvaloniaFact]
     [Trait("Feature", "COMBO-025")]
     public void DuplicatingAComponentWithStatesAnimationsAndCodeSettings_CopiesAllThree()
     {
