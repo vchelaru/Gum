@@ -238,6 +238,9 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
     void IAnimationUndoProvider.ApplyAnimations(ElementSave element, ElementAnimationsSave animations) =>
         _controller.ApplyAnimations(element, animations);
 
+    void IAnimationUndoProvider.RemoveKeyframesPlaying(ElementSave element, string instanceName) =>
+        _controller.RemoveKeyframesPlaying(element, instanceName);
+
     #endregion
 
     private void AssignEvents()

@@ -268,6 +268,38 @@ public class AnimationTabController
         }
     }
 
+    /// <summary>
+    /// Implements <c>IAnimationUndoProvider.RemoveKeyframesPlaying</c>: drops the keyframes of
+    /// <paramref name="element"/> that play one of <paramref name="instanceName"/>'s animations
+    /// (<c>Label.FadeIn</c>), from the tab when it shows the element, otherwise from its animation file.
+    /// </summary>
+    public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
+    {
+        if (ViewModel?.Element == element)
+        {
+            string prefix = instanceName + ".";
+            foreach (AnimationViewModel animation in ViewModel.Animations)
+            {
+                List<AnimatedKeyframeViewModel> playsInstance = animation.Keyframes
+                    .Where(keyframe => keyframe.AnimationName?.StartsWith(prefix, StringComparison.Ordinal) == true)
+                    .ToList();
+                foreach (AnimatedKeyframeViewModel keyframe in playsInstance)
+                {
+                    // Removing a keyframe saves through HandleDataChange.
+                    animation.Keyframes.Remove(keyframe);
+                }
+            }
+            return;
+        }
+
+        ElementAnimationsSave? save = _animationCollectionViewModelManager.GetElementAnimationsSave(element);
+        int removedCount = save?.Animations.Sum(animation => animation.Animations.RemoveAll(item => item.SourceObject == instanceName)) ?? 0;
+        if (removedCount > 0)
+        {
+            _animationCollectionViewModelManager.SaveElementAnimations(element, save!);
+        }
+    }
+
     /// <summary>Wired to <c>PluginBase.StateRename</c>: propagates the rename into keyframe references, then repaints the tab.</summary>
     public void HandleStateRename(StateSave stateSave, string oldName)
     {

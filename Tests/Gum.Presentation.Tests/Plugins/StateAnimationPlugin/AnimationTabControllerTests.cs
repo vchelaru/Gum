@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -85,6 +86,74 @@ public class AnimationTabControllerTests
         controller.ViewModel.ShouldNotBeSameAs(buttonTab);
         buttonTab.IsPlaying.ShouldBeFalse();
         timers[button].Verify(timer => timer.Stop(), Times.Once);
+    }
+
+    [Fact]
+    public void HandleInstanceDelete_DropsKeyframesPlayingTheInstancesAnimations_AndSaves()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        InstanceSave label = new InstanceSave { Name = "Label", BaseType = "Text", ParentContainer = button };
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(state => state.SelectedElement).Returns(button);
+        Mock<IProjectState> projectState = new Mock<IProjectState>();
+        projectState.SetupGet(state => state.GumProjectSave).Returns(new GumProjectSave { FullFileName = "/project/Project.gumx" });
+        ElementAnimationsViewModel buttonTab = CreateViewModel(selectedState.Object, Mock.Of<IUiTimer>());
+        buttonTab.Element = button;
+        AnimationViewModel show = new AnimationViewModel(selectedState.Object, Mock.Of<IWireframeObjectManager>()) { Name = "Show" };
+        show.Keyframes.Add(new AnimatedKeyframeViewModel { AnimationName = "Label.FadeIn", Time = 0 });
+        show.Keyframes.Add(new AnimatedKeyframeViewModel { AnimationName = "Labeled.FadeIn", Time = 1 });
+        show.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Hidden", Time = 2 });
+        buttonTab.Animations.Add(show);
+        Mock<IAnimationCollectionViewModelManager> collectionManager = new Mock<IAnimationCollectionViewModelManager>();
+        collectionManager.Setup(manager => manager.GetAnimationCollectionViewModel(button)).Returns(buttonTab);
+        AnimationTabController controller = new AnimationTabController(
+            selectedState.Object,
+            Mock.Of<IUndoManager>(),
+            Mock.Of<IGuiCommands>(),
+            Mock.Of<IDialogService>(),
+            projectState.Object,
+            collectionManager.Object,
+            Mock.Of<IRenameManager>(),
+            Mock.Of<IDuplicateService>(),
+            Mock.Of<IAnimationFilePathService>(),
+            () => CreateViewModel(selectedState.Object, Mock.Of<IUiTimer>()));
+
+        controller.RefreshViewModel();
+
+        controller.RemoveKeyframesPlaying(button, "Label");
+
+        show.Keyframes.Select(keyframe => keyframe.AnimationName ?? keyframe.StateName)
+            .ShouldBe(new[] { "Labeled.FadeIn", "Hidden" });
+        collectionManager.Verify(manager => manager.Save(buttonTab), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void RemoveKeyframesPlaying_ElementNotInTheTab_DropsItsKeyframesFromItsFile()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        ElementAnimationsSave animations = new ElementAnimationsSave();
+        AnimationSave show = new AnimationSave { Name = "Show" };
+        show.Animations.Add(new AnimationReferenceSave { Name = "Label.FadeIn" });
+        show.Animations.Add(new AnimationReferenceSave { Name = "Caption.FadeIn" });
+        animations.Animations.Add(show);
+        Mock<IAnimationCollectionViewModelManager> collectionManager = new Mock<IAnimationCollectionViewModelManager>();
+        collectionManager.Setup(manager => manager.GetElementAnimationsSave(button)).Returns(animations);
+        AnimationTabController controller = new AnimationTabController(
+            Mock.Of<ISelectedState>(),
+            Mock.Of<IUndoManager>(),
+            Mock.Of<IGuiCommands>(),
+            Mock.Of<IDialogService>(),
+            Mock.Of<IProjectState>(),
+            collectionManager.Object,
+            Mock.Of<IRenameManager>(),
+            Mock.Of<IDuplicateService>(),
+            Mock.Of<IAnimationFilePathService>(),
+            () => CreateViewModel(Mock.Of<ISelectedState>(), Mock.Of<IUiTimer>()));
+
+        controller.RemoveKeyframesPlaying(button, "Label");
+
+        collectionManager.Verify(manager => manager.SaveElementAnimations(button,
+            It.Is<ElementAnimationsSave>(save => save.Animations.Single().Animations.Single().Name == "Caption.FadeIn")), Times.Once);
     }
 
     private static AnimationTabController CreateController(ISelectedState selectedState) =>
