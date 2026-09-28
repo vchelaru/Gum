@@ -120,8 +120,9 @@ public class AddInstanceLogic : IAddInstanceLogic
 
     private InstanceSave? AddToElement(ElementSave elementToAdd, ElementSave target, InstanceSave? parent, string? name, DropPosition? position)
     {
-        // One undo entry for the add and its parenting.
-        using UndoLock undoLock = _undoManager.RequestLock();
+        // One undo entry for the add and its parenting, recorded on the target even when a drop
+        // targets an element that was not selected: selecting it under the lock captures no baseline.
+        using UndoLock undoLock = _undoManager.RequestLock(target);
 
         name ??= _elementCommands.GetUniqueNameForNewInstance(elementToAdd, target);
 

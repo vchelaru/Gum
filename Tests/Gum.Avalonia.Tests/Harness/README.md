@@ -116,6 +116,7 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `FileMenuScenarioTests.cs`, `ContentMenuScenarioTests.cs` | The File menu (save with auto-save off, Load Recent, reopening the last project on launch, legacy and JSON projects, external file changes, Export as Image) and the Content menu (file references, font cache, orphaned code scan, Convert to JSON, HTML import options). A project with no watched folders reacts to no file change: reload it first (`SaveAndReload`); the test calls `IFileWatchManager.Flush` where the tool's timer would. |
 | `CodeTabHarness.cs`, `CodeGenScenarioTests.cs` | The head's Code tab in its own window beside a `ProjectTreeHarness`: settings rows, Generate, and the generated files read back from disk. |
 | `HeadCommandLineScenarioTests.cs` | The head's command line without a window: `HeadOptions` and `CommandLineManager` parse a launch line, and the test hands what they read to the services startup uses. gumcli's process-level scenarios are in `Tests/Gum.Cli.Tests/EndToEnd/`. |
+| `DisplayPropertiesScenarioTests.cs` | The grid's editors on real rows (slider, angle, file, list, toggles, corner radius, remove button), the Project Properties tab hosted in its own window and edited through its grid, and the Standards palette's chips (menu, drop on a tree row, drop on the canvas). A guide that changes rendering is checked with pixel reads of the canvas window. |
 | `TabViewScenarioTests.cs` | The other tabs (Output, Errors, History, Alignment, Behaviors, Hotkeys, File Watch, Performance) and the View menu. A tab's view is the head's singleton. Theme, font size, renderer options and the standards palette outlive the test, so a scenario puts them back in a `finally`. The File Watch tab lists folders only after a project load (`SaveAndReload`). |
 
 A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
@@ -152,6 +153,8 @@ Gotchas in scenario setup:
   `ToolProjectFixture` loads its project before the project has a folder. A scenario that needs
   code settings or a `.csproj` in place passes them to `CodeTabHarness`'s `beforeLoad`, which
   writes them and then reopens the project.
+- A nullable number field (the single pixel texture bounds) is disabled while its value is null;
+  click its "Is Null" check box before typing, or the typed Enter lands on whatever kept focus.
 - The editor tab, which sits out, fills a project's canvas sizes when the tool opens it; a scenario
   that makes a new project through the tool sets `CustomCanvasSizes` itself before the oracles.
 

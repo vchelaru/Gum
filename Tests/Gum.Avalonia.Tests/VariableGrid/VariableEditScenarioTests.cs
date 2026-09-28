@@ -122,4 +122,19 @@ public class VariableEditScenarioTests
 
         VariableGridHarness.StoredValue(button, "Width").ShouldBe(175f);
     }
+
+    [AvaloniaFact]
+    public void TypingAnAngle_AndPressingEnter_StoresTheTypedDegrees()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave icon = grid.Project.AddInstance(button, "Icon", "Sprite");
+        grid.Select(icon);
+
+        grid.Input.TypeAndEnter(grid.Editor<AvaloniaDataUi.Controls.AngleSelectorDisplay>("Rotation").TextBox, "45");
+        grid.Settle();
+
+        VariableGridHarness.StoredValue(button, "Icon.Rotation").ShouldBe(45f);
+        grid.Editor<AvaloniaDataUi.Controls.AngleSelectorDisplay>("Rotation").TextBox.Text.ShouldBe("45");
+    }
 }

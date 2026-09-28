@@ -16,6 +16,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using ToolsUtilities;
 
@@ -101,6 +102,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IRenameLogic _renameLogic;
     private readonly IOutputManager _outputManager;
+    private readonly IMovedInstanceReferenceFinder _movedInstanceReferenceFinder;
 
     // The screen or component the last cut took, which the next paste on a folder moves. Null when
     // the last copy or cut was anything else, or the cut element was already moved.
@@ -129,9 +131,11 @@ public class CopyPasteLogic : ICopyPasteLogic
         Lazy<IElementTreeRoots> elementTreeRoots,
         ICircularReferenceManager circularReferenceManager,
         IRenameLogic renameLogic,
-        IOutputManager outputManager
+        IOutputManager outputManager,
+        IMovedInstanceReferenceFinder movedInstanceReferenceFinder
         )
     {
+        _movedInstanceReferenceFinder = movedInstanceReferenceFinder;
         _renameLogic = renameLogic;
         _outputManager = outputManager;
         _circularReferenceManager = circularReferenceManager;
@@ -1539,6 +1543,9 @@ public class CopyPasteLogic : ICopyPasteLogic
             .Select(item => item.Clone())
             .ToList();
 
+        MovedInstanceReference[] brokenReferences =
+            _movedInstanceReferenceFinder.GetReferencesBrokenByMove(sourceElement, instance, descendants);
+
         foreach (InstanceSave descendant in descendants)
         {
             _deleteLogic.RemoveInstance(descendant, sourceElement);
@@ -1569,6 +1576,25 @@ public class CopyPasteLogic : ICopyPasteLogic
         _wireframeObjectManager.RefreshAll(true);
         _guiCommands.RefreshElementTreeView(sourceElement);
         _selectedState.SelectedInstance = replacement;
+
+        ReportBrokenReferences(brokenReferences, component);
+    }
+
+    private void ReportBrokenReferences(MovedInstanceReference[] brokenReferences, ComponentSave component)
+    {
+        if (brokenReferences.Length == 0)
+        {
+            return;
+        }
+        string movedNames = string.Join(", ", brokenReferences.Select(item => item.MovedInstanceName).Distinct());
+        StringBuilder message = new StringBuilder();
+        message.Append($"{movedNames} moved into {component.Name}, so these references no longer apply:");
+        foreach (MovedInstanceReference reference in brokenReferences)
+        {
+            message.AppendLine();
+            message.Append($"  {reference.Description}");
+        }
+        _outputManager.AddOutput(message.ToString());
     }
 
     private List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
