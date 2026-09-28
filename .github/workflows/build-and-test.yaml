@@ -75,16 +75,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: false
-      - name: Setup .NET SDKs
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-      - name: Build Gum (Gum.slnx, the Avalonia tool and its plugins)
-        run: dotnet build Gum.slnx --configuration Release --verbosity quiet -p:WarningLevel=0
-      # Export to SVG runs GumCli/gumcli.dll from beside the tool. Gum.Cli is kept out of Gum.slnx, so
-      # publish it into the test output the way the release package ships it; FILE-008 skips without it.
-      - name: Publish gumcli into the Gum.Avalonia.Tests output
-        run: dotnet publish Tools/Gum.Cli/Gum.Cli.csproj --configuration Release --self-contained false --verbosity quiet -p:WarningLevel=0 -o Tests/Gum.Avalonia.Tests/bin/Release/net10.0/GumCli
+      # Setup, Release build, gumcli publish, and Xvfb on Linux; shared with e2e-nightly.yaml.
+      - uses: ./.github/actions/build-avalonia-head
       # The runners have no GPU, so the KNI device tests (CanvasHostTests, TextureCoordinateTab*,
       # CanvasScenarioTests) skip themselves here
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
@@ -105,8 +97,6 @@ jobs:
           GUM_RUN_CANVAS_DEVICE_TESTS: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
           xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=head-process.trx" --results-directory TestResults --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests|FullyQualifiedName~CanvasMenuAndToolbarScenarioTests|FullyQualifiedName~DragDropScenarioTests"
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
