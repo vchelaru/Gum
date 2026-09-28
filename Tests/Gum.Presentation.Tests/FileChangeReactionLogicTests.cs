@@ -1,9 +1,10 @@
-using Gum.Commands;
+﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
@@ -43,6 +44,20 @@ public class FileChangeReactionLogicTests : BaseTestClass
         out Mock<ISelectedState> selectedStateMock,
         out Mock<IWireframeObjectManager> wireframeObjectManagerMock)
     {
+        return BuildSut(out guiCommandsMock, out fileCommandsMock, out pluginManagerMock, out projectStateMock,
+            out selectedStateMock, out wireframeObjectManagerMock, new Mock<IDialogService>().Object, new UnsavedChangesTracker());
+    }
+
+    private static FileChangeReactionLogic BuildSut(
+        out Mock<IGuiCommands> guiCommandsMock,
+        out Mock<IFileCommands> fileCommandsMock,
+        out Mock<IPluginManager> pluginManagerMock,
+        out Mock<IProjectState> projectStateMock,
+        out Mock<ISelectedState> selectedStateMock,
+        out Mock<IWireframeObjectManager> wireframeObjectManagerMock,
+        IDialogService dialogService,
+        IUnsavedChangesTracker unsavedChangesTracker)
+    {
         guiCommandsMock = new Mock<IGuiCommands>();
         fileCommandsMock = new Mock<IFileCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
@@ -61,7 +76,9 @@ public class FileChangeReactionLogicTests : BaseTestClass
             wireframeObjectManagerMock.Object,
             projectStateMock.Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
-            pluginManagerMock.Object);
+            pluginManagerMock.Object,
+            dialogService,
+            unsavedChangesTracker);
     }
 
     [Fact]
@@ -221,6 +238,115 @@ public class FileChangeReactionLogicTests : BaseTestClass
         {
             ObjectFinder.Self.GumProjectSave = null;
         }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldAskAndKeepTheElement_WhenItHasUnsavedChangesAndTheUserKeepsThem()
+    {
+        // Issue #5379: with Auto Save off, reloading would drop the element's unsaved edits.
+        Mock<IDialogService> dialogServiceMock = new Mock<IDialogService>();
+        dialogServiceMock
+            .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Negative);
+        UnsavedChangesTracker tracker = new UnsavedChangesTracker();
+        FileChangeReactionLogic sut = BuildReloadSut(dialogServiceMock.Object, tracker,
+            out Mock<IGuiCommands> guiCommandsMock, out Mock<IPluginManager> pluginManagerMock,
+            out string tempDir, out GumProjectSave project);
+        ComponentSave component = new ComponentSave { Name = "MyButton", IsSourceFileMissing = true };
+        project.Components.Add(component);
+        tracker.MarkUnsaved(component);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(Path.Combine(tempDir, "Components", "MyButton.gucx")));
+
+            dialogServiceMock.Verify(d => d.ShowMessage(It.Is<string>(m => m.Contains("MyButton")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+            project.Components.ShouldContain(component);
+            tracker.HasUnsavedChanges(component).ShouldBeTrue();
+            // The file is back, so the kept element can be saved over it.
+            component.IsSourceFileMissing.ShouldBeFalse();
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(component), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReloadTheElement_WhenItHasUnsavedChangesAndTheUserReloads()
+    {
+        Mock<IDialogService> dialogServiceMock = new Mock<IDialogService>();
+        dialogServiceMock
+            .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Affirmative);
+        UnsavedChangesTracker tracker = new UnsavedChangesTracker();
+        FileChangeReactionLogic sut = BuildReloadSut(dialogServiceMock.Object, tracker,
+            out Mock<IGuiCommands> guiCommandsMock, out Mock<IPluginManager> pluginManagerMock,
+            out string tempDir, out GumProjectSave project);
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        tracker.MarkUnsaved(component);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(Path.Combine(tempDir, "Components", "MyButton.gucx")));
+
+            dialogServiceMock.Verify(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReloadWithoutAsking_WhenTheElementHasNoUnsavedChanges()
+    {
+        Mock<IDialogService> dialogServiceMock = new Mock<IDialogService>();
+        UnsavedChangesTracker tracker = new UnsavedChangesTracker();
+        FileChangeReactionLogic sut = BuildReloadSut(dialogServiceMock.Object, tracker,
+            out Mock<IGuiCommands> guiCommandsMock, out Mock<IPluginManager> pluginManagerMock,
+            out string tempDir, out GumProjectSave project);
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(Path.Combine(tempDir, "Components", "MyButton.gucx")));
+
+            dialogServiceMock.Verify(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    private static FileChangeReactionLogic BuildReloadSut(
+        IDialogService dialogService,
+        IUnsavedChangesTracker tracker,
+        out Mock<IGuiCommands> guiCommandsMock,
+        out Mock<IPluginManager> pluginManagerMock,
+        out string tempDir,
+        out GumProjectSave project)
+    {
+        FileChangeReactionLogic sut = BuildSut(
+            out guiCommandsMock,
+            out Mock<IFileCommands> fileCommandsMock,
+            out pluginManagerMock,
+            out Mock<IProjectState> projectStateMock,
+            out _,
+            out _,
+            dialogService,
+            tracker);
+        tempDir = Path.Combine(Path.GetTempPath(), "GumUnsavedReloadTest_" + Guid.NewGuid().ToString("N"));
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(new FilePath(tempDir + Path.DirectorySeparatorChar));
+        project = new GumProjectSave { FullFileName = Path.Combine(tempDir, "Project.gumx") };
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+        ObjectFinder.Self.GumProjectSave = project;
+        return sut;
     }
 
     [Fact]

@@ -35,6 +35,7 @@ public class FileCommands : IFileCommands
     private readonly IPluginManager _pluginManager;
     private readonly IRecycleBinService _recycleBinService;
     private readonly IPathCaseSensitivity _pathCaseSensitivity;
+    private readonly IUnsavedChangesTracker _unsavedChangesTracker;
     // Lazy: NewProjectLogic saves through IFileCommands, so a direct reference would be a
     // construction cycle.
     private readonly Lazy<INewProjectLogic> _newProjectLogicLazy;
@@ -53,8 +54,10 @@ public class FileCommands : IFileCommands
         IPluginManager pluginManager,
         IRecycleBinService recycleBinService,
         Lazy<INewProjectLogic> newProjectLogic,
-        IPathCaseSensitivity pathCaseSensitivity)
+        IPathCaseSensitivity pathCaseSensitivity,
+        IUnsavedChangesTracker unsavedChangesTracker)
     {
+        _unsavedChangesTracker = unsavedChangesTracker;
         _newProjectLogicLazy = newProjectLogic;
         _pathCaseSensitivity = pathCaseSensitivity;
         _selectedState = selectedState;
@@ -159,7 +162,13 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveElement(ElementSave? elementSave)
     {
-        if (_projectManager.AutoSave && elementSave != null)
+        if (elementSave == null)
+        {
+            return;
+        }
+        // A successful save clears the mark; a failed one (read-only file, missing source) keeps it.
+        _unsavedChangesTracker.MarkUnsaved(elementSave);
+        if (_projectManager.AutoSave)
         {
             SaveElement(elementSave);
         }
@@ -323,6 +332,7 @@ public class FileCommands : IFileCommands
                 if (isReadOnly)
                 {
                     _projectManager.ShowReadOnlyDialog(fileName.FullPath);
+                    succeeded = false;
                 }
                 else
                 {
@@ -362,6 +372,7 @@ public class FileCommands : IFileCommands
                 if (succeeded)
                 {
                     _outputManager.AddOutput("Saved " + elementSave + " to " + fileName);
+                    _unsavedChangesTracker.MarkSaved(elementSave);
                     _pluginManager.AfterSavingElementSave(elementSave);
                 }
             }
