@@ -57,4 +57,38 @@ public class PluginScanReportTests
         // A native DLL is expected in a plugin folder and is counted, not listed as a problem.
         description.ShouldNotContain("dxcompiler.dll");
     }
+    // A built-in plugin can fail to be created with no Plugins folder at all; the scan text must
+    // still name it, as the plugin list does.
+    [Fact]
+    public void Describe_ListsPluginsThatCouldNotBeCreated_WhenTheFolderDoesNotExist()
+    {
+        PluginScanReport report = new(@"C:\Gum\Plugins", FolderExists: false, [],
+            PluginsNotCreated: [new RefusedPlugin("BuiltInPlugin (Gum)", "it failed while it was being created: boom")]);
+
+        report.Describe().ShouldContain("BuiltInPlugin (Gum) - it failed while it was being created: boom");
+    }
+
+    // A plugin the head refused (built for WPF) or could not create was found, not missing, and the
+    // report must say which and why rather than count it in no category.
+    [Fact]
+    public void Describe_ListsRefusedAssembliesAndPluginsThatCouldNotBeCreated_WithTheirReasons()
+    {
+        PluginScanReport report = new(@"C:\Gum\Plugins", FolderExists: true, [
+            new PluginFileScan("EditorTabPlugin_XNA.dll", PluginFileOutcome.Loaded, CouldContainPlugins: true, null),
+            new PluginFileScan("WpfPlugin.dll", PluginFileOutcome.NotHostable, CouldContainPlugins: true, "references PresentationFramework"),
+            new PluginFileScan("WpfHelper.dll", PluginFileOutcome.NotHostable, CouldContainPlugins: false, "references WindowsBase"),
+        ], PluginsNotCreated: [new RefusedPlugin("ThrowingPlugin (Third.Party)", "its constructor threw: boom")]);
+
+        string description = report.Describe();
+
+        description.ShouldContain("1 holding plugins, 0 dependencies, 0 native, 0 failed to load, 2 refused");
+        description.ShouldContain("WpfPlugin.dll - references PresentationFramework");
+        description.ShouldContain("WpfHelper.dll - references WindowsBase");
+        description.ShouldContain("ThrowingPlugin (Third.Party) - its constructor threw: boom");
+        // Only assemblies that could hold a plugin get a row in the plugin list; a refused helper does not.
+        report.RefusedPlugins.ShouldBe([
+            new RefusedPlugin("WpfPlugin.dll", "references PresentationFramework"),
+            new RefusedPlugin("ThrowingPlugin (Third.Party)", "its constructor threw: boom"),
+        ]);
+    }
 }

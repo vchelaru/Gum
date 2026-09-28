@@ -320,9 +320,56 @@ public class DialogScenarioTests
         {
             scan.ShouldContain("    " + plugin, customMessage: $"the scan lists {plugin} as holding plugins");
         }
-        scan.ShouldContain(" 0 failed to load)");
+        scan.ShouldContain(" 0 failed to load, 0 refused)");
         clipboard.LastText.ShouldBe(scan, "Copy puts the scan on the clipboard");
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "PLUG-005")]
+    public void ManagePlugins_APluginBuiltForTheWpfTool_IsListedAsNotLoaded_WithTheReason()
+    {
+        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
+        // The real folder is scanned once per process, so this scans a folder holding a plugin
+        // built against the WPF tool's Gum assembly and shows that scan instead. Scanned before the
+        // harness starts watching Output, where the refusal is reported as an error by design.
+        string folder = Path.Combine(Path.GetTempPath(), "GumRefusedPluginTests", Guid.NewGuid().ToString("N"));
+        string pluginName = "WpfBuiltPlugin" + Guid.NewGuid().ToString("N");
+        PluginHostFixture.PluginAssemblyWriter.WriteDerivingFrom(Path.Combine(folder, pluginName), pluginName,
+            "Gum", "Gum.Plugins.BaseClasses", "PriorityPlugin", "Gum.Presentation");
+        PluginScanReport? startupScan = pluginManager.PluginScanReport;
+        List<(string Text, bool? IsChecked, bool IsEnabled, string? ToolTip)> rows = new();
+        string scan = "";
+        try
+        {
+            pluginManager.PluginScanReport = pluginManager.ScanPluginFolder(folder, new List<System.ComponentModel.Composition.Primitives.ComposablePartCatalog>());
+            using ProjectTreeHarness tree = new ProjectTreeHarness();
+            tree.Dialogs.AnswerNextInWindow<PluginsDialogViewModel>(window =>
+            {
+                rows.AddRange(window.FindAll<global::Avalonia.Controls.CheckBox>().Select(box =>
+                    (box.Content as string ?? "", box.IsChecked, box.IsEnabled, global::Avalonia.Controls.ToolTip.GetTip(box) as string)));
+                window.Click(window.Find<global::Avalonia.Controls.TabItem>(tab => tab.Header as string == "Folder scan"));
+                scan = window.Find<global::Avalonia.Controls.TextBox>().Text ?? "";
+                window.Click(window.AffirmativeButton);
+            });
+
+            tree.PickMainMenu("Plugins", "Manage Plugins");
+
+            tree.AssertOracles();
+        }
+        finally
+        {
+            pluginManager.PluginScanReport = startupScan;
+        }
+
+        (string Text, bool? IsChecked, bool IsEnabled, string? ToolTip) refused =
+            rows.Where(row => row.Text == pluginName + ".dll (not loaded)").ShouldHaveSingleItem();
+        refused.IsChecked.ShouldBe(false);
+        refused.IsEnabled.ShouldBeFalse("a refused plugin cannot be turned on");
+        refused.ToolTip.ShouldNotBeNull();
+        refused.ToolTip.ShouldContain("needs an Avalonia build");
+        scan.ShouldContain("1 refused)");
+        scan.ShouldContain($"    {pluginName}.dll - ");
     }
 
     [AvaloniaFact]

@@ -151,4 +151,27 @@ public class PluginsDialogViewModelTests
         crashedItem.CanToggle.ShouldBeFalse();
         changed.ShouldContain(nameof(PluginItemViewModel.CanToggle));
     }
+    // A plugin that was found but not loaded gets its own row: never checked, never toggleable,
+    // and its tooltip says why, so it is not mistaken for one that was never installed.
+    [Fact]
+    public void Constructor_AddsARowForEachRefusedPlugin_ThatCannotBeTurnedOn()
+    {
+        PluginSummary loaded = new("Loaded Plugin", "Loaded Plugin", true, false, new object());
+        Mock<IPluginManager> pluginManager = new();
+        pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([loaded]);
+        pluginManager.Setup(p => p.GetPluginScanReport()).Returns(new PluginScanReport("/Gum/Plugins", FolderExists: true, [
+            new PluginFileScan("WpfPlugin.dll", PluginFileOutcome.NotHostable, CouldContainPlugins: true, "references PresentationFramework"),
+        ]));
+
+        PluginsDialogViewModel viewModel = new(Mock.Of<IDialogService>(), pluginManager.Object, Mock.Of<IClipboardService>());
+
+        PluginItemViewModel refused = viewModel.Plugins.Single(p => p.DisplayText.StartsWith("WpfPlugin.dll"));
+        refused.DisplayText.ShouldBe("WpfPlugin.dll (not loaded)");
+        refused.IsEnabled.ShouldBeFalse();
+        refused.CanToggle.ShouldBeFalse();
+        refused.ToolTip.ShouldBe("Not loaded: references PresentationFramework");
+        refused.IsEnabled = true;
+        refused.IsEnabled.ShouldBeFalse();
+        pluginManager.Verify(p => p.TryEnablePlugin(It.IsAny<object>()), Times.Never);
+    }
 }

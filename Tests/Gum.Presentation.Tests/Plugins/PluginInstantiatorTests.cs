@@ -33,11 +33,19 @@ public class PluginInstantiatorTests
         Mock<IOutputManager> output = new Mock<IOutputManager>();
         output.Setup(x => x.AddError(It.IsAny<string>())).Callback<string>(errors.Add);
 
-        List<PluginBase> plugins = new PluginInstantiator(output.Object).CreatePlugins(container, catalog);
+        PluginInstantiator instantiator = new PluginInstantiator(output.Object);
+
+        List<PluginBase> plugins = instantiator.CreatePlugins(container, catalog);
 
         plugins.ShouldHaveSingleItem().ShouldBeOfType<WorkingPlugin>();
         errors.ShouldContain(error => error.Contains(nameof(ThrowingPlugin)) && error.Contains("failed while it was being created"));
         errors.ShouldContain(error => error.Contains(nameof(MissingServicePlugin)) && error.Contains($"needs {typeof(IWpfOnlyService).FullName}"));
+        // Recorded too, so Manage Plugins can list them as found but not loaded.
+        instantiator.NotCreated.Count.ShouldBe(2);
+        instantiator.NotCreated.ShouldContain(refused => refused.Name.StartsWith(nameof(ThrowingPlugin) + " (")
+            && refused.Reason.Contains("Could not load type 'Gum.ToolStates.SelectedState'."));
+        instantiator.NotCreated.ShouldContain(refused => refused.Name.StartsWith(nameof(MissingServicePlugin) + " (")
+            && refused.Reason.Contains($"needs {typeof(IWpfOnlyService).FullName}"));
     }
 
     [Export(typeof(PluginBase))]
