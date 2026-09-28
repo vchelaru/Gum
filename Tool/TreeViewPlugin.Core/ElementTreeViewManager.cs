@@ -486,7 +486,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
-    /// Handles a Ctrl-click on a Standards palette chip (and the chip's "add to current" menu
+    /// Handles a click on a Standards palette chip (and the chip's "add to current" menu
     /// item): adds the standard at the add destination, like every other add gesture.
     /// </summary>
     private void AddStandardAtDestination(string typeName)
@@ -511,7 +511,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
-    /// Runs an add-instance gesture that repeats rapidly (Ctrl-click a Standards chip, Ctrl+Shift-click
+    /// Runs an add-instance gesture that repeats rapidly (click a Standards chip, Ctrl+Shift-click
     /// an element node) without scrolling the tree to the newly-selected instance, so users can keep
     /// adding instances one after another without the view jumping (#4882). Drag, the right-click Add
     /// menu, and the Add Instance dialog are excluded on purpose: each is a single deliberate
@@ -1425,7 +1425,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     /// <summary>
     /// Scrolls <paramref name="treeNode"/> into view unless <see cref="SuppressNextEnsureVisible"/> is
-    /// set, which an add-instance gesture that repeats rapidly (Ctrl-click a Standards chip,
+    /// set, which an add-instance gesture that repeats rapidly (click a Standards chip,
     /// Ctrl+Shift-click an element node) uses so each add doesn't jerk the tree view's scroll
     /// position (#4882).
     /// </summary>
@@ -1856,7 +1856,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     /// <summary>
     /// When true, Select skips scrolling the newly-selected node into view. Set around an
-    /// add-instance gesture that repeats rapidly (Ctrl-click a Standards chip, Ctrl+Shift-click an
+    /// add-instance gesture that repeats rapidly (click a Standards chip, Ctrl+Shift-click an
     /// element node) so each add doesn't jerk the tree view's scroll position (#4882).
     /// </summary>
     internal bool SuppressNextEnsureVisible;

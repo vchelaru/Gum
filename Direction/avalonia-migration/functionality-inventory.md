@@ -150,7 +150,7 @@
 
 ## Standards palette (PAL)
 
-- PAL-001 Chip click selects standard. tested: StandardsPaletteTests
+- PAL-001 Chip click: Add to current element (inside a selected container). tested: StandardsPaletteAddTests, DisplayPropertiesScenarioTests
 - PAL-002 Right-click: Add to current element. tested: StandardsPaletteAddTests
 - PAL-003 Right-click: Edit defaults...
 - PAL-004 Drag chip onto tree. tested: StandardsPaletteAddTests
