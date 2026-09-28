@@ -61,7 +61,8 @@ Rules that keep scenarios honest:
 - For tool events the tab reacts to (rename, delete, undo, file changes), call the same entry the
   tool calls: `PluginManager.ElementRename`, `IDeleteLogic.Remove` under `UndoManager.RequestLock`,
   `UndoManager.PerformUndo`, `Plugin.CallReactToFileChanged`.
-- Playback goes through `Wait` or `WaitUntil`, never `await` or `Thread.Sleep`. They advance the harness's clock one 20 ms tick at a time, so a duration is playback time, not wall time, and a slow machine gets the same result.
+- Playback goes through `Wait` or `PlayUntil`, never `await` or `Thread.Sleep`. They advance the harness's clock one 20 ms tick at a time, so a duration is playback time, not wall time, and a slow machine gets the same result.
+- Work that runs on another thread (a project load, a .gumx preview) goes through `WaitUntil`, which waits on the wall clock. Playback time passes in a few milliseconds of real time, so a playback wait gives up before a load finishes.
 - An end-to-end scenario (inventory-tagged, in `../EndToEnd/AnimationScenarioTests.cs`) calls
   `StartScenario()` after its setup and ends with `AssertOracles()`; see `../Harness/README.md`.
 - Call `ThrowIfPluginFailed` after an event that could throw inside the plugin: the plugin manager

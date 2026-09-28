@@ -290,7 +290,6 @@ public class FormsAndImportScenarioTests
     [Trait("Feature", "EDIT-001")]
     public void ImportGumx_AStandardWhoseFileIsUnchangedButWhoseAnimationsAreNot_UndoKeepsTheImportedAnimations()
     {
-        Skip.If(OperatingSystem.IsMacOS(), "#5402: the post-import project reload times out on macOS CI; re-enable once #5402 is fixed on a Mac");
         DeviceTestThread.Run(ImportGumx_AStandardWhoseFileIsUnchangedButWhoseAnimationsAreNot_UndoKeepsTheImportedAnimationsBody);
     }
 
@@ -318,14 +317,14 @@ public class FormsAndImportScenarioTests
         editor.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
         {
             dialog.BrowseCommand.Execute(null);
-            editor.WaitUntil(() => dialog.IsPreviewLoaded, AsyncWork).ShouldBeTrue("the .gumx preview loads");
+            editor.WaitUntil(() => dialog.IsPreviewLoaded, AsyncWork, "the .gumx preview to load");
             Leaf(dialog, "Text").IsChecked = true;
             return true;
         });
 
         PickMainMenu("Content", "Import", ".gumx…");
         IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
-        editor.WaitUntil(() => projectManager.GumProjectSave != editor.Project, AsyncWork).ShouldBeTrue("the project reloads after the import");
+        editor.WaitUntil(() => projectManager.GumProjectSave != editor.Project, AsyncWork, "the project to reload after the import");
         StandardElementSave reloadedText = projectManager.GumProjectSave!.StandardElements.Single(standard => standard.Name == "Text");
         editor.Select(reloadedText);
         ElementAnimationsSave.Load(targetAnimations).Animations.Select(animation => animation.Name).ShouldBe(new[] { "Pulse" });

@@ -339,21 +339,11 @@ internal sealed class ProjectTreeHarness : IDisposable
     /// </summary>
     public void WaitUntil(Func<bool> condition, TimeSpan timeout, string what)
     {
-        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        while (!condition())
+        AsyncWorkWait.Until(condition, timeout, what, () =>
         {
-            if (stopwatch.Elapsed > timeout)
-            {
-                // A load still running, or one that never started, is the first thing to rule out.
-                IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
-                Task? load = (projectManager as ProjectManager)?.InFlightLoadProjectTask;
-                throw new TimeoutException($"Waited {timeout.TotalSeconds:0} s for {what}. Messages shown: [{string.Join(" | ", Dialogs.Messages)}]. " +
-                    $"Last project load: {load?.Status.ToString() ?? "none"}; open project: {projectManager.GumProjectSave?.FullFileName ?? "none"}.");
-            }
-            Thread.Sleep(10);
             _driver.Layout();
             _exceptions.ThrowIfCrashed();
-        }
+        }, Dialogs.Messages);
         _driver.Layout();
     }
 

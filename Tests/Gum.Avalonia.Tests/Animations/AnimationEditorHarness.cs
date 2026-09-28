@@ -328,8 +328,12 @@ internal sealed class AnimationEditorHarness : IDisposable
         }
     }
 
-    /// <summary>Plays ticks as <see cref="Wait"/> does until <paramref name="condition"/> holds or <paramref name="timeout"/> of playback time passes.</summary>
-    public bool WaitUntil(Func<bool> condition, TimeSpan timeout)
+    /// <summary>
+    /// Plays ticks as <see cref="Wait"/> does until <paramref name="condition"/> holds or <paramref name="timeout"/>
+    /// of playback time passes. Playback time runs far faster than the wall clock, so work on another
+    /// thread (a project load) needs <see cref="WaitUntil"/> instead.
+    /// </summary>
+    public bool PlayUntil(Func<bool> condition, TimeSpan timeout)
     {
         for (TimeSpan played = TimeSpan.Zero; !condition() && played < timeout; played += PlaybackFrame)
         {
@@ -338,6 +342,17 @@ internal sealed class AnimationEditorHarness : IDisposable
         }
         Layout();
         return condition();
+    }
+
+    /// <summary>
+    /// Pumps the UI thread on the wall clock until <paramref name="condition"/> holds, for work a
+    /// gesture started asynchronously (a project load, a .gumx preview); fails after <paramref name="timeout"/>.
+    /// Playback timers do not tick meanwhile.
+    /// </summary>
+    public void WaitUntil(Func<bool> condition, TimeSpan timeout, string what)
+    {
+        AsyncWorkWait.Until(condition, timeout, what, () => Dispatcher.UIThread.RunJobs(), Dialogs.Messages);
+        Layout();
     }
 
     // The gestures scenarios use most, forwarded to Input so the scenarios read as the user's steps.

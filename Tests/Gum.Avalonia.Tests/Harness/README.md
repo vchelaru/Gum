@@ -159,6 +159,9 @@ Gotchas in scenario setup:
   click its "Is Null" check box before typing, or the typed Enter lands on whatever kept focus.
 - The editor tab, which sits out, fills a project's canvas sizes when the tool opens it; a scenario
   that makes a new project through the tool sets `CustomCanvasSizes` itself before the oracles.
+- A tree node object can be rebuilt after a drop or a redo, so a scenario calls `NodeFor` again
+  instead of keeping an old reference.
+- A wait on async or thread-pool work is bounded by the real clock, never by pump or tick counts.
 
 ### Canvas scenarios
 
