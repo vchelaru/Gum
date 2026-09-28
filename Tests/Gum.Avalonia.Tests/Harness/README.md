@@ -10,6 +10,7 @@ depend on the tab.
 | `ToolProjectFixture.cs` | A new project in a temp folder (`.gumx` or `.gumj`, optionally with a shared per-user folder), built through the tool's own commands (`AddComponent`, `AddInstance`, `AddCategory`, `AddState`), with every dialog answered by `Dialogs`. The editor tab and Texture Coordinates plugins sit out meanwhile: they need canvases the headless run never builds. Dispose restores the tool, including the plugin set, so a harness that swaps plugins in need not put them back itself. |
 | `ScriptedDialogService.cs` | Answers dialogs from a queue, file pickers included (`AnswerNextOpenFile`, `AnswerNextSaveFile`); an unanswered dialog fails the test instead of hanging. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
+| `RecordingClipboardService.cs` | The test container's `IClipboardService`. The headless app has no main window to copy to, so it also keeps the last text copied (`LastText`). |
 
 ## PR screenshots
 
@@ -107,6 +108,7 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `TreeScenarioTests.cs`, `VariableScenarioTests.cs`, `StateScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search); the Variables tab, states and edits that cascade into other elements; the States tab; copy, paste, rename and delete where they meet references, parents, states and animations. |
 | `AnimationScenarioTests.cs` | The Animations tab on `../Animations/AnimationEditorHarness.cs`: `StartScenario()` after setup (saves, routes Ctrl+Z/Ctrl+Y, starts the exception watch, returns the start snapshot), `Undo`/`Redo`, and `AssertOracles()`, which also checks the saved sidecar holds exactly what the tab shows, before and after the reload. |
 | `DialogScenarioTests.cs` | Dialogs reached from the main menu (`ProjectTreeHarness.PickMainMenu("File", "New Project")`) and the Project tree: New Project, Load Project and Load Recent, Import Components, Theming, Manage Plugins, Project Properties. An async menu action is followed by `WaitUntil`. |
+| `TabViewScenarioTests.cs` | The other tabs (Output, Errors, History, Alignment, Behaviors, Hotkeys, File Watch, Performance) and the View menu. A tab's view is the head's singleton. Theme, font size, renderer options and the standards palette outlive the test, so a scenario puts them back in a `finally`. The File Watch tab lists folders only after a project load (`SaveAndReload`). |
 
 A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
 the gesture with its dialogs queued, asserts the model and the tree, undoes back and compares the

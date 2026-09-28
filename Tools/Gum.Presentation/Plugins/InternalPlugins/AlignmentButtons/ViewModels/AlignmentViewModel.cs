@@ -90,7 +90,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
             PositionUnitType.PixelsFromLeft, DockMargin);
@@ -107,7 +106,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
             PositionUnitType.PixelsFromCenterX);
@@ -124,7 +122,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
             PositionUnitType.PixelsFromRight, -DockMargin);
@@ -141,7 +138,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
                 PositionUnitType.PixelsFromLeft, DockMargin);
@@ -174,7 +170,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
                 PositionUnitType.PixelsFromRight, -DockMargin);
@@ -191,7 +186,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
                 PositionUnitType.PixelsFromLeft, DockMargin);
@@ -208,7 +202,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
                 PositionUnitType.PixelsFromCenterX);
@@ -225,7 +218,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
                 PositionUnitType.PixelsFromRight, -DockMargin);
@@ -270,8 +262,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
 
@@ -287,13 +277,13 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetAndCallReact("Width", DockMargin * 2, "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.SetAndCallReact("Height", DockMargin * 2, "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.RefreshAndSave();
         }
     }
 
@@ -301,8 +291,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
@@ -317,9 +305,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
@@ -337,9 +322,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
@@ -354,8 +336,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
 
@@ -370,9 +350,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
             _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
@@ -386,9 +363,6 @@ public class AlignmentViewModel : ViewModel
     {
         using (_undoManager.RequestLock())
         {
-
-            var state = _selectedState.SelectedStateSave;
-
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
 
             _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
