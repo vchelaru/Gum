@@ -48,6 +48,8 @@ public static class HeadTestServices
         services.AddSingleton<AvaloniaDialogService>();
         services.Replace(ServiceDescriptor.Singleton<IDialogService>(provider =>
             new SwitchableDialogService(provider.GetRequiredService<AvaloniaDialogService>())));
+        // The headless app has no main window to copy to; the recorder keeps what was copied.
+        services.Replace(ServiceDescriptor.Singleton<IClipboardService, RecordingClipboardService>());
         ServiceProvider provider = services.BuildServiceProvider();
         // The plugin host and a few not-yet-drained services still reach the container through the locator.
         Locator.Register(provider);
