@@ -769,6 +769,7 @@ public class TreeScenarioTests
         ComponentSave button = tree.Project.AddComponent("Button");
         InstanceSave box = tree.Project.AddInstance(button, "Box", "Container");
         InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Project.AddInstance(button, "Caption", "Text");
         tree.Click(tree.NodeFor(label));
         tree.Grid.PickComboItem("Parent", "Box");
         tree.Click(tree.NodeFor(Component(tree, "Button").Instances.First()));
@@ -779,7 +780,9 @@ public class TreeScenarioTests
 
         ComponentSave created = Component(tree, "BoxComponent");
         created.Instances.Select(instance => instance.Name).ShouldBe(new[] { "Label" });
-        InstanceSave replacement = Component(tree, "Button").Instances.ShouldHaveSingleItem();
+        // The replacement keeps Box's place in the order, which is the draw order.
+        Component(tree, "Button").Instances.Select(instance => instance.Name).ShouldBe(new[] { "Box", "Caption" });
+        InstanceSave replacement = Component(tree, "Button").Instances.First();
         replacement.Name.ShouldBe("Box");
         replacement.BaseType.ShouldBe("BoxComponent");
         File.Exists(Path.Combine(tree.Project.ProjectFolder, "Components", "BoxComponent.gucx")).ShouldBeTrue();

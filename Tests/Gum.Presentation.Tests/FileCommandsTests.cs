@@ -308,6 +308,20 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadLocalizationFile_ShouldRebuildTheVariablesGrid_SoTheSelectedTextOffersTheStringIds()
+    {
+        // A loaded database swaps Text rows from a text box to a combo of string IDs; with the
+        // same selection, only a forced refresh rebuilds the rows.
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"), "String ID,English\nT_Hello,Hello\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _mocker.GetMock<IGuiCommands>().Verify(x => x.RefreshVariables(true), Times.Once);
+    }
+
+    [Fact]
     public void LoadLocalizationFile_ShouldRouteRepeatedCsvIdToOutputTab()
     {
         _tempDirectory = CreateTempDirectory();

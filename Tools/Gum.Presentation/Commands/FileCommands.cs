@@ -463,7 +463,9 @@ public class FileCommands : IFileCommands
             }
         }
 
-        _guiCommands.RefreshVariables();
+        // Forced: the database decides whether Text rows are a text box or a combo of string
+        // IDs, and an unforced refresh keeps the rows of an unchanged selection.
+        _guiCommands.RefreshVariables(force: true);
         LocalizationLoaded?.Invoke();
     }
 

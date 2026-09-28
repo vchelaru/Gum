@@ -1539,6 +1539,12 @@ public class CopyPasteLogic : ICopyPasteLogic
             .Select(item => item.Clone())
             .ToList();
 
+        // The replacement takes the promoted instance's place among the instances that stay,
+        // since the instance order is the draw order.
+        int replacementIndex = sourceElement.Instances
+            .TakeWhile(item => item != instance)
+            .Count(item => !descendants.Contains(item));
+
         foreach (InstanceSave descendant in descendants)
         {
             _deleteLogic.RemoveInstance(descendant, sourceElement);
@@ -1551,7 +1557,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             BaseType = component.Name,
             ParentContainer = sourceElement,
         };
-        sourceElement.Instances.Add(replacement);
+        sourceElement.Instances.Insert(Math.Min(replacementIndex, sourceElement.Instances.Count), replacement);
 
         foreach (VariableSave positionalVariable in positionalVariables)
         {

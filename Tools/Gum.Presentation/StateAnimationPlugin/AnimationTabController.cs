@@ -241,6 +241,13 @@ public class AnimationTabController
     public void HandleElementDuplicate(ElementSave oldElement, ElementSave newElement)
     {
         _duplicateService.HandleDuplicate(oldElement, newElement);
+
+        // Adding the copy selected it before its sidecar existed, so the tab holds an empty set of
+        // animations for it, which the next save would write over the copied file.
+        if (ViewModel?.Element == newElement)
+        {
+            RefreshViewModel(forceReload: true);
+        }
     }
 
     /// <summary>Wired to <c>PluginBase.ElementRename</c>: propagates the rename into keyframe references.</summary>

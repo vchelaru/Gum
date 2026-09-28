@@ -586,6 +586,14 @@ public class CopyPasteRenameScenarioTests
         File.ReadAllText(Path.Combine(components, "ButtonCopyAnimations.ganx")).ShouldContain("<StateName>Looks/Pressed</StateName>");
         File.Exists(Path.Combine(components, "ButtonAnimations.ganx")).ShouldBeTrue();
 
+        // The copy is selected, so the Animations tab shows it; renaming it right away saves what
+        // the tab holds, which must be the copied animations.
+        tree.SelectedState.SelectedElement.ShouldBeSameAs(copy);
+        tree.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "IconButton"; return true; });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Press(Key.F2, PhysicalKey.F2);
+        File.ReadAllText(Path.Combine(components, "IconButtonAnimations.ganx")).ShouldContain("<StateName>Looks/Pressed</StateName>");
+
         tree.AssertOracles();
     }
 

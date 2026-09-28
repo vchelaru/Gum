@@ -1,5 +1,9 @@
+using System.Reflection;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Plugins.TreeView;
@@ -184,6 +188,46 @@ internal sealed class ProjectTreeHarness : IDisposable
         item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         menu.Close();
         _driver.Layout();
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>
+    /// Drags <paramref name="source"/> (with the rest of the selection, when it is selected) onto
+    /// <paramref name="target"/>'s row and drops it there. <paramref name="rowFraction"/> is where
+    /// on the row it lands, from its top (0) to its bottom (1): the middle drops onto the node, the
+    /// edges before or after it. Headless Avalonia has no drag source, so this does what the tree's
+    /// own drag start does (the press selects, the payload carries the nodes) and then raises the
+    /// platform's enter, over and drop events at the target.
+    /// </summary>
+    public void Drag(GumTreeNode source, GumTreeNode target, double rowFraction = 0.5)
+    {
+        AvaloniaGumTreeView treeControl = View.Tree;
+        RowFor(source);
+        IReadOnlyList<GumTreeNode> dragged = treeControl.Selection.BeginDrag(source);
+        _exceptions.ThrowIfCrashed();
+        Control targetRow = RowFor(target);
+        Point point = targetRow.TranslatePoint(new Point(targetRow.Bounds.Width / 2, targetRow.Bounds.Height * rowFraction), _driver.Window)
+            ?? throw new InvalidOperationException($"The row for {target.Text} is not in the window.");
+        DataTransfer data = new DataTransfer();
+        data.Add(DataTransferItem.Create(AvaloniaDragFormats.TreeNodes, "nodes"));
+        TreeDragPayload.SetNodes(dragged);
+        try
+        {
+            _driver.Window.DragDrop(point, RawDragEventType.DragEnter, data, DragDropEffects.Move | DragDropEffects.Copy);
+            _driver.Layout();
+            _driver.Window.DragDrop(point, RawDragEventType.DragOver, data, DragDropEffects.Move | DragDropEffects.Copy);
+            _driver.Layout();
+            _driver.Window.DragDrop(point, RawDragEventType.Drop, data, DragDropEffects.Move | DragDropEffects.Copy);
+            _driver.Layout();
+        }
+        finally
+        {
+            TreeDragPayload.Clear();
+            // The control raises DragEnded when its drag loop returns; the tree manager reselects then.
+            (typeof(AvaloniaGumTreeView).GetField(nameof(AvaloniaGumTreeView.DragEnded), BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.GetValue(treeControl) as Action)?.Invoke();
+            _driver.Layout();
+        }
         _exceptions.ThrowIfCrashed();
     }
 
