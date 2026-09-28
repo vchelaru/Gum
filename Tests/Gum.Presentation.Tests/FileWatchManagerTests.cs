@@ -68,7 +68,9 @@ public class FileWatchManagerTests : IDisposable
             new Mock<IWireframeObjectManager>().Object,
             new Mock<IProjectState>().Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
-            pluginManagerMock.Object);
+            pluginManagerMock.Object,
+            new Mock<Gum.Services.Dialogs.IDialogService>().Object,
+            new UnsavedChangesTracker());
 
         return new FileWatchManager(
             guiCommandsMock.Object,
