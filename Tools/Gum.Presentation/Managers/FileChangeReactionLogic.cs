@@ -561,7 +561,7 @@ namespace Gum.Managers
             var gumProject = _projectState.GetLoadedProject();
             var behavior = gumProject.Behaviors.FirstOrDefault(item =>
             // It's somehow possible for behaviors with no name to make it in the project. let's tolerate it
-                item?.Name?.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
+                string.Equals(item?.Name, file.CaseSensitiveNoPathNoExtension, StringComparison.OrdinalIgnoreCase));
 
             var refreshingSelected = behavior == _selectedState.SelectedBehavior;
 
@@ -586,7 +586,7 @@ namespace Gum.Managers
                 if (refreshingSelected)
                 {
                     behavior = gumProject.Behaviors.FirstOrDefault(item =>
-                        item.Name?.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
+                        string.Equals(item.Name, file.CaseSensitiveNoPathNoExtension, StringComparison.OrdinalIgnoreCase));
                     _selectedState.SelectedBehavior = behavior;
 
                     _guiCommands.RefreshVariables(force: true);

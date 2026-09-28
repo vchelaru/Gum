@@ -66,8 +66,6 @@ internal sealed class ToolProjectFixture : IDisposable
             IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
             projectManager.CreateNewProject();
             Project = projectManager.GumProjectSave!;
-            // The editor tab, sitting out, fills the canvas sizes of every project the tool opens.
-            Project.CustomCanvasSizes ??= new List<CustomCanvasSize>();
             ProjectFilePath = Path.Combine(ProjectFolder, projectFileName);
             Project.FullFileName = ProjectFilePath;
         }

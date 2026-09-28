@@ -81,9 +81,10 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   Details: `Tests/Gum.Avalonia.Tests/Animations/README.md`. Never add thread-pool work that reaches
   into Avalonia (timers, continuations) to a test or a plugin's StartUp.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame,
-  and the headless session sometimes throws `PlatformNotSupportedException` from `PushFrame`. To
-  let a `DispatcherTimer` tick, loop `Thread.Sleep(10)` + `Dispatcher.UIThread.RunJobs()` for the
-  duration instead of awaiting (`AnimationEditorHarness.Wait`).
+  and the headless session sometimes throws `PlatformNotSupportedException` from `PushFrame`.
+  Playback-style timing goes through an injected `TimeProvider` plus a manual timer the test
+  advances, never a wall-clock sleep loop (`TestAnimationPlugin.Clock`/`Timers`,
+  `AnimationEditorHarness.Wait`).
 - `HeadTestServices` replaces `IFontFileGenerator` with `NoOpFontFileGenerator`, so no Avalonia
   test writes `.fnt`/`.png` files; a test that needs real fonts must register the real generator
   and await it.

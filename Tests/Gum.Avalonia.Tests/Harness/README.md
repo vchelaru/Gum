@@ -192,6 +192,11 @@ class in its filter.
 - The canvas draws on its own frame timer only when the app's input hook asks for a frame; the head
   installs `CanvasInputRedrawHook` at startup and a harness does not, so a scenario that waits for a
   redraw without `Frame()` installs it for its duration.
+- `WireframeCanvasCore.Draw` raises `FrameUpdate` (where the editor tab runs
+  `BackgroundManager.Activity`) before `BeforeRender`. A tool step that hides editor visuals for
+  one frame from a `BeforeRender` handler must apply the change immediately, as
+  `BackgroundManager.IsHiddenForExport` does; a flag that waits for the next update shows up one
+  frame late.
 - A new project has no ColoredRectangle standard; a filled `Rectangle` (`IsFilled`) is the solid
   shape to look for in pixels, white over the gray checkerboard.
 - Undo replaces an element's instances with copies; after an undo, find instances again by name.
