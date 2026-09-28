@@ -15,7 +15,10 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Plugins;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
 
@@ -134,6 +137,71 @@ internal sealed class ProjectTreeHarness : IDisposable
     public void Click(GumTreeNode node, RawInputModifiers modifiers = RawInputModifiers.None)
     {
         _driver.Click(RowFor(node), modifiers);
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>Clicks the expander arrow on <paramref name="node"/>'s row, which toggles it open or closed.</summary>
+    public void ClickExpander(GumTreeNode node)
+    {
+        _driver.Click(((TreeRowView)RowFor(node)).Expander);
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>Clicks the "Collapse all" button beside the search box.</summary>
+    public void ClickCollapseAll() => ClickSearchRowButton(column: 1);
+
+    /// <summary>Clicks the "Collapse to element level" button beside the search box.</summary>
+    public void ClickCollapseToElementLevel() => ClickSearchRowButton(column: 2);
+
+    private void ClickSearchRowButton(int column)
+    {
+        Button button = View.SearchRow.Children.OfType<Button>().Single(candidate => global::Avalonia.Controls.Grid.GetColumn(candidate) == column);
+        _driver.Click(button);
+        _exceptions.ThrowIfCrashed();
+    }
+
+    /// <summary>The nodes the tree shows as rows (inside expanded parents), in order.</summary>
+    public List<GumTreeNode> VisibleNodes()
+    {
+        _driver.Layout();
+        return View.Tree.VisibleNodes.ToList();
+    }
+
+    /// <summary>
+    /// Whether <paramref name="node"/>'s row is realized and lies inside the tree's scrolled viewport,
+    /// without scrolling to it.
+    /// </summary>
+    public bool IsScrolledIntoView(GumTreeNode node)
+    {
+        _driver.Layout();
+        ScrollViewer scroller = View.Tree.GetVisualDescendants().OfType<ScrollViewer>().First();
+        TreeRowView? row = View.Tree.GetVisualDescendants().OfType<TreeRowView>().SingleOrDefault(candidate => candidate.Row?.Node == node);
+        if (row == null || !row.IsEffectivelyVisible || global::Avalonia.VisualExtensions.TranslatePoint(row, default, scroller) is not { } topLeft)
+        {
+            return false;
+        }
+        return topLeft.Y >= 0 && topLeft.Y + row.Bounds.Height <= scroller.Viewport.Height;
+    }
+
+    /// <summary>
+    /// Runs what the tree registers for application exit (it saves the expanded nodes into the
+    /// project's user settings), as closing the tool does.
+    /// </summary>
+    public void RunTreeExitWork()
+    {
+        List<Action> teardown = new List<Action>();
+        ApplicationTeardownMessage message = new ApplicationTeardownMessage(teardown);
+        // Only the tree's plugin: the shell's own exit work would write the test app's window layout.
+        foreach (IRecipient<ApplicationTeardownMessage> plugin in Services.GetRequiredService<PluginManager>().InitializedPlugins
+            .OfType<IRecipient<ApplicationTeardownMessage>>())
+        {
+            plugin.Receive(message);
+        }
+        teardown.ShouldNotBeEmpty("the tree's plugin registers exit work");
+        foreach (Action action in teardown)
+        {
+            action();
+        }
         _exceptions.ThrowIfCrashed();
     }
 

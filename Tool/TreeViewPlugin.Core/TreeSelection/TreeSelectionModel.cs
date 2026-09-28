@@ -500,7 +500,11 @@ public class TreeSelectionModel
         AfterSelect?.Invoke(node);
     }
 
-    private void PruneDetachedSelection()
+    /// <summary>
+    /// Deselects every node no longer under one of <see cref="Nodes"/>. Runs by itself when a top
+    /// node is removed; a caller that removes deeper nodes (a folder, an element) calls it after.
+    /// </summary>
+    public void PruneDetachedSelection()
     {
         for (int i = _selectedNodes.Count - 1; i >= 0; i--)
         {

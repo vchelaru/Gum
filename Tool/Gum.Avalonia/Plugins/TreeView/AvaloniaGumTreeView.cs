@@ -901,8 +901,13 @@ internal sealed class TreeRowView : Border
         row.Children.Add(_highlight);
         Child = row;
 
-        DoubleTapped += (_, _) =>
+        DoubleTapped += (_, e) =>
         {
+            // Each press on the chevron already toggled; a quick second one must not toggle a third time.
+            if (e.Source is Visual source && (source == _expander || _expander.IsVisualAncestorOf(source)))
+            {
+                return;
+            }
             if (_node is { HasChildren: true } node)
             {
                 node.IsExpanded = !node.IsExpanded;

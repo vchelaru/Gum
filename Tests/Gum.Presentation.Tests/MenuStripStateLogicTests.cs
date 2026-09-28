@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
@@ -91,12 +92,41 @@ public class MenuStripStateLogicTests
     public void GetRefreshState_ShouldEnableRemoveVariable_AndShowVariableText_WhenBehaviorVariableSelected()
     {
         VariableSave variable = new() { Name = "MyVariable" };
+        BehaviorSave behavior = new() { Name = "Clickable" };
+        behavior.RequiredVariables.Variables.Add(variable);
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(behavior);
         _selectedState.Setup(x => x.SelectedBehaviorVariable).Returns(variable);
 
         MenuStripRefreshState result = _sut.GetRefreshState();
 
         result.RemoveVariableHeader.ShouldBe(variable.ToString());
         result.RemoveVariableEnabled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetRefreshState_ShouldDisableRemoveVariable_WhenTheSelectedBehaviorNoLongerHasTheVariable()
+    {
+        VariableSave removed = new() { Name = "MyVariable" };
+        _selectedState.Setup(x => x.SelectedBehavior).Returns(new BehaviorSave { Name = "Clickable" });
+        _selectedState.Setup(x => x.SelectedBehaviorVariable).Returns(removed);
+
+        MenuStripRefreshState result = _sut.GetRefreshState();
+
+        result.RemoveVariableHeader.ShouldBe("<no behavior variable selected>");
+        result.RemoveVariableEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetRefreshState_ShouldDisableRemoveVariable_WhenNoBehaviorIsSelected()
+    {
+        // A behavior variable picked earlier stays recorded after the user selects a component.
+        _selectedState.Setup(x => x.SelectedBehaviorVariable).Returns(new VariableSave { Name = "MyVariable" });
+        _selectedState.Setup(x => x.SelectedElement).Returns(new ComponentSave { Name = "Card" });
+
+        MenuStripRefreshState result = _sut.GetRefreshState();
+
+        result.RemoveVariableHeader.ShouldBe("<no behavior variable selected>");
+        result.RemoveVariableEnabled.ShouldBeFalse();
     }
 
     [Fact]

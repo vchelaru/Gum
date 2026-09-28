@@ -288,6 +288,7 @@ public class DialogScenarioTests
     [Trait("Feature", "PROP-012")]
     [Trait("Feature", "PROP-015")]
     [Trait("Feature", "PROP-019")]
+    [Trait("Feature", "EDIT-012")]
     public void ProjectProperties_FromTheEditMenu_SaveEachChangeIntoTheProjectFile_AndCloseHidesTheTab()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();

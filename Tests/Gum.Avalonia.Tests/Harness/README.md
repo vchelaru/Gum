@@ -11,6 +11,7 @@ depend on the tab.
 | `ScriptedDialogService.cs` | Answers dialogs from a queue, file pickers included (`AnswerNextOpenFile`, `AnswerNextSaveFile`); an unanswered dialog fails the test instead of hanging. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
 | `RecordingClipboardService.cs` | The test container's `IClipboardService`. The headless app has no main window to copy to, so it also keeps the last text copied (`LastText`). |
+| `RecordingFileSystemRevealService.cs` | The test container's `IFileSystemRevealService`. View in explorer, Open Settings Folder and the Help links are recorded (`Requests`) instead of starting a file manager or browser. |
 
 ## PR screenshots
 
@@ -105,7 +106,7 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `ProjectOracleTests.cs` | Each oracle fails on the damage it exists to catch. |
 | `CanvasHarness.cs` | The head's Editor tab (toolbar, canvas, scroll bars) on a real graphics device, next to a `ProjectTreeHarness` over the same project, whose oracles it ends with. Pointer, key, wheel and drop input in window coordinates (`WindowPointOf(worldX, worldY)`), a drawn frame after every event, and `SavedValue` to read what reached disk. |
 | `CanvasScenarioTests.cs` | The Editor canvas: selection, move, resize, rotate, nudge, polygon points, camera, rulers, drops. |
-| `TreeScenarioTests.cs`, `VariableScenarioTests.cs`, `StateScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search); the Variables tab, states and edits that cascade into other elements; the States tab; copy, paste, rename and delete where they meet references, parents, states and animations. |
+| `TreeScenarioTests.cs`, `TreeNavigationScenarioTests.cs`, `EditMenuScenarioTests.cs`, `VariableScenarioTests.cs`, `StateScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search; selecting, expanding, icons, file menus, importing); the main menu's Edit menu; the Variables tab, states and edits that cascade into other elements; the States tab; copy, paste, rename and delete where they meet references, parents, states and animations. |
 | `AnimationScenarioTests.cs` | The Animations tab on `../Animations/AnimationEditorHarness.cs`: `StartScenario()` after setup (saves, routes Ctrl+Z/Ctrl+Y, starts the exception watch, returns the start snapshot), `Undo`/`Redo`, and `AssertOracles()`, which also checks the saved sidecar holds exactly what the tab shows, before and after the reload. |
 | `DialogScenarioTests.cs` | Dialogs reached from the main menu (`ProjectTreeHarness.PickMainMenu("File", "New Project")`) and the Project tree: New Project, Load Project and Load Recent, Import Components, Theming, Manage Plugins, Project Properties. An async menu action is followed by `WaitUntil`. |
 | `CodeTabHarness.cs`, `CodeGenScenarioTests.cs` | The head's Code tab in its own window beside a `ProjectTreeHarness`: settings rows, Generate, and the generated files read back from disk. |
