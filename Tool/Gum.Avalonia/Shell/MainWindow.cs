@@ -49,10 +49,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
 
     private bool _drawsInTitleBar;
 
-    // Where ShowInBackground puts the window: past the edge of any real monitor, but clear of
-    // Windows' -32000 minimized-window sentinel.
-    private static readonly PixelPoint BackgroundPosition = new PixelPoint(-20000, -20000);
-
     /// <summary>True after <see cref="ShowInBackground"/>; the window then never takes focus.</summary>
     public bool IsInBackground { get; private set; }
 
@@ -146,14 +142,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         Content = root;
         ApplyResizeBorderMargin(panel);
 
-        Opened += (_, _) =>
-        {
-            if (IsInBackground)
-            {
-                // Showing the window puts it back at 0,0 on Windows, so place it again once it is open.
-                Position = BackgroundPosition;
-            }
-        };
         PropertyChanged += (_, e) =>
         {
             if (e.Property == WindowStateProperty)
@@ -261,9 +249,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     public void ShowInBackground()
     {
         IsInBackground = true;
-        ShowActivated = false;
-        WindowStartupLocation = WindowStartupLocation.Manual;
-        WindowState = WindowState.Normal;
-        Position = BackgroundPosition;
+        BackgroundWindowPlacement.Apply(this, placeBeforeShowing: !OperatingSystem.IsMacOS());
     }
 }
