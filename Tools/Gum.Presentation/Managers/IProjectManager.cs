@@ -12,6 +12,12 @@ public interface IProjectManager
     bool HaveErrorsOccurredLoadingProject { get; }
 
     /// <summary>
+    /// True while plugins receive a newly loaded or created project. Anything a plugin changes
+    /// then is a load-time fill, not an edit, so auto-saves requested meanwhile are ignored (#5412).
+    /// </summary>
+    bool IsNotifyingProjectLoad { get; }
+
+    /// <summary>
     /// Whether the project auto-saves on changes. Narrowed off the whole, WinForms-entangled
     /// <c>GeneralSettingsFile</c> (ADR-0005 Phase 3) so <see cref="IProjectManager"/> itself can live
     /// in the headless Gum.Presentation assembly; each member below mirrors the matching one on

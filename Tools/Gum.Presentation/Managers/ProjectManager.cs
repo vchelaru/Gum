@@ -54,6 +54,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly ILastProjectLoadMarker _lastProjectLoadMarker;
     private readonly IUnsavedChangesTracker _unsavedChangesTracker;
+    private readonly IProjectLoadFills _projectLoadFills;
     private readonly IGuiCommands _guiCommands;
     private readonly Lazy<IFileCommands> _fileCommands;
     private readonly IMessenger _messenger;
@@ -131,6 +132,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             return mHaveErrorsOccurredLoadingProject;
         }
     }
+
+    /// <inheritdoc/>
+    public bool IsNotifyingProjectLoad { get; private set; }
     #endregion
 
     #region Methods
@@ -155,9 +159,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         IFileSystemRevealService fileSystemRevealService,
         IProjectOpenRequestRouter projectOpenRequests,
         ILastProjectLoadMarker lastProjectLoadMarker,
-        IUnsavedChangesTracker unsavedChangesTracker)
+        IUnsavedChangesTracker unsavedChangesTracker,
+        IProjectLoadFills projectLoadFills)
     {
         _unsavedChangesTracker = unsavedChangesTracker;
+        _projectLoadFills = projectLoadFills;
         _lastProjectLoadMarker = lastProjectLoadMarker;
         _newProjectLogic = newProjectLogic;
         _projectOpenRequests = projectOpenRequests;
@@ -283,7 +289,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_gumProjectSave);
 
-        _pluginManager.ProjectLoad(_gumProjectSave);
+        FillAndNotifyPluginsOfLoad(_gumProjectSave);
 
         _fileCommands.Value.LoadLocalizationFile();
     }
@@ -309,6 +315,22 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
 
         return false;
+    }
+
+    // Fills what the project lacks, then hands it to the plugins. Neither is an edit: the project is
+    // not marked unsaved or saved for it, and the next save of the project writes the fills (#5412).
+    private void FillAndNotifyPluginsOfLoad(GumProjectSave project)
+    {
+        _projectLoadFills.Apply(project);
+        IsNotifyingProjectLoad = true;
+        try
+        {
+            _pluginManager.ProjectLoad(project);
+        }
+        finally
+        {
+            IsNotifyingProjectLoad = false;
+        }
     }
 
     // made public so that File commands can access this function
@@ -465,7 +487,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             }
             using (StartupTiming.Time("  PluginManager.ProjectLoad (total)"))
             {
-                _pluginManager.ProjectLoad(_gumProjectSave);
+                FillAndNotifyPluginsOfLoad(_gumProjectSave);
             }
 
             if (_gumProjectSave.Version < (int)GumProjectSave.GumxVersions.AttributeVersion)

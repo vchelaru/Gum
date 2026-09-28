@@ -74,6 +74,23 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void TryAutoSave_WhilePluginsReceiveTheLoadedProject_NeitherSavesNorMarksUnsaved()
+    {
+        // A plugin's ProjectLoad handler filling in a default is not the user's edit (#5412).
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        _projectManager.Setup(p => p.IsNotifyingProjectLoad).Returns(true);
+        ComponentSave component = new ComponentSave { Name = "Button" };
+
+        bool saved = _fileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveElement(component);
+
+        saved.ShouldBeFalse();
+        _projectManager.Verify(p => p.SaveProject(It.IsAny<bool>()), Times.Never);
+        _unsavedChangesTracker.HasAnyUnsavedChanges(_gumProject).ShouldBeFalse();
+        _unsavedChangesTracker.HasUnsavedChanges(component).ShouldBeFalse();
+    }
+
+    [Fact]
     public void MoveToRecycleBin_ShouldDelegateToInjectedRecycleBinService()
     {
         FilePath filePath = @"C:\MyProject\Component.gucx";
