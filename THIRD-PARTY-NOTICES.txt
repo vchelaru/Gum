@@ -192,7 +192,7 @@ Vortice.Windows (D3DCompiler / DirectX / Dxc) and Vortice.Mathematics —
     NuGet: Vortice.D3DCompiler, Vortice.DirectX, Vortice.Dxc,
         Vortice.Mathematics
     Managed bindings. Vortice.Dxc also carries the native DirectX Shader
-    Compiler (dxcompiler / dxil, see below).
+    Compiler (dxcompiler, see below).
 
 --------------------------------------------------------------------------------
 FreeType License (FTL) — a BSD-style license with a credit clause
@@ -292,9 +292,9 @@ DirectX Shader Compiler (native dxcompiler.dll / libdxcompiler) — Copyright
     Bundled by Vortice.Dxc (and, on macOS, by ShadowDusk.HLSL). The upstream
     LICENSE.TXT also lists third-party code distributed with LLVM:
         https://github.com/microsoft/DirectXShaderCompiler/blob/main/LICENSE.TXT
-    dxil.dll (Windows, bundled by Vortice.Dxc) is the DXIL signing library
-    from the same release. Its separate redistribution terms were NOT
-    retrieved for this file and are unverified.
+    Vortice.Dxc's DXIL signing library (dxil.dll / libdxil.so) is left out
+    of the packages: the tool only compiles shaders for OpenGL and never
+    uses it.
 
 --------------------------------------------------------------------------------
 GNU Lesser General Public License (LGPL)
