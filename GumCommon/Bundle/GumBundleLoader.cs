@@ -55,7 +55,10 @@ public static class GumBundleLoader
             // GetStreamForFile's File.OpenRead fallback already serves loose files, so installing
             // an adapter would only add a stricter casing check with no upside. The provider is
             // carried purely so new enumeration-based code (animation loading) has a seam to use.
-            string? looseDirectory = Path.GetDirectoryName(resolvedPath);
+            // Root the provider where the project file actually is: in a macOS .app it can sit in
+            // Contents/Resources/ even though the path was anchored on Contents/MacOS/ (#5451).
+            string? looseDirectory = Path.GetDirectoryName(
+                FileManager.ResolveExistingFilePath(resolvedPath) ?? resolvedPath);
             string looseRoot = string.IsNullOrEmpty(looseDirectory) ? "." : looseDirectory!;
             return new ProjectResolution(
                 usedBundle: false,
@@ -159,9 +162,10 @@ public static class GumBundleLoader
 
     private static Stream? TryOpenBundle(string bundlePath)
     {
-        if (File.Exists(bundlePath))
+        Stream? diskStream = FileManager.TryOpenFromDisk(bundlePath);
+        if (diskStream != null)
         {
-            return File.OpenRead(bundlePath);
+            return diskStream;
         }
 
         if (FileManager.CustomGetStreamFromFile == null)

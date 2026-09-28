@@ -20,6 +20,9 @@ public static class GumFileSerializer
     private const string TrimSuppressionJustification =
         "rootType/T is always a Gum.DataTypes.* save class (ElementSave/BehaviorSave/GumProjectSave/StateSave and friends), " +
         "which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").";
+    private const string AotSuppressionJustification =
+        "XmlSerializer falls back to reflection-only serialization when dynamic code is unsupported (Native AOT), " +
+        "so no code is generated at runtime; the IL2026 suppression covers the trimming side.";
 #endif
 
     private static readonly Dictionary<Type, XmlSerializer> _compactSerializers = new();
@@ -78,6 +81,7 @@ public static class GumFileSerializer
     /// </summary>
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = AotSuppressionJustification)]
 #endif
     public static XmlSerializer GetCompactSerializer(Type rootType)
     {
@@ -108,6 +112,7 @@ public static class GumFileSerializer
     /// </summary>
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = AotSuppressionJustification)]
 #endif
     public static XmlSerializer GetLegacyInstancesCompactSerializer(Type rootType)
     {
@@ -127,6 +132,7 @@ public static class GumFileSerializer
 
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = AotSuppressionJustification)]
 #endif
     public static XmlSerializer GetGumProjectCompactSerializer()
     {
@@ -201,6 +207,7 @@ public static class GumFileSerializer
     /// </summary>
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = AotSuppressionJustification)]
 #endif
     public static T? DeserializeElementSave<T>(string content, int projectVersion) where T : ElementSave, new()
     {
@@ -227,6 +234,7 @@ public static class GumFileSerializer
     /// </summary>
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = AotSuppressionJustification)]
 #endif
     public static BehaviorSave? DeserializeBehaviorSave(string content, int projectVersion)
     {

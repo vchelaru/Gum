@@ -978,6 +978,8 @@ public static class StateSaveExtensionMethods
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "T is always StateSave (no subclasses exist), which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+    [UnconditionalSuppressMessage("AOT", "IL3050",
+        Justification = "XmlSerializer falls back to reflection-only serialization when dynamic code is unsupported (Native AOT), so no code is generated at runtime; the IL2026 suppression above covers the trimming side.")]
     public static T Clone<T>(this StateSave whatToClone) where T : StateSave
     {
         T toReturn = FileManager.CloneSaveObjectCast<StateSave, T>(whatToClone);
