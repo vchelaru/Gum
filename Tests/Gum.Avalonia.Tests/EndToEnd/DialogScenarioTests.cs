@@ -52,8 +52,6 @@ public class DialogScenarioTests
 
         tree.Dialogs.Messages.Single().ShouldContain("is not empty");
         GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
-        // The editor tab, which sits out headlessly, fills the canvas sizes of every project the tool opens.
-        project.CustomCanvasSizes ??= new List<CustomCanvasSize>();
         tree.SaveAll();
         project.FullFileName.ShouldBe(tree.Project.ProjectFilePath);
         project.Screens.Select(screen => screen.Name).ShouldBe(new[] { NewProjectLogic.StartingScreenName });

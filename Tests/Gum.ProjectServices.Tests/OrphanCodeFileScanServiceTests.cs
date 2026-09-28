@@ -290,6 +290,19 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void Scan_ShouldNotFlagGeneratedFile_WhenCodeProjectRootIsMixedCaseBuildOutputFolder()
+    {
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.CodeProjectRoot = "./Bin/";
+        WriteGeneratedFile("Bin/Screens/StaleCopy.Generated.cs", "StaleCopy");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Scan_ShouldNotFlagGeneratedFile_WhenGumDidNotWriteIt()
     {
         GumProjectSave project = Project;

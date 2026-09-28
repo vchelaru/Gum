@@ -255,6 +255,66 @@ public class ExternalChangeScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "FILE-002")]
+    [Trait("Feature", "FILE-006")]
+    [Trait("Feature", "FILE-013")]
+    [Trait("Feature", "PROP-001")]
+    [Trait("Feature", "CANV-024")]
+    public void OpeningAProjectWithoutCanvasSizes_FillsThemWithoutAnUnsavedEdit_AndTheNextSaveWritesThem()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Button");
+        FileChangeReactionLogic fileChanges = TestAppBuilder.Services.GetRequiredService<FileChangeReactionLogic>();
+        IProjectManager projectManager = TestAppBuilder.Services.GetRequiredService<IProjectManager>();
+        IUnsavedChangesTracker unsavedChanges = TestAppBuilder.Services.GetRequiredService<IUnsavedChangesTracker>();
+        string projectFile = tree.Project.ProjectFilePath;
+        string buttonFile = Path.Combine(tree.Project.ProjectFolder, "Components", "Button.gucx");
+
+        bool autoSave = projectManager.AutoSave;
+        try
+        {
+            projectManager.AutoSave = false;
+            // A project saved without canvas sizes, as older projects are.
+            tree.Project.Project.CustomCanvasSizes = null;
+            tree.Project.SaveAndReload();
+            File.ReadAllText(projectFile).ShouldNotContain("CustomCanvasSize");
+
+            GumProjectSave opened = tree.Project.Project;
+            opened.CustomCanvasSizes.ShouldNotBeNull().Select(size => size.FriendlyName).ShouldContain("1080p");
+            unsavedChanges.HasAnyUnsavedChanges(opened).ShouldBeFalse();
+            File.ReadAllText(projectFile).ShouldNotContain("CustomCanvasSize");
+
+            // Nothing is unsaved, so an outside change to the project file reloads it without asking.
+            File.AppendAllText(projectFile, Environment.NewLine);
+            fileChanges.ReactToFileChanged(new FilePath(projectFile));
+            tree.WaitUntil(() => projectManager.GumProjectSave != opened, TimeSpan.FromSeconds(30), "the project to reload");
+            tree.ThrowIfCrashed();
+            tree.Dialogs.Messages.ShouldBeEmpty();
+            tree.Project.FollowProjectFile(projectFile);
+
+            // A real edit and save writes the filled sizes along with the edit.
+            string buttonBeforeEdit = File.ReadAllText(buttonFile);
+            tree.Click(tree.NodeFor(Component(tree, "Button")));
+            tree.Grid.TypeAndEnter("X", "7");
+            tree.SaveAll();
+            File.ReadAllText(projectFile).ShouldContain("1080p");
+            File.ReadAllText(buttonFile).ShouldNotBe(buttonBeforeEdit);
+
+            // Undoing the edit and saving restores the element file byte for byte.
+            tree.Undo();
+            tree.SaveAll();
+            File.ReadAllText(buttonFile).ShouldBe(buttonBeforeEdit);
+            File.ReadAllText(projectFile).ShouldContain("1080p");
+        }
+        finally
+        {
+            projectManager.AutoSave = autoSave;
+        }
+
+        tree.AssertOracles();
+    }
+
     /// <summary>Exactly one message was shown; on failure, names every message and the file watcher's queue.</summary>
     private static void ShouldHaveShownOnePrompt(ProjectTreeHarness tree)
     {
