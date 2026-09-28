@@ -2,9 +2,9 @@ name: Smoke-test a release package
 description: >
   Extracts one Gum release package the way a user would, opens a copy of the Forms sample in the
   packaged Gum unattended (--exit-after, --select, --screenshot), runs the packaged gumcli check and
-  fonts on that copy, and launches the Native AOT GumPreview. Linux runs on Xvfb with Mesa, Windows
+  fonts on that copy, and screenshots the Native AOT GumPreview the same way. Linux runs on Xvfb with Mesa, Windows
   on Mesa llvmpipe dropped next to the executables, macOS on the runner's own display. Uploads the
-  screenshot and logs as smoke-<rid>. The logic is .github/scripts/smoke-test-package.sh, which also
+  screenshots and logs as smoke-<rid>. The logic is .github/scripts/smoke-test-package.sh, which also
   runs locally. Check out the repo first.
 inputs:
   rid:
@@ -40,13 +40,23 @@ runs:
           ${{ runner.temp }}\gum-smoke-${{ inputs.rid }}\package
           ${{ runner.temp }}\gum-smoke-${{ inputs.rid }}\package\Preview-Aot
 
+    # osx-x64 runs on an Apple Silicon runner, where the framework-dependent x64 gumcli needs an x64
+    # .NET of its own; it runs under Rosetta beside the runner's arm64 .NET.
+    - name: Install an x64 .NET runtime (osx-x64 on Apple Silicon)
+      if: inputs.rid == 'osx-x64' && runner.os == 'macOS' && runner.arch == 'ARM64'
+      shell: bash
+      run: |
+        curl -sSfL https://dot.net/v1/dotnet-install.sh -o "$RUNNER_TEMP/dotnet-install.sh"
+        bash "$RUNNER_TEMP/dotnet-install.sh" --channel 10.0 --runtime dotnet --architecture x64 --install-dir "$RUNNER_TEMP/dotnet-x64" --no-path
+        echo "DOTNET_ROOT_X64=$RUNNER_TEMP/dotnet-x64" >> "$GITHUB_ENV"
+
     - name: Launch the packaged Gum, gumcli and GumPreview
       shell: bash
       # Mesa reads these on Linux and Windows; macOS ignores them.
       env:
         LIBGL_ALWAYS_SOFTWARE: '1'
         GALLIUM_DRIVER: llvmpipe
-      run: bash .github/scripts/smoke-test-package.sh "${{ inputs.rid }}" "${{ inputs.dist }}" "${{ inputs.sample }}" smoke-out --launch-preview
+      run: bash .github/scripts/smoke-test-package.sh "${{ inputs.rid }}" "${{ inputs.dist }}" "${{ inputs.sample }}" smoke-out
 
     - name: Upload screenshot and logs
       if: always()

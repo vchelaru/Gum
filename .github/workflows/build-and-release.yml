@@ -19,7 +19,7 @@ on:
       - .github/scripts/smoke-test-package.sh
       - Tool/Gum.Avalonia/Gum.Avalonia.csproj
       - Tool/Gum.Avalonia/Packaging/**
-      - Tool/GumPreview/GumPreview.csproj
+      - Tool/GumPreview/**
       - Tools/Gum.Cli/Gum.Cli.csproj
 
 permissions:

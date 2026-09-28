@@ -1,37 +1,36 @@
 using System;
+using System.Threading;
 using GumPreview;
 
-string? gumxPath = null;
-string? elementName = null;
-string? selectionFilePath = null;
-string? contentRootDirectory = null;
-
-for (int i = 0; i < args.Length; i++)
+PreviewOptions options = PreviewOptions.Parse(args);
+if (options.Error != null)
 {
-    if (args[i] == "--project" && i + 1 < args.Length)
-    {
-        gumxPath = args[++i];
-    }
-    else if (args[i] == "--element" && i + 1 < args.Length)
-    {
-        elementName = args[++i];
-    }
-    else if (args[i] == "--selection-file" && i + 1 < args.Length)
-    {
-        selectionFilePath = args[++i];
-    }
-    else if (args[i] == "--content-root" && i + 1 < args.Length)
-    {
-        contentRootDirectory = args[++i];
-    }
-}
-
-if (string.IsNullOrEmpty(gumxPath) || string.IsNullOrEmpty(elementName))
-{
-    Console.Error.WriteLine("Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>]");
+    Console.Error.WriteLine(options.Error);
+    Console.Error.WriteLine(PreviewOptions.Usage);
     return 1;
 }
 
-using Game1 game = new Game1(gumxPath, elementName, selectionFilePath, contentRootDirectory);
+UnattendedPreviewRun? unattended = null;
+Timer? deadline = null;
+if (options.ExitAfterSeconds is double exitAfterSeconds)
+{
+    unattended = new UnattendedPreviewRun(exitAfterSeconds);
+    UnattendedWindow.KeepInBackground();
+    // A thread-pool timer, so the run still ends when the game thread is stuck loading the project.
+    deadline = new Timer(_ =>
+    {
+        string? message = unattended.TryExpire();
+        if (message != null)
+        {
+            Console.Error.WriteLine(message);
+            Console.Error.Flush();
+            Environment.Exit(1);
+        }
+    }, null, TimeSpan.FromSeconds(exitAfterSeconds), Timeout.InfiniteTimeSpan);
+}
+
+using Game1 game = new Game1(options.ProjectPath!, options.ElementName!, options.SelectionFilePath, options.ContentRootDirectory,
+    unattended, options.ScreenshotPath);
 game.Run();
-return 0;
+deadline?.Dispose();
+return game.UnattendedExitCode;

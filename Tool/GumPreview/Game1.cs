@@ -30,10 +30,16 @@ public class Game1 : Game
     private readonly string _gumxPath;
     private readonly string? _selectionFilePath;
     private readonly string? _contentRootDirectory;
+    private readonly UnattendedPreviewRun? _unattended;
+    private readonly string? _screenshotPath;
 
     private PreviewSelectionMessage _selection;
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
+    private bool _isElementMissing;
+
+    /// <summary>The process exit code: 0, or 1 when an unattended run failed.</summary>
+    public int UnattendedExitCode { get; private set; }
 
     /// <param name="contentRootDirectory">
     /// Overrides where relative content (fonts, textures) resolves from after load (issue #4748).
@@ -42,12 +48,17 @@ public class Game1 : Game
     /// .gumx, not the temp copy. Null for an ordinary project, where the project's own directory is
     /// already correct.
     /// </param>
-    public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null)
+    /// <param name="unattended">Set for an <c>--exit-after</c> run: the first drawn frame ends it.</param>
+    /// <param name="screenshotPath">With <paramref name="unattended"/>, where that frame is saved as a PNG.</param>
+    public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null,
+        UnattendedPreviewRun? unattended = null, string? screenshotPath = null)
     {
         _gumxPath = gumxPath;
         _selection = new PreviewSelectionMessage(elementName);
         _selectionFilePath = selectionFilePath;
         _contentRootDirectory = contentRootDirectory;
+        _unattended = unattended;
+        _screenshotPath = screenshotPath;
 
         _graphics = new GraphicsDeviceManager(this);
         // Apos.Shapes (the shape fill/effect renderer behind RectangleRuntime/CircleRuntime/etc.)
@@ -97,6 +108,18 @@ public class Game1 : Game
         ApplySiblingOrdering();
         ShowElement();
 
+        if (_unattended != null)
+        {
+            if (_isElementMissing)
+            {
+                FailUnattended(_unattended.TryFail("the element to show was not found."));
+            }
+            else
+            {
+                _unattended.MarkLoaded();
+            }
+        }
+
         base.Initialize();
     }
 
@@ -109,9 +132,78 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        if (_unattended != null && _unattended.TryClaimCapture())
+        {
+            FinishUnattended();
+        }
+
         GraphicsDevice.Clear(Color.CornflowerBlue);
         GumService.Default.Draw();
         base.Draw(gameTime);
+    }
+
+    private void FinishUnattended()
+    {
+        if (_screenshotPath != null)
+        {
+            try
+            {
+                SaveFrame(_screenshotPath);
+            }
+            catch (Exception exception)
+            {
+                Console.Error.WriteLine($"GumPreview: could not write the screenshot {_screenshotPath}: {exception.Message}");
+                UnattendedExitCode = 1;
+                Exit();
+                return;
+            }
+            Console.WriteLine($"GumPreview: wrote {_screenshotPath}");
+        }
+        Exit();
+    }
+
+    // Draws a frame into an offscreen target of the canvas size and saves it. The window's own
+    // back buffer can't be used: on the first frame its drawable may not have been resized to the
+    // project's canvas yet, and a window partly off the screen doesn't keep every pixel.
+    private void SaveFrame(string path)
+    {
+        int width = (int)GraphicalUiElement.CanvasWidth;
+        int height = (int)GraphicalUiElement.CanvasHeight;
+        using RenderTarget2D target = new RenderTarget2D(GraphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+        GraphicsDevice.SetRenderTarget(target);
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumService.Default.Draw();
+        GraphicsDevice.SetRenderTarget(null);
+
+        // Blending leaves partial alpha where translucent content was drawn; the window shows the
+        // frame opaque, so the PNG is too.
+        Color[] pixels = new Color[width * height];
+        target.GetData(pixels);
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i].A = 255;
+        }
+        using Texture2D opaque = new Texture2D(GraphicsDevice, width, height);
+        opaque.SetData(pixels);
+
+        string? directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+        using FileStream stream = File.Create(path);
+        opaque.SaveAsPng(stream, width, height);
+    }
+
+    private void FailUnattended(string? message)
+    {
+        if (message == null)
+        {
+            return;
+        }
+        Console.Error.WriteLine(message);
+        UnattendedExitCode = 1;
+        Exit();
     }
 
     // The tool has no live channel to this process, so it hands off new selections by rewriting
@@ -221,9 +313,11 @@ public class Game1 : Game
         {
             Console.Error.WriteLine($"GumPreview: no screen or component named '{_selection.ElementName}' in {_gumxPath}.");
             UpdateWindowTitle(missingElement: true);
+            _isElementMissing = true;
             return;
         }
 
+        _isElementMissing = false;
         element.ToGraphicalUiElement().AddToRoot();
         ApplySelectedState();
         UpdateWindowTitle();
