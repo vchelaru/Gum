@@ -25,12 +25,12 @@ public class LocalizedTextRowScreenshotTests
             ComponentSave button = grid.Project.AddComponent("Button");
             InstanceSave label = grid.Project.AddInstance(button, "Label", "Text");
             grid.Select(label);
-            grid.ViewModel.VariableFilterText = "Text";
-            grid.Settle();
 
             File.WriteAllText(Path.Combine(grid.Project.ProjectFolder, "Strings.csv"), "String ID,English\nT_Play,Play\nT_Quit,Quit\n");
             grid.Project.Project.LocalizationFiles.Add("Strings.csv");
             TestAppBuilder.Services.GetRequiredService<IFileCommands>().LoadLocalizationFile();
+            grid.Settle();
+            grid.ViewModel.VariableFilterText = "Text";
             grid.Settle();
 
             PrScreenshot.SaveWindow(grid.Input.Window, "text-row-after-adding-localization");
