@@ -72,6 +72,7 @@ public class CodeOutputSettingsMembers
     {
         MemberCategory projectCategory = new MemberCategory("Project-Wide Code Generation");
         projectCategory.Members.Add(CreateCodeProjectRootMember());
+        projectCategory.Members.Add(CreateGeneratedCodeFolderMember());
         projectCategory.Members.Add(CreateOutputLibrarySelectionMember());
         projectCategory.Members.Add(CreateObjectInstantiationTypeMember());
         projectCategory.Members.Add(CreateProjectUsingStatementsMember());
@@ -193,6 +194,38 @@ public class CodeOutputSettingsMembers
         // Not a file selection editor: that only picks files, and this is a folder.
 
         _viewModel.NeedsSetup = _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
+
+        return member;
+    }
+
+    private InstanceMember CreateGeneratedCodeFolderMember()
+    {
+        InstanceMember member = new InstanceMember("Generated Code Folder", this);
+        member.DetailText = "Optional folder under the Code Project Root for generated code";
+
+        member.CustomSetPropertyEvent += (owner, args) =>
+        {
+            if (ProjectSettings != null)
+            {
+                string valueToSet = ((string?)args.Value ?? string.Empty).Trim();
+                string? projectDirectory = _projectState.ProjectDirectory;
+                if (valueToSet.Length > 0 && !FileManager.IsRelative(valueToSet) && projectDirectory != null)
+                {
+                    // Kept relative, like Code Project Root, so the .codsj works on every machine.
+                    string codeProjectRoot = ProjectSettings.CodeProjectRoot;
+                    if (FileManager.IsRelative(codeProjectRoot))
+                    {
+                        codeProjectRoot = projectDirectory + codeProjectRoot;
+                    }
+                    valueToSet = FileManager.MakeRelative(valueToSet, codeProjectRoot, preserveCase: true);
+                }
+                ProjectSettings.GeneratedCodeFolder = valueToSet;
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        };
+
+        member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolder;
+        member.CustomGetTypeEvent += (owner) => typeof(string);
 
         return member;
     }
