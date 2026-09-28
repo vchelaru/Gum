@@ -369,7 +369,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (e.Files != null)
         {
-            _dragDropManager.OnFilesDroppedInTreeView(e.Files);
+            _dragDropManager.OnFilesDroppedInTreeView(e.Files, e.TargetNode);
         }
         else if (e.StandardElementTypeName is { } standardTypeName
             && GetChipDropTargetNode(e.TargetNode) is { } targetNode

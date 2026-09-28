@@ -877,9 +877,8 @@ public class DragDropManager : IDragDropManager
         }
     }
 
-    public void OnFilesDroppedInTreeView(string[] files)
+    public void OnFilesDroppedInTreeView(string[] files, ITreeNode? targetTreeNode)
     {
-        var targetTreeNode = _pluginManager.GetTreeNodeOver();
 
         // The main window opens a dropped project, so nothing gets imported into the one it replaces.
         if (files != null && !files.Any(GumProjectSave.IsProjectFile))
