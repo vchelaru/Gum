@@ -156,7 +156,7 @@ $repoName = (gh repo view --json nameWithOwner -q .nameWithOwner)
 if ($LASTEXITCODE -ne 0) { throw 'gh repo view failed; is gh signed in?' }
 
 Write-Host "After: $repo"
-$afterPngs = Invoke-Screenshots $repo (Join-Path $outRoot 'after')
+$afterPngs = @(Invoke-Screenshots $repo (Join-Path $outRoot 'after'))
 
 $beforePngs = @()
 if (-not $NoBefore) {
@@ -165,7 +165,7 @@ if (-not $NoBefore) {
     if ($LASTEXITCODE -ne 0) { throw "Unknown base '$Base'." }
     Initialize-BaseWorktree $baseSha
     Write-Host "Before: $baseWorktree"
-    $beforePngs = Invoke-Screenshots $baseWorktree (Join-Path $outRoot 'before')
+    $beforePngs = @(Invoke-Screenshots $baseWorktree (Join-Path $outRoot 'before'))
 }
 
 $names = @($afterPngs + $beforePngs | ForEach-Object BaseName | Sort-Object -Unique)
