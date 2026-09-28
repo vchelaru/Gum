@@ -69,6 +69,7 @@ The rectangle selector activates on drag when no handler is active and the curso
 | `MoveInputHandler.SnapSelectedToUnitValues()` | `MoveInputHandler.cs` | Skips locked instances during snap-to-unit |
 | `RectangleSelector.GetElementsInRectangle()` | `RectangleSelector.cs` | Excludes locked instances from marquee results |
 | `SelectionManager.ReverseLoopToFindIpso()` | `SelectionManager.cs` | Prevents click-selection of locked instances on canvas |
+| `AlignmentViewModel.ApplyToSelection()` / `CommonControlLogic.SetAndCallReact()` | `Tools/Gum.Presentation/Plugins/InternalPlugins/AlignmentButtons/` | Alignment tab skips locked instances and names them in Output |
 | `ListBoxDisplay` (variable grid) | `WpfDataUi/Controls/ListBoxDisplay.xaml.cs` (WPF) and the list editor in `AvaloniaDataUi/Controls/CompositeDisplays.cs` (Avalonia), both over `ListBoxDisplayLogic` in `DataUi.Core` | Disables Add/Delete/Edit in list variables (e.g. polygon Points) |
 
 ### Locked + IsActive Interaction (Critical)

@@ -80,6 +80,8 @@ Pasting a state runs `ValidateStatePaste()` first. It checks that all variables 
 
 `PluginManager.InstanceAdd()` is called for each newly pasted instance, allowing plugins to react to paste-created instances the same way they react to manually added ones.
 
+Duplicating or pasting an element raises `ElementDuplicate` before the copy is added, so plugins copy their sidecar files (`.codsj`, animation file) there; `ElementAdd` handlers must read the new element's own settings, not the tab's.
+
 ## Animation Copy/Paste
 
 `AnimationCopyPasteManager.cs` is a **separate, independent** copy/paste system for animations. It has its own `CopiedData` class, stores a single `AnimationViewModel`, and does not interact with `CopyPasteLogic`.
