@@ -194,5 +194,9 @@ class in its filter.
 - A new project has no ColoredRectangle standard; a filled `Rectangle` (`IsFilled`) is the solid
   shape to look for in pixels, white over the gray checkerboard.
 - Undo replaces an element's instances with copies; after an undo, find instances again by name.
+- Read pixels through `HeadlessWindowDriver` (`PixelAt`, `PixelsAlong`, `AnyPixelNear`,
+  `SaveFrame`), never `CaptureRenderedFrame` directly. The compositor keeps one frame in flight,
+  so a single render tick can return the frame before the canvas's latest one; the driver ticks,
+  runs the jobs and ticks again first.
 
 `pwsh Tools/e2e-coverage.ps1` lists the inventory IDs no non-skipped test tags, per area.
