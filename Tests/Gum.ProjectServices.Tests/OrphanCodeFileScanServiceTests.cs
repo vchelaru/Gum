@@ -327,6 +327,62 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void Scan_ShouldFlagOrphans_InsideGeneratedCodeFolder_AndNotFlagLiveElements()
+    {
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("LiveScreen"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gum/Generated/";
+        WriteGeneratedFile("Gum/Generated/Screens/LiveScreen.Generated.cs", "LiveScreen");
+        WriteGeneratedFile("Gum/Generated/Screens/DeletedScreen.Generated.cs", "DeletedScreen");
+        WriteGeneratedFile("Gum/Generated/StandardElements.Generated.cs", "StandardElements");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath).ShouldBe(new[]
+        {
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Gum", "Generated", "Screens", "DeletedScreen.Generated.cs"))
+        });
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagFilesLeftAtTheCodeProjectRoot_AfterGeneratedCodeFolderIsSet()
+    {
+        // Left behind, the old pair compiles alongside the new one as a duplicate partial class.
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("LiveScreen"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gum/Generated";
+        WriteGeneratedFile("Gum/Generated/Screens/LiveScreen.Generated.cs", "LiveScreen");
+        WriteGeneratedFile("Screens/LiveScreen.Generated.cs", "LiveScreen");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath).ShouldBe(new[]
+        {
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Screens", "LiveScreen.Generated.cs"))
+        });
+    }
+
+    [Fact]
+    public void Scan_ShouldWalkTheGeneratedCodeFolder_WhenItIsOutsideTheCodeProjectRoot()
+    {
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.CodeProjectRoot = "Game/";
+        projectSettings.GeneratedCodeFolder = "../Shared/Generated";
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Game"));
+        WriteGeneratedFile("Shared/Generated/Screens/DeletedScreen.Generated.cs", "DeletedScreen");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath).ShouldBe(new[]
+        {
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Shared", "Generated", "Screens", "DeletedScreen.Generated.cs"))
+        });
+    }
+
+    [Fact]
     public void Scan_ShouldReturnEmpty_WhenCodeProjectRootIsEmpty()
     {
         GumProjectSave project = Project;

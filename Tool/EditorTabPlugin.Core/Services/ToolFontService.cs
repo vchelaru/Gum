@@ -26,6 +26,12 @@ namespace Gum.Managers
     /// <inheritdoc cref="IToolFontService"/>
     public class ToolFontService : IToolFontService
     {
+        /// <summary>
+        /// The tool font, relative to the application's directory. Rendered from Liberation Sans by
+        /// Tools/regenerate-tool-fonts.ps1.
+        /// </summary>
+        public const string FontFileRelativePath = "Content/Fonts/Font18LiberationSans_o1.fnt";
+
         BitmapFont? _toolFont;
         public BitmapFont? ToolFont
         {
@@ -37,7 +43,7 @@ namespace Gum.Managers
             // AppContext.BaseDirectory is the correct way to locate the executable's directory.
             var directory = AppContext.BaseDirectory;
 
-            var fntFilePath = Path.Combine(directory, "Content/Fonts/Font18Arial_o1.fnt");
+            var fntFilePath = Path.Combine(directory, FontFileRelativePath);
             var font = new BitmapFont(fntFilePath);
 
             // Remove the loaded contnet from the loaderManager so it is never accidentally disposed

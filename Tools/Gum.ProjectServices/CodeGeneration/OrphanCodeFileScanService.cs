@@ -105,28 +105,39 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
     }
 
     /// <summary>
-    /// The absolute, normalized code output folder, or null when none is configured or it does not
-    /// exist - nothing can be proven orphaned then.
+    /// The absolute, normalized folder to walk, or null when none is configured or it does not
+    /// exist - nothing can be proven orphaned then. This is the code project root, so files
+    /// generated there before a <see cref="CodeOutputProjectSettings.GeneratedCodeFolder"/> was set
+    /// are still found; it is the generated code folder only when that folder sits outside the root.
     /// </summary>
     private string? ResolveCodeRoot(CodeOutputProjectSettings projectSettings)
     {
-        if (string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
+        string codeProjectRoot = projectSettings.CodeProjectRoot;
+        if (string.IsNullOrEmpty(codeProjectRoot))
         {
             return null;
         }
 
-        string codeRoot = projectSettings.CodeProjectRoot;
-        if (FileManager.IsRelative(codeRoot))
+        if (FileManager.IsRelative(codeProjectRoot))
         {
             if (string.IsNullOrEmpty(_projectDirectoryProvider.ProjectDirectory))
             {
                 return null;
             }
-            codeRoot = _projectDirectoryProvider.ProjectDirectory + codeRoot;
+            codeProjectRoot = _projectDirectoryProvider.ProjectDirectory + codeProjectRoot;
         }
 
-        string fullPath = Normalize(codeRoot).FullPath;
+        string rootPath = Normalize(codeProjectRoot).FullPath;
+        string outputPath = Normalize(_fileLocationsService.GetCodeOutputFolder(projectSettings)!).FullPath;
+        string fullPath = IsSameOrUnder(outputPath, rootPath) ? rootPath : outputPath;
         return Directory.Exists(fullPath) ? fullPath : null;
+    }
+
+    private static bool IsSameOrUnder(string path, string folder)
+    {
+        string folderWithSeparator = Path.EndsInDirectorySeparator(folder) ? folder : folder + Path.DirectorySeparatorChar;
+        return string.Equals(path, folder, StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith(folderWithSeparator, StringComparison.OrdinalIgnoreCase);
     }
 
     private void AddExpectedCodeFiles(GumProjectSave project, CodeOutputProjectSettings projectSettings,

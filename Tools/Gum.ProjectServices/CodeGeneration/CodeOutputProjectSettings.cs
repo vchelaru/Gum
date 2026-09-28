@@ -56,6 +56,20 @@ using System.Linq;
     /// </summary>
     public string CodeProjectRoot { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Optional folder, relative to <see cref="CodeProjectRoot"/>, that generated and custom code files
+    /// are written under. Empty (the default) writes them directly under <see cref="CodeProjectRoot"/>.
+    /// Syntax version detection keeps reading the .csproj from <see cref="CodeProjectRoot"/>, so this lets
+    /// generated code live in a subfolder without losing detection.
+    /// </summary>
+    public string GeneratedCodeFolder { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Newtonsoft.Json convention: leaves the field out of the .codsj while unset, so projects that never
+    /// use it resave byte-identical.
+    /// </summary>
+    public bool ShouldSerializeGeneratedCodeFolder() => !string.IsNullOrEmpty(GeneratedCodeFolder);
+
     public string RootNamespace { get; set; } = string.Empty;
 
     public bool AppendFolderToNamespace { get; set; }

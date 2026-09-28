@@ -53,7 +53,7 @@ public class CodeOutputSettingsMembersTests
         categories.Select(category => category.Name).ShouldBe(new[] { "Project-Wide Code Generation", "Element Code Generation" });
         categories[0].Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Code Project Root", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
+            "Code Project Root", "Generated Code Folder", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Syntax Version",
         });
         categories[1].Members.Select(member => member.Name).ShouldBe(new[]
@@ -100,6 +100,37 @@ public class CodeOutputSettingsMembersTests
         Path.IsPathRooted(stored).ShouldBeFalse();
         string resolved = Path.GetFullPath(Path.Combine(projectDirectory, stored.Replace('\\', '/')));
         resolved.TrimEnd('/', '\\').ShouldBe(root);
+    }
+
+    [Fact]
+    public void GeneratedCodeFolder_IsStoredTrimmed_AndReportsTheChange()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/" };
+        int changes = 0;
+        _sut.SettingsChanged += (_, _) => changes++;
+
+        Member("Generated Code Folder").SetValue("  Gum/Generated  ", SetPropertyCommitType.Full);
+
+        _sut.ProjectSettings.GeneratedCodeFolder.ShouldBe("Gum/Generated");
+        _sut.ProjectSettings.CodeProjectRoot.ShouldBe("Code/", "the .csproj folder stays the syntax-detection root");
+        Member("Generated Code Folder").Value.ShouldBe("Gum/Generated");
+        changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void GeneratedCodeFolder_FromAnAbsoluteFolder_IsStoredRelativeToTheCodeProjectRoot()
+    {
+        // An absolute path would only exist on the machine that saved the .codsj.
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumGeneratedFolderTest") + Path.DirectorySeparatorChar;
+        _projectState.Setup(state => state.ProjectDirectory).Returns(projectDirectory);
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/" };
+        string absolute = Path.Combine(projectDirectory, "Code", "Gum", "Generated");
+
+        Member("Generated Code Folder").SetValue(absolute, SetPropertyCommitType.Full);
+
+        string stored = _sut.ProjectSettings.GeneratedCodeFolder;
+        Path.IsPathRooted(stored).ShouldBeFalse();
+        Path.GetFullPath(Path.Combine(projectDirectory, "Code", stored.Replace('\\', '/'))).TrimEnd('/', '\\').ShouldBe(absolute);
     }
 
     [Fact]

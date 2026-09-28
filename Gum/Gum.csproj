@@ -76,7 +76,7 @@
 		<None Include="..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Content\Fonts\Font18Arial_o1.fnt">
+		<None Update="Content\Fonts\Font18LiberationSans_o1.fnt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Content\TestFont.fnt">
@@ -274,7 +274,7 @@
 		<Content Include="Content\ExampleSpriteFrame.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-		<Content Include="Content\Fonts\Font18Arial_o1_0.png">
+		<Content Include="Content\Fonts\Font18LiberationSans_o1_0.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Content Include="GumLogo64.png">

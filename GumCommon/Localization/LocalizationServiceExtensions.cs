@@ -141,7 +141,9 @@ public static class LocalizationServiceExtensions
         {
             // A project saved on Windows stores "Localization\Strings.resx"; macOS/Linux read a
             // backslash as part of the file name, so the path and satellite search need native separators.
-            var baseResxFilePath = FileManager.Standardize(requestedPath, preserveCase: true);
+            var standardizedPath = FileManager.Standardize(requestedPath, preserveCase: true);
+            // In a macOS .app the file may be in Contents/Resources/; its satellites sit beside it.
+            var baseResxFilePath = FileManager.ResolveExistingFilePath(standardizedPath) ?? standardizedPath;
 
             // Skip duplicates — a list with the same path twice would otherwise report
             // every key as a collision against itself, spamming onWarning.

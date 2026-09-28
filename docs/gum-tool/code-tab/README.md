@@ -66,7 +66,13 @@ The location of the folder containing the .csproj file. This path is used to det
 * Components
 * Screens
 
-If you would like Gum to place these folders in a subfolder rather than at the same location as your .csproj file, then you can specify a subfolder here.
+Gum also reads the .csproj in this folder to detect which version of the Gum runtime your game references, so keep this pointed at the .csproj folder. To put generated code somewhere else, use Generated Code Folder.
+
+### Generated Code Folder
+
+An optional folder, relative to the Code Project Root, that Gum writes the Components and Screens folders into. For example, `Gum/Generated` writes a component named Button to `<Code Project Root>/Gum/Generated/Components/Button.Generated.cs`. Leave it empty to generate directly in the Code Project Root.
+
+This setting only moves files. Namespaces are still built from the Root Namespace and the element's folder in the Gum project.
 
 If an absolute path is entered, it is saved to a relative path so that generation works for all users working on a project regardless of where a project is cloned even though it appears absolute in Gum. For example: `C:\Users\Owner\Documents\GitHub\Gum\Samples\MonoGameGumCodeGeneration\`
 

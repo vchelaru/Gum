@@ -23,6 +23,10 @@ namespace ToolsUtilities
         private const string XmlSerializerTrimMessage =
             "Uses System.Xml.Serialization.XmlSerializer with a type known only at runtime; members of that type may be trimmed if not referenced directly elsewhere.";
 #endif
+#if NET7_0_OR_GREATER
+        private const string XmlSerializerAotMessage =
+            "Uses System.Xml.Serialization.XmlSerializer, which runs in reflection-only mode under Native AOT.";
+#endif
 
         public const char DefaultSlash = '\\';
         #region Fields
@@ -131,6 +135,9 @@ namespace ToolsUtilities
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
 #endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
         public static bool AreSaveObjectsEqual<T>(T first, T second)
         {
             string firstAsString;
@@ -145,6 +152,9 @@ namespace ToolsUtilities
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
 #endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
         public static T CloneSaveObject<T>(T objectToClone)
         {
             string container;
@@ -158,6 +168,9 @@ namespace ToolsUtilities
 
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
 #endif
         public static T CloneSaveObjectCast<U, T>(U objectToClone)
         {
@@ -819,6 +832,9 @@ namespace ToolsUtilities
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
 #endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
         public static T XmlDeserialize<T>(string fileName)
         {
             T objectToReturn = default(T)!;
@@ -973,6 +989,9 @@ namespace ToolsUtilities
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
 #endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
         public static T XmlDeserializeFromStream<T>(Stream stream)
         {
             Type type = typeof(T);
@@ -989,6 +1008,9 @@ namespace ToolsUtilities
 
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
 #endif
         public static XmlSerializer GetXmlSerializer(Type type)
         {
@@ -1026,6 +1048,9 @@ namespace ToolsUtilities
 
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
 #endif
         public static void XmlSerialize<T>(T objectToSerialize, out string stringToSerializeTo)
         {
@@ -1544,6 +1569,9 @@ namespace ToolsUtilities
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
 #endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
             XmlSerialize(objectToSerialize, fileName, GetXmlSerializer(type));
@@ -1551,6 +1579,9 @@ namespace ToolsUtilities
 
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
 #endif
         public static void XmlSerialize(object objectToSerialize, string fileName, XmlSerializer serializer)
         {
@@ -1586,6 +1617,9 @@ namespace ToolsUtilities
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
 #endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
         public static void XmlSerialize<T>(T objectToSerialize, string fileName)
         {
             XmlSerialize(typeof(T), objectToSerialize!, fileName);
@@ -1593,6 +1627,9 @@ namespace ToolsUtilities
 
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
 #endif
         public static T XmlDeserialize<T>(string fileName, XmlSerializer serializer)
         {
@@ -1620,6 +1657,9 @@ namespace ToolsUtilities
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
 #endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
+#endif
         public static T XmlDeserializeFromStream<T>(Stream stream, XmlSerializer serializer)
         {
             // XmlSerializer returns null only for an xsi:nil root.
@@ -1629,6 +1669,9 @@ namespace ToolsUtilities
 
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
+#if NET7_0_OR_GREATER
+        [RequiresDynamicCode(XmlSerializerAotMessage)]
 #endif
         public static T XmlDeserializeEmbeddedResource<T>(Assembly assembly, string location)
         {
