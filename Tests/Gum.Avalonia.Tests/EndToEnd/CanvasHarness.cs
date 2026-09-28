@@ -5,6 +5,7 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Avalonia.Layout;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using EditorTabPlugin_XNA.ViewModels;
 using Gum.Avalonia.Plugins.EditorTab;
@@ -20,6 +21,7 @@ using Gum.Wireframe;
 using Microsoft.Extensions.DependencyInjection;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using System.Diagnostics;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
 
@@ -355,6 +357,32 @@ internal sealed class CanvasHarness : IDisposable
         Frame();
         _driver.Window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
         Frame();
+        WaitForPendingMenu(throwOnTimeout: true);
+    }
+
+    // Longer than the plugin's own fallback wait for a frame, so a pending menu always settles first.
+    private static readonly TimeSpan PendingMenuTimeout = TimeSpan.FromSeconds(5);
+
+    // The plugin opens the menu once the frame after the press is presented. That frame's task
+    // completes its continuations on the thread pool, which then posts the menu's opening to the UI
+    // thread, possibly after the frames above ran their jobs; so pump until the plugin is done.
+    private void WaitForPendingMenu(bool throwOnTimeout)
+    {
+        Stopwatch waited = Stopwatch.StartNew();
+        while (Plugin.IsCanvasContextMenuPending)
+        {
+            if (waited.Elapsed > PendingMenuTimeout)
+            {
+                if (throwOnTimeout)
+                {
+                    throw new TimeoutException($"The canvas menu was still pending {PendingMenuTimeout.TotalSeconds} s after the right-click. {Describe()}");
+                }
+                return;
+            }
+            Thread.Sleep(1);
+            Dispatcher.UIThread.RunJobs();
+        }
+        _driver.Layout();
     }
 
     public ContextMenu ContextMenu => Plugin.CanvasContextMenu;
@@ -469,6 +497,13 @@ internal sealed class CanvasHarness : IDisposable
             if (Canvas != null)
             {
                 Canvas.ErrorOccurred -= HandleFrameError;
+            }
+            // The plugin and its menu outlive the test: a menu left open, or one still pending
+            // from a right-click, would be open when the next test starts.
+            if (Plugin != null && _driver != null)
+            {
+                WaitForPendingMenu(throwOnTimeout: false);
+                Plugin.CanvasContextMenu.Close();
             }
             _driver?.Dispose();
         }
