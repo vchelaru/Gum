@@ -60,6 +60,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     private readonly IFileCommands _codeOutputFileCommands;
     private CodeOutputProjectSettingsManager _codeOutputProjectSettingsManager;
     private readonly CodeFileDeleteService _codeFileDeleteService;
+    private readonly NewElementCodeSettingsService _newElementCodeSettingsService;
 
     private readonly IProjectState _projectState;
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
@@ -146,6 +147,9 @@ public abstract class CodeOutputPluginBase : PluginBase
             _codeOutputFileCommands,
             dialogService);
 
+        _newElementCodeSettingsService = new NewElementCodeSettingsService(
+            _elementSettingsManager, _codeOutputFileCommands, outputManager);
+
         _messenger.Register<RequestCodeGenerationMessage>(
             this,
             (_, message) => HandleRequestCodeGeneration(message));
@@ -214,7 +218,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         this.ElementSelected += HandleElementSelected;
         this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element));
         this.ElementAdd += HandleElementAdd;
-        this.ElementDuplicate += (oldElement, newElement) => _elementSettingsManager.CopySettings(oldElement, newElement);
+        this.ElementDuplicate += _newElementCodeSettingsService.HandleElementDuplicate;
         this.ElementDelete += HandleElementDeleted;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
 
@@ -293,6 +297,9 @@ public abstract class CodeOutputPluginBase : PluginBase
 
     private void HandleElementAdd(ElementSave element)
     {
+        // Before anything reads the new element's settings, so a leftover .codsj is never applied.
+        _newElementCodeSettingsService.HandleElementAdd(element);
+
         HandleRefreshAndExport();
 
         // The new element's own settings, not the tab's: the tab still shows whichever element was

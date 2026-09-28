@@ -35,13 +35,14 @@ public class CodeOutputElementSettingsManager
     /// cleared, since keeping it would make both elements generate into the same file. Does nothing
     /// when the source has no settings file.
     /// </summary>
-    public void CopySettings(ElementSave source, ElementSave copy)
+    /// <returns>Whether settings were written for the copy.</returns>
+    public bool CopySettings(ElementSave source, ElementSave copy)
     {
         FilePath? sourceFile = GetCodeSettingsFilePath(source);
         FilePath? copyFile = GetCodeSettingsFilePath(copy);
         if (sourceFile == null || copyFile == null || !sourceFile.Exists())
         {
-            return;
+            return false;
         }
 
         CodeOutputElementSettings settings = LoadOrCreateSettingsFor(source);
@@ -53,6 +54,7 @@ public class CodeOutputElementSettingsManager
             System.IO.Directory.CreateDirectory(directory.FullPath);
         }
         WriteSettingsForElement(copy, settings);
+        return true;
     }
 
     /// <summary>
