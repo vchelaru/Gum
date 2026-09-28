@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="Tool/Gum.Avalonia/Gum.Avalonia.csproj" DefaultStartup="true" />
   <Project Path="Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj" />
+  <Project Path="Tests/PluginHostFixture/PluginHostFixture.csproj" />
   <Folder Name="/Preview/">
     <Project Path="Tool/GumPreview/GumPreview.csproj" />
   </Folder>
