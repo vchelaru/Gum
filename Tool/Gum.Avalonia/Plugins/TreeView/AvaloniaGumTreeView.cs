@@ -610,7 +610,7 @@ public sealed class AvaloniaGumTreeView : UserControl
             // travel in TreeDragPayload.
             DataTransfer data = new DataTransfer();
             data.Add(DataTransferItem.Create(AvaloniaDragFormats.TreeNodes, "nodes"));
-            await DragDrop.DoDragDropAsync(e, data, DragDropEffects.Move | DragDropEffects.Copy);
+            await AvaloniaDragSource.Start(e, data, DragDropEffects.Move | DragDropEffects.Copy);
         }
         catch (Exception ex)
         {

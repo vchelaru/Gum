@@ -9,6 +9,7 @@ depend on the tab.
 | `HeadlessWindowDriver.cs` | The window: clicks, right-click menus, drags, keys, typing, pixel reads, `SaveFrame`. Fails fast when the window hit-tests nothing (see `Animations/README.md`, "Gotchas"). |
 | `ToolProjectFixture.cs` | A new project in a temp folder (`.gumx` or `.gumj`, optionally with a shared per-user folder), built through the tool's own commands (`AddComponent`, `AddInstance`, `AddCategory`, `AddState`), with every dialog answered by `Dialogs`. The editor tab and Texture Coordinates plugins sit out meanwhile: they need canvases the headless run never builds. Dispose restores the tool, including the plugin set, so a harness that swaps plugins in need not put them back itself. |
 | `ScriptedDialogService.cs` | Answers dialogs from a queue, file pickers included (`AnswerNextOpenFile`, `AnswerNextSaveFile`); an unanswered dialog fails the test instead of hanging. |
+| `DialogWindowDriver.cs` | A dialog in the head's own `DialogWindow` and registered view, driven with clicks, typing, keys and the copy gesture. `ScriptedDialogService.AnswerNextInWindow<T>` and `AnswerNextMessageInWindow` answer the next dialog through one, so the view's bindings are tested too. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
 | `RecordingClipboardService.cs` | The test container's `IClipboardService`. The headless app has no main window to copy to, so it also keeps the last text copied (`LastText`). |
 | `RecordingFileSystemRevealService.cs` | The test container's `IFileSystemRevealService`. View in explorer, Open Settings Folder and the Help links are recorded (`Requests`) instead of starting a file manager or browser. |
@@ -106,11 +107,16 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `ProjectOracleTests.cs` | Each oracle fails on the damage it exists to catch. |
 | `CanvasHarness.cs` | The head's Editor tab (toolbar, canvas, scroll bars) on a real graphics device, next to a `ProjectTreeHarness` over the same project, whose oracles it ends with. Pointer, key, wheel and drop input in window coordinates (`WindowPointOf(worldX, worldY)`), a drawn frame after every event, and `SavedValue` to read what reached disk. |
 | `CanvasScenarioTests.cs` | The Editor canvas: selection, move, resize, rotate, nudge, polygon points, camera, rulers, drops. |
+| `CanvasMenuAndToolbarScenarioTests.cs` | The canvas's right-click menu, its toolbar (grid snap, canvas size, font scale), resize edge cases, and what the canvas draws (hover highlight, dimension display, checkerboard, redraws, Skia shapes). |
+| `DragDropScenarioTests.cs` | Drag and drop: tree rows onto rows, folders and the canvas, search results onto the canvas, files from the file manager onto the tree, the canvas and the window. |
 | `TreeScenarioTests.cs`, `TreeNavigationScenarioTests.cs`, `EditMenuScenarioTests.cs`, `VariableScenarioTests.cs`, `StateScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search; selecting, expanding, icons, file menus, importing); the main menu's Edit menu; the Variables tab, states and edits that cascade into other elements; the States tab; copy, paste, rename and delete where they meet references, parents, states and animations. |
 | `AnimationScenarioTests.cs` | The Animations tab on `../Animations/AnimationEditorHarness.cs`: `StartScenario()` after setup (saves, routes Ctrl+Z/Ctrl+Y, starts the exception watch, returns the start snapshot), `Undo`/`Redo`, and `AssertOracles()`, which also checks the saved sidecar holds exactly what the tab shows, before and after the reload. |
-| `DialogScenarioTests.cs` | Dialogs reached from the main menu (`ProjectTreeHarness.PickMainMenu("File", "New Project")`) and the Project tree: New Project, Load Project and Load Recent, Import Components, Theming, Manage Plugins, Project Properties. An async menu action is followed by `WaitUntil`. |
+| `DialogScenarioTests.cs` | Dialogs reached from the main menu (`ProjectTreeHarness.PickMainMenu("File", "New Project")`) and the Project tree: New Project, Load Project and Load Recent, Import Components, Theming, Manage Plugins, Add Skia Standard Elements, Project Properties, the Help menu. An async menu action is followed by `WaitUntil`. |
+| `DialogWindowScenarioTests.cs` | Dialogs answered in their own window and view (`AnswerNextInWindow`): rename folder, create component, delete (Y/N keys), view references, expose color, add variable, the read-only file choice, the freeze diagnostics prompt. |
+| `FileMenuScenarioTests.cs`, `ContentMenuScenarioTests.cs` | The File menu (save with auto-save off, Load Recent, reopening the last project on launch, legacy and JSON projects, external file changes, Export as Image) and the Content menu (file references, font cache, orphaned code scan, Convert to JSON, HTML import options). A project with no watched folders reacts to no file change: reload it first (`SaveAndReload`); the test calls `IFileWatchManager.Flush` where the tool's timer would. |
 | `CodeTabHarness.cs`, `CodeGenScenarioTests.cs` | The head's Code tab in its own window beside a `ProjectTreeHarness`: settings rows, Generate, and the generated files read back from disk. |
 | `HeadCommandLineScenarioTests.cs` | The head's command line without a window: `HeadOptions` and `CommandLineManager` parse a launch line, and the test hands what they read to the services startup uses. gumcli's process-level scenarios are in `Tests/Gum.Cli.Tests/EndToEnd/`. |
+| `DisplayPropertiesScenarioTests.cs` | The grid's editors on real rows (slider, angle, file, list, toggles, corner radius, remove button), the Project Properties tab hosted in its own window and edited through its grid, and the Standards palette's chips (menu, drop on a tree row, drop on the canvas). A guide that changes rendering is checked with pixel reads of the canvas window. |
 | `TabViewScenarioTests.cs` | The other tabs (Output, Errors, History, Alignment, Behaviors, Hotkeys, File Watch, Performance) and the View menu. A tab's view is the head's singleton. Theme, font size, renderer options and the standards palette outlive the test, so a scenario puts them back in a `finally`. The File Watch tab lists folders only after a project load (`SaveAndReload`). |
 
 A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
@@ -147,6 +153,8 @@ Gotchas in scenario setup:
   `ToolProjectFixture` loads its project before the project has a folder. A scenario that needs
   code settings or a `.csproj` in place passes them to `CodeTabHarness`'s `beforeLoad`, which
   writes them and then reopens the project.
+- A nullable number field (the single pixel texture bounds) is disabled while its value is null;
+  click its "Is Null" check box before typing, or the typed Enter lands on whatever kept focus.
 - The editor tab, which sits out, fills a project's canvas sizes when the tool opens it; a scenario
   that makes a new project through the tool sets `CustomCanvasSizes` itself before the oracles.
 
@@ -172,6 +180,23 @@ class in its filter.
 - A drop onto the canvas is the platform's drag events with the payload the source would build
   (`DropOnCanvas`); headless Avalonia has no drag source. A drop parents the new instance only to
   the selected instance under it.
+- A drag out of the tree or its search results starts for real (press, then a move past the
+  threshold): `ProjectTreeHarness.BeginDrag` replaces `AvaloniaDragSource.Start`, the head's one
+  call into the platform's drag loop, and stands in for that loop. `DropOn` (a tree row) or
+  `DropOnCanvas` with `CurrentDrag` delivers the drop, and `EndDrag` ends the loop the way the
+  platform does: the pressed row loses the pointer capture and never sees the button come up.
+  No pointer move reaches a window while a drag or a file drop is under way, as on a desktop.
+- The canvas's right-click menu opens after the frame that reads the press, so `RightClick` then
+  `PickMenu` acts on what is under the pointer.
+- The canvas draws on its own frame timer only when the app's input hook asks for a frame; the head
+  installs `CanvasInputRedrawHook` at startup and a harness does not, so a scenario that waits for a
+  redraw without `Frame()` installs it for its duration.
+- A new project has no ColoredRectangle standard; a filled `Rectangle` (`IsFilled`) is the solid
+  shape to look for in pixels, white over the gray checkerboard.
 - Undo replaces an element's instances with copies; after an undo, find instances again by name.
+- Read pixels through `HeadlessWindowDriver` (`PixelAt`, `PixelsAlong`, `AnyPixelNear`,
+  `SaveFrame`), never `CaptureRenderedFrame` directly. The compositor keeps one frame in flight,
+  so a single render tick can return the frame before the canvas's latest one; the driver ticks,
+  runs the jobs and ticks again first.
 
 `pwsh Tools/e2e-coverage.ps1` lists the inventory IDs no non-skipped test tags, per area.

@@ -213,6 +213,59 @@ public class CodeGenScenarioTests
         code.AssertOracles();
     }
 
+    [AvaloniaFact]
+    public void DuplicatingAComponent_CopiesItsCodeSettings_WithoutItsGeneratedFileName()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ProjectTreeHarness tree = code.Tree;
+        ComponentSave card = code.Project.AddComponent("Card");
+        tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.TypeAndLeave("Using Statements", "using System.Numerics;");
+        code.TypeAndEnter("Generated File Name", "Special/CardView.Generated.cs");
+        code.ClickGenerate();
+        string cardFile = Path.Combine(code.Project.ProjectFolder, "Special", "CardView.Generated.cs");
+
+        tree.Dialogs.AnswerNextUserString("CardCopy");
+        tree.RightClick(tree.NodeFor(card));
+        tree.PickMenu("Duplicate Card");
+
+        ComponentSave copy = code.Project.Project.Components.Single(item => item.Name == "CardCopy");
+        File.ReadAllText(cardFile).ShouldContain("partial class Card ", customMessage: "the copy must not generate into the Card's file");
+        File.Exists(code.CodeFile("Components/CardCopy.Generated.cs")).ShouldBeFalse("a manually generated copy waits for Generate");
+        code.Select(copy);
+        code.Member("Using Statements").Value.ShouldBe("using System.Numerics;");
+        code.Member("Generation Behavior").Value?.ToString().ShouldBe("GenerateManually");
+        code.Member("Generated File Name").Value.ShouldBe("", "two elements must not share one generated file");
+
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void PastingAComponentIntoAFolder_CopiesItsCodeSettingsNextToTheCopy()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ProjectTreeHarness tree = code.Tree;
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Project.AddComponent("Controls/Toggle");
+        tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.TypeAndLeave("Using Statements", "using System.Numerics;");
+
+        tree.Click(tree.NodeFor(card));
+        tree.Press(Key.C, PhysicalKey.C, RawInputModifiers.Control);
+        tree.Click(tree.FolderNode("Components", "Controls"));
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+
+        code.Project.Project.Components.ShouldContain(item => item.Name == "Controls/Card");
+        File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "Components", "Controls", "Card.codsj"))
+            .ShouldContain("using System.Numerics;");
+
+        code.AssertOracles();
+    }
+
     private static string GeneratedFileFor(CodeTabHarness code, string className) =>
         File.ReadAllText(Directory.GetFiles(code.CodeFolder, className + "*.Generated.cs", SearchOption.AllDirectories).Single());
 

@@ -534,18 +534,23 @@ public class ProjectManagerTests : BaseTestClass
     {
         string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
 
-        int callingThreadId = Environment.CurrentManagedThreadId;
-        int? deserializeThreadId = null;
+        // Thread ids cannot tell: once the caller awaits, the pool may run the deserialize on the
+        // very thread the caller gave back. Instead the deserialize waits for the caller to get its
+        // task back, which it can only do when the deserialize is not running on the caller.
+        using ManualResetEventSlim callerHasTask = new ManualResetEventSlim();
+        bool? deserializedAfterCallerReturned = null;
         Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
         FileManager.CustomGetStreamFromFile = path =>
         {
-            deserializeThreadId = Environment.CurrentManagedThreadId;
+            deserializedAfterCallerReturned = callerHasTask.Wait(TimeSpan.FromSeconds(5));
             return File.OpenRead(path);
         };
 
         try
         {
-            await _projectManager.LoadProjectAsync(gumxPath);
+            Task load = _projectManager.LoadProjectAsync(gumxPath);
+            callerHasTask.Set();
+            await load;
         }
         finally
         {
@@ -553,8 +558,7 @@ public class ProjectManagerTests : BaseTestClass
             Directory.Delete(tempDirectory, recursive: true);
         }
 
-        deserializeThreadId.ShouldNotBeNull();
-        deserializeThreadId.ShouldNotBe(callingThreadId);
+        deserializedAfterCallerReturned.ShouldBe(true);
     }
 
     [Fact]

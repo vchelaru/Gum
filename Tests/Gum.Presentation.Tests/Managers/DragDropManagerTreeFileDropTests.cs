@@ -28,15 +28,13 @@ public class DragDropManagerTreeFileDropTests
         // leaves the whole drop alone rather than importing into the project being replaced.
         Mock<ITreeNode> screensNode = new Mock<ITreeNode>();
         screensNode.SetupGet(node => node.Text).Returns("Screens");
-        Mock<IPluginManager> pluginManager = new Mock<IPluginManager>();
-        pluginManager.Setup(manager => manager.GetTreeNodeOver()).Returns(screensNode.Object);
         Mock<IImportLogic> importLogic = new Mock<IImportLogic>();
-        DragDropManager manager = CreateManager(pluginManager.Object, importLogic.Object);
+        DragDropManager manager = CreateManager(Mock.Of<IPluginManager>(), importLogic.Object);
         string[] files = alsoDropsProject
             ? new[] { "C:/Game/Screens/Title.gusx", "C:/Game/Game.gumx" }
             : new[] { "C:/Game/Screens/Title.gusx" };
 
-        manager.OnFilesDroppedInTreeView(files);
+        manager.OnFilesDroppedInTreeView(files, screensNode.Object);
 
         importLogic.Verify(logic => logic.ImportScreen(It.IsAny<FilePath>(), null, true), Times.Exactly(expectedImports));
     }

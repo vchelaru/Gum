@@ -38,12 +38,23 @@ namespace StateAnimationPlugin.Managers
             if (elementSave == viewModel?.Element)
             {
                 var oldFileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(oldName);
+                var newFileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(elementSave);
 
                 // save if we had an old file, or if there are any animations.
                 // We still want to save if there are no animations because the
                 // user may explicitly remove animations and we want that to save
                 // so it can overwrite old files that might have animations.
                 var shouldSave = oldFileName?.Exists() == true || viewModel.Animations.Count > 0;
+
+                // A rename that only changes casing names the same physical file on Windows and
+                // macOS, so deleting the "old" file after saving would delete the new one. Move it
+                // to the new casing instead and skip the delete.
+                var isCasingOnly = oldFileName != null && newFileName != null &&
+                    SidecarFileMover.IsSameFileWithDifferentCase(oldFileName, newFileName);
+                if (isCasingOnly && oldFileName!.Exists())
+                {
+                    SidecarFileMover.Move(oldFileName, newFileName!);
+                }
 
                 // save the new:
                 bool succeeded = false;
@@ -60,7 +71,7 @@ namespace StateAnimationPlugin.Managers
                     succeeded = false;
                 }
 
-                if (succeeded)
+                if (succeeded && !isCasingOnly)
                 {
                     if (oldFileName?.Exists() == true)
                     {
@@ -88,18 +99,16 @@ namespace StateAnimationPlugin.Managers
 
                 var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + suffix);
 
-                if(oldFile.Exists())
+                var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + suffix);
+
+                // A file already at the destination belongs to some other element, so leave both
+                // alone rather than overwriting animations that cannot be recovered.
+                var isDestinationTaken = newFile.Exists() &&
+                    !SidecarFileMover.IsSameFileWithDifferentCase(oldFile, newFile);
+
+                if(oldFile.Exists() && !isDestinationTaken)
                 {
-                    var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + suffix);
-
-                    var newDirectory = newFile.GetDirectoryContainingThis();
-
-                    if(newDirectory != null && System.IO.Directory.Exists(newDirectory.FullPath) == false)
-                    {
-                        System.IO.Directory.CreateDirectory(newDirectory.FullPath);
-                    }
-
-                    System.IO.File.Move(oldFile.FullPath, newFile.FullPath);
+                    SidecarFileMover.Move(oldFile, newFile);
                 }
             }
         }

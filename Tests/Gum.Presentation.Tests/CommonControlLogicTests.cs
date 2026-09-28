@@ -1,4 +1,6 @@
 using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ToolStates;
@@ -39,5 +41,22 @@ public class CommonControlLogicTests
         _guiCommands.Verify(x => x.RefreshVariables(true), Times.Once);
         _wireframeCommands.Verify(x => x.Refresh(true, false), Times.Once);
         _fileCommands.Verify(x => x.TryAutoSaveCurrentElement(), Times.Once);
+    }
+
+    [Fact]
+    public void SetAndCallReact_WithOnlyALockedInstanceSelected_WritesNeitherTheInstanceNorTheElement()
+    {
+        StateSave state = new();
+        InstanceSave locked = new() { Name = "Panel", Locked = true };
+        Mock<ISelectedState> selectedState = new();
+        selectedState.Setup(s => s.SelectedStateSave).Returns(state);
+        selectedState.Setup(s => s.SelectedInstances).Returns(new[] { locked });
+        selectedState.Setup(s => s.SelectedComponent).Returns(new ComponentSave { Name = "Card" });
+        CommonControlLogic logic = new(selectedState.Object, _wireframeCommands.Object, _guiCommands.Object,
+            _fileCommands.Object, Mock.Of<ISetVariableLogic>());
+
+        logic.SetAndCallReact("Width", 10f, "float");
+
+        state.Variables.ShouldBeEmpty();
     }
 }

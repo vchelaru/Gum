@@ -78,19 +78,22 @@ public class AngleSelectorDisplay : DataUiDisplayBase
         _dial.PointerReleased += HandleDialPointerReleased;
 
         _textBox = new EditTrackingTextBox { MinWidth = 40, VerticalAlignment = VerticalAlignment.Center };
-        // Registered before the text logic so the typed angle is parsed before the logic commits it.
-        _textBox.AddHandler(KeyDownEvent, (_, e) =>
-        {
-            if (e.Key == Key.Enter)
-            {
-                ApplyTextBoxText();
-            }
-        }, RoutingStrategies.Tunnel);
         _textBox.EditCommitRequested += (_, _) => ApplyTextBoxText();
         _textLogic = AvaloniaDataUiTextBox.CreateLogic(this, _textBox);
         _hint = CreateHintTextBlock();
 
         StackPanel field = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        // The typed angle must be parsed before the text logic's own Enter handler commits the
+        // displayed angle. A tunnel handler on the parent runs before any on the text box itself;
+        // a second handler on the text box would run after the logic's, whatever the order they
+        // were added in, and the logic would commit the old angle.
+        field.AddHandler(KeyDownEvent, (_, e) =>
+        {
+            if (e.Key == Key.Enter && e.Source == _textBox)
+            {
+                ApplyTextBoxText();
+            }
+        }, RoutingStrategies.Tunnel);
         field.Children.Add(_textBox);
         field.Children.Add(new TextBlock { Text = "º", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(2, 0) });
 

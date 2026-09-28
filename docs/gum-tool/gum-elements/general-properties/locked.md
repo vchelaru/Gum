@@ -21,6 +21,11 @@ If this value is true, then the following is true:
 * Instance variables are all disabled and cannot be edited in the Variables tab (except un-locking the instance)
 * Selected instances cannot be moved, resized, or rotated in the Editor tab
 * Polygons cannot have points modified, added, or deleted in the Editor tab
+* The **Alignment** tab buttons leave the instance where it is. If other instances are selected too, the buttons change only the unlocked ones, and the **Output** tab lists the locked instances they skipped.
+
+{% hint style="info" %}
+The **Alignment** tab respects `Locked` starting in October 2026, or now if building Gum from source. Earlier versions let its buttons move and resize a locked instance.
+{% endhint %}
 
 <figure><img src="../../../.gitbook/assets/05_09 56 30.gif" alt=""><figcaption><p><code>Locked</code> instances cannot be selected by clicking on them in the editor window</p></figcaption></figure>
 

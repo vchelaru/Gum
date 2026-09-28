@@ -124,6 +124,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly LocalizationService _localizationService;
     private readonly ScreenshotService _screenshotService;
     private readonly SelectionManager _selectionManager;
+
+    /// <summary>The canvas's selection manager (hover highlight, handles), for tests.</summary>
+    internal SelectionManager CanvasSelectionManager => _selectionManager;
+
     private readonly IElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private readonly IFileDropTargetFilter _fileDropTargetFilter;

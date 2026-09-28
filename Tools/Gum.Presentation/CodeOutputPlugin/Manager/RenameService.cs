@@ -86,13 +86,13 @@ public class RenameService
 
         // A file already at the destination belongs to some other element, so leave both alone
         // rather than overwriting settings that cannot be recovered.
-        if (newSettingsFile.Exists() && !IsSameFileWithDifferentCase(oldSettingsFile, newSettingsFile))
+        if (newSettingsFile.Exists() && !SidecarFileMover.IsSameFileWithDifferentCase(oldSettingsFile, newSettingsFile))
         {
             return;
         }
         //////////////End Early Out///////////////
 
-        MoveFile(oldSettingsFile, newSettingsFile);
+        SidecarFileMover.Move(oldSettingsFile, newSettingsFile);
     }
 
     private void RegenerateAndMoveCode(ElementSave element,
@@ -123,10 +123,10 @@ public class RenameService
             bool shouldMove = true;
 
             // A rename that only changes casing points both names at the same physical file on a
-            // case-insensitive filesystem, so there is nothing to overwrite - MoveFile corrects the
+            // case-insensitive filesystem, so there is nothing to overwrite - the move corrects the
             // casing instead.
             bool isOverwritingAnotherFile = newCustomFileName.Exists() &&
-                !IsSameFileWithDifferentCase(oldCustomFileName, newCustomFileName);
+                !SidecarFileMover.IsSameFileWithDifferentCase(oldCustomFileName, newCustomFileName);
 
             if (isOverwritingAnotherFile)
             {
@@ -145,7 +145,7 @@ public class RenameService
 
             if (shouldMove)
             {
-                MoveFile(oldCustomFileName, newCustomFileName);
+                SidecarFileMover.Move(oldCustomFileName, newCustomFileName);
             }
         }
 
@@ -172,55 +172,6 @@ public class RenameService
 
         // 5. Regenerate this
         _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, showPopups: false);
-    }
-
-    /// <summary>
-    /// True when the two paths differ only by casing, which means they are the same physical file on
-    /// a case-insensitive filesystem (Windows, macOS).
-    /// </summary>
-    private static bool IsSameFileWithDifferentCase(FilePath first, FilePath second) =>
-        first.FullPath != second.FullPath &&
-        string.Equals(first.FullPath, second.FullPath, StringComparison.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Moves a file, creating the destination directory if needed and translating file-access
-    /// failures into a message the user can act on.
-    /// </summary>
-    private static void MoveFile(FilePath source, FilePath destination)
-    {
-        try
-        {
-            // Moving into a folder for the first time means the destination directory may not exist
-            // yet - without this the move throws and the file orphans at its old path.
-            var destinationDirectory = destination.GetDirectoryContainingThis();
-            if (destinationDirectory != null && !System.IO.Directory.Exists(destinationDirectory.FullPath))
-            {
-                System.IO.Directory.CreateDirectory(destinationDirectory.FullPath);
-            }
-
-            if (IsSameFileWithDifferentCase(source, destination))
-            {
-                // Source and destination are the same physical file, so move through a temporary
-                // name. Windows corrects the casing with a direct move, but File.Move pre-checks the
-                // destination on Unix and throws "already exists" on a case-insensitive macOS
-                // volume. The casing on disk does have to change: git is case-sensitive even where
-                // the filesystem is not.
-                var temporaryPath = destination.FullPath + ".gumrename";
-                System.IO.File.Move(source.FullPath, temporaryPath);
-                System.IO.File.Move(temporaryPath, destination.FullPath);
-            }
-            else
-            {
-                System.IO.File.Move(source.FullPath, destination.FullPath);
-            }
-        }
-        catch (Exception e) when (FileOperationFailure.IsAccessFailure(e))
-        {
-            throw new FileOperationException(
-                FileOperationFailure.BuildMessage(
-                    $"Could not move this file:\n{source.FullPath}\nto:\n{destination.FullPath}", e),
-                e);
-        }
     }
 
     /// <summary>

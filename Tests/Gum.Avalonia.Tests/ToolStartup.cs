@@ -46,6 +46,10 @@ internal static class ToolStartup
         services.GetRequiredService<ITypeManager>().Initialize();
         AvaloniaTabManager tabManager = (AvaloniaTabManager)services.GetRequiredService<ITabManager>();
 
+        // The grid's file editors ("..." and Add...) open the tool's file dialogs through this picker,
+        // so a scenario answers them with the scripted dialogs.
+        WpfDataUi.Controls.FilePickingLogic.FilePicker = services.GetRequiredService<WpfDataUi.Controls.IDataUiFilePicker>();
+
         // Builds the Project tab's tree. Until this has run, the first project load that reaches
         // the tree's plugin throws on the view it never got.
         services.GetRequiredService<ElementTreeViewManager>().Initialize();
