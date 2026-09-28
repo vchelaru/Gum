@@ -193,17 +193,6 @@ public partial class EditorViewModel : ViewModel, IZoomController
         set => Set(value);
     }
 
-    static readonly CustomCanvasSize[] DefaultCanvasSizes = new CustomCanvasSize[]
-    {
-        new CustomCanvasSize{ Width = null, Height=null,   FriendlyName="Project Default" },
-        new CustomCanvasSize{ Width = 640, Height=480,   FriendlyName="480p" },
-        new CustomCanvasSize{ Width = 1280, Height=720,   FriendlyName="720p" },
-        new CustomCanvasSize{ Width = 1280, Height=800,   FriendlyName="Steam Deck" },
-        new CustomCanvasSize{ Width = 1920, Height=1080,   FriendlyName="1080p" },
-        new CustomCanvasSize{ Width = 3840, Height=2160,   FriendlyName="4k" },
-    };
-
-
     public CustomCanvasSize SelectedCustomCanvasSize
     {
         get => Get<CustomCanvasSize>();
@@ -309,7 +298,7 @@ public partial class EditorViewModel : ViewModel, IZoomController
         _previewLauncher = previewLauncher;
         PercentZoomLevel = ZoomLevels.First(item => item.Value == 100);
 
-        CustomCanvasSizes = DefaultCanvasSizes;
+        CustomCanvasSizes = ProjectLoadFills.DefaultCanvasSizes.ToArray();
 
         SetWithoutNotifying(CustomCanvasSizes[0], nameof(SelectedCustomCanvasSize));
         SetWithoutNotifying(GraphicalUiElement.GlobalFontScale, nameof(GlobalFontScale));
@@ -389,17 +378,11 @@ public partial class EditorViewModel : ViewModel, IZoomController
     {
         RefreshCanvasSize();
 
-        if(save.CustomCanvasSizes == null || save.CustomCanvasSizes.Count == 0)
-        {
-            save.CustomCanvasSizes = DefaultCanvasSizes.ToList();
-
-            if(!string.IsNullOrEmpty(save.FullFileName))
-            {
-                _fileCommands.TryAutoSaveProject();
-            }
-        }
-
-        this.CustomCanvasSizes = save.CustomCanvasSizes.ToArray();
+        // The project manager fills a loaded project's missing sizes; a project handed in without
+        // them still shows the defaults.
+        this.CustomCanvasSizes = save.CustomCanvasSizes is { Count: > 0 }
+            ? save.CustomCanvasSizes.ToArray()
+            : ProjectLoadFills.DefaultCanvasSizes.ToArray();
 
         this.SelectedCustomCanvasSize = this.CustomCanvasSizes[0];
 

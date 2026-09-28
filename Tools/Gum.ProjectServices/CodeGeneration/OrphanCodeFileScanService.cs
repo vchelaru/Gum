@@ -356,11 +356,11 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
     /// </summary>
     private static bool IsInBuildOutputFolder(FilePath filePath)
     {
-        // FilePath.Standardized normalizes to Path.DirectorySeparatorChar and lowercases.
+        // FilePath.FullPath normalizes to Path.DirectorySeparatorChar.
         string separator = Path.DirectorySeparatorChar.ToString();
-        string standardized = filePath.Standardized;
-        return standardized.Contains(separator + "bin" + separator)
-            || standardized.Contains(separator + "obj" + separator);
+        string fullPath = filePath.FullPath;
+        return fullPath.Contains(separator + "bin" + separator, StringComparison.OrdinalIgnoreCase)
+            || fullPath.Contains(separator + "obj" + separator, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

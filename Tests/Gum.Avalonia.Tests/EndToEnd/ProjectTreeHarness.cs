@@ -434,6 +434,71 @@ internal sealed class ProjectTreeHarness : IDisposable
     }
 
     /// <summary>
+    /// Carries the drag under way over <paramref name="target"/>'s row at <paramref name="fraction"/>
+    /// of its height without dropping it. Returns the effect the tree reported.
+    /// </summary>
+    public DragDropEffects DragOver(GumTreeNode target, double fraction)
+    {
+        IDataTransfer data = _dragData ?? throw new InvalidOperationException("No drag was started.");
+        Control row = RowFor(target);
+        Point topLeft = row.TranslatePoint(new Point(0, 0), _driver.Window) ?? throw new InvalidOperationException($"{target.Text}'s row is not in the window.");
+        Point point = new Point(topLeft.X + row.Bounds.Width / 2, topLeft.Y + row.Bounds.Height * fraction);
+        DragDropEffects reported = DragDropEffects.None;
+        EventHandler<DragEventArgs> record = (_, e) => reported = e.DragEffects;
+        _driver.Window.AddHandler(DragDrop.DragOverEvent, record, handledEventsToo: true);
+        try
+        {
+            _driver.Window.DragDrop(point, RawDragEventType.DragEnter, data, DragDropEffects.Move | DragDropEffects.Copy);
+            _driver.Window.DragDrop(point, RawDragEventType.DragOver, data, DragDropEffects.Move | DragDropEffects.Copy);
+            _driver.Layout();
+        }
+        finally
+        {
+            _driver.Window.RemoveHandler(DragDrop.DragOverEvent, record);
+        }
+        _exceptions.ThrowIfCrashed();
+        return reported;
+    }
+
+    /// <summary>Carries the drag under way out of the tree and cancels it, as Escape does.</summary>
+    public void CancelDrag()
+    {
+        IDataTransfer data = _dragData ?? throw new InvalidOperationException("No drag was started.");
+        _driver.Window.DragDrop(new Point(-10, -10), RawDragEventType.DragLeave, data, DragDropEffects.Move | DragDropEffects.Copy);
+        _driver.Layout();
+        EndDrag(DragDropEffects.None);
+    }
+
+    /// <summary>Where the tree's drop indicator (line or outline) is drawn, in window coordinates; null while hidden.</summary>
+    public Rect? DropIndicatorBounds => OverlayBounds(1);
+
+    /// <summary>Where the tree washes the row that will be the dropped rows' parent, in window coordinates; null while hidden.</summary>
+    public Rect? DropParentHighlightBounds => OverlayBounds(0);
+
+    /// <summary>The bounds of <paramref name="node"/>'s row highlight (icon, text and the space after them), in window coordinates.</summary>
+    public Rect RowHighlightBounds(GumTreeNode node)
+    {
+        Border highlight = ((TreeRowView)RowFor(node)).Expander.FindAncestorOfType<Border>()
+            ?? throw new InvalidOperationException($"{node.Text}'s row has no highlight.");
+        return WindowBounds(highlight);
+    }
+
+    private Rect? OverlayBounds(int index)
+    {
+        _driver.Layout();
+        global::Avalonia.Controls.Canvas overlay = View.Tree.GetVisualDescendants().OfType<global::Avalonia.Controls.Canvas>()
+            .Single(canvas => !canvas.IsHitTestVisible && canvas.Children.Count == 2);
+        Control shape = overlay.Children[index];
+        return shape.IsVisible ? WindowBounds(shape) : null;
+    }
+
+    private Rect WindowBounds(Control control)
+    {
+        Point topLeft = control.TranslatePoint(new Point(0, 0), _driver.Window) ?? throw new InvalidOperationException("The control is not in the window.");
+        return new Rect(topLeft, control.Bounds.Size);
+    }
+
+    /// <summary>
     /// Ends the drag as the platform's loop does once it is dropped (or cancelled, with
     /// <see cref="DragDropEffects.None"/>): the tree clears the drag, and the pressed row loses
     /// the pointer.

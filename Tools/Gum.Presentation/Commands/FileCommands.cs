@@ -162,7 +162,7 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveElement(ElementSave? elementSave)
     {
-        if (elementSave == null)
+        if (elementSave == null || _projectManager.IsNotifyingProjectLoad)
         {
             return;
         }
@@ -176,7 +176,7 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveBehavior(BehaviorSave behavior)
     {
-        if (behavior == null)
+        if (behavior == null || _projectManager.IsNotifyingProjectLoad)
         {
             return;
         }
@@ -227,6 +227,11 @@ public class FileCommands : IFileCommands
     /// <returns>Whether a save occurred.</returns>
     public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
     {
+        // What a plugin fills in while the project opens is written by the next real save (#5412).
+        if (_projectManager.IsNotifyingProjectLoad)
+        {
+            return false;
+        }
         // A successful save clears the mark (ProjectManager.SaveProject).
         if (_projectState.GumProjectSave is { } project)
         {

@@ -221,6 +221,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<IPathCaseSensitivity, PathCaseSensitivity>();
         services.AddSingleton<IUnsavedChangesTracker, UnsavedChangesTracker>();
+        services.AddSingleton<IProjectLoadFills, ProjectLoadFills>();
         services.AddSingleton<FileChangeReactionLogic>();
         services.AddSingleton<ProjectCommands>();
         // ICopyPasteProjectCommands: narrow headless port (ADR-0005 Phase 3). Resolves to the same ProjectCommands singleton.

@@ -26,6 +26,31 @@ public class DialogWindowScenarioTests
     private static IServiceProvider Services => TestAppBuilder.Services;
 
     [AvaloniaFact]
+    [Trait("Feature", "DLG-028")]
+    public void EveryDialogTheComposedToolCanOpen_HasARegisteredView()
+    {
+        // The assemblies of every plugin the tool loaded (plugin folders included), not only
+        // Gum.Presentation: a plugin that brings its own dialog view model needs a view too.
+        Gum.Plugins.PluginManager pluginManager = Services.GetRequiredService<Gum.Plugins.PluginManager>();
+        System.Reflection.Assembly[] assemblies = pluginManager.InitializedPlugins
+            .Select(plugin => plugin.GetType().Assembly)
+            .Append(typeof(DialogViewModel).Assembly)
+            .Distinct()
+            .ToArray();
+        Gum.Avalonia.Dialogs.DialogViewRegistry registry = Services.GetRequiredService<Gum.Avalonia.Dialogs.DialogViewRegistry>();
+
+        Type[] dialogs = assemblies
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => typeof(DialogViewModel).IsAssignableFrom(type) && !type.IsAbstract)
+            .ToArray();
+
+        assemblies.Length.ShouldBeGreaterThan(1, "the composed tool should have loaded plugins");
+        dialogs.ShouldNotBeEmpty();
+        dialogs.Where(type => !registry.HasView(type)).Select(type => type.FullName).ShouldBeEmpty(
+            "these dialogs would open as the 'No Avalonia view is registered' placeholder");
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "DLG-007")]
     public void RenameFolder_TypingTheNewNameAndPressingEnter_MovesTheFolder()
     {

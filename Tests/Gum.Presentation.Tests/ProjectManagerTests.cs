@@ -91,7 +91,30 @@ public class ProjectManagerTests : BaseTestClass
             _fileSystemRevealService.Object,
             _projectOpenRequests.Object,
             _lastProjectLoadMarker.Object,
-            _unsavedChangesTracker);
+            _unsavedChangesTracker,
+            new ProjectLoadFills());
+    }
+
+    [Fact]
+    public void CreateNewProject_FillsCanvasSizesBeforePlugins_AndTheirAutoSavesAreIgnoredDuringTheLoad()
+    {
+        StandardElementsManager.Self.Initialize();
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+        int sizesSeenByPlugins = -1;
+        bool loadingSeenByPlugins = false;
+        _pluginManager.Setup(p => p.ProjectLoad(It.IsAny<GumProjectSave>()))
+            .Callback<GumProjectSave>(project =>
+            {
+                sizesSeenByPlugins = project.CustomCanvasSizes?.Count ?? 0;
+                loadingSeenByPlugins = _projectManager.IsNotifyingProjectLoad;
+            });
+
+        _projectManager.CreateNewProject();
+
+        sizesSeenByPlugins.ShouldBe(ProjectLoadFills.DefaultCanvasSizes.Count);
+        loadingSeenByPlugins.ShouldBeTrue();
+        _projectManager.IsNotifyingProjectLoad.ShouldBeFalse();
+        _unsavedChangesTracker.HasAnyUnsavedChanges(_projectManager.GumProjectSave!).ShouldBeFalse();
     }
 
     [Fact]

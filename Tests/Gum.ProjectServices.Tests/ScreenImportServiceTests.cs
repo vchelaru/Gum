@@ -27,6 +27,18 @@ public class ScreenImportServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void ImportScreen_ShouldGiveTheScreenADefaultState_WhenItsFileHasNone()
+    {
+        ScreenSave screenSave = new() { Name = "Stateless" };
+        screenSave.Instances.Add(new InstanceSave { Name = "Title", BaseType = "Text" });
+
+        _sut.ImportScreen(Project, screenSave);
+
+        screenSave.DefaultState.ShouldNotBeNull();
+        screenSave.DefaultState.ParentContainer.ShouldBe(screenSave);
+    }
+
+    [Fact]
     public void ImportScreen_ShouldFailWithConflict_WhenNameAlreadyExists()
     {
         ScreenSave existing = new() { Name = "Dupe" };

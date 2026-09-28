@@ -19,12 +19,12 @@ namespace Gum.Presentation.Tests;
 /// </summary>
 public class EditorViewModelTests
 {
-    private static (EditorViewModel ViewModel, Mock<IPluginManager> PluginManager) CreateSut()
+    private static (EditorViewModel ViewModel, Mock<IPluginManager> PluginManager) CreateSut(Mock<IFileCommands>? fileCommands = null)
     {
         Mock<IPluginManager> pluginManager = new Mock<IPluginManager>();
         EditorViewModel viewModel = new EditorViewModel(
             pluginManager.Object,
-            Mock.Of<IFileCommands>(),
+            (fileCommands ?? new Mock<IFileCommands>()).Object,
             Mock.Of<IWireframeObjectManager>(),
             Mock.Of<IGridSnapWarningService>(),
             Mock.Of<IProjectManager>(),
@@ -47,6 +47,22 @@ public class EditorViewModelTests
         changed.ShouldContain(nameof(EditorViewModel.GridSize));
         changed.ShouldContain(nameof(EditorViewModel.SnapToGrid));
         pluginManager.Verify(manager => manager.ProjectPropertySet(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void HandleProjectLoad_ProjectWithoutCanvasSizes_ShowsTheDefaultsWithoutSavingOrWritingThem()
+    {
+        Mock<IFileCommands> fileCommands = new Mock<IFileCommands>();
+        (EditorViewModel viewModel, _) = CreateSut(fileCommands);
+        GumProjectSave project = new GumProjectSave { FullFileName = "/game/Project.gumx" };
+
+        viewModel.HandleProjectLoad(project);
+
+        viewModel.CustomCanvasSizes.Select(size => size.FriendlyName)
+            .ShouldBe(ProjectLoadFills.DefaultCanvasSizes.Select(size => size.FriendlyName));
+        viewModel.SelectedCustomCanvasSize.ShouldBeSameAs(viewModel.CustomCanvasSizes[0]);
+        project.CustomCanvasSizes.ShouldBeNull();
+        fileCommands.Verify(commands => commands.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]

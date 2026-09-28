@@ -382,7 +382,7 @@ public class FileWatchManager : IFileWatchManager
         {
             return true;
         }
-        var fullName = System.IO.Path.GetFileName(file.Standardized);
+        var fullName = System.IO.Path.GetFileName(file.FullPath);
         return fullName.Contains(".tmp.", StringComparison.OrdinalIgnoreCase);
     }
 
