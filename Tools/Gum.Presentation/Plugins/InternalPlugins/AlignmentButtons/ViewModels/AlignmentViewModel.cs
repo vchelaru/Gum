@@ -5,6 +5,9 @@ using Gum.Plugins.AlignmentButtons;
 using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Drawing;
 using System.Globalization;
 
@@ -16,6 +19,7 @@ public class AlignmentViewModel : ViewModel
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly IStateEditingIndicatorService _stateEditingIndicatorService;
+    private readonly IOutputManager _outputManager;
 
     public bool HasStateInformation
     {
@@ -62,8 +66,10 @@ public class AlignmentViewModel : ViewModel
     public bool IsMarginTextVisible => DockMargin != 0;
 
     public AlignmentViewModel(CommonControlLogic commonControlLogic, ISelectedState selectedState,
-        IUndoManager undoManager, IStateEditingIndicatorService stateEditingIndicatorService)
+        IUndoManager undoManager, IStateEditingIndicatorService stateEditingIndicatorService,
+        IOutputManager outputManager)
     {
+        _outputManager = outputManager;
         _commonControlLogic = commonControlLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -84,11 +90,38 @@ public class AlignmentViewModel : ViewModel
     // dock-size computation through this helper so future handlers can't reintroduce it.
     internal static float NormalizeNegativeZero(float value) => value == 0f ? 0f : value;
 
+    /// <summary>
+    /// Runs one button's writes as a single undo step. A locked instance is left alone, the same as
+    /// a canvas drag or an arrow-key nudge leaves it: the writes skip it, and the Output tab names it.
+    /// </summary>
+    private void ApplyToSelection(Action setValues)
+    {
+        List<InstanceSave> selectedInstances = _selectedState.SelectedInstances.ToList();
+        List<InstanceSave> lockedInstances = selectedInstances.Where(instance => instance.Locked).ToList();
+
+        if (lockedInstances.Count > 0)
+        {
+            _outputManager.AddOutput(
+                $"The Alignment tab left locked instances unchanged: {string.Join(", ", lockedInstances.Select(instance => instance.Name))}");
+
+            if (lockedInstances.Count == selectedInstances.Count)
+            {
+                return;
+            }
+        }
+
+        using (_undoManager.RequestLock())
+        {
+            setValues();
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
     #region Anchor Actions
 
     public void TopLeftButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
@@ -97,14 +130,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Top,
                 PositionUnitType.PixelsFromTop, DockMargin);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void TopButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
@@ -113,14 +144,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Top,
                 PositionUnitType.PixelsFromTop, DockMargin);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void TopRightButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
@@ -129,14 +158,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Top,
                 PositionUnitType.PixelsFromTop, DockMargin);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void MiddleLeftButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
@@ -145,14 +172,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Center,
                 PositionUnitType.PixelsFromCenterY);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void MiddleMiddleButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
@@ -161,14 +186,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Center,
                 PositionUnitType.PixelsFromCenterY);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void MiddleRightButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
@@ -177,14 +200,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Center,
                 PositionUnitType.PixelsFromCenterY);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void BottomLeftButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
@@ -193,14 +214,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
                 PositionUnitType.PixelsFromBottom, -DockMargin);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void BottomMiddleButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
@@ -209,14 +228,12 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
                 PositionUnitType.PixelsFromBottom, -DockMargin);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void BottomRightButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
@@ -225,33 +242,27 @@ public class AlignmentViewModel : ViewModel
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
                 PositionUnitType.PixelsFromBottom, -DockMargin);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void AnchorCenterHorizontally_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
             PositionUnitType.PixelsFromCenterX);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void AnchorCenterVertically_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetYValues(
                 global::RenderingLibrary.Graphics.VerticalAlignment.Center,
                 PositionUnitType.PixelsFromCenterY);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     #endregion
@@ -260,50 +271,43 @@ public class AlignmentViewModel : ViewModel
 
     public void DockTopButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
 
             _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
-
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void SizeToChildren_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetAndCallReact("Width", DockMargin * 2, "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
 
             _commonControlLogic.SetAndCallReact("Height", DockMargin * 2, "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void DockLeftButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
             _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void DockFillButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
@@ -313,63 +317,53 @@ public class AlignmentViewModel : ViewModel
 
             _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void DockRightButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
             _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void DockBottomButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
 
             _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void DockFillVerticallyButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
             _commonControlLogic.SetAndCallReact("Height", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     public void DockFillHorizontallyButton_Click()
     {
-        using (_undoManager.RequestLock())
+        ApplyToSelection(() =>
         {
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
 
             _commonControlLogic.SetAndCallReact("Width", NormalizeNegativeZero(-DockMargin * 2), "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
-
-            _commonControlLogic.RefreshAndSave();
-        }
+        });
     }
 
     #endregion
