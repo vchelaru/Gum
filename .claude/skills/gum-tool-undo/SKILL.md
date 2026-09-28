@@ -76,6 +76,8 @@ using var undoLock = _undoManager.RequestLock();
 
 **Why not `RecordState()` manually?** `RecordState()` is a no-op when any locks are held, and calling it outside of that flow risks overwriting the correct baseline snapshot.
 
+A Variables-tab edit's undo step is recorded when its lock is released after plugins react to `VariableSet` (`SetVariableLogic`), not before, so what plugins change in response (e.g. inherited instances after a BaseType change) undoes with the edit.
+
 **Changing an element that is not the selected one** (a tree drop that reorders or reparents inside another open element, #4692): request the lock for that element instead, `_undoManager.RequestLock(targetElement)`, **before** anything mutates it and at the outermost point of the operation. `ElementUndoStrategy.CaptureBaseline(element)` snapshots that element at that moment (bypassing the lock guard, since the caller holds the lock) and `TryRecordTargeted()` diffs it when the last lock releases, appending to *that element's* history. For the selected element the overload is the plain lock, so it is safe to call unconditionally. A lock taken after the mutation records nothing: the baseline already contains the change.
 
 ## Snapshots Are Deep Copies
