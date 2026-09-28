@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Launch-tests one release package (#5465) the way a user would use it: extract it, open a copy
-# of the Forms sample in the packaged Gum unattended, and run the packaged gumcli on that copy.
+# of the Forms sample in the packaged Gum unattended, run the packaged gumcli on that copy, and
+# screenshot the packaged GumPreview (Preview-Aot) on a JSON conversion of it.
 #
-# Usage: smoke-test-package.sh <rid> <dist-dir> <sample-project-dir> <out-dir> [--launch-preview]
+# Usage: smoke-test-package.sh <rid> <dist-dir> <sample-project-dir> <out-dir>
 #   dist-dir holds Gum-<rid>.zip or Gum-<rid>.tar.xz and its .sha256.
 #   out-dir receives the screenshots and logs.
-#   --launch-preview also starts Preview-Aot/GumPreview on a JSON copy of the project and checks it
-#   is still running after a few seconds. GumPreview has no unattended exit flag, so this opens a
-#   window until it is killed; only pass it where no one is looking (CI, Xvfb).
+#   An osx-x64 package on Apple Silicon runs gumcli on the x64 .NET in DOTNET_ROOT_X64 (default
+#   /usr/local/share/dotnet/x64), under Rosetta.
 #
 # Extract-only mode, so CI can drop software GL next to the executables before launching:
 #   smoke-test-package.sh --extract <rid> <dist-dir> <extract-dir>
@@ -55,8 +55,6 @@ if [ "${1:-}" = "--extract" ]; then
 fi
 
 rid="$1"; dist="$2"; sample="$3"; out="$4"
-launch_preview=false
-[ "${5:-}" = "--launch-preview" ] && launch_preview=true
 
 mkdir -p "$out"
 out=$(cd "$out" && pwd)
@@ -172,46 +170,40 @@ cat "$out/gum-$rid.log"
 echo "screenshot: $shot"
 
 # The packaged gumcli is framework-dependent, so it needs a .NET runtime of its own architecture.
-# An osx-x64 package on an Apple Silicon runner only finds the runner's arm64 .NET; osx-arm64
-# covers gumcli on macOS. GumPreview needs gumcli's JSON conversion, so it is skipped too.
+# On Apple Silicon an osx-x64 gumcli runs under Rosetta on a separately installed x64 .NET.
 if [ "$rid" = "osx-x64" ] && [ "$(uname -m)" = "arm64" ]; then
-  echo "::warning::osx-x64 on an arm64 runner: no x64 .NET for the packaged gumcli, skipping gumcli and GumPreview"
-  echo "== $rid package smoke test passed (Gum launched; gumcli and GumPreview skipped)"
-  exit 0
+  dotnet_x64="${DOTNET_ROOT_X64:-/usr/local/share/dotnet/x64}"
+  [ -x "$dotnet_x64/dotnet" ] || fail "osx-x64 on arm64 needs an x64 .NET runtime in DOTNET_ROOT_X64 (none at $dotnet_x64)"
+  run_gumcli() { DOTNET_ROOT_X64="$dotnet_x64" DOTNET_ROOT="$dotnet_x64" "$gumcli" "$@"; }
+else
+  run_gumcli() { "$gumcli" "$@"; }
 fi
 
 echo "== gumcli check"
-"$gumcli" check "$gumx" || fail "gumcli check failed"
+run_gumcli check "$gumx" || fail "gumcli check failed"
 
 echo "== gumcli fonts (from an empty FontCache)"
 rm -rf "$project_dir/FontCache"
-"$gumcli" fonts "$gumx" || fail "gumcli fonts failed"
+run_gumcli fonts "$gumx" || fail "gumcli fonts failed"
 fnt_count=$(find "$project_dir/FontCache" -name '*.fnt' 2>/dev/null | wc -l | tr -d ' ')
 [ "$fnt_count" -gt 0 ] || fail "gumcli fonts generated no .fnt files"
 echo "generated $fnt_count fonts"
 
-if $launch_preview; then
-  echo "== launch GumPreview (Native AOT)"
-  # The AOT build loads JSON projects only; the tool converts before launching it, so do the same.
-  "$gumcli" convert-to-json "$gumx" || fail "gumcli convert-to-json failed"
-  gumj="${gumx%.gumx}.gumj"
-  [ -f "$gumj" ] || fail "convert-to-json wrote no $gumj"
-  # GumPreview runs until closed. Alive after 15 s means it loaded the project and entered its
-  # game loop; an early exit is a crash.
-  gui "$preview" --project "$gumj" --element DemoScreenGum > "$out/preview-$rid.log" 2>&1 &
-  pid=$!
-  sleep 15
-  if kill -0 "$pid" 2>/dev/null; then
-    # Kill the whole group: under xvfb-run the pid is the wrapper, not GumPreview.
-    pkill -P "$pid" 2>/dev/null || true
-    kill "$pid" 2>/dev/null || true
-    wait "$pid" 2>/dev/null || true
-    echo "GumPreview was still running after 15 s"
-  else
-    set +e; wait "$pid"; pcode=$?; set -e
-    cat "$out/preview-$rid.log"
-    fail "GumPreview exited early with $pcode"
-  fi
-fi
+echo "== launch packaged GumPreview (Native AOT) unattended"
+# The AOT build loads JSON projects only; the tool converts before launching it, so do the same.
+run_gumcli convert-to-json "$gumx" || fail "gumcli convert-to-json failed"
+gumj="${gumx%.gumx}.gumj"
+[ -f "$gumj" ] || fail "convert-to-json wrote no $gumj"
+preview_shot="$out/preview-$rid.png"
+rm -f "$preview_shot"
+set +e
+gui "$preview" --project "$gumj" --element DemoScreenGum --exit-after 120 --screenshot "$preview_shot" \
+  > "$out/preview-$rid.log" 2>&1
+code=$?
+set -e
+cat "$out/preview-$rid.log"
+[ "$code" -eq 0 ] || fail "GumPreview exited $code"
+[ -s "$preview_shot" ] || fail "GumPreview exited 0 but wrote no screenshot"
+echo "screenshot: $preview_shot"
 
 echo "== $rid package smoke test passed"
