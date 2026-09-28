@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.Managers;
 using Shouldly;
@@ -124,6 +125,47 @@ public class FormsThemesTemplateTests
 
         inManifest.ShouldBe(GetElementNamesOnDisk(templateDir, subfolder, extension),
             $"FormsTemplate/{subfolder}: manifest.txt vs files on disk");
+    }
+
+    // GumFormsPlugin copies each template folder, FontCache included, into the release's
+    // Content/FormsThemes. A cached font no element needs ships for nothing, and the Standard
+    // theme's leftovers were rendered from Arial and Wasco Sans, which may not be redistributed (#5430).
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void FontCache_ShouldOnlyContainFontsTheTemplateUses(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        string templateDir = GetTemplateDir(templateFolder);
+        GumProjectSave project = new ProjectLoader().Load(Path.Combine(templateDir, "GumProject.gumx")).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            IEnumerable<ElementSave> allElements = project.StandardElements
+                .Cast<ElementSave>()
+                .Concat(project.Components)
+                .Concat(project.Screens);
+            HashSet<string> required = new FontReferenceCollector(instance => ObjectFinder.Self.GetElementSave(instance))
+                .Collect(project, allElements)
+                .Keys
+                .Select(Path.GetFileName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+
+            string fontCacheDir = Path.Combine(templateDir, "FontCache");
+            List<string> unused = Directory.Exists(fontCacheDir)
+                ? Directory.GetFiles(fontCacheDir, "*.fnt")
+                    .Select(Path.GetFileName)
+                    .Where(fileName => !required.Contains(fileName!))
+                    .OrderBy(fileName => fileName, StringComparer.Ordinal)
+                    .ToList()!
+                : new List<string>();
+
+            unused.ShouldBeEmpty();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
     }
 
     private static string GetTemplateDir(string templateFolder) =>
