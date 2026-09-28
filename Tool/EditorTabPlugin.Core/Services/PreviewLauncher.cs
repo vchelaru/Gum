@@ -17,17 +17,13 @@ public class PreviewLauncher : IPreviewLauncher
     private readonly IProjectManager _projectManager;
     private readonly IOutputManager _outputManager;
     private readonly IPreviewGumxProjectionService _previewGumxProjectionService;
-    private readonly string _headBaseDirectory;
     private readonly Func<bool> _isSortByBatchKey;
 
-    private Process? _process;
+    private IPreviewProcess? _process;
     private string? _selectionFilePath;
     private bool _isConvertedGumxPreview;
 
-    /// <param name="headBaseDirectory">
-    /// The running head's own base directory (<c>AppContext.BaseDirectory</c>), used to locate the
-    /// preview executable via <see cref="PreviewExecutableLocator"/>.
-    /// </param>
+    /// <param name="processStarter">Finds and starts the preview executable.</param>
     /// <param name="isSortByBatchKey">
     /// Whether the tool's canvas currently renders with <c>BatchKeyGroupedOrderer</c> (the
     /// Performance panel's "Sort by batch" option), so the preview renders the same way.
@@ -37,16 +33,19 @@ public class PreviewLauncher : IPreviewLauncher
         IProjectManager projectManager,
         IOutputManager outputManager,
         IPreviewGumxProjectionService previewGumxProjectionService,
-        string headBaseDirectory,
+        IPreviewProcessStarter processStarter,
         Func<bool> isSortByBatchKey)
     {
         _selectedState = selectedState;
         _projectManager = projectManager;
         _outputManager = outputManager;
         _previewGumxProjectionService = previewGumxProjectionService;
-        _headBaseDirectory = headBaseDirectory;
+        ProcessStarter = processStarter;
         _isSortByBatchKey = isSortByBatchKey;
     }
+
+    /// <summary>Finds and starts the preview executable; a test swaps it for a stand-in.</summary>
+    internal IPreviewProcessStarter ProcessStarter { get; set; }
 
     private bool IsRunning => _process is { HasExited: false };
 
@@ -82,7 +81,7 @@ public class PreviewLauncher : IPreviewLauncher
         }
 
         bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName);
-        ResolvedPreviewExecutable? resolved = PreviewExecutableLocator.Resolve(_headBaseDirectory);
+        ResolvedPreviewExecutable? resolved = ProcessStarter.Resolve();
         if (resolved == null)
         {
             _outputManager.AddError(
@@ -111,7 +110,7 @@ public class PreviewLauncher : IPreviewLauncher
 
         try
         {
-            _process = Process.Start(startInfo);
+            _process = ProcessStarter.Start(startInfo);
         }
         catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or IOException)
         {

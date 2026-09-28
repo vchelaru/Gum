@@ -63,6 +63,9 @@ in-memory changes sit unsaved until an explicit save. Code that mutates an eleme
 currently-selected one (e.g. a cascading delete affecting other elements' instances) should call
 `TryAutoSaveElement` for that element, not assume it needs saving unconditionally.
 
+A project-load default fill goes in `IProjectLoadFills`, not a plugin's `ProjectLoad` handler. Auto-saves
+during `ProjectLoad` are ignored (`IsNotifyingProjectLoad`).
+
 ## Ignore Mechanism
 
 `IgnoreNextChangeUntil(FilePath, DateTime?)` suppresses the next detected change for a file until the given time. Default is **5 seconds** from now.

@@ -40,6 +40,15 @@
 		Forms controls (RegisterFromFileFormRuntimeDefaults + BehaviorFormsPropertyApplier's
 		reflection) by Tests/NativeAotSmoke.Harness.
 	-->
+	<PropertyGroup Condition="'$(PublishAot)' == 'true'">
+		<!--
+			IL2104/IL3053 are the one-line-per-assembly summaries the trimmer and AOT compiler print for
+			NuGet packages (MonoGame, Apos.Shapes, CsvHelper, BrotliSharpLib) whose own code has
+			trim/AOT warnings, which we can't fix. Gum's own assemblies are not summarized this way, so
+			their warnings still show up individually.
+		-->
+		<NoWarn>$(NoWarn);IL2104;IL3053</NoWarn>
+	</PropertyGroup>
 
 	<PropertyGroup>
 		<_PreviewVariantRid Condition="'$(_PreviewVariantRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</_PreviewVariantRid>

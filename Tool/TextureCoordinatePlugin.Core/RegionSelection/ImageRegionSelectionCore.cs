@@ -36,6 +36,12 @@ public enum ZoomDirection
 /// </summary>
 public class ImageRegionSelectionCore
 {
+    /// <summary>The tab's font, embedded in XnaAndWinforms. Rendered by Tools/regenerate-tool-fonts.ps1.</summary>
+    public const string EmbeddedFontResourceName = "XnaAndWinforms.Content.Font18LiberationSans.fnt";
+
+    /// <summary>The page texture of <see cref="EmbeddedFontResourceName"/>.</summary>
+    public const string EmbeddedFontPageResourceName = "XnaAndWinforms.Content.Font18LiberationSans_0.png";
+
     #region Fields
 
     ImageData? maxAlphaImageData;
@@ -487,8 +493,8 @@ public class ImageRegionSelectionCore
             // through one of its types.
             Assembly assembly = typeof(RenderTargetFrameLoop).Assembly;
 
-            FilePath targetFntFileName = FileManager.UserApplicationDataForThisApplication + "Font18Arial.fnt";
-            FilePath targetPngFileName = FileManager.UserApplicationDataForThisApplication + "Font18Arial_0.png";
+            FilePath targetFntFileName = FileManager.UserApplicationDataForThisApplication + "Font18LiberationSans.fnt";
+            FilePath targetPngFileName = FileManager.UserApplicationDataForThisApplication + "Font18LiberationSans_0.png";
 
             if(!targetFntFileName.Exists())
             {
@@ -496,7 +502,7 @@ public class ImageRegionSelectionCore
                 {
                     FileManager.SaveEmbeddedResource(
                         assembly,
-                        "XnaAndWinforms.Content.Font18Arial.fnt",
+                        EmbeddedFontResourceName,
                         targetFntFileName.FullPath);
                 }
                 catch(System.IO.IOException)
@@ -511,7 +517,7 @@ public class ImageRegionSelectionCore
                 {
                     FileManager.SaveEmbeddedResource(
                         assembly,
-                        "XnaAndWinforms.Content.Font18Arial_0.png",
+                        EmbeddedFontPageResourceName,
                         targetPngFileName.FullPath);
                 }
                 catch (System.IO.IOException)

@@ -1,0 +1,55 @@
+name: End-to-End Nightly
+
+# The tool's end-to-end regression suite (Category=EndToEnd, ADR-0019) against main on Windows,
+# macOS and Linux. Per-PR CI already runs these tests; the nightly run catches what changes without
+# a PR (runner images, the .NET SDK, floating package versions) and repeats the suite daily so a
+# flaky scenario shows up as an intermittent red here. Run it by hand before a release.
+#
+# Linux runs under Xvfb with the device tests opted in, so the canvas scenarios run there; they
+# skip on the other two OSes, which have no GL driver on the runner.
+#
+# Not a required check. A failure only fails the run; nothing files an issue.
+on:
+  schedule:
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+jobs:
+  End-to-End:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: ./.github/actions/build-avalonia-head
+      - name: End-to-end suite (headless)
+        if: runner.os != 'Linux'
+        run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --logger "trx;LogFileName=e2e.trx" --results-directory TestResults --filter "Category=EndToEnd"
+      - name: End-to-end suite under Xvfb, with device tests (Linux)
+        if: runner.os == 'Linux'
+        env:
+          GUM_RUN_CANVAS_DEVICE_TESTS: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=e2e.trx" --results-directory TestResults --filter "Category=EndToEnd"
+      - name: Publish Test Results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: End-to-end (${{ matrix.os }})
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+      - name: Upload hang dumps
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-hang-dumps-${{ matrix.os }}
+          path: |
+            TestResults/**/*.dmp
+            TestResults/**/Sequence_*.xml
+          if-no-files-found: ignore

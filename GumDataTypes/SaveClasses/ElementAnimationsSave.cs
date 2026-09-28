@@ -54,6 +54,8 @@ public class ElementAnimationsSave
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Serializes ElementAnimationsSave, which GumCommon's ILLink.Descriptors.xml preserves in full (Gum.StateAnimation.SaveClasses.*, preserve=\"all\").")]
+    [UnconditionalSuppressMessage("AOT", "IL3050",
+        Justification = "XmlSerializer falls back to reflection-only serialization when dynamic code is unsupported (Native AOT), so no code is generated at runtime; the IL2026 suppression above covers the trimming side.")]
 #endif
     public void Save(string fileName)
     {
@@ -75,11 +77,13 @@ public class ElementAnimationsSave
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Deserializes ElementAnimationsSave, which GumCommon's ILLink.Descriptors.xml preserves in full (Gum.StateAnimation.SaveClasses.*, preserve=\"all\").")]
+    [UnconditionalSuppressMessage("AOT", "IL3050",
+        Justification = "XmlSerializer falls back to reflection-only serialization when dynamic code is unsupported (Native AOT), so no code is generated at runtime; the IL2026 suppression above covers the trimming side.")]
 #endif
     public static ElementAnimationsSave Load(string fileName)
     {
         return IsJsonFormat(fileName)
-            ? GumAnimationJsonFileSerializer.DeserializeElementAnimations(File.ReadAllText(fileName))
+            ? GumAnimationJsonFileSerializer.DeserializeElementAnimations(FileManager.FromFileText(fileName))
             : FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
     }
 

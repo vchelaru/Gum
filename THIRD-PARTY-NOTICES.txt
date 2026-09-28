@@ -198,7 +198,7 @@ Vortice.Windows (D3DCompiler / DirectX / Dxc) and Vortice.Mathematics —
     NuGet: Vortice.D3DCompiler, Vortice.DirectX, Vortice.Dxc,
         Vortice.Mathematics
     Managed bindings. Vortice.Dxc also carries the native DirectX Shader
-    Compiler (dxcompiler / libdxil, see below).
+    Compiler (dxcompiler / dxil, see below).
 
 --------------------------------------------------------------------------------
 FreeType License (FTL) — a BSD-style license with a credit clause
@@ -303,18 +303,16 @@ AngelCode Bitmap Font Generator (BMFont, native: bmfont.exe) — Copyright (c)
 --------------------------------------------------------------------------------
 University of Illinois/NCSA Open Source License (LLVM Release License)
 --------------------------------------------------------------------------------
-DirectX Shader Compiler (native dxcompiler.dll / libdxcompiler) — Copyright
-    (c) Microsoft Corporation; portions Copyright (c) 2003-2015 University of
-    Illinois at Urbana-Champaign. All rights reserved.
+DirectX Shader Compiler (native dxcompiler.dll / libdxcompiler and the DXIL
+    signing library dxil.dll / libdxil.so) — Copyright (c) Microsoft
+    Corporation; portions Copyright (c) 2003-2015 University of Illinois at
+    Urbana-Champaign. All rights reserved.
     https://github.com/microsoft/DirectXShaderCompiler
     Bundled by Vortice.Dxc (and, on macOS, by ShadowDusk.HLSL). The upstream
     LICENSE.TXT also lists third-party code distributed with LLVM:
         https://github.com/microsoft/DirectXShaderCompiler/blob/main/LICENSE.TXT
-    Vortice.Dxc's DXIL signing library is left out of the Windows package
-    (dxil.dll): the tool only compiles shaders for OpenGL and never uses it.
-    The Linux package still ships libdxil.so, because Vortice.Dxc loads
-    libdxcompiler.so only after it. Its separate redistribution terms were
-    NOT retrieved for this file and are unverified.
+    Microsoft's DXC release package (Microsoft.Direct3D.DXC) lists dxil.dll
+    under this license (LICENSE-LLVM.txt).
 
 --------------------------------------------------------------------------------
 GNU Lesser General Public License (LGPL)
@@ -364,6 +362,9 @@ Content/FormsThemes/<Theme>/Fonts/, as the OFL requires:
     Share Tech Mono — Copyright (c) 2012, Carrois Type Design, Ralph du Carrois
     Liberation Sans — Digitized data copyright (c) 2010 Google Corporation;
         Copyright (c) 2012 Red Hat, Inc.
+        Also the source of the tool's own bitmap fonts: Content/TestFont,
+        Content/Fonts/Font18LiberationSans_o1, and Font18LiberationSans embedded
+        in XnaAndWinforms.dll (regenerate with Tools/regenerate-tool-fonts.ps1).
 
 Inter — Copyright (c) 2016 The Inter Project Authors
     https://github.com/rsms/inter
@@ -392,10 +393,9 @@ StbImageSharp / StbImageWriteSharp / StbTrueTypeSharp — StbSharp
 --------------------------------------------------------------------------------
 Unverified
 --------------------------------------------------------------------------------
-Pre-rendered bitmap fonts in Content/ (FontCache/*.fnt + .png) generated from
-Arial (Content/Fonts/Font18Arial_o1 and the Standard theme's FontCache),
-Wasco Sans and Titillium Web. These are rasterized glyph images, not font software; their
-licensing position was not verified for this file.
+The runtime's default bitmap font (Font18Arial, regular/Bold/Italic/Bold_Italic),
+embedded in KniGum.dll, is rendered from Arial. These are rasterized glyph images,
+not font software; replacing them is tracked in #5434.
 
 
 ================================================================================

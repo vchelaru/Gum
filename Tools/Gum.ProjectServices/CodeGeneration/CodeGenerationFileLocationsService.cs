@@ -63,11 +63,7 @@ public class CodeGenerationFileLocationsService
 
                 var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(fileName);
 
-                var folder = codeOutputProjectSettings.CodeProjectRoot;
-                if (FileManager.IsRelative(folder))
-                {
-                    folder = projectDirectory + folder;
-                }
+                string folder = GetCodeOutputFolder(codeOutputProjectSettings)!;
 
                 generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
             }
@@ -90,26 +86,49 @@ public class CodeGenerationFileLocationsService
     }
 
     /// <summary>
-    /// Gets the file path for the per-project Standard Elements fallback-registration file
-    /// (<c>StandardElements.Generated.cs</c>). Written directly under
-    /// <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> with no Screens/Components
-    /// subfolder, since it isn't owned by any single element. Returns null when
+    /// The folder generated code is written under: <see cref="CodeOutputProjectSettings.CodeProjectRoot"/>
+    /// plus the optional <see cref="CodeOutputProjectSettings.GeneratedCodeFolder"/>, resolved against the
+    /// Gum project directory when relative. Returns null when
     /// <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> isn't configured.
     /// </summary>
-    public FilePath? GetStandardElementsFallbackFileName(CodeOutputProjectSettings codeOutputProjectSettings)
+    public string? GetCodeOutputFolder(CodeOutputProjectSettings codeOutputProjectSettings)
     {
-        if (string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+        string folder = codeOutputProjectSettings.CodeProjectRoot;
+        if (string.IsNullOrEmpty(folder))
         {
             return null;
         }
 
-        string folder = codeOutputProjectSettings.CodeProjectRoot;
         if (FileManager.IsRelative(folder))
         {
             folder = _projectDirectoryProvider.ProjectDirectory + folder;
         }
 
-        return folder + "StandardElements.Generated.cs";
+        string generatedCodeFolder = codeOutputProjectSettings.GeneratedCodeFolder;
+        if (!string.IsNullOrEmpty(generatedCodeFolder))
+        {
+            folder = FileManager.IsRelative(generatedCodeFolder)
+                ? WithTrailingSeparator(folder) + generatedCodeFolder
+                : generatedCodeFolder;
+            folder = WithTrailingSeparator(folder);
+        }
+
+        return folder;
+    }
+
+    private static string WithTrailingSeparator(string folder) =>
+        folder.EndsWith("/") || folder.EndsWith("\\") ? folder : folder + "/";
+
+    /// <summary>
+    /// Gets the file path for the per-project Standard Elements fallback-registration file
+    /// (<c>StandardElements.Generated.cs</c>). Written directly under <see cref="GetCodeOutputFolder"/>
+    /// with no Screens/Components subfolder, since it isn't owned by any single element. Returns null
+    /// when <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> isn't configured.
+    /// </summary>
+    public FilePath? GetStandardElementsFallbackFileName(CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        string? folder = GetCodeOutputFolder(codeOutputProjectSettings);
+        return folder == null ? null : folder + "StandardElements.Generated.cs";
     }
 
     /// <summary>

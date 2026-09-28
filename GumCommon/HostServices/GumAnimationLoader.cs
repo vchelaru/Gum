@@ -85,6 +85,8 @@ public static class GumAnimationLoader
     /// </summary>
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Deserializes ElementAnimationsSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\") under Gum.StateAnimation.SaveClasses.*.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050",
+        Justification = "XmlSerializer falls back to reflection-only serialization when dynamic code is unsupported (Native AOT), so no code is generated at runtime; the IL2026 suppression above covers the trimming side.")]
     public static int LoadAnimationsFromProvider(GumProjectSave project, IGumFileProvider provider)
     {
         // Filename-only pattern (no '/'): GlobMatcher matches it against the file name regardless of

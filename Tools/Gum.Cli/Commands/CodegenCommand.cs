@@ -125,7 +125,17 @@ public static class CodegenCommand
         {
             resolvedCodeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory!, resolvedCodeProjectRoot));
         }
-        Console.WriteLine($"Generating code into {resolvedCodeProjectRoot}");
+        string resolvedOutputFolder = resolvedCodeProjectRoot;
+        if (!string.IsNullOrEmpty(projectSettings.GeneratedCodeFolder))
+        {
+            string generatedCodeFolder = projectSettings.GeneratedCodeFolder.Replace('\\', Path.DirectorySeparatorChar);
+            resolvedOutputFolder = Path.GetFullPath(Path.Combine(resolvedCodeProjectRoot, generatedCodeFolder));
+            if (!Path.EndsInDirectorySeparator(resolvedOutputFolder))
+            {
+                resolvedOutputFolder += Path.DirectorySeparatorChar;
+            }
+        }
+        Console.WriteLine($"Generating code into {resolvedOutputFolder}");
 
         // Build the codegen pipeline
         INameVerifier nameVerifier = new HeadlessNameVerifier();

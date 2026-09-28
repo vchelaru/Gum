@@ -6456,14 +6456,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     // This is made public so that specific implementations can fall back to it if needed:
     public static bool SetPropertyThroughReflection(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object? value) =>
-        TrySetPropertyThroughReflection(mContainedObjectAsIpso, propertyName, value);
+        TrySetPropertyThroughReflection(mContainedObjectAsIpso.GetType(), mContainedObjectAsIpso, propertyName, value);
 
     // Shared by SetPropertyThroughReflection (targets the contained renderable) and
     // TrySetCustomVariableOnThis (targets this GUE/generated runtime class itself, issue #4891) so
     // both get the same enum/Nullable<T> coercion tolerance.
-    private static bool TrySetPropertyThroughReflection(object target, string propertyName, object? value)
+    //
+    // targetObjectType is passed separately from target so the trimmer can see it carries public
+    // properties: each caller gets it from GetType() on a statically typed value whose type is
+    // annotated with DynamicallyAccessedMembers(PublicProperties) (IRenderableIpso, GraphicalUiElement),
+    // which a GetType() on a plain object cannot express.
+    private static bool TrySetPropertyThroughReflection(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type targetObjectType,
+        object target, string propertyName, object? value)
     {
-        System.Reflection.PropertyInfo? propertyInfo = target.GetType().GetProperty(propertyName);
+        System.Reflection.PropertyInfo? propertyInfo = targetObjectType.GetProperty(propertyName);
 
         if (propertyInfo == null || !propertyInfo.CanWrite)
         {
@@ -6531,7 +6538,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             return false;
         }
 
-        return TrySetPropertyThroughReflection(this, propertyName, value);
+        return TrySetPropertyThroughReflection(this.GetType(), this, propertyName, value);
     }
 
     /// <summary>
@@ -6551,7 +6558,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         object? formsControl = interactiveGue.FormsControlAsObject;
         if (formsControl != null)
         {
-            return TrySetPropertyThroughReflection(formsControl, propertyName, value);
+            return TrySetPropertyThroughReflection(GetFormsControlType(formsControl), formsControl, propertyName, value);
         }
 
         if (_pendingCustomVariables == null)
@@ -6561,6 +6568,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         _pendingCustomVariables[propertyName] = value;
         return false;
     }
+
+    // FormsControlAsObject is typed object because this file also compiles into FlatRedBall, which
+    // has its own FrameworkElement. The value is always a FrameworkElement, whose
+    // DynamicallyAccessedMembers(PublicProperties) type annotation keeps the public properties of
+    // every subclass.
+    [UnconditionalSuppressMessage("Trimming", "IL2073",
+        Justification = "Forms controls derive from FrameworkElement, which is annotated with DynamicallyAccessedMembers(PublicProperties).")]
+    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+    private static Type GetFormsControlType(object formsControl) => formsControl.GetType();
 
     /// <summary>
     /// Applies the custom variables that arrived before a Forms control existed, then discards
@@ -6579,7 +6595,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         foreach (KeyValuePair<string, object?> variable in pending)
         {
-            TrySetPropertyThroughReflection(formsControl, variable.Key, variable.Value);
+            TrySetPropertyThroughReflection(GetFormsControlType(formsControl), formsControl, variable.Key, variable.Value);
         }
     }
 

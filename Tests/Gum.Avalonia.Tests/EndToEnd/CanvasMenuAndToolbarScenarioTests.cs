@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -441,6 +442,100 @@ public class CanvasMenuAndToolbarScenarioTests
             }
             Thread.Sleep(10);
             canvas.Input.Layout();
+        }
+    }
+
+    #endregion
+
+    #region Preview
+
+    [SkippableFact]
+    [Trait("Feature", "CANV-026")]
+    public void PreviewButton_LaunchesThePreviewOnce_ThenFollowsTheSelection()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            ScreenSave mainMenu = canvas.Project.AddScreen("MainMenu");
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            PreviewLauncher launcher = canvas.Plugin.PreviewLauncher;
+            IPreviewProcessStarter originalStarter = launcher.ProcessStarter;
+            StandInPreview preview = new StandInPreview();
+            launcher.ProcessStarter = preview;
+            try
+            {
+                canvas.Input.Click(canvas.PreviewButton);
+
+                preview.Started.Count.ShouldBe(1);
+                string projectFile = canvas.Project.Project.FullFileName.ShouldNotBeNull();
+                preview.Argument(0, "--project").ShouldBe(projectFile);
+                preview.Argument(0, "--element").ShouldBe("Button");
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(preview.Argument(0, "--content-root")))
+                    .ShouldBe(Path.GetDirectoryName(Path.GetFullPath(projectFile)));
+                PreviewSelectionMessage launched = preview.Selection(0);
+                launched.ElementName.ShouldBe("Button");
+                launched.Activate.ShouldBeFalse();
+
+                // Selecting in the tree follows along without raising the preview window.
+                canvas.Tree.Click(canvas.Tree.NodeFor(mainMenu));
+                preview.Selection(0).ElementName.ShouldBe("MainMenu");
+                preview.Selection(0).Activate.ShouldBeFalse();
+
+                // A second click raises the running preview instead of starting another.
+                canvas.Input.Click(canvas.PreviewButton);
+                preview.Started.Count.ShouldBe(1);
+                preview.Selection(0).Activate.ShouldBeTrue();
+
+                // Once the preview has closed, the button starts a new one.
+                preview.HasExited = true;
+                canvas.Input.Click(canvas.PreviewButton);
+                preview.Started.Count.ShouldBe(2);
+                preview.Argument(1, "--element").ShouldBe("MainMenu");
+                canvas.Tree.OutputWritten.ShouldContain("Launched preview for MainMenu.");
+            }
+            finally
+            {
+                preview.HasExited = true;
+                launcher.ProcessStarter = originalStarter;
+                preview.DeleteSelectionFiles();
+            }
+
+            canvas.AssertOracles();
+        });
+    }
+
+    // Stands in for GumPreview: records each launch and reports itself running until told otherwise.
+    private sealed class StandInPreview : IPreviewProcessStarter, IPreviewProcess
+    {
+        public List<ProcessStartInfo> Started { get; } = new List<ProcessStartInfo>();
+
+        public bool HasExited { get; set; }
+
+        public ResolvedPreviewExecutable? Resolve() => new ResolvedPreviewExecutable("/Preview/GumPreview", IsNativeAot: false);
+
+        public IPreviewProcess? Start(ProcessStartInfo startInfo)
+        {
+            Started.Add(startInfo);
+            HasExited = false;
+            return this;
+        }
+
+        public string Argument(int launch, string name)
+        {
+            List<string> arguments = Started[launch].ArgumentList.ToList();
+            return arguments[arguments.IndexOf(name) + 1];
+        }
+
+        public PreviewSelectionMessage Selection(int launch) =>
+            PreviewSelectionMessage.TryParse(File.ReadAllLines(Argument(launch, "--selection-file")))
+            ?? throw new InvalidOperationException("The selection file holds no selection.");
+
+        public void DeleteSelectionFiles()
+        {
+            for (int launch = 0; launch < Started.Count; launch++)
+            {
+                File.Delete(Argument(launch, "--selection-file"));
+            }
         }
     }
 

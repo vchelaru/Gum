@@ -62,6 +62,32 @@ public class CodeGenScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "CODE-004")]
+    public void Generate_WithGeneratedCodeFolder_WritesUnderThatFolder_AndKeepsTheNamespace()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave toggle = code.Project.AddComponent("Controls/Toggle");
+        code.Tree.SaveAll();
+        code.Select(toggle);
+        code.SetUpManualGeneration();
+        code.TypeAndEnter("Root Namespace", "MyGame");
+
+        code.TypeAndEnter("Generated Code Folder", "Gum/Generated");
+        code.ClickGenerate();
+
+        string generated = File.ReadAllText(code.CodeFile("Gum/Generated/Components/Controls/Toggle.Generated.cs"));
+        generated.ShouldContain("namespace MyGame.Components", customMessage: "the folder moves files, not namespaces");
+        generated.ShouldNotContain("namespace MyGame.Gum");
+        File.Exists(code.CodeFile("Gum/Generated/Components/Controls/Toggle.cs")).ShouldBeTrue();
+        File.Exists(code.CodeFile("Components/Controls/Toggle.Generated.cs")).ShouldBeFalse();
+        string settings = File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj"));
+        settings.ShouldContain("\"CodeProjectRoot\": \"Code");
+        settings.ShouldContain("\"GeneratedCodeFolder\": \"Gum/Generated\"");
+
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "CODE-007")]
     [Trait("Feature", "CODE-008")]
     [Trait("Feature", "CODE-009")]

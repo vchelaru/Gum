@@ -157,6 +157,44 @@ public class ContentLoaderTests : BaseTestClass
         }
     }
 
+    // A macOS .app runs from Contents/MacOS/ but ships content in Contents/Resources/; raylib's native
+    // font loader takes a raw path, so it must be handed the Resources copy (#5450). The requested
+    // name may carry the .ttf extension or omit it.
+    [Theory]
+    [InlineData("Orbitron-Black.ttf")]
+    [InlineData("Orbitron-Black")]
+    public void LoadContent_Font_WhenTtfIsInMacOSBundleResources_ShouldLoadIt(string requestedName)
+    {
+        string contents = Path.Combine(Path.GetTempPath(), "GumRaylibBundle_" + Guid.NewGuid().ToString("N"),
+            "Game.app", "Contents");
+        string macOsDirectory = Path.Combine(contents, "MacOS") + Path.DirectorySeparatorChar;
+        string resourcesDirectory = Path.Combine(contents, "Resources");
+        Directory.CreateDirectory(macOsDirectory);
+        Directory.CreateDirectory(resourcesDirectory);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "Orbitron-Black.ttf"),
+            Path.Combine(resourcesDirectory, "Orbitron-Black.ttf"));
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = null;
+            FileManager.MacOSBundleExecutableDirectoryOverride = macOsDirectory;
+
+            Font font = LoaderManager.Self.LoadContent<Font>(Path.Combine(macOsDirectory, requestedName));
+
+            font.GlyphCount.ShouldBeGreaterThan(0);
+        }
+        finally
+        {
+            FileManager.MacOSBundleExecutableDirectoryOverride = null;
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+            try { Directory.Delete(Path.GetDirectoryName(Path.GetDirectoryName(contents))!, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
     // The line-metrics registry (which lets a raylib Text recover the .fnt's lineHeight/base, since
     // Raylib_cs.Font has no field for them) is keyed by atlas texture id. Loading a .fnt registers an
     // entry; that entry MUST be dropped when the font is unloaded, because raylib can later hand the

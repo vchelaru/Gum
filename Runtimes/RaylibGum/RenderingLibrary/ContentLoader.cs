@@ -80,15 +80,18 @@ public sealed class ContentLoader : IContentLoader
         // The CustomGetStreamFromFile hook wins over a loose file at the same path, as it does for
         // every other content load, so a loaded bundle overrides stale loose copies (#5299).
         string? hookedFntText = isFnt ? TryReadFntFromStreamHook(contentName) : null;
+        // raylib's native loaders take a raw path, so resolve the macOS .app Contents/Resources/
+        // copy up front (#5450).
+        string? diskPath = hookedFntText == null ? FileManager.ResolveExistingFilePath(contentName) : null;
         if (hookedFntText != null)
         {
             font = BuildBitmapFontWithShadowSibling(contentName, hookedFntText);
         }
-        else if (System.IO.File.Exists(contentName))
+        else if (diskPath != null)
         {
             if (isFnt)
             {
-                Font loadedFont = Raylib.LoadFont(contentName);
+                Font loadedFont = Raylib.LoadFont(diskPath);
                 // Apply the project's texture filter (#3496); raylib defaults new textures to point
                 // filtering. Bitmap font atlases pack glyphs edge-to-edge with little/no padding, so
                 // Linear filtering can bleed adjacent glyphs' pixels at the seams — an inherent
@@ -98,7 +101,7 @@ public sealed class ContentLoader : IContentLoader
                 // raylib's native loader discards the .fnt's lineHeight/base, so re-parse the on-disk
                 // file to record them (same registry the in-memory/KernSmith path populates via
                 // BuildFont). Keyed by atlas texture id so the Text renderable can recover them.
-                RegisterFontMetricsFromFnt(File.ReadAllText(contentName), loadedFont.Texture.Id);
+                RegisterFontMetricsFromFnt(File.ReadAllText(diskPath), loadedFont.Texture.Id);
                 // #4057: if a "-shadow.fnt" sibling exists (written by the font generator for a
                 // dropshadow font, sharing the same PNG - see BitmapFont.LoadShadowSiblingIfPresent on
                 // the MonoGame side), load it too and record it against the primary's texture id.
@@ -106,15 +109,14 @@ public sealed class ContentLoader : IContentLoader
             }
             else
             {
-                font = LoadFontEx(contentName, 24, null, 0);
+                font = LoadFontEx(diskPath, 24, null, 0);
                 TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
             }
         }
         else if (isFnt)
         {
-            // Neither the hook nor this exact disk path has the .fnt, but FileManager's own disk
-            // fallback may (e.g. a macOS .app's Resources folder). Null falls through to the
-            // default(Font) handling below. (#3037)
+            // Neither the hook text read nor the disk found the .fnt; GetStreamForFile gets a last
+            // try. Null falls through to the default(Font) handling below. (#3037)
             font = TryLoadBitmapFontThroughStreamHook(contentName);
         }
 
@@ -124,9 +126,10 @@ public sealed class ContentLoader : IContentLoader
             font = default(Font);
         }
 
-        if (System.IO.File.Exists(contentName + ".ttf") && font == null)
+        string? ttfPath = font == null ? FileManager.ResolveExistingFilePath(contentName + ".ttf") : null;
+        if (ttfPath != null)
         {
-            font = LoadFontEx(contentName, 24, null, 0);
+            font = LoadFontEx(ttfPath, 24, null, 0);
             TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
         }
 
@@ -266,7 +269,7 @@ public sealed class ContentLoader : IContentLoader
     private static string? TryReadFntFromStreamHook(string fntPath)
     {
         string? text = TryReadTextFromStreamHook(fntPath);
-        if (text != null && System.IO.File.Exists(fntPath) && HasMultiplePages(text))
+        if (text != null && FileManager.ResolveExistingFilePath(fntPath) != null && HasMultiplePages(text))
         {
             return null;
         }
@@ -465,9 +468,9 @@ public sealed class ContentLoader : IContentLoader
             {
                 shadowFont = BuildBitmapFontThroughStreamHook(shadowFntPath, hookedShadowText);
             }
-            else if (System.IO.File.Exists(shadowFntPath))
+            else if (FileManager.ResolveExistingFilePath(shadowFntPath) is string shadowDiskPath)
             {
-                Font loadedShadowFont = Raylib.LoadFont(shadowFntPath);
+                Font loadedShadowFont = Raylib.LoadFont(shadowDiskPath);
                 TextureFilterApplier(loadedShadowFont.Texture, DefaultTextureFilter);
                 shadowFont = loadedShadowFont;
             }

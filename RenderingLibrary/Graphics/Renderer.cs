@@ -2087,8 +2087,10 @@ public class CustomEffectManager
     // ContentManager loads title-relative content from) and NOT the process working directory:
     // launching via a Windows file association sets the working directory to the opened file's
     // folder, which made a working-directory-relative probe miss a shipped Content/Shader.xnb (#3694).
+    // A macOS .app ships content in Contents/Resources/ instead (#5450).
     internal static bool CustomShaderFileExists(string baseDirectory) =>
-        System.IO.File.Exists(System.IO.Path.Combine(baseDirectory, "Content", "Shader.xnb"));
+        ToolsUtilities.FileManager.ResolveExistingFilePath(
+            System.IO.Path.Combine(baseDirectory, "Content", "Shader.xnb")) != null;
 
     public void Initialize(GraphicsDevice graphicsDevice)
     {

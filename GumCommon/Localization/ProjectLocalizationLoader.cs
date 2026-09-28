@@ -78,7 +78,7 @@ public static class ProjectLocalizationLoader
         {
             bool exists = bundleFileProvider != null
                 ? bundleFileProvider.Exists(relativePath)
-                : File.Exists(ToLooseFilePath(projectDirectory, relativePath));
+                : FileManager.ResolveExistingFilePath(ToLooseFilePath(projectDirectory, relativePath)) != null;
             if (exists)
             {
                 existingPaths.Add(relativePath);
