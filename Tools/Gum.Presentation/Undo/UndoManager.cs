@@ -152,10 +152,10 @@ public class UndoManager : IUndoManager
     /// <inheritdoc/>
     public void HandleProjectLoaded(GumProjectSave project)
     {
-        if (IsSameFile(_loadedProject?.FullFileName, project.FullFileName))
+        if (_loadedProject != null && IsSameFile(_loadedProject.FullFileName, project.FullFileName))
         {
-            _elementStrategy.CarryOverTo(project);
-            _behaviorStrategy.CarryOverTo(project);
+            _elementStrategy.CarryOverTo(_loadedProject, project);
+            _behaviorStrategy.CarryOverTo(_loadedProject, project);
         }
         else
         {
