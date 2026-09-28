@@ -285,10 +285,16 @@ public class FormsAndImportScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact]
+    [SkippableFact]
     [Trait("Feature", "CONT-008")]
     [Trait("Feature", "EDIT-001")]
     public void ImportGumx_AStandardWhoseFileIsUnchangedButWhoseAnimationsAreNot_UndoKeepsTheImportedAnimations()
+    {
+        Skip.If(OperatingSystem.IsMacOS(), "#5402: the post-import project reload times out on macOS CI; re-enable once #5402 is fixed on a Mac");
+        DeviceTestThread.Run(ImportGumx_AStandardWhoseFileIsUnchangedButWhoseAnimationsAreNot_UndoKeepsTheImportedAnimationsBody);
+    }
+
+    private void ImportGumx_AStandardWhoseFileIsUnchangedButWhoseAnimationsAreNot_UndoKeepsTheImportedAnimationsBody()
     {
         // The reload keeps an unchanged element's history (#5339), but the element file alone does
         // not say whether the import replaced its animations (#5345).

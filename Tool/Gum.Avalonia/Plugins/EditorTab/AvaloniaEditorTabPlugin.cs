@@ -224,6 +224,13 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     /// <summary>The canvas's right-click menu, for tests.</summary>
     internal ContextMenu CanvasContextMenu => _contextMenu;
 
+    /// <summary>
+    /// True from a right press until its menu has been opened (or found nothing to show), for
+    /// tests. The menu opens on a dispatcher job posted from the thread pool, so a test cannot
+    /// know it has run from the frames it drew alone.
+    /// </summary>
+    internal bool IsCanvasContextMenuPending => _isContextMenuPending;
+
     /// <inheritdoc/>
     protected override void OnUiBaseFontSizeChanged(double size) => _toolbar?.UpdateButtonSizes(size);
 
