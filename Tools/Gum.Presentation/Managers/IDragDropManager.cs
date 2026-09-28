@@ -23,7 +23,11 @@ public interface IDragDropManager
     string? GetFileDropBlockedReason();
 
     bool IsValidExtensionForFileDrop(string file);
-    void OnFilesDroppedInTreeView(string[] files);
+    /// <summary>
+    /// Files dropped from the file manager onto <paramref name="targetTreeNode"/>, the row under
+    /// the drop (null when none): a screen file dropped on Screens is imported.
+    /// </summary>
+    void OnFilesDroppedInTreeView(string[] files, ITreeNode? targetTreeNode);
 
     /// <summary>
     /// Creates an instance of <paramref name="draggedObject"/> (an <see cref="ElementSave"/>) on

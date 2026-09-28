@@ -107,6 +107,8 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `ProjectOracleTests.cs` | Each oracle fails on the damage it exists to catch. |
 | `CanvasHarness.cs` | The head's Editor tab (toolbar, canvas, scroll bars) on a real graphics device, next to a `ProjectTreeHarness` over the same project, whose oracles it ends with. Pointer, key, wheel and drop input in window coordinates (`WindowPointOf(worldX, worldY)`), a drawn frame after every event, and `SavedValue` to read what reached disk. |
 | `CanvasScenarioTests.cs` | The Editor canvas: selection, move, resize, rotate, nudge, polygon points, camera, rulers, drops. |
+| `CanvasMenuAndToolbarScenarioTests.cs` | The canvas's right-click menu, its toolbar (grid snap, canvas size, font scale), resize edge cases, and what the canvas draws (hover highlight, dimension display, checkerboard, redraws, Skia shapes). |
+| `DragDropScenarioTests.cs` | Drag and drop: tree rows onto rows, folders and the canvas, search results onto the canvas, files from the file manager onto the tree, the canvas and the window. |
 | `TreeScenarioTests.cs`, `TreeNavigationScenarioTests.cs`, `EditMenuScenarioTests.cs`, `VariableScenarioTests.cs`, `StateScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search; selecting, expanding, icons, file menus, importing); the main menu's Edit menu; the Variables tab, states and edits that cascade into other elements; the States tab; copy, paste, rename and delete where they meet references, parents, states and animations. |
 | `AnimationScenarioTests.cs` | The Animations tab on `../Animations/AnimationEditorHarness.cs`: `StartScenario()` after setup (saves, routes Ctrl+Z/Ctrl+Y, starts the exception watch, returns the start snapshot), `Undo`/`Redo`, and `AssertOracles()`, which also checks the saved sidecar holds exactly what the tab shows, before and after the reload. |
 | `DialogScenarioTests.cs` | Dialogs reached from the main menu (`ProjectTreeHarness.PickMainMenu("File", "New Project")`) and the Project tree: New Project, Load Project and Load Recent, Import Components, Theming, Manage Plugins, Add Skia Standard Elements, Project Properties, the Help menu. An async menu action is followed by `WaitUntil`. |
@@ -175,6 +177,19 @@ class in its filter.
 - A drop onto the canvas is the platform's drag events with the payload the source would build
   (`DropOnCanvas`); headless Avalonia has no drag source. A drop parents the new instance only to
   the selected instance under it.
+- A drag out of the tree or its search results starts for real (press, then a move past the
+  threshold): `ProjectTreeHarness.BeginDrag` replaces `AvaloniaDragSource.Start`, the head's one
+  call into the platform's drag loop, and stands in for that loop. `DropOn` (a tree row) or
+  `DropOnCanvas` with `CurrentDrag` delivers the drop, and `EndDrag` ends the loop the way the
+  platform does: the pressed row loses the pointer capture and never sees the button come up.
+  No pointer move reaches a window while a drag or a file drop is under way, as on a desktop.
+- The canvas's right-click menu opens after the frame that reads the press, so `RightClick` then
+  `PickMenu` acts on what is under the pointer.
+- The canvas draws on its own frame timer only when the app's input hook asks for a frame; the head
+  installs `CanvasInputRedrawHook` at startup and a harness does not, so a scenario that waits for a
+  redraw without `Frame()` installs it for its duration.
+- A new project has no ColoredRectangle standard; a filled `Rectangle` (`IsFilled`) is the solid
+  shape to look for in pixels, white over the gray checkerboard.
 - Undo replaces an element's instances with copies; after an undo, find instances again by name.
 
 `pwsh Tools/e2e-coverage.ps1` lists the inventory IDs no non-skipped test tags, per area.
