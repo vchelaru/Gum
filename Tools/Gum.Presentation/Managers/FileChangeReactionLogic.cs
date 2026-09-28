@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -26,6 +27,8 @@ namespace Gum.Managers
         private readonly IProjectState _projectState;
         private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
         private readonly IPluginManager _pluginManager;
+        private readonly IDialogService _dialogService;
+        private readonly IUnsavedChangesTracker _unsavedChangesTracker;
 
         public FileChangeReactionLogic(
             ISelectedState selectedState,
@@ -36,8 +39,12 @@ namespace Gum.Managers
             IWireframeObjectManager wireframeObjectManager,
             IProjectState projectState,
             IStandardElementsManagerGumTool standardElementsManagerGumTool,
-            IPluginManager pluginManager)
+            IPluginManager pluginManager,
+            IDialogService dialogService,
+            IUnsavedChangesTracker unsavedChangesTracker)
         {
+            _dialogService = dialogService;
+            _unsavedChangesTracker = unsavedChangesTracker;
             _selectedState = selectedState;
             _wireframeCommands = wireframeCommands;
             _guiCommands = guiCommands;
@@ -425,6 +432,20 @@ namespace Gum.Managers
 
             var refreshingSelected = element == _selectedState.SelectedElement;
 
+            if (element != null && _unsavedChangesTracker.HasUnsavedChanges(element))
+            {
+                string relativeFile = file.RelativeTo(projectDirectory).Replace("\\", "/");
+                MessageDialogResult answer = _dialogService.ShowMessage(
+                    BuildUnsavedChangesPromptMessage(element.Name, relativeFile),
+                    UnsavedChangesPromptTitle,
+                    CreateUnsavedChangesPromptStyle());
+                if (answer != MessageDialogResult.Affirmative)
+                {
+                    KeepUnsavedElement(element);
+                    return;
+                }
+            }
+
             if(element != null)
             {
                 // File changes are only watched while a project is open.
@@ -481,6 +502,37 @@ namespace Gum.Managers
 
                 // todo - this isn't working if I rename a variable...
                 _guiCommands.RefreshVariables(force: true);
+            }
+        }
+
+        /// <summary>Title of the prompt shown when a file changes on disk under unsaved edits (#5379).</summary>
+        public const string UnsavedChangesPromptTitle = "File changed outside Gum";
+
+        /// <summary>
+        /// The prompt shown when <paramref name="relativeFile"/> changes on disk while
+        /// <paramref name="elementName"/> has unsaved edits in the tool (Auto Save off).
+        /// </summary>
+        public static string BuildUnsavedChangesPromptMessage(string elementName, string relativeFile) =>
+            $"{relativeFile} was changed outside Gum, and {elementName} has unsaved changes.\n\n" +
+            "Reload it from disk and lose your changes, or keep your version? " +
+            "If you keep it, your next save overwrites the change made outside Gum.";
+
+        /// <summary>The buttons of the prompt: reload is affirmative, keep is negative.</summary>
+        public static MessageDialogStyle CreateUnsavedChangesPromptStyle() => new MessageDialogStyle
+        {
+            AffirmativeText = "Reload from disk",
+            NegativeText = "Keep my changes",
+        };
+
+        private void KeepUnsavedElement(ElementSave element)
+        {
+            // The file is on disk again, so the kept element saves over it instead of being
+            // refused as missing.
+            if (element.IsSourceFileMissing)
+            {
+                element.IsSourceFileMissing = false;
+                _guiCommands.RefreshElementTreeView();
+                _pluginManager.ElementReloaded(element);
             }
         }
 

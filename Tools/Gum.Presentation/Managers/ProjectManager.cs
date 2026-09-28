@@ -47,6 +47,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     private readonly IDialogService _dialogService;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly ILastProjectLoadMarker _lastProjectLoadMarker;
+    private readonly IUnsavedChangesTracker _unsavedChangesTracker;
     private readonly IGuiCommands _guiCommands;
     private readonly Lazy<IFileCommands> _fileCommands;
     private readonly IMessenger _messenger;
@@ -147,8 +148,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         Lazy<INewProjectLogic> newProjectLogic,
         IFileSystemRevealService fileSystemRevealService,
         IProjectOpenRequestRouter projectOpenRequests,
-        ILastProjectLoadMarker lastProjectLoadMarker)
+        ILastProjectLoadMarker lastProjectLoadMarker,
+        IUnsavedChangesTracker unsavedChangesTracker)
     {
+        _unsavedChangesTracker = unsavedChangesTracker;
         _lastProjectLoadMarker = lastProjectLoadMarker;
         _newProjectLogic = newProjectLogic;
         _projectOpenRequests = projectOpenRequests;
@@ -674,6 +677,15 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
     }
 
+    // GumProjectSave.Save skips a missing-source element, so its edits are still only in memory.
+    private void MarkSavedIfWritten(ElementSave element)
+    {
+        if (!element.IsSourceFileMissing)
+        {
+            _unsavedChangesTracker.MarkSaved(element);
+        }
+    }
+
     public bool SaveProject(bool forceSaveContainedElements = false)
     {
         bool succeeded = false;
@@ -738,14 +750,17 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     {
                         foreach (var screenSave in project.Screens)
                         {
+                            MarkSavedIfWritten(screenSave);
                             _pluginManager.AfterSavingElementSave(screenSave);
                         }
                         foreach (var componentSave in project.Components)
                         {
+                            MarkSavedIfWritten(componentSave);
                             _pluginManager.AfterSavingElementSave(componentSave);
                         }
                         foreach (var standardElementSave in project.StandardElements)
                         {
+                            MarkSavedIfWritten(standardElementSave);
                             _pluginManager.AfterSavingElementSave(standardElementSave);
                         }
                     }
