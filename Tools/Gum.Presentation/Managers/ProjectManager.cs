@@ -764,6 +764,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                             _pluginManager.AfterSavingElementSave(standardElementSave);
                         }
                     }
+                    _unsavedChangesTracker.MarkSaved(project);
                 }
                 catch (UnauthorizedAccessException exception)
                 {

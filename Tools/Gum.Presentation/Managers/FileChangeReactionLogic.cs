@@ -288,6 +288,14 @@ namespace Gum.Managers
 
         private void ReactToProjectChanged(FilePath file)
         {
+            // Reloading the project replaces every element and behavior, so any unsaved edit
+            // anywhere in it would be lost (#5388).
+            if (_projectState.GumProjectSave is { } project && _unsavedChangesTracker.HasAnyUnsavedChanges(project)
+                && UserKeepsUnsavedChanges(ProjectPromptName, file))
+            {
+                return;
+            }
+
             var currentElement = _selectedState.SelectedElement;
             var elementName = currentElement?.Name;
 
@@ -303,7 +311,7 @@ namespace Gum.Managers
         {
             try
             {
-                await _fileCommands.LoadProjectAsync(file.Standardized);
+                await _fileCommands.LoadProjectAsync(file.FullPath);
             }
             catch (Exception ex)
             {
@@ -356,7 +364,7 @@ namespace Gum.Managers
             {
                 try
                 {
-                    var contents = FileManager.FromFileText(innerFile.Standardized);
+                    var contents = FileManager.FromFileText(innerFile.FullPath);
 
                     var font = new ParsedFontFile(contents);
 
@@ -432,18 +440,11 @@ namespace Gum.Managers
 
             var refreshingSelected = element == _selectedState.SelectedElement;
 
-            if (element != null && _unsavedChangesTracker.HasUnsavedChanges(element))
+            if (element != null && _unsavedChangesTracker.HasUnsavedChanges(element)
+                && UserKeepsUnsavedChanges(element.Name, file))
             {
-                string relativeFile = file.RelativeTo(projectDirectory).Replace("\\", "/");
-                MessageDialogResult answer = _dialogService.ShowMessage(
-                    BuildUnsavedChangesPromptMessage(element.Name, relativeFile),
-                    UnsavedChangesPromptTitle,
-                    CreateUnsavedChangesPromptStyle());
-                if (answer != MessageDialogResult.Affirmative)
-                {
-                    KeepUnsavedElement(element);
-                    return;
-                }
+                KeepUnsavedElement(element);
+                return;
             }
 
             if(element != null)
@@ -505,15 +506,33 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// Asks whether to reload <paramref name="file"/> over the unsaved edits of
+        /// <paramref name="name"/>; true when the user keeps their edits.
+        /// </summary>
+        private bool UserKeepsUnsavedChanges(string name, FilePath file)
+        {
+            string relativeFile = file.RelativeTo(_fileCommands.ProjectDirectory).Replace("\\", "/");
+            MessageDialogResult answer = _dialogService.ShowMessage(
+                BuildUnsavedChangesPromptMessage(name, relativeFile),
+                UnsavedChangesPromptTitle,
+                CreateUnsavedChangesPromptStyle());
+            return answer != MessageDialogResult.Affirmative;
+        }
+
+        /// <summary>How the prompt names the project when its file changes under unsaved edits.</summary>
+        public const string ProjectPromptName = "the project";
+
         /// <summary>Title of the prompt shown when a file changes on disk under unsaved edits (#5379).</summary>
         public const string UnsavedChangesPromptTitle = "File changed outside Gum";
 
         /// <summary>
         /// The prompt shown when <paramref name="relativeFile"/> changes on disk while
-        /// <paramref name="elementName"/> has unsaved edits in the tool (Auto Save off).
+        /// <paramref name="name"/> (an element, a behavior or <see cref="ProjectPromptName"/>) has
+        /// unsaved edits in the tool (Auto Save off).
         /// </summary>
-        public static string BuildUnsavedChangesPromptMessage(string elementName, string relativeFile) =>
-            $"{relativeFile} was changed outside Gum, and {elementName} has unsaved changes.\n\n" +
+        public static string BuildUnsavedChangesPromptMessage(string name, string relativeFile) =>
+            $"{relativeFile} was changed outside Gum, and {name} has unsaved changes.\n\n" +
             "Reload it from disk and lose your changes, or keep your version? " +
             "If you keep it, your next save overwrites the change made outside Gum.";
 
@@ -545,6 +564,12 @@ namespace Gum.Managers
                 item?.Name?.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
 
             var refreshingSelected = behavior == _selectedState.SelectedBehavior;
+
+            if (behavior != null && _unsavedChangesTracker.HasUnsavedChanges(behavior)
+                && UserKeepsUnsavedChanges(behavior.Name, file))
+            {
+                return;
+            }
 
             if (behavior != null)
             {

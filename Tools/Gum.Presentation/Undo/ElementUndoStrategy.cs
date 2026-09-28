@@ -1140,10 +1140,13 @@ public class ElementUndoStrategy : IUndoStrategy
     /// Moves each element's history onto the element of the same name in <paramref name="reloaded"/>,
     /// the same project reopened, when the reload left it (file and animations) and every element its
     /// cross-element changes touch unchanged; drops the rest. Those changes are re-pointed at the reloaded elements, so undo
-    /// still replays them in full.
+    /// still replays them in full. Only elements still in <paramref name="previous"/> carry over: one
+    /// a reload from disk replaced left its history behind, and would match the same reloaded
+    /// element as its replacement.
     /// </summary>
-    public void CarryOverTo(GumProjectSave reloaded)
+    public void CarryOverTo(GumProjectSave previous, GumProjectSave reloaded)
     {
+        HashSet<ElementSave> live = previous.AllElements.ToHashSet();
         Dictionary<ElementSave, ElementSave?> matches = new Dictionary<ElementSave, ElementSave?>();
         ElementSave? UnchangedMatch(ElementSave old)
         {
@@ -1162,6 +1165,10 @@ public class ElementUndoStrategy : IUndoStrategy
         List<KeyValuePair<ElementSave, ElementHistory>> carried = new List<KeyValuePair<ElementSave, ElementHistory>>();
         foreach (KeyValuePair<ElementSave, ElementHistory> pair in mUndos)
         {
+            if (!live.Contains(pair.Key))
+            {
+                continue;
+            }
             ElementSave? match = UnchangedMatch(pair.Key);
             // The element file alone does not cover its animations sidecar, which undo also writes.
             if (match != null && !DoAnimationsMatchHistory(pair.Value, match))
