@@ -1543,7 +1543,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             .Select(item => item.Clone())
             .ToList();
 
-        List<MovedInstanceReference> brokenReferences =
+        MovedInstanceReference[] brokenReferences =
             _movedInstanceReferenceFinder.GetReferencesBrokenByMove(sourceElement, instance, descendants);
 
         foreach (InstanceSave descendant in descendants)
@@ -1580,9 +1580,9 @@ public class CopyPasteLogic : ICopyPasteLogic
         ReportBrokenReferences(brokenReferences, component);
     }
 
-    private void ReportBrokenReferences(List<MovedInstanceReference> brokenReferences, ComponentSave component)
+    private void ReportBrokenReferences(MovedInstanceReference[] brokenReferences, ComponentSave component)
     {
-        if (brokenReferences.Count == 0)
+        if (brokenReferences.Length == 0)
         {
             return;
         }

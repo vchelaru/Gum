@@ -22,7 +22,7 @@ public interface IMovedInstanceReferenceFinder
     /// move itself carries (the moved instances' default-state variables, and references owned by
     /// the moved instances or by <paramref name="promotedInstance"/>) are not reported.
     /// </summary>
-    List<MovedInstanceReference> GetReferencesBrokenByMove(ElementSave sourceElement, InstanceSave promotedInstance,
+    MovedInstanceReference[] GetReferencesBrokenByMove(ElementSave sourceElement, InstanceSave promotedInstance,
         IReadOnlyCollection<InstanceSave> movedInstances);
 }
 
@@ -50,7 +50,7 @@ public class MovedInstanceReferenceFinder : IMovedInstanceReferenceFinder
     }
 
     /// <inheritdoc/>
-    public List<MovedInstanceReference> GetReferencesBrokenByMove(ElementSave sourceElement, InstanceSave promotedInstance,
+    public MovedInstanceReference[] GetReferencesBrokenByMove(ElementSave sourceElement, InstanceSave promotedInstance,
         IReadOnlyCollection<InstanceSave> movedInstances)
     {
         HashSet<string> insideNames = new HashSet<string>(movedInstances.Select(item => item.Name), StringComparer.Ordinal)
@@ -155,6 +155,6 @@ public class MovedInstanceReferenceFinder : IMovedInstanceReferenceFinder
 
             results.AddRange(descriptions.Distinct().Select(description => new MovedInstanceReference(name, description)));
         }
-        return results;
+        return results.ToArray();
     }
 }

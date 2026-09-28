@@ -37,7 +37,7 @@ public class MovedInstanceReferenceFinderTests : BaseTestClass
         defaultState.VariableLists.Add(new VariableListSave<string> { Name = "Label.VariableReferences", Value = new List<string> { "Y = Label.X" } });
         defaultState.VariableLists.Add(new VariableListSave<string> { Name = "Box.VariableReferences", Value = new List<string> { "Width = Label.Width" } });
 
-        List<MovedInstanceReference> result = _finder.GetReferencesBrokenByMove(button, box, new[] { label });
+        MovedInstanceReference[] result = _finder.GetReferencesBrokenByMove(button, box, new[] { label });
 
         result.ShouldBeEmpty();
     }
@@ -73,7 +73,7 @@ public class MovedInstanceReferenceFinderTests : BaseTestClass
         animations.Animations.Add(show);
         _mocker.GetMock<IElementAnimationsProvider>().Setup(x => x.GetAnimationsFor(button, _project)).Returns(animations);
 
-        List<MovedInstanceReference> result = _finder.GetReferencesBrokenByMove(button, box, new[] { label });
+        MovedInstanceReference[] result = _finder.GetReferencesBrokenByMove(button, box, new[] { label });
 
         result.ShouldAllBe(item => item.MovedInstanceName == "Label");
         result.Select(item => item.Description).ShouldBe(new[]
