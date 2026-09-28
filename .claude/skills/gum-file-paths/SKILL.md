@@ -14,6 +14,10 @@ silently — wrong result, no exception.
 Any logic about a case-only rename (`Foo` → `foo`) must compare `FullPath` ordinally — `oldPath == newPath`
 reports "nothing changed" for exactly the rename it needs to detect.
 
+## `Standardized` is for comparison only
+
+`FilePath.Standardized` and `StandardizedNoPathNoExtension` are lowercased, so opening or reading a file through them misses on a case-sensitive file system (Linux, some macOS volumes). Do I/O through `FullPath`, and compare `FilePath`s with `==`. Tool projects ban both properties via `BannedSymbols.CrossPlatform.txt` (RS0030).
+
 ## `Standardized` normalizes to `Path.DirectorySeparatorChar`, not `/`
 
 `FileManager.RemoveDotDotSlash` does the conversion. A hardcoded `Contains("/bin/")` check therefore
