@@ -1,4 +1,3 @@
-using System.Reflection;
 using ToolsUtilities;
 using System.IO;
 using System;
@@ -266,10 +265,10 @@ public class BmfcSave
     /// <param name="fileName">The output file path for the generated .bmfc file.</param>
     public void Save(string fileName)
     {
-        var assembly2 = Assembly.GetEntryAssembly();
-
-        // The template ships next to the tool executable.
-        string directory = FileManager.GetDirectory(assembly2!.Location);
+        // The template ships next to the tool executable. AppContext.BaseDirectory is that folder
+        // (with a trailing separator), and unlike Assembly.Location it is not empty in a
+        // single-file publish.
+        string directory = AppContext.BaseDirectory;
 
         var bmfcTemplateFullPath =
             directory + "Content/BmfcTemplate.bmfc";

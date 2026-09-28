@@ -137,6 +137,8 @@ namespace Gum.DataTypes.Variables
 #if NET5_0_OR_GREATER
         [UnconditionalSuppressMessage("Trimming", "IL2026",
             Justification = "Clones this VariableListSave<T> instance, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\") under Gum.DataTypes.Variables.*.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050",
+            Justification = "XmlSerializer falls back to reflection-only serialization when dynamic code is unsupported (Native AOT), so no code is generated at runtime; the IL2026 suppression above covers the trimming side.")]
 #endif
         public new VariableListSave<T> Clone()
         {
