@@ -171,6 +171,15 @@ cat "$out/gum-$rid.log"
 [ -s "$shot" ] || fail "Gum exited 0 but wrote no screenshot"
 echo "screenshot: $shot"
 
+# The packaged gumcli is framework-dependent, so it needs a .NET runtime of its own architecture.
+# An osx-x64 package on an Apple Silicon runner only finds the runner's arm64 .NET; osx-arm64
+# covers gumcli on macOS. GumPreview needs gumcli's JSON conversion, so it is skipped too.
+if [ "$rid" = "osx-x64" ] && [ "$(uname -m)" = "arm64" ]; then
+  echo "::warning::osx-x64 on an arm64 runner: no x64 .NET for the packaged gumcli, skipping gumcli and GumPreview"
+  echo "== $rid package smoke test passed (Gum launched; gumcli and GumPreview skipped)"
+  exit 0
+fi
+
 echo "== gumcli check"
 "$gumcli" check "$gumx" || fail "gumcli check failed"
 
