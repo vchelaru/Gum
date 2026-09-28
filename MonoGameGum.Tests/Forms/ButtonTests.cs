@@ -20,6 +20,30 @@ using GamePad = Gum.Input.GamePad;
 namespace MonoGameGum.Tests.Forms;
 public class ButtonTests : BaseTestClass
 {
+    // Issue #5406: a render-only host (SkiaGum, headless SVG export) has no cursor, so building and
+    // updating a Button must not dereference one; only the enabled/focused states apply.
+    [Fact]
+    public void UpdateState_WithNoMainCursor_ShouldUseEnabledAndFocusStatesOnly()
+    {
+        FrameworkElement.MainCursor = null!;
+        Button button = new();
+        string lastStateSet = string.Empty;
+        foreach (string stateName in new[] { FrameworkElement.EnabledStateName, FrameworkElement.DisabledStateName, FrameworkElement.FocusedStateName })
+        {
+            button.GetState(stateName).Apply = () => lastStateSet = stateName;
+        }
+
+        button.IsEnabled = false;
+        lastStateSet.ShouldBe(FrameworkElement.DisabledStateName);
+
+        button.IsEnabled = true;
+        button.IsFocused = true;
+        lastStateSet.ShouldBe(FrameworkElement.FocusedStateName);
+
+        button.IsFocused = false;
+        lastStateSet.ShouldBe(FrameworkElement.EnabledStateName);
+    }
+
     [Fact]
     public void Constructor_ShouldAssignVisual()
     {

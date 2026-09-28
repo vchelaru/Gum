@@ -951,6 +951,12 @@ public class FrameworkElement : INotifyPropertyChanged
     protected bool GetIfIsOnThisOrChildVisual(ICursor cursor)
 #endif
     {
+        // Null in a render-only host (SkiaGum), where nothing is ever under a pointer.
+        if (cursor == null)
+        {
+            return false;
+        }
+
         var isOnThisOrChild =
             cursor.VisualOver == this.Visual ||
             (cursor.VisualOver != null && cursor.VisualOver.IsInParentChain(this.Visual));
@@ -2221,16 +2227,19 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         var cursor = MainCursor;
 
-#if FULL_DIAGNOSTICS
+        // A render-only host (SkiaGum's GumService, headless SVG export) has no cursor by design,
+        // so a pointer never hovers or pushes anything: only enabled/focused state applies.
         if (cursor == null)
         {
-            throw new InvalidOperationException("MainCursor must be assigned before performing any UI logic");
+            if (IsEnabled == false)
+            {
+                return isFocused ? DisabledFocusedStateName : DisabledStateName;
+            }
+            return IsFocused ? FocusedStateName : EnabledStateName;
         }
-#endif
-
 
         bool isPushInputHeldDown = GetIfPushInputIsHeld();
-        
+
         var primaryDown = cursor.PrimaryDown;
 
         var isTouchScreen = cursor.LastInputDevice == InputDevice.TouchScreen;
