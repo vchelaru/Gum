@@ -576,14 +576,16 @@ public class GumProjectSave
         }
         else
         {
-            if (!System.IO.File.Exists(fileName))
+            // Resolves to the macOS .app Contents/Resources/ copy when the file isn't at fileName.
+            string? existingFileName = FileManager.ResolveExistingFilePath(fileName);
+            if (existingFileName == null)
             {
                 result.ErrorMessage = $"Could not find main project file {fileName}";
                 return null;
             }
             try
             {
-                string fileContent = File.ReadAllText(fileName);
+                string fileContent = File.ReadAllText(existingFileName);
                 if (isJsonFormat)
                 {
                     gps = GumJsonFileSerializer.DeserializeProject(fileContent);

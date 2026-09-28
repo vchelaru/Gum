@@ -79,7 +79,7 @@ public class ElementAnimationsSave
     public static ElementAnimationsSave Load(string fileName)
     {
         return IsJsonFormat(fileName)
-            ? GumAnimationJsonFileSerializer.DeserializeElementAnimations(File.ReadAllText(fileName))
+            ? GumAnimationJsonFileSerializer.DeserializeElementAnimations(FileManager.FromFileText(fileName))
             : FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
     }
 
