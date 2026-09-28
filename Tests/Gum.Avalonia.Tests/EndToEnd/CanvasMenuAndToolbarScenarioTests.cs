@@ -221,15 +221,14 @@ public class CanvasMenuAndToolbarScenarioTests
             float canvasHeight = GraphicalUiElement.CanvasHeight;
             try
             {
-                // The canvas size combo, stepped with the arrow keys from its first item (Down then
-                // Up lands there whether or not the combo shows a selection, #5374) past 480p to
-                // 720p: the canvas the layout uses resizes.
+                // The canvas size combo shows Project Default and steps with the arrow keys past
+                // 480p to 720p: the canvas the layout uses resizes.
                 ComboBox sizes = canvas.CanvasSizeComboBox;
+                canvas.Editor.SelectedCustomCanvasSize.FriendlyName.ShouldBe("Project Default");
+                sizes.SelectedItem.ShouldBeSameAs(canvas.Editor.SelectedCustomCanvasSize);
                 sizes.Focus();
                 canvas.Input.Press(Key.Down, PhysicalKey.ArrowDown);
-                canvas.Input.Press(Key.Up, PhysicalKey.ArrowUp);
-                canvas.Editor.SelectedCustomCanvasSize.FriendlyName.ShouldBe("Project Default");
-                canvas.Input.Press(Key.Down, PhysicalKey.ArrowDown);
+                canvas.Editor.SelectedCustomCanvasSize.FriendlyName.ShouldBe("480p");
                 canvas.Input.Press(Key.Down, PhysicalKey.ArrowDown);
                 canvas.Frame();
                 canvas.Editor.SelectedCustomCanvasSize.FriendlyName.ShouldBe("720p");
