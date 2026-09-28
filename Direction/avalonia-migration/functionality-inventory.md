@@ -60,14 +60,14 @@
 - VIEW-005 Show File Watch. tested: TabViewScenarioTests
 - VIEW-006 View Animations toggles tab. tested: TabLifecycleTests, TabViewScenarioTests
 - VIEW-008 Tab auto-selects on relevant selection. tested: TabAutoSelectLogicTests, TabViewScenarioTests
-- VIEW-009 Window size and position persist. tested: WindowSettingsLogicTests. e2e gap: #5438
+- VIEW-009 Window size and position persist. tested: WindowSettingsLogicTests, MainWindowScenarioTests
 - VIEW-010 Title shows project and unsaved state. tested: ShellTitlePluginTests, TabViewScenarioTests
 - VIEW-011 UI font size scales panels. tested: UiFontSizeEndToEndTests, TabViewScenarioTests
 - VIEW-012 Light and dark theme. tested: ThemeResourceTests, TabViewScenarioTests
 - VIEW-013 Accent color. tested: AccentPaletteTests, TabViewScenarioTests
 - VIEW-014 macOS native menu with About Gum. tested: NativeMenuBuilderTests, TabViewScenarioTests
 - VIEW-015 Mouse back/forward step selection history. tested: AppWideWindowGesturesTests, TabViewScenarioTests
-- VIEW-016 Startup failure shows error panel. tested: StartupFailureReporterTests. e2e gap: #5438
+- VIEW-016 Startup failure shows error panel. tested: StartupFailureReporterTests, MainWindowScenarioTests
 
 ## Content menu (CONT)
 
@@ -183,7 +183,7 @@
 - CANV-023 Scrollbars pan. tested: ScrollbarServiceTests, CanvasScenarioTests
 - CANV-024 Canvas size preset combo
 - CANV-025 Font Scale +/-
-- CANV-026 Preview in runtime button. tested: PreviewLauncherTests. e2e gap: #5438
+- CANV-026 Preview in runtime button. tested: PreviewLauncherTests, CanvasMenuAndToolbarScenarioTests
 - CANV-027 Rulers. tested: CanvasScenarioTests
 - CANV-028 Drag guide out of ruler. tested: CanvasScenarioTests
 - CANV-029 Dimension and distance display

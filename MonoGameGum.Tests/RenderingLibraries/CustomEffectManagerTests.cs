@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.RenderingLibraries;
@@ -38,6 +39,31 @@ public class CustomEffectManagerTests : BaseTestClass
             Directory.SetCurrentDirectory(originalWorkingDirectory);
             Directory.Delete(baseDirectory, recursive: true);
             Directory.Delete(workingDirectory, recursive: true);
+        }
+    }
+
+    // A macOS .app runs from Contents/MacOS/, but MonoGame's TitleContainer loads content from
+    // Contents/Resources/, so a shader shipped there must be found (#5450).
+    [Fact]
+    public void CustomShaderFileExists_FindsShaderInMacOSBundleResources_WhenBaseDirectoryIsContentsMacOS()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "gum_5450_bundle_" + Guid.NewGuid().ToString("N"));
+        string contents = Path.Combine(root, "Game.app", "Contents");
+        string macOsDirectory = Path.Combine(contents, "MacOS") + Path.DirectorySeparatorChar;
+
+        try
+        {
+            Directory.CreateDirectory(macOsDirectory);
+            Directory.CreateDirectory(Path.Combine(contents, "Resources", "Content"));
+            File.WriteAllText(Path.Combine(contents, "Resources", "Content", "Shader.xnb"), "dummy");
+            FileManager.MacOSBundleExecutableDirectoryOverride = macOsDirectory;
+
+            CustomEffectManager.CustomShaderFileExists(macOsDirectory).ShouldBeTrue();
+        }
+        finally
+        {
+            FileManager.MacOSBundleExecutableDirectoryOverride = null;
+            Directory.Delete(root, recursive: true);
         }
     }
 
