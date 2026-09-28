@@ -115,7 +115,7 @@ public class PlaybackTests
     }
 
     [AvaloniaFact]
-    public void AtFourTimesSpeed_AOneSecondAnimationFinishesInUnderHalfASecond()
+    public void AtFiveTimesSpeed_AOneSecondAnimationFinishesInUnderHalfASecond()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
         ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");

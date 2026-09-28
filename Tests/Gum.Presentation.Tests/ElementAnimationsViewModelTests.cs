@@ -114,6 +114,23 @@ public class ElementAnimationsViewModelTests
     }
 
     [Fact]
+    public void TimerTick_AfterTheFirst_AdvancesByTheClockTimeSinceTheLastTick_ScaledBySpeed()
+    {
+        Mock<IUiTimer> uiTimer = new();
+        ManualTimeProvider clock = new ManualTimeProvider();
+        ElementAnimationsViewModel viewModel = CreateViewModel(uiTimer.Object, playbackClock: clock);
+        viewModel.CurrentGameSpeed = "200%";
+        viewModel.IsPlaying = true;
+        uiTimer.Raise(x => x.Tick += null);
+
+        clock.Advance(TimeSpan.FromMilliseconds(100));
+        uiTimer.Raise(x => x.Tick += null);
+
+        // 0.04 from the fixed first frame at 2x, plus 0.1 s of clock time at 2x.
+        viewModel.DisplayedAnimationTime.ShouldBe(0.04 + 0.2, 0.0001);
+    }
+
+    [Fact]
     public void MoveSelectedAnimationUp_KeepsTheMovedAnimationSelected_WhenTheListDropsTheSelectionDuringTheMove()
     {
         ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>());
@@ -322,7 +339,18 @@ public class ElementAnimationsViewModelTests
         renameManager.Verify(r => r.HandleRename(It.IsAny<AnimationViewModel>(), It.IsAny<string>(), It.IsAny<IEnumerable<AnimationViewModel>>(), It.IsAny<ElementSave>()), Times.Never);
     }
 
-    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null, IDialogService? dialogs = null, IRenameManager? renameManager = null)
+    private sealed class ManualTimeProvider : TimeProvider
+    {
+        private long _timestamp;
+
+        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+        public override long GetTimestamp() => _timestamp;
+
+        public void Advance(TimeSpan amount) => _timestamp += amount.Ticks;
+    }
+
+    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null, IDialogService? dialogs = null, IRenameManager? renameManager = null, TimeProvider? playbackClock = null)
     {
         ComponentSave element = new() { Name = "Foo" };
         ISelectedState selectedState = Mock.Of<ISelectedState>(s => s.SelectedElement == element);
@@ -337,6 +365,7 @@ public class ElementAnimationsViewModelTests
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
             uiTimer,
-            clipboard);
+            clipboard,
+            playbackClock);
     }
 }

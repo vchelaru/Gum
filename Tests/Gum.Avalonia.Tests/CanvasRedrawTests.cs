@@ -3,6 +3,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Gum.Avalonia.Canvas;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -15,17 +16,6 @@ namespace Gum.Avalonia.Tests;
 /// </summary>
 public class CanvasRedrawTests
 {
-    private sealed class ManualTimeProvider : TimeProvider
-    {
-        private long _timestamp;
-
-        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
-
-        public override long GetTimestamp() => _timestamp;
-
-        public void Advance(TimeSpan amount) => _timestamp += amount.Ticks;
-    }
-
     [Fact]
     public void Scheduler_NeedsRedraw_OnlyUntilTheSettlePeriodAfterARequestEnds()
     {
