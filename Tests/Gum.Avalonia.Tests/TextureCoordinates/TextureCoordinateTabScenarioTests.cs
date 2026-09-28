@@ -221,14 +221,19 @@ public class TextureCoordinateTabScenarioTests
                 checker.Visible.ShouldBe(properties.ShowCheckerBackground, tab.Describe());
                 solid.Color.ShouldBe(theming.EffectiveSettings.CheckerA);
 
+                // The dialog applies a color while it is open; Cancel puts it back, so no setting is saved.
+                System.Drawing.Color? whileOpen = null;
                 tab.Project.Dialogs.AnswerNext<ThemingDialogViewModel>(dialog =>
                 {
                     dialog.CheckerAColor = picked;
-                    return true;
+                    tab.Frame();
+                    whileOpen = solid.Color;
+                    return false;
                 });
                 tab.Tree.PickMainMenu("View", "Theming");
                 tab.Frame();
-                solid.Color.ShouldBe(picked, "the tab's background takes the theme's checker color");
+                whileOpen.ShouldBe(picked, "the tab's background takes the theme's checker color");
+                solid.Color.ShouldBe(theming.EffectiveSettings.CheckerA, "Cancel puts the color back");
 
                 properties.ShowCheckerBackground = !originalChecker;
                 tab.Frame();
