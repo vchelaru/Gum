@@ -344,6 +344,9 @@ Content/FormsThemes/<Theme>/Fonts/, as the OFL requires:
     Share Tech Mono — Copyright (c) 2012, Carrois Type Design, Ralph du Carrois
     Liberation Sans — Digitized data copyright (c) 2010 Google Corporation;
         Copyright (c) 2012 Red Hat, Inc.
+        Also the source of the tool's own bitmap fonts: Content/TestFont,
+        Content/Fonts/Font18LiberationSans_o1, and Font18LiberationSans embedded
+        in XnaAndWinforms.dll (regenerate with Tools/regenerate-tool-fonts.ps1).
 
 Inter — Copyright (c) 2016 The Inter Project Authors
     https://github.com/rsms/inter
@@ -372,10 +375,9 @@ StbImageSharp / StbImageWriteSharp / StbTrueTypeSharp — StbSharp
 --------------------------------------------------------------------------------
 Unverified
 --------------------------------------------------------------------------------
-Pre-rendered bitmap fonts in Content/ (FontCache/*.fnt + .png) generated from
-Arial (Content/Fonts/Font18Arial_o1 and the Standard theme's FontCache),
-Wasco Sans and Titillium Web. These are rasterized glyph images, not font software; their
-licensing position was not verified for this file.
+The runtime's default bitmap font (Font18Arial, regular/Bold/Italic/Bold_Italic),
+embedded in KniGum.dll, is rendered from Arial. These are rasterized glyph images,
+not font software; replacing them is tracked in #5434.
 
 
 ================================================================================
