@@ -773,7 +773,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         _hostConfiguration = hostConfiguration;
     }
 
-    private PluginScanReport? _pluginScanReport;
+    /// <summary>
+    /// What the startup scan of <see cref="PluginFolder"/> found, plus the plugins that then could
+    /// not be created; null until plugins load. Settable so a test can show a scan of its own.
+    /// </summary>
+    internal PluginScanReport? PluginScanReport { get; set; }
 
 
     public void Initialize()
@@ -986,7 +990,12 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             using (StartupTiming.Time("    create plugins (plugin ctors)"))
             {
-                instance.Plugins = new PluginInstantiator(instance._outputManager).CreatePlugins(container, catalog);
+                PluginInstantiator instantiator = new PluginInstantiator(instance._outputManager);
+                instance.Plugins = instantiator.CreatePlugins(container, catalog);
+                if (instance.PluginScanReport != null)
+                {
+                    instance.PluginScanReport = instance.PluginScanReport with { PluginsNotCreated = instantiator.NotCreated };
+                }
             }
         }
         catch (Exception e)
@@ -1141,50 +1150,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     {
         var returnValue = new AggregateCatalog();
 
-        var pluginDirectories = new List<string>();
-
-        pluginDirectories.Add(PluginFolder);
-
         IOutputManager outputManager = Locator.GetRequiredService<IOutputManager>();
-        PluginCatalogFactory catalogFactory = new(outputManager);
-
-        foreach (var directory in pluginDirectories)
-        {
-            if (!System.IO.Directory.Exists(directory))
-            {
-                continue;
-            }
-
-            List<string> dllFiles = FindDllFiles(directory, outputManager).ToList();
-            // Before loading: a stale same-named copy fails later, several frames from its cause.
-            catalogFactory.ReportMismatchedDuplicates(dllFiles);
-
-            foreach (string dll in dllFiles)
-            {
-                ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll, _hostConfiguration);
-                if (catalog != null)
-                {
-                    returnValue.Catalogs.Add(catalog);
-                }
-            }
-        }
-
-        bool foundAnyPluginAssembly = catalogFactory.Scans
-            .Any(x => x.Outcome == PluginFileOutcome.Loaded && x.CouldContainPlugins);
-
-        _pluginScanReport = new PluginScanReport(
-            PluginFolder,
-            System.IO.Directory.Exists(PluginFolder),
-            catalogFactory.Scans,
-            Environment.ProcessPath ?? AppContext.BaseDirectory,
-            // Only when the scan came up empty: otherwise this is a few hundred lines nobody reads.
-            foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder));
+        PluginScanReport = ScanPluginFolder(PluginFolder, returnValue.Catalogs);
 
         // Every plugin shipping as its own DLL is missing when this happens, and nothing else says
         // so - Gum otherwise starts looking healthy. The dialog carries the same text.
-        if (!foundAnyPluginAssembly)
+        if (!PluginScanReport.PluginAssemblies.Any())
         {
-            outputManager.AddError(_pluginScanReport.Describe());
+            outputManager.AddError(PluginScanReport.Describe());
         }
 
         foreach (Assembly internalAssembly in _hostConfiguration.InternalPluginAssemblies)
@@ -1261,7 +1234,46 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         AllPluginContainers.Select(ToPluginSummary).ToList();
 
     /// <inheritdoc/>
-    public PluginScanReport? GetPluginScanReport() => _pluginScanReport;
+    public PluginScanReport? GetPluginScanReport() => PluginScanReport;
+
+    /// <summary>
+    /// Loads every .dll under <paramref name="folder"/>, adds a catalog to <paramref name="catalogs"/>
+    /// for each one this head can run, and reports what happened to each file. Internal so a test
+    /// can scan a folder of its own; the real one is scanned once, at startup.
+    /// </summary>
+    internal PluginScanReport ScanPluginFolder(string folder, ICollection<ComposablePartCatalog> catalogs)
+    {
+        IOutputManager outputManager = Locator.GetRequiredService<IOutputManager>();
+        PluginCatalogFactory catalogFactory = new(outputManager);
+        bool folderExists = System.IO.Directory.Exists(folder);
+
+        if (folderExists)
+        {
+            List<string> dllFiles = FindDllFiles(folder, outputManager).ToList();
+            // Before loading: a stale same-named copy fails later, several frames from its cause.
+            catalogFactory.ReportMismatchedDuplicates(dllFiles);
+
+            foreach (string dll in dllFiles)
+            {
+                ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll, _hostConfiguration);
+                if (catalog != null)
+                {
+                    catalogs.Add(catalog);
+                }
+            }
+        }
+
+        bool foundAnyPluginAssembly = catalogFactory.Scans
+            .Any(x => x.Outcome == PluginFileOutcome.Loaded && x.CouldContainPlugins);
+
+        return new PluginScanReport(
+            folder,
+            folderExists,
+            catalogFactory.Scans.ToList(),
+            Environment.ProcessPath ?? AppContext.BaseDirectory,
+            // Only when the scan came up empty: otherwise this is a few hundred lines nobody reads.
+            foundAnyPluginAssembly ? null : ListFolderEntries(folder));
+    }
 
     /// <summary>
     /// Every .dll under <paramref name="folder"/>, at any depth.

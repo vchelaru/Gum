@@ -88,7 +88,7 @@
 - PLUG-002 Enable or disable a plugin. tested: PluginEnablementStoreTests
 - PLUG-003 Plugin folder scan report. tested: PluginScanReportTests
 - PLUG-004 Add Skia Standard Elements. tested: SkiaShapeStandardsLogicTests
-- PLUG-005 Refuse WPF-built plugins with a reason. tested: PluginInstantiatorTests
+- PLUG-005 Refuse WPF-built plugins with a reason, listed in Manage Plugins as not loaded. tested: PluginInstantiatorTests, DialogScenarioTests
 - PLUG-006 Every plugin composes. tested: PluginHostTests
 - HELP-001 About shows version. tested: ToolVersionTests
 - HELP-002 Third-Party Licenses

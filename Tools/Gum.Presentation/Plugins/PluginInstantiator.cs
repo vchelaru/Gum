@@ -21,11 +21,18 @@ internal class PluginInstantiator
     private static readonly string PluginContractName = AttributedModelServices.GetContractName(typeof(PluginBase));
 
     private readonly IOutputManager _outputManager;
+    private readonly List<RefusedPlugin> _notCreated;
 
     public PluginInstantiator(IOutputManager outputManager)
     {
         _outputManager = outputManager;
+        _notCreated = new List<RefusedPlugin>();
     }
+
+    /// <summary>
+    /// The plugins <see cref="CreatePlugins"/> reported and skipped, for "Manage Plugins".
+    /// </summary>
+    public IReadOnlyList<RefusedPlugin> NotCreated => _notCreated;
 
     /// <summary>
     /// Returns the plugins exported by <paramref name="catalog"/>, in catalog order, with their
@@ -47,7 +54,9 @@ internal class PluginInstantiator
             string? missingContract = FindMissingImport(container, definition);
             if (missingContract != null)
             {
-                _outputManager.AddError($"Plugin {DescribePart(definition)} was not loaded: it needs {missingContract}, which this version of Gum does not provide.");
+                string reason = $"it needs {missingContract}, which this version of Gum does not provide";
+                _outputManager.AddError($"Plugin {DescribePart(definition)} was not loaded: {reason}.");
+                _notCreated.Add(new RefusedPlugin(DescribePartForList(definition), reason));
                 continue;
             }
 
@@ -91,6 +100,23 @@ internal class PluginInstantiator
         // MEF's message already carries the root cause and the part chain; its stack trace is noise.
         string details = exception is CompositionException ? exception.Message : exception.ToString();
         _outputManager.AddError($"Plugin {DescribePart(definition)} was not loaded: it failed while it was being created.\n{details}");
+        // The innermost message names the cause; the Output tab has the rest.
+        _notCreated.Add(new RefusedPlugin(DescribePartForList(definition),
+            "it failed while it was being created: " + exception.GetBaseException().Message));
+    }
+
+    /// <summary>Type name and assembly, short enough for a row in the plugin list.</summary>
+    private static string DescribePartForList(ComposablePartDefinition definition)
+    {
+        try
+        {
+            Type type = ReflectionModelServices.GetPartType(definition).Value;
+            return $"{type.Name} ({type.Assembly.GetName().Name})";
+        }
+        catch (Exception)
+        {
+            return definition.ToString() ?? "Unknown plugin";
+        }
     }
 
     private static string DescribePart(ComposablePartDefinition definition)

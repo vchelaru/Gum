@@ -43,7 +43,16 @@ public class PluginsDialogViewModel : DialogViewModel
             Plugins.Add(new PluginItemViewModel(summary, pluginManager, dialogService));
         }
 
-        Diagnostics = pluginManager.GetPluginScanReport()?.Describe()
+        PluginScanReport? scanReport = pluginManager.GetPluginScanReport();
+
+        // After the running plugins: these were found but never loaded, so they cannot be turned on.
+        foreach (RefusedPlugin refused in (scanReport?.RefusedPlugins ?? [])
+                     .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            Plugins.Add(PluginItemViewModel.ForRefused(refused, pluginManager, dialogService));
+        }
+
+        Diagnostics = scanReport?.Describe()
             ?? "Plugins have not been loaded, so there is nothing to report.";
 
         CopyDiagnosticsCommand = new RelayCommand(() => clipboardService.SetText(Diagnostics));
@@ -59,24 +68,28 @@ public class PluginItemViewModel : Mvvm.ViewModel
     private readonly IPluginManager pluginManager;
     private readonly IDialogService dialogService;
     private PluginSummary summary;
+    private readonly RefusedPlugin? _refused;
 
-    public string DisplayText => summary.DisplayText;
+    public string DisplayText => _refused != null ? $"{_refused.Name} (not loaded)" : summary.DisplayText;
 
     /// <summary>
     /// Whether the checkbox is offered. A plugin the tool needs cannot be turned off, but one that
-    /// crashed can still be turned back on.
+    /// crashed can still be turned back on. One that was never loaded cannot be turned on.
     /// </summary>
-    public bool CanToggle => summary.CanBeDisabled || !summary.IsEnabled;
+    public bool CanToggle => _refused == null && (summary.CanBeDisabled || !summary.IsEnabled);
 
     /// <summary>Explains a checkbox that is not offered; null when it is.</summary>
-    public string? ToolTip => CanToggle ? null : "Gum needs this plugin, so it cannot be turned off.";
+    public string? ToolTip =>
+        _refused != null ? "Not loaded: " + _refused.Reason
+        : CanToggle ? null
+        : "Gum needs this plugin, so it cannot be turned off.";
 
     public bool IsEnabled
     {
         get => summary.IsEnabled;
         set
         {
-            if (value == summary.IsEnabled)
+            if (value == summary.IsEnabled || _refused != null)
             {
                 return;
             }
@@ -94,11 +107,24 @@ public class PluginItemViewModel : Mvvm.ViewModel
     }
 
     public PluginItemViewModel(PluginSummary summary, IPluginManager pluginManager, IDialogService dialogService)
+        : this(summary, null, pluginManager, dialogService)
+    {
+    }
+
+    private PluginItemViewModel(PluginSummary summary, RefusedPlugin? refused, IPluginManager pluginManager,
+        IDialogService dialogService)
     {
         this.summary = summary;
+        _refused = refused;
         this.pluginManager = pluginManager;
         this.dialogService = dialogService;
     }
+
+    /// <summary>A row for a plugin that was found but not loaded: unchecked, and never toggleable.</summary>
+    public static PluginItemViewModel ForRefused(RefusedPlugin refused, IPluginManager pluginManager,
+        IDialogService dialogService) =>
+        new(new PluginSummary(refused.Name, refused.Name, IsEnabled: false, HasFailureDetails: false, PluginHandle: refused,
+            CanBeDisabled: false), refused, pluginManager, dialogService);
 
     private void TryEnablePlugin()
     {

@@ -36,6 +36,14 @@ public record PluginFileScan(
     string? Detail);
 
 /// <summary>
+/// A plugin that was found but is not running: its assembly was refused by this head, or its
+/// plugin could not be created. Shown in "Manage Plugins" so it is not mistaken for one that was
+/// never installed.
+/// </summary>
+/// <param name="Name">The assembly file name, or the plugin type and its assembly.</param>
+public record RefusedPlugin(string Name, string Reason);
+
+/// <summary>
 /// Result of scanning the plugin folder, surfaced in the "Manage Plugins" dialog. A plugin that
 /// never loads is otherwise indistinguishable from one that was never installed — this says which,
 /// and names the folder that was actually searched.
@@ -49,12 +57,17 @@ public record PluginFileScan(
 /// no plugin assembly was found. "The folder is empty" and "the folder has files the scan did not
 /// match" are different bugs that produce the same count of zero.
 /// </param>
+/// <param name="PluginsNotCreated">
+/// Plugins in loaded assemblies that could not be created (a constructor threw, or an import this
+/// head does not export). Known only after plugins are created, so added to the report afterwards.
+/// </param>
 public record PluginScanReport(
     string FolderPath,
     bool FolderExists,
     IReadOnlyList<PluginFileScan> Files,
     string ExecutablePath = "",
-    IReadOnlyList<string>? FolderEntries = null)
+    IReadOnlyList<string>? FolderEntries = null,
+    IReadOnlyList<RefusedPlugin>? PluginsNotCreated = null)
 {
     /// <summary>
     /// Assemblies that reference the one declaring <c>PluginBase</c>, so could hold a plugin. When
@@ -62,6 +75,15 @@ public record PluginScanReport(
     /// </summary>
     public IEnumerable<PluginFileScan> PluginAssemblies => Files
         .Where(x => x.Outcome == PluginFileOutcome.Loaded && x.CouldContainPlugins);
+
+    /// <summary>
+    /// Plugins that were found but are not running: refused assemblies that could hold a plugin,
+    /// then plugins that could not be created. A refused dependency is left to <see cref="Describe"/>.
+    /// </summary>
+    public IEnumerable<RefusedPlugin> RefusedPlugins => Files
+        .Where(x => x.Outcome == PluginFileOutcome.NotHostable && x.CouldContainPlugins)
+        .Select(x => new RefusedPlugin(x.FileName, x.Detail ?? "this version of Gum cannot run it"))
+        .Concat(PluginsNotCreated ?? []);
 
     /// <summary>
     /// The scan as readable, copyable text, for the "Manage Plugins" dialog and the Output tab.
@@ -79,6 +101,8 @@ public record PluginScanReport(
         {
             text.AppendLine("This folder does not exist, so no plugin was loaded from it.");
             text.Append(NoPluginAssembliesAdvice);
+            // Built-in plugins still load without the folder, and can still fail to be created.
+            AppendRefused(text, PluginsNotCreated ?? []);
             return text.ToString();
         }
 
@@ -89,11 +113,16 @@ public record PluginScanReport(
             .Where(x => x.Outcome == PluginFileOutcome.LoadFailed)
             .OrderBy(x => x.FileName, StringComparer.OrdinalIgnoreCase)
             .ToList();
+        List<RefusedPlugin> refused = Files
+            .Where(x => x.Outcome == PluginFileOutcome.NotHostable)
+            .OrderBy(x => x.FileName, StringComparer.OrdinalIgnoreCase)
+            .Select(x => new RefusedPlugin(x.FileName, x.Detail ?? "this version of Gum cannot run it"))
+            .ToList();
         int dependencyCount = Files.Count(x => x.Outcome == PluginFileOutcome.Loaded && !x.CouldContainPlugins);
         int nativeCount = Files.Count(x => x.Outcome == PluginFileOutcome.NotManagedAssembly);
 
         text.AppendLine($".dll files found: {Files.Count} ({pluginAssemblies.Count} holding plugins, " +
-            $"{dependencyCount} dependencies, {nativeCount} native, {failures.Count} failed to load)");
+            $"{dependencyCount} dependencies, {nativeCount} native, {failures.Count} failed to load, {refused.Count} refused)");
 
         text.AppendLine();
         if (pluginAssemblies.Count == 0)
@@ -120,7 +149,25 @@ public record PluginScanReport(
             }
         }
 
+        refused.AddRange(PluginsNotCreated ?? []);
+        AppendRefused(text, refused);
+
         return text.ToString();
+    }
+
+    private static void AppendRefused(StringBuilder text, IReadOnlyList<RefusedPlugin> refused)
+    {
+        if (refused.Count == 0)
+        {
+            return;
+        }
+
+        text.AppendLine();
+        text.AppendLine("Found but not loaded by this version of Gum:");
+        foreach (RefusedPlugin plugin in refused)
+        {
+            text.AppendLine($"    {plugin.Name} - {plugin.Reason}");
+        }
     }
 
     /// <summary>
