@@ -346,7 +346,7 @@ public class FileChangeReactionLogicTests : BaseTestClass
         tracker.MarkUnsaved(component);
         try
         {
-            sut.ReactToFileChanged(new FilePath(project.FullFileName));
+            sut.ReactToFileChanged(new FilePath(project.FullFileName!));
 
             dialogServiceMock.Verify(d => d.ShowMessage(
                 It.Is<string>(m => m.Contains(FileChangeReactionLogic.ProjectPromptName) && m.Contains("Project.gumx")),
@@ -369,7 +369,7 @@ public class FileChangeReactionLogicTests : BaseTestClass
         project.Components.Add(new ComponentSave { Name = "MyButton" });
         try
         {
-            sut.ReactToFileChanged(new FilePath(project.FullFileName));
+            sut.ReactToFileChanged(new FilePath(project.FullFileName!));
 
             dialogServiceMock.Verify(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
             fileCommandsMock.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Once);

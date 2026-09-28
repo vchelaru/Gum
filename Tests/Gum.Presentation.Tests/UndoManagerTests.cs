@@ -887,13 +887,13 @@ public class UndoManagerTests : BaseTestClass
         ComponentSave live = FileManager.CloneSaveObject(replaced);
         live.States.ForEach(state => state.ParentContainer = live);
         _undoManager.RecordState();
-        replaced.DefaultState.SetValue("X", 5f);
+        replaced.DefaultState!.SetValue("X", 5f);
         _undoManager.RecordUndo();
         loaded.Components.Remove(replaced);
         loaded.Components.Add(live);
         SelectComponent(live);
         _undoManager.RecordState();
-        live.DefaultState.SetValue("X", 5f);
+        live.DefaultState!.SetValue("X", 5f);
         _undoManager.RecordUndo();
 
         GumProjectSave reloaded = new GumProjectSave { FullFileName = "/game/Project.gumx" };
@@ -904,7 +904,7 @@ public class UndoManagerTests : BaseTestClass
 
         SelectComponent(reloadedCard);
         _undoManager.PerformUndo();
-        reloadedCard.DefaultState.GetValue("X").ShouldBeNull();
+        reloadedCard.DefaultState!.GetValue("X").ShouldBeNull();
     }
 
     [Fact]

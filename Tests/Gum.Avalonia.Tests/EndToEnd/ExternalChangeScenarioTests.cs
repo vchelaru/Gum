@@ -3,6 +3,7 @@ using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Dialogs;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,7 +48,7 @@ public class ExternalChangeScenarioTests
             fileChanges.ReactToFileChanged(new FilePath(buttonFile));
             tree.ThrowIfCrashed();
 
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             tree.Dialogs.Messages[0].ShouldContain("Button");
             Component(tree, "Button").ShouldBeSameAs(button);
             VariableGridHarness.StoredValue(button, "X").ShouldBe(7f);
@@ -69,7 +70,7 @@ public class ExternalChangeScenarioTests
             File.WriteAllText(buttonFile, File.ReadAllText(buttonFile).Replace(">80</Value>", ">96</Value>"));
             fileChanges.ReactToFileChanged(new FilePath(buttonFile));
             tree.ThrowIfCrashed();
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             VariableGridHarness.StoredValue(Component(tree, "Button"), "Width").ShouldBe(96f);
         }
         finally
@@ -106,7 +107,7 @@ public class ExternalChangeScenarioTests
             fileChanges.ReactToFileChanged(new FilePath(buttonFile));
             tree.ThrowIfCrashed();
 
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             ComponentSave button = Component(tree, "Button");
             VariableGridHarness.StoredValue(button, "Width").ShouldBe(95f);
             VariableGridHarness.StoredValue(button, "X").ShouldBeNull();
@@ -121,7 +122,7 @@ public class ExternalChangeScenarioTests
             File.WriteAllText(buttonFile, File.ReadAllText(buttonFile).Replace(">95</Value>", ">96</Value>"));
             fileChanges.ReactToFileChanged(new FilePath(buttonFile));
             tree.ThrowIfCrashed();
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             VariableGridHarness.StoredValue(Component(tree, "Button"), "Width").ShouldBe(96f);
         }
         finally
@@ -183,7 +184,7 @@ public class ExternalChangeScenarioTests
             fileChanges.ReactToFileChanged(new FilePath(behaviorFile));
             tree.ThrowIfCrashed();
 
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             tree.Dialogs.Messages[0].ShouldContain("Clickable");
             tree.Project.Project.Behaviors.Single().ShouldBeSameAs(behavior);
             behavior.Categories.Select(category => category.Name).ShouldBe(new[] { "Looks" });
@@ -194,7 +195,7 @@ public class ExternalChangeScenarioTests
             File.WriteAllText(behaviorFile, File.ReadAllText(behaviorFile));
             fileChanges.ReactToFileChanged(new FilePath(behaviorFile));
             tree.ThrowIfCrashed();
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             tree.Project.Project.Behaviors.Single().ShouldNotBeSameAs(behavior);
             tree.Project.Project.Behaviors.Single().Categories.Select(category => category.Name).ShouldBe(new[] { "Looks" });
         }
@@ -232,7 +233,7 @@ public class ExternalChangeScenarioTests
             fileChanges.ReactToFileChanged(new FilePath(tree.Project.ProjectFilePath));
             tree.ThrowIfCrashed();
 
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             tree.Dialogs.Messages[0].ShouldContain("Harness.gumx");
             projectManager.GumProjectSave.ShouldBeSameAs(project);
             VariableGridHarness.StoredValue(button, "X").ShouldBe(7f);
@@ -242,7 +243,7 @@ public class ExternalChangeScenarioTests
             File.WriteAllText(tree.Project.ProjectFilePath, File.ReadAllText(tree.Project.ProjectFilePath));
             fileChanges.ReactToFileChanged(new FilePath(tree.Project.ProjectFilePath));
             tree.WaitUntil(() => projectManager.GumProjectSave != project, TimeSpan.FromSeconds(30), "the project to reload");
-            tree.Dialogs.Messages.Count.ShouldBe(1);
+            ShouldHaveShownOnePrompt(tree);
             ComponentSave reloadedButton = projectManager.GumProjectSave!.Components.Single(component => component.Name == "Button");
             VariableGridHarness.StoredValue(reloadedButton, "X").ShouldBe(7f);
         }
@@ -252,6 +253,15 @@ public class ExternalChangeScenarioTests
         }
 
         tree.AssertOracles();
+    }
+
+    /// <summary>Exactly one message was shown; on failure, names every message and the file watcher's queue.</summary>
+    private static void ShouldHaveShownOnePrompt(ProjectTreeHarness tree)
+    {
+        IFileWatchManager fileWatch = TestAppBuilder.Services.GetRequiredService<IFileWatchManager>();
+        tree.Dialogs.Messages.Count.ShouldBe(1,
+            $"Messages: [{string.Join(" | ", tree.Dialogs.Messages)}]. File watch enabled {fileWatch.Enabled}, " +
+            $"waiting [{string.Join(", ", fileWatch.ChangedFilesWaitingForFlush)}].");
     }
 
     /// <summary>Adds a behavior from the Behaviors menu, which saves it while Auto Save is on.</summary>
