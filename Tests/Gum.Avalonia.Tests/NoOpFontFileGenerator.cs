@@ -15,7 +15,24 @@ public class NoOpFontFileGenerator : IFontFileGenerator
     /// <inheritdoc/>
     public bool RequiresSizeEstimation => false;
 
+    private readonly List<string> _requestedFntPaths = new List<string>();
+
+    /// <summary>The .fnt paths the tool has asked for so far, so a test can see what would have been generated.</summary>
+    public List<string> RequestedFntPaths()
+    {
+        lock (_requestedFntPaths)
+        {
+            return _requestedFntPaths.ToList();
+        }
+    }
+
     /// <inheritdoc/>
-    public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask) =>
-        Task.FromResult(GeneralResponse.SuccessfulResponse);
+    public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
+    {
+        lock (_requestedFntPaths)
+        {
+            _requestedFntPaths.Add(outputFntPath);
+        }
+        return Task.FromResult(GeneralResponse.SuccessfulResponse);
+    }
 }
