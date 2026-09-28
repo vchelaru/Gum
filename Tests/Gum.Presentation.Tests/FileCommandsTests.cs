@@ -27,6 +27,7 @@ public class FileCommandsTests : BaseTestClass
     private readonly Mock<IOutputManager> _outputManager;
     private readonly Mock<IRecycleBinService> _recycleBinService;
     private readonly LocalizationService _localizationService;
+    private readonly UnsavedChangesTracker _unsavedChangesTracker;
     private readonly GumProjectSave _gumProject;
     private readonly List<string> _outputCalls;
     private readonly List<string> _errorCalls;
@@ -58,6 +59,8 @@ public class FileCommandsTests : BaseTestClass
             _tempDirectory == null ? null : _tempDirectory + Path.DirectorySeparatorChar);
 
         _mocker.Use<IPathCaseSensitivity>(new PathCaseSensitivity());
+        _unsavedChangesTracker = new UnsavedChangesTracker();
+        _mocker.Use<IUnsavedChangesTracker>(_unsavedChangesTracker);
         _fileCommands = _mocker.CreateInstance<FileCommands>();
     }
 
@@ -305,6 +308,20 @@ public class FileCommandsTests : BaseTestClass
         _localizationService.Translate("T_Bye").ShouldBe("Adios");
         _localizationService.Translate("T_Hello").ShouldBe("T_Hello");
         _localizationService.Keys.ShouldNotContain("// comment");
+    }
+
+    [Fact]
+    public void LoadLocalizationFile_ShouldRebuildTheVariablesGrid_SoTheSelectedTextOffersTheStringIds()
+    {
+        // A loaded database swaps Text rows from a text box to a combo of string IDs; with the
+        // same selection, only a forced refresh rebuilds the rows.
+        _tempDirectory = CreateTempDirectory();
+        File.WriteAllText(Path.Combine(_tempDirectory, "Strings.csv"), "String ID,English\nT_Hello,Hello\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _mocker.GetMock<IGuiCommands>().Verify(x => x.RefreshVariables(true), Times.Once);
     }
 
     [Fact]
@@ -603,6 +620,57 @@ public class FileCommandsTests : BaseTestClass
 
         File.Exists(xmlPath).ShouldBeFalse("An XML .gucx file must NOT be written for a .gumj project");
         File.Exists(jsonPath).ShouldBeTrue("The component must be saved as .gucj");
+    }
+
+    [Fact]
+    public void TryAutoSaveElement_ShouldLeaveTheElementUnsaved_WhenAutoSaveIsOff_UntilItIsSaved()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+        _projectManager.Setup(p => p.AutoSave).Returns(false);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        ComponentSave button = new() { Name = "Button", BaseType = "Container" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+
+        _fileCommands.TryAutoSaveElement(button);
+
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Button.gucx")).ShouldBeFalse();
+        _unsavedChangesTracker.HasUnsavedChanges(button).ShouldBeTrue();
+
+        _fileCommands.ForceSaveElement(button);
+
+        _unsavedChangesTracker.HasUnsavedChanges(button).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TryAutoSaveElement_ShouldLeaveTheElementUnsaved_WhenAutoSaveIsOnButItsFileIsReadOnly()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.ComponentReferences.Add(new ElementReference { Name = "Button", ElementType = ElementType.Component });
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+        ComponentSave button = new() { Name = "Button", BaseType = "Container" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        string buttonFile = Path.Combine(_tempDirectory, "Components", "Button.gucx");
+        Directory.CreateDirectory(Path.GetDirectoryName(buttonFile)!);
+        File.WriteAllText(buttonFile, "on disk");
+        File.SetAttributes(buttonFile, FileAttributes.ReadOnly);
+        try
+        {
+            _fileCommands.TryAutoSaveElement(button);
+
+            _projectManager.Verify(p => p.ShowReadOnlyDialog(It.IsAny<string>()), Times.Once);
+            _unsavedChangesTracker.HasUnsavedChanges(button).ShouldBeTrue();
+            _outputCalls.ShouldNotContain(output => output.StartsWith("Saved "));
+        }
+        finally
+        {
+            File.SetAttributes(buttonFile, FileAttributes.Normal);
+        }
     }
 
     #region Helpers

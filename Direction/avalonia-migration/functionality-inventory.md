@@ -25,15 +25,16 @@
 - FILE-003 Load Recent, pick a listed project. tested: RecentFilesLogicTests
 - FILE-004 Load Recent > More... dialog. tested: LoadRecentViewModelTests, DialogScenarioTests
 - FILE-005 Save Project
-- FILE-006 Save All
+- FILE-006 Save All. tested: ExternalChangeScenarioTests
 - FILE-007 Export > Export as Image
 - FILE-008 Export > Export to SVG. tested: SvgExportMenuLogicTests, FileMenuScenarioTests
 - FILE-009 Auto-save after each edit. tested: UndoManagerTests, VariableScenarioTests
 - FILE-010 Last project reopens on launch
 - FILE-011 Legacy project upgrades on load. tested: OldProjectLoadTests
 - FILE-012 Load a `.gumj` (JSON) project. tested: JsonProjectFormatRoundTripTests
-- FILE-013 External file change reloads element. tested: FileChangeReactionLogicTests
+- FILE-013 External file change reloads element. tested: FileChangeReactionLogicTests, ExternalChangeScenarioTests
 - FILE-014 Save refuses with no project loaded
+- FILE-015 External change to an element with unsaved edits (Auto Save off) asks to reload or keep. tested: FileChangeReactionLogicTests, ExternalChangeScenarioTests
 
 ## Edit menu (EDIT)
 
@@ -149,7 +150,7 @@
 
 ## Standards palette (PAL)
 
-- PAL-001 Chip click selects standard. tested: StandardsPaletteTests
+- PAL-001 Chip click: Add to current element (inside a selected container). tested: StandardsPaletteAddTests, DisplayPropertiesScenarioTests
 - PAL-002 Right-click: Add to current element. tested: StandardsPaletteAddTests
 - PAL-003 Right-click: Edit defaults...
 - PAL-004 Drag chip onto tree. tested: StandardsPaletteAddTests
@@ -341,7 +342,7 @@
 
 ## Project Properties (PROP)
 
-- PROP-001 Auto Save. tested: ProjectPropertiesViewModelTests
+- PROP-001 Auto Save. tested: ProjectPropertiesViewModelTests, ExternalChangeScenarioTests
 - PROP-002 Canvas Width / Height. tested: ProjectPropertiesGridPresenterTests
 - PROP-003 Show Outlines. tested: ProjectPropertiesGridPresenterTests
 - PROP-004 Show Canvas Outline. tested: ProjectPropertiesViewModelTests
@@ -349,7 +350,6 @@
 - PROP-006 Texture Filter. tested: ProjectPropertiesGridPresenterTests
 - PROP-007 Restrict To Unit Values. tested: DialogScenarioTests
 - PROP-008 Restrict File Names For Android. tested: ProjectPropertiesGridPresenterTests
-- PROP-009 Render Text Character By Character
 - PROP-010 Localization Files. tested: ProjectPropertiesChangeLogicTests
 - PROP-011 Language. tested: ProjectPropertiesViewModelTests
 - PROP-012 Show Localization. tested: DialogScenarioTests

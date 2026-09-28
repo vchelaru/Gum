@@ -134,4 +134,135 @@ public class SelectionHistoryTests : BaseTestClass
         _selectionHistory.CanNavigateForward.ShouldBeFalse();
         _selectionHistory.CanNavigateBack.ShouldBeTrue();
     }
+
+    [Fact]
+    public void NavigateBack_PassesOverADeletedElementAndItsInstances()
+    {
+        var screenA = new ScreenSave { Name = "ScreenA" };
+        var deleted = new ScreenSave { Name = "Deleted" };
+        var deletedInstance = new InstanceSave { Name = "Child", ParentContainer = deleted };
+        deleted.Instances.Add(deletedInstance);
+        var screenC = new ScreenSave { Name = "ScreenC" };
+        _selectionHistory.RecordSelection(screenA, null);
+        _selectionHistory.RecordSelection(deleted, null);
+        _selectionHistory.RecordSelection(deleted, deletedInstance);
+        _selectionHistory.RecordSelection(screenC, null);
+
+        _selectionHistory.ForgetElement(deleted);
+        _selectionHistory.NavigateBack();
+
+        _selectedState.VerifySet(x => x.SelectedElement = screenA, Times.Once);
+        _selectedState.VerifySet(x => x.SelectedElement = deleted, Times.Never);
+        _selectedState.VerifySet(x => x.SelectedInstance = It.IsAny<InstanceSave>(), Times.Never);
+        _selectionHistory.CanNavigateBack.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(3)]
+    [InlineData(2)]
+    public void NavigateBack_AfterDeletingTheSelectedElement_GoesToTheOneSelectedBeforeIt(int visited)
+    {
+        // Deleting the selected element clears the selection before the history hears of it.
+        List<ScreenSave> screens = Enumerable.Range(0, visited).Select(i => new ScreenSave { Name = $"Screen{i}" }).ToList();
+        foreach (ScreenSave screen in screens)
+        {
+            _selectionHistory.RecordSelection(screen, null);
+        }
+        _selectionHistory.RecordSelection(null, null);
+
+        _selectionHistory.ForgetElement(screens[^1]);
+
+        _selectionHistory.CanNavigateBack.ShouldBeTrue();
+        _selectionHistory.CanNavigateForward.ShouldBeFalse();
+        _selectionHistory.NavigateBack();
+        _selectedState.VerifySet(x => x.SelectedElement = screens[^2], Times.Once);
+    }
+
+    [Fact]
+    public void RecordSelection_AfterDeletingTheSelectedElement_DropsWhatCameAfterIt()
+    {
+        var screenA = new ScreenSave { Name = "ScreenA" };
+        var deleted = new ScreenSave { Name = "Deleted" };
+        var screenC = new ScreenSave { Name = "ScreenC" };
+        var screenD = new ScreenSave { Name = "ScreenD" };
+        _selectionHistory.RecordSelection(screenA, null);
+        _selectionHistory.RecordSelection(deleted, null);
+        _selectionHistory.RecordSelection(screenC, null);
+        _selectionHistory.NavigateBack();
+
+        _selectionHistory.ForgetElement(deleted);
+        _selectionHistory.RecordSelection(screenD, null);
+
+        _selectionHistory.CanNavigateForward.ShouldBeFalse();
+        _selectionHistory.NavigateBack();
+        _selectedState.VerifySet(x => x.SelectedElement = screenA, Times.Once);
+        _selectionHistory.CanNavigateBack.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ForgetElement_BetweenTwoVisitsOfTheSameElement_LeavesNoStepThatChangesNothing()
+    {
+        var screenA = new ScreenSave { Name = "ScreenA" };
+        var deleted = new ScreenSave { Name = "Deleted" };
+        _selectionHistory.RecordSelection(screenA, null);
+        _selectionHistory.RecordSelection(deleted, null);
+        _selectionHistory.RecordSelection(screenA, null);
+
+        _selectionHistory.ForgetElement(deleted);
+
+        _selectionHistory.CanNavigateBack.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void NavigateForward_PassesOverADeletedInstance()
+    {
+        var screen = new ScreenSave { Name = "Screen" };
+        var kept = new InstanceSave { Name = "Kept", ParentContainer = screen };
+        var deleted = new InstanceSave { Name = "Deleted", ParentContainer = screen };
+        screen.Instances.Add(kept);
+        _selectionHistory.RecordSelection(screen, kept);
+        _selectionHistory.RecordSelection(screen, deleted);
+        _selectionHistory.RecordSelection(screen, null);
+        _selectionHistory.NavigateBack();
+        _selectionHistory.NavigateBack();
+        _selectedState.Invocations.Clear();
+
+        _selectionHistory.ForgetInstance(deleted);
+        _selectionHistory.NavigateForward();
+
+        _selectedState.VerifySet(x => x.SelectedInstance = deleted, Times.Never);
+        _selectedState.VerifySet(x => x.SelectedElement = screen, Times.Once);
+    }
+
+    [Fact]
+    public void RecordSelection_OfNothing_AddsNoStep()
+    {
+        var screenA = new ScreenSave { Name = "ScreenA" };
+        var screenB = new ScreenSave { Name = "ScreenB" };
+        _selectionHistory.RecordSelection(screenA, null);
+        _selectionHistory.RecordSelection(null, null);
+        _selectionHistory.RecordSelection(screenB, null);
+
+        _selectionHistory.NavigateBack();
+
+        _selectedState.VerifySet(x => x.SelectedElement = screenA, Times.Once);
+        _selectedState.VerifySet(x => x.SelectedElement = null, Times.Never);
+    }
+
+    [Fact]
+    public void NavigateBack_ToAnInstanceAnUndoReplaced_SelectsTheInstanceNowInItsPlace()
+    {
+        // Undo swaps an element's instances for copies, so the recorded object is no longer in it.
+        var screen = new ScreenSave { Name = "Screen" };
+        var original = new InstanceSave { Name = "Box", ParentContainer = screen };
+        var copy = new InstanceSave { Name = "Box", ParentContainer = screen };
+        screen.Instances.Add(copy);
+        _selectionHistory.RecordSelection(screen, original);
+        _selectionHistory.RecordSelection(screen, null);
+
+        _selectionHistory.NavigateBack();
+
+        _selectedState.VerifySet(x => x.SelectedInstance = copy, Times.Once);
+        _selectedState.VerifySet(x => x.SelectedInstance = original, Times.Never);
+    }
 }

@@ -22,4 +22,7 @@ public class AnimationUndoProviderRelay : IAnimationUndoProvider, IAnimationUndo
 
     public void ApplyAnimations(ElementSave element, ElementAnimationsSave animations)
         => _provider?.ApplyAnimations(element, animations);
+
+    public void RemoveKeyframesPlaying(ElementSave element, string instanceName)
+        => _provider?.RemoveKeyframesPlaying(element, instanceName);
 }
