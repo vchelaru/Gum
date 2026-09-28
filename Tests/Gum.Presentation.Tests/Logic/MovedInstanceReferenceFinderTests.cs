@@ -32,7 +32,7 @@ public class MovedInstanceReferenceFinderTests : BaseTestClass
     public void GetReferencesBrokenByMove_IgnoresWhatTheMoveCarries()
     {
         ComponentSave button = CreateButton(out InstanceSave box, out InstanceSave label, out _);
-        StateSave defaultState = button.DefaultState;
+        StateSave defaultState = button.GetDefaultStateOrThrow();
         defaultState.SetValue("Label.Text", "Hi", "string");
         defaultState.VariableLists.Add(new VariableListSave<string> { Name = "Label.VariableReferences", Value = new List<string> { "Y = Label.X" } });
         defaultState.VariableLists.Add(new VariableListSave<string> { Name = "Box.VariableReferences", Value = new List<string> { "Width = Label.Width" } });
@@ -46,7 +46,7 @@ public class MovedInstanceReferenceFinderTests : BaseTestClass
     public void GetReferencesBrokenByMove_ReportsEachKindOfOutsideReference()
     {
         ComponentSave button = CreateButton(out InstanceSave box, out InstanceSave label, out _);
-        StateSave defaultState = button.DefaultState;
+        StateSave defaultState = button.GetDefaultStateOrThrow();
         defaultState.VariableLists.Add(new VariableListSave<string> { Name = "Caption.VariableReferences", Value = new List<string> { "X = Label.X" } });
         defaultState.Variables.Add(new VariableSave { Name = "Label.Text", Type = "string", Value = "Hi", SetsValue = true, ExposedAsName = "LabelText" });
         StateSaveCategory category = new StateSaveCategory { Name = "Look" };
@@ -59,12 +59,12 @@ public class MovedInstanceReferenceFinderTests : BaseTestClass
         ScreenSave menu = new ScreenSave { Name = "Menu" };
         menu.States.Add(new StateSave { Name = "Default", ParentContainer = menu });
         menu.Instances.Add(new InstanceSave { Name = "OkButton", BaseType = "Button", ParentContainer = menu });
-        menu.DefaultState.VariableLists.Add(new VariableListSave<string> { Name = "VariableReferences", Value = new List<string> { "X = Components/Button.Label.X" } });
+        menu.GetDefaultStateOrThrow().VariableLists.Add(new VariableListSave<string> { Name = "VariableReferences", Value = new List<string> { "X = Components/Button.Label.X" } });
         _project.Screens.Add(menu);
 
         ComponentSave bigButton = new ComponentSave { Name = "BigButton", BaseType = "Button" };
         bigButton.States.Add(new StateSave { Name = "Default", ParentContainer = bigButton });
-        bigButton.DefaultState.SetValue("Label.FontSize", 30, "int");
+        bigButton.GetDefaultStateOrThrow().SetValue("Label.FontSize", 30, "int");
         _project.Components.Add(bigButton);
 
         ElementAnimationsSave animations = new ElementAnimationsSave();
@@ -98,7 +98,7 @@ public class MovedInstanceReferenceFinderTests : BaseTestClass
         button.Instances.Add(box);
         button.Instances.Add(label);
         button.Instances.Add(caption);
-        button.DefaultState.SetValue("Label.Parent", "Box", "string");
+        button.GetDefaultStateOrThrow().SetValue("Label.Parent", "Box", "string");
         _project.Components.Add(button);
         return button;
     }
