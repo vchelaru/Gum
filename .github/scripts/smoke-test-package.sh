@@ -134,13 +134,27 @@ if [ "$rid" = "osx-x64" ] && [ "$(uname -m)" = "arm64" ] && ! /usr/bin/arch -x86
   can_launch=false
 fi
 
-# On Linux run GUI programs on a virtual display unless one already exists.
+# On Linux run GUI programs on a virtual display unless one already exists, with a DBus session
+# bus like a real desktop's: without one, Avalonia skips its DBus integration (global menu, file
+# portal, IME) and failures there never show up.
 gui() {
   if [ "$(uname -s)" = "Linux" ] && [ -z "${DISPLAY:-}" ]; then
-    xvfb-run -a -s "-screen 0 1600x1000x24" "$@"
+    dbus-run-session -- xvfb-run -a -s "-screen 0 1600x1000x24" "$@"
   else
     "$@"
   fi
+}
+
+# An error Gum survives still writes a log and shows the user a dialog, so any log fails the test.
+fail_on_crash_logs() {
+  local logs
+  logs=$(find "$work/userdata" -path '*CrashLogs*' -name '*.txt' 2>/dev/null || true)
+  [ -z "$logs" ] && return 0
+  echo "$logs" | while read -r log; do
+    echo "---- $log"
+    cat "$log"
+  done
+  fail "Gum wrote crash logs during the launch"
 }
 
 echo "== copy sample project"
@@ -165,6 +179,7 @@ gui "$gum" "$gumx" --exit-after 120 --select DemoScreenGum --screenshot "$shot" 
 code=$?
 set -e
 cat "$out/gum-$rid.log"
+fail_on_crash_logs
 [ "$code" -eq 0 ] || fail "Gum exited $code"
 [ -s "$shot" ] || fail "Gum exited 0 but wrote no screenshot"
 echo "screenshot: $shot"
