@@ -17,6 +17,11 @@ public class MoveInputHandler : InputHandlerBase
 {
     private bool _hasGrabbed = false;
 
+    // Movement since the push as if no axis were locked, and the part of it applied to the
+    // selection since each axis was last held at its grab position.
+    private Vector2 _unlockedMovement;
+    private Vector2 _appliedMovement;
+
     public override int Priority => 80; // Lower than resize/rotation
 
     public MoveInputHandler(EditorContext context) : base(context) { }
@@ -57,6 +62,8 @@ public class MoveInputHandler : InputHandlerBase
     protected override void OnPush(float worldX, float worldY)
     {
         _hasGrabbed = Context.SelectionManager.HasSelection;
+        _unlockedMovement = Vector2.Zero;
+        _appliedMovement = Vector2.Zero;
 
         if (_hasGrabbed)
         {
@@ -75,10 +82,10 @@ public class MoveInputHandler : InputHandlerBase
     {
         if (Context.HasChangedAnythingSinceLastPush)
         {
-            // Apply axis lock if held
-            if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.LockMovementToAxis))
+            // Drag frames already hold the axis, but the dominant axis can change after the last
+            // one, for example when the cursor leaves the body.
+            if (GetAxisHeldAtGrab() is { } axisHeldAtGrab && ReturnAxisToGrabPosition(axisHeldAtGrab))
             {
-                ApplyAxisLockToSelectedState();
                 Context.GuiCommands.RefreshVariables();
             }
 
@@ -156,17 +163,28 @@ public class MoveInputHandler : InputHandlerBase
             }
         }
 
+        XOrY? axisHeldAtGrab = GetAxisHeldAtGrab();
+        effectiveXToMoveBy = GetMovementAfterAxisLock(effectiveXToMoveBy, axisHeldAtGrab == XOrY.X,
+            ref _unlockedMovement.X, ref _appliedMovement.X);
+        effectiveYToMoveBy = GetMovementAfterAxisLock(effectiveYToMoveBy, axisHeldAtGrab == XOrY.Y,
+            ref _unlockedMovement.Y, ref _appliedMovement.Y);
+
         var didMove = Context.ElementCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
+
+        // Only changes anything after the dominant axis switches mid-drag.
+        if (axisHeldAtGrab is { } heldAxis && ReturnAxisToGrabPosition(heldAxis))
+        {
+            didMove = true;
+            Context.GuiCommands.RefreshVariableValues();
+        }
 
         if (didMove)
         {
-            ApplyAxisLockIfNeeded();
-
             // Snap to grid live, as the object is dragged - not deferred to release, so the user
             // sees exactly where it will land instead of having to guess and re-grab.
             if (Context.SnapToGrid)
             {
-                SnapSelectedToGrid();
+                SnapSelectedToGrid(axisHeldAtGrab);
             }
 
             MarkAsChanged();
@@ -189,116 +207,112 @@ public class MoveInputHandler : InputHandlerBase
         }
     }
 
-    private void ApplyAxisLockIfNeeded()
+    /// <summary>
+    /// The axis an axis-locked drag holds at its grab position, which is the one the cursor has
+    /// moved less along. Null when axis lock is not held or the cursor is back at the push point.
+    /// </summary>
+    private XOrY? GetAxisHeldAtGrab()
     {
-        bool isLockedToAxis = Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.LockMovementToAxis);
-        if (!isLockedToAxis) return;
-
-        var selectedInstances = Context.SelectedState.SelectedInstances;
-
-        var selectedElement = Context.SelectedState.SelectedElement;
-        if (selectedInstances.Count() == 0 &&
-            (Context.SelectedState.SelectedComponent != null ||
-             Context.SelectedState.SelectedStandardElement != null))
+        if (!Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.LockMovementToAxis))
         {
-            // Component/element selected
-            var xOrY = Context.GrabbedState.AxisMovedFurthestAlong;
-            var gue = selectedElement == null ? null : Context.WireframeObjectManager.GetRepresentation(selectedElement);
-
-            if (gue == null)
-            {
-                return;
-            }
-            if (xOrY == XOrY.X)
-            {
-                gue.Y = Context.GrabbedState.ComponentPosition.Y;
-            }
-            else if (xOrY == XOrY.Y)
-            {
-                gue.X = Context.GrabbedState.ComponentPosition.X;
-            }
+            return null;
         }
-        else
+        return Context.GrabbedState.AxisMovedFurthestAlong switch
         {
-            // Instances selected
-            foreach (InstanceSave instance in selectedInstances)
-            {
-                if (instance.Locked)
-                {
-                    continue;
-                }
-
-                var xOrY = Context.GrabbedState.AxisMovedFurthestAlong;
-                var gue = Context.WireframeObjectManager.GetRepresentation(instance);
-                if (gue == null)
-                {
-                    continue;
-                }
-
-                if (xOrY == XOrY.X)
-                {
-                    gue.Y = Context.GrabbedState.InstancePositions[instance].AbsoluteY;
-                }
-                else if (xOrY == XOrY.Y)
-                {
-                    gue.X = Context.GrabbedState.InstancePositions[instance].AbsoluteX;
-                }
-            }
-        }
+            XOrY.X => XOrY.Y,
+            XOrY.Y => XOrY.X,
+            _ => null
+        };
     }
 
-    private void ApplyAxisLockToSelectedState()
+    /// <summary>
+    /// Returns the amount to move an axis by this frame. A held axis does not move; the movement
+    /// it skipped is applied once it stops being held, so it catches up to the cursor.
+    /// </summary>
+    private static float GetMovementAfterAxisLock(float movement, bool isHeld,
+        ref float unlockedMovement, ref float appliedMovement)
+    {
+        float heldBackMovement = unlockedMovement - appliedMovement;
+        unlockedMovement += movement;
+
+        if (isHeld)
+        {
+            // ReturnAxisToGrabPosition puts the selection back at its grab position on this axis.
+            appliedMovement = 0;
+            return 0;
+        }
+
+        movement += heldBackMovement;
+        appliedMovement += movement;
+        return movement;
+    }
+
+    /// <summary>
+    /// Sets the selection's state value and visual on <paramref name="axis"/> back to where they
+    /// were when grabbed. Returns whether anything changed.
+    /// </summary>
+    private bool ReturnAxisToGrabPosition(XOrY axis)
     {
         // HandlePush only starts a move while a state is selected.
         if (Context.SelectedState.SelectedStateSave is not { } stateSave)
         {
-            return;
+            return false;
         }
-        var axis = Context.GrabbedState.AxisMovedFurthestAlong;
 
-        bool isElementSelected = Context.SelectedState.SelectedInstances.Count() == 0 &&
-                 (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null);
+        bool didChange = false;
 
+        if (Context.SelectedState.SelectedInstances.Count() == 0 &&
+            (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null))
+        {
+            if (Context.SelectedState.SelectedElement is { } selectedElement &&
+                Context.WireframeObjectManager.GetRepresentation(selectedElement) is { } gue)
+            {
+                float grabbedValue = axis == XOrY.X
+                    ? Context.GrabbedState.ComponentPosition.X
+                    : Context.GrabbedState.ComponentPosition.Y;
+                didChange = SetAxisValue(gue, axis, stateSave, axis == XOrY.X ? "X" : "Y", grabbedValue, grabbedValue);
+            }
+        }
+        else
+        {
+            foreach (InstanceSave instance in Context.SelectedState.SelectedInstances)
+            {
+                if (instance.Locked ||
+                    !Context.GrabbedState.InstancePositions.TryGetValue(instance, out StateAndAbsoluteVector2 grabbed) ||
+                    Context.WireframeObjectManager.GetRepresentation(instance) is not { } gue)
+                {
+                    continue;
+                }
+
+                // Despite the field names, AbsoluteX/Y are the local X/Y at grab.
+                didChange |= axis == XOrY.X
+                    ? SetAxisValue(gue, axis, stateSave, instance.Name + ".X", grabbed.AbsoluteX, grabbed.StateX)
+                    : SetAxisValue(gue, axis, stateSave, instance.Name + ".Y", grabbed.AbsoluteY, grabbed.StateY);
+            }
+        }
+
+        return didChange;
+    }
+
+    private static bool SetAxisValue(GraphicalUiElement gue, XOrY axis, StateSave stateSave,
+        string variableName, float visualValue, float? stateValue)
+    {
+        float currentVisualValue = axis == XOrY.X ? gue.X : gue.Y;
+        if (currentVisualValue == visualValue && stateSave.GetValue(variableName) as float? == stateValue)
+        {
+            return false;
+        }
+
+        stateSave.SetValue(variableName, stateValue, "float");
         if (axis == XOrY.X)
         {
-            // If the X axis is the furthest-moved, set the Y values back to what they were.
-            if (isElementSelected)
-            {
-                stateSave.SetValue("Y", Context.GrabbedState.ComponentPosition.Y, "float");
-            }
-            else
-            {
-                foreach (var instance in Context.SelectedState.SelectedInstances)
-                {
-                    if (instance.Locked)
-                    {
-                        continue;
-                    }
-
-                    stateSave.SetValue(instance.Name + ".Y", Context.GrabbedState.InstancePositions[instance].StateY, "float");
-                }
-            }
+            gue.X = visualValue;
         }
-        else if (axis == XOrY.Y)
+        else
         {
-            // If the Y axis is the furthest-moved, set the X values back to what they were.
-            if (isElementSelected)
-            {
-                stateSave.SetValue("X", Context.GrabbedState.ComponentPosition.X, "float");
-            }
-            else
-            {
-                foreach (var instance in Context.SelectedState.SelectedInstances)
-                {
-                    if (instance.Locked)
-                    {
-                        continue;
-                    }
-
-                    stateSave.SetValue(instance.Name + ".X", Context.GrabbedState.InstancePositions[instance].StateX, "float");
-                }
-            }
+            gue.Y = visualValue;
         }
+        return true;
     }
 
     private void SnapSelectedToUnitValues()
@@ -378,7 +392,7 @@ public class MoveInputHandler : InputHandlerBase
         }
     }
 
-    private void SnapSelectedToGrid()
+    private void SnapSelectedToGrid(XOrY? axisHeldAtGrab)
     {
         bool wasAnythingModified = false;
         float gridSize = Context.GridSize;
@@ -393,6 +407,7 @@ public class MoveInputHandler : InputHandlerBase
             GetDifferenceToGrid(elementGue, gridSize,
                 Context.GrabbedState.ComponentPosition, Context.GrabbedState.TrueComponentPositionOffset,
                 out float differenceToGridX, out float differenceToGridY);
+            ClearHeldAxis(axisHeldAtGrab, ref differenceToGridX, ref differenceToGridY);
 
             if (differenceToGridX != 0)
             {
@@ -421,6 +436,7 @@ public class MoveInputHandler : InputHandlerBase
 
                     GetDifferenceToGrid(gue, gridSize, grabStartLocal, trueOffset,
                         out float differenceToGridX, out float differenceToGridY);
+                    ClearHeldAxis(axisHeldAtGrab, ref differenceToGridX, ref differenceToGridY);
 
                     if (differenceToGridX != 0)
                     {
@@ -441,6 +457,19 @@ public class MoveInputHandler : InputHandlerBase
             // Not forced (true) - this runs on every drag tick, not just once at release, so a
             // full grid rebuild here would be needlessly expensive.
             Context.GuiCommands.RefreshVariables();
+        }
+    }
+
+    // An axis-locked drag leaves the held axis where it was grabbed, even off the grid.
+    private static void ClearHeldAxis(XOrY? axisHeldAtGrab, ref float differenceX, ref float differenceY)
+    {
+        if (axisHeldAtGrab == XOrY.X)
+        {
+            differenceX = 0;
+        }
+        else if (axisHeldAtGrab == XOrY.Y)
+        {
+            differenceY = 0;
         }
     }
 
