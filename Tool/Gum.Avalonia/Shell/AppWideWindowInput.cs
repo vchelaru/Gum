@@ -21,13 +21,19 @@ internal static class AppWideWindowInput
     {
         window.AddHandler(InputElement.KeyDownEvent, (_, e) =>
         {
-            modifierKeyState.Current = e.KeyModifiers;
+            modifierKeyState.HandleKey(e.Key, e.KeyModifiers, isDown: true);
             GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
             // Ctrl+= / Ctrl+- zoom the whole app unless a canvas that owns them has focus (phase 50).
             hotkeyManager.PreviewKeyDownAppWide(keyArgs, enableEntireAppZoom: CameraZoomScope.IsEntireAppZoomEnabledFor(e.Source));
             e.Handled = keyArgs.Handled;
         }, RoutingStrategies.Tunnel);
-        window.AddHandler(InputElement.KeyUpEvent, (_, e) => modifierKeyState.Current = e.KeyModifiers, RoutingStrategies.Tunnel);
+        window.AddHandler(InputElement.KeyUpEvent, (_, e) => modifierKeyState.HandleKey(e.Key, e.KeyModifiers, isDown: false), RoutingStrategies.Tunnel);
+        // A pointer event never changes a modifier, so its modifiers are current on every platform;
+        // they correct any state a key event got wrong or missed while the window was unfocused.
+        EventHandler<PointerEventArgs> resync = (_, e) => modifierKeyState.Current = e.KeyModifiers;
+        window.AddHandler(InputElement.PointerPressedEvent, resync, RoutingStrategies.Tunnel, handledEventsToo: true);
+        window.AddHandler(InputElement.PointerMovedEvent, resync, RoutingStrategies.Tunnel, handledEventsToo: true);
+        window.AddHandler(InputElement.PointerReleasedEvent, resync, RoutingStrategies.Tunnel, handledEventsToo: true);
     }
 
     /// <summary>
