@@ -205,8 +205,8 @@ public sealed class App : Application
             for (int i = 0; i < 3; i++)
             {
                 Window probe = new Window { Width = 200, Height = 100, Title = "probe " + i };
+                // Closed in the same UI job, before the RegisterWindow reply's continuation runs.
                 probe.Show();
-                await Task.Delay(1000);
                 probe.Close();
                 await Task.Delay(1000);
                 Console.WriteLine("EXPERIMENT: closed probe window " + i);
