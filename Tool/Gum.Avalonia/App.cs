@@ -201,6 +201,8 @@ public sealed class App : Application
 
         if (exitCode is int code)
         {
+            await OpenAndCloseTransientWindowAsync();
+
             // A faulted task nobody awaited is reported only when the GC finalizes it, which a short
             // run may never do; collect now so its crash log is written before the run ends.
             GC.Collect();
@@ -208,6 +210,27 @@ public sealed class App : Application
             failureReporter.OnUnattendedExitStarted();
             desktop.Shutdown(code);
         }
+    }
+
+    // A real session opens and closes popups and dialogs constantly, and platform integration can
+    // fail on that path (Avalonia's Linux global menu did, #5475). An unattended run exercises it
+    // once, closing in the same UI job the way a quickly dismissed popup does, then gives any
+    // resulting async fault time to arrive.
+    private static async Task OpenAndCloseTransientWindowAsync()
+    {
+        // Off-screen and unfocused, like the unattended main window.
+        Window transient = new Window
+        {
+            Width = 200,
+            Height = 100,
+            ShowInTaskbar = false,
+            ShowActivated = false,
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Position = new PixelPoint(-10000, -10000),
+        };
+        transient.Show();
+        transient.Close();
+        await Task.Delay(500);
     }
 
 
