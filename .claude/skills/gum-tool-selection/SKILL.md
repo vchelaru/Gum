@@ -64,8 +64,7 @@ The rectangle selector activates on drag when no handler is active and the curso
 | `PolygonPointInputHandler.UpdateHover()` | `PolygonPointInputHandler.cs` | Hides the "add point" sprite on polygon edges |
 | `ElementCommands.MoveSelectedObjectsBy()` | `Tools/Gum.Presentation/ToolCommands/ElementCommands.cs` | Skips locked instances in multi-selection moves |
 | `ResizeInputHandler.ApplySizeChange()` | `ResizeInputHandler.cs` | Skips locked instances during resize |
-| `MoveInputHandler.ApplyAxisLockIfNeeded()` | `MoveInputHandler.cs` | Skips locked instances during axis-lock correction |
-| `MoveInputHandler.ApplyAxisLockToSelectedState()` | `MoveInputHandler.cs` | Skips locked instances when writing axis-lock to state |
+| `MoveInputHandler.ReturnAxisToGrabPosition()` | `MoveInputHandler.cs` | Skips locked instances when returning the axis-locked axis to its grab position |
 | `MoveInputHandler.SnapSelectedToUnitValues()` | `MoveInputHandler.cs` | Skips locked instances during snap-to-unit |
 | `RectangleSelector.GetElementsInRectangle()` | `RectangleSelector.cs` | Excludes locked instances from marquee results |
 | `SelectionManager.ReverseLoopToFindIpso()` | `SelectionManager.cs` | Prevents click-selection of locked instances on canvas |
