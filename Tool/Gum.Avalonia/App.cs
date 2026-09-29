@@ -201,6 +201,10 @@ public sealed class App : Application
 
         if (exitCode is int code)
         {
+            // A faulted task nobody awaited is reported only when the GC finalizes it, which a short
+            // run may never do; collect now so its crash log is written before the run ends.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             failureReporter.OnUnattendedExitStarted();
             desktop.Shutdown(code);
         }
