@@ -141,7 +141,7 @@ gui() {
   if [ "$(uname -s)" = "Linux" ] && [ -z "${DISPLAY:-}" ]; then
     # EXPERIMENT: record every message on the session bus during the run.
     dbus-run-session -- bash -c '
-      mon="$0"; shift
+      mon="$0"
       echo "session bus: $DBUS_SESSION_BUS_ADDRESS"
       dbus-monitor --session > "$mon" 2>&1 & m=$!
       sleep 1
