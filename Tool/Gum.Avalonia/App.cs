@@ -201,6 +201,17 @@ public sealed class App : Application
 
         if (exitCode is int code)
         {
+            // EXPERIMENT (#5476): open and close windows so Avalonia's DBus menu exporter is disposed.
+            for (int i = 0; i < 3; i++)
+            {
+                Window probe = new Window { Width = 200, Height = 100, Title = "probe " + i };
+                probe.Show();
+                await Task.Delay(1000);
+                probe.Close();
+                await Task.Delay(1000);
+                Console.WriteLine("EXPERIMENT: closed probe window " + i);
+            }
+
             // A faulted task nobody awaited is reported only when the GC finalizes it, which a short
             // run may never do; collect now so its crash log is written before the run ends.
             GC.Collect();
