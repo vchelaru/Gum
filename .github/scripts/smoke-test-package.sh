@@ -139,7 +139,18 @@ fi
 # portal, IME) and failures there never show up.
 gui() {
   if [ "$(uname -s)" = "Linux" ] && [ -z "${DISPLAY:-}" ]; then
-    dbus-run-session -- xvfb-run -a -s "-screen 0 1600x1000x24" "$@"
+    # EXPERIMENT: record every message on the session bus during the run.
+    dbus-run-session -- bash -c '
+      mon="$0"; shift
+      echo "session bus: $DBUS_SESSION_BUS_ADDRESS"
+      dbus-monitor --session > "$mon" 2>&1 & m=$!
+      sleep 1
+      xvfb-run -a -s "-screen 0 1600x1000x24" "$@"; c=$?
+      sleep 2
+      kill $m
+      echo "---- dbus traffic ($(wc -l < "$mon") lines), non-bus-daemon calls and errors:"
+      grep -E "method call|error|signal" "$mon" | grep -v "member=NameAcquired\|member=NameLost" | cut -c1-300
+      exit $c' "$out/dbus-monitor-$(date +%s%N).log" "$@"
   else
     "$@"
   fi
