@@ -19,12 +19,6 @@ public interface ICrashReporter
     string? ReportRecoverable(Exception exception, string source);
 
     /// <summary>
-    /// Logs an exception Gum survived without telling the user, for faults outside Gum's control
-    /// that don't affect it. Returns the log's path, or null when none was written. Never throws.
-    /// </summary>
-    string? LogRecoverable(Exception exception, string source);
-
-    /// <summary>
     /// Logs an exception that is about to end the process. The user is told at the next launch by
     /// <see cref="PromptForPreviousCrash"/>. Returns the log's path, or null when none was written.
     /// Never throws.

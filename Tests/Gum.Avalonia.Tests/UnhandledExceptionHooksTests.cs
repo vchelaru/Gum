@@ -4,7 +4,6 @@ using Gum.Avalonia.Diagnostics;
 using Gum.Diagnostics;
 using Moq;
 using Shouldly;
-using Tmds.DBus.Protocol;
 
 namespace Gum.Avalonia.Tests;
 
@@ -55,36 +54,6 @@ public class UnhandledExceptionHooksTests
         }
 
         reporter.Verify(x => x.ReportRecoverable(thrown, It.IsAny<string>()), Times.Once);
-    }
-
-    // Avalonia's Linux desktop integration (global menu, file portal, IME) makes fire-and-forget
-    // DBus calls that fault when the desktop lacks the service, e.g. no AppMenu registrar on Cinnamon.
-    [Fact]
-    public void UnobservedTask_DBusFault_IsLoggedWithoutTellingTheUser()
-    {
-        Mock<ICrashReporter> reporter = new Mock<ICrashReporter>();
-        AggregateException fault = new AggregateException(new DBusException(
-            "org.freedesktop.DBus.Error.ServiceUnknown",
-            "The name com.canonical.AppMenu.Registrar was not provided by any .service files"));
-
-        UnhandledExceptionHooks.ReportUnobservedTask(reporter.Object, fault);
-
-        reporter.Verify(x => x.LogRecoverable(fault, It.IsAny<string>()), Times.Once);
-        reporter.Verify(x => x.ReportRecoverable(It.IsAny<Exception>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
-    public void UnobservedTask_FaultNotAllDBus_IsReported()
-    {
-        Mock<ICrashReporter> reporter = new Mock<ICrashReporter>();
-        AggregateException fault = new AggregateException(
-            new DBusException("org.freedesktop.DBus.Error.ServiceUnknown", "missing"),
-            new InvalidOperationException("from Gum"));
-
-        UnhandledExceptionHooks.ReportUnobservedTask(reporter.Object, fault);
-
-        reporter.Verify(x => x.ReportRecoverable(fault, It.IsAny<string>()), Times.Once);
-        reporter.Verify(x => x.LogRecoverable(It.IsAny<Exception>(), It.IsAny<string>()), Times.Never);
     }
 
     private static async void ThrowAfterAwait(Exception exception)
