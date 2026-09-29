@@ -139,7 +139,7 @@ fi
 # portal, IME) and failures there never show up.
 gui() {
   if [ "$(uname -s)" = "Linux" ] && [ -z "${DISPLAY:-}" ]; then
-    dbus-run-session -- xvfb-run -a -s "-screen 0 1600x1000x24" "$@"
+    xvfb-run -a -s "-screen 0 1600x1000x24" "$@"
   else
     "$@"
   fi
