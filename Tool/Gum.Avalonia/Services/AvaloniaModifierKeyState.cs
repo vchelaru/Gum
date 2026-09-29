@@ -24,8 +24,25 @@ public class AvaloniaModifierKeyState : IModifierKeyState
         _commandModifiers = commandModifiers;
     }
 
-    /// <summary>The modifiers as of the last key event the main window saw.</summary>
+    /// <summary>The modifiers as of the last key or pointer event the main window saw.</summary>
     public KeyModifiers Current { get; set; }
+
+    /// <summary>
+    /// Records a key press or release. When <paramref name="key"/> is itself a modifier, its own flag
+    /// comes from <paramref name="isDown"/>, since X11 reports the modifiers from before the event.
+    /// </summary>
+    public void HandleKey(Key key, KeyModifiers reported, bool isDown)
+    {
+        KeyModifiers own = key switch
+        {
+            Key.LeftShift or Key.RightShift => KeyModifiers.Shift,
+            Key.LeftCtrl or Key.RightCtrl => KeyModifiers.Control,
+            Key.LeftAlt or Key.RightAlt => KeyModifiers.Alt,
+            Key.LWin or Key.RWin => KeyModifiers.Meta,
+            _ => KeyModifiers.None,
+        };
+        Current = isDown ? reported | own : reported & ~own;
+    }
 
     /// <inheritdoc/>
     public bool IsCtrlDown => Current.HasFlag(_commandModifiers);
