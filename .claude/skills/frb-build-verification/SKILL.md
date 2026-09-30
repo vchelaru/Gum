@@ -38,6 +38,8 @@ The sibling-relative imports (`..\..\..\..\FlatRedBall\…`) are computed from t
 
 An agent working in a nested `.claude/worktrees/` worktree cannot run the canary; it reports the FRB check as not run, and the orchestrator runs it from a sibling worktree (e.g. `<gum-repo>/../gum-wt-<branch>/`) on the pushed branch.
 
+The Forms canary (`FlatRedBall.Forms.DesktopGlNet6.csproj`) still reads `..\Gum\`, the primary checkout, from any worktree. To test a branch's `MonoGameGum/Forms/` changes, check the branch out in the primary checkout (or detach it to `origin/<branch>`) before building.
+
 ## Canaries
 
 Pick by what you changed. **The "Lives in" column is the repo containing the `.csproj` file itself** — don't go hunting for it in the other repo. Both rows still need the FlatRedBall sibling present (row 1's target also pulls in some FlatRedBall-side `Embedded\*.cs` files), but only row 2's `.csproj` is physically located there.
