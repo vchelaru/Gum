@@ -198,6 +198,8 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
         result.Settings!.CodeProjectRoot.ShouldBe("./");
         result.Settings!.RootNamespace.ShouldBe(string.Empty);
         result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGame);
+        // Detection reads only a .csproj, so a shared project isn't recorded.
+        result.Settings!.CsprojPath.ShouldBeEmpty();
     }
 
     [Fact]
@@ -273,6 +275,69 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
 
         result.Success.ShouldBeTrue();
         result.Settings!.OutputLibrary.ShouldNotBe(OutputLibrary.MonoGameForms);
+    }
+
+    [Fact]
+    public void Run_UnityProject_WritesCodeUnderAssets_AndTakesTheNamespaceFromAssemblyCSharp()
+    {
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Assets"));
+        // Unity writes one csproj per assembly; the editor one sorts first.
+        File.WriteAllText(Path.Combine(_tempDirectory, "Assembly-CSharp-Editor.csproj"),
+            "<Project><PropertyGroup><RootNamespace>EditorStuff</RootNamespace></PropertyGroup></Project>");
+        File.WriteAllText(Path.Combine(_tempDirectory, "Assembly-CSharp.csproj"),
+            "<Project><PropertyGroup><RootNamespace>MyUnityGame</RootNamespace></PropertyGroup></Project>");
+        string gumDirectory = Path.Combine(_tempDirectory, "Assets", "StreamingAssets", "GumProject");
+        Directory.CreateDirectory(gumDirectory);
+        string gumxPath = Path.Combine(gumDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath);
+
+        result.Success.ShouldBeTrue();
+        result.Settings!.GeneratedCodeFolder.ShouldBe("Assets/");
+        result.Settings.RootNamespace.ShouldBe("MyUnityGame");
+    }
+
+    [Fact]
+    public void Run_NonUnityProject_LeavesGeneratedCodeFolderEmpty()
+    {
+        // An Assets folder alone doesn't make it Unity; the csproj name does.
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Assets"));
+        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"), "<Project></Project>");
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath);
+
+        result.Settings!.GeneratedCodeFolder.ShouldBeEmpty();
+        result.Settings.CsprojPath.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Run_WithExplicitCsproj_RecordsItRelativeToTheGumx()
+    {
+        string gameDirectory = Path.Combine(_tempDirectory, "Game");
+        Directory.CreateDirectory(gameDirectory);
+        string csprojPath = Path.Combine(gameDirectory, "MyGame.Ui.csproj");
+        File.WriteAllText(csprojPath, "<Project></Project>");
+        string gumDirectory = Path.Combine(_tempDirectory, "Content");
+        Directory.CreateDirectory(gumDirectory);
+        string gumxPath = Path.Combine(gumDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath, csprojPath);
+
+        result.Settings!.CsprojPath.ShouldBe("../Game/MyGame.Ui.csproj");
+    }
+
+    [Fact]
+    public void CsprojPath_IsLeftOutOfTheCodsj_WhenEmpty()
+    {
+        string empty = Newtonsoft.Json.JsonConvert.SerializeObject(new CodeOutputProjectSettings());
+        string set = Newtonsoft.Json.JsonConvert.SerializeObject(new CodeOutputProjectSettings { CsprojPath = "Game.csproj" });
+
+        empty.ShouldNotContain("CsprojPath");
+        Newtonsoft.Json.JsonConvert.DeserializeObject<CodeOutputProjectSettings>(set)!.CsprojPath.ShouldBe("Game.csproj");
     }
 
     public void Dispose()

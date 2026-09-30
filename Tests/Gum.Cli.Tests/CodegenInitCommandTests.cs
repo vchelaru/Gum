@@ -80,6 +80,27 @@ public class CodegenInitCommandTests : IDisposable
     }
 
     [Fact]
+    public void CodegenInit_UnityProjectWithExplicitCsproj_RecordsItAndWritesCodeUnderAssets()
+    {
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Assets"));
+        string csprojPath = Path.Combine(_tempDirectory, "Assembly-CSharp.csproj");
+        File.WriteAllText(csprojPath, "<Project></Project>");
+        string gumDirectory = Path.Combine(_tempDirectory, "Assets", "StreamingAssets", "GumProject");
+        Directory.CreateDirectory(gumDirectory);
+        string gumxPath = Path.Combine(gumDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        CliTestHelper result = CliTestHelper.Run("codegen-init", gumxPath, "--csproj", csprojPath);
+
+        result.ExitCode.ShouldBe(0);
+        string codsj = File.ReadAllText(Path.Combine(gumDirectory, "ProjectCodeSettings.codsj"));
+        codsj.ShouldContain("\"CsprojPath\": \"../../../Assembly-CSharp.csproj\"");
+        codsj.ShouldContain("\"GeneratedCodeFolder\": \"Assets/\"");
+        result.StandardOutput.ShouldContain("GeneratedCodeFolder");
+        result.StandardOutput.ShouldContain("CsprojPath");
+    }
+
+    [Fact]
     public void CodegenInit_WhenNoCsprojFound_ReturnsExitCode2()
     {
         // Use an isolated directory with no .csproj in the ancestor chain.

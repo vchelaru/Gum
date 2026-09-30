@@ -70,6 +70,19 @@ using System.Linq;
     /// </summary>
     public bool ShouldSerializeGeneratedCodeFolder() => !string.IsNullOrEmpty(GeneratedCodeFolder);
 
+    /// <summary>
+    /// Optional path to the game .csproj, relative to the .gumx folder. Syntax version and C# version
+    /// detection read this .csproj when set. Empty (the default) finds one from
+    /// <see cref="CodeProjectRoot"/>: the nearest folder at or above it that has a .csproj, picking
+    /// Assembly-CSharp.csproj, then the shortest name, when there are several.
+    /// </summary>
+    public string CsprojPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Newtonsoft.Json convention: leaves the field out of the .codsj while unset.
+    /// </summary>
+    public bool ShouldSerializeCsprojPath() => !string.IsNullOrEmpty(CsprojPath);
+
     public string RootNamespace { get; set; } = string.Empty;
 
     public bool AppendFolderToNamespace { get; set; }

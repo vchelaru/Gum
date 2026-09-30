@@ -94,15 +94,21 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         }
 
         string? codeProjectRoot = CodeProjectCsprojLocator.ResolveCodeProjectRoot(settings, projectDirectory);
-        if (codeProjectRoot == null)
+        string? configuredCsproj = CodeProjectCsprojLocator.ResolveConfiguredCsproj(settings, projectDirectory);
+        if (codeProjectRoot == null && configuredCsproj == null)
         {
             return CreateFallback("No project directory or CodeProjectRoot configured.");
         }
 
-        string? csprojPath = CodeProjectCsprojLocator.FindCsproj(codeProjectRoot);
+        if (configuredCsproj != null && !File.Exists(configuredCsproj))
+        {
+            return CreateFallback($"CsprojPath {configuredCsproj} not found.");
+        }
+
+        string? csprojPath = CodeProjectCsprojLocator.FindCsproj(settings, projectDirectory);
         if (csprojPath == null)
         {
-            return CreateFallback($"No .csproj found in {codeProjectRoot}.");
+            return CreateFallback($"No .csproj found in {codeProjectRoot} or any folder above it.");
         }
 
         string csprojContents;
