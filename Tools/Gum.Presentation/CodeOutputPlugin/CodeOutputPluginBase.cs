@@ -61,6 +61,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     private CodeOutputProjectSettingsManager _codeOutputProjectSettingsManager;
     private readonly CodeFileDeleteService _codeFileDeleteService;
     private readonly NewElementCodeSettingsService _newElementCodeSettingsService;
+    private readonly IDispatcher _dispatcher;
 
     private readonly IProjectState _projectState;
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
@@ -96,9 +97,11 @@ public abstract class CodeOutputPluginBase : PluginBase
         ISelectedState selectedState,
         IRetryService retryService,
         IMessenger messenger,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        IDispatcher dispatcher)
     {
         codeOutputProjectSettings = new CodeOutputProjectSettings();
+        _dispatcher = dispatcher;
 
         _nameVerifier = nameVerifier;
         _localizationService = localizationService;
@@ -327,7 +330,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        HandleRefreshAndExport(isFullCommit);
+        _controller?.HandleVariableSet(element, codeOutputProjectSettings, isFullCommit);
     }
     private void HandleVariableAdd(ElementSave? elementSave, string variableName)
     {
@@ -397,7 +400,8 @@ public abstract class CodeOutputPluginBase : PluginBase
             _codeGenerationService,
             _elementSettingsManager,
             _codeOutputProjectSettingsManager,
-            viewModel);
+            viewModel,
+            _dispatcher);
 
         pluginTab.GotFocus += () => RefreshCodeDisplay();
     }

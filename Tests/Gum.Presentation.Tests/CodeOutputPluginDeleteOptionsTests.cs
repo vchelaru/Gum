@@ -67,7 +67,8 @@ public class CodeOutputPluginDeleteOptionsTests : BaseTestClass
             new Mock<ISelectedState>().Object,
             new Mock<IRetryService>().Object,
             new WeakReferenceMessenger(),
-            _fileCommands.Object);
+            _fileCommands.Object,
+            new Mock<IDispatcher>().Object);
 
         // The plugin reads its project settings when a project loads.
         CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
@@ -140,9 +141,10 @@ public class CodeOutputPluginDeleteOptionsTests : BaseTestClass
             ISelectedState selectedState,
             IRetryService retryService,
             IMessenger messenger,
-            IFileCommands fileCommands)
+            IFileCommands fileCommands,
+            IDispatcher dispatcher)
             : base(guiCommands, dialogService, nameVerifier, localizationService, projectState, typeManager,
-                outputManager, selectedState, retryService, messenger, fileCommands)
+                outputManager, selectedState, retryService, messenger, fileCommands, dispatcher)
         {
         }
 

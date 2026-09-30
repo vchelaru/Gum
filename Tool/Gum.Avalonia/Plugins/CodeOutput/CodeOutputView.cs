@@ -266,9 +266,10 @@ public class MainCodeOutputPlugin : CodeOutputPluginBase
         ISelectedState selectedState,
         IRetryService retryService,
         IMessenger messenger,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        IDispatcher dispatcher)
         : base(guiCommands, dialogService, nameVerifier, localizationService, projectState, typeManager,
-            outputManager, selectedState, retryService, messenger, fileCommands)
+            outputManager, selectedState, retryService, messenger, fileCommands, dispatcher)
     {
     }
 

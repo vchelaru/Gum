@@ -9,7 +9,9 @@ using Gum.Reflection;
 using Gum.Services;
 using Gum.ToolStates;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.Errors;
@@ -37,6 +39,10 @@ public class MainErrorsPlugin : CorePriorityPlugin
     private ErrorViewModel[] _projectErrors = [];
     private bool _isProjectErrorRefreshPending;
 
+    // Elements other than the selected one whose variables changed through a variable reference
+    // (#5541), checked once after the commit so the tree's "!" follows without replacing the tab.
+    private readonly HashSet<ElementSave> _pendingUnselectedElements;
+
     #endregion
 
     [ImportingConstructor]
@@ -51,6 +57,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
         _fileSystemRevealService = fileSystemRevealService;
         _projectState = projectState;
         _dispatcher = dispatcher;
+        _pendingUnselectedElements = new HashSet<ElementSave>();
     }
 
     public override void StartUp()
@@ -160,7 +167,33 @@ public class MainErrorsPlugin : CorePriorityPlugin
             return;
         }
 
-        UpdateErrorsForElement(element);
+        if (element == null || element == _selectedState.SelectedElement)
+        {
+            UpdateErrorsForElement(element);
+            return;
+        }
+
+        if (_pendingUnselectedElements.Add(element) && _pendingUnselectedElements.Count == 1)
+        {
+            _dispatcher.Post(CheckPendingUnselectedElements);
+        }
+    }
+
+    private void CheckPendingUnselectedElements()
+    {
+        ElementSave[] elements = _pendingUnselectedElements.ToArray();
+        _pendingUnselectedElements.Clear();
+
+        if (_projectState.GumProjectSave is not { } project)
+        {
+            return;
+        }
+
+        // The tab lists the selected element; the check still raises ErrorsChecked for the tree.
+        foreach (ElementSave element in elements)
+        {
+            _errorChecker.GetErrorsFor(element, project);
+        }
     }
 
     private void HandleInstanceDelete(ElementSave? element, InstanceSave instance)

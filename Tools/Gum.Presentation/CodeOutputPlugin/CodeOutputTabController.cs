@@ -3,8 +3,11 @@ using CodeOutputPlugin.ViewModels;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Services;
 using Gum.ProjectServices.CodeGeneration;
 using Gum.ToolStates;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CodeOutputPlugin;
 
@@ -35,6 +38,9 @@ public class CodeOutputTabController
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly CodeOutputProjectSettingsManager _codeOutputProjectSettingsManager;
     private readonly CodeWindowViewModel _viewModel;
+    private readonly IDispatcher _dispatcher;
+    private readonly HashSet<ElementSave> _pendingElements;
+    private CodeOutputProjectSettings _pendingProjectSettings;
 
     public CodeOutputTabController(
         ICodeOutputTabView view,
@@ -46,7 +52,8 @@ public class CodeOutputTabController
         CodeGenerationService codeGenerationService,
         CodeOutputElementSettingsManager elementSettingsManager,
         CodeOutputProjectSettingsManager codeOutputProjectSettingsManager,
-        CodeWindowViewModel viewModel)
+        CodeWindowViewModel viewModel,
+        IDispatcher dispatcher)
     {
         _view = view;
         _tabVisibility = tabVisibility;
@@ -58,6 +65,9 @@ public class CodeOutputTabController
         _elementSettingsManager = elementSettingsManager;
         _codeOutputProjectSettingsManager = codeOutputProjectSettingsManager;
         _viewModel = viewModel;
+        _dispatcher = dispatcher;
+        _pendingElements = new HashSet<ElementSave>();
+        _pendingProjectSettings = new CodeOutputProjectSettings();
     }
 
     /// <summary>
@@ -194,6 +204,47 @@ public class CodeOutputTabController
         if (elementSettings.AutoGenerateOnChange)
         {
             GenerateCodeForElement(showPopups: false, _selectedState.SelectedElement, codeOutputProjectSettings);
+        }
+    }
+
+    /// <summary>
+    /// Reacts to a variable set on <paramref name="element"/>. The selected element refreshes and
+    /// exports as usual. Any other element (a Styles edit propagated through variable references
+    /// raises one notification per reference line) is queued and generated once, with its own
+    /// settings, after the current commit finishes (issue #5541).
+    /// </summary>
+    public void HandleVariableSet(ElementSave? element, CodeOutputProjectSettings codeOutputProjectSettings, bool isFullCommit)
+    {
+        if (element == null || element == _selectedState.SelectedElement)
+        {
+            HandleRefreshAndExport(codeOutputProjectSettings, isFullCommit);
+            return;
+        }
+
+        if (!isFullCommit)
+        {
+            return;
+        }
+
+        _pendingProjectSettings = codeOutputProjectSettings;
+        if (_pendingElements.Add(element) && _pendingElements.Count == 1)
+        {
+            _dispatcher.Post(GeneratePendingElements);
+        }
+    }
+
+    private void GeneratePendingElements()
+    {
+        ElementSave[] elements = _pendingElements.ToArray();
+        _pendingElements.Clear();
+
+        foreach (ElementSave element in elements)
+        {
+            CodeOutputElementSettings elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
+            if (elementSettings.AutoGenerateOnChange)
+            {
+                GenerateCodeForElement(showPopups: false, element, _pendingProjectSettings, elementSettings);
+            }
         }
     }
 

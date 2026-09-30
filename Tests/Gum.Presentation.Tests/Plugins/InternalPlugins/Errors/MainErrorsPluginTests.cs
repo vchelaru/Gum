@@ -119,6 +119,33 @@ public class MainErrorsPluginTests : BaseTestClass
     }
 
     /// <summary>
+    /// A Styles edit reaches each referencing element through VariableSet, once per reference line.
+    /// The referencing element is checked once, after the commit, and the tab keeps listing the
+    /// selected element's rows (#5541).
+    /// </summary>
+    [Fact]
+    public void VariableSet_OnAnElementThatIsNotSelected_ChecksItOnceAndKeepsTheSelectedElementsRows()
+    {
+        ComponentSave referencing = new ComponentSave { Name = "Referencing" };
+        ErrorViewModel selectedError = new ErrorViewModel { Message = "selected" };
+        ErrorViewModel referencingError = new ErrorViewModel { Message = "referencing" };
+        _errorChecker.Setup(c => c.GetErrorsFor(_screen, _project)).Returns(new[] { selectedError });
+        _errorChecker.Setup(c => c.GetErrorsFor(referencing, _project)).Returns(new[] { referencingError });
+        _selectedState.Setup(s => s.SelectedElement).Returns(_screen);
+        _plugin.CallElementSelected(_screen);
+
+        _plugin.CallVariableSet(referencing, null, "Red", 0, isFullCommit: true);
+        _plugin.CallVariableSet(referencing, null, "Green", 0, isFullCommit: true);
+        foreach (Action posted in _posted.ToArray())
+        {
+            posted();
+        }
+
+        _errorChecker.Verify(c => c.GetErrorsFor(referencing, _project), Times.Once);
+        _viewModel.Errors.ShouldBe(new[] { selectedError });
+    }
+
+    /// <summary>
     /// Project-level rows (#5262) come from a pass over the whole project: it runs once per burst of
     /// load, save and file-change notifications, and a selection change reuses its result.
     /// </summary>
