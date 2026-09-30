@@ -61,6 +61,8 @@ Consequence for themes: a rounded/shadowed theme's visual code (`new RectangleRu
 Model it on `Runtimes/SilkNetGum`: reference `GumCommon` + `SkiaGum`, import `Runtimes/CursorInput.props`, and add a `Cursor.<Host>.cs` partial (mouse/touch reads) and a `Keyboard` deriving from `GumCommon/Input/PolledKeyboard.cs` (key map plus a down query). `GumService` subclasses `GumServiceSkiaBase` and pumps `FormsUtilities.Update` in `Update`. For GPU rendering, draw into a SkiaGameRendering canvas (see `StrideGum`).
 
 - ⚠ **netstandard2.1 builds (Unity) compile out `OperatingSystem.Is*`.** The host sets `Cursor.IsMobile` and `TextBoxBase.ShowNativeKeyboardOnFocus` itself, and supplies files through `FileManager.CustomGetStreamFromFile` when it can't read from disk.
+- `Runtimes/UnityGum` is the push-model example: the host pushes input in each frame rather than the runtime polling a device.
+- ⚠ **Unity IL2CPP needs a `link.xml` preserving `netstandard` and at least Low managed stripping.** Svg.Skia is built against SkiaSharp 2.88 and doesn't compile to C++ at Minimal (#5519).
 
 ## Cross-references
 - [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md) — per-runtime file unification (`#if`/links).
