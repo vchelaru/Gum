@@ -12,6 +12,10 @@ package, so add both to `Packages/manifest.json`:
 "com.vchelaru.gum": "https://github.com/vchelaru/Gum.git#upm"
 ```
 
+Each Gum release publishes the package to the `upm` branch, so `#upm` works once the first release
+with it has shipped; until then, install from a Gum checkout with a `file:` path to this folder. To
+pin a version, use `#upm/v<version>` (for example `#upm/v2026.10.1`) instead of `#upm`.
+
 Gum's package brings in `com.unity.inputsystem`; set Player Settings > Active Input Handling to
 Input System Package (or Both).
 
