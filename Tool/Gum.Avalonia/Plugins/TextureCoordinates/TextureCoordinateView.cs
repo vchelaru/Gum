@@ -32,7 +32,6 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
     public TextureCoordinateView(ICanvasRedrawScheduler redrawScheduler)
     {
         _canvasControl = new ImageRegionCanvasControl(redrawScheduler);
-        _canvasControl.SizeChanged += (_, _) => CanvasResized?.Invoke();
         _canvasControl.AddHandler(KeyDownEvent, HandleCanvasKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         _canvasControl.AddHandler(KeyUpEvent, HandleCanvasKeyUp, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         _canvasControl.PointerPressed += (_, e) =>
@@ -116,9 +115,6 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
 
     /// <inheritdoc/>
     public ICameraScrollBar HorizontalScrollBar { get; }
-
-    /// <inheritdoc/>
-    public event Action? CanvasResized;
 
     /// <inheritdoc/>
     public new event Action<GumKeyEventArgs>? KeyDown;

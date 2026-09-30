@@ -27,9 +27,6 @@ public interface ITextureCoordinateView
     /// <summary>The horizontal scroll bar below the canvas.</summary>
     ICameraScrollBar HorizontalScrollBar { get; }
 
-    /// <summary>Raised after the canvas control changes size.</summary>
-    event Action? CanvasResized;
-
     /// <summary>
     /// Raised for a key pressed over the canvas. The handler sets <see cref="GumKeyEventArgs.Handled"/>
     /// and the head copies it back to its own event.

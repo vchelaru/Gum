@@ -27,7 +27,6 @@ namespace TextureCoordinateSelectionPlugin.Views
 
             VerticalScrollBar = new WpfCameraScrollBar(VerticalScrollBarElement);
             HorizontalScrollBar = new WpfCameraScrollBar(HorizontalScrollBarElement);
-            InnerControl.SizeChanged += (_, _) => CanvasResized?.Invoke();
             InnerControl.KeyDown += HandleInnerKeyDown;
             InnerControl.KeyUp += (_, e) => KeyUp?.Invoke(e.ToGumKeyEventArgs());
             InnerControl.MouseDown += (_, e) => MouseDown?.Invoke(e.ToGumMouseEventArgs(InnerControl));
@@ -47,9 +46,6 @@ namespace TextureCoordinateSelectionPlugin.Views
 
         /// <inheritdoc/>
         public ICameraScrollBar HorizontalScrollBar { get; }
-
-        /// <inheritdoc/>
-        public event Action? CanvasResized;
 
         /// <inheritdoc/>
         public new event Action<GumKeyEventArgs>? KeyDown;
