@@ -20,7 +20,7 @@
     <!-- ScreenshotDiffServiceTests writes tiny synthetic PNGs from mocked IScreenshotService
          backends; SkiaSharp is already a transitive dependency via Gum.ProjectServices ->
          Gum.ImageDiff, referenced directly here only to encode those fixtures. -->
-    <PackageReference Include="SkiaSharp" VersionOverride="3.119.1" />
+    <PackageReference Include="SkiaSharp" VersionOverride="3.119.4" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,10 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
     <!-- The Linux native is a separate package (the SkiaSharp package carries only Windows and macOS);
          pinned to the managed version so the Avalonia head does not fall back to Avalonia's 2.88 native. -->
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.4" />
   </ItemGroup>
 
 	<ItemGroup>

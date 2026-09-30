@@ -61,7 +61,7 @@
          atlas-baking dependency: it rasterizes TTFs natively via GumFontMapper, and no Apos.Shapes
          package: SkiaGum renders RectangleRuntime / CircleRuntime (gradients, dropshadows,
          per-corner radii) natively. -->
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
   </ItemGroup>
   <ItemGroup>
     <!-- Gum.SilkNet: the real game-host runtime (window/input + Skia rendering). Deliberately NOT
