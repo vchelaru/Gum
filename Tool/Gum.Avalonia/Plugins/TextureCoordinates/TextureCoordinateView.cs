@@ -42,6 +42,7 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         _canvasControl.PointerReleased += (_, e) =>
             MouseUp?.Invoke(e.ToGumMouseEventArgs(_canvasControl, e.GetCurrentPoint(_canvasControl).Properties.PointerUpdateKind));
         _canvasControl.PointerWheelChanged += HandleCanvasPointerWheelChanged;
+        _canvasControl.AttachedToVisualTree += (_, _) => AvaloniaMouseMapping.EnableTouchpadDetection(_canvasControl);
         Gestures.AddPointerTouchPadGestureMagnifyHandler(_canvasControl, HandleCanvasPinch);
 
         ScrollBar vertical = new ScrollBar { Orientation = Orientation.Vertical, AllowAutoHide = false };
@@ -168,7 +169,7 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         e.Handled = args.Handled;
     }
 
-    // Avalonia raises the trackpad pinch only on macOS.
+    // Avalonia raises the trackpad pinch only on macOS; Windows sends it as Ctrl+wheel.
     private void HandleCanvasPinch(object? sender, PointerDeltaEventArgs e)
     {
         GumMouseEventArgs args = e.ToGumMouseEventArgs(_canvasControl, PointerUpdateKind.Other);

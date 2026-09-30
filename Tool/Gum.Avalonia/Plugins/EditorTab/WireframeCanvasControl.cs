@@ -34,6 +34,13 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
     }
 
     /// <inheritdoc/>
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        AvaloniaMouseMapping.EnableTouchpadDetection(this);
+    }
+
+    /// <inheritdoc/>
     protected override void OnKeyDown(KeyEventArgs e)
     {
         // The hotkey manager gets first refusal, ahead of Avalonia's own handling (focus
@@ -86,7 +93,7 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
         e.Handled = args.Handled;
     }
 
-    // Avalonia raises the trackpad pinch only on macOS.
+    // Avalonia raises the trackpad pinch only on macOS; Windows sends it as Ctrl+wheel.
     private void HandlePinch(object? sender, PointerDeltaEventArgs e)
     {
         GumMouseEventArgs args = e.ToGumMouseEventArgs(this, PointerUpdateKind.Other);
