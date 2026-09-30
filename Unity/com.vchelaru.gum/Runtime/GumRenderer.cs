@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
 using SkiaGameRendering.Unity;
 using SkiaSharp;
@@ -83,8 +82,9 @@ namespace Gum.Unity
             string? projectPath = null;
             if (!string.IsNullOrEmpty(_projectFile))
             {
-                new GumStreamingAssets().Install();
-                projectPath = Path.Combine(Application.streamingAssetsPath, _projectFile);
+                GumStreamingAssets streamingAssets = new GumStreamingAssets();
+                streamingAssets.Install();
+                projectPath = streamingAssets.GetProjectPath(_projectFile);
             }
 
             GumService gum = GumService.Default;

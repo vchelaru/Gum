@@ -1,6 +1,13 @@
 # Gum for Unity
 
-Gum UI (layout, Forms controls, `.gumx` projects) drawn with SkiaSharp. Windows x64 only so far.
+Gum UI (layout, Forms controls, `.gumx` projects) drawn with SkiaSharp.
+
+## Platforms
+
+Windows x64, macOS (Intel and Apple silicon), Linux x64, Android (arm64-v8a, armeabi-v7a, x86_64) and
+iOS, in the Editor and in players. WebGL isn't supported: SkiaSharp has no Unity WebGL native, and Gum
+reads project files synchronously, which a browser can't do. Each platform needs a SkiaGameRendering
+version that ships SkiaSharp for it.
 
 ## Install
 
@@ -32,9 +39,9 @@ inactive GameObject and set `ProjectFile` before activating it.
 
 ## Rendering
 
-On Direct3D 11, Gum draws on the GPU through SkiaGameRendering. On any other graphics API it draws on
-the CPU and uploads a texture each frame. `GumRenderer.Texture` holds the result either way; turn off
-`DrawToScreen` to show it yourself.
+On Direct3D 11 (Windows), Gum draws on the GPU through SkiaGameRendering. On any other graphics API,
+so on every other platform, it draws on the CPU and uploads a texture each frame. `GumRenderer.Texture`
+holds the result either way; turn off `DrawToScreen` to show it yourself.
 
 ## IL2CPP
 
