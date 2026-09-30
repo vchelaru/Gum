@@ -1,6 +1,6 @@
-# 0010. Converge Sprite/NineSlice/Container/Polygon dispatch onto their Runtimes, smallest-first
+# 0021. Converge Sprite/NineSlice/Container/Polygon dispatch onto their Runtimes, smallest-first
 
-- **Status:** Accepted
+- **Status:** Accepted (originally numbered 0010, which it shared with another ADR; renumbered 2026-09-30)
 - **Date:** 2026-07-16
 - **Deciders:** Victor Chelaru, Claude
 

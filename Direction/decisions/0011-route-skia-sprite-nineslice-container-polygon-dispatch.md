@@ -6,7 +6,7 @@
 
 ## Context
 
-[0010](0010-converge-sprite-nineslice-container-polygon-dispatch.md) converged the **core**
+[0021](0021-converge-sprite-nineslice-container-polygon-dispatch.md) converged the **core**
 dispatcher's (`Gum/Wireframe/CustomSetPropertyOnRenderable.cs`) Sprite/NineSlice/Container/Polygon
 branches onto their Runtime types (`SpriteRuntime`/`NineSliceRuntime`/`ContainerRuntime`/
 `PolygonRuntime`), but explicitly scoped out doing the same for the **Skia** dispatcher
@@ -19,7 +19,7 @@ Runtime parity is already satisfied for all four: `SpriteRuntime`, `NineSliceRun
 `ContainerRuntime`, and `PolygonRuntime` are the same linked source files across MonoGame/Raylib/
 Skia (file-linked into `SkiaGum.csproj` from `MonoGameGum/GueDeriving/`), not merely
 API-compatible. [0008](0008-sequence-runtime-dispatch-convergence.md)'s phase-1 parity
-precondition needs no dedicated work here — same situation 0010 found for the core file.
+precondition needs no dedicated work here — same situation 0021 found for the core file.
 
 As on the core file, the direct-to-renderable writes skip the runtime's `NotifyPropertyChanged`
 side effect, and in some cases skip the runtime setter's logic entirely — e.g. `SetProperty
@@ -43,7 +43,7 @@ and Container's IsRenderTarget) through their Runtime types **ahead of**
 `TrySetPropertiesOnRenderableBase`/the direct `InvisibleRenderable` write, mirroring core's
 `TrySetPropertyOnSprite`/`TrySetPropertyOnNineSlice`/`TrySetPropertyOnContainer`/
 `TrySetPropertyOnLinePolygon` branches. One runtime class per PR, smallest/cleanest first
-(Sprite, then NineSlice, then Container, then Polygon) — same sequencing rule as 0010, so each
+(Sprite, then NineSlice, then Container, then Polygon) — same sequencing rule as 0021, so each
 change stays independently reviewable and bisectable. Each PR gets pinning tests first (per the
 `tdd` skill), following the `Dispatch_<Property>_RoutesToRuntime` naming already established in
 `CircleRuntimeTests`/`RectangleRuntimeTests` (#3662).
@@ -66,11 +66,11 @@ It shrinks the *behavioral* gap and cross-file diff for these four branches, con
 - `TrySetPropertiesOnRenderableBase` and the shape branches that also call it are untouched — the
   new runtime-typed checks sit ahead of it, they don't modify it.
 - `SourceFile` on Sprite/NineSlice remains renderable/runtime-direct outside the mechanical
-  redispatch, same carve-out as 0010.
+  redispatch, same carve-out as 0021.
 
 ## Alternatives considered
 
-- **Do all four types in one PR.** Rejected for the same reason as 0010: mixes independently
+- **Do all four types in one PR.** Rejected for the same reason as 0021: mixes independently
   low-risk changes into one diff.
 - **Rely solely on the generic `TrySetPropertyOnRuntime` reflection fallback instead of explicit
   branches.** Rejected for `Color`: the incoming value is `System.Drawing.Color` (the cross-platform
