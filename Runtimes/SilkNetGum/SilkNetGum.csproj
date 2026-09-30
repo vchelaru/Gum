@@ -56,15 +56,7 @@
 	     fork trap the FormsUtilities/IAnimatable comments above already call out. -->
 
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
-	<ItemGroup>
-		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
-	</ItemGroup>
+	<Import Project="..\CursorInput.props" />
 
 	<ItemGroup>
 		<PackageReference Include="SkiaSharp" Version="3.119.1" />

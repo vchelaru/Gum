@@ -64,15 +64,7 @@
 		<Compile Include="..\..\MonoGameGum\Renderables\RenderableCreator.cs" Link="Renderables\RenderableCreator.cs" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
-	</ItemGroup>
+	<Import Project="..\CursorInput.props" />
 
 	<ItemGroup>
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />

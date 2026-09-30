@@ -75,15 +75,7 @@
 	     same-FQN-fork reasoning: the same trap this project would otherwise repeat. -->
 
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
-	<ItemGroup>
-		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
-	</ItemGroup>
+	<Import Project="..\CursorInput.props" />
 
 	<ItemGroup>
 		<!-- 3.119.4, not SkiaGum.csproj's 3.119.1: SkiaGameRendering.Stride.D3D11 (below, windows7.0

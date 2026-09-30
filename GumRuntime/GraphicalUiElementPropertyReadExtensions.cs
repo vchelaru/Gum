@@ -46,7 +46,7 @@ public static class GraphicalUiElementPropertyReadExtensions
             case "Clips Children":
                 value = element.ClipsChildren;
                 return true;
-#if !FRB && NET6_0_OR_GREATER
+#if !FRB && (NET6_0_OR_GREATER || NETSTANDARD2_1)
             case "ExposeChildrenEvents":
                 if (element is InteractiveGue exposeChildrenEventsGue)
                 {
@@ -58,7 +58,7 @@ public static class GraphicalUiElementPropertyReadExtensions
             case "FlipHorizontal":
                 value = element.FlipHorizontal;
                 return true;
-#if !FRB && NET6_0_OR_GREATER
+#if !FRB && (NET6_0_OR_GREATER || NETSTANDARD2_1)
             case "HasEvents":
                 if (element is InteractiveGue hasEventsGue)
                 {

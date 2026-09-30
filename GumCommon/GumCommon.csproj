@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
 		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -369,4 +369,16 @@
 	  <PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
 	  <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
 	</ItemGroup>
+	<!-- netstandard2.1 is the build Unity (Mono/IL2CPP) loads. net8.0 gets System.Text.Json from the
+	     shared framework; netstandard2.1 needs the package. Missing attributes are polyfilled in
+	     Polyfills/NetStandardPolyfills.cs. -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+	  <PackageReference Include="System.Text.Json" Version="8.0.5" />
+	</ItemGroup>
+	<!-- netstandard2.1's BCL has no nullability annotations (Path.GetDirectoryName and friends read
+	     as non-null-returning), so it raises null warnings the annotated net8.0 build doesn't. The
+	     net8.0 build is the nullability check. -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+	  <NoWarn>$(NoWarn);CS8600;CS8602;CS8603;CS8604</NoWarn>
+	</PropertyGroup>
 </Project>

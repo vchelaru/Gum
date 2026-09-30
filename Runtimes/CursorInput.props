@@ -1,0 +1,17 @@
+<Project>
+  <!--
+    The shared cursor source a non-XNA host compiles: the XNA-shaped mouse/touch state types and the
+    Cursor that Forms reads. Each host adds a Cursor.<Host>.cs partial that supplies GetMouseState,
+    GetTouchCollection and the viewport offsets. Imported by RaylibGum, SokolGum, SilkNetGum and
+    StrideGum; a new host imports this instead of copying the list.
+  -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
+  </ItemGroup>
+</Project>

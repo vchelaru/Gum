@@ -41,6 +41,21 @@ public class CursorSilkTests
     }
 
     [Fact]
+    public void Activity_IsMobile_IgnoresMouse()
+    {
+        (Cursor cursor, Mock<IMouse> mouse) = CreateAttachedCursor();
+        mouse.SetupGet(m => m.Position).Returns(new Vector2(37, 52));
+        mouse.Setup(m => m.IsButtonPressed(MouseButton.Left)).Returns(true);
+        cursor.IsMobile = true;
+
+        cursor.Activity(0);
+
+        cursor.PrimaryDown.ShouldBeFalse();
+        cursor.X.ShouldBe(0);
+        cursor.LastInputDevice.ShouldBe(InputDevice.TouchScreen);
+    }
+
+    [Fact]
     public void Activity_MapsPrimaryButtonDown()
     {
         (Cursor cursor, Mock<IMouse> mouse) = CreateAttachedCursor();

@@ -6703,7 +6703,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.ClipsChildren = (bool)value!;
                     toReturn = true;
                     break;
-#if !FRB && NET6_0_OR_GREATER
+#if !FRB && (NET6_0_OR_GREATER || NETSTANDARD2_1)
                 case "ExposeChildrenEvents":
                     {
                         if (this is InteractiveGue interactiveGue)
@@ -6718,7 +6718,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.FlipHorizontal = (bool)value!;
                     toReturn = true;
                     break;
-#if !FRB && NET6_0_OR_GREATER
+#if !FRB && (NET6_0_OR_GREATER || NETSTANDARD2_1)
                 case "HasEvents":
                     {
                         if (this is InteractiveGue interactiveGue)
@@ -7194,7 +7194,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void RemoveChild(GraphicalUiElement child) => this.Children.Remove(child);
 
-#if !FRB && NET6_0_OR_GREATER
+#if !FRB && (NET6_0_OR_GREATER || NETSTANDARD2_1)
     /// <summary>
     /// Adds this element as a child of the active runtime's root container (resolved via
     /// <see cref="IGumService.Default"/>), making it a top-level element that will be rendered

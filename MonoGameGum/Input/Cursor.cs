@@ -478,6 +478,16 @@ public partial class Cursor : ICursor
     /// Defaults to 20, roughly Android's 8dp touch slop on a typical phone.
     /// </summary>
     public float TouchDragThreshold { get; set; } = 20;
+
+    /// <summary>
+    /// Whether this cursor runs on a mobile device. When true, <see cref="Activity(double)"/> reads
+    /// only touch input and ignores the mouse. Defaults to true on Android and iOS. A host whose runtime
+    /// can't report the platform (netstandard2.1, such as Unity) sets this itself.
+    /// </summary>
+    public bool IsMobile { get; set; }
+#if NET5_0_OR_GREATER
+        = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
+#endif
 #if XNALIKE
     private readonly GameWindow? _gameWindow;
 #endif
@@ -515,7 +525,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
 
     public void Activity(double gameTime)
     {
-        var isMobile = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
+        bool isMobile = IsMobile;
 
         MouseState? mouseState = isMobile ? null : GetMouseState();
 

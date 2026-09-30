@@ -142,13 +142,6 @@
 		<!-- WindowFitMath/WindowZoomMode/SingleThreadSynchronizationContext/GumHotReloadManager moved
 		     to GumCommon (issue #4452), arriving via the GumCommon ProjectReference below instead of
 		     a file-link. -->
-		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
-		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
-		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Renderables\RenderableCreator.cs" Link="Renderables\RenderableCreator.cs" />
 		<!--
 			HierarchicalOrderer / IRenderableOrderer / DrawCommand / BatchKeyGroupedOrderer are
@@ -168,6 +161,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\TextExtensions.cs" Link="Renderables\TextExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
 	</ItemGroup>
+	<Import Project="..\CursorInput.props" />
 
 	<ItemGroup>
 	  <!--
