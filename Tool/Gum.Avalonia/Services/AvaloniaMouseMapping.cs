@@ -38,8 +38,7 @@ public static class AvaloniaMouseMapping
 
     /// <summary>
     /// Builds a neutral wheel event. A touchpad's two-finger scroll pans like native canvas apps,
-    /// unless Cmd (macOS, #4985) or Ctrl (Windows, #5477) is held; a mouse wheel, and every event on
-    /// Linux, zooms.
+    /// unless Cmd (macOS, #4985) or Ctrl (Windows #5477, Linux #5489) is held; a mouse wheel zooms.
     /// </summary>
     public static GumMouseEventArgs ToGumWheelEventArgs(this PointerWheelEventArgs e, Visual relativeTo)
     {
@@ -54,6 +53,16 @@ public static class AvaloniaMouseMapping
         {
             source = GetWindowsWheelSource(Environment.TickCount64, WindowsTouchpadContacts.LastReportMs);
         }
+        else if (OperatingSystem.IsLinux())
+        {
+            long now = Environment.TickCount64;
+            source = GetLinuxWheelSource(e.Delta, now, _lastLinuxTouchpadMs);
+            if (source == WheelSource.LinuxTouchpad)
+            {
+                _lastLinuxTouchpadMs = now;
+            }
+        }
+        ScrollLog.Write(e.Delta, e.KeyModifiers, source);
         Vector? touchpadPan = null;
         if (source == WheelSource.WindowsTouchpad && OperatingSystem.IsWindows())
         {
@@ -100,6 +109,24 @@ public static class AvaloniaMouseMapping
             : WheelSource.Wheel;
 
     /// <summary>
+    /// Classifies a Linux wheel event from its delta alone, since Avalonia's X11 backend doesn't say
+    /// which device sent it: a notched wheel scrolls whole steps, a touchpad fractions. A whole step
+    /// within <see cref="LinuxTouchpadGestureGapMs"/> of the last touchpad event is still the touchpad.
+    /// </summary>
+    public static WheelSource GetLinuxWheelSource(Vector delta, long nowMs, long? lastTouchpadMs)
+    {
+        if (!IsWhole(delta.X) || !IsWhole(delta.Y))
+        {
+            return WheelSource.LinuxTouchpad;
+        }
+        return lastTouchpadMs is { } last && nowMs - last <= LinuxTouchpadGestureGapMs
+            ? WheelSource.LinuxTouchpad
+            : WheelSource.Wheel;
+    }
+
+    private static bool IsWhole(double value) => Math.Abs(value - Math.Round(value)) < 1e-6;
+
+    /// <summary>
     /// Fills in <paramref name="args"/>' zoom <see cref="GumMouseEventArgs.Delta"/> or, for a
     /// touchpad scroll without Cmd (macOS) or Ctrl (Windows), its pan in physical pixels. A Windows
     /// touchpad pans by <paramref name="touchpadPan"/>, the fingers' travel in device-independent
@@ -126,6 +153,14 @@ public static class AvaloniaMouseMapping
             return;
         }
 
+        if (source == WheelSource.LinuxTouchpad && !modifiers.HasFlag(KeyModifiers.Control))
+        {
+            args.IsPanScroll = true;
+            args.PanX = (float)(delta.X * LinuxTouchpadPixelsPerDelta * dpiScale);
+            args.PanY = (float)(delta.Y * LinuxTouchpadPixelsPerDelta * dpiScale);
+            return;
+        }
+
         if (source == WheelSource.MacMouseWheel)
         {
             // macOS sends one event per click but scales its delta by scroll acceleration (about
@@ -144,6 +179,8 @@ public static class AvaloniaMouseMapping
     public static int PinchToWheelDelta(double magnification) =>
         (int)Math.Round(magnification / PinchPerZoomStep * WheelNotchDelta);
 
+    private static long? _lastLinuxTouchpadMs;
+
     // WPF reports 120 per notch; Avalonia reports 1.
     private const int WheelNotchDelta = 120;
 
@@ -155,6 +192,11 @@ public static class AvaloniaMouseMapping
 
     // A precision touchpad reports at 100+ Hz while touched, so a gap this long means no fingers.
     private const long TouchpadReportWindowMs = 100;
+
+    // xf86-input-libinput's default scroll distance: one unit of touchpad delta is 15 pixels of finger travel.
+    private const double LinuxTouchpadPixelsPerDelta = 15;
+
+    private const long LinuxTouchpadGestureGapMs = 200;
 
     private const double PinchPerZoomStep = 0.15;
 
@@ -181,4 +223,6 @@ public enum WheelSource
     MacTrackpad,
     /// <summary>A scroll or pinch on a Windows precision touchpad, reporting 1 per notch.</summary>
     WindowsTouchpad,
+    /// <summary>A two-finger scroll on a Linux touchpad, reporting fractional steps.</summary>
+    LinuxTouchpad,
 }
