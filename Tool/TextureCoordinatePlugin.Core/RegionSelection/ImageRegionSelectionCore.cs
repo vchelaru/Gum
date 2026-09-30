@@ -182,6 +182,7 @@ public class ImageRegionSelectionCore
                     // No explicit redraw request - the WPF host renders continuously off
                     // CompositionTarget.Rendering, so the new texture shows on the next frame.
                 }
+                CurrentTextureChanged?.Invoke();
             }
         }
     }
@@ -454,6 +455,9 @@ public class ImageRegionSelectionCore
     /// bars, the camera clamp) is recomputed here rather than when the control resizes.
     /// </summary>
     public event Action? ViewSizeChanged;
+
+    /// <summary>Raised when <see cref="CurrentTexture"/> is set to a different texture, or to or from null.</summary>
+    public event Action? CurrentTextureChanged;
     #endregion
 
     #region Methods

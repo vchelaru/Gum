@@ -223,6 +223,33 @@ public class TextureCoordinateTabScenarioTests
     }
 
     [SkippableFact]
+    [Trait("Feature", "TEX-001")]
+    public void ASpriteWithNoTexture_ShowsANoTextureMessage_InsteadOfAnEmptyCanvas()
+    {
+        // #5493: a sprite with no Source File left the tab blank, with scroll bars over nothing.
+        OnTab(tab =>
+        {
+            ComponentSave button = tab.Project.AddComponent("Button");
+            InstanceSave plain = tab.Project.AddInstance(button, "Plain", "Sprite");
+            string atlas = tab.AddTextureFile("Atlas.png");
+            InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
+
+            tab.Select(plain);
+
+            tab.Tab.IsVisible.ShouldBeTrue(tab.Describe());
+            tab.View.NoTextureMessage.IsEffectivelyVisible.ShouldBeTrue(tab.Describe());
+            tab.View.HorizontalScrollBarControl.IsVisible.ShouldBeFalse();
+            tab.View.VerticalScrollBarControl.IsVisible.ShouldBeFalse();
+
+            tab.Select(icon);
+
+            tab.View.NoTextureMessage.IsVisible.ShouldBeFalse(tab.Describe());
+            tab.View.HorizontalScrollBarControl.IsVisible.ShouldBeTrue();
+            tab.View.VerticalScrollBarControl.IsVisible.ShouldBeTrue();
+        });
+    }
+
+    [SkippableFact]
     [Trait("Feature", "TEX-007")]
     public void Background_FollowsTheThemesCheckerColors_AndTheProjectsCheckerSetting()
     {
