@@ -1,19 +1,15 @@
-using Gum.Wireframe;
 using Silk.NET.Input;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GumKeys = Gum.Forms.Input.Keys;
 
 namespace Gum.Input;
 
 /// <summary>
-/// Keyboard implementation for Silk.NET.Input. Down-state is polled from an <see cref="IKeyboard"/>
-/// each frame in <see cref="Activity"/>; push/release edges are derived from a frame-over-frame
-/// snapshot (Silk has no "pressed this frame" query); typed text is buffered from the
-/// <see cref="IKeyboard.KeyChar"/> event. Modeled on <c>Runtimes/RaylibGum/Input/Keyboard.cs</c>.
+/// Keyboard implementation for Silk.NET.Input. Down-state is polled from an <see cref="IKeyboard"/>;
+/// <see cref="PolledKeyboard"/> derives push/release edges and key repeat from it (Silk has no
+/// "pressed this frame" query). Typed text comes from the <see cref="IKeyboard.KeyChar"/> event.
 /// </summary>
-public class Keyboard : IInputReceiverKeyboard
+public class Keyboard : PolledKeyboard
 {
     private readonly IKeyboard? _keyboard;
 
@@ -25,7 +21,7 @@ public class Keyboard : IInputReceiverKeyboard
     public Keyboard(IKeyboard keyboard)
     {
         _keyboard = keyboard;
-        _keyboard.KeyChar += HandleKeyChar;
+        _keyboard.KeyChar += (_, character) => AppendTypedText(character);
     }
 
     /// <summary>
@@ -165,159 +161,12 @@ public class Keyboard : IInputReceiverKeyboard
 
     #endregion
 
-    #region Frame state
-
-    private readonly HashSet<GumKeys> _currentDown = new();
-    private readonly HashSet<GumKeys> _previousDown = new();
-
-    // Manual OS-independent key-repeat: Silk.NET.Input has no repeat-rate poll (unlike Raylib's
-    // IsKeyPressedRepeat), so discrete key actions (e.g. holding an arrow key to move a caret or
-    // navigate a ListBox) are timed here instead. Mirrors MonoGame's Keyboard.RepeatDelay/RepeatRate
-    // semantics (Runtimes/MonoGameGum/Input/Keyboard.cs).
-    private readonly Dictionary<GumKeys, double> _keyDownSince = new();
-    private readonly Dictionary<GumKeys, double> _lastRepeatTime = new();
-    private double _currentGameTime;
-
-    /// <summary>
-    /// Delay after the initial key press before repeat typing begins.
-    /// </summary>
-    public System.TimeSpan RepeatDelay { get; set; } = System.TimeSpan.FromMilliseconds(500);
-
-    /// <summary>
-    /// Interval between repeated key-typed events while a key is held down, once
-    /// <see cref="RepeatDelay"/> has elapsed.
-    /// </summary>
-    public System.TimeSpan RepeatRate { get; set; } = System.TimeSpan.FromMilliseconds(70);
-
-    // Typed chars accrue from KeyChar events as they arrive (before Update). Activity snapshots
-    // and clears them so the frame's DoKeyboardAction reads exactly this frame's input.
-    private readonly StringBuilder _charsTyped = new();
-    private string _frameChars = "";
-
-    private void HandleKeyChar(IKeyboard keyboard, char character) => _charsTyped.Append(character);
-
-    #endregion
-
-    /// <summary>
-    /// Returns true if either the left or right shift key is currently pressed down.
-    /// </summary>
-    public bool IsShiftDown => KeyDown(GumKeys.LeftShift) || KeyDown(GumKeys.RightShift);
-
-    /// <summary>
-    /// Returns true if either the left or right control key is currently pressed down.
-    /// </summary>
-    public bool IsCtrlDown => KeyDown(GumKeys.LeftControl) || KeyDown(GumKeys.RightControl);
-
-    /// <summary>
-    /// Returns true if either Command key is held on macOS, where it is reported as a Windows key. Always false
-    /// elsewhere, so the Windows key never triggers text shortcuts.
-    /// </summary>
-    public bool IsCommandDown => System.OperatingSystem.IsMacOS() && (KeyDown(GumKeys.LeftWindows) || KeyDown(GumKeys.RightWindows));
-
-    /// <summary>
-    /// Returns true if either the left or right alt key is currently pressed down.
-    /// </summary>
-    public bool IsAltDown => KeyDown(GumKeys.LeftAlt) || KeyDown(GumKeys.RightAlt);
+    /// <inheritdoc/>
+    protected override IEnumerable<GumKeys> SupportedKeys => _gumToSilk.Keys;
 
     /// <inheritdoc/>
-    IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped => _gumToSilk.Keys.Where(KeyTyped);
-
-    /// <inheritdoc/>
-    public bool KeyDown(GumKeys key) => _currentDown.Contains(key);
-
-    /// <inheritdoc/>
-    public bool KeyPushed(GumKeys key) => _currentDown.Contains(key) && !_previousDown.Contains(key);
-
-    /// <inheritdoc/>
-    public bool KeyReleased(GumKeys key) => !_currentDown.Contains(key) && _previousDown.Contains(key);
-
-    /// <inheritdoc/>
-    /// <remarks>
-    /// Returns true on the initial press and again at <see cref="RepeatDelay"/>/<see cref="RepeatRate"/>
-    /// intervals while the key is held, manually timed since Silk provides no OS-driven repeat poll.
-    /// Character-producing input (including repeat) also flows through <see cref="GetStringTyped"/>
-    /// via the KeyChar event (which the OS already repeats), which is what TextBox text entry consumes.
-    /// </remarks>
-    public bool KeyTyped(GumKeys key)
-    {
-        if (KeyPushed(key))
-        {
-            return true;
-        }
-
-        if (!KeyDown(key) || !_keyDownSince.TryGetValue(key, out double downSince))
-        {
-            return false;
-        }
-
-        double elapsedSincePush = _currentGameTime - downSince;
-        if (elapsedSincePush < RepeatDelay.TotalSeconds)
-        {
-            return false;
-        }
-
-        if (_lastRepeatTime.TryGetValue(key, out double lastRepeat) &&
-            _currentGameTime - lastRepeat < RepeatRate.TotalSeconds)
-        {
-            return false;
-        }
-
-        _lastRepeatTime[key] = _currentGameTime;
-        return true;
-    }
-
-    /// <summary>
-    /// Performs every-frame activity: rolls the down-state snapshot forward (for push/release edge
-    /// detection) and repolls the live keyboard, then latches this frame's typed characters.
-    /// Automatically called by Gum via FormsUtilities.Update.
-    /// </summary>
-    /// <param name="gameTime">The number of seconds since the start of the game.</param>
-    public void Activity(double gameTime)
-    {
-        _currentGameTime = gameTime;
-
-        _previousDown.Clear();
-        foreach (GumKeys key in _currentDown)
-        {
-            _previousDown.Add(key);
-        }
-
-        _currentDown.Clear();
-        foreach (KeyValuePair<GumKeys, Key> pair in _gumToSilk)
-        {
-            if (IsKeyPressed(pair.Value))
-            {
-                _currentDown.Add(pair.Key);
-            }
-        }
-
-        foreach (GumKeys key in _currentDown)
-        {
-            if (!_previousDown.Contains(key))
-            {
-                _keyDownSince[key] = gameTime;
-                _lastRepeatTime.Remove(key);
-            }
-        }
-
-        foreach (GumKeys key in _previousDown)
-        {
-            if (!_currentDown.Contains(key))
-            {
-                _keyDownSince.Remove(key);
-                _lastRepeatTime.Remove(key);
-            }
-        }
-
-        _frameChars = _charsTyped.ToString();
-        _charsTyped.Clear();
-    }
-
-    /// <summary>
-    /// Retrieves the string of Unicode characters typed since the previous <see cref="Activity"/>.
-    /// </summary>
-    /// <returns>The characters typed this frame, or an empty string if none.</returns>
-    public string GetStringTyped() => _frameChars;
+    protected override bool IsDeviceKeyDown(GumKeys key) =>
+        _gumToSilk.TryGetValue(key, out Key silkKey) && IsKeyPressed(silkKey);
 
     /// <summary>
     /// Returns whether the given Silk key is currently held down. Virtual so unit tests can drive
