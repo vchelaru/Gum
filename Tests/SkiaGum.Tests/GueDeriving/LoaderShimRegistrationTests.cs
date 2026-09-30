@@ -40,6 +40,7 @@ public class LoaderShimRegistrationTests
     [InlineData("Arc", typeof(global::SkiaGum.GueDeriving.ArcRuntime))]
     [InlineData("Circle", typeof(global::SkiaGum.GueDeriving.CircleRuntime))]
     [InlineData("ColoredCircle", typeof(global::SkiaGum.GueDeriving.ColoredCircleRuntime))]
+    [InlineData("ColoredRectangle", typeof(global::SkiaGum.GueDeriving.ColoredRectangleRuntime))]
     [InlineData("Container", typeof(global::SkiaGum.GueDeriving.ContainerRuntime))]
     [InlineData("Line", typeof(global::SkiaGum.GueDeriving.LineRuntime))]
     [InlineData("Polygon", typeof(global::SkiaGum.GueDeriving.PolygonRuntime))]
@@ -55,4 +56,16 @@ public class LoaderShimRegistrationTests
         created.ShouldBeAssignableTo(expectedShimType);
     }
 #pragma warning restore CS0618
+
+    // Issue #5524: NineSlice was unregistered, so a loaded NineSlice fell back to a plain
+    // GraphicalUiElement. It has no SkiaGum.GueDeriving shim, so the base type is expected.
+    [Fact]
+    public void CreateGueForElement_ForNineSlice_ProducesNineSliceRuntime()
+    {
+        StandardElementSave element = new StandardElementSave { Name = "NineSlice" };
+
+        GraphicalUiElement created = ElementSaveExtensions.CreateGueForElement(element);
+
+        created.ShouldBeOfType<Gum.GueDeriving.NineSliceRuntime>();
+    }
 }
