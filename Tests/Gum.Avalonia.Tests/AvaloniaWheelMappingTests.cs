@@ -87,6 +87,19 @@ public class AvaloniaWheelMappingTests
     }
 
     [Fact]
+    public void ApplyWheelDelta_WindowsTouchpadScrollWithFingerTravel_PansByTheTravelNotTheWheelDelta()
+    {
+        GumMouseEventArgs args = new GumMouseEventArgs();
+
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0, 0.5), KeyModifiers.None, WheelSource.WindowsTouchpad, dpiScale: 2,
+            touchpadPan: new Vector(12, 30));
+
+        args.IsPanScroll.ShouldBeTrue();
+        args.PanX.ShouldBe(24f, tolerance: 0.001f);
+        args.PanY.ShouldBe(60f, tolerance: 0.001f);
+    }
+
+    [Fact]
     public void ApplyWheelDelta_WindowsTouchpadScrollWithCtrl_Zooms()
     {
         // Windows also reports a precision-touchpad pinch as Ctrl+wheel.

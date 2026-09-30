@@ -54,8 +54,20 @@ public static class AvaloniaMouseMapping
         {
             source = GetWindowsWheelSource(Environment.TickCount64, WindowsTouchpadContacts.LastReportMs);
         }
+        Vector? touchpadPan = null;
+        if (source == WheelSource.WindowsTouchpad && OperatingSystem.IsWindows())
+        {
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            {
+                WindowsTouchpadContacts.PanTracker.Discard();
+            }
+            else
+            {
+                touchpadPan = WindowsTouchpadContacts.PanTracker.TakePan(e.Delta);
+            }
+        }
         double dpiScale = TopLevel.GetTopLevel(relativeTo)?.RenderScaling ?? 1.0;
-        ApplyWheelDelta(args, e.Delta, e.KeyModifiers, source, dpiScale);
+        ApplyWheelDelta(args, e.Delta, e.KeyModifiers, source, dpiScale, touchpadPan);
         return args;
     }
 
@@ -89,9 +101,12 @@ public static class AvaloniaMouseMapping
 
     /// <summary>
     /// Fills in <paramref name="args"/>' zoom <see cref="GumMouseEventArgs.Delta"/> or, for a
-    /// touchpad scroll without Cmd (macOS) or Ctrl (Windows), its pan in physical pixels.
+    /// touchpad scroll without Cmd (macOS) or Ctrl (Windows), its pan in physical pixels. A Windows
+    /// touchpad pans by <paramref name="touchpadPan"/>, the fingers' travel in device-independent
+    /// pixels, when it's known, since the wheel delta Windows sends is locked to one axis at first.
     /// </summary>
-    public static void ApplyWheelDelta(GumMouseEventArgs args, Vector delta, KeyModifiers modifiers, WheelSource source, double dpiScale)
+    public static void ApplyWheelDelta(GumMouseEventArgs args, Vector delta, KeyModifiers modifiers, WheelSource source, double dpiScale,
+        Vector? touchpadPan = null)
     {
         if (source == WheelSource.MacTrackpad && !modifiers.HasFlag(KeyModifiers.Meta))
         {
@@ -104,9 +119,10 @@ public static class AvaloniaMouseMapping
         // Ctrl+scroll zooms, and so does a pinch, which Windows reports as Ctrl+wheel.
         if (source == WheelSource.WindowsTouchpad && !modifiers.HasFlag(KeyModifiers.Control))
         {
+            Vector pan = touchpadPan ?? delta * WindowsTouchpadPixelsPerDelta;
             args.IsPanScroll = true;
-            args.PanX = (float)(delta.X * WindowsTouchpadPixelsPerDelta * dpiScale);
-            args.PanY = (float)(delta.Y * WindowsTouchpadPixelsPerDelta * dpiScale);
+            args.PanX = (float)(pan.X * dpiScale);
+            args.PanY = (float)(pan.Y * dpiScale);
             return;
         }
 
