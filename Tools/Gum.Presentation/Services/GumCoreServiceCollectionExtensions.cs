@@ -169,6 +169,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchIgnoreList>();
         services.AddSingleton<IFileWatchIgnoreList>(provider => provider.GetRequiredService<FileWatchIgnoreList>());
+        services.AddSingleton<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
         services.AddSingleton<FileWatchManager>();
         services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());
         services.AddSingleton<ReorderLogic>();
