@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Runs GumCommon's and SkiaGum's netstandard2.1 builds (the ones Unity loads) on .NET 10, so
+       their netstandard2.1-only branches execute. SetTargetFramework picks the netstandard2.1 asset;
+       DisableTransitiveProjectReferences stops NuGet adding GumCommon's net8.0 build through
+       SkiaGum, which would otherwise win. NetStandardAssetTests proves which build is loaded. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" SetTargetFramework="TargetFramework=netstandard2.1" />
+    <ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" SetTargetFramework="TargetFramework=netstandard2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
