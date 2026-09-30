@@ -7,6 +7,7 @@ using Gum.Managers;
 using Gum.Services.Dialogs;
 using Moq;
 using Shouldly;
+using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 
@@ -60,6 +61,51 @@ public class DeleteObjectPluginTests : BaseTestClass
         DeleteOptionCheckboxViewModel[] secondOptions = second.Choices.Single().Options.ToArray();
         secondOptions[0].IsChecked.ShouldBeFalse();
         secondOptions[1].IsChecked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DeleteOptionsShow_NamesTheElementFileByItsExtension()
+    {
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        DeleteObjectPlugin plugin = GivenPluginWithFiles(
+            (component, "C:/Project/Components/Button.gucj"));
+
+        DeleteOptionsDialogViewModel dialog = new DeleteOptionsDialogViewModel();
+        plugin.CallDeleteOptionsShow(dialog, new object[] { component });
+
+        dialog.CheckBoxes.Single().Label.ShouldBe("Delete file (.gucj)");
+    }
+
+    [Fact]
+    public void DeleteOptionsShow_OmitsTheExtension_WhenTheSelectionMixesFileTypes()
+    {
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        DeleteObjectPlugin plugin = GivenPluginWithFiles(
+            (component, "C:/Project/Components/Button.gucj"),
+            (screen, "C:/Project/Screens/MainMenu.gusj"));
+
+        DeleteOptionsDialogViewModel dialog = new DeleteOptionsDialogViewModel();
+        plugin.CallDeleteOptionsShow(dialog, new object[] { component, screen });
+
+        dialog.CheckBoxes.Single().Label.ShouldBe("Delete file");
+    }
+
+    private static DeleteObjectPlugin GivenPluginWithFiles(params (ElementSave element, string file)[] files)
+    {
+        Mock<IFileCommands> fileCommands = new Mock<IFileCommands>();
+        foreach ((ElementSave element, string file) in files)
+        {
+            fileCommands.Setup(item => item.GetFullPathXmlFile(element, element.Name))
+                .Returns(new FilePath(file));
+        }
+        DeleteObjectPlugin plugin = new DeleteObjectPlugin(
+            Mock.Of<IGuiCommands>(),
+            fileCommands.Object,
+            Mock.Of<IDeleteLogic>(),
+            Mock.Of<IWireframeCommands>());
+        plugin.StartUp();
+        return plugin;
     }
 
     private static object[] GivenInstanceWithChild()

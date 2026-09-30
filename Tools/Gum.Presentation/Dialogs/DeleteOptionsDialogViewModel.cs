@@ -33,7 +33,7 @@ public class DeleteOptionsDialogViewModel : DialogViewModel
     /// <summary>What is about to be deleted.</summary>
     public string Message { get => Get<string>(); set => Set(value); }
 
-    /// <summary>Check-box options, such as "Delete XML file".</summary>
+    /// <summary>Check-box options, such as "Delete file".</summary>
     public ObservableCollection<DeleteOptionCheckboxViewModel> CheckBoxes { get; }
 
     /// <summary>Pick-one option groups, such as whether to delete children.</summary>

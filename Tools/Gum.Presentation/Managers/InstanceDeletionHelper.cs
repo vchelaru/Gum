@@ -293,7 +293,7 @@ public class InstanceDeletionHelper
     }
 
     /// <summary>
-    /// Decides whether the "Delete XML file?" option should be offered for the given object being
+    /// Decides whether the "Delete file" option should be offered for the given object being
     /// deleted. Instances have no XML file of their own. An element only offers this option when
     /// its name is not shared by another element in the project (e.g. duplicates added directly to
     /// the .gumx) — deleting the shared XML file in that case would remove the base file out from
