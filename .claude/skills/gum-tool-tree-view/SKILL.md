@@ -72,7 +72,7 @@ produces one refresh instead of N.
 
 ## Adding instances
 
-Every gesture that creates an instance (Ctrl-click on a Standards chip, with or without Shift; Ctrl+Shift+click on an element node; chip or node drag onto a node or the canvas; the right-click Add menus; the Add Instance dialog) ends in `IAddInstanceLogic` (`Tools/Gum.Presentation/Logic/AddInstanceLogic.cs`). The click and menu gestures all call `AddInstanceAtDestination`, which adds to the remembered add destination, else the selected instance, else the element root, the same rule Ctrl+V uses; only a drag names its own container. Validation, naming, parenting (default child slot), undo, selection and the destination live there once. Do not add a second `IElementCommands.AddInstance` call site or a gesture-specific target rule.
+Every gesture that creates an instance (a plain left click on a Standards chip; Ctrl+Shift+click on an element node; chip or node drag onto a node or the canvas; the right-click Add menus; the Add Instance dialog) ends in `IAddInstanceLogic` (`Tools/Gum.Presentation/Logic/AddInstanceLogic.cs`). The click and menu gestures all call `AddInstanceAtDestination`, which adds to the remembered add destination, else the selected instance, else the element root, the same rule Ctrl+V uses; only a drag names its own container. Validation, naming, parenting (default child slot), undo, selection and the destination live there once. Do not add a second `IElementCommands.AddInstance` call site or a gesture-specific target rule.
 
 ## Gotchas
 

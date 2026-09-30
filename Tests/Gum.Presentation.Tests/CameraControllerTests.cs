@@ -249,6 +249,35 @@ public class CameraControllerTests
         raised.ShouldBe(0);
     }
 
+    // The Space release can land in another control or window (#5540), so focus loss is the only
+    // signal that Space is no longer held for this canvas.
+    [Fact]
+    public void HandleFocusLost_ForgetsSpace_SoItEndsASpacePanAndTheNextLeftPressDoesNotPan()
+    {
+        (CameraController controller, _, _, _) = CreateSut();
+        controller.HandleKeyPress(new GumKeyEventArgs { Key = GumKey.Space });
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Left });
+        controller.IsPanning.ShouldBeTrue();
+
+        controller.HandleFocusLost();
+
+        controller.IsPanning.ShouldBeFalse("focus loss ends a Space pan");
+        controller.HandleMouseUp(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Left });
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Left });
+        controller.IsPanning.ShouldBeFalse("Space was released while the canvas lacked focus");
+    }
+
+    [Fact]
+    public void HandleFocusLost_LeavesAMiddleButtonPanAlone()
+    {
+        (CameraController controller, _, _, _) = CreateSut();
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Middle });
+
+        controller.HandleFocusLost();
+
+        controller.IsPanning.ShouldBeTrue();
+    }
+
     [Fact]
     public void HandleMouseWheel_ScrollUp_ZoomsInAndKeepsWorldPointUnderCursorFixed()
     {

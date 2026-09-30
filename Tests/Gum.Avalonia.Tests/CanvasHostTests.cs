@@ -228,6 +228,9 @@ public class CanvasHostTests
     [InlineData(Key.Delete, XnaKeys.Delete)]
     [InlineData(Key.OemPlus, XnaKeys.OemPlus)]
     [InlineData(Key.F5, XnaKeys.F5)]
+    // Cmd on macOS; the texture-coordinate nudge reads it to stand aside for Cmd+Arrow (#5540).
+    [InlineData(Key.LWin, XnaKeys.LeftWindows)]
+    [InlineData(Key.RWin, XnaKeys.RightWindows)]
     public void InputAdapter_MapsAvaloniaKeysToXnaKeys(Key avaloniaKey, XnaKeys expected)
     {
         AvaloniaInputHostAdapter.ToXnaKey(avaloniaKey).ShouldBe(expected);
@@ -284,6 +287,37 @@ public class CanvasHostTests
 
         adapter.GetPointerState().X.ShouldBe(40);
         adapter.GetPointerState().Y.ShouldBe(25);
+        window.Close();
+    }
+
+    // A key released while the canvas lacks focus, or while another app is active, never reaches
+    // it, so held keys (Space for panning, Cmd for the arrow keys) are forgotten then (#5540).
+    [AvaloniaFact]
+    public void InputAdapter_ForgetsHeldKeys_WhenTheControlLosesFocus()
+    {
+        global::Avalonia.Controls.Border control = new global::Avalonia.Controls.Border { Width = 100, Height = 80, Focusable = true };
+        global::Avalonia.Controls.Button other = new global::Avalonia.Controls.Button { Content = "other" };
+        global::Avalonia.Controls.Window window = new global::Avalonia.Controls.Window
+        {
+            Width = 300,
+            Height = 300,
+            Content = new global::Avalonia.Controls.StackPanel { Children = { control, other } },
+        };
+        window.Show();
+        window.UpdateLayout();
+        AvaloniaInputHostAdapter adapter = new AvaloniaInputHostAdapter(control);
+        int lostCount = 0;
+        adapter.KeyboardInputLost += () => lostCount++;
+
+        control.Focus();
+        window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, null);
+        adapter.GetKeyboardState().IsKeyDown(XnaKeys.Space).ShouldBeTrue();
+        other.Focus();
+
+        adapter.GetKeyboardState().GetPressedKeys().ShouldBeEmpty();
+        lostCount.ShouldBe(1);
+        // Window deactivation takes the same path, but a headless window cannot be deactivated
+        // while keeping its focus, so that subscription is a manual check.
         window.Close();
     }
 

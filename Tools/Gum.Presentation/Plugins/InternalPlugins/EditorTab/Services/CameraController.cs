@@ -155,6 +155,20 @@ public class CameraController
         }
     }
 
+    /// <summary>
+    /// Forgets Space when the canvas loses keyboard focus or its window deactivates: the release
+    /// lands elsewhere and never reaches <see cref="HandleKeyUp"/>. Ends a Space pan in progress.
+    /// </summary>
+    public void HandleFocusLost()
+    {
+        _isSpaceDown = false;
+        if (_isSpacePanning)
+        {
+            _isPanning = false;
+            _isSpacePanning = false;
+        }
+    }
+
     public void HandleKeyPress(GumKeyEventArgs e)
     {
         if (e.Key == GumKey.Space)

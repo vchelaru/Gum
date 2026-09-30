@@ -139,7 +139,7 @@ public class SimpleEditorTests
     }
 
     [AvaloniaFact]
-    public void MultiLineTextBoxDisplay_EnterAddsALine_AndTheApplyButtonOrCtrlEnterCommitsWithLineBreaks()
+    public void MultiLineTextBoxDisplay_EnterAddsALine_AndTheApplyButtonOrCommandEnterCommitsWithLineBreaks()
     {
         EditorFixture fixture = new EditorFixture { Text = "start" };
         MultiLineTextBoxDisplay display = new MultiLineTextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Text)) };
@@ -156,8 +156,22 @@ public class SimpleEditorTests
         display.ApplyButton.IsVisible.ShouldBeFalse();
 
         display.EditorTextBox.Text = "three";
-        display.EditorTextBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, KeyModifiers = KeyModifiers.Control });
+        display.EditorTextBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, KeyModifiers = AvaloniaDataUi.PlatformKeyModifiers.Command });
         fixture.Text.ShouldBe("three");
+    }
+
+    // Apply is on the platform command key: Cmd+Enter on macOS, Ctrl+Enter elsewhere (#5540).
+    [Theory]
+    [InlineData(KeyModifiers.Meta, KeyModifiers.Meta, true, "Apply (⌘Enter)")]
+    [InlineData(KeyModifiers.Meta, KeyModifiers.Control, false, "Apply (⌘Enter)")]
+    [InlineData(KeyModifiers.Control, KeyModifiers.Control, true, "Apply (Ctrl+Enter)")]
+    [InlineData(KeyModifiers.Control, KeyModifiers.None, false, "Apply (Ctrl+Enter)")]
+    public void MultiLineTextBoxDisplay_AppliesOnTheCommandKeyPlusEnter_AndSaysSoInTheTooltip(
+        KeyModifiers commandModifiers, KeyModifiers pressed, bool expectedApply, string expectedTooltip)
+    {
+        MultiLineTextBoxDisplay.IsApplyGesture(Key.Enter, pressed, commandModifiers).ShouldBe(expectedApply);
+        MultiLineTextBoxDisplay.IsApplyGesture(Key.A, pressed, commandModifiers).ShouldBeFalse();
+        MultiLineTextBoxDisplay.ApplyToolTip(commandModifiers).ShouldBe(expectedTooltip);
     }
 
     [AvaloniaFact]
