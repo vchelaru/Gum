@@ -11,7 +11,11 @@ using System.Linq;
 namespace CodeGen_Raylib_ByReference.Screens;
 partial class TestScreenRuntime : Gum.Wireframe.GraphicalUiElement
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("TestScreen", typeof(TestScreenRuntime));

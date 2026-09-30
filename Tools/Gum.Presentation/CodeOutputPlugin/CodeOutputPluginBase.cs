@@ -113,7 +113,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         var codeGenLoggerForDetection = new ToolCodeGenLogger(outputManager);
         var syntaxVersionDetectionService = new SyntaxVersionDetectionService(codeGenLoggerForDetection);
 
-        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, _projectDirectoryProvider, typeStringResolver, syntaxVersionDetectionService);
+        _codeGenerator = new CodeGenerator(_codeGenerationNameVerifier, _localizationService, _elementSettingsManager, _projectDirectoryProvider, typeStringResolver, syntaxVersionDetectionService, new CSharpVersionDetectionService());
 
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider);
 

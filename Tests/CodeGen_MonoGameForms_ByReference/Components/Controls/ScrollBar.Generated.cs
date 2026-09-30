@@ -12,7 +12,11 @@ using System.Linq;
 namespace CodeGenProject.Components.Controls;
 partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
     public static void RegisterRuntimeType()
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>

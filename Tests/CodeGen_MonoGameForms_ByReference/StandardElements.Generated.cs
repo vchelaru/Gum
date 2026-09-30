@@ -12,7 +12,11 @@ namespace CodeGenProject;
 
 internal static class StandardElementsCodeGenRegistration
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [ModuleInitializer]
+    #endif
     internal static void RegisterFallbackStandardElements()
     {
         XmlSerializer serializer = GumFileSerializer.GetCompactSerializer(typeof(List<StandardElementSave>));
