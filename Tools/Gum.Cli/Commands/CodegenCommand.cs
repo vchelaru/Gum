@@ -148,7 +148,8 @@ public static class CodegenCommand
         var codeGenerator = new CodeGenerator(
             codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,
             typeStringResolver: null,
-            syntaxVersionDetectionService: syntaxVersionDetectionService);
+            syntaxVersionDetectionService: syntaxVersionDetectionService,
+            cSharpVersionDetectionService: new CSharpVersionDetectionService());
 
         var customCodeGenerator = new CustomCodeGenerator(codeGenerator, codeGenNameVerifier);
         var fileLocationsService = new CodeGenerationFileLocationsService(

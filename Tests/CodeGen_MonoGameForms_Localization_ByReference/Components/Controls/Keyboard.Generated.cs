@@ -14,7 +14,11 @@ using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
 partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
     public static void RegisterRuntimeType()
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>

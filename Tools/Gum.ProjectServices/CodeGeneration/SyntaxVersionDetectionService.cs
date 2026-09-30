@@ -44,6 +44,9 @@ public enum SyntaxVersionSource
     /// <summary>Auto-detected from a direct ProjectReference.</summary>
     ProjectReference,
 
+    /// <summary>Auto-detected from a plain assembly Reference's HintPath (e.g. Unity's generated .csproj).</summary>
+    AssemblyReference,
+
     /// <summary>Auto-detection failed; fell back to default version 0.</summary>
     Fallback
 }
@@ -51,6 +54,10 @@ public enum SyntaxVersionSource
 /// <inheritdoc/>
 public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 {
+    // Gum runtimes that stamp a GumSyntaxVersion. These are both the project names and the
+    // assembly (dll) names.
+    private static readonly string[] GumRuntimeNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum" };
+
     private readonly ICodeGenLogger _logger;
     private readonly string _nuGetCacheRoot;
 
@@ -86,24 +93,13 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             };
         }
 
-        if (string.IsNullOrEmpty(projectDirectory) || string.IsNullOrEmpty(settings.CodeProjectRoot))
+        string? codeProjectRoot = CodeProjectCsprojLocator.ResolveCodeProjectRoot(settings, projectDirectory);
+        if (codeProjectRoot == null)
         {
             return CreateFallback("No project directory or CodeProjectRoot configured.");
         }
 
-        string codeProjectRoot = settings.CodeProjectRoot;
-        if (FileManager.IsRelative(codeProjectRoot))
-        {
-            // Combine through the Path APIs rather than string concatenation: projectDirectory
-            // may or may not end in a separator, and a raw concat like "dir" + "./" produces
-            // "dir./" — a literal (nonexistent) directory name on macOS/Linux, though Windows
-            // silently trims the trailing dot. A root saved on Windows uses backslashes, which are
-            // file-name characters on macOS/Linux, so they become the native separator first.
-            codeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory,
-                codeProjectRoot.Replace('\\', Path.DirectorySeparatorChar)));
-        }
-
-        string? csprojPath = FindCsprojInDirectory(codeProjectRoot);
+        string? csprojPath = CodeProjectCsprojLocator.FindCsproj(codeProjectRoot);
         if (csprojPath == null)
         {
             return CreateFallback($"No .csproj found in {codeProjectRoot}.");
@@ -133,29 +129,21 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             return result;
         }
 
-        return CreateFallback("No Gum PackageReference or ProjectReference found in .csproj.");
-    }
+        // Try a plain assembly Reference with a HintPath to a runtime dll (e.g. Unity, which
+        // references dlls copied into the project rather than NuGet packages or projects)
+        result = TryDetectFromAssemblyReference(csprojContents, csprojPath);
+        if (result != null)
+        {
+            return result;
+        }
 
-    private static string? FindCsprojInDirectory(string directory)
-    {
-        try
-        {
-            return Directory
-                .EnumerateFiles(directory, "*.csproj", SearchOption.TopDirectoryOnly)
-                .FirstOrDefault();
-        }
-        catch
-        {
-            return null;
-        }
+        return CreateFallback("No Gum PackageReference, ProjectReference or assembly Reference found in .csproj.");
     }
 
     private SyntaxVersionResult? TryDetectFromProjectReference(string csprojContents, string csprojPath)
     {
         // Look for a ProjectReference to a Gum runtime that stamps a GumSyntaxVersion.
-        string[] gumProjectNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum" };
-
-        foreach (string projectName in gumProjectNames)
+        foreach (string projectName in GumRuntimeNames)
         {
             string? relativePath = ExtractProjectReferencePath(csprojContents, projectName);
             if (relativePath == null)
@@ -194,6 +182,52 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
                     Version = version.Value,
                     Source = SyntaxVersionSource.ProjectReference,
                     Description = $"Syntax Version: {version.Value} (auto-detected from ProjectReference to {projectName})"
+                };
+            }
+        }
+
+        return null;
+    }
+
+    private SyntaxVersionResult? TryDetectFromAssemblyReference(string csprojContents, string csprojPath)
+    {
+        foreach (string runtimeName in GumRuntimeNames)
+        {
+            string? hintPath = ExtractReferenceHintPath(csprojContents, runtimeName);
+            if (hintPath == null)
+            {
+                continue;
+            }
+
+            // Same separator normalization as TryDetectFromProjectReference. A relative HintPath
+            // is relative to the .csproj; Path.Combine keeps an absolute one as-is.
+            hintPath = hintPath.Replace('\\', '/');
+
+            string csprojDir = Path.GetDirectoryName(csprojPath) ?? csprojPath;
+            string dllPath;
+            try
+            {
+                dllPath = Path.GetFullPath(Path.Combine(csprojDir, hintPath));
+            }
+            catch
+            {
+                continue;
+            }
+
+            if (!File.Exists(dllPath))
+            {
+                _logger.PrintOutput($"Referenced {runtimeName} dll not found at {dllPath}.");
+                continue;
+            }
+
+            int? version = ReadVersionFromAssembly(dllPath);
+            if (version.HasValue)
+            {
+                return new SyntaxVersionResult
+                {
+                    Version = version.Value,
+                    Source = SyntaxVersionSource.AssemblyReference,
+                    Description = $"Syntax Version: {version.Value} (auto-detected from assembly Reference to {Path.GetFileName(dllPath)})"
                 };
             }
         }
@@ -243,6 +277,19 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         }
 
         return null;
+    }
+
+    internal static string? ExtractReferenceHintPath(string csprojContents, string assemblyName)
+    {
+        // Match a HintPath to the runtime's dll anywhere inside a plain assembly Reference,
+        // whatever children come before it:
+        // <Reference Include="SkiaGum">
+        //   <Private>False</Private>
+        //   <HintPath>D:\Game\Assets\Gum\DLLs\SkiaGum.dll</HintPath>
+        // </Reference>
+        string pattern = $@"<Reference\b[^>]*>(?:(?!</Reference>).)*?<HintPath>\s*((?:[^<]*[\\/])?{Regex.Escape(assemblyName)}\.dll)\s*</HintPath>";
+        Match match = Regex.Match(csprojContents, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return match.Success ? match.Groups[1].Value : null;
     }
 
     internal static string? ExtractProjectReferencePath(string csprojContents, string projectName)

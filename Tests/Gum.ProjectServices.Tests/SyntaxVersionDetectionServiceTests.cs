@@ -653,6 +653,164 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
 
     #endregion
 
+    #region Assembly Reference (HintPath) detection
+
+    private static int GumCommonSyntaxVersion =>
+        typeof(Gum.DataTypes.GumSyntaxVersionAttribute).Assembly
+            .GetCustomAttributes(typeof(Gum.DataTypes.GumSyntaxVersionAttribute), inherit: false)
+            .Cast<Gum.DataTypes.GumSyntaxVersionAttribute>()
+            .Single().Version;
+
+    private static CodeOutputProjectSettings AutoDetectSettings => new CodeOutputProjectSettings
+    {
+        SyntaxVersion = "*",
+        CodeProjectRoot = "./"
+    };
+
+    [Theory]
+    [InlineData(@"<HintPath>Assets\Gum\DLLs\SkiaGum.dll</HintPath>")]
+    // Unity writes <Private> before <HintPath>
+    [InlineData(@"<Private>False</Private>
+      <HintPath>Assets\Gum\DLLs\SkiaGum.dll</HintPath>")]
+    public void Detect_AssemblyReference_RelativeHintPath_ReadsSyntaxVersionFromDll(string referenceBody)
+    {
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        string dllDir = Path.Combine(gameDir, "Assets", "Gum", "DLLs");
+        Directory.CreateDirectory(dllDir);
+        // GumCommon.dll carries the same [assembly: GumSyntaxVersion] as the runtimes, so it
+        // stands in for a real SkiaGum.dll.
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), Path.Combine(dllDir, "SkiaGum.dll"));
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"),
+$@"<Project ToolsVersion=""4.0"">
+  <ItemGroup>
+    <Reference Include=""SkiaGum"">
+      {referenceBody}
+    </Reference>
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.AssemblyReference);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+    }
+
+    [Fact]
+    public void Detect_AssemblyReference_AbsoluteHintPath_ReadsSyntaxVersionFromDll()
+    {
+        string dllDir = Path.Combine(_tempDirectory, "dlls");
+        Directory.CreateDirectory(dllDir);
+        string dllPath = Path.Combine(dllDir, "SkiaGum.dll");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), dllPath);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"),
+$@"<Project ToolsVersion=""4.0"">
+  <ItemGroup>
+    <Reference Include=""SkiaGum"">
+      <HintPath>{dllPath}</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.AssemblyReference);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+    }
+
+    [Fact]
+    public void Detect_AssemblyReference_DllMissing_ReturnsFallback()
+    {
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"),
+@"<Project ToolsVersion=""4.0"">
+  <ItemGroup>
+    <Reference Include=""SkiaGum"">
+      <HintPath>Assets\Gum\DLLs\SkiaGum.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+    }
+
+    [Fact]
+    public void ExtractReferenceHintPath_OtherDllWithSameSuffix_ReturnsNull()
+    {
+        string csproj =
+@"<Reference Include=""NotSkiaGum"">
+  <HintPath>Assets\NotSkiaGum.dll</HintPath>
+</Reference>";
+
+        SyntaxVersionDetectionService.ExtractReferenceHintPath(csproj, "SkiaGum").ShouldBeNull();
+    }
+
+    [Fact]
+    public void ExtractReferenceHintPath_AmongOtherReferences_ReturnsMatchingPath()
+    {
+        string csproj =
+@"<Reference Include=""GumCommon"">
+  <HintPath>D:\Game\Assets\Gum\DLLs\GumCommon.dll</HintPath>
+</Reference>
+<Reference Include=""SkiaGum"">
+  <Private>False</Private>
+  <HintPath>D:\Game\Assets\Gum\DLLs\SkiaGum.dll</HintPath>
+</Reference>";
+
+        SyntaxVersionDetectionService.ExtractReferenceHintPath(csproj, "SkiaGum")
+            .ShouldBe(@"D:\Game\Assets\Gum\DLLs\SkiaGum.dll");
+    }
+
+    #endregion
+
+    #region Choosing among several .csproj files
+
+    [Fact]
+    public void Detect_SeveralCsprojFiles_PrefersAssemblyCSharp()
+    {
+        string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "SkiaGum");
+        Directory.CreateDirectory(referencedProjectDir);
+        File.WriteAllText(Path.Combine(referencedProjectDir, "AssemblyAttributes.cs"),
+            "using Gum.DataTypes;\n\n[assembly: GumSyntaxVersion(Version = 3)]\n");
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        // Sorts before Assembly-CSharp.csproj, so a directory-order pick lands on it.
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp-Editor.csproj"), "<Project></Project>");
+        // A shorter name than Assembly-CSharp.csproj, so the shortest-name rule would pick it.
+        File.WriteAllText(Path.Combine(gameDir, "Gum.Unity.csproj"), "<Project></Project>");
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"),
+@"<Project>
+  <ItemGroup>
+    <ProjectReference Include=""..\libs\SkiaGum\SkiaGum.csproj"" />
+  </ItemGroup>
+</Project>");
+
+        SyntaxVersionResult result = _sut.Detect(AutoDetectSettings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        result.Version.ShouldBe(3);
+    }
+
+    [Fact]
+    public void FindCsproj_NoAssemblyCSharp_PicksShortestName()
+    {
+        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.Tests.csproj"), "<Project></Project>");
+        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"), "<Project></Project>");
+        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.Android.csproj"), "<Project></Project>");
+
+        string? result = CodeProjectCsprojLocator.FindCsproj(_tempDirectory);
+
+        Path.GetFileName(result).ShouldBe("MyGame.csproj");
+    }
+
+    #endregion
+
     public void Dispose()
     {
         try

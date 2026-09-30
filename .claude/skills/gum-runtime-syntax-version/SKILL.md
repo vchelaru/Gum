@@ -22,10 +22,10 @@ Not the same thing as `.gumx` file format versioning (see `gum-project-versionin
 
 ## How detection works
 
-Reads the consumer's `.csproj`:
+A manual `SyntaxVersion` in `.codsj` wins. Otherwise reads the consumer's `.csproj` (`CodeProjectCsprojLocator` prefers `Assembly-CSharp.csproj`, then the shortest name):
 1. If `ProjectReference` → finds `MonoGameGum`/`RaylibGum`/`SkiaGum`/`KniGum`/`FnaGum`, opens that project's `AssemblyAttributes.cs`, regex-parses the version.
 2. Else if `PackageReference` → locates the DLL in the NuGet cache, reads the attribute via `MetadataLoadContext`.
-3. Else manual override from `.codsj`'s `SyntaxVersion` field.
+3. Else if a `<Reference>` has a `<HintPath>` to a runtime DLL (how Unity references Gum) → reads that DLL's attribute.
 
 **GumCommon is not on the detection scan list** — stamping it is for assembly-metadata consistency, not for codegen detection.
 

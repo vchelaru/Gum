@@ -40,7 +40,7 @@ Both files live on disk outside the `.gumx`, so a change to an element's identit
 
 | Enum | Values | Notes |
 |------|--------|-------|
-| `OutputLibrary` | XamarinForms(0), WPF(1), Skia(2), Maui(3), MonoGame(4), MonoGameForms(5), Raylib(6) | MonoGameForms is recommended default. Raylib currently only supports `ObjectInstantiationType.FindByName` (see below) |
+| `OutputLibrary` | XamarinForms(0), WPF(1), Skia(2), Maui(3), MonoGame(4), MonoGameForms(5), Raylib(6), Silk(7) | MonoGameForms is recommended default. Raylib and Silk currently only support `ObjectInstantiationType.FindByName` (see below) |
 | `ObjectInstantiationType` | FullyInCode, FindByName | FullyInCode generates all creation; FindByName wires references to externally-created instances |
 | `InheritanceLocation` | InGeneratedCode, InCustomCode | Controls which partial class file declares the base class |
 | `VisualApi` | Gum, XamarinForms | Internal enum; Gum for MonoGame/MonoGameForms/Skia/raylib, XamarinForms for Xamarin/MAUI |

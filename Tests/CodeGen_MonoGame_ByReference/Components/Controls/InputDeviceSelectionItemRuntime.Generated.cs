@@ -13,7 +13,11 @@ using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
 partial class InputDeviceSelectionItemRuntime : ContainerRuntime
 {
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
     [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/InputDeviceSelectionItem", typeof(InputDeviceSelectionItemRuntime));

@@ -76,6 +76,12 @@ public class CodeGenerationContext
     /// </summary>
     public int ResolvedSyntaxVersion { get; set; }
 
+    /// <summary>
+    /// Whether the game project's C# version supports file-scoped namespaces (C# 10+). When false
+    /// (e.g. Unity, which compiles with C# 9) generated files use a block namespace instead.
+    /// </summary>
+    public bool UseFileScopedNamespace { get; set; } = true;
+
     CodeOutputProjectSettings _codeOutputProjectSettings = new ();
     public CodeOutputProjectSettings CodeOutputProjectSettings
     {
@@ -265,6 +271,7 @@ public class CodeGenerator
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
     private readonly ISyntaxVersionDetectionService? _syntaxVersionDetectionService;
+    private readonly ICSharpVersionDetectionService? _cSharpVersionDetectionService;
     private readonly ICollapsedShapeCodeGenLogic _collapsedShapeLogic;
 
     /// <summary>
@@ -289,7 +296,8 @@ public class CodeGenerator
     public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationService localizationService,
         CodeOutputElementSettingsManager elementSettingsManager, IProjectDirectoryProvider projectDirectoryProvider,
         ITypeStringResolver? typeStringResolver = null,
-        ISyntaxVersionDetectionService? syntaxVersionDetectionService = null)
+        ISyntaxVersionDetectionService? syntaxVersionDetectionService = null,
+        ICSharpVersionDetectionService? cSharpVersionDetectionService = null)
     {
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
         _localizationService = localizationService;
@@ -297,6 +305,7 @@ public class CodeGenerator
         _projectDirectoryProvider = projectDirectoryProvider;
         _typeStringResolver = typeStringResolver;
         _syntaxVersionDetectionService = syntaxVersionDetectionService;
+        _cSharpVersionDetectionService = cSharpVersionDetectionService;
         _collapsedShapeLogic = new CollapsedShapeCodeGenLogic();
     }
 
@@ -433,6 +442,31 @@ public class CodeGenerator
         }
 
         return version;
+    }
+
+    /// <summary>
+    /// File-scoped namespaces need C# 10. An unknown language version is assumed to be modern.
+    /// </summary>
+    internal bool ResolveUseFileScopedNamespace(CodeOutputProjectSettings projectSettings)
+    {
+        int? languageVersion = _cSharpVersionDetectionService?.Detect(
+            projectSettings, _projectDirectoryProvider.ProjectDirectory);
+
+        return languageVersion == null || languageVersion >= 10;
+    }
+
+    /// <summary>
+    /// Appends the attribute that runs a static registration method at startup. Unity compiles
+    /// [ModuleInitializer] but never calls it, so Unity builds (which define UNITY_5_3_OR_NEWER)
+    /// get Unity's earliest startup hook instead. The same file works in both kinds of project.
+    /// </summary>
+    private static void AppendStartupInitializerAttribute(StringBuilder builder, string tabs, string moduleInitializerAttribute)
+    {
+        builder.AppendLine(tabs + "#if UNITY_5_3_OR_NEWER");
+        builder.AppendLine(tabs + "[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]");
+        builder.AppendLine(tabs + "#else");
+        builder.AppendLine(tabs + moduleInitializerAttribute);
+        builder.AppendLine(tabs + "#endif");
     }
 
     #region Using Statements
@@ -1685,7 +1719,7 @@ public class CodeGenerator
         {
             var builder = context.StringBuilder;
 
-            builder.AppendLine(context.Tabs + "[System.Runtime.CompilerServices.ModuleInitializer]");
+            AppendStartupInitializerAttribute(builder, context.Tabs, "[System.Runtime.CompilerServices.ModuleInitializer]");
             var registerRuntimeTypeBase = ObjectFinder.Self.GetElementSave(context.Element.BaseType);
             var registerRuntimeTypeNewModifier = registerRuntimeTypeBase is ComponentSave ? "new " : "";
             builder.AppendLine(context.Tabs + $"public static {registerRuntimeTypeNewModifier}void RegisterRuntimeType()");
@@ -1782,7 +1816,7 @@ public class CodeGenerator
         {
             var builder = context.StringBuilder;
 
-            builder.AppendLine(context.Tabs + "[System.Runtime.CompilerServices.ModuleInitializer]");
+            AppendStartupInitializerAttribute(builder, context.Tabs, "[System.Runtime.CompilerServices.ModuleInitializer]");
             var registerRuntimeTypeBase = ObjectFinder.Self.GetElementSave(context.Element.BaseType);
             var registerRuntimeTypeNewModifier = registerRuntimeTypeBase is ComponentSave ? "new " : "";
             builder.AppendLine(context.Tabs + $"public static {registerRuntimeTypeNewModifier}void RegisterRuntimeType()");
@@ -3324,7 +3358,7 @@ public class CodeGenerator
 
             stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true)");
 
-            stringBuilder.AppendLine(context.TabCount + "{");
+            stringBuilder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
             #endregion
@@ -3511,6 +3545,7 @@ public class CodeGenerator
         context.CodeOutputProjectSettings = projectSettings;
         context.ElementSettings = elementSettings;
         context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
+        context.UseFileScopedNamespace = ResolveUseFileScopedNamespace(projectSettings);
 
         var stringBuilder = context.StringBuilder;
 
@@ -3526,7 +3561,15 @@ public class CodeGenerator
 
         string namespaceName = GetElementNamespace(element, elementSettings, projectSettings);
 
-        if (!string.IsNullOrEmpty(namespaceName))
+        bool hasBlockNamespace = !string.IsNullOrEmpty(namespaceName) && !context.UseFileScopedNamespace;
+
+        if (hasBlockNamespace)
+        {
+            stringBuilder.AppendLine(context.Tabs + $"namespace {namespaceName}");
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+        }
+        else if (!string.IsNullOrEmpty(namespaceName))
         {
             stringBuilder.AppendLine(context.Tabs + $"namespace {namespaceName};");
         }
@@ -3617,6 +3660,12 @@ public class CodeGenerator
         stringBuilder.AppendLine(context.Tabs + "}");
         #endregion
 
+        if (hasBlockNamespace)
+        {
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
+        }
+
         return stringBuilder.ToString();
     }
 
@@ -3667,28 +3716,42 @@ public class CodeGenerator
         stringBuilder.AppendLine("using System.Xml.Serialization;");
         stringBuilder.AppendLine();
 
-        if (!string.IsNullOrEmpty(projectSettings.RootNamespace))
+        bool hasBlockNamespace = !string.IsNullOrEmpty(projectSettings.RootNamespace) &&
+            !ResolveUseFileScopedNamespace(projectSettings);
+        string indent = hasBlockNamespace ? "    " : "";
+
+        if (hasBlockNamespace)
+        {
+            stringBuilder.AppendLine($"namespace {projectSettings.RootNamespace}");
+            stringBuilder.AppendLine("{");
+        }
+        else if (!string.IsNullOrEmpty(projectSettings.RootNamespace))
         {
             stringBuilder.AppendLine($"namespace {projectSettings.RootNamespace};");
             stringBuilder.AppendLine();
         }
 
-        stringBuilder.AppendLine("internal static class StandardElementsCodeGenRegistration");
-        stringBuilder.AppendLine("{");
-        stringBuilder.AppendLine("    [ModuleInitializer]");
-        stringBuilder.AppendLine("    internal static void RegisterFallbackStandardElements()");
-        stringBuilder.AppendLine("    {");
-        stringBuilder.AppendLine("        XmlSerializer serializer = GumFileSerializer.GetCompactSerializer(typeof(List<StandardElementSave>));");
-        stringBuilder.AppendLine("        string xml = @\"" + escapedXml + "\";");
-        stringBuilder.AppendLine("        using StringReader reader = new StringReader(xml);");
-        stringBuilder.AppendLine("        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(reader);");
-        stringBuilder.AppendLine("        foreach (StandardElementSave standard in standards)");
-        stringBuilder.AppendLine("        {");
-        stringBuilder.AppendLine("            standard.Initialize(defaultState: null, tolerateMissingDefaultStates: true);");
-        stringBuilder.AppendLine("        }");
-        stringBuilder.AppendLine("        ObjectFinder.Self.RegisterFallbackStandardElements(standards);");
-        stringBuilder.AppendLine("    }");
-        stringBuilder.AppendLine("}");
+        stringBuilder.AppendLine(indent + "internal static class StandardElementsCodeGenRegistration");
+        stringBuilder.AppendLine(indent + "{");
+        AppendStartupInitializerAttribute(stringBuilder, indent + "    ", "[ModuleInitializer]");
+        stringBuilder.AppendLine(indent + "    internal static void RegisterFallbackStandardElements()");
+        stringBuilder.AppendLine(indent + "    {");
+        stringBuilder.AppendLine(indent + "        XmlSerializer serializer = GumFileSerializer.GetCompactSerializer(typeof(List<StandardElementSave>));");
+        stringBuilder.AppendLine(indent + "        string xml = @\"" + escapedXml + "\";");
+        stringBuilder.AppendLine(indent + "        using StringReader reader = new StringReader(xml);");
+        stringBuilder.AppendLine(indent + "        List<StandardElementSave> standards = (List<StandardElementSave>)serializer.Deserialize(reader);");
+        stringBuilder.AppendLine(indent + "        foreach (StandardElementSave standard in standards)");
+        stringBuilder.AppendLine(indent + "        {");
+        stringBuilder.AppendLine(indent + "            standard.Initialize(defaultState: null, tolerateMissingDefaultStates: true);");
+        stringBuilder.AppendLine(indent + "        }");
+        stringBuilder.AppendLine(indent + "        ObjectFinder.Self.RegisterFallbackStandardElements(standards);");
+        stringBuilder.AppendLine(indent + "    }");
+        stringBuilder.AppendLine(indent + "}");
+
+        if (hasBlockNamespace)
+        {
+            stringBuilder.AppendLine("}");
+        }
 
         return stringBuilder.ToString();
     }
