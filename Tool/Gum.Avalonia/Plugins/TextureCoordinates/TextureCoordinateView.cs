@@ -32,7 +32,6 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
     public TextureCoordinateView(ICanvasRedrawScheduler redrawScheduler)
     {
         _canvasControl = new ImageRegionCanvasControl(redrawScheduler);
-        _canvasControl.SizeChanged += (_, _) => CanvasResized?.Invoke();
         _canvasControl.AddHandler(KeyDownEvent, HandleCanvasKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         _canvasControl.AddHandler(KeyUpEvent, HandleCanvasKeyUp, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         _canvasControl.PointerPressed += (_, e) =>
@@ -45,10 +44,22 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         _canvasControl.AttachedToVisualTree += (_, _) => AvaloniaMouseMapping.EnableTouchpadDetection(_canvasControl);
         Gestures.AddPointerTouchPadGestureMagnifyHandler(_canvasControl, HandleCanvasPinch);
 
-        ScrollBar vertical = new ScrollBar { Orientation = Orientation.Vertical, AllowAutoHide = false };
-        ScrollBar horizontal = new ScrollBar { Orientation = Orientation.Horizontal, AllowAutoHide = false };
-        VerticalScrollBar = new AvaloniaCameraScrollBar(vertical);
-        HorizontalScrollBar = new AvaloniaCameraScrollBar(horizontal);
+        VerticalScrollBarControl = new ScrollBar { Orientation = Orientation.Vertical, AllowAutoHide = false };
+        HorizontalScrollBarControl = new ScrollBar { Orientation = Orientation.Horizontal, AllowAutoHide = false };
+        VerticalScrollBar = new AvaloniaCameraScrollBar(VerticalScrollBarControl);
+        HorizontalScrollBar = new AvaloniaCameraScrollBar(HorizontalScrollBarControl);
+        NoTextureMessage = new TextBlock
+        {
+            Text = "No texture. Set a Source File to edit texture coordinates.",
+            TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+            TextAlignment = global::Avalonia.Media.TextAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(16),
+            Opacity = 0.7,
+        };
+        _canvasControl.Core.CurrentTextureChanged += RefreshNoTextureState;
+        RefreshNoTextureState();
 
         _minusButton = ToolButton("-");
         _minusButton.Click += (_, _) => (DataContext as MainControlViewModel)?.ZoomOut();
@@ -95,10 +106,11 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
             RowDefinitions = new RowDefinitions("*,Auto"),
         };
         canvasGrid.Children.Add(_canvasControl);
-        Grid.SetColumn(vertical, 1);
-        canvasGrid.Children.Add(vertical);
-        Grid.SetRow(horizontal, 1);
-        canvasGrid.Children.Add(horizontal);
+        canvasGrid.Children.Add(NoTextureMessage);
+        Grid.SetColumn(VerticalScrollBarControl, 1);
+        canvasGrid.Children.Add(VerticalScrollBarControl);
+        Grid.SetRow(HorizontalScrollBarControl, 1);
+        canvasGrid.Children.Add(HorizontalScrollBarControl);
 
         SetDock(toolbar, global::Avalonia.Controls.Dock.Top);
         Children.Add(toolbar);
@@ -117,8 +129,12 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
     /// <inheritdoc/>
     public ICameraScrollBar HorizontalScrollBar { get; }
 
-    /// <inheritdoc/>
-    public event Action? CanvasResized;
+    /// <summary>Shown over the canvas, in place of its scroll bars, while there is no texture to show.</summary>
+    internal TextBlock NoTextureMessage { get; }
+
+    internal ScrollBar VerticalScrollBarControl { get; }
+
+    internal ScrollBar HorizontalScrollBarControl { get; }
 
     /// <inheritdoc/>
     public new event Action<GumKeyEventArgs>? KeyDown;
@@ -151,6 +167,14 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         _minusButton.FontSize = baseFontSize;
         _plusButton.MinWidth = minWidth;
         _plusButton.FontSize = baseFontSize;
+    }
+
+    private void RefreshNoTextureState()
+    {
+        bool hasTexture = _canvasControl.Core.CurrentTexture != null;
+        NoTextureMessage.IsVisible = !hasTexture;
+        VerticalScrollBarControl.IsVisible = hasTexture;
+        HorizontalScrollBarControl.IsVisible = hasTexture;
     }
 
     private void HandleCanvasKeyDown(object? sender, KeyEventArgs e)

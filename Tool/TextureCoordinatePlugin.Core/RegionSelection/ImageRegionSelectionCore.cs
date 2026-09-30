@@ -182,6 +182,7 @@ public class ImageRegionSelectionCore
                     // No explicit redraw request - the WPF host renders continuously off
                     // CompositionTarget.Rendering, so the new texture shows on the next frame.
                 }
+                CurrentTextureChanged?.Invoke();
             }
         }
     }
@@ -447,11 +448,24 @@ public class ImageRegionSelectionCore
     /// with a different scale.
     /// </summary>
     public event Action? DisplayScaleChanged;
+
+    /// <summary>
+    /// Raised after a frame is drawn at a different size than the last one. The camera takes the
+    /// canvas's size only when a frame draws, so anything derived from its visible area (the scroll
+    /// bars, the camera clamp) is recomputed here rather than when the control resizes.
+    /// </summary>
+    public event Action? ViewSizeChanged;
+
+    /// <summary>Raised when <see cref="CurrentTexture"/> is set to a different texture, or to or from null.</summary>
+    public event Action? CurrentTextureChanged;
     #endregion
 
     #region Methods
 
     private readonly ICanvasHost _host;
+
+    private int _drawnClientWidth;
+    private int _drawnClientHeight;
 
     /// <summary>
     /// The host's OS display scale (1 at 100%), read every frame. The selectors size their strokes
@@ -645,7 +659,6 @@ public class ImageRegionSelectionCore
         DisplayScaleChanged?.Invoke();
     }
 
-    /// <summary>The host calls this with the render target bound and cleared.</summary>
     /// <summary>
     /// True while <see cref="Draw"/> paints the texture, which the texture-coordinate plugin draws
     /// over an opaque background; otherwise the frame is left transparent.
@@ -654,6 +667,7 @@ public class ImageRegionSelectionCore
     // may not react in time. Therefore we draw only if the texture is not disposed.
     public bool DrawsOpaqueFrames => CurrentTexture is { IsDisposed: false };
 
+    /// <summary>The host calls this with the render target bound and cleared.</summary>
     public void Draw()
     {
         this.PerformActivity();
@@ -661,6 +675,13 @@ public class ImageRegionSelectionCore
         if (DrawsOpaqueFrames)
         {
             mManagers.Renderer.Draw(mManagers);
+
+            if (Camera.ClientWidth != _drawnClientWidth || Camera.ClientHeight != _drawnClientHeight)
+            {
+                _drawnClientWidth = Camera.ClientWidth;
+                _drawnClientHeight = Camera.ClientHeight;
+                ViewSizeChanged?.Invoke();
+            }
         }
     }
 

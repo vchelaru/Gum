@@ -159,8 +159,9 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     {
         _scrollBarLogic.Initialize(_view.VerticalScrollBar, _view.HorizontalScrollBar, SystemManagers.Renderer.Camera);
 
-        _view.CanvasResized += () =>
+        _view.Canvas.ViewSizeChanged += () =>
         {
+            _view.Canvas.ClampCameraToTexture();
             UpdateScrollBarsToTexture();
         };
     }
