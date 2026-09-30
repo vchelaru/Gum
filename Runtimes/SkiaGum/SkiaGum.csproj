@@ -205,6 +205,8 @@
 		<!-- Same reason, for the Stride runtime host (issue #4600): StrideGum.csproj also
 		     ProjectReferences this project for GumServiceSkiaBase instead of file-linking. -->
 		<InternalsVisibleTo Include="StrideGum" />
+		<!-- Same reason, for the Unity runtime host (Runtimes/UnityGum). -->
+		<InternalsVisibleTo Include="UnityGum" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />

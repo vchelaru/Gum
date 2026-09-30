@@ -505,6 +505,8 @@ jobs:
       #   - SilkNetGum.Tests               (Gum.SilkNet runtime: SkiaGum renderer +
       #                                     Silk.NET.Input host. CPU raster SKSurface
       #                                     + mocked input, fully headless. #3605)
+      #   - UnityGum.Tests                 (Unity runtime: SkiaGum renderer + host-
+      #                                     pushed input; no Unity needed. #5506)
       #   - RaylibGum.Tests                (raylib runtime; Windows-only. Needs an
       #                                     OpenGL 3.3 context the GPU-less runners
       #                                     lack, supplied by Mesa llvmpipe software
@@ -625,6 +627,12 @@ jobs:
       - name: SilkNetGum.Tests
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/SilkNetGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # UnityGum.Tests is the Unity runtime (SkiaGum renderer + host-pushed input). No Unity needed:
+      # the runtime references no Unity assembly, and the tests draw into a CPU raster SKSurface. #5506
+      - name: UnityGum.Tests
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        run: dotnet test "Tests/UnityGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
       # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
