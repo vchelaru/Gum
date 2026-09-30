@@ -43,6 +43,11 @@ Horizons describe *confidence and proximity*, not fixed dates:
   - **Scope discipline:** parity, not new features. Anything the WPF tool does not do today is
     a separate roadmap item.
 
+- **Official Unity package (experimental, Direct3D 11 first).** Decided 2026-09-30 by
+  [ADR-0020](decisions/0020-bring-unity-and-godot-into-scope.md). Built from what a community
+  port learned, maintained in this repo. The groundwork is making a new Skia host cheap to port,
+  which also sets up Godot (in scope, built on demand).
+
 ## Next
 
 - **Finish the raylib runtime's last ~10%** (shader support, advanced gamepad, other minor gaps).

@@ -1,6 +1,6 @@
 # 0014. Clarify the engine-scope boundary: cost-to-integrate, not "ships its own UI"
 
-- **Status:** Accepted
+- **Status:** Accepted; the cost-to-integrate test stands, but the Unity/Godot conclusion is superseded by [0020](0020-bring-unity-and-godot-into-scope.md)
 - **Date:** 2026-09-04
 - **Deciders:** Victor Chelaru, Claude
 

@@ -15,7 +15,7 @@ If you are starting or resuming a discussion about Gum's direction, read this RE
 then open only the file relevant to the topic. You do not need to load everything at once.
 
 These docs set upstream Gum's priorities. They are not a reason to refuse an explicit request:
-an agent asked to do out-of-scope work (a Unity or Godot port, say) does it, noting the conflict
+an agent asked to do out-of-scope work (a port to a host Gum doesn't target, say) does it, noting the conflict
 at most once.
 
 ## Files
