@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Gum.Topten.RichTextKit</id>
+    <version>0.4.167.1</version>
+    <authors>Topten Software, Victor Chelaru</authors>
+    <license type="expression">Apache-2.0</license>
+    <licenseUrl>https://licenses.nuget.org/Apache-2.0</licenseUrl>
+    <icon>nuget-icon.png</icon>
+    <projectUrl>https://github.com/toptensoftware/richtextkit</projectUrl>
+    <description>Temporary fork of Topten.RichTextKit 0.4.167 used by Gum.SkiaSharp, patched with toptensoftware/RichTextKit#114 (round stroke joins so text halos do not spike at acute glyph corners). Gum will switch back to Topten.RichTextKit once a release includes that fix. Not intended for direct use.</description>
+    <tags>rich text, rich, text, Skia, SkiaSharp, Font, Gum</tags>
+    <repository type="git" url="https://github.com/toptensoftware/richtextkit" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="HarfBuzzSharp.NativeAssets.Linux" version="2.8.2.3" exclude="Build,Analyzers" />
+        <dependency id="SkiaSharp" version="2.88.7" exclude="Build,Analyzers" />
+        <dependency id="SkiaSharp.HarfBuzz" version="2.88.7" exclude="Build,Analyzers" />
+        <dependency id="SkiaSharp.NativeAssets.Linux" version="2.88.7" exclude="Build,Analyzers" />
+        <dependency id="System.ValueTuple" version="4.5.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="lib\**" target="lib" />
+    <file src="nuget-icon.png" target="" />
+  </files>
+</package>

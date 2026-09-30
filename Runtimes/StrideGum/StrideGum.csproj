@@ -95,10 +95,10 @@
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
 		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
 		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
-		<!-- Vendored patched build (see /NuGet.config and /ThirdParty/nuget-local), fixes halo
+		<!-- Gum's published fork of Topten.RichTextKit (see /ThirdParty/README.md), fixes halo
 		     stroke-join spiking at acute glyph corners, needed for per-run outline thickness (#4037).
 		     Must track SkiaGum.csproj's reference: see SilkNetGum.csproj's identical comment. -->
-		<PackageReference Include="Topten.RichTextKit" Version="0.4.167-gumfix.1" />
+		<PackageReference Include="Gum.Topten.RichTextKit" Version="0.4.167.1" />
 		<!-- Input + the AddSceneRenderer/AddGraphicsCompositor extension methods GumService.Stride.cs
 		     uses to self-register its GumSceneRenderer. Stride.CommunityToolkit.Windows/.Bepu (window
 		     backend, physics) are a consuming game's choice, not this adapter's concern. -->

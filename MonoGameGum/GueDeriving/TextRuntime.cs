@@ -1493,7 +1493,7 @@ public class TextRuntime : InteractiveGue
     public static int DefaultFontSize = 18;
 
     /// <summary>
-    /// Whether <see cref="RegenerateOversampledFont"/> is allowed to regenerate fonts at a higher
+    /// Whether <c>RegenerateOversampledFont</c> (MonoGame/FNA/KNI and raylib; no effect on Skia) is allowed to regenerate fonts at a higher
     /// raster size than <see cref="FontSize"/> for crisper text under camera zoom. Off by default:
     /// pixel-art games deliberately want blocky/nearest-neighbor text, and whether a project wants
     /// oversampling at all is a project-wide decision, so a single global toggle (not a per-instance
@@ -1506,7 +1506,7 @@ public class TextRuntime : InteractiveGue
 
     /// <summary>
     /// How far, in raster pixels, the requested oversampled size must move from what a Text was last
-    /// rasterized at before <see cref="UpdateAutomaticFontOversampling(float)"/> regenerates its font
+    /// rasterized at before automatic oversampling regenerates its font
     /// again. Debounces continuous zooming so it doesn't rebuild a font atlas every frame for
     /// imperceptible deltas -- callers who want a different regenerate-vs-smoothness tradeoff (e.g. a
     /// lower threshold so small FontSizes re-crisp sooner) can change this project-wide. Defaults to 1.
