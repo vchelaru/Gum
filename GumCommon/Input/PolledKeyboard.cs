@@ -11,7 +11,7 @@ namespace Gum.Input;
 /// Base for a keyboard whose host can report which keys are down but not "pressed this frame" or
 /// key repeat. <see cref="Activity"/> snapshots the down state once per frame to derive push and
 /// release edges, times held-key repeat for <see cref="KeyTyped"/> the way MonoGame's keyboard does,
-/// and latches the text the host appended with <see cref="AppendTypedText"/>. A host supplies its key
+/// and latches the text the host appended with <see cref="AppendTypedText(string)"/>. A host supplies its key
 /// map through <see cref="SupportedKeys"/> and <see cref="IsDeviceKeyDown"/>.
 /// </summary>
 public abstract class PolledKeyboard : IInputReceiverKeyboard
