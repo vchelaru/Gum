@@ -11,7 +11,7 @@ using Gum.Services.Dialogs;
 namespace Gum.Gui.Plugins;
 
 /// <summary>
-/// Adds the delete confirmation's "Delete children?" and "Delete XML file" options and applies them
+/// Adds the delete confirmation's "Delete children?" and "Delete file" options and applies them
 /// when the delete is confirmed. Shared by both heads: the options are neutral
 /// (<see cref="DeleteOptionsDialogViewModel"/>) and each head renders them.
 /// </summary>
@@ -21,7 +21,7 @@ public class DeleteObjectPlugin : CorePriorityPlugin
     internal const string DeleteChildrenHeader = "Delete children?";
     internal const string DeleteOnlyParentsLabel = "Delete only parent(s)";
     internal const string DeleteParentsAndChildrenLabel = "Delete parent and children";
-    internal const string DeleteXmlLabel = "Delete XML file";
+    internal const string DeleteFileLabel = "Delete file";
 
     private readonly InstanceDeletionHelper _instanceDeletionHelper;
 
@@ -74,11 +74,28 @@ public class DeleteObjectPlugin : CorePriorityPlugin
         // duplicates were somehow added to the .gumx. It's possible the user has multiple components
         // selected, and wants to delete both, but that's an edge case that adds complexity so I'm not
         // going to worry about that.
-        if (objectsToDelete.Cast<object>().Any(_instanceDeletionHelper.ShouldOfferDeleteXmlOption))
+        List<object> fileBackedObjects = objectsToDelete.Cast<object>()
+            .Where(_instanceDeletionHelper.ShouldOfferDeleteXmlOption)
+            .ToList();
+        if (fileBackedObjects.Count > 0)
         {
-            _deleteXmlOption = new DeleteOptionCheckboxViewModel { Label = DeleteXmlLabel, IsChecked = true };
+            _deleteXmlOption = new DeleteOptionCheckboxViewModel { Label = GetDeleteFileLabel(fileBackedObjects), IsChecked = true };
             dialog.CheckBoxes.Add(_deleteXmlOption);
         }
+    }
+
+    // Projects can be XML or JSON, so name the file by its actual extension (e.g. "Delete file
+    // (.gucj)"), matching the animation file's option. A mixed selection gets the plain label.
+    private string GetDeleteFileLabel(List<object> fileBackedObjects)
+    {
+        List<string?> extensions = fileBackedObjects
+            .Select(item => _instanceDeletionHelper.GetFileNameForObject(item)?.Extension)
+            .Distinct()
+            .ToList();
+
+        return extensions.Count == 1 && !string.IsNullOrEmpty(extensions[0])
+            ? $"Delete file (.{extensions[0]})"
+            : DeleteFileLabel;
     }
 
     private void HandleDeleteConfirmed(DeleteOptionsDialogViewModel dialog, Array deletedObjects)

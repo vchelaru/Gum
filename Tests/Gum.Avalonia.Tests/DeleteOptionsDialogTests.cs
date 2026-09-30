@@ -40,7 +40,7 @@ public class DeleteOptionsDialogTests
     public void View_RendersPluginOptions_AndWritesTheUsersChoicesBack()
     {
         DeleteOptionsDialogViewModel viewModel = new DeleteOptionsDialogViewModel { Title = "Delete?", Message = "Delete Button?" };
-        DeleteOptionCheckboxViewModel deleteXml = new DeleteOptionCheckboxViewModel { Label = "Delete XML file", IsChecked = true };
+        DeleteOptionCheckboxViewModel deleteXml = new DeleteOptionCheckboxViewModel { Label = "Delete file", IsChecked = true };
         DeleteOptionCheckboxViewModel onlyParent = new DeleteOptionCheckboxViewModel { Label = "Delete only parent(s)", IsChecked = true };
         DeleteOptionCheckboxViewModel withChildren = new DeleteOptionCheckboxViewModel { Label = "Delete parent and children" };
         viewModel.CheckBoxes.Add(deleteXml);

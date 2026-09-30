@@ -28,8 +28,8 @@ namespace Gum.Commands;
 /// ### Pattern 2 — DeleteSelection (elements, behaviors, instances)
 /// Elements, behaviors, and instances are all deleted via DeleteSelection(),
 /// which dispatches based on what is currently selected and shows the richer
-/// DeleteOptionsWindow. That window is plugin-extensible (e.g. "Delete XML
-/// file?" and "Delete children?" options contributed by DeleteObjectPlugin).
+/// DeleteOptionsWindow. That window is plugin-extensible (e.g. "Delete
+/// file" and "Delete children?" options contributed by DeleteObjectPlugin).
 ///
 ///   DeleteSelection() — reads selected objects, shows DeleteOptionsWindow
 ///
