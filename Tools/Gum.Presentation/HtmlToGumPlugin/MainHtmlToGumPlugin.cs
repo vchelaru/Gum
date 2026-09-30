@@ -50,10 +50,20 @@ public class MainHtmlToGumPlugin : PluginBase
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         ProcessRunner = new HtmlConverterProcessRunner();
+        FindConverterDir = () => LocateConverterDir(
+            Environment.GetEnvironmentVariable(ConverterEnvironmentVariable), AppDomain.CurrentDomain.BaseDirectory);
+        _importMenuEntry = null;
     }
+
+    private const string ConverterEnvironmentVariable = "HTMLTOGUM_CONVERTER";
+
+    private Gum.Menus.MenuItemModel? _importMenuEntry;
 
     /// <summary>Runs Node.js and the converter; a test replaces it to stand in for the converter.</summary>
     internal IHtmlConverterProcessRunner ProcessRunner { get; set; }
+
+    /// <summary>Returns the converter folder, or null when none is found; a test replaces it.</summary>
+    internal Func<string?> FindConverterDir { get; set; }
 
     public override string FriendlyName => "HTML to Gum";
     public override Version Version => new(0, 3, 0);
@@ -62,7 +72,19 @@ public class MainHtmlToGumPlugin : PluginBase
 
     public override void StartUp()
     {
-        AddMenuEntry(HandleImportHtml, "Content", "Import", "HTML…");
+        AddImportMenuEntryIfConverterFound();
+    }
+
+    /// <summary>
+    /// Adds Content > Import > HTML… once, and only when a converter folder is found. Packaged
+    /// builds do not ship the converter yet (#5544), so they show no item.
+    /// </summary>
+    internal void AddImportMenuEntryIfConverterFound()
+    {
+        if (_importMenuEntry == null && FindConverterDir() != null)
+        {
+            _importMenuEntry = AddMenuEntry(HandleImportHtml, "Content", "Import", "HTML…");
+        }
     }
 
     private async void HandleImportHtml()
@@ -354,16 +376,19 @@ public class MainHtmlToGumPlugin : PluginBase
         Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "Repos", "html-to-gum", "converter")),
     ];
 
-    private static string ResolveConverterDir()
+    /// <summary>
+    /// The converter folder: <paramref name="environmentValue"/> (HTMLTOGUM_CONVERTER) when it names
+    /// an existing folder, else the first of <see cref="GetConverterDirCandidates"/> holding
+    /// convert.ts or convert.mjs, else null.
+    /// </summary>
+    public static string? LocateConverterDir(string? environmentValue, string baseDir)
     {
-        string? env = Environment.GetEnvironmentVariable("HTMLTOGUM_CONVERTER");
-        if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env))
+        if (!string.IsNullOrWhiteSpace(environmentValue) && Directory.Exists(environmentValue))
         {
-            return Path.GetFullPath(env);
+            return Path.GetFullPath(environmentValue);
         }
 
-        string[] candidates = GetConverterDirCandidates(AppDomain.CurrentDomain.BaseDirectory);
-        foreach (string candidate in candidates)
+        foreach (string candidate in GetConverterDirCandidates(baseDir))
         {
             if (File.Exists(Path.Combine(candidate, "convert.ts")) ||
                 File.Exists(Path.Combine(candidate, "convert.mjs")))
@@ -371,8 +396,11 @@ public class MainHtmlToGumPlugin : PluginBase
                 return candidate;
             }
         }
-        return candidates[0];
+        return null;
     }
+
+    private string ResolveConverterDir() =>
+        FindConverterDir() ?? GetConverterDirCandidates(AppDomain.CurrentDomain.BaseDirectory)[0];
 
     /// <summary>Turns <paramref name="raw"/> into a valid screen name: word characters only, not starting with a digit.</summary>
     public static string SanitizeScreenName(string? raw)

@@ -11,6 +11,7 @@ using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using HtmlToGumPlugin;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using ToolsUtilities;
@@ -201,6 +202,12 @@ public class DialogScenarioTests
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
+        // The item shows only when a converter is found, which the test output has none of.
+        MainHtmlToGumPlugin htmlPlugin = pluginManager.InitializedPlugins.OfType<MainHtmlToGumPlugin>().Single();
+        Func<string?> originalFindConverterDir = htmlPlugin.FindConverterDir;
+        htmlPlugin.FindConverterDir = () => "converter";
+        htmlPlugin.AddImportMenuEntryIfConverterFound();
+        htmlPlugin.FindConverterDir = originalFindConverterDir;
         ProjectFileSnapshot start = tree.SnapshotFiles();
         tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
         {
