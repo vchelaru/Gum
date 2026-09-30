@@ -17,7 +17,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <!-- Decodes the monogame backend's rendered PNG to assert on pixel color; already a
          transitive dependency via Gum.ProjectServices -> Gum.ImageDiff. -->
-    <PackageReference Include="SkiaSharp" VersionOverride="3.119.1" />
+    <PackageReference Include="SkiaSharp" VersionOverride="3.119.4" />
   </ItemGroup>
 
   <ItemGroup>

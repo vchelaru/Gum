@@ -37,7 +37,7 @@
     <!-- Color (SkiaSharp.SKColor) resolves through this package on the SKIA branch of the theme
          sources; the theme imports it explicitly (no global using). Skia needs no KernSmith
          atlas-baking dependency: it rasterizes TTFs natively via GumFontMapper. -->
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
   </ItemGroup>
   <ItemGroup>
     <!-- Gum.SilkNet: the real game-host runtime (window/input + Skia rendering). Deliberately NOT

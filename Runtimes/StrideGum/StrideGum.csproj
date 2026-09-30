@@ -78,14 +78,11 @@
 	<Import Project="..\CursorInput.props" />
 
 	<ItemGroup>
-		<!-- 3.119.4, not SkiaGum.csproj's 3.119.1: SkiaGameRendering.Stride.D3D11 (below, windows7.0
-		     only) pins SkiaSharp 3.119.4 exactly, and NuGet flags anything lower in this project's own
-		     graph as a downgrade. Different projects in the same solution resolving different patch
-		     versions is normal (see StrideGum.csproj's TargetFrameworks remarks for why the two
-		     packages can't just share a version file: SkiaGameRendering isn't a Gum-managed csproj). -->
+		<!-- Must match SkiaGum.csproj: SkiaGameRendering.Stride.D3D11 (below, windows7.0 only) pins
+		     SkiaSharp 3.119.4 exactly, and NuGet flags anything lower as a downgrade. -->
 		<PackageReference Include="SkiaSharp" Version="3.119.4" />
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.4" />
 		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
 		<!-- Gum's published fork of Topten.RichTextKit (see /ThirdParty/README.md), fixes halo
 		     stroke-join spiking at acute glyph corners, needed for per-run outline thickness (#4037).

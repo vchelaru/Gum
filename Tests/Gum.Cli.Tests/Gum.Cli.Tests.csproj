@@ -18,7 +18,7 @@
     <!-- Decodes the raylib backend's rendered PNG to assert on pixel color in
          Screenshot_WithBackgroundOption_RendersOpaqueBackground; already a transitive
          dependency via Gum.Cli -> Gum.ProjectServices -> Gum.ImageDiff. -->
-    <PackageReference Include="SkiaSharp" VersionOverride="3.119.1" />
+    <PackageReference Include="SkiaSharp" VersionOverride="3.119.4" />
   </ItemGroup>
 
   <ItemGroup>

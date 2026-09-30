@@ -22,7 +22,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <!-- SKSurface for the in-memory raster canvas; Silk.NET.Input types (IInputContext / IMouse /
          IKeyboard / Key) for mocking input in the Cursor/Keyboard tests. -->
-    <PackageReference Include="SkiaSharp" VersionOverride="3.119.1" />
+    <PackageReference Include="SkiaSharp" VersionOverride="3.119.4" />
     <PackageReference Include="Silk.NET.Input" VersionOverride="2.21.0" />
   </ItemGroup>
 

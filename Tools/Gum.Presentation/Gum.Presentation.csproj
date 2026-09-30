@@ -79,7 +79,7 @@
 		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
 		<!-- SkiaInstalledFontProvider lists installed fonts on every OS (GDI+'s FontFamily.Families is
 		     Windows-only). Same version as Gum.ImageDiff and the heads resolve. -->
-		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<PackageReference Include="SkiaSharp" Version="3.119.4" />
 	</ItemGroup>
 
 	<ItemGroup>

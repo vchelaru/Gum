@@ -179,9 +179,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<!-- Pinned to SkiaGameRendering's SkiaSharp version (its eng/Versions.props): StrideGum's GPU path
+		     and the Unity package load SkiaGameRendering's SkiaSharp, so every Skia-family project
+		     moves with it. -->
+		<PackageReference Include="SkiaSharp" Version="3.119.4" />
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.4" />
 		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
 		<!-- Gum's published fork of Topten.RichTextKit (see /ThirdParty/README.md), fixes halo
 		     stroke-join spiking at acute glyph corners, needed for per-run outline thickness.
