@@ -189,7 +189,12 @@ internal sealed class VariableGridHarness : IDisposable
         ?? throw new InvalidOperationException($"The {memberName} row shows a {Row(memberName).Displayer?.GetType().Name ?? "nothing"}, not a {typeof(T).Name}.");
 
     /// <summary>The text field of a text-box row.</summary>
-    public TextBox TextField(string memberName) => Editor<TextBoxDisplay>(memberName).TextBox;
+    public TextBox TextField(string memberName) => Row(memberName).Displayer switch
+    {
+        TextBoxDisplay single => single.TextBox,
+        MultiLineTextBoxDisplay multi => multi.EditorTextBox,
+        _ => Editor<TextBoxDisplay>(memberName).TextBox,
+    };
 
     /// <summary>What a text-box row's field shows.</summary>
     public string FieldText(string memberName) => TextField(memberName).Text ?? "";
