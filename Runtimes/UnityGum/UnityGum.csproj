@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum for Unity: renders through SkiaGum and adds Forms input, the same split as SilkNetGum. It
+		references no Unity assembly, so it builds and tests like any other runtime. The Unity package
+		(Unity/com.vchelaru.gum) reads Unity's input and pushes it into GumService.Default.Cursor and
+		Keyboard each frame, and draws into a SkiaGameRendering render target.
+
+		netstandard2.1 only: that is what Unity (Mono and IL2CPP) loads. Not a NuGet package; the Unity
+		package's build script copies the built DLL (and its dependencies) into the package.
+	-->
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+		<!-- Same as SkiaGum's netstandard2.1 build: the BCL here has no nullability annotations. -->
+		<NoWarn>1591;CS8600;CS8602;CS8603;CS8604</NoWarn>
+		<!-- The Unity package copies every dependency DLL out of this project's output. -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+
+	<!-- SKIA selects the Skia render aliases in the shared source; UNITY selects this project's input host. -->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;UNITY;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;UNITY;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;UNITY</DefineConstants>
+	</PropertyGroup>
+
+	<!-- The input host half SkiaGum omits because it is render-only. -->
+	<Import Project="..\CursorInput.props" />
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+	</ItemGroup>
+
+</Project>
