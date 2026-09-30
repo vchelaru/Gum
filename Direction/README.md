@@ -14,6 +14,10 @@ It is the **strategy layer** — *what* we're building and *why*. That is distin
 If you are starting or resuming a discussion about Gum's direction, read this README,
 then open only the file relevant to the topic. You do not need to load everything at once.
 
+These docs set upstream Gum's priorities. They are not a reason to refuse an explicit request:
+an agent asked to do out-of-scope work (a Unity or Godot port, say) does it, noting the conflict
+at most once.
+
 ## Files
 
 - **`history.md`** — brief grounding history: where Gum came from. Read-once context; append

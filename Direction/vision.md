@@ -55,7 +55,8 @@ performance, backward compatibility.*
 
 - **Not a UI layer for full engines.** Unity and Godot ship their own native UI; Gum deliberately
   does not target them — for now, possibly permanently. See
-  `decisions/0002-target-code-first-frameworks-not-engines.md`.
+  `decisions/0002-target-code-first-frameworks-not-engines.md`, refined by `decisions/0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md`;
+  `decisions/0020-revisit-unity-and-godot-under-cost-to-integrate.md` (Proposed) revisits this now that Skia hosts in both engines.
 
 *(Other boundaries will be added here as they are decided.)*
 

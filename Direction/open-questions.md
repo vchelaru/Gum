@@ -17,6 +17,10 @@
   code-only / code-generation workflows?
 - **Scope boundaries (beyond engines).** Full engines are settled (ADR-0002, refined by
   ADR-0014); what *other* boundaries should Gum name as explicitly out of scope?
+- **Unity and Godot, now that Skia hosts in both?** ADR-0014 kept them out for lack of a cheap
+  Skia-hosting path; SkiaGameRendering now provides one. Proposed answer in
+  `decisions/0020-revisit-unity-and-godot-under-cost-to-integrate.md` (community-supported, with a
+  revisit trigger).
 
 ## Resolved
 
