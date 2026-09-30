@@ -90,3 +90,26 @@ Sokol.NET/
 
 # Parity screenshot output (Tools/ParityShots/README.md)
 Tools/ParityShots/out/
+
+# Unity package (Unity/com.vchelaru.gum): Plugins/ and the license files come from
+# Unity/build-unity-package.ps1, so they are build output.
+Unity/com.vchelaru.gum/Plugins/
+Unity/com.vchelaru.gum/Plugins.meta
+Unity/com.vchelaru.gum/LICENSE.md
+Unity/com.vchelaru.gum/LICENSE.md.meta
+Unity/com.vchelaru.gum/ThirdPartyNotices~/
+Unity/.artifacts/
+
+# Unity sample project: the editor regenerates these. Packages/ is Unity's manifest folder, not
+# NuGet's, so it is un-ignored.
+!Samples/UnityGum/Packages/
+Samples/UnityGum/[Ll]ibrary/
+Samples/UnityGum/[Tt]emp/
+Samples/UnityGum/[Ll]ogs/
+Samples/UnityGum/[Uu]ser[Ss]ettings/
+Samples/UnityGum/[Bb]uild/
+Samples/UnityGum/*.csproj
+Samples/UnityGum/*.sln
+Samples/UnityGum/*.slnx
+Samples/UnityGum/.vsconfig
+Samples/UnityGum/smoke-result*.txt

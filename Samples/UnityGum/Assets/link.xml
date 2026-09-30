@@ -1,0 +1,4 @@
+<linker>
+  <!-- Stripped SkiaSharp keeps a reference to the netstandard facade, which IL2CPP must resolve. -->
+  <assembly fullname="netstandard" preserve="all" />
+</linker>

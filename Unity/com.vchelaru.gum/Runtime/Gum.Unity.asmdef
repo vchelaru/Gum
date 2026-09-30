@@ -1,0 +1,20 @@
+{
+    "name": "Gum.Unity",
+    "rootNamespace": "Gum.Unity",
+    "references": [
+        "SkiaGameRendering.Unity",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
