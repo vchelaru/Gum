@@ -37,20 +37,43 @@ public class MainHtmlToGumPluginMenuTests
     }
 
     [Fact]
-    public void LocateConverterDir_ReturnsNull_WhenNoCandidateHoldsAConverter()
+    public void AddImportMenuEntryIfConverterFound_AddsTheItemOnce_AfterAConverterTurnsUp()
     {
-        string baseDir = Path.Combine(Path.GetTempPath(), "GumHtmlLocate", Guid.NewGuid().ToString("N")) + Path.DirectorySeparatorChar;
+        MenuModel menu = new MenuModel();
+        MainHtmlToGumPlugin plugin = CreatePlugin(menu);
+        string? converterDir = null;
+        plugin.FindConverterDir = () => converterDir;
+        plugin.StartUp();
 
-        MainHtmlToGumPlugin.LocateConverterDir(environmentValue: null, baseDir).ShouldBeNull();
+        converterDir = "converter";
+        plugin.AddImportMenuEntryIfConverterFound();
+        plugin.AddImportMenuEntryIfConverterFound();
+
+        menu.GetItem("Content")!.Items.Single(item => item.Header == "Import")
+            .Items.Count(item => item.Header == "HTML…").ShouldBe(1);
     }
 
-    [Fact]
-    public void LocateConverterDir_ReturnsTheCandidateHoldingTheConverterScript()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("missing")]
+    public void LocateConverterDir_ReturnsNull_WhenNeitherTheEnvironmentNorACandidateHoldsAConverter(string? environmentValue)
+    {
+        string baseDir = Path.Combine(Path.GetTempPath(), "GumHtmlLocate", Guid.NewGuid().ToString("N")) + Path.DirectorySeparatorChar;
+        string? environmentDir = environmentValue == "missing" ? Path.Combine(baseDir, "missing") : environmentValue;
+
+        MainHtmlToGumPlugin.LocateConverterDir(environmentDir, baseDir).ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("convert.mjs")]
+    [InlineData("convert.ts")]
+    public void LocateConverterDir_ReturnsTheCandidateHoldingTheConverterScript(string script)
     {
         string baseDir = Path.Combine(Path.GetTempPath(), "GumHtmlLocate", Guid.NewGuid().ToString("N")) + Path.DirectorySeparatorChar;
         string converter = Path.Combine(baseDir, "converter");
         Directory.CreateDirectory(converter);
-        File.WriteAllText(Path.Combine(converter, "convert.mjs"), "");
+        File.WriteAllText(Path.Combine(converter, script), "");
         try
         {
             MainHtmlToGumPlugin.LocateConverterDir(environmentValue: null, baseDir).ShouldBe(Path.GetFullPath(converter));
@@ -59,6 +82,35 @@ public class MainHtmlToGumPluginMenuTests
         {
             Directory.Delete(baseDir, recursive: true);
         }
+    }
+
+    [Fact]
+    public void LocateConverterDir_PrefersAnExistingEnvironmentFolder_EvenWithoutAScript()
+    {
+        string baseDir = Path.Combine(Path.GetTempPath(), "GumHtmlLocate", Guid.NewGuid().ToString("N")) + Path.DirectorySeparatorChar;
+        string candidate = Path.Combine(baseDir, "converter");
+        Directory.CreateDirectory(candidate);
+        File.WriteAllText(Path.Combine(candidate, "convert.mjs"), "");
+        string environmentDir = Path.Combine(baseDir, "fromEnvironment");
+        Directory.CreateDirectory(environmentDir);
+        try
+        {
+            MainHtmlToGumPlugin.LocateConverterDir(environmentDir, baseDir).ShouldBe(Path.GetFullPath(environmentDir));
+        }
+        finally
+        {
+            Directory.Delete(baseDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ResolveConverterDir_UsesTheFoundFolder_OrElseTheFirstCandidate()
+    {
+        string baseDir = Path.Combine(Path.GetTempPath(), "GumHtmlLocate", "bin") + Path.DirectorySeparatorChar;
+        string found = Path.Combine(Path.GetTempPath(), "found");
+
+        MainHtmlToGumPlugin.ResolveConverterDir(found, baseDir).ShouldBe(found);
+        MainHtmlToGumPlugin.ResolveConverterDir(null, baseDir).ShouldBe(MainHtmlToGumPlugin.GetConverterDirCandidates(baseDir)[0]);
     }
 
     private static MainHtmlToGumPlugin CreatePlugin(MenuModel menu) =>

@@ -131,7 +131,7 @@ public class MainHtmlToGumPlugin : PluginBase
 
         string? subfolder = string.IsNullOrWhiteSpace(opts.DestinationSubfolder) ? null : opts.DestinationSubfolder.Trim();
 
-        string converterDir = ResolveConverterDir();
+        string converterDir = ResolveConverterDir(FindConverterDir(), AppDomain.CurrentDomain.BaseDirectory);
         string convertTs = Path.Combine(converterDir, "convert.ts");
         string convertMjs = Path.Combine(converterDir, "convert.mjs");
         bool useTs = File.Exists(convertTs);
@@ -399,8 +399,12 @@ public class MainHtmlToGumPlugin : PluginBase
         return null;
     }
 
-    private string ResolveConverterDir() =>
-        FindConverterDir() ?? GetConverterDirCandidates(AppDomain.CurrentDomain.BaseDirectory)[0];
+    /// <summary>
+    /// The folder the import runs from: <paramref name="foundDir"/>, or the first candidate when the
+    /// converter went missing after startup, so the "Converter not found" message names a path.
+    /// </summary>
+    internal static string ResolveConverterDir(string? foundDir, string baseDir) =>
+        foundDir ?? GetConverterDirCandidates(baseDir)[0];
 
     /// <summary>Turns <paramref name="raw"/> into a valid screen name: word characters only, not starting with a digit.</summary>
     public static string SanitizeScreenName(string? raw)
