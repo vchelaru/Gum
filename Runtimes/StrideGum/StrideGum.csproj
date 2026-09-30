@@ -84,13 +84,10 @@
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
 		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.4" />
 		<PackageReference Include="Svg.Skia" Version="5.1.1" />
-		<!-- RichTextKit asks for the SkiaSharp 2.88 build of SkiaSharp.HarfBuzz; lift it to the SkiaSharp 3 build
-		     so no 2.88-compiled assembly ships (Unity IL2CPP fails to compile those at Minimal stripping). -->
-		<PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.4" />
 		<!-- Gum's published fork of Topten.RichTextKit (see /ThirdParty/README.md), fixes halo
 		     stroke-join spiking at acute glyph corners, needed for per-run outline thickness (#4037).
 		     Must track SkiaGum.csproj's reference: see SilkNetGum.csproj's identical comment. -->
-		<PackageReference Include="Gum.Topten.RichTextKit" Version="0.4.167.1" />
+		<PackageReference Include="Gum.Topten.RichTextKit" Version="0.4.167.2" />
 		<!-- Input + the AddSceneRenderer/AddGraphicsCompositor extension methods GumService.Stride.cs
 		     uses to self-register its GumSceneRenderer. Stride.CommunityToolkit.Windows/.Bepu (window
 		     backend, physics) are a consuming game's choice, not this adapter's concern. -->
