@@ -8,6 +8,6 @@ Gum's fork of [Topten.RichTextKit](https://github.com/toptensoftware/RichTextKit
 
 It is published to nuget.org as `Gum.Topten.RichTextKit` so Gum.SkiaSharp consumers can restore it. The assembly inside is still `Topten.RichTextKit.dll`, so the source code is unchanged. `nuget-local/` holds the same `.nupkg` (see `/NuGet.config`) so the repo builds without depending on nuget.org having it.
 
-To re-pack after a new patch: bump the version in `Gum.Topten.RichTextKit/Gum.Topten.RichTextKit.nuspec`, put the rebuilt `lib/netstandard2.0/Topten.RichTextKit.{dll,pdb,xml}` and `nuget-icon.png` next to the nuspec, and pack it with a `NoBuild` csproj whose `NuspecFile` points at it. Then publish the `.nupkg` to nuget.org and replace the copy in `nuget-local/`.
+To re-pack after a new patch: bump the version in `Gum.Topten.RichTextKit/Gum.Topten.RichTextKit.nuspec`, put the rebuilt `lib/netstandard2.0/Topten.RichTextKit.{dll,pdb,xml}` and `nuget-icon.png` next to the nuspec, and pack it with a `NoBuild` csproj whose `NuspecFile` points at it. Then replace the copy in `nuget-local/`; the next release run of `.github/workflows/dotnet-nuget.yaml` publishes it to nuget.org.
 
 Switch back to the real package once upstream releases the fix: #5499 lists the steps.

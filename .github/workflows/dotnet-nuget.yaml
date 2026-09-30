@@ -113,6 +113,12 @@ jobs:
           ./nupkgs/*.nupkg
           ./nupkgs/*.snupkg
     
+    # Forked third-party packages Gum's own packages depend on (ThirdParty/README.md). Added after
+    # the version check because they keep their own version; --skip-duplicate makes re-publishing a no-op.
+    - name: Add vendored third-party packages
+      shell: pwsh
+      run: Copy-Item ./ThirdParty/nuget-local/*.nupkg ./nupkgs/
+
     # Publish to NuGet.org (when explicitly requested).
     - name: Publish to NuGet.org
       if: github.event.inputs.publish_to_nuget == 'true'
