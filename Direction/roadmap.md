@@ -21,32 +21,21 @@ Horizons describe *confidence and proximity*, not fixed dates:
     into open-ended web-platform plumbing (WASM perf, web fonts, input quirks). Let platform fixes
     be *pulled* by a real blocker, not pushed speculatively.
 
-- **Decouple UI from logic in the Gum tool.** Separated the WPF UI layer from application /
-  business logic, continuing the tool's move to constructor-injected services. This was the
-  enabler for the Avalonia cutover below — see the next item for current status.
-  - **Plan & decisions:** the phased approach lives in [`ui-decoupling-plan.md`](ui-decoupling-plan.md);
-    the architecture calls are recorded in
-    [ADR-0003](decisions/0003-decouple-tool-ui-from-logic.md) (the approach) and
-    [ADR-0004](decisions/0004-viewmodels-expose-neutral-presentation-state.md) (the ViewModel rule).
-  - **Status (2026-09-09):** Phases 0–4b landed (see `avalonia-migration/foundation.md`). Done;
-    remaining decoupling gaps are worked as part of the migration, not as a separate track.
-
-- **Cross-platform (Mac / Linux / Windows) editor on Avalonia — full cutover.** Decided
-  2026-09-09 by [ADR-0017](decisions/0017-commit-to-avalonia-full-cutover.md). **The Avalonia head
-  is now the shipped tool** — it builds via `Gum.slnx`, and the release workflow packages it
-  natively for all three OSes (WPF no longer ships). WPF (`Gum.Wpf.sln`, `Gum/`) is frozen: no new
-  work there except an explicit fix on the last WPF release. Deleting the frozen WPF projects is deferred
-  with no date.
-  - **Plan:** [`avalonia-migration/README.md`](avalonia-migration/README.md) — twelve phases,
-    highest risk (the canvas backend) first; all phases landed and the cutover shipped
-    2026-09-14.
-  - **Scope discipline:** parity, not new features. Anything the WPF tool does not do today is
-    a separate roadmap item.
-
 - **Official Unity package (experimental, Direct3D 11 first).** Decided 2026-09-30 by
   [ADR-0020](decisions/0020-bring-unity-and-godot-into-scope.md). Built from what a community
   port learned, maintained in this repo. The groundwork is making a new Skia host cheap to port,
   which also sets up Godot (in scope, built on demand).
+
+## Recently shipped
+
+- **Cross-platform (Mac / Linux / Windows) editor on Avalonia.** Shipped 2026-09-14 per
+  [ADR-0017](decisions/0017-commit-to-avalonia-full-cutover.md): the Avalonia head is the tool,
+  packaged for all three OSes. WPF (`Gum.Wpf.sln`, `Gum/`) is frozen, and deleting it is deferred
+  with no date. Plan and history: [`avalonia-migration/README.md`](avalonia-migration/README.md).
+- **Decouple UI from logic in the Gum tool**, the groundwork for the cutover
+  ([ADR-0003](decisions/0003-decouple-tool-ui-from-logic.md),
+  [ADR-0004](decisions/0004-viewmodels-expose-neutral-presentation-state.md),
+  [`ui-decoupling-plan.md`](ui-decoupling-plan.md)). Remaining gaps are fixed as they come up.
 
 ## Next
 
@@ -57,7 +46,7 @@ Horizons describe *confidence and proximity*, not fixed dates:
 
 ## Later
 
-(The cross-platform editor moved to **Now** on 2026-09-09 — ADR-0017.)
+(Nothing here right now.)
 
 ## Parked (deliberately not now)
 
