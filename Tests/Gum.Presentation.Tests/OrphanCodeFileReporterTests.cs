@@ -207,6 +207,20 @@ public class OrphanCodeFileReporterTests : BaseTestClass
     }
 
     [Fact]
+    public async Task Resolve_WhenTheFileCannotBeTrashed_KeepsTheOrphanInsteadOfThrowing()
+    {
+        FilePath filePath = new FilePath("/game/Screens/DeletedScreen.Generated.cs");
+        OrphanCodeFile orphan = new OrphanCodeFile(filePath, OrphanCodeFileKind.Generated, "DeletedScreen");
+        ArrangeScan(orphan);
+        await RefreshAndApplyAsync();
+        _fileCommands.Setup(x => x.MoveToRecycleBin(filePath)).Throws(new System.IO.IOException("locked"));
+
+        _sut.Resolve(orphan);
+
+        _sut.Orphans.ShouldBe(new[] { orphan });
+    }
+
+    [Fact]
     public async Task Resolve_ShouldNotRemoveCustomCodeFile_WhenUserDeclines()
     {
         FilePath filePath = new FilePath("/game/Screens/DeletedScreen.cs");

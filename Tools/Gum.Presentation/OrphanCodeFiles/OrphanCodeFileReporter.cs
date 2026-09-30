@@ -7,6 +7,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -171,7 +172,15 @@ public class OrphanCodeFileReporter
             }
         }
 
-        _fileCommands.MoveToRecycleBin(orphan.FilePath);
+        try
+        {
+            _fileCommands.MoveToRecycleBin(orphan.FilePath);
+        }
+        catch (IOException)
+        {
+            // Already reported to Output; the orphan stays listed so the user can retry.
+            return;
+        }
         _orphans.Remove(orphan);
         OrphansChanged?.Invoke();
     }

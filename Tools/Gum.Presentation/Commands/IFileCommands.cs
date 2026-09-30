@@ -22,13 +22,15 @@ public interface IFileCommands
     void ClearDirectoryContents(FilePath directory);
 
     /// <summary>
-    /// Moves a file to the OS recycle bin/trash rather than permanently deleting it.
+    /// Moves a file to the OS recycle bin/trash rather than permanently deleting it. A failure is
+    /// reported to Output and thrown as <see cref="IOException"/>.
     /// </summary>
     void MoveToRecycleBin(FilePath filePath);
 
     /// <summary>
     /// Moves several files to the OS recycle bin/trash in as few OS calls as the platform allows,
-    /// so a large batch doesn't play the trash sound or spawn a process once per file.
+    /// so a large batch doesn't play the trash sound or spawn a process once per file. A failure is
+    /// reported to Output and thrown as <see cref="IOException"/>.
     /// </summary>
     void MoveToRecycleBin(IReadOnlyList<FilePath> filePaths);
 

@@ -117,6 +117,19 @@ public class FileWatchManagerTests : IDisposable
     }
 
     [Fact]
+    public void HandleWatcherError_ShouldReportTheWatchedDirectoryToOutput()
+    {
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        FileWatchManager sut = BuildSut(out Mock<IGuiCommands> guiCommandsMock, out _, out _, watchedDirectory);
+        using FileSystemWatcher watcher = new FileSystemWatcher(_tempDirectory);
+
+        sut.HandleWatcherError(watcher, new ErrorEventArgs(new InternalBufferOverflowException("too many changes")));
+
+        guiCommandsMock.Verify(g => g.PrintOutput(It.Is<string>(s =>
+            s.Contains(_tempDirectory) && s.Contains("too many changes"))), Times.Once);
+    }
+
+    [Fact]
     public void EnableWithDirectories_ThenFlush_ShouldReactToFileCreatedInWatchedDirectory()
     {
         FilePath watchedDirectory = new FilePath(_tempDirectory + "/");

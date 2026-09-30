@@ -144,6 +144,7 @@ public class FileWatchManager : IFileWatchManager
         // Gum files get deleted and then created, rather than changed
         fileSystemWatcher.Created += HandleFileSystemChange;
         fileSystemWatcher.Renamed += HandleRename;
+        fileSystemWatcher.Error += HandleWatcherError;
 
         return fileSystemWatcher;
     }
@@ -166,6 +167,22 @@ public class FileWatchManager : IFileWatchManager
 
     internal void HandleFileSystemChange(object? sender, FileSystemEventArgs e)
         => RunOnUiThread(isOnIgnoreList => ReactToChangeOrCreate(e, isOnIgnoreList), e.FullPath);
+
+    // Raised on a watcher thread when the watcher overflows its buffer or loses a watch (e.g. the
+    // Linux inotify limit), after which external changes can go unnoticed.
+    internal void HandleWatcherError(object? sender, ErrorEventArgs e)
+    {
+        try
+        {
+            string path = (sender as FileSystemWatcher)?.Path ?? "a watched directory";
+            _guiCommands.PrintOutput(
+                $"File watching failed for {path}, so external changes there may not reload: {e.GetException().Message}");
+        }
+        catch
+        {
+            // Watcher thread: an escaping exception would end the process.
+        }
+    }
 
     private void RunOnUiThread(Action<bool> reaction, string path)
     {

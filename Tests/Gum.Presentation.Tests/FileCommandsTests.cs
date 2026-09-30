@@ -101,6 +101,19 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void MoveToRecycleBin_WhenTheTrashCommandIsMissing_ReportsToOutputAndThrowsIOException()
+    {
+        FilePath filePath = "/MyProject/Button.gucx";
+        System.ComponentModel.Win32Exception missingCommand = new System.ComponentModel.Win32Exception("gio not found");
+        _recycleBinService.Setup(x => x.MoveToRecycleBin(filePath)).Throws(missingCommand);
+
+        IOException thrown = Should.Throw<IOException>(() => _fileCommands.MoveToRecycleBin(filePath));
+
+        thrown.InnerException.ShouldBe(missingCommand);
+        _errorCalls.ShouldHaveSingleItem().ShouldContain("gio not found");
+    }
+
+    [Fact]
     public void MoveToRecycleBin_WithSeveralFiles_ShouldDelegateTheWholeBatchInOneCall()
     {
         List<FilePath> filePaths = new List<FilePath> { "/MyProject/Button.gucx", "/MyProject/Label.gucx" };
