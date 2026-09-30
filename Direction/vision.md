@@ -12,22 +12,23 @@ core, runtime libraries for MonoGame, KNI, FNA, SkiaSharp, and raylib, and a WYS
 
 ## Mission / north star
 
-> Settled 2026-06-20.
+> Settled 2026-06-20; widened 2026-09-30 by `decisions/0020-bring-unity-and-godot-into-scope.md`.
 
-**Gum is the visual UI editor and cross-framework runtime for code-first C# game frameworks — the
-ones that ship no UI of their own.**
+**Gum is the visual UI editor and cross-platform runtime for code-first C# game development,
+wherever Gum can be hosted cheaply.** Over time that may become "anywhere C# runs."
 
 In practice: author UI visually in the Gum tool, then run it on MonoGame (and MonoGame-based
-engines such as FlatRedBall), KNI, FNA, and raylib, plus SkiaSharp-based app hosts (WPF, Avalonia,
-MAUI). Gum deliberately serves *frameworks*, not full **engines** (Unity, Godot) that already ship
-their own UI — see `decisions/0002-target-code-first-frameworks-not-engines.md`. Portability and
-reach *within that segment* are the through-line of Gum's history and what has kept it alive across
-changing owners.
+engines such as FlatRedBall), KNI, FNA, and raylib, on SkiaSharp-based app hosts (WPF, Avalonia,
+MAUI), and on full engines that can host a Skia surface (Stride, Unity, and later Godot). Which
+hosts qualify is decided by the cost-to-integrate test in
+`decisions/0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md`. Gum's roots are in
+frameworks that ship no UI of their own (`decisions/0002-target-code-first-frameworks-not-engines.md`),
+and portability across hosts has kept it alive across changing owners.
 
 ## Who it's for
 
-All of Gum's users share one trait: they are **code-first C# developers whose framework ships no
-UI of its own.** Specifically:
+All of Gum's users share one trait: they are **code-first C# developers who want one UI system
+they can author visually and carry across hosts.** Specifically:
 
 - **Primary (now):** MonoGame indie / hobbyist developers — the center of gravity, driven by Gum's
   inclusion in the official MonoGame 2D tutorial. When priorities conflict, this audience wins.
@@ -36,6 +37,9 @@ UI of its own.** Specifically:
 - **Distinct:** SkiaSharp app developers (WPF / Avalonia / MAUI) — often building *application* UI
   rather than games, a somewhat different user.
 - **Emerging:** raylib-cs developers, as that runtime matures toward MonoGame parity.
+- **New:** Unity developers (experimental package, Direct3D 11 first) and, on demand, Godot
+  developers. They already have native UI, so they come to Gum mostly because they know it from
+  MonoGame or want one UI across engine and framework projects.
 
 ## Principles
 
@@ -53,9 +57,9 @@ performance, backward compatibility.*
 
 ## Scope — what Gum is *not*
 
-- **Not a UI layer for full engines.** Unity and Godot ship their own native UI; Gum deliberately
-  does not target them — for now, possibly permanently. See
-  `decisions/0002-target-code-first-frameworks-not-engines.md`.
+- **Not for hosts that are expensive to integrate.** A host is in scope when it can present a Skia
+  surface (or an existing Gum backend) cheaply, so Gum only adds input and packaging. See
+  `decisions/0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md`.
 
 *(Other boundaries will be added here as they are decided.)*
 

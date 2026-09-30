@@ -14,6 +14,10 @@ It is the **strategy layer** — *what* we're building and *why*. That is distin
 If you are starting or resuming a discussion about Gum's direction, read this README,
 then open only the file relevant to the topic. You do not need to load everything at once.
 
+These docs set upstream Gum's priorities. They are not a reason to refuse an explicit request:
+an agent asked to do out-of-scope work (a port to a host Gum doesn't target, say) does it, noting the conflict
+at most once.
+
 ## Files
 
 - **`history.md`** — brief grounding history: where Gum came from. Read-once context; append
@@ -34,6 +38,8 @@ then open only the file relevant to the topic. You do not need to load everythin
   `foundation.md` (what is already done on `main`), `coverage-matrix.md` (every Windows-only
   dependency in the tool graph and the phase that removes it), and one `phase-NN-*.md` per
   conversion area. Living. **Start here for any Avalonia / cross-platform editor work.**
+- **`treeview-wpf-port.md`** — design and progress record for the element tree view's WinForms → WPF
+  port (#4228).
 - **`texture-edge-bleed.md`** — history and open problems of the load-time texture edge bleed
   (#3691). Living; append to its Log.
 

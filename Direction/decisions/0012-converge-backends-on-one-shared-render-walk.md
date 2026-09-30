@@ -1,6 +1,6 @@
 # 0012. Converge every backend on one shared render walk, including render-target bakes
 
-- **Status:** Accepted
+- **Status:** Accepted; implemented for the XNA-like backends and raylib (main pass and bakes). Skia and SokolGum still use their own walks.
 - **Date:** 2026-07-31
 - **Deciders:** Victor Chelaru, Claude
 

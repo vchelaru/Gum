@@ -155,7 +155,7 @@ Needs everything. Nothing depends on it except the future.
 
 ## Done when
 
-- [ ] One merged PR; `gum.exe` and its load graph are WPF/WinForms-free. **Half done:** the shipped `Gum.Avalonia` load graph is WPF-free (verified by `HeadCompositionTests` and the publish), but the WPF projects are still in the repo; the deletion PR is open.
+- [ ] One merged PR; `gum.exe` and its load graph are WPF/WinForms-free. **Half done:** the shipped `Gum.Avalonia` load graph is WPF-free (verified by `HeadCompositionTests` and the publish), but the WPF projects are still in the repo; their deletion is deferred with no date.
 - [x] CI and release workflows build the Avalonia tool on three OSes; WPF zip discontinued (#4699, 2026-09-14; the `Gum.Wpf.sln` build job stays until the deletion PR).
 - [x] `CLAUDE.md`, `code-style.md`, skills, and docs describe the Avalonia tool as *the* tool (2026-09-14); the "frozen WPF head" mentions go with the deletion PR. `GEMINI.md` is owner-edited only and still stale.
 - [ ] Release notes published; plugin compatibility change announced. The docs half is done (plugin page, setup page, upgrading page); the release-notes and Discord halves wait for the first Avalonia release.

@@ -1,6 +1,6 @@
 # 0013. Adopt JSON as an AOT-safe project file format, phased in alongside XML
 
-- **Status:** Accepted
+- **Status:** Accepted; implemented (Convert to JSON, and `.gumj` is the default for new projects)
 - **Date:** 2026-07-31
 - **Deciders:** Victor Chelaru, Claude
 

@@ -15,8 +15,8 @@
   understood as a permanent maintenance tax — see the private growth strategy.)
 - **Tool vs. code-first.** How do we balance investment between the WYSIWYG tool and
   code-only / code-generation workflows?
-- **Scope boundaries (beyond engines).** Full engines are settled (ADR-0002, refined by
-  ADR-0014); what *other* boundaries should Gum name as explicitly out of scope?
+- **Scope boundaries.** Hosts are judged by ADR-0014's cost-to-integrate test; what *other*
+  boundaries should Gum name as explicitly out of scope?
 
 ## Resolved
 
@@ -26,13 +26,17 @@
   `decisions/0017-commit-to-avalonia-full-cutover.md` and the plan in `avalonia-migration/`.
 - **North star / mission** — settled (2026-06-20): *"Gum is the visual UI editor and
   cross-framework runtime for code-first C# game frameworks — the ones that ship no UI of their
-  own."* See `vision.md` (mission).
+  own."* Widened on 2026-09-30 by ADR-0020. See `vision.md` (mission).
 - **Primary audience** — settled (2026-06-20): MonoGame indie / hobbyist devs are primary;
   FlatRedBall (via FRB2 on the MonoGame runtime) continuing; SkiaSharp app devs distinct; raylib
   emerging. See `vision.md` ("Who it's for"). The earlier "cross-engine teams" idea was retracted.
-- **Scope: full engines** — settled (2026-06-20): Unity and Godot are deliberately out, for now
-  and possibly permanently. See `decisions/0002-target-code-first-frameworks-not-engines.md`.
+- **Scope: full engines** — settled (2026-06-20), superseded by ADR-0020: Unity and Godot were
+  deliberately out. See `decisions/0002-target-code-first-frameworks-not-engines.md`.
 - **Scope: full engines, refined test** — settled (2026-09-04): the boundary is cost-to-integrate
   (can the engine host `SKCanvas` cheaply?), not "does it ship its own UI." Unblocks Stride
   (issue #4600) without reopening Unity/Godot. See
   `decisions/0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md`.
+- **Scope: Unity and Godot, and the mission** — settled (2026-09-30): SkiaGameRendering now hosts
+  Skia in both, so both pass ADR-0014's test. Unity gets an official experimental package now
+  (Direct3D 11 first); Godot is in scope and waits for demand. The mission widens beyond UI-less
+  frameworks. See `decisions/0020-bring-unity-and-godot-into-scope.md`.
