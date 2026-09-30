@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PublishAot">
 
 	<Import Project="..\RuntimePackage.props" />
 
@@ -15,6 +15,10 @@
 	<!-- netstandard2.1 defaults to C# 8; pin the net8.0 build's C# 12. The NoWarn is the same as
 	     GumCommon.csproj's: netstandard2.1's BCL has no nullability annotations. -->
 	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<!-- A command-line -p:PublishAot=true (GumPreview's release and local publishes) flows into
+		     every referenced project; netstandard2.1 can't be AOT-compiled (NETSDK1207). TreatAsLocalProperty
+		     on <Project> lets this override it. -->
+		<PublishAot>false</PublishAot>
 		<LangVersion>12.0</LangVersion>
 		<NoWarn>$(NoWarn);CS8600;CS8602;CS8603;CS8604</NoWarn>
 	</PropertyGroup>

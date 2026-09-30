@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PublishAot">
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
@@ -379,6 +379,10 @@
 	     as non-null-returning), so it raises null warnings the annotated net8.0 build doesn't. The
 	     net8.0 build is the nullability check. -->
 	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+	  <!-- A command-line -p:PublishAot=true (GumPreview's release and local publishes) flows into
+	       every referenced project; netstandard2.1 can't be AOT-compiled (NETSDK1207). TreatAsLocalProperty
+	       on <Project> lets this override it. -->
+	  <PublishAot>false</PublishAot>
 	  <NoWarn>$(NoWarn);CS8600;CS8602;CS8603;CS8604</NoWarn>
 	</PropertyGroup>
 </Project>
