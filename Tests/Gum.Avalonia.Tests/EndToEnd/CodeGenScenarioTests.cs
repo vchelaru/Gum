@@ -125,7 +125,7 @@ public class CodeGenScenarioTests
         code.Select(toggle);
         code.ClickCheckBox("Append Folder to Namespace");
         File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj")).ShouldContain("\"AppendFolderToNamespace\": false");
-        code.ClickButton("This");
+        code.ClickButton("Selected");
         File.WriteAllText(code.CodeFile("Screens/TitleScreen.Generated.cs"), "// not regenerated");
         code.ClickGenerate();
 

@@ -158,6 +158,12 @@ public class CodeWindowViewModel : ViewModel
         }
     }
 
+    /// <summary>What the Generate button writes, given <see cref="WhichElementsToGenerate"/>.</summary>
+    [DependsOn(nameof(WhichElementsToGenerate))]
+    public string GenerateToolTip => WhichElementsToGenerate == WhichElementsToGenerate.AllInProject
+        ? "Generate code for every element in the project"
+        : "Generate code for the selected element";
+
     public string Code
     {
         get => Get<string>();
