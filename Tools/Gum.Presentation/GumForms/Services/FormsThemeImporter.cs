@@ -243,7 +243,7 @@ public class FormsThemeImporter : IFormsThemeImporter
             if (standardFiles.Any() || otherFiles.Any())
             {
                 message += "\n\nProceed?";
-                shouldSave = _dialogService.ShowYesNoMessage(message, "Ovewrite files?");
+                shouldSave = _dialogService.ShowYesNoMessage(message, "Overwrite files?");
             }
             else
             {

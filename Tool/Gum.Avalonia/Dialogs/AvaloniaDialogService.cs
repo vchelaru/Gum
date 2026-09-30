@@ -23,12 +23,14 @@ public class AvaloniaDialogService : IDialogService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly DialogViewRegistry _viewRegistry;
+    private readonly List<DialogWindow> _openDialogs;
 
     /// <summary>Creates the service over the view registry and the container that builds view models.</summary>
     public AvaloniaDialogService(IServiceProvider serviceProvider, DialogViewRegistry viewRegistry)
     {
         _serviceProvider = serviceProvider;
         _viewRegistry = viewRegistry;
+        _openDialogs = new List<DialogWindow>();
     }
 
     /// <inheritdoc/>
@@ -80,7 +82,7 @@ public class AvaloniaDialogService : IDialogService
     public List<string>? OpenFile(OpenFileDialogOptions? options = null)
     {
         options ??= new OpenFileDialogOptions();
-        Window? owner = MainWindow;
+        Window? owner = CurrentOwner;
         if (owner == null)
         {
             return null;
@@ -102,7 +104,7 @@ public class AvaloniaDialogService : IDialogService
     public string? SaveFile(SaveFileDialogOptions? options = null)
     {
         options ??= new SaveFileDialogOptions();
-        Window? owner = MainWindow;
+        Window? owner = CurrentOwner;
         if (owner == null)
         {
             return null;
@@ -122,7 +124,7 @@ public class AvaloniaDialogService : IDialogService
     public string? OpenFolder(OpenFolderDialogOptions? options = null)
     {
         options ??= new OpenFolderDialogOptions();
-        Window? owner = MainWindow;
+        Window? owner = CurrentOwner;
         if (owner == null)
         {
             return null;
@@ -155,6 +157,16 @@ public class AvaloniaDialogService : IDialogService
         return types;
     }
 
+    /// <summary>The dialogs this service has open, oldest first. Exposed for tests.</summary>
+    internal IReadOnlyList<DialogWindow> OpenDialogs => _openDialogs;
+
+    /// <summary>
+    /// The window a new dialog or file picker is modal over: the topmost open dialog, else the main
+    /// window. Avalonia's ShowDialog disables only its owner, so owning a prompt by the main window
+    /// left the dialog that raised it clickable (#5538).
+    /// </summary>
+    private Window? CurrentOwner => _openDialogs.LastOrDefault(dialog => dialog.IsVisible) ?? MainWindow;
+
     private static Window? MainWindow =>
         (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
 
@@ -165,13 +177,18 @@ public class AvaloniaDialogService : IDialogService
 
         Control view = _viewRegistry.CreateView(viewModel);
         DialogWindow window = new DialogWindow(viewModel, view);
-        Window? owner = MainWindow;
+        Window? owner = CurrentOwner;
         window.FitHeightToScreen(owner);
         // An unattended run's window sits off-screen without focus; its dialogs stay there with it.
         window.ShowActivated = owner?.ShowActivated ?? true;
 
         using CancellationTokenSource closed = new CancellationTokenSource();
-        window.Closed += (_, _) => closed.Cancel();
+        _openDialogs.Add(window);
+        window.Closed += (_, _) =>
+        {
+            _openDialogs.Remove(window);
+            closed.Cancel();
+        };
         if (owner is { IsVisible: true })
         {
             UiFreezeWatchdog.RecordStep($"ShowModal({dialogKind}): calling ShowDialog(owner)");

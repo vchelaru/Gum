@@ -79,6 +79,26 @@ public class DialogFocusTests
     }
 
     [AvaloniaFact]
+    public void DialogWithItsAffirmativeButtonDisabled_FocusesTheNegativeButtonOnceOpen()
+    {
+        // Import from .gumx opens with OK disabled; focusing it left the window with no keyboard focus.
+        CannotAffirmDialogViewModel viewModel = new CannotAffirmDialogViewModel { AffirmativeText = "OK", NegativeText = "Cancel" };
+        DialogWindow window = new DialogWindow(viewModel, new TextBlock { Text = "Nothing to focus" });
+
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        Button negative = window.GetVisualDescendants().OfType<Button>().First(button => button.Name == DialogWindow.NegativeButtonName);
+        negative.IsFocused.ShouldBeTrue();
+        window.Close();
+    }
+
+    private sealed class CannotAffirmDialogViewModel : DialogViewModel
+    {
+        public override bool CanExecuteAffirmative() => false;
+    }
+
+    [AvaloniaFact]
     public void TextInputDialog_ValidatesAsItOpens_SoAnEmptyValueShowsTheErrorWithOkDisabled()
     {
         // As the WPF view does on load: the user sees why OK is disabled before typing anything.
