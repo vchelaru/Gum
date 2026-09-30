@@ -24,13 +24,27 @@ public class AvaloniaDialogService : IDialogService
     private readonly IServiceProvider _serviceProvider;
     private readonly DialogViewRegistry _viewRegistry;
     private readonly List<DialogWindow> _openDialogs;
+    private readonly IFilePickers _filePickers;
+    private readonly Func<Window?> _mainWindow;
 
     /// <summary>Creates the service over the view registry and the container that builds view models.</summary>
     public AvaloniaDialogService(IServiceProvider serviceProvider, DialogViewRegistry viewRegistry)
+        : this(serviceProvider, viewRegistry, new StorageProviderFilePickers(), () => AppMainWindow)
+    {
+    }
+
+    /// <summary>
+    /// Tests pass <paramref name="filePickers"/> to see which window a picker is opened over, and
+    /// <paramref name="mainWindow"/> because the headless app has no main window.
+    /// </summary>
+    internal AvaloniaDialogService(IServiceProvider serviceProvider, DialogViewRegistry viewRegistry,
+        IFilePickers filePickers, Func<Window?> mainWindow)
     {
         _serviceProvider = serviceProvider;
         _viewRegistry = viewRegistry;
         _openDialogs = new List<DialogWindow>();
+        _filePickers = filePickers;
+        _mainWindow = mainWindow;
     }
 
     /// <inheritdoc/>
@@ -88,16 +102,9 @@ public class AvaloniaDialogService : IDialogService
             return null;
         }
 
-        IReadOnlyList<IStorageFile> files = RunOnUiThread(() => owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = options.Title,
-            AllowMultiple = options.Multiselect,
-            FileTypeFilter = ParseFilter(options.Filter),
-            SuggestedStartLocation = StartLocation(owner, options.InitialDirectory),
-        }));
-
-        List<string> paths = files.Select(f => f.Path.LocalPath).Where(p => !string.IsNullOrEmpty(p)).ToList();
-        return paths.Count == 0 ? null : paths;
+        IReadOnlyList<string> paths = RunOnUiThread(() => _filePickers.OpenFileAsync(owner, new OpenFilePickerRequest(
+            options.Title, options.Multiselect, ParseFilter(options.Filter), ExistingDirectory(options.InitialDirectory))));
+        return paths.Count == 0 ? null : paths.ToList();
     }
 
     /// <inheritdoc/>
@@ -110,14 +117,8 @@ public class AvaloniaDialogService : IDialogService
             return null;
         }
 
-        IStorageFile? file = RunOnUiThread(() => owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = options.Title,
-            SuggestedFileName = options.FileName,
-            FileTypeChoices = ParseFilter(options.Filter),
-            SuggestedStartLocation = StartLocation(owner, options.InitialDirectory),
-        }));
-        return file?.Path.LocalPath;
+        return RunOnUiThread(() => _filePickers.SaveFileAsync(owner, new SaveFilePickerRequest(
+            options.Title, options.FileName, ParseFilter(options.Filter), ExistingDirectory(options.InitialDirectory))));
     }
 
     /// <inheritdoc/>
@@ -130,13 +131,8 @@ public class AvaloniaDialogService : IDialogService
             return null;
         }
 
-        IReadOnlyList<IStorageFolder> folders = RunOnUiThread(() => owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = options.Title,
-            SuggestedStartLocation = StartLocation(owner, options.InitialDirectory),
-        }));
-
-        return folders.Select(f => f.Path.LocalPath).FirstOrDefault(p => !string.IsNullOrEmpty(p));
+        return RunOnUiThread(() => _filePickers.OpenFolderAsync(owner, new OpenFolderPickerRequest(
+            options.Title, ExistingDirectory(options.InitialDirectory))));
     }
 
     /// <summary>
@@ -165,9 +161,9 @@ public class AvaloniaDialogService : IDialogService
     /// window. Avalonia's ShowDialog disables only its owner, so owning a prompt by the main window
     /// left the dialog that raised it clickable (#5538).
     /// </summary>
-    private Window? CurrentOwner => _openDialogs.LastOrDefault(dialog => dialog.IsVisible) ?? MainWindow;
+    private Window? CurrentOwner => _openDialogs.LastOrDefault(dialog => dialog.IsVisible) ?? _mainWindow();
 
-    private static Window? MainWindow =>
+    private static Window? AppMainWindow =>
         (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
 
     private bool? ShowModal(DialogViewModel viewModel)
@@ -220,12 +216,6 @@ public class AvaloniaDialogService : IDialogService
         return task.GetAwaiter().GetResult();
     }
 
-    private static IStorageFolder? StartLocation(Window owner, string? directory)
-    {
-        if (string.IsNullOrEmpty(directory) || !System.IO.Directory.Exists(directory))
-        {
-            return null;
-        }
-        return RunOnUiThread(() => owner.StorageProvider.TryGetFolderFromPathAsync(directory));
-    }
+    private static string? ExistingDirectory(string? directory) =>
+        !string.IsNullOrEmpty(directory) && System.IO.Directory.Exists(directory) ? directory : null;
 }
