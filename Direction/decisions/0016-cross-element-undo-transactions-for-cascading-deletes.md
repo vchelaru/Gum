@@ -1,6 +1,6 @@
 # 0016. Cross-element undo transactions for cascading deletes
 
-- **Status:** Accepted
+- **Status:** Accepted; implemented
 - **Date:** 2026-09-09
 - **Deciders:** Victor Chelaru, Claude
 

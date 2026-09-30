@@ -1,7 +1,7 @@
 # Gum — Roadmap
 
 > Living document. Items move between horizons as reality changes — this is intent, not a
-> contract. Date significant changes. Last updated 2026-09-04.
+> contract. Date significant changes. Last updated 2026-09-30.
 
 Horizons describe *confidence and proximity*, not fixed dates:
 
@@ -38,8 +38,8 @@ Horizons describe *confidence and proximity*, not fixed dates:
   work there except an explicit fix on the last WPF release. Deleting the frozen WPF projects is deferred
   with no date.
   - **Plan:** [`avalonia-migration/README.md`](avalonia-migration/README.md) — twelve phases,
-    highest risk (the canvas backend) first; everything already landed on `main` except the phase
-    120 cutover PR.
+    highest risk (the canvas backend) first; all phases landed and the cutover shipped
+    2026-09-14.
   - **Scope discipline:** parity, not new features. Anything the WPF tool does not do today is
     a separate roadmap item.
 
