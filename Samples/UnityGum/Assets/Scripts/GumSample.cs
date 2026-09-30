@@ -86,6 +86,9 @@ public sealed class GumSample : MonoBehaviour
         panel.AddChild(textBox);
 
         GumService.Default.UseKeyboardDefaults();
+        GumService.Default.UseGamepadDefaults();
+        // Gamepad navigation moves focus from the focused control, so start with one.
+        _button.IsFocused = true;
     }
 
     void Update()

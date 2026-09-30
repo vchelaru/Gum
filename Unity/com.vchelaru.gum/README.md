@@ -34,6 +34,9 @@ To load a project, put it under `Assets/StreamingAssets` and set `GumRenderer.Pr
 there (for example `GumProject/GumProject.gumx`). When adding the components from code, add them to an
 inactive GameObject and set `ProjectFile` before activating it.
 
+`GumInput` pushes the mouse, touches, keyboard and gamepads. Keyboard and gamepad navigation of Forms
+controls is off until you call `GumService.Default.UseKeyboardDefaults()` or `UseGamepadDefaults()`.
+
 ## Rendering
 
 On Direct3D 11, Gum draws on the GPU through SkiaGameRendering. On any other graphics API it draws on
