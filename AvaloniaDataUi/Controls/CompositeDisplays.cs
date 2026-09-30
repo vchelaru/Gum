@@ -73,9 +73,7 @@ public class AngleSelectorDisplay : DataUiDisplayBase
         _dial.Children.Add(face);
         _dial.Children.Add(_needle);
         _dial.Children.Add(center);
-        _dial.PointerPressed += HandleDialPointerPressed;
-        _dial.PointerMoved += HandleDialPointerMoved;
-        _dial.PointerReleased += HandleDialPointerReleased;
+        CapturedPointerDrag.Attach(_dial, TryBeginDialPointerDrag, HandleDialPointerMoved, EndDialDrag);
 
         _textBox = new EditTrackingTextBox { MinWidth = 40, VerticalAlignment = VerticalAlignment.Center };
         _textBox.EditCommitRequested += (_, _) => ApplyTextBoxText();
@@ -136,6 +134,9 @@ public class AngleSelectorDisplay : DataUiDisplayBase
 
     /// <summary>The needle, for tests.</summary>
     internal Line Needle => _needle;
+
+    /// <summary>The dial, for tests.</summary>
+    internal Control Dial => _dial;
 
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()
@@ -265,36 +266,19 @@ public class AngleSelectorDisplay : DataUiDisplayBase
         _textBox.Watermark = InstanceMember?.IsIndeterminate != true && _angle == null ? "<NULL>" : null;
     }
 
-    private void HandleDialPointerPressed(object? sender, PointerPressedEventArgs e)
+    private bool TryBeginDialPointerDrag(PointerPressedEventArgs e)
     {
-        if (!e.GetCurrentPoint(_dial).Properties.IsLeftButtonPressed)
-        {
-            return;
-        }
-
         BeginDialDrag();
-        e.Pointer.Capture(_dial);
         DragToPointer(e);
-        e.Handled = true;
+        return true;
     }
 
-    private void HandleDialPointerMoved(object? sender, PointerEventArgs e)
+    private void HandleDialPointerMoved(PointerEventArgs e)
     {
-        if (_isDragging && e.GetCurrentPoint(_dial).Properties.IsLeftButtonPressed)
+        if (e.GetCurrentPoint(_dial).Properties.IsLeftButtonPressed)
         {
             DragToPointer(e);
         }
-    }
-
-    private void HandleDialPointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (!_isDragging)
-        {
-            return;
-        }
-
-        e.Pointer.Capture(null);
-        EndDialDrag();
     }
 
     private void DragToPointer(PointerEventArgs e)

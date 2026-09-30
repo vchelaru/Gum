@@ -29,7 +29,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     private ApplyValueResult? _lastApplyValueResult;
     private bool _isInSet;
     private Point? _dragLastPosition;
-    private Point? _dragPressedPosition;
+    private bool _hasScrubbed;
 
     /// <summary>Builds the displayer.</summary>
     public TextBoxDisplay()
@@ -46,9 +46,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
             Background = global::Avalonia.Media.Brushes.Transparent,
             Child = _label,
         };
-        _labelHost.PointerPressed += HandleLabelPointerPressed;
-        _labelHost.PointerMoved += HandleLabelPointerMoved;
-        _labelHost.PointerReleased += HandleLabelPointerReleased;
+        CapturedPointerDrag.Attach(_labelHost, TryBeginLabelScrub, HandleLabelScrubMoved, EndLabelScrub);
 
         _textBox = new EditTrackingTextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
         _textBox.GotFocus += (_, _) => RefreshPlaceholderText();
@@ -133,6 +131,9 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
     /// <summary>The text field, for tests and subclasses.</summary>
     protected internal TextBox TextBox => _textBox;
+
+    /// <summary>The label area a numeric scrub starts from, for tests.</summary>
+    internal Control LabelHost => _labelHost;
 
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()
@@ -282,26 +283,25 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
     #region Label scrubbing
 
-    private void HandleLabelPointerPressed(object? sender, PointerPressedEventArgs e)
+    private bool TryBeginLabelScrub(PointerPressedEventArgs e)
     {
-        if (!_logic.IsNumeric || !EnableLabelDragValueChange || !e.GetCurrentPoint(_labelHost).Properties.IsLeftButtonPressed)
+        if (!_logic.IsNumeric || !EnableLabelDragValueChange)
         {
-            return;
+            return false;
         }
 
         if (TryGetValueOnUi(out object? value) != ApplyValueResult.Success || _logic.InstancePropertyType is not Type propertyType)
         {
-            return;
+            return false;
         }
 
         _scrubLogic.Begin(value, propertyType);
         _dragLastPosition = e.GetPosition(this);
-        _dragPressedPosition = _dragLastPosition;
-        e.Pointer.Capture(_labelHost);
-        e.Handled = true;
+        _hasScrubbed = false;
+        return true;
     }
 
-    private void HandleLabelPointerMoved(object? sender, PointerEventArgs e)
+    private void HandleLabelScrubMoved(PointerEventArgs e)
     {
         if (_dragLastPosition == null)
         {
@@ -318,6 +318,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         }
 
         ApplyScrub(difference);
+        _hasScrubbed = true;
     }
 
     /// <summary>Applies one horizontal scrub step of <paramref name="difference"/> units as an intermediate edit.</summary>
@@ -338,20 +339,12 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         }
     }
 
-    private void HandleLabelPointerReleased(object? sender, PointerReleasedEventArgs e)
+    private void EndLabelScrub()
     {
-        if (_dragPressedPosition == null)
-        {
-            return;
-        }
-
-        bool moved = e.GetPosition(this).X != _dragPressedPosition.Value.X;
         _dragLastPosition = null;
-        _dragPressedPosition = null;
-        e.Pointer.Capture(null);
-
-        if (moved)
+        if (_hasScrubbed)
         {
+            _hasScrubbed = false;
             _lastApplyValueResult = _logic.TryApplyToInstance(SetPropertyCommitType.Full);
         }
     }

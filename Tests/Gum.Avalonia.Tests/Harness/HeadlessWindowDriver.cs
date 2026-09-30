@@ -20,6 +20,7 @@ namespace Gum.Avalonia.Tests.Harness;
 internal sealed class HeadlessWindowDriver : IDisposable
 {
     private readonly string _framesFolder;
+    private IPointer? _lastPressedPointer;
 
     /// <summary>Shows <paramref name="content"/> in a new headless window of the given size.</summary>
     /// <param name="framesFolderName">Folder under the temp folder that <see cref="SaveFrame"/> writes to, unless GUM_HEADLESS_FRAMES names one.</param>
@@ -30,6 +31,7 @@ internal sealed class HeadlessWindowDriver : IDisposable
             : Path.Combine(Path.GetTempPath(), framesFolderName, "frames");
         DetachFromHost(content);
         Window = new Window { Content = content, Width = width, Height = height };
+        Window.AddHandler(InputElement.PointerPressedEvent, (_, e) => _lastPressedPointer = e.Pointer, RoutingStrategies.Tunnel, handledEventsToo: true);
         Window.Show();
         Layout();
         // Hit testing reads what the compositor last rendered, and the compositor takes one frame
@@ -143,6 +145,39 @@ internal sealed class HeadlessWindowDriver : IDisposable
             Window.MouseMove(new Point(from.X + (to.X - from.X) * t, from.Y + (to.Y - from.Y) * t), RawInputModifiers.LeftMouseButton);
         }
         Window.MouseUp(to, MouseButton.Left, RawInputModifiers.None);
+        Layout();
+    }
+
+    /// <summary>Presses the left button at <paramref name="point"/> and holds it.</summary>
+    public void PressLeftAt(Point point)
+    {
+        Window.MouseMove(point, RawInputModifiers.None);
+        Window.MouseDown(point, MouseButton.Left, RawInputModifiers.None);
+        Layout();
+    }
+
+    /// <summary>Moves the pointer to <paramref name="point"/> with the left button held.</summary>
+    public void MoveWithLeftHeld(Point point)
+    {
+        Window.MouseMove(point, RawInputModifiers.LeftMouseButton);
+        Layout();
+    }
+
+    /// <summary>
+    /// Takes the pointer capture away from whatever holds it, as the platform does when the window
+    /// loses the pointer mid-drag (Alt+Tab, another window taking the mouse).
+    /// </summary>
+    public void LosePointerCapture()
+    {
+        (_lastPressedPointer ?? throw new InvalidOperationException("No pointer has been pressed in the window.")).Capture(null);
+        Layout();
+    }
+
+    /// <summary>Turns the mouse wheel by <paramref name="notches"/> (positive is up) at <paramref name="point"/>.</summary>
+    public void Wheel(Point point, double notches)
+    {
+        Window.MouseMove(point, RawInputModifiers.None);
+        Window.MouseWheel(point, new Vector(0, notches), RawInputModifiers.None);
         Layout();
     }
 
