@@ -4,7 +4,9 @@ using Avalonia.Interactivity;
 using CodeOutputPlugin;
 using CodeOutputPlugin.Manager;
 using CodeOutputPlugin.ViewModels;
+using Avalonia.Controls.Primitives;
 using Gum.Avalonia.Plugins.CodeOutput;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Commands;
 using Gum.Managers;
 using Gum.Plugins;
@@ -66,5 +68,46 @@ public class CodeOutputTabTests
         viewModel.Code = "class Sample {}";
         view.CodeTextBox.Text.ShouldBe("class Sample {}");
         window.Close();
+    }
+    [AvaloniaFact]
+    public void ScopeAndPreviewChoices_ClickingTheSelectedOption_KeepsExactlyOneSelected()
+    {
+        IProjectState projectState = Services.GetRequiredService<IProjectState>();
+        CodeWindowViewModel viewModel = new CodeWindowViewModel(
+            projectState,
+            Services.GetRequiredService<IFileCommands>(),
+            Services.GetRequiredService<IDialogService>(),
+            Services.GetRequiredService<IGuiCommands>(),
+            new CodeGenerationAutoSetupService());
+        viewModel.CanGenerateCode = true;
+        CodeOutputSettingsMembers members = new CodeOutputSettingsMembers(
+            projectState,
+            new SyntaxVersionDetectionService(new ToolCodeGenLogger(Services.GetRequiredService<IOutputManager>())),
+            viewModel);
+        CodeOutputView view = new CodeOutputView(viewModel, members);
+        ICodeOutputTabHost host = view;
+        host.CodeOutputProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code\\" };
+        host.CodeOutputElementSettings = new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateManually };
+        using HeadlessWindowDriver driver = new HeadlessWindowDriver(view, 900, 700, "CodeOutputTabTests");
+        driver.Layout();
+
+        driver.Click(view.AllInProjectToggle);
+        driver.Click(view.AllInProjectToggle);
+        view.AllInProjectToggle.IsChecked.ShouldBe(true);
+        view.SelectedOnlyToggle.IsChecked.ShouldBe(false);
+        viewModel.WhichElementsToGenerate.ShouldBe(WhichElementsToGenerate.AllInProject);
+        ToolTip.GetTip(view.GenerateButton).ShouldBe("Generate code for every element in the project");
+
+        driver.Click(view.SelectedOnlyToggle);
+        driver.Click(view.SelectedOnlyToggle);
+        view.SelectedOnlyToggle.IsChecked.ShouldBe(true);
+        view.AllInProjectToggle.IsChecked.ShouldBe(false);
+        viewModel.WhichElementsToGenerate.ShouldBe(WhichElementsToGenerate.SelectedOnly);
+        ToolTip.GetTip(view.GenerateButton).ShouldBe("Generate code for the selected element");
+
+        driver.Click(view.SelectedObjectToggle);
+        driver.Click(view.SelectedObjectToggle);
+        view.SelectedObjectToggle.IsChecked.ShouldBe(true);
+        viewModel.WhatToView.ShouldBe(WhatToView.SelectedElement);
     }
 }

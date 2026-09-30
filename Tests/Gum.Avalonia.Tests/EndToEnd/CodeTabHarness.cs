@@ -185,7 +185,7 @@ internal sealed class CodeTabHarness : IDisposable
         PickComboItem("Generation Behavior", "GenerateManually");
     }
 
-    /// <summary>Clicks a toggle or button of the tab by its text ("This", "All", "Object", "State", "Manual", "Auto").</summary>
+    /// <summary>Clicks a toggle or button of the tab by its text ("Selected", "All", "Object", "State", "Manual", "Auto").</summary>
     public void ClickButton(string text)
     {
         _driver.Layout();

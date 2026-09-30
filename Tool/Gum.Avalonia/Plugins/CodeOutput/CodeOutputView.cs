@@ -39,6 +39,9 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
     private readonly DataUiGrid _grid;
     private readonly TextBox _code;
     private readonly Button _generate;
+    private readonly ToggleButton _selectedObjectToggle;
+    private readonly ToggleButton _selectedOnlyToggle;
+    private readonly ToggleButton _allInProjectToggle;
 
     /// <summary>Builds the view over the Code tab's view model and settings members.</summary>
     public CodeOutputView(CodeWindowViewModel viewModel, CodeOutputSettingsMembers settingsMembers)
@@ -49,7 +52,8 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         Grid previewHeader = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(4, 2) };
         previewHeader.Children.Add(new TextBlock { Text = "Preview", VerticalAlignment = VerticalAlignment.Center });
         StackPanel previewChoice = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
-        previewChoice.Children.Add(CreateToggle("Object", "Selected Object", nameof(CodeWindowViewModel.IsSelectedObjectSelected)));
+        _selectedObjectToggle = CreateToggle("Object", "Selected Object", nameof(CodeWindowViewModel.IsSelectedObjectSelected));
+        previewChoice.Children.Add(_selectedObjectToggle);
         previewChoice.Children.Add(CreateToggle("State", "Selected State", nameof(CodeWindowViewModel.IsSelectedStateSelected)));
         Grid.SetColumn(previewChoice, 1);
         previewHeader.Children.Add(previewChoice);
@@ -75,11 +79,14 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         settingsTitle.Bind(TextBlock.TextProperty, new Binding(nameof(CodeWindowViewModel.NeedsSetup)) { Converter = SetupTitleConverter });
 
         _generate = new Button { Content = "Generate", Padding = new Thickness(4, 1), Margin = new Thickness(0, 0, 8, 0) };
+        _generate.Bind(ToolTip.TipProperty, new Binding(nameof(CodeWindowViewModel.GenerateToolTip)));
         _generate.Click += (_, _) => GenerateCodeClicked?.Invoke(this, EventArgs.Empty);
         StackPanel generatePanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
         generatePanel.Children.Add(_generate);
-        generatePanel.Children.Add(CreateToggle("This", "This element only", nameof(CodeWindowViewModel.IsSelectedOnlyGenerating)));
-        generatePanel.Children.Add(CreateToggle("All", "All elements in project", nameof(CodeWindowViewModel.IsAllInProjectGenerating)));
+        _selectedOnlyToggle = CreateToggle("Selected", "Generate only the selected element", nameof(CodeWindowViewModel.IsSelectedOnlyGenerating));
+        _allInProjectToggle = CreateToggle("All", "Generate every element in the project", nameof(CodeWindowViewModel.IsAllInProjectGenerating));
+        generatePanel.Children.Add(_selectedOnlyToggle);
+        generatePanel.Children.Add(_allInProjectToggle);
         generatePanel.Bind(IsVisibleProperty, new MultiBinding
         {
             Converter = BoolConverters.And,
@@ -201,14 +208,40 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
     /// <summary>The Generate button, for tests.</summary>
     internal Button GenerateButton => _generate;
 
+    /// <summary>The preview's Object choice, for tests.</summary>
+    internal ToggleButton SelectedObjectToggle => _selectedObjectToggle;
+
+    /// <summary>The Generate scope's selected-element choice, for tests.</summary>
+    internal ToggleButton SelectedOnlyToggle => _selectedOnlyToggle;
+
+    /// <summary>The Generate scope's all-elements choice, for tests.</summary>
+    internal ToggleButton AllInProjectToggle => _allInProjectToggle;
+
     private void RebuildSettings() => _grid.SetCategories(_settingsMembers.BuildCategories());
 
     private static ToggleButton CreateToggle(string text, string tip, string property)
     {
-        ToggleButton toggle = new ToggleButton { Content = text, Padding = new Thickness(6, 1) };
+        ToggleButton toggle = new ChoiceToggleButton { Content = text, Padding = new Thickness(6, 1) };
         ToolTip.SetTip(toggle, tip);
         toggle.Bind(ToggleButton.IsCheckedProperty, new Binding(property) { Mode = BindingMode.TwoWay });
         return toggle;
+    }
+}
+
+/// <summary>
+/// A toggle in a group where exactly one option is always selected: clicking it selects it, and
+/// clicking it again leaves it selected. Styled as a <see cref="ToggleButton"/>.
+/// </summary>
+internal sealed class ChoiceToggleButton : ToggleButton
+{
+    protected override Type StyleKeyOverride => typeof(ToggleButton);
+
+    protected override void Toggle()
+    {
+        if (IsChecked != true)
+        {
+            SetCurrentValue(IsCheckedProperty, true);
+        }
     }
 }
 

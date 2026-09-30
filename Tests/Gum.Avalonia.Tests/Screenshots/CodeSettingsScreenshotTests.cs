@@ -24,5 +24,10 @@ public class CodeSettingsScreenshotTests
         code.Select(card);
         code.SetUpManualGeneration();
         PrScreenshot.SaveWindow(code.Input.Window, "code-settings");
+
+        // Clicking the selected scope choice again must leave it selected (#5479).
+        code.ClickButton("All");
+        code.ClickButton("All");
+        PrScreenshot.SaveWindow(code.Input.Window, "code-scope-all-clicked-twice");
     });
 }
