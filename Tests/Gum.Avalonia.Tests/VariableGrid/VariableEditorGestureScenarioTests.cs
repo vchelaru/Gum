@@ -52,6 +52,24 @@ public class VariableEditorGestureScenarioTests
     }
 
     [AvaloniaFact]
+    public void Slider_LeftClickOnTheTrack_CommitsTheClickedValue()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave icon = grid.Project.AddInstance(button, "Icon", "Sprite");
+        grid.Select(icon);
+        Slider alpha = AlphaSlider(grid);
+        Point center = grid.Input.CenterOf(alpha);
+
+        grid.Input.ClickAt(center);
+        grid.Settle();
+
+        object? committed = VariableGridHarness.StoredValue(grid.SelectedState.SelectedElement!, "Icon.Alpha");
+        committed.ShouldNotBeNull();
+        committed.ShouldNotBe(255);
+    }
+
+    [AvaloniaFact]
     public void Slider_LosingThePointerCaptureMidThumbDrag_CommitsTheDraggedValue()
     {
         using VariableGridHarness grid = new VariableGridHarness();
