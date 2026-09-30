@@ -293,7 +293,7 @@ public class CanvasHostTests
     // A key released while the canvas lacks focus, or while another app is active, never reaches
     // it, so held keys (Space for panning, Cmd for the arrow keys) are forgotten then (#5540).
     [AvaloniaFact]
-    public void InputAdapter_ForgetsHeldKeys_WhenTheControlLosesFocus()
+    public void InputAdapter_ForgetsHeldKeys_WhenTheControlLosesFocusOrTheWindowDeactivates()
     {
         global::Avalonia.Controls.Border control = new global::Avalonia.Controls.Border { Width = 100, Height = 80, Focusable = true };
         global::Avalonia.Controls.Button other = new global::Avalonia.Controls.Button { Content = "other" };
@@ -303,11 +303,12 @@ public class CanvasHostTests
             Height = 300,
             Content = new global::Avalonia.Controls.StackPanel { Children = { control, other } },
         };
-        window.Show();
-        window.UpdateLayout();
+        // Created before the control is in a window, as the canvases create theirs.
         AvaloniaInputHostAdapter adapter = new AvaloniaInputHostAdapter(control);
         int lostCount = 0;
         adapter.KeyboardInputLost += () => lostCount++;
+        window.Show();
+        window.UpdateLayout();
 
         control.Focus();
         window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, null);
@@ -316,8 +317,14 @@ public class CanvasHostTests
 
         adapter.GetKeyboardState().GetPressedKeys().ShouldBeEmpty();
         lostCount.ShouldBe(1);
-        // Window deactivation takes the same path, but a headless window cannot be deactivated
-        // while keeping its focus, so that subscription is a manual check.
+
+        // The control no longer has focus, so only the window's deactivation (which a headless
+        // window raises when hidden) can count here.
+        window.Activate();
+        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        window.Hide();
+        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        lostCount.ShouldBe(2, "the window was deactivated");
         window.Close();
     }
 

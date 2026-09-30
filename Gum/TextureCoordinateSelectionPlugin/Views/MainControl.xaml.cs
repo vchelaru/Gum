@@ -29,7 +29,6 @@ namespace TextureCoordinateSelectionPlugin.Views
             HorizontalScrollBar = new WpfCameraScrollBar(HorizontalScrollBarElement);
             InnerControl.KeyDown += HandleInnerKeyDown;
             InnerControl.KeyUp += (_, e) => KeyUp?.Invoke(e.ToGumKeyEventArgs());
-            InnerControl.LostKeyboardFocus += (_, _) => KeyboardFocusLost?.Invoke();
             InnerControl.MouseDown += (_, e) => MouseDown?.Invoke(e.ToGumMouseEventArgs(InnerControl));
             InnerControl.MouseMove += (_, e) => MouseMove?.Invoke(e.ToGumMouseEventArgs(InnerControl));
             InnerControl.MouseUp += (_, e) => MouseUp?.Invoke(e.ToGumMouseEventArgs(InnerControl));
@@ -55,7 +54,12 @@ namespace TextureCoordinateSelectionPlugin.Views
         public new event Action<GumKeyEventArgs>? KeyUp;
 
         /// <inheritdoc/>
-        public event Action? KeyboardFocusLost;
+        /// <remarks>Never raised: the frozen WPF head keeps its old focus behavior.</remarks>
+        public event Action? KeyboardFocusLost
+        {
+            add { }
+            remove { }
+        }
 
         /// <inheritdoc/>
         public new event Action<GumMouseEventArgs>? MouseDown;
