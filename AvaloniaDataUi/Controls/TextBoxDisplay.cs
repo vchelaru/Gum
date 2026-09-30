@@ -28,7 +28,6 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     private readonly TextBlock _hint;
     private ApplyValueResult? _lastApplyValueResult;
     private bool _isInSet;
-    private bool _isMultiline;
     private Point? _dragLastPosition;
     private Point? _dragPressedPosition;
 
@@ -141,10 +140,6 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         _logic.InstanceMember = InstanceMember;
         _lastApplyValueResult = null;
         _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
-        if (!_isMultiline)
-        {
-            ResetToSingleLine();
-        }
         _textBox.ClearValue(TemplatedControl.BackgroundProperty);
     }
 
@@ -213,30 +208,6 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         _logic.HasUserChangedAnything = false;
         _logic.TextAtStartOfEditing = _textBox.Text ?? string.Empty;
         _textBox.AcceptText();
-    }
-
-    /// <summary>Makes the field a tall, wrapping, multi-line editor where Enter inserts a line.</summary>
-    public void MakeMultiline()
-    {
-        _isMultiline = true;
-        _label.VerticalAlignment = VerticalAlignment.Top;
-        _textBox.TextWrapping = global::Avalonia.Media.TextWrapping.Wrap;
-        _textBox.AcceptsReturn = true;
-        _textBox.VerticalAlignment = VerticalAlignment.Top;
-        _textBox.VerticalContentAlignment = VerticalAlignment.Top;
-        _textBox.Height = 65;
-        _logic.HandlesEnter = false;
-    }
-
-    private void ResetToSingleLine()
-    {
-        _label.VerticalAlignment = VerticalAlignment.Center;
-        _textBox.TextWrapping = global::Avalonia.Media.TextWrapping.NoWrap;
-        _textBox.AcceptsReturn = false;
-        _textBox.VerticalAlignment = VerticalAlignment.Center;
-        _textBox.VerticalContentAlignment = VerticalAlignment.Center;
-        _textBox.Height = double.NaN;
-        _logic.HandlesEnter = true;
     }
 
     private bool IsDisplayedTypeNullable()
@@ -402,14 +373,4 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     }
 
     #endregion
-}
-
-/// <summary>A <see cref="TextBoxDisplay"/> that is always multi-line.</summary>
-public class MultiLineTextBoxDisplay : TextBoxDisplay
-{
-    /// <summary>Builds the displayer.</summary>
-    public MultiLineTextBoxDisplay()
-    {
-        MakeMultiline();
-    }
 }

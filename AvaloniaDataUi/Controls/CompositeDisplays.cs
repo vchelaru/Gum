@@ -481,161 +481,35 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
 }
 
 /// <summary>
-/// A list of strings edited as multi-line text, one entry per line. Enter inserts a line; edits apply
-/// on focus loss, Ctrl+Enter, or the Apply button, which shows only while edits are unapplied. Escape
-/// reverts unapplied edits.
+/// A list of strings edited as multi-line text, one entry per line, with the apply behavior of
+/// <see cref="MultiLineTextBoxDisplay"/>.
 /// </summary>
-public class StringListTextBoxDisplay : DataUiDisplayBase
+public class StringListTextBoxDisplay : MultiLineTextBoxDisplay
 {
     private readonly StringListLogic _listLogic;
-    private readonly TextBlock _label;
-    private readonly TextBox _textBox;
-    private readonly TextBlock _hint;
-    private string _appliedText;
 
     /// <summary>Builds the displayer.</summary>
     public StringListTextBoxDisplay()
     {
         _listLogic = new StringListLogic();
-        _appliedText = string.Empty;
-        _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4, 4, 4, 0), TextWrapping = TextWrapping.Wrap };
-        _textBox = new TextBox
-        {
-            MinWidth = 60,
-            Height = 150,
-            AcceptsReturn = true,
-            TextWrapping = TextWrapping.NoWrap,
-            VerticalContentAlignment = VerticalAlignment.Top,
-        };
-        _textBox.PropertyChanged += (_, e) =>
-        {
-            if (e.Property == TextBox.TextProperty)
-            {
-                RefreshApplyButton();
-            }
-        };
-        _textBox.LostFocus += (_, _) => Apply();
-        // Tunnel so Ctrl+Enter is handled before the text box inserts a line.
-        _textBox.AddHandler(KeyDownEvent, HandleTextBoxKeyDown, RoutingStrategies.Tunnel);
-
-        // Not focusable, so clicking it leaves the caret in the text box and Tab skips it.
-        ApplyButton = new Button
-        {
-            Content = "Apply",
-            Focusable = false,
-            IsTabStop = false,
-            IsVisible = false,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 4, 4),
-        };
-        ToolTip.SetTip(ApplyButton, "Apply (Ctrl+Enter)");
-        ApplyButton.Click += (_, _) => Apply();
-
-        _hint = CreateHintTextBlock();
-
-        // The button overlays the text box so showing it doesn't push the rows below.
-        Grid editorArea = new Grid();
-        editorArea.Children.Add(_textBox);
-        editorArea.Children.Add(ApplyButton);
-
-        StackPanel panel = new StackPanel();
-        panel.Children.Add(_label);
-        panel.Children.Add(editorArea);
-        panel.Children.Add(_hint);
-        Content = panel;
+        EditorTextBox.Height = 150;
+        // A wrapped line would read as two entries.
+        EditorTextBox.TextWrapping = TextWrapping.NoWrap;
+        UseAboveBelowLayout();
     }
-
-    /// <summary>Applies unapplied edits; visible only while there are some.</summary>
-    public Button ApplyButton { get; }
-
-    /// <summary>The text editor; the tool listens to its keys for go-to-definition.</summary>
-    public TextBox EditorTextBox => _textBox;
 
     /// <summary>The text of the line under the caret.</summary>
-    public string GetCurrentLineText() => _listLogic.GetLineAt(_textBox.Text, _textBox.CaretIndex);
+    public string GetCurrentLineText() => _listLogic.GetLineAt(EditorTextBox.Text, EditorTextBox.CaretIndex);
 
     /// <inheritdoc/>
-    protected override void OnInstanceMemberChanged()
-    {
-        _textBox.ClearValue(TemplatedControl.BackgroundProperty);
-    }
+    protected override bool CanEdit(Type? propertyType) => propertyType == typeof(List<string>);
 
     /// <inheritdoc/>
-    public override void Refresh(bool forceRefreshEvenIfFocused = false)
-    {
-        if (InstanceMember == null)
-        {
-            return;
-        }
-
-        SuppressSettingProperty = true;
-        _label.Text = InstanceMember.DisplayName;
-        DataUiValueStateBrushes.ApplyBackground(_textBox, InstanceMember.ValueState);
-        RefreshHint(_hint);
-        TrySetValueOnUi(InstanceMember.Value);
-        RefreshIsEnabled();
-        SuppressSettingProperty = false;
-    }
+    protected override string ConvertToText(object? value) =>
+        value is List<string> lines ? _listLogic.JoinLines(lines) : string.Empty;
 
     /// <inheritdoc/>
-    public override ApplyValueResult TryGetValueOnUi(out object? result)
-    {
-        if (InstanceMember?.PropertyType == typeof(List<string>))
-        {
-            result = _listLogic.ParseLines(_textBox.Text);
-            return ApplyValueResult.Success;
-        }
-
-        result = null;
-        return ApplyValueResult.NotSupported;
-    }
-
-    /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object? value)
-    {
-        if (value is List<string> lines)
-        {
-            // Set the baseline first so the text change this raises doesn't read as an edit.
-            _appliedText = _listLogic.JoinLines(lines);
-            _textBox.Text = _appliedText;
-            RefreshApplyButton();
-        }
-        return ApplyValueResult.Success;
-    }
-
-    private void Apply()
-    {
-        // Compared against the applied text rather than tracked through TextChanged, so a
-        // refresh's programmatic text never reads as a user edit (which would override an
-        // inherited value).
-        if ((_textBox.Text ?? string.Empty) != _appliedText)
-        {
-            this.TrySetValueOnInstance();
-            // The commit may rewrite the lines (reference expansion), which refreshes the text.
-            _appliedText = _textBox.Text ?? string.Empty;
-        }
-        RefreshApplyButton();
-    }
-
-    private void HandleTextBoxKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            Apply();
-            e.Handled = true;
-        }
-        else if (e.Key == Key.Escape && (_textBox.Text ?? string.Empty) != _appliedText)
-        {
-            _textBox.Text = _appliedText;
-            e.Handled = true;
-        }
-    }
-
-    private void RefreshApplyButton()
-    {
-        ApplyButton.IsVisible = (_textBox.Text ?? string.Empty) != _appliedText;
-    }
+    protected override object? ConvertFromText(string text) => _listLogic.ParseLines(text);
 }
 
 /// <summary>

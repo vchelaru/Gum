@@ -139,16 +139,25 @@ public class SimpleEditorTests
     }
 
     [AvaloniaFact]
-    public void MultiLineTextBoxDisplay_KeepsLineBreaks()
+    public void MultiLineTextBoxDisplay_EnterAddsALine_AndTheApplyButtonOrCtrlEnterCommitsWithLineBreaks()
     {
-        EditorFixture fixture = new EditorFixture();
+        EditorFixture fixture = new EditorFixture { Text = "start" };
         MultiLineTextBoxDisplay display = new MultiLineTextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Text)) };
+        display.EditorTextBox.AcceptsReturn.ShouldBeTrue();
+        display.ApplyButton.IsVisible.ShouldBeFalse();
 
-        display.TextBox.AcceptsReturn.ShouldBeTrue();
-        display.TextBox.Text = "one\ntwo";
-        display.TrySetValueOnInstance();
+        display.EditorTextBox.Text = "one\ntwo";
+        display.EditorTextBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        fixture.Text.ShouldBe("start");
+        display.ApplyButton.IsVisible.ShouldBeTrue();
 
+        display.ApplyButton.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
         fixture.Text.ShouldBe("one\ntwo");
+        display.ApplyButton.IsVisible.ShouldBeFalse();
+
+        display.EditorTextBox.Text = "three";
+        display.EditorTextBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, KeyModifiers = KeyModifiers.Control });
+        fixture.Text.ShouldBe("three");
     }
 
     [AvaloniaFact]
