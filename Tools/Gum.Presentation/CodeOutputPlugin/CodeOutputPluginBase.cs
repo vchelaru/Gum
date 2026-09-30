@@ -227,6 +227,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         this.VariableAdd += HandleVariableAdd;
         this.VariableSet += HandleVariableSet;
+        this.VariableSetThroughReference += HandleVariableSetThroughReference;
         this.VariableDelete += HandleVariableDelete;
         this.VariableExcluded += HandleVariableExcluded;
         this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
@@ -330,7 +331,17 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        _controller?.HandleVariableSet(element, codeOutputProjectSettings, isFullCommit);
+        HandleRefreshAndExport(isFullCommit);
+    }
+
+    private void HandleVariableSetThroughReference(ElementSave? element, InstanceSave? instance, string variableName,
+        object? oldValue, bool isFullCommit)
+    {
+        _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+
+        _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+
+        _controller?.HandleVariableSetThroughReference(element, codeOutputProjectSettings, isFullCommit);
     }
     private void HandleVariableAdd(ElementSave? elementSave, string variableName)
     {

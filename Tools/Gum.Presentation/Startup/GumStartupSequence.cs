@@ -77,7 +77,7 @@ public class GumStartupSequence
         StandardElementsManager.Self.CustomGetDefaultState = pluginManager.GetDefaultStateFor;
         StartupTiming.Mark("StandardElementsManager.Initialize");
 
-        ElementSaveExtensions.VariableChangedThroughReference += pluginManager.VariableSet;
+        ElementSaveExtensions.VariableChangedThroughReference += pluginManager.VariableSetThroughReference;
 
         _services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
         StartupTiming.Mark("StandardElementsManagerGumTool.Initialize");

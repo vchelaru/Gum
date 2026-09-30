@@ -221,12 +221,12 @@ public class CodeOutputTabControllerTests : BaseTestClass
     }
 
     /// <summary>
-    /// A Styles edit reaches each referencing element through VariableSet, once per reference line.
+    /// A Styles edit reaches each referencing element once per reference line.
     /// The referencing element's code is generated once, after the commit, with its own settings,
     /// and the selected Styles element is not regenerated (#5541).
     /// </summary>
     [Fact]
-    public void HandleVariableSet_OnAnElementThatIsNotSelected_GeneratesThatElementOnceWithItsOwnSettings()
+    public void HandleVariableSetThroughReference_OnAnElementThatIsNotSelected_GeneratesThatElementOnceWithItsOwnSettings()
     {
         GumProjectSave project = new();
         ScreenSave styles = CreateScreenWithDefaultState(project, "Styles");
@@ -249,12 +249,38 @@ public class CodeOutputTabControllerTests : BaseTestClass
         };
         CodeOutputTabController controller = CreateController();
 
-        controller.HandleVariableSet(referencing, codeOutputProjectSettings, isFullCommit: true);
-        controller.HandleVariableSet(referencing, codeOutputProjectSettings, isFullCommit: true);
+        controller.HandleVariableSetThroughReference(referencing, codeOutputProjectSettings, isFullCommit: true);
+        controller.HandleVariableSetThroughReference(referencing, codeOutputProjectSettings, isFullCommit: true);
         _posted.ShouldHaveSingleItem().Invoke();
 
         File.Exists(Path.Combine(_tempDirectory, "Screens", "ReferencingRuntime.Generated.cs")).ShouldBeTrue();
         File.Exists(Path.Combine(_tempDirectory, "Screens", "StylesRuntime.Generated.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleVariableSetThroughReference_IntermediateCommitOnAnElementThatIsNotSelected_QueuesNothing()
+    {
+        GumProjectSave project = new();
+        ScreenSave styles = CreateScreenWithDefaultState(project, "Styles");
+        ScreenSave referencing = CreateScreenWithDefaultState(project, "Referencing");
+        ObjectFinder.Self.GumProjectSave = project;
+        _projectState.Setup(p => p.GumProjectSave).Returns(project);
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Screens"));
+        _elementSettingsManager.WriteSettingsForElement(referencing,
+            new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateAutomaticallyOnPropertyChange });
+        _selectedState.Setup(s => s.SelectedElement).Returns(styles);
+        CodeOutputProjectSettings codeOutputProjectSettings = new()
+        {
+            CodeProjectRoot = _tempDirectory + Path.DirectorySeparatorChar,
+            RootNamespace = "MyGame",
+            OutputLibrary = OutputLibrary.MonoGame
+        };
+        CodeOutputTabController controller = CreateController();
+
+        controller.HandleVariableSetThroughReference(referencing, codeOutputProjectSettings, isFullCommit: false);
+
+        _posted.ShouldBeEmpty();
+        File.Exists(Path.Combine(_tempDirectory, "Screens", "ReferencingRuntime.Generated.cs")).ShouldBeFalse();
     }
 
     [Fact]

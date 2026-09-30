@@ -208,12 +208,12 @@ public class CodeOutputTabController
     }
 
     /// <summary>
-    /// Reacts to a variable set on <paramref name="element"/>. The selected element refreshes and
-    /// exports as usual. Any other element (a Styles edit propagated through variable references
-    /// raises one notification per reference line) is queued and generated once, with its own
+    /// Reacts to a variable that a variable reference re-applied on <paramref name="element"/>. The
+    /// selected element refreshes and exports as usual. Any other element (a Styles edit reaching the
+    /// elements that reference it, once per reference line) is queued and generated once, with its own
     /// settings, after the current commit finishes (issue #5541).
     /// </summary>
-    public void HandleVariableSet(ElementSave? element, CodeOutputProjectSettings codeOutputProjectSettings, bool isFullCommit)
+    public void HandleVariableSetThroughReference(ElementSave? element, CodeOutputProjectSettings codeOutputProjectSettings, bool isFullCommit)
     {
         if (element == null || element == _selectedState.SelectedElement)
         {

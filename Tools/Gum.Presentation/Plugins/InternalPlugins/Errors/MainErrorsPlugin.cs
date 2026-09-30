@@ -98,6 +98,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
         this.InstanceAdd += HandleInstanceAdd;
         this.InstanceDelete += HandleInstanceDelete;
         this.VariableSet += HandleVariableSet;
+        this.VariableSetThroughReference += HandleVariableSetThroughReference;
         this.VariableRemovedFromCategory += HandleVariableRemovedFromCategory;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
 
@@ -162,6 +163,17 @@ public class MainErrorsPlugin : CorePriorityPlugin
     {
         // Checking an element walks its file references and reads the disk, so it waits for a
         // committed value rather than running on every tick of a drag (issue #4946).
+        if (!isFullCommit)
+        {
+            return;
+        }
+
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleVariableSetThroughReference(ElementSave? element, InstanceSave? instance, string variableName,
+        object? oldValue, bool isFullCommit)
+    {
         if (!isFullCommit)
         {
             return;

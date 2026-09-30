@@ -83,6 +83,12 @@ public interface IPluginManager
     /// to a committed value.</param>
     void VariableSet(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
         bool isFullCommit = true);
+    /// <summary>
+    /// Notifies plugins that a variable changed because a variable reference re-applied it.
+    /// Arguments as <see cref="VariableSet"/>.
+    /// </summary>
+    void VariableSetThroughReference(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName,
+        object? oldValue, bool isFullCommit = true);
     void VariableSelected(IStateContainer? container, VariableSave? variable);
     void VariableRemovedFromCategory(string variableName, StateSaveCategory category);
     void InstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName);

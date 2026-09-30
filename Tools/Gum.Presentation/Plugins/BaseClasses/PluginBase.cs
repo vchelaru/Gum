@@ -237,6 +237,14 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave?, InstanceSave?, string, object?, bool>? VariableSet;
 
     /// <summary>
+    /// Raised instead of <see cref="VariableSet"/> when a variable changed because a variable reference
+    /// re-applied it, for plugins that subscribe to it. A commit raises one per reference line, often on
+    /// an element other than the selected one. Plugins that don't subscribe get <see cref="VariableSet"/>.
+    /// Same arguments as <see cref="VariableSet"/>.
+    /// </summary>
+    public event Action<ElementSave?, InstanceSave?, string, object?, bool>? VariableSetThroughReference;
+
+    /// <summary>
     /// Event raised after a variable has been set - this can be used to perform action after most
     /// plugins have responded to VariableSet, such as refreshing views.
     /// [ElementSave] - current ElementSave (like the Screen)
@@ -532,6 +540,23 @@ public abstract class PluginBase : IPlugin
     public void CallVariableSet(ElementSave? parentElement, InstanceSave? instance, string changedMember, object? oldValue,
         bool isFullCommit = true) =>
         VariableSet?.Invoke(parentElement, instance, changedMember, oldValue, isFullCommit);
+
+    /// <summary>
+    /// Raises <see cref="VariableSetThroughReference"/> if the plugin subscribed to it, otherwise
+    /// <see cref="VariableSet"/>. Called by <see cref="PluginManager.VariableSetThroughReference"/>.
+    /// </summary>
+    public void CallVariableSetThroughReference(ElementSave? parentElement, InstanceSave? instance, string changedMember,
+        object? oldValue, bool isFullCommit = true)
+    {
+        if (VariableSetThroughReference != null)
+        {
+            VariableSetThroughReference.Invoke(parentElement, instance, changedMember, oldValue, isFullCommit);
+        }
+        else
+        {
+            VariableSet?.Invoke(parentElement, instance, changedMember, oldValue, isFullCommit);
+        }
+    }
 
     public void CallVariableSetLate(ElementSave? parentElement, InstanceSave? instance, string changedMember, object? oldValue,
         bool isFullCommit = true) =>
