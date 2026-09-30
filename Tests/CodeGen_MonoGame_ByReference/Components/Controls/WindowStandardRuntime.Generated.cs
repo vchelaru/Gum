@@ -16,7 +16,7 @@ partial class WindowStandardRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/WindowStandard", typeof(WindowStandardRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Window)] = typeof(WindowStandardRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Window)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new WindowStandardRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Window FormsControl => FormsControlAsObject as global::Gum.Forms.Window;
     public NineSliceRuntime Background { get; protected set; }

@@ -16,7 +16,7 @@ partial class ListBoxRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBox", typeof(ListBoxRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.ListBox)] = typeof(ListBoxRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ListBox)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new ListBoxRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.ListBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ListBox;
     public enum ListBoxCategory
