@@ -17,7 +17,7 @@ partial class ComboBoxRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ComboBox", typeof(ComboBoxRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.ComboBox)] = typeof(ComboBoxRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ComboBox)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new ComboBoxRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.ComboBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ComboBox;
     public enum ComboBoxCategory

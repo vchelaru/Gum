@@ -16,7 +16,7 @@ partial class ScrollBarRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ScrollBar", typeof(ScrollBarRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.ScrollBar)] = typeof(ScrollBarRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ScrollBar)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new ScrollBarRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.ScrollBar FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ScrollBar;
     public enum ScrollBarCategory

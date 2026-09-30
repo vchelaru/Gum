@@ -15,7 +15,7 @@ partial class SplitterStandardRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/SplitterStandard", typeof(SplitterStandardRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Splitter)] = typeof(SplitterStandardRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Splitter)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new SplitterStandardRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.Splitter FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Splitter;
     public NineSliceRuntime NineSliceInstance { get; protected set; }

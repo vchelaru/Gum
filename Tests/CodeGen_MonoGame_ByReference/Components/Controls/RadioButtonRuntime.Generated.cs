@@ -16,7 +16,7 @@ partial class RadioButtonRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/RadioButton", typeof(RadioButtonRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.RadioButton)] = typeof(RadioButtonRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.RadioButton)] = new global::Gum.Forms.VisualTemplate((vm, createForms) => new RadioButtonRuntime(fullInstantiation: true, tryCreateFormsObject: createForms));
     }
     public global::Gum.Forms.Controls.RadioButton FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.RadioButton;
     public enum RadioButtonCategory
