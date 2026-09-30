@@ -191,6 +191,9 @@ namespace RenderingLibrary
                 "ColoredCircle",
                 () => new global::SkiaGum.GueDeriving.ColoredCircleRuntime());
 
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "ColoredRectangle",
+                () => new global::SkiaGum.GueDeriving.ColoredRectangleRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Container",
@@ -204,9 +207,10 @@ namespace RenderingLibrary
                 "Line",
                 () => new global::SkiaGum.GueDeriving.LineRuntime());
 
-            //ElementSaveExtensions.RegisterGueInstantiation(
-            //    "NineSlice",
-            //    () => new NineSliceRuntime());
+            // NineSliceRuntime has no SkiaGum.GueDeriving shim, so it stays the canonical base type.
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "NineSlice",
+                () => new NineSliceRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Polygon",
