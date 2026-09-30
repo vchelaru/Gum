@@ -111,9 +111,24 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
 
         settings.SetDefaults();
 
-        string? projectFilePath = explicitCsprojPath ?? RecognizedProjectFileExtensions
-            .SelectMany(extension => Directory.EnumerateFiles(projectDirectory, $"*.{extension}", SearchOption.TopDirectoryOnly))
-            .FirstOrDefault();
+        // A folder can hold several .csproj files (Unity writes one per assembly), so pick one by the
+        // same rule detection uses before falling back to the other project types.
+        string? projectFilePath = explicitCsprojPath
+            ?? CodeProjectCsprojLocator.FindCsproj(projectDirectory)
+            ?? RecognizedProjectFileExtensions
+                .SelectMany(extension => Directory.EnumerateFiles(projectDirectory, $"*.{extension}", SearchOption.TopDirectoryOnly))
+                .FirstOrDefault();
+
+        if (explicitCsprojPath != null
+            && string.Equals(Path.GetExtension(explicitCsprojPath), ".csproj", StringComparison.OrdinalIgnoreCase))
+        {
+            settings.CsprojPath = Path.GetRelativePath(gumxDirectory, explicitCsprojPath).Replace('\\', '/');
+        }
+
+        if (projectFilePath != null && CodeProjectCsprojLocator.IsUnityGameProject(projectFilePath))
+        {
+            settings.GeneratedCodeFolder = "Assets/";
+        }
 
         // Shared projects (.shproj) don't carry PackageReference/RootNamespace MSBuild metadata like a
         // .csproj does, so leave OutputLibrary/RootNamespace at their defaults for the user to fill in

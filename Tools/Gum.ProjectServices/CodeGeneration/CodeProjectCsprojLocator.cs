@@ -24,19 +24,48 @@ public static class CodeProjectCsprojLocator
             return null;
         }
 
-        string codeProjectRoot = settings.CodeProjectRoot;
-        if (FileManager.IsRelative(codeProjectRoot))
+        return ResolveAgainstProjectDirectory(settings.CodeProjectRoot, projectDirectory);
+    }
+
+    /// <summary>
+    /// Returns the absolute path of <see cref="CodeOutputProjectSettings.CsprojPath"/>, whether or not the
+    /// file exists, or null when it or the project directory isn't set.
+    /// </summary>
+    public static string? ResolveConfiguredCsproj(CodeOutputProjectSettings settings, string? projectDirectory)
+    {
+        if (string.IsNullOrEmpty(projectDirectory) || string.IsNullOrEmpty(settings.CsprojPath))
         {
-            // Combine through the Path APIs rather than string concatenation: projectDirectory
-            // may or may not end in a separator, and a raw concat like "dir" + "./" produces
-            // "dir./", a nonexistent directory on macOS/Linux. A root saved on Windows uses
-            // backslashes, which are file-name characters on macOS/Linux, so they become the
-            // native separator first.
-            codeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory,
-                codeProjectRoot.Replace('\\', Path.DirectorySeparatorChar)));
+            return null;
         }
 
-        return codeProjectRoot;
+        return ResolveAgainstProjectDirectory(settings.CsprojPath, projectDirectory);
+    }
+
+    private static string ResolveAgainstProjectDirectory(string path, string projectDirectory)
+    {
+        if (!FileManager.IsRelative(path))
+        {
+            return path;
+        }
+
+        // Combine through the Path APIs rather than string concatenation: projectDirectory
+        // may or may not end in a separator, and a raw concat like "dir" + "./" produces
+        // "dir./", a nonexistent directory on macOS/Linux. A path saved on Windows uses
+        // backslashes, which are file-name characters on macOS/Linux, so they become the
+        // native separator first.
+        return Path.GetFullPath(Path.Combine(projectDirectory, path.Replace('\\', Path.DirectorySeparatorChar)));
+    }
+
+    /// <summary>
+    /// Whether <paramref name="csprojPath"/> is Unity's game project: Assembly-CSharp.csproj next to an
+    /// Assets folder. Unity compiles only code under Assets.
+    /// </summary>
+    public static bool IsUnityGameProject(string csprojPath)
+    {
+        string? directory = Path.GetDirectoryName(csprojPath);
+        return directory != null
+            && string.Equals(Path.GetFileName(csprojPath), UnityGameProjectFileName, StringComparison.OrdinalIgnoreCase)
+            && Directory.Exists(Path.Combine(directory, "Assets"));
     }
 
     /// <summary>
@@ -62,10 +91,18 @@ public static class CodeProjectCsprojLocator
     }
 
     /// <summary>
-    /// Resolves the code project root and returns its .csproj, or null.
+    /// Returns the game .csproj for these settings, or null: <see cref="CodeOutputProjectSettings.CsprojPath"/>
+    /// when set (even if the file is missing, so a wrong path isn't swapped for another project), otherwise
+    /// the .csproj in the code project root.
     /// </summary>
     public static string? FindCsproj(CodeOutputProjectSettings settings, string? projectDirectory)
     {
+        string? configured = ResolveConfiguredCsproj(settings, projectDirectory);
+        if (configured != null)
+        {
+            return configured;
+        }
+
         string? codeProjectRoot = ResolveCodeProjectRoot(settings, projectDirectory);
         return codeProjectRoot == null ? null : FindCsproj(codeProjectRoot);
     }

@@ -809,6 +809,76 @@ $@"<Project ToolsVersion=""4.0"">
         Path.GetFileName(result).ShouldBe("MyGame.csproj");
     }
 
+    [Fact]
+    public void Detect_NoCsprojInCodeProjectRoot_DoesNotReadACsprojInAParentFolder()
+    {
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(Path.Combine(gameDir, "Assets"));
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"),
+@"<Project>
+  <ItemGroup>
+    <ProjectReference Include=""..\libs\SkiaGum\SkiaGum.csproj"" />
+  </ItemGroup>
+</Project>");
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "Assets/"
+        };
+
+        SyntaxVersionResult result = _sut.Detect(settings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+    }
+
+    [Fact]
+    public void Detect_CsprojPathSet_ReadsThatCsprojAheadOfTheRule()
+    {
+        string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "SkiaGum");
+        Directory.CreateDirectory(referencedProjectDir);
+        File.WriteAllText(Path.Combine(referencedProjectDir, "AssemblyAttributes.cs"),
+            "using Gum.DataTypes;\n\n[assembly: GumSyntaxVersion(Version = 3)]\n");
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        // The rule picks Assembly-CSharp.csproj, which has no Gum reference when the game code
+        // lives in an assembly definition.
+        File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"), "<Project></Project>");
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.Ui.csproj"),
+@"<Project>
+  <ItemGroup>
+    <ProjectReference Include=""..\libs\SkiaGum\SkiaGum.csproj"" />
+  </ItemGroup>
+</Project>");
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./",
+            CsprojPath = "MyGame.Ui.csproj"
+        };
+
+        SyntaxVersionResult result = _sut.Detect(settings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        result.Version.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Detect_CsprojPathSetToAMissingFile_FallsBackWithoutUsingAnotherCsproj()
+    {
+        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"), "<Project></Project>");
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./",
+            CsprojPath = "Missing.csproj"
+        };
+
+        SyntaxVersionResult result = _sut.Detect(settings, _tempDirectory);
+
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+        result.Description.ShouldContain("Missing.csproj");
+    }
+
     #endregion
 
     public void Dispose()

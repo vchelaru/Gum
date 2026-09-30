@@ -27,7 +27,7 @@ public static class CodegenInitCommand
 
         var csprojOption = new Option<string?>(
             "--csproj",
-            "Explicit path to the .csproj file. When omitted, the nearest .csproj above the .gumx file is used.");
+            "Explicit path to the game .csproj file, recorded in the settings so detection reads it. When omitted, the nearest .csproj above the .gumx file is used.");
 
         var command = new Command("codegen-init",
             "Auto-configure code generation settings by locating the nearest .csproj above the .gumx file.")
@@ -90,6 +90,14 @@ public static class CodegenInitCommand
 
         Console.WriteLine("Code generation settings initialized successfully.");
         Console.WriteLine($"  CodeProjectRoot : {result.Settings!.CodeProjectRoot}");
+        if (!string.IsNullOrEmpty(result.Settings.GeneratedCodeFolder))
+        {
+            Console.WriteLine($"  GeneratedCodeFolder : {result.Settings.GeneratedCodeFolder}");
+        }
+        if (!string.IsNullOrEmpty(result.Settings.CsprojPath))
+        {
+            Console.WriteLine($"  CsprojPath      : {result.Settings.CsprojPath}");
+        }
         Console.WriteLine($"  RootNamespace   : {result.Settings.RootNamespace}");
         Console.WriteLine($"  OutputLibrary   : {result.Settings.OutputLibrary}");
         Console.WriteLine($"  Settings saved to: {settingsFilePath}");
