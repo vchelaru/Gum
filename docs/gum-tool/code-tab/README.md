@@ -68,10 +68,10 @@ The location of the folder containing the .csproj file. This path is used to det
 
 Gum also reads the .csproj in this folder to detect which version of the Gum runtime your game references, so keep this pointed at the .csproj folder. To put generated code somewhere else, use Generated Code Folder.
 
-If this folder has no .csproj, Gum reads the .csproj in the nearest folder above it. If a folder has several, Gum reads `Assembly-CSharp.csproj` first, then the one with the shortest name. To use a different .csproj, set `CsprojPath` in `ProjectCodeSettings.codsj` to its path relative to the .gumx, for example `"CsprojPath": "../MyGame.Ui.csproj"`.
+If this folder has several, Gum reads `Assembly-CSharp.csproj` first, then the one with the shortest name. To use a different .csproj, set `CsprojPath` in `ProjectCodeSettings.codsj` to its path relative to the .gumx, for example `"CsprojPath": "../MyGame.Ui.csproj"`.
 
 {% hint style="info" %}
-Finding the .csproj in a parent folder and the `CsprojPath` setting are available in October 2026, or now if building Gum from source.
+The `CsprojPath` setting is available in October 2026, or now if building Gum from source.
 {% endhint %}
 
 ### Generated Code Folder

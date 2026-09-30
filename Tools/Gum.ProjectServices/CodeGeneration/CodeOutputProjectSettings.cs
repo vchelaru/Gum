@@ -72,9 +72,9 @@ using System.Linq;
 
     /// <summary>
     /// Optional path to the game .csproj, relative to the .gumx folder. Syntax version and C# version
-    /// detection read this .csproj when set. Empty (the default) finds one from
-    /// <see cref="CodeProjectRoot"/>: the nearest folder at or above it that has a .csproj, picking
-    /// Assembly-CSharp.csproj, then the shortest name, when there are several.
+    /// detection read this .csproj when set. Empty (the default) reads the .csproj in
+    /// <see cref="CodeProjectRoot"/>, picking Assembly-CSharp.csproj, then the shortest name, when there
+    /// are several.
     /// </summary>
     public string CsprojPath { get; set; } = string.Empty;
 

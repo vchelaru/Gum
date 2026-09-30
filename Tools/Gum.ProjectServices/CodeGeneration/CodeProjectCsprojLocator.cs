@@ -93,8 +93,7 @@ public static class CodeProjectCsprojLocator
     /// <summary>
     /// Returns the game .csproj for these settings, or null: <see cref="CodeOutputProjectSettings.CsprojPath"/>
     /// when set (even if the file is missing, so a wrong path isn't swapped for another project), otherwise
-    /// the .csproj in the nearest folder at or above the code project root that has one. Walking up lets
-    /// the code project root be a subfolder, like Unity's Assets folder below Assembly-CSharp.csproj.
+    /// the .csproj in the code project root.
     /// </summary>
     public static string? FindCsproj(CodeOutputProjectSettings settings, string? projectDirectory)
     {
@@ -104,17 +103,7 @@ public static class CodeProjectCsprojLocator
             return configured;
         }
 
-        string? directory = ResolveCodeProjectRoot(settings, projectDirectory);
-        while (directory != null)
-        {
-            string? csproj = FindCsproj(directory);
-            if (csproj != null)
-            {
-                return csproj;
-            }
-            directory = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(directory));
-        }
-
-        return null;
+        string? codeProjectRoot = ResolveCodeProjectRoot(settings, projectDirectory);
+        return codeProjectRoot == null ? null : FindCsproj(codeProjectRoot);
     }
 }

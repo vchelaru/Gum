@@ -810,12 +810,8 @@ $@"<Project ToolsVersion=""4.0"">
     }
 
     [Fact]
-    public void Detect_CodeProjectRootBelowTheCsproj_FindsTheCsprojInAParentFolder()
+    public void Detect_NoCsprojInCodeProjectRoot_DoesNotReadACsprojInAParentFolder()
     {
-        string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "SkiaGum");
-        Directory.CreateDirectory(referencedProjectDir);
-        File.WriteAllText(Path.Combine(referencedProjectDir, "AssemblyAttributes.cs"),
-            "using Gum.DataTypes;\n\n[assembly: GumSyntaxVersion(Version = 3)]\n");
         string gameDir = Path.Combine(_tempDirectory, "game");
         Directory.CreateDirectory(Path.Combine(gameDir, "Assets"));
         File.WriteAllText(Path.Combine(gameDir, "Assembly-CSharp.csproj"),
@@ -832,8 +828,7 @@ $@"<Project ToolsVersion=""4.0"">
 
         SyntaxVersionResult result = _sut.Detect(settings, gameDir);
 
-        result.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
-        result.Version.ShouldBe(3);
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
     }
 
     [Fact]

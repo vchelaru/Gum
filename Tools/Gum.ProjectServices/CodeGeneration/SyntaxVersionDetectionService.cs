@@ -108,7 +108,7 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         string? csprojPath = CodeProjectCsprojLocator.FindCsproj(settings, projectDirectory);
         if (csprojPath == null)
         {
-            return CreateFallback($"No .csproj found in {codeProjectRoot} or any folder above it.");
+            return CreateFallback($"No .csproj found in {codeProjectRoot}.");
         }
 
         string csprojContents;

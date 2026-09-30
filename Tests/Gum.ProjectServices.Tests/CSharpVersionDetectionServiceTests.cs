@@ -51,18 +51,6 @@ public class CSharpVersionDetectionServiceTests : IDisposable
     }
 
     [Fact]
-    public void Detect_CodeProjectRootIsUnityAssetsFolder_ReadsTheCsprojAboveIt()
-    {
-        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Assets"));
-        File.WriteAllText(Path.Combine(_tempDirectory, "Assembly-CSharp.csproj"),
-            "<Project><PropertyGroup><LangVersion>9.0</LangVersion></PropertyGroup></Project>");
-
-        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { CodeProjectRoot = "Assets/" };
-
-        _sut.Detect(settings, _tempDirectory).ShouldBe(9);
-    }
-
-    [Fact]
     public void Detect_CsprojPathSet_ReadsThatCsproj()
     {
         File.WriteAllText(Path.Combine(_tempDirectory, "Game.csproj"),
