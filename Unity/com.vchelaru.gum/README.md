@@ -43,7 +43,7 @@ the CPU and uploads a texture each frame. `GumRenderer.Texture` holds the result
 - An `Assets/link.xml` that preserves `netstandard` (stripped SkiaSharp still references the facade,
   and IL2CPP fails to resolve it otherwise):
   `<linker><assembly fullname="netstandard" preserve="all" /></linker>`
-- Managed Stripping Level of at least Low. At Minimal, Svg.Skia (built against SkiaSharp 2.88) keeps
-  calls that don't compile to C++ against SkiaSharp 3.x.
+- Managed Stripping Level of at least Low. RichTextKit is still built against SkiaSharp 2.88, and
+  IL2CPP at Minimal is not verified with it yet.
 
 `Samples/UnityGum` in the Gum repo has both.

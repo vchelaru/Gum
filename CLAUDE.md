@@ -75,7 +75,7 @@ If a runtime change is in `GumCommon` and you've already built `MonoGameGum.Test
 
 **SokolGum is in no solution and is not built by CI.** Sokol.NET is not a submodule, so `Runtimes/Sokol`, `Runtimes/SokolGum`, `Tests/SokolGum.Tests`, and `Samples/SokolGum*` build only after cloning it by hand — see `Runtimes/SokolGum/README.md`. A sweep across every runtime should still update SokolGum's source, but report the Sokol side as unverified rather than claiming it builds.
 
-**`Tools/Gum.Cli` stays out of `Gum.slnx`, and the Avalonia head and its tests must not reference it.** It pulls in MonoGameGum (a second XNA API next to the head's KNI, so types like `GraphicsDevice` become ambiguous, CS0433) and SkiaGum's newer `Svg.Skia`/`SkiaSharp.Extended` (restore fails with NU1605 against the head's pinned versions). CI publishes it separately into the release packages and the Gum.Avalonia.Tests output for the SVG export test.
+**`Tools/Gum.Cli` stays out of `Gum.slnx`, and the Avalonia head and its tests must not reference it.** It pulls in MonoGameGum (a second XNA API next to the head's KNI, so types like `GraphicsDevice` become ambiguous, CS0433) and SkiaGum's newer `SkiaSharp.Extended` (restore fails with NU1605 against the head's pinned version). CI publishes it separately into the release packages and the Gum.Avalonia.Tests output for the SVG export test.
 
 **Zero new warnings** after every change — verify via the build output; suppress with a comment only when unavoidable. **Never launch Visual Studio, a sample `.exe`, `dotnet run`, or any GUI app** — verify with `dotnet build`/`dotnet test` only, manual/visual testing is the user's step.
 

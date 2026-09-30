@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Runtime.InteropServices.ComTypes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,7 +7,6 @@ using System.Windows.Media;
 using ColorPicker.Models;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
-using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace Gum.Controls.DataUi
 {
