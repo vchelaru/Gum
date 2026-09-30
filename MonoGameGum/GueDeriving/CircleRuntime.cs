@@ -47,14 +47,14 @@ namespace Gum.GueDeriving;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Issue #2768 replaces the single-renderable Phase 2 model from #2761 with a two-slot model
-/// (<see cref="IFilledCircleRenderable"/> + <see cref="IStrokedCircleRenderable"/>) so a
-/// single runtime can draw fill and outline simultaneously. Core MonoGameGum ships only a
-/// stroke default (<see cref="DefaultStrokedCircleRenderable"/>); without the optional
-/// MonoGameGumShapes / Apos.Shapes package the fill slot resolves to <c>null</c> and
-/// <see cref="FillColor"/> setters are no-ops. Backing fields still round-trip so user code
-/// is forward-compatible with adding the package later. Backends other than XNA-like are
-/// still on the single <c>LineCircle</c> model — see issue #2761's "out of scope" list.
+/// Under XNA-likes (issue #2768) the two slots are <c>IFilledCircleRenderable</c> and
+/// <c>IStrokedCircleRenderable</c>, so a single runtime can draw fill and outline
+/// simultaneously. Core MonoGameGum ships only a stroke default
+/// (<c>DefaultStrokedCircleRenderable</c>); without the optional MonoGameGumShapes /
+/// Apos.Shapes package the fill slot resolves to <c>null</c> and <c>FillColor</c> setters are
+/// no-ops. Backing fields still round-trip so user code is forward-compatible with adding the
+/// package later. raylib wraps a single <c>LineCircle</c> that draws both fill and stroke;
+/// Skia uses the fill + stroke slots of <c>SkiaShapeRuntime</c>.
 /// </para>
 /// <para>
 /// Containment: when both slots exist, <c>_fill</c> is the contained object and <c>_stroke</c>

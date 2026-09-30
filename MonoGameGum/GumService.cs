@@ -595,7 +595,7 @@ public partial class GumService : IGumService
     /// <remarks>
     /// Precedence: this runs during <c>Initialize</c>, so a per-layer
     /// <c>Layer.IsLinearFilteringEnabled</c> (when non-null) still wins, and
-    /// code that assigns <see cref="Renderer.TextureFilter"/> after <c>Initialize</c> returns
+    /// code that assigns the backend's filter (MonoGame's <c>Renderer.TextureFilter</c>) after <c>Initialize</c> returns
     /// overrides the project value. <c>"Linear"</c> is the string the editor stores for linear
     /// filtering; any other value (including null) maps to point filtering.
     /// </remarks>

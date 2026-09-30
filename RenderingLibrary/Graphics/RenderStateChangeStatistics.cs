@@ -4,14 +4,14 @@ namespace RenderingLibrary.Graphics
 {
     /// <summary>
     /// Per-frame counters for render-state changes that the existing
-    /// <see cref="SpriteRenderer.LastFrameDrawStates"/> does not capture — specifically the
+    /// <c>SpriteRenderer.LastFrameDrawStates</c> does not capture — specifically the
     /// Apos.Shapes <c>ShapeBatch</c> begins, which live on a separate GPU command stream from
     /// the SpriteBatch. Used to measure how much shape rendering adds to a frame (e.g. comparing
     /// SpriteBatch-backed visuals against Apos.Shapes-backed ones).
     /// <para>
     /// Owned by <see cref="Renderer"/> and reset at the start of each <see cref="Renderer.Draw(SystemManagers)"/>,
     /// so after a frame the counts describe just-completed frame, mirroring
-    /// <see cref="SpriteRenderer.LastFrameDrawStates"/>.
+    /// <c>SpriteRenderer.LastFrameDrawStates</c>.
     /// </para>
     /// </summary>
     public class RenderStateChangeStatistics

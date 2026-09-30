@@ -267,8 +267,8 @@ SPIRV-Cross (native spirv-cross library) — The Khronos Group Inc. and
 Topten.RichTextKit — Copyright © 2019 Topten Software. All Rights Reserved.
     https://github.com/toptensoftware/RichTextKit
     NuGet: Topten.RichTextKit
-    Used by GumCli (SkiaGum). The shipped build is Gum's patched fork
-    (0.4.167-gumfix.1).
+    Used by GumCli (SkiaGum). The shipped build is Gum's patched fork,
+    published as Gum.Topten.RichTextKit 0.4.167.1.
 
 --------------------------------------------------------------------------------
 zlib License

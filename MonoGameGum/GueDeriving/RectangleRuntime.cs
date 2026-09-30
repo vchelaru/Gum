@@ -49,12 +49,13 @@ namespace Gum.GueDeriving;
 /// resolved once at construction via <see cref="RenderableRegistry"/> and kept for life.
 /// </summary>
 /// <remarks>
-/// Core MonoGameGum ships defaults for both slots — <see cref="DefaultFilledRectangleRenderable"/>
-/// (wraps <c>SolidRectangle</c>) and <see cref="DefaultStrokedRectangleRenderable"/> (wraps
+/// Core MonoGameGum ships defaults for both slots — <c>DefaultFilledRectangleRenderable</c>
+/// (wraps <c>SolidRectangle</c>) and <c>DefaultStrokedRectangleRenderable</c> (wraps
 /// <c>LineRectangle</c>) — so fill and stroke both work
 /// without the optional MonoGameGumShapes package. <see cref="CornerRadius"/> is stored on
-/// the defaults but not rendered; install MonoGameGumShapes for rounded corners. Backends
-/// other than XNA-like are still on the single <c>LineRectangle</c> model.
+/// the defaults but not rendered; install MonoGameGumShapes for rounded corners. raylib wraps
+/// a single <c>LineRectangle</c> that draws both fill and stroke; Skia uses the fill + stroke
+/// slots of <c>SkiaShapeRuntime</c>.
 /// </remarks>
 #if SKIA
 public class RectangleRuntime : SkiaShapeRuntime
@@ -1727,7 +1728,7 @@ public class RectangleRuntime : GraphicalUiElement
 
     /// <summary>
     /// Unit of measurement for <see cref="CornerRadius"/> and per-corner overrides. Mirrors
-    /// <see cref="StrokeWidthUnits"/>: <c>ScreenPixel</c> divides by camera zoom each frame.
+    /// <see cref="SkiaShapeRuntime.StrokeWidthUnits"/>: <c>ScreenPixel</c> divides by camera zoom each frame.
     /// </summary>
     public DimensionUnitType CornerRadiusUnits { get; set; }
 

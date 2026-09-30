@@ -55,7 +55,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// Number of times entering or exiting a <see cref="IRenderableIpso.ClipsChildren"/> renderable
     /// or a <see cref="IRenderableIpso.IsRenderTarget"/> renderable forced a real flush -
     /// unconditionally, regardless of whether the surrounding <see cref="IRenderable.BatchKey"/>/
-    /// <see cref="IRenderable.BatchSortKey"/> happened to match. <see cref="Renderer.AdjustRenderStates"/>
+    /// <see cref="IRenderable.BatchSortKey"/> happened to match. <c>Renderer.AdjustRenderStates</c>
     /// restarts <c>SpriteBatch</c> on every clip change, and <c>SubmitDrawRenderable</c>/
     /// <c>DrawRenderTargetToScreen</c> give a render target its own flush + bind/restore cycle - no
     /// amount of reordering can avoid either, so these are never <see cref="MergeBlockedByOverlapCount"/>
@@ -306,7 +306,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         /// <summary>
         /// True for a plain wrapper (empty <see cref="IRenderable.BatchKey"/>, not a render target,
         /// not a clip) — the shape a Gum component instance's root takes.
-        /// <see cref="BatchOrchestrator.OnRenderable"/> treats an empty BatchKey as a complete
+        /// <c>BatchOrchestrator.OnRenderable</c> treats an empty BatchKey as a complete
         /// no-op (no flush, no StartBatch/EndBatch, running key left alone) and
         /// <c>InvisibleRenderable.Render</c> submits no vertices, so emitting one costs nothing at
         /// the GPU level. That makes it both exempt from break accounting and a free choice for
