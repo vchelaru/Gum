@@ -37,8 +37,9 @@ public static class AvaloniaMouseMapping
     }
 
     /// <summary>
-    /// Builds a neutral wheel event. On macOS a trackpad's two-finger scroll pans (unless Cmd is
-    /// held) like native Mac canvas apps; a mouse wheel, and every event on other OSes, zooms (#4985).
+    /// Builds a neutral wheel event. A touchpad's two-finger scroll pans like native canvas apps,
+    /// unless Cmd (macOS, #4985) or Ctrl (Windows, #5477) is held; a mouse wheel, and every event on
+    /// Linux, zooms.
     /// </summary>
     public static GumMouseEventArgs ToGumWheelEventArgs(this PointerWheelEventArgs e, Visual relativeTo)
     {
@@ -48,6 +49,10 @@ public static class AvaloniaMouseMapping
         {
             MacScrollEvent.ReadCurrentEvent(out bool isPrecise, out bool hasGesturePhase);
             source = GetMacWheelSource(isPrecise, hasGesturePhase);
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            source = GetWindowsWheelSource(Environment.TickCount64, WindowsTouchpadContacts.LastReportMs);
         }
         double dpiScale = TopLevel.GetTopLevel(relativeTo)?.RenderScaling ?? 1.0;
         ApplyWheelDelta(args, e.Delta, e.KeyModifiers, source, dpiScale);
@@ -62,8 +67,29 @@ public static class AvaloniaMouseMapping
         isPrecise && hasGesturePhase ? WheelSource.MacTrackpad : WheelSource.MacMouseWheel;
 
     /// <summary>
+    /// Starts telling touchpad scrolls from wheel clicks for the window hosting <paramref name="canvas"/>.
+    /// Only Windows needs this; call it when the canvas attaches to the visual tree.
+    /// </summary>
+    public static void EnableTouchpadDetection(Visual canvas)
+    {
+        if (OperatingSystem.IsWindows() && TopLevel.GetTopLevel(canvas) is { } topLevel)
+        {
+            WindowsTouchpadContacts.EnsureListening(topLevel);
+        }
+    }
+
+    /// <summary>
+    /// Classifies a Windows wheel event: it came from a precision touchpad if the touchpad sent a
+    /// contact report within the last <see cref="TouchpadReportWindowMs"/>.
+    /// </summary>
+    public static WheelSource GetWindowsWheelSource(long nowMs, long? lastTouchpadReportMs) =>
+        lastTouchpadReportMs is { } last && nowMs - last <= TouchpadReportWindowMs
+            ? WheelSource.WindowsTouchpad
+            : WheelSource.Wheel;
+
+    /// <summary>
     /// Fills in <paramref name="args"/>' zoom <see cref="GumMouseEventArgs.Delta"/> or, for a
-    /// trackpad scroll without Cmd, its pan in physical pixels.
+    /// touchpad scroll without Cmd (macOS) or Ctrl (Windows), its pan in physical pixels.
     /// </summary>
     public static void ApplyWheelDelta(GumMouseEventArgs args, Vector delta, KeyModifiers modifiers, WheelSource source, double dpiScale)
     {
@@ -72,6 +98,15 @@ public static class AvaloniaMouseMapping
             args.IsPanScroll = true;
             args.PanX = (float)(delta.X * PrecisePointsPerDelta * dpiScale);
             args.PanY = (float)(delta.Y * PrecisePointsPerDelta * dpiScale);
+            return;
+        }
+
+        // Ctrl+scroll zooms, and so does a pinch, which Windows reports as Ctrl+wheel.
+        if (source == WheelSource.WindowsTouchpad && !modifiers.HasFlag(KeyModifiers.Control))
+        {
+            args.IsPanScroll = true;
+            args.PanX = (float)(delta.X * WindowsTouchpadPixelsPerDelta * dpiScale);
+            args.PanY = (float)(delta.Y * WindowsTouchpadPixelsPerDelta * dpiScale);
             return;
         }
 
@@ -99,6 +134,12 @@ public static class AvaloniaMouseMapping
     // Avalonia's macOS backend divides a precise scroll's points by 50 (AvnView.mm).
     private const double PrecisePointsPerDelta = 50;
 
+    // Browsers scroll 100 pixels per wheel notch; Avalonia reports a notch as 1.
+    private const double WindowsTouchpadPixelsPerDelta = 100;
+
+    // A precision touchpad reports at 100+ Hz while touched, so a gap this long means no fingers.
+    private const long TouchpadReportWindowMs = 100;
+
     private const double PinchPerZoomStep = 0.15;
 
     private static GumMouseButton ToGumMouseButton(PointerUpdateKind updateKind, PointerPointProperties properties) => updateKind switch
@@ -122,4 +163,6 @@ public enum WheelSource
     MacMouseWheel,
     /// <summary>A gesture on a precise-delta device on macOS (trackpad, Magic Mouse).</summary>
     MacTrackpad,
+    /// <summary>A scroll or pinch on a Windows precision touchpad, reporting 1 per notch.</summary>
+    WindowsTouchpad,
 }

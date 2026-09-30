@@ -7,8 +7,8 @@ using Shouldly;
 namespace Gum.Avalonia.Tests;
 
 /// <summary>
-/// A macOS trackpad's two-finger scroll pans the canvas; Cmd+scroll, a mouse wheel and every
-/// other OS keep zooming (#4985).
+/// A touchpad's two-finger scroll pans the canvas on macOS (#4985) and Windows (#5477); Cmd+scroll
+/// on macOS, Ctrl+scroll or pinch on Windows, and a mouse wheel keep zooming.
 /// </summary>
 public class AvaloniaWheelMappingTests
 {
@@ -71,6 +71,41 @@ public class AvaloniaWheelMappingTests
     {
         // Remote desktop injects precise pixel scrolls with no gesture phase for mouse-wheel clicks.
         AvaloniaMouseMapping.GetMacWheelSource(isPrecise, hasGesturePhase).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ApplyWheelDelta_WindowsTouchpadScroll_PansOneHundredPixelsPerNotchOfDelta()
+    {
+        GumMouseEventArgs args = new GumMouseEventArgs();
+
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0.5, -0.25), KeyModifiers.None, WheelSource.WindowsTouchpad, dpiScale: 2);
+
+        args.IsPanScroll.ShouldBeTrue();
+        args.PanX.ShouldBe(100f, tolerance: 0.001f);
+        args.PanY.ShouldBe(-50f, tolerance: 0.001f);
+        args.Delta.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ApplyWheelDelta_WindowsTouchpadScrollWithCtrl_Zooms()
+    {
+        // Windows also reports a precision-touchpad pinch as Ctrl+wheel.
+        GumMouseEventArgs args = new GumMouseEventArgs();
+
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0, 0.25), KeyModifiers.Control, WheelSource.WindowsTouchpad, dpiScale: 2);
+
+        args.IsPanScroll.ShouldBeFalse();
+        args.Delta.ShouldBe(30);
+    }
+
+    [Theory]
+    [InlineData(1000L, 950L, WheelSource.WindowsTouchpad)]
+    [InlineData(1000L, 1000L, WheelSource.WindowsTouchpad)]
+    [InlineData(1000L, 800L, WheelSource.Wheel)]
+    [InlineData(1000L, null, WheelSource.Wheel)]
+    public void GetWindowsWheelSource_TouchpadOnlyWhileItIsReportingContacts(long nowMs, long? lastTouchpadReportMs, WheelSource expected)
+    {
+        AvaloniaMouseMapping.GetWindowsWheelSource(nowMs, lastTouchpadReportMs).ShouldBe(expected);
     }
 
     [Fact]
