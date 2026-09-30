@@ -45,7 +45,7 @@ Consequence for themes: a rounded/shadowed theme's visual code (`new RectangleRu
 
 ## Three source-sharing mechanisms (each is a separate landmine)
 
-1. **GumCommon project reference.** `GumCommon` is the runtime-agnostic core (net8.0, no XNA/WPF). It cherry-picks files from `RenderingLibrary/`, `GumDataTypes/`, `ToolsUtilities/` via `<Compile Include="..\X" Link="..."/>` **and globs its own folder**. MonoGame/Raylib/Skia/Sokol reference it as a project.
+1. **GumCommon project reference.** `GumCommon` is the runtime-agnostic core (net8.0 and netstandard2.1, no XNA/WPF). It cherry-picks files from `RenderingLibrary/`, `GumDataTypes/`, `ToolsUtilities/` via `<Compile Include="..\X" Link="..."/>` **and globs its own folder**. MonoGame/Raylib/Skia/Sokol reference it as a project.
 2. **Cross-project file links.** `GueDeriving` runtimes are canonical in `MonoGameGum/GueDeriving/` and `<Compile Include ... Link>`-ed into the Raylib/Skia/Sokol csprojs. These are **deliberately excluded** from `GumCoreShared.projitems` (FRB generates its own runtime classes).
 3. **FRB shared projects** (the two `../FlatRedBall/...shproj` above) — source-sharing for an out-of-repo consumer on a net6 floor.
 
@@ -54,8 +54,14 @@ Consequence for themes: a rounded/shadowed theme's visual code (`new RectangleRu
 - **`RenderingLibrary` is not a built assembly.** It's a source directory distributed by links/projitems, so `RenderingLibrary.*` types exist in *several* compiled assemblies at once.
 - **Same-FQN forks.** Because of the above, two files can define the same `RenderingLibrary.X` type for different consumers and silently diverge. Confirmed example: `GumCommon/Content/LoaderManager.cs` (XNA-free; used by every GumCommon-referencing runtime) vs `RenderingLibrary/Content/LoaderManager.cs` (XNA-coupled — `InvalidTexture`, `Initialize`, `LoadOrInvalid`; compiled only by `GumCoreShared.projitems` + FRB `GumPlugin.csproj`). Editing one does not touch the other; placing both in one compilation is a duplicate-type error.
 - **Moving a file between a glob'd folder and a linked location requires a csproj edit.** GumCommon and the runtime projects glob their own folders; external shared files are explicit links. (E.g. relocating the shared `LoaderManager` into `GumCommon/Content/` meant dropping its explicit `<Compile Include>` link and removing SkiaGum's `<Compile Remove>`.)
-- **projitems / Forms / net6 sync.** Adding/renaming/deleting files under `GumCommon/` or `MonoGameGum/` (and Forms files) has sync obligations to the FRB shared projects, with explicit exceptions (the LoaderManager fork, `GueDeriving`). These rules are authoritative in the coder agent (`.claude/agents/coder.md`) — follow them there, don't restate.
+- **projitems / Forms / net6 sync.** Adding/renaming/deleting files under `GumCommon/` or `MonoGameGum/` (and Forms files) has sync obligations to the FRB shared projects, with explicit exceptions (the LoaderManager fork, `GueDeriving`). These rules are authoritative in [frb-build-verification](../frb-build-verification/SKILL.md); follow them there.
+
+## Adding a Skia-based host
+
+Model it on `Runtimes/SilkNetGum`: reference `GumCommon` + `SkiaGum`, import `Runtimes/CursorInput.props`, and add a `Cursor.<Host>.cs` partial (mouse/touch reads) and a `Keyboard` deriving from `GumCommon/Input/PolledKeyboard.cs` (key map plus a down query). `GumService` subclasses `GumServiceSkiaBase` and pumps `FormsUtilities.Update` in `Update`. For GPU rendering, draw into a SkiaGameRendering canvas (see `StrideGum`).
+
+- ⚠ **netstandard2.1 builds (Unity) compile out `OperatingSystem.Is*`.** The host sets `Cursor.IsMobile` and `TextBoxBase.ShowNativeKeyboardOnFocus` itself, and supplies files through `FileManager.CustomGetStreamFromFile` when it can't read from disk.
 
 ## Cross-references
 - [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md) — per-runtime file unification (`#if`/links).
-- `.claude/agents/coder.md` — projitems/Forms/net6 sync rules (authoritative).
+- [frb-build-verification](../frb-build-verification/SKILL.md) — projitems/Forms/net6 sync rules (authoritative).

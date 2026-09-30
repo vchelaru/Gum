@@ -548,6 +548,10 @@ public class GumProjectSave
         shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid() ||
                                        System.OperatingSystem.IsBrowser() ||
                                        FileManager.CustomGetStreamFromFile != null;
+#elif NETSTANDARD2_1
+        // netstandard2.1 (Unity) has no OperatingSystem checks; a host that can't read files
+        // directly (Android StreamingAssets, WebGL) installs CustomGetStreamFromFile instead.
+        shouldLoadFromTitleContainer = FileManager.CustomGetStreamFromFile != null;
 #endif
 
 

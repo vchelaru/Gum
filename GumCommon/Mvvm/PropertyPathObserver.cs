@@ -77,7 +77,10 @@ public class PropertyPathObserver : IDisposable
         "members may be removed under PublishTrimmed if nothing else in the app references them.")]
     public void Attach(object newRoot)
     {
-        ArgumentNullException.ThrowIfNull(newRoot);
+        if (newRoot is null)
+        {
+            throw new ArgumentNullException(nameof(newRoot));
+        }
 
         _currentRoot = newRoot;
         LeafType = newRoot.GetType();

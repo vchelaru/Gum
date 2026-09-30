@@ -1,21 +1,18 @@
-using Gum.Wireframe;
 using Stride.Input;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GumKeys = Gum.Forms.Input.Keys;
 using StrideKeys = Stride.Input.Keys;
 
 namespace Gum.Input;
 
 /// <summary>
-/// Keyboard implementation for Stride. Down/pushed/released state is read directly from
-/// <see cref="IKeyboardDevice"/>'s per-frame edge sets (Stride already resets these each
-/// <c>InputManager.Update</c>, unlike Silk.NET which only exposes a live down-poll); typed text is
-/// captured via a <see cref="TextInputEvent"/> listener. Held-key repeat is still timed manually
-/// (Stride has no repeat-rate poll). Modeled on <c>Runtimes/SilkNetGum/Input/Keyboard.Silk.cs</c>.
+/// Keyboard implementation for Stride. Down/pushed/released are read directly from
+/// <see cref="IKeyboardDevice"/>'s per-frame sets, which Stride resets each
+/// <c>InputManager.Update</c>, so a press and release within one frame still reports a push.
+/// <see cref="PolledKeyboard"/> times held-key repeat (Stride has no repeat-rate poll) and latches
+/// typed text, which arrives through a <see cref="TextInputEvent"/> listener.
 /// </summary>
-public class Keyboard : IInputReceiverKeyboard, IInputEventListener<TextInputEvent>
+public class Keyboard : PolledKeyboard, IInputEventListener<TextInputEvent>
 {
     private readonly IKeyboardDevice? _keyboard;
 
@@ -168,157 +165,31 @@ public class Keyboard : IInputReceiverKeyboard, IInputEventListener<TextInputEve
         { GumKeys.OemBackslash, StrideKeys.OemBackslash },
     };
 
-    private static readonly Dictionary<StrideKeys, GumKeys> _strideToGum =
-        _gumToStride.ToDictionary(pair => pair.Value, pair => pair.Key);
-
     #endregion
-
-    #region Frame state
-
-    // Manual OS-independent key-repeat: Stride's per-frame Pressed/Down/ReleasedKeys have no
-    // repeat-rate poll, so discrete key actions (e.g. holding an arrow key to move a caret or
-    // navigate a ListBox) are timed here instead. Mirrors MonoGame's Keyboard.RepeatDelay/RepeatRate
-    // semantics (Runtimes/MonoGameGum/Input/Keyboard.cs) and Keyboard.Silk.cs.
-    private readonly Dictionary<GumKeys, double> _keyDownSince = new();
-    private readonly Dictionary<GumKeys, double> _lastRepeatTime = new();
-    private double _currentGameTime;
-
-    /// <summary>
-    /// Delay after the initial key press before repeat typing begins.
-    /// </summary>
-    public System.TimeSpan RepeatDelay { get; set; } = System.TimeSpan.FromMilliseconds(500);
-
-    /// <summary>
-    /// Interval between repeated key-typed events while a key is held down, once
-    /// <see cref="RepeatDelay"/> has elapsed.
-    /// </summary>
-    public System.TimeSpan RepeatRate { get; set; } = System.TimeSpan.FromMilliseconds(70);
-
-    // Typed chars accrue from TextInputEvents as they arrive (before Update). Activity snapshots
-    // and clears them so the frame's DoKeyboardAction reads exactly this frame's input.
-    private readonly StringBuilder _charsTyped = new();
-    private string _frameChars = "";
 
     void IInputEventListener<TextInputEvent>.ProcessEvent(TextInputEvent inputEvent)
     {
         if (inputEvent.Type == TextInputEventType.Input)
         {
-            _charsTyped.Append(inputEvent.Text);
+            AppendTypedText(inputEvent.Text);
         }
     }
 
-    #endregion
-
-    /// <summary>
-    /// Returns true if either the left or right shift key is currently pressed down.
-    /// </summary>
-    public bool IsShiftDown => KeyDown(GumKeys.LeftShift) || KeyDown(GumKeys.RightShift);
-
-    /// <summary>
-    /// Returns true if either the left or right control key is currently pressed down.
-    /// </summary>
-    public bool IsCtrlDown => KeyDown(GumKeys.LeftControl) || KeyDown(GumKeys.RightControl);
-
-    /// <summary>
-    /// Returns true if either Command key is held on macOS, where it is reported as a Windows key. Always false
-    /// elsewhere, so the Windows key never triggers text shortcuts.
-    /// </summary>
-    public bool IsCommandDown => System.OperatingSystem.IsMacOS() && (KeyDown(GumKeys.LeftWindows) || KeyDown(GumKeys.RightWindows));
-
-    /// <summary>
-    /// Returns true if either the left or right alt key is currently pressed down.
-    /// </summary>
-    public bool IsAltDown => KeyDown(GumKeys.LeftAlt) || KeyDown(GumKeys.RightAlt);
+    /// <inheritdoc/>
+    protected override IEnumerable<GumKeys> SupportedKeys => _gumToStride.Keys;
 
     /// <inheritdoc/>
-    IEnumerable<GumKeys> IInputReceiverKeyboard.KeysTyped => _gumToStride.Keys.Where(KeyTyped);
+    protected override bool IsDeviceKeyDown(GumKeys key) => KeyDown(key);
 
     /// <inheritdoc/>
-    public bool KeyDown(GumKeys key) =>
+    public override bool KeyDown(GumKeys key) =>
         _gumToStride.TryGetValue(key, out var strideKey) && _keyboard?.DownKeys.Contains(strideKey) == true;
 
     /// <inheritdoc/>
-    public bool KeyPushed(GumKeys key) =>
+    public override bool KeyPushed(GumKeys key) =>
         _gumToStride.TryGetValue(key, out var strideKey) && _keyboard?.PressedKeys.Contains(strideKey) == true;
 
     /// <inheritdoc/>
-    public bool KeyReleased(GumKeys key) =>
+    public override bool KeyReleased(GumKeys key) =>
         _gumToStride.TryGetValue(key, out var strideKey) && _keyboard?.ReleasedKeys.Contains(strideKey) == true;
-
-    /// <inheritdoc/>
-    /// <remarks>
-    /// Returns true on the initial press and again at <see cref="RepeatDelay"/>/<see cref="RepeatRate"/>
-    /// intervals while the key is held, manually timed since Stride provides no OS-driven repeat poll.
-    /// Character-producing input (including repeat) also flows through <see cref="GetStringTyped"/>
-    /// via the TextInputEvent listener (which the OS already repeats), which is what TextBox text
-    /// entry consumes.
-    /// </remarks>
-    public bool KeyTyped(GumKeys key)
-    {
-        if (KeyPushed(key))
-        {
-            return true;
-        }
-
-        if (!KeyDown(key) || !_keyDownSince.TryGetValue(key, out double downSince))
-        {
-            return false;
-        }
-
-        double elapsedSincePush = _currentGameTime - downSince;
-        if (elapsedSincePush < RepeatDelay.TotalSeconds)
-        {
-            return false;
-        }
-
-        if (_lastRepeatTime.TryGetValue(key, out double lastRepeat) &&
-            _currentGameTime - lastRepeat < RepeatRate.TotalSeconds)
-        {
-            return false;
-        }
-
-        _lastRepeatTime[key] = _currentGameTime;
-        return true;
-    }
-
-    /// <summary>
-    /// Performs every-frame activity: refreshes the manual repeat-timing bookkeeping against
-    /// Stride's per-frame Pressed/Released sets, then latches this frame's typed characters.
-    /// Automatically called by Gum via FormsUtilities.Update.
-    /// </summary>
-    /// <param name="gameTime">The number of seconds since the start of the game.</param>
-    public void Activity(double gameTime)
-    {
-        _currentGameTime = gameTime;
-
-        if (_keyboard != null)
-        {
-            foreach (var strideKey in _keyboard.PressedKeys)
-            {
-                if (_strideToGum.TryGetValue(strideKey, out var gumKey))
-                {
-                    _keyDownSince[gumKey] = gameTime;
-                    _lastRepeatTime.Remove(gumKey);
-                }
-            }
-
-            foreach (var strideKey in _keyboard.ReleasedKeys)
-            {
-                if (_strideToGum.TryGetValue(strideKey, out var gumKey))
-                {
-                    _keyDownSince.Remove(gumKey);
-                    _lastRepeatTime.Remove(gumKey);
-                }
-            }
-        }
-
-        _frameChars = _charsTyped.ToString();
-        _charsTyped.Clear();
-    }
-
-    /// <summary>
-    /// Retrieves the string of Unicode characters typed since the previous <see cref="Activity"/>.
-    /// </summary>
-    /// <returns>The characters typed this frame, or an empty string if none.</returns>
-    public string GetStringTyped() => _frameChars;
 }

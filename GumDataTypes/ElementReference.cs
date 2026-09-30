@@ -143,6 +143,10 @@ namespace Gum.DataTypes
                                  System.OperatingSystem.IsIOS() ||
                                  System.OperatingSystem.IsBrowser() ||
                                  FileManager.CustomGetStreamFromFile != null;
+#elif NETSTANDARD2_1
+            // netstandard2.1 (Unity) has no OperatingSystem checks; a host that can't read files
+            // directly (Android StreamingAssets, WebGL) installs CustomGetStreamFromFile instead.
+            usesTitleContainer = FileManager.CustomGetStreamFromFile != null;
 #endif
 
 
