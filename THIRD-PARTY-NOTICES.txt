@@ -168,9 +168,10 @@ SharpGen.Runtime / SharpGen.Runtime.COM — (c) 2010-2017 Alexandre Mutel,
     https://github.com/SharpGenTools/SharpGenTools
     NuGet: SharpGen.Runtime, SharpGen.Runtime.COM
 
-ShimSkiaSharp / Svg.Model / Svg.Skia — Copyright © Wiesław Šoltés
+ShimSkiaSharp / Svg.Animation / Svg.Model / Svg.SceneGraph / Svg.Skia —
+    Copyright © Wiesław Šoltés
     https://github.com/wieslawsoltes/Svg.Skia
-    NuGet: ShimSkiaSharp, Svg.Model, Svg.Skia
+    NuGet: ShimSkiaSharp, Svg.Animation, Svg.Model, Svg.SceneGraph, Svg.Skia
     (Svg.Custom, from the same project, is under Ms-PL — see below.)
 
 SkiaSharp (+ Extended / Resources / SceneGraph / Skottie) — Copyright (c)
@@ -319,13 +320,6 @@ GNU Lesser General Public License (LGPL)
 --------------------------------------------------------------------------------
 Each LGPL component below is distributed as a separate, dynamically-loaded
 library that a recipient may replace with their own build.
-
-Fizzler — Copyright © 2009 Atif Aziz, Colin Ramsay. All rights reserved.
-    Portions Copyright © 2008 Novell, Inc.
-    https://github.com/atifaziz/Fizzler
-    NuGet: Fizzler
-    LGPL-3.0-or-later. A CSS-selector engine pulled in transitively via
-    Svg.Custom / Svg.Skia (Fizzler.dll).
 
 vkd3d-shader (native: libvkd3d-shader) — Copyright 2016-2025 the Vkd3d
     project authors
@@ -1052,11 +1046,6 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 ================================================================================
 Other licenses (referenced by URL)
 ================================================================================
-
-GNU Lesser General Public License v3.0 (Fizzler):
-    https://www.gnu.org/licenses/lgpl-3.0.txt
-    (incorporates the GNU General Public License v3.0:
-    https://www.gnu.org/licenses/gpl-3.0.txt)
 
 GNU Lesser General Public License v2.1 (vkd3d-shader):
     https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt
