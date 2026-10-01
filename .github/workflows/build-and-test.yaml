@@ -234,14 +234,8 @@ jobs:
         timeout-minutes: 25
         shell: bash
         run: |
-          # An attempt can hang with no output (seen on macos-15 for 50 min). Cap each
-          # attempt at 10 min, keep a detailed log, retry once, and upload the logs if both fail.
-          set -o pipefail
-          for attempt in 1 2; do
-            if perl -e 'alarm shift; exec @ARGV' 600 dotnet workload install maui --verbosity detailed 2>&1 | tee "workload-install-$attempt.log"; then exit 0; fi
-            echo "::warning::workload install attempt $attempt failed or timed out"
-          done
-          exit 1
+          # Caps each attempt and retries once; see the script for why.
+          bash .github/scripts/install-workloads.sh maui
 
       - name: Upload workload install logs
         if: failure()
@@ -450,14 +444,8 @@ jobs:
         timeout-minutes: 25
         shell: bash
         run: |
-          # An attempt can hang with no output (seen on macos-15 for 50 min). Cap each
-          # attempt at 10 min, keep a detailed log, retry once, and upload the logs if both fail.
-          set -o pipefail
-          for attempt in 1 2; do
-            if perl -e 'alarm shift; exec @ARGV' 600 dotnet workload install wasm-tools ios android maui --verbosity detailed 2>&1 | tee "workload-install-$attempt.log"; then exit 0; fi
-            echo "::warning::workload install attempt $attempt failed or timed out"
-          done
-          exit 1
+          # Caps each attempt and retries once; see the script for why.
+          bash .github/scripts/install-workloads.sh wasm-tools ios android maui
 
       - name: Upload workload install logs
         if: failure()
