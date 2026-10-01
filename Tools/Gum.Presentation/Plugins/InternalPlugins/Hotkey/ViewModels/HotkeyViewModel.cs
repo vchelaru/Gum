@@ -21,6 +21,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             _formatter = formatter;
 
             Add(_hotkeyManager.Delete, "Delete");
+            Add(_hotkeyManager.DeleteAlt, "Delete (Alternative)");
             Add(_hotkeyManager.Copy, "Copy");
             Add(_hotkeyManager.Paste, "Paste");
             Add(_hotkeyManager.Cut, "Cut");

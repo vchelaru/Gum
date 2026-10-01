@@ -57,6 +57,56 @@ public class HotkeyManagerTests
         hotkeyManager.RedoAlt.IsShiftDown.ShouldBe(redoAltShift);
     }
 
+    [Theory]
+    [InlineData(true, 1)]
+    [InlineData(false, 0)]
+    public void Backspace_DeletesTheSelectionInTheTreeAndCanvas_OnlyOnMacOS(bool isMacOS, int deletesPerKey)
+    {
+        // A Mac keyboard's "delete" key arrives as Backspace (#5552).
+        AutoMocker mocker = new AutoMocker();
+        mocker.GetMock<IOperatingSystemInfo>().Setup(o => o.IsMacOS).Returns(isMacOS);
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+        GumKeyEventArgs inTree = new() { Key = GumKey.Back };
+        GumKeyEventArgs inCanvas = new() { Key = GumKey.Back };
+
+        hotkeyManager.HandleKeyDownElementTreeView(inTree);
+        hotkeyManager.HandleEditorKeyDown(inCanvas);
+
+        mocker.GetMock<IEditCommands>().Verify(c => c.DeleteSelection(), Times.Exactly(deletesPerKey * 2));
+        inTree.Handled.ShouldBe(isMacOS);
+        inCanvas.Handled.ShouldBe(isMacOS);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_Backspace_IsLeftForTheFocusedTextField_OnMacOS()
+    {
+        // The app-wide pass sees every key, including those typed in a text field.
+        AutoMocker mocker = new AutoMocker();
+        mocker.GetMock<IOperatingSystemInfo>().Setup(o => o.IsMacOS).Returns(true);
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+        GumKeyEventArgs e = new() { Key = GumKey.Back };
+
+        bool handled = hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeFalse();
+        e.Handled.ShouldBeFalse();
+        mocker.GetMock<IEditCommands>().Verify(c => c.DeleteSelection(), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Delete_StillDeletesTheSelection_OnEveryPlatform(bool isMacOS)
+    {
+        AutoMocker mocker = new AutoMocker();
+        mocker.GetMock<IOperatingSystemInfo>().Setup(o => o.IsMacOS).Returns(isMacOS);
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+
+        hotkeyManager.HandleKeyDownElementTreeView(new GumKeyEventArgs { Key = GumKey.Delete });
+
+        mocker.GetMock<IEditCommands>().Verify(c => c.DeleteSelection(), Times.Once);
+    }
+
     [Fact]
     public void HandleKeyDownElementTreeView_F2OnInstance_ValidatesNameAheadOfTime()
     {

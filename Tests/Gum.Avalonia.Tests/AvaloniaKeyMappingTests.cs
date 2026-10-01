@@ -43,6 +43,13 @@ public class AvaloniaKeyMappingTests
     }
 
     [Fact]
+    public void ToGumKey_Backspace_MapsToBack()
+    {
+        // Avalonia's macOS backend sends the Mac keyboard's "delete" key (kVK_Delete) as Key.Back (#5552).
+        Key.Back.ToGumKey().ShouldBe(GumKey.Back);
+    }
+
+    [Fact]
     public void ToKeyGesture_BuildsTheGestureWithThePlatformCommandModifier()
     {
         KeyCombination combo = new KeyCombination { Key = GumKey.Z, IsCtrlDown = true, IsShiftDown = true };

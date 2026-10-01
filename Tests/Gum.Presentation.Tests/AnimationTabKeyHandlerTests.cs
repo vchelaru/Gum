@@ -49,6 +49,28 @@ public class AnimationTabKeyHandlerTests
     }
 
     [Fact]
+    public void DeleteAlt_DeletesTheSelectedAnimationAndKeyframe()
+    {
+        // macOS binds Backspace as the alternative delete key (#5552).
+        _hotkeyManager.SetupGet(x => x.DeleteAlt).Returns(KeyCombination.Pressed(GumKey.Back));
+        _dialogService.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Affirmative);
+        AnimationViewModel walk = new AnimationViewModel(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel();
+        walk.Keyframes.Add(keyframe);
+        walk.SelectedKeyframe = keyframe;
+        _viewModel.Animations.Add(walk);
+        _viewModel.SelectedAnimation = walk;
+
+        _handler.HandleKeyframeListKey(new GumKeyEventArgs { Key = GumKey.Back }, _viewModel);
+        bool animationHandled = _handler.HandleAnimationListKey(new GumKeyEventArgs { Key = GumKey.Back }, _viewModel);
+
+        walk.Keyframes.ShouldBeEmpty();
+        animationHandled.ShouldBeTrue();
+        _viewModel.Animations.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void HandleAnimationListKey_DoesNotConsumeAnUnboundKey()
     {
         bool handled = _handler.HandleAnimationListKey(new GumKeyEventArgs { Key = GumKey.F12 }, _viewModel);

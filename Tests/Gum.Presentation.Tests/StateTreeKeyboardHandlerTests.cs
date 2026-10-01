@@ -17,6 +17,7 @@ public class StateTreeKeyboardHandlerTests
     private readonly Mock<IStateTreeViewRightClickService> _rightClickService;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<ICopyPasteLogic> _copyPasteLogic;
+    private readonly Mock<IHotkeyManager> _hotkeyManager;
     private readonly CopiedData _copiedData;
     private readonly StateTreeKeyboardHandler _sut;
 
@@ -29,17 +30,17 @@ public class StateTreeKeyboardHandlerTests
         _copyPasteLogic.Setup(x => x.CopiedData).Returns(_copiedData);
 
         // The tool's default bindings.
-        Mock<IHotkeyManager> hotkeyManager = new Mock<IHotkeyManager>();
-        hotkeyManager.Setup(x => x.ReorderUp).Returns(KeyCombination.Alt(GumKey.Up));
-        hotkeyManager.Setup(x => x.ReorderDown).Returns(KeyCombination.Alt(GumKey.Down));
-        hotkeyManager.Setup(x => x.Rename).Returns(KeyCombination.Pressed(GumKey.F2));
-        hotkeyManager.Setup(x => x.Delete).Returns(KeyCombination.Pressed(GumKey.Delete));
-        hotkeyManager.Setup(x => x.Copy).Returns(KeyCombination.Ctrl(GumKey.C));
-        hotkeyManager.Setup(x => x.Paste).Returns(KeyCombination.Ctrl(GumKey.V));
+        _hotkeyManager = new Mock<IHotkeyManager>();
+        _hotkeyManager.Setup(x => x.ReorderUp).Returns(KeyCombination.Alt(GumKey.Up));
+        _hotkeyManager.Setup(x => x.ReorderDown).Returns(KeyCombination.Alt(GumKey.Down));
+        _hotkeyManager.Setup(x => x.Rename).Returns(KeyCombination.Pressed(GumKey.F2));
+        _hotkeyManager.Setup(x => x.Delete).Returns(KeyCombination.Pressed(GumKey.Delete));
+        _hotkeyManager.Setup(x => x.Copy).Returns(KeyCombination.Ctrl(GumKey.C));
+        _hotkeyManager.Setup(x => x.Paste).Returns(KeyCombination.Ctrl(GumKey.V));
 
         _sut = new StateTreeKeyboardHandler(
             _rightClickService.Object,
-            hotkeyManager.Object,
+            _hotkeyManager.Object,
             _selectedState.Object,
             _copyPasteLogic.Object);
     }
@@ -71,6 +72,24 @@ public class StateTreeKeyboardHandlerTests
 
         handled.ShouldBeTrue();
         _rightClickService.Verify(x => x.DeleteStateClick(), Times.Once);
+    }
+
+    [Fact]
+    public void DeleteAlt_OnAStateAndOnACategory_DeletesThem()
+    {
+        // macOS binds Backspace as the alternative delete key (#5552).
+        _hotkeyManager.Setup(x => x.DeleteAlt).Returns(KeyCombination.Pressed(GumKey.Back));
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(new StateSave { Name = "Highlighted" });
+
+        bool stateHandled = _sut.HandleKeyDown(new GumKeyEventArgs { Key = GumKey.Back });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns((StateSave?)null);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(new StateSaveCategory { Name = "Visibility" });
+        bool categoryHandled = _sut.HandleKeyDown(new GumKeyEventArgs { Key = GumKey.Back });
+
+        stateHandled.ShouldBeTrue();
+        categoryHandled.ShouldBeTrue();
+        _rightClickService.Verify(x => x.DeleteStateClick(), Times.Once);
+        _rightClickService.Verify(x => x.DeleteCategoryClick(), Times.Once);
     }
 
     [Fact]

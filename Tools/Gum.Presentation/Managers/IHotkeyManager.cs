@@ -7,6 +7,13 @@ namespace Gum.Managers;
 public interface IHotkeyManager
 {
     KeyCombination Delete { get; }
+
+    /// <summary>
+    /// A second key that deletes, or null when the platform has none: Backspace on macOS, the key a
+    /// Mac keyboard labels "delete". Match both through <see cref="HotkeyManagerExtensions.IsDeletePressed"/>.
+    /// </summary>
+    KeyCombination? DeleteAlt { get; }
+
     KeyCombination Copy { get; }
     KeyCombination Paste { get; }
     KeyCombination Cut { get; }
@@ -84,4 +91,12 @@ public interface IHotkeyManager
     /// state explicitly. Returns true if the key was handled.
     /// </summary>
     bool ProcessCmdKeyWireframe(Gum.Input.GumKey? key, bool isShiftDown, bool isCtrlDown, bool isAltDown);
+}
+
+/// <summary>Matching helpers over <see cref="IHotkeyManager"/> bindings that have an alternative key.</summary>
+public static class HotkeyManagerExtensions
+{
+    /// <summary>Whether <paramref name="e"/> is <see cref="IHotkeyManager.Delete"/> or <see cref="IHotkeyManager.DeleteAlt"/>.</summary>
+    public static bool IsDeletePressed(this IHotkeyManager hotkeyManager, Gum.Input.GumKeyEventArgs e) =>
+        hotkeyManager.Delete.IsPressed(e) || hotkeyManager.DeleteAlt?.IsPressed(e) == true;
 }

@@ -50,6 +50,17 @@ public class KeyCombinationFormatterTests
         formatter.Format(combo).ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData(KeyDisplayStyle.Windows, "Backspace")]
+    [InlineData(KeyDisplayStyle.MacOS, "⌫")]
+    public void Format_Backspace_UsesThePlatformKeyName(KeyDisplayStyle style, string expected)
+    {
+        KeyCombination combo = KeyCombination.Pressed(GumKey.Back);
+        KeyCombinationFormatter formatter = new KeyCombinationFormatter(style);
+
+        formatter.Format(combo).ShouldBe(expected);
+    }
+
     [Fact]
     public void Format_KeyOnly_ShowsTheKey()
     {

@@ -17,15 +17,18 @@ namespace Gum.Avalonia.Tests.DataUi;
 public class CompositeEditorTests : IDisposable
 {
     private readonly IDataUiFilePicker? _originalPicker;
+    private readonly bool _originalBackspaceDeletes;
 
     public CompositeEditorTests()
     {
         _originalPicker = FilePickingLogic.FilePicker;
+        _originalBackspaceDeletes = DataUiKeyboard.BackspaceDeletes;
     }
 
     public void Dispose()
     {
         FilePickingLogic.FilePicker = _originalPicker;
+        DataUiKeyboard.BackspaceDeletes = _originalBackspaceDeletes;
     }
 
     private sealed class FakePicker : IDataUiFilePicker
@@ -181,6 +184,26 @@ public class CompositeEditorTests : IDisposable
         display.ListBox.SelectedIndex = 1;
         display.RemoveSelected();
         fixture.Numbers.ShouldBe(new List<int> { 7, 3 });
+    }
+
+    [AvaloniaTheory]
+    [InlineData(true, 1)]
+    [InlineData(false, 2)]
+    public void ListEditors_Backspace_RemovesTheSelectedEntry_OnlyWhereBackspaceDeletes(bool backspaceDeletes, int entriesLeft)
+    {
+        // On macOS the key labeled "delete" sends Backspace (#5552).
+        DataUiKeyboard.BackspaceDeletes = backspaceDeletes;
+        EditorFixture fixture = new EditorFixture { Numbers = new List<int> { 1, 2 }, Files = new List<string> { "a.csv", "b.csv" } };
+        ListBoxDisplay list = new ListBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Numbers)) };
+        MultiFileDisplay files = new MultiFileDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Files)) };
+        list.ListBox.SelectedIndex = 0;
+        files.ListBox.SelectedIndex = 0;
+
+        list.ListBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Back });
+        files.ListBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Back });
+
+        fixture.Numbers.Count.ShouldBe(entriesLeft);
+        fixture.Files.Count.ShouldBe(entriesLeft);
     }
 
     [AvaloniaFact]

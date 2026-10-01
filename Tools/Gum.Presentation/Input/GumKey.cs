@@ -13,6 +13,7 @@ namespace Gum.Input;
 /// </remarks>
 public enum GumKey
 {
+    Back = 0x08,
     Delete = 0x2E,
 
     Left = 0x25,

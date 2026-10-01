@@ -69,6 +69,8 @@ All delete actions funnel through `IEditCommands`:
 
 Do not call `IDeleteLogic` methods directly from UI code — always go through `IEditCommands`.
 
+A key handler that deletes matches through `IHotkeyManager.IsDeletePressed` (or `PlatformKeys.IsDelete` in `AvaloniaDataUi`), never `Delete.IsPressed` or `Key.Delete`. A Mac keyboard's "delete" key arrives as Backspace, which only those helpers accept.
+
 ## Testability
 
 `DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) delegates dialog display to the head-provided `IDeleteDialogService`: the WPF `DeleteDialogService` (`Gum/Services/Dialogs/DeleteDialogService.cs`) creates the `DeleteOptionsWindow` and calls `ShowDialog()`, and `AvaloniaDeleteDialogService` (`Tool/Gum.Avalonia/Dialogs/`) shows the neutral `DeleteOptionsDialogViewModel` through `IDialogService` — neither can be unit-tested directly. The `internal BuildDeleteDialogMessage(Array, List<InstanceSave>?)` method on `DeleteLogic` is the testable seam for asserting dialog message content (`InternalsVisibleTo("GumToolUnitTests")` is already configured).
