@@ -25,8 +25,7 @@ public static class SampleBuild
         PlayerSettings.SetGraphicsAPIs(BuildTarget.StandaloneWindows64, new[] { GraphicsDeviceType.Direct3D11 });
         PlayerSettings.SetScriptingBackend(target, il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
 
-        // IL2CPP uses Low stripping until a Minimal build is verified: RichTextKit is still built
-        // against SkiaSharp 2.88 (#5529). -stripping overrides it.
+        // IL2CPP uses Low stripping until a Minimal build is verified (#5529). -stripping overrides it.
         string[] args = Environment.GetCommandLineArgs();
         int strippingIndex = Array.IndexOf(args, "-stripping");
         ManagedStrippingLevel stripping = strippingIndex >= 0
