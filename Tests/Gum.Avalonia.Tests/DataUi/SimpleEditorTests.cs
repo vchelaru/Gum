@@ -263,9 +263,45 @@ public class SimpleEditorTests
         display.Slider.Value.ShouldBe(25);
 
         display.Slider.Value = 60;
+        // Without a pointer drag in progress, moving the slider applies nothing until the commit.
+        fixture.Number.ShouldBe(0.25f);
         display.HandleSliderCommitted();
 
         fixture.Number.ShouldBe(0.6f, 0.0001f);
+    }
+
+    [AvaloniaFact]
+    public void SliderDisplay_Drag_WritesIntermediateValuesThenOneFullOnRelease()
+    {
+        EditorFixture fixture = new EditorFixture { Number = 0 };
+        InstanceMember member = fixture.Member(nameof(EditorFixture.Number));
+        List<(object? Value, SetPropertyCommitType CommitType)> commits = new();
+        member.CustomSetPropertyEvent += (_, args) =>
+        {
+            fixture.Number = Convert.ToSingle(args.Value);
+            commits.Add((args.Value, args.CommitType));
+        };
+        SliderDisplay display = new SliderDisplay { MinValue = 0, MaxValue = 100, InstanceMember = member };
+        Window window = new Window { Content = display, Width = 400, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+        Rect sliderBounds = display.Slider.Bounds;
+        Point start = display.Slider.TranslatePoint(new Point(sliderBounds.Width * 0.25, sliderBounds.Height / 2), window)!.Value;
+        Point end = display.Slider.TranslatePoint(new Point(sliderBounds.Width * 0.75, sliderBounds.Height / 2), window)!.Value;
+
+        window.MouseDown(start, MouseButton.Left);
+        window.MouseMove(start + new Point(10, 0));
+        window.MouseMove(end);
+
+        commits.ShouldNotBeEmpty();
+        commits.ShouldAllBe(c => c.CommitType == SetPropertyCommitType.Intermediate);
+        fixture.Number.ShouldBe((float)display.Slider.Value, 1f);
+
+        window.MouseUp(end, MouseButton.Left);
+
+        commits.Count(c => c.CommitType == SetPropertyCommitType.Full).ShouldBe(1);
+        commits.Last().CommitType.ShouldBe(SetPropertyCommitType.Full);
+        window.Close();
     }
 
     [AvaloniaFact]

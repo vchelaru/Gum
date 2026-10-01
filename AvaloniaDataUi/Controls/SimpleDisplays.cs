@@ -641,8 +641,14 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     {
         if (e.Property == RangeBase.ValueProperty && !_isSettingSliderValueProgrammatically)
         {
-            // Show the value while dragging; it is committed when the pointer is released.
             _textBox.Text = _sliderLogic.FormatSliderValue(_slider.Value, InstanceMember?.PropertyType);
+            // While the pointer drags, apply each value live; releasing the pointer does the full commit.
+            if (_sliderValueAtLeftPress != null)
+            {
+                // A drag is a user edit; the text box does not report programmatic text as one.
+                _textLogic.HasUserChangedAnything = true;
+                _textLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
+            }
         }
     }
 
