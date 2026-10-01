@@ -136,6 +136,9 @@ ew-scratch-projects.ps1
 - UI Automation `Invoke` still works on a window a modal dialog has disabled, while mouse clicks do
   nothing. List the process's visible windows before each step so a dialog left open (behind
   another app's window, say) is not mistaken for a dead button.
+- A file dragged from Explorer with synthetic mouse input (`SetCursorPos` + `mouse_event`) drops
+  into Notepad but never reaches the Avalonia head, though a real hand drag does. File drops from
+  outside the tool need a person.
 - Launched with no last project, the Avalonia head opens the New Project dialog about 5 s after its
   window appears. Wait for it before driving the main window.
 
