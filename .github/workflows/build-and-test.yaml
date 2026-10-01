@@ -77,6 +77,11 @@ jobs:
           submodules: false
       # Setup, Release build, gumcli publish, and Xvfb on Linux; shared with e2e-nightly.yaml.
       - uses: ./.github/actions/build-avalonia-head
+      # The packaged app declares no Automation consent, but the runner image grants it. Revoking it
+      # makes a test that trashes through Finder (Apple Events) fail here as it would for users (#5556).
+      - name: Revoke Apple Events consent (macOS)
+        if: runner.os == 'macOS'
+        run: tccutil reset AppleEvents
       # The runners have no GPU, so the KNI device tests (CanvasHostTests, TextureCoordinateTab*,
       # CanvasScenarioTests) skip themselves here
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
