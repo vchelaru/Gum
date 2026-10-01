@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Gum.Avalonia.Canvas;
 using Gum.Input;
+using Gum.Services;
 
 namespace Gum.Avalonia.Services;
 
@@ -35,6 +36,15 @@ public static class AvaloniaMouseMapping
             Handled = e.Handled,
         };
     }
+
+    /// <summary>
+    /// Whether a press is macOS's secondary click: the left button with Ctrl, which Mac apps treat as
+    /// a right-click. Avalonia's macOS backend reports it as a plain left press with Ctrl held
+    /// (<c>AvnView.mm</c> sends every <c>mouseDown:</c> as <c>LeftButtonDown</c>), so the head maps it
+    /// itself; see <see cref="SecondaryClickHook"/>.
+    /// </summary>
+    public static bool IsSecondaryClickPress(PointerUpdateKind kind, KeyModifiers modifiers, IOperatingSystemInfo operatingSystem) =>
+        operatingSystem.IsMacOS && kind == PointerUpdateKind.LeftButtonPressed && modifiers.HasFlag(KeyModifiers.Control);
 
     /// <summary>
     /// Builds a neutral wheel event. A touchpad's two-finger scroll pans like native canvas apps,

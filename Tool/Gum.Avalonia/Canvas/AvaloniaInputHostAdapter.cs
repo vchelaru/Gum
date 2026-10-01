@@ -4,6 +4,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Gum.Avalonia.Services;
+using Gum.Services;
 using InputLibrary;
 using Microsoft.Xna.Framework.Input;
 using AvaloniaCursor = Avalonia.Input.Cursor;
@@ -24,6 +26,7 @@ namespace Gum.Avalonia.Canvas;
 public sealed class AvaloniaInputHostAdapter : IInputHostControl
 {
     private readonly Control _control;
+    private readonly SecondaryClickTracker _secondaryClick;
     private readonly HashSet<XnaKeys> _keysDown = new HashSet<XnaKeys>();
     private Point _pointerPosition;
     private bool _isLeftDown;
@@ -31,10 +34,14 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
     private bool _isMiddleDown;
     private CursorKind _cursorKind;
 
-    /// <summary>Starts tracking input on <paramref name="control"/>.</summary>
-    public AvaloniaInputHostAdapter(Control control)
+    /// <summary>
+    /// Starts tracking input on <paramref name="control"/>. A macOS Ctrl+left press reads as the right
+    /// button until it is released (#5555); <paramref name="operatingSystem"/> defaults to the one running.
+    /// </summary>
+    public AvaloniaInputHostAdapter(Control control, IOperatingSystemInfo? operatingSystem = null)
     {
         _control = control ?? throw new ArgumentNullException(nameof(control));
+        _secondaryClick = new SecondaryClickTracker(operatingSystem ?? new OperatingSystemInfo());
         _pointerPosition = new Point(-1, -1);
         _cursorKind = CursorKind.Arrow;
 
@@ -139,8 +146,12 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
     {
         _pointerPosition = ToPhysicalPixels(e.GetPosition(_control));
         PointerPointProperties properties = e.GetCurrentPoint(_control).Properties;
-        _isLeftDown = properties.IsLeftButtonPressed;
-        _isRightDown = properties.IsRightButtonPressed;
+        // SecondaryClickHook raises a right press in place of a secondary click's left press, and this
+        // control sees both, the left one as handled; the tracker makes both read as the right button.
+        _secondaryClick.Track(properties.PointerUpdateKind, e.KeyModifiers);
+        bool isSecondary = _secondaryClick.IsActive;
+        _isLeftDown = properties.IsLeftButtonPressed && !isSecondary;
+        _isRightDown = properties.IsRightButtonPressed || (properties.IsLeftButtonPressed && isSecondary);
         _isMiddleDown = properties.IsMiddleButtonPressed;
     }
 
