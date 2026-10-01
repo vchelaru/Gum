@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
+using Gum.Avalonia.Services.MacOS;
 using Gum.Managers;
 using ToolsUtilities;
 
 namespace Gum.Avalonia.Services;
 
 /// <summary>
-/// Moves files to the OS trash: the shell recycle bin on Windows, Finder's trash on macOS, and
-/// the freedesktop trash through <c>gio</c> on Linux. Never deletes permanently on its own; a
+/// Moves files to the OS trash: the shell recycle bin on Windows, <c>NSFileManager</c> on macOS,
+/// and the freedesktop trash through <c>gio</c> on Linux. Never deletes permanently on its own; a
 /// platform without a trash command raises so the caller can decide.
 /// </summary>
 public class AvaloniaRecycleBinService : IRecycleBinService
@@ -38,8 +40,13 @@ public class AvaloniaRecycleBinService : IRecycleBinService
             return;
         }
 
-        ProcessStartInfo command = CreateTrashCommand(
-            filePaths.Select(filePath => filePath.FullPath).ToList(), OperatingSystem.IsMacOS());
+        if (OperatingSystem.IsMacOS())
+        {
+            MoveToMacTrash(filePaths);
+            return;
+        }
+
+        ProcessStartInfo command = CreateTrashCommand(filePaths.Select(filePath => filePath.FullPath).ToList());
         command.UseShellExecute = false;
         command.CreateNoWindow = true;
         command.RedirectStandardError = true;
@@ -57,33 +64,40 @@ public class AvaloniaRecycleBinService : IRecycleBinService
         }
     }
 
-    /// <summary>
-    /// Builds the single macOS (Finder via <c>osascript</c>) or Linux (<c>gio trash</c>) command that
-    /// trashes every path in <paramref name="fullPaths"/>. One Finder call for the whole batch plays the
-    /// trash sound once instead of once per file.
-    /// </summary>
-    internal static ProcessStartInfo CreateTrashCommand(IReadOnlyList<string> fullPaths, bool isMacOS)
+    // Trashes every file even when one fails, then reports all failures together, as gio does.
+    [SupportedOSPlatform("macos")]
+    private static void MoveToMacTrash(IReadOnlyList<FilePath> filePaths)
     {
-        ProcessStartInfo command;
-        if (isMacOS)
+        List<string> failures = new List<string>();
+        foreach (FilePath filePath in filePaths)
         {
-            string files = string.Join(", ", fullPaths.Select(path => $"POSIX file \"{EscapeAppleScriptString(path)}\""));
-            command = new ProcessStartInfo("osascript");
-            command.ArgumentList.Add("-e");
-            command.ArgumentList.Add($"tell application \"Finder\" to delete {{{files}}}");
-        }
-        else
-        {
-            command = new ProcessStartInfo("gio");
-            command.ArgumentList.Add("trash");
-            foreach (string path in fullPaths)
+            try
             {
-                command.ArgumentList.Add(path);
+                MacFileTrash.MoveToTrash(filePath.FullPath);
             }
+            catch (IOException exception)
+            {
+                failures.Add(exception.Message);
+            }
+        }
+        if (failures.Count > 0)
+        {
+            throw new IOException(string.Join(Environment.NewLine, failures));
+        }
+    }
+
+    /// <summary>
+    /// Builds the single Linux <c>gio trash</c> command that trashes every path in
+    /// <paramref name="fullPaths"/>.
+    /// </summary>
+    internal static ProcessStartInfo CreateTrashCommand(IReadOnlyList<string> fullPaths)
+    {
+        ProcessStartInfo command = new ProcessStartInfo("gio");
+        command.ArgumentList.Add("trash");
+        foreach (string path in fullPaths)
+        {
+            command.ArgumentList.Add(path);
         }
         return command;
     }
-
-    private static string EscapeAppleScriptString(string value) =>
-        value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 }
