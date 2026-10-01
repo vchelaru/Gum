@@ -77,16 +77,16 @@ jobs:
           submodules: false
       # Setup, Release build, gumcli publish, and Xvfb on Linux; shared with e2e-nightly.yaml.
       - uses: ./.github/actions/build-avalonia-head
-      # The runners have no GPU, so the KNI device tests (CanvasHostTests, TextureCoordinateTab*,
-      # CanvasScenarioTests) skip themselves here
-      # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
-      # --no-build runs against the Release build above; a rebuild here can hit a parallel-build
-      # file lock (MSB3248). --blame names the test that was running if the test host crashes.
       # The packaged app declares no Automation consent, but the runner image grants it. Revoking it
       # makes a test that trashes through Finder (Apple Events) fail here as it would for users (#5556).
       - name: Revoke Apple Events consent (macOS)
         if: runner.os == 'macOS'
         run: tccutil reset AppleEvents
+      # The runners have no GPU, so the KNI device tests (CanvasHostTests, TextureCoordinateTab*,
+      # CanvasScenarioTests) skip themselves here
+      # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
+      # --no-build runs against the Release build above; a rebuild here can hit a parallel-build
+      # file lock (MSB3248). --blame names the test that was running if the test host crashes.
       - name: Gum.Avalonia.Tests (headless)
         run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --logger "trx;LogFileName=avalonia-head.trx" --results-directory TestResults
       # The full-startup layer (phase 100): the real head executable on a fixture project, plus the
