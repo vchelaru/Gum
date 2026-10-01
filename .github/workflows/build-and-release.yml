@@ -24,7 +24,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 # Define the jobs to run
 jobs:
@@ -206,25 +205,6 @@ jobs:
           # Supposedly needed for tags
           fetch-depth: 0
 
-      # Update AssemblyInfo.cs version dynamically to current date. The build version lives
-      # in an AssemblyMetadata("BuildVersion", ...) attribute rather than
-      # AssemblyVersion/AssemblyFileVersion - see the comment in AssemblyInfo.cs for why
-      # (a WPF/SDK wpftmp bug that made those attributes uncompilable in this project).
-      - name: Update AssemblyInfo.cs version
-        shell: pwsh
-        run: |
-          $version = (Get-Date).ToString('yyyy.MM.dd')
-          $currentYear = (Get-Date).Year
-          $copyrightLine = "Copyright © FlatRedBall 2017-$currentYear."
-          $file = "Gum/Properties/AssemblyInfo.cs"
-
-          Write-Host "Updating version in $file to $version"
-          (Get-Content $file) -replace 'AssemblyMetadata\("BuildVersion", ".*"\)', "AssemblyMetadata(`"BuildVersion`", `"$version`")" `
-                              -replace 'AssemblyCopyright\(".*"\)', "AssemblyCopyright(`"$copyrightLine`")" |
-            Set-Content $file
-
-          Write-Host "Updated AssemblyInfo.cs to version $version"
-
       # 1) Collect the Avalonia packages built by publish-avalonia.
       - name: Download Avalonia packages
         uses: actions/download-artifact@v4
@@ -283,34 +263,9 @@ jobs:
           }
           "prev_tag=$prev" >> $env:GITHUB_OUTPUT
 
-      # 3) Create PR for version bump. This is peter-evans/create-pull-request's normal,
-      # well-supported usage: it discovers the uncommitted AssemblyInfo.cs edit from the
-      # "Update AssemblyInfo.cs version" step (which ran earlier, unconditionally), commits
-      # it itself, pushes a fresh branch, and opens the PR.
-      - name: Create pull request for version bump
-        if: github.event.inputs.release_kind == 'release'
-        id: version_bump_pr
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: version-bump/${{ steps.meta.outputs.tag }}
-          title: "Bump version to ${{ steps.meta.outputs.tag }}"
-          body: |
-            This PR was automatically created by the Build and Release workflow.
-
-            - Bumps `Gum/Properties/AssemblyInfo.cs` to version **${{ steps.meta.outputs.tag }}**
-            - Release title: **${{ steps.meta.outputs.title }}**
-          base: main
-          labels: |
-            automated
-            version-bump
-
-      # 3b) Tag the version-bump commit the PR step just created and pushed.
-      # Tagging the PR branch's resulting commit (instead of committing to that exact branch
-      # name ourselves beforehand) avoids create-pull-request's "branch already matches base"
-      # reset: that action expects to be the one doing the committing, and force-resets any
-      # branch it's handed that already has a pushed commit identical to what it would have
-      # made itself. See the PR description for the full root-cause writeup.
+      # 3) Tag the commit this run built. The packages get their version from -p:Version at
+      # publish, so nothing is committed: a run dispatched from a release branch
+      # (release/YYYY-MM) tags that branch's commit and leaves main untouched.
       - name: Create and push release tag
         if: github.event.inputs.release_kind == 'release'
         shell: pwsh
@@ -318,9 +273,8 @@ jobs:
           git config user.name  "github-actions"
           git config user.email "actions@github.com"
 
-          $headSha = "${{ steps.version_bump_pr.outputs.pull-request-head-sha }}"
-          Write-Host "Tagging version-bump commit $headSha"
-          git tag -a "${{ steps.meta.outputs.tag }}" -m "${{ steps.meta.outputs.title }}" $headSha
+          Write-Host "Tagging ${{ github.sha }} on ${{ github.ref_name }}"
+          git tag -a "${{ steps.meta.outputs.tag }}" -m "${{ steps.meta.outputs.title }}" ${{ github.sha }}
 
           Write-Host "Pushing tag..."
           git push origin "${{ steps.meta.outputs.tag }}"
@@ -330,6 +284,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
+          # A prerelease or test tag doesn't exist yet and is created here; without this it
+          # would land on the default branch, not the commit this run built.
+          target_commitish: ${{ github.sha }}
           name:     ${{ steps.meta.outputs.title }}
           generate_release_notes: true
           # Pin the comparison base so the auto-notes diff against the actual prior tag
