@@ -3,8 +3,8 @@ using Avalonia.Input;
 using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
 using Gum.Services.Dialogs;
+using Gum.Undo;
 using Shouldly;
-using WpfDataUi.DataTypes;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
 
@@ -25,13 +25,17 @@ public class ParentValidationScenarioTests
         grid.PickComboItem("Parent", "Outer");
         tree.Click(tree.NodeFor(outer));
         tree.Click(tree.NodeFor(box), RawInputModifiers.Control);
+        // A second message is answered too, so a double commit fails on the count instead of
+        // throwing mid-commit.
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
 
-        CommitOnRow(grid, "Parent", "Inner");
+        int heldLocks = PickIsolated(tree, grid, "Parent", "Inner");
 
+        heldLocks.ShouldBe(0);
         VariableGridHarness.StoredValue(panel, "Outer.Parent").ShouldBeNull();
         VariableGridHarness.StoredValue(panel, "Box.Parent").ShouldBe("Inner");
-        tree.Dialogs.Messages.ShouldContain(message => message.Contains("circular reference"));
+        tree.Dialogs.Messages.Count(message => message.Contains("circular reference")).ShouldBe(1);
     }
 
     [AvaloniaFact]
@@ -48,19 +52,34 @@ public class ParentValidationScenarioTests
         tree.Dialogs.AnswerNextUserString("OuterParent");
         grid.PickRowMenuItem("Parent", "Expose Variable");
         tree.Click(tree.NodeFor(panel));
+        // A second message is answered too, so a double commit fails on the count instead of
+        // throwing mid-commit.
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
 
-        CommitOnRow(grid, "OuterParent", "Inner");
+        int heldLocks = PickIsolated(tree, grid, "OuterParent", "Inner");
 
+        heldLocks.ShouldBe(0);
         VariableGridHarness.StoredValue(panel, "Outer.Parent").ShouldBeNull();
-        tree.Dialogs.Messages.ShouldContain(message => message.Contains("circular reference"));
+        tree.Dialogs.Messages.Count(message => message.Contains("circular reference")).ShouldBe(1);
     }
 
-    // Committing through the combo commits a rejected value a second time when the rejection
-    // rebuilds the grid (#5580), so these commit through the row instead.
-    private static void CommitOnRow(VariableGridHarness grid, string memberName, string value)
+    /// <summary>
+    /// Picks <paramref name="item"/> and returns how many undo locks the commit left held. The undo
+    /// manager is shared by every test, so a leaked lock is released here, or later tests would
+    /// record no undo.
+    /// </summary>
+    private static int PickIsolated(ProjectTreeHarness tree, VariableGridHarness grid, string memberName, string item)
     {
-        grid.Member(memberName).SetValue(value, SetPropertyCommitType.Full);
-        grid.Settle();
+        UndoManager undoManager = (UndoManager)tree.UndoManager;
+        try
+        {
+            grid.PickComboItem(memberName, item);
+            return undoManager.UndoLocks.Count;
+        }
+        finally
+        {
+            undoManager.UndoLocks.Clear();
+        }
     }
 }
