@@ -70,11 +70,11 @@ slider.Minimum = 25; // this sets Value to 25
 
 ## Clicking the Track
 
-Clicking the track (the bar the thumb slides along) moves the thumb in one of two ways, controlled by `IsMoveToPointEnabled`. The default is `false`.
+`IsMoveToPointEnabled` controls what happens when the user clicks the track. It defaults to `false`.
 
 ### Stepping with LargeChange
 
-By default, each click on the track changes `Value` by `LargeChange` toward the cursor, and holding the button repeats the step until the thumb reaches the cursor. `LargeChange` defaults to 25 no matter what `Minimum` and `Maximum` are.
+When `IsMoveToPointEnabled` is `false`, each click on the track changes `Value` by `LargeChange` toward the cursor. Holding the button repeats the step until the thumb reaches the cursor.
 
 ```csharp
 // Initialize
@@ -97,11 +97,11 @@ slider.ValueChanged += (_, _) =>
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA12P0QqCMBSGX-UwuiiQMKsbxYuKiMBuSipBiMVGDeYE3SoK3705h412te_7z_5xPmhbb1SBQlkp6iEmmGSYszdFIXrgCji-Ug4xCPqEpL0PR1EujB0vCEnLfVlKx5317NzvMdMYzDTmom2rOSO0snUHA-Zt5_8KrewbLWd_fGJE3ttvXLnTixSq0NqV-GXlxHd0gqsbXd2xuFET_ZIj5somBHLl-8EyhuHFg8sI4pan61yAPt2yKX1J3TAwk4F5HMLH7Wq6KELNF2tmwsF4AQAA)
 
-Because the step size does not scale with the range, the thumb can land past the cursor, or barely move. With the default `LargeChange` of 25, a click on a slider from 0 to 1 jumps the whole range, while a click on a slider from 0 to 1000 moves the thumb by 2.5%. Set `LargeChange` to match your range, or use `IsMoveToPointEnabled`.
+`LargeChange` defaults to 25 regardless of `Minimum` and `Maximum`. On a slider from 0 to 1, one click jumps the whole range. On a slider from 0 to 1000, one click barely moves the thumb. Set `LargeChange` to fit your range, or set `IsMoveToPointEnabled` to `true`.
 
 ### Moving to the Cursor
 
-Setting `IsMoveToPointEnabled` to `true` moves the thumb directly to the cursor when the track is pushed, and keeps it under the cursor while the button is held. `LargeChange` is ignored.
+When `IsMoveToPointEnabled` is `true`, clicking the track moves the thumb to the cursor. The thumb follows the cursor while the button is held. `LargeChange` is not used.
 
 ```csharp
 // Initialize
@@ -124,4 +124,4 @@ slider.ValueChanged += (_, _) =>
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA12QUWvCMBDHv8oR9qAgo1b3UunDJiKCgmxFJxQkkkMDaQJtoqL43XdJiwvmKb_f3f3D5c4WzdxVLLO1wwGTWlrJlbwhy9iZ16D4ARXkoPECS3_v9SelDvb9U4jCfBtjI_dLvR_JE3eE6Ziw1D6tUVJg3cX9BAizrX8J7OQzsePdC2-lsCf_TCxXtEjlKtKx5NdODpNIL5qVOWNh1kZqO9P8oFBQj_-Q_6YNVw6nJ66PVCxdkqRfOfT2A9j3Ifc8mpUa6LR7F3i1lPEWOtMwnME9znq0pQl7_AHKGcQUgwEAAA)
 
-With `IsMoveToPointEnabled` set to `true`, `ValueChanged` is raised as the thumb moves, and `ValueChangeCompleted` is raised once when the button is released. Use `ValueChangeCompleted` for work you do not want to repeat every frame, such as saving a setting. If `IsSnapToTickEnabled` is `true`, the thumb snaps to the nearest tick in either mode.
+`ValueChanged` is raised as the thumb moves. `ValueChangeCompleted` is raised once when the button is released, so use it for work that should not run every frame, such as saving a setting. `IsSnapToTickEnabled` applies in both modes.
