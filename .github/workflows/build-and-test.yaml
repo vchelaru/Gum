@@ -231,7 +231,24 @@ jobs:
 
       - name: Install workloads
         if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true'
-        run: dotnet workload install maui
+        timeout-minutes: 25
+        shell: bash
+        run: |
+          # An attempt can hang with no output (seen on macos-15 for 50 min). Cap each
+          # attempt at 10 min, keep a detailed log, retry once, and upload the logs if both fail.
+          set -o pipefail
+          for attempt in 1 2; do
+            if perl -e 'alarm shift; exec @ARGV' 600 dotnet workload install maui --verbosity detailed 2>&1 | tee "workload-install-$attempt.log"; then exit 0; fi
+            echo "::warning::workload install attempt $attempt failed or timed out"
+          done
+          exit 1
+
+      - name: Upload workload install logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workload-install-logs-generated-code
+          path: workload-install-*.log
 
       # Regenerate every harness project with GumCli and fail if the checked-in
       # generated code is stale. This forces codegen behavior changes to ship with
@@ -430,7 +447,24 @@ jobs:
 
       - name: Install workloads
         if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
-        run: dotnet workload install wasm-tools ios android maui
+        timeout-minutes: 25
+        shell: bash
+        run: |
+          # An attempt can hang with no output (seen on macos-15 for 50 min). Cap each
+          # attempt at 10 min, keep a detailed log, retry once, and upload the logs if both fail.
+          set -o pipefail
+          for attempt in 1 2; do
+            if perl -e 'alarm shift; exec @ARGV' 600 dotnet workload install wasm-tools ios android maui --verbosity detailed 2>&1 | tee "workload-install-$attempt.log"; then exit 0; fi
+            echo "::warning::workload install attempt $attempt failed or timed out"
+          done
+          exit 1
+
+      - name: Upload workload install logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workload-install-logs-${{ matrix.os }}
+          path: workload-install-*.log
 
       # Workload caching IS used above and saves ~2 minutes per run.
       # I tried caching both NuGet packages and also cache on the actions/setup-dotnet@v4
