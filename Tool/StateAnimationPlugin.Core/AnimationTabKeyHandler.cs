@@ -37,7 +37,7 @@ public class AnimationTabKeyHandler
         {
             return viewModel.MoveSelectedAnimationDown();
         }
-        if (viewModel.SelectedAnimation != null && _hotkeyManager.Delete.IsPressed(e))
+        if (viewModel.SelectedAnimation != null && _hotkeyManager.IsDeletePressed(e))
         {
             viewModel.DeleteSelectedAnimation();
             return true;
@@ -67,7 +67,7 @@ public class AnimationTabKeyHandler
             return null;
         }
 
-        if (_hotkeyManager.Delete.IsPressed(e))
+        if (_hotkeyManager.IsDeletePressed(e))
         {
             viewModel.DeleteSelectedKeyframe();
         }

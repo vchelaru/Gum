@@ -35,6 +35,20 @@ public class HotkeyViewModelTests
     }
 
     [Fact]
+    public void Constructor_ListsTheAlternativeDeleteKey_OnlyWhenThereIsOne()
+    {
+        Mock<IHotkeyManager> mac = new();
+        mac.Setup(x => x.DeleteAlt).Returns(KeyCombination.Pressed(GumKey.Back));
+        Mock<IHotkeyManager> windows = new();
+
+        HotkeyViewModel macViewModel = new(mac.Object, new KeyCombinationFormatter(KeyDisplayStyle.MacOS));
+        HotkeyViewModel windowsViewModel = new(windows.Object, new KeyCombinationFormatter(KeyDisplayStyle.Windows));
+
+        macViewModel.Items.ShouldContain(item => item.Display == "Delete (Alternative): ⌫");
+        windowsViewModel.Items.ShouldNotContain(item => item.Display.StartsWith("Delete (Alternative)"));
+    }
+
+    [Fact]
     public void Constructor_ListsEveryBindingTheManagerExposes()
     {
         Mock<IHotkeyManager> hotkeyManager = new();

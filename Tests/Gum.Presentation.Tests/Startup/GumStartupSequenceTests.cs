@@ -46,6 +46,28 @@ public class GumStartupSequenceTests : IDisposable
         providers.Remove(_testServiceProvider);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ApplyPlatformKeyboard_LetsBackspaceRemoveListEntries_OnlyOnMacOS(bool isMacOS)
+    {
+        bool original = WpfDataUi.Controls.DataUiKeyboard.BackspaceDeletes;
+        Moq.Mock<IOperatingSystemInfo> operatingSystemInfo = new Moq.Mock<IOperatingSystemInfo>();
+        operatingSystemInfo.Setup(o => o.IsMacOS).Returns(isMacOS);
+        WpfDataUi.Controls.DataUiKeyboard.BackspaceDeletes = !isMacOS;
+
+        try
+        {
+            GumStartupSequence.ApplyPlatformKeyboard(operatingSystemInfo.Object);
+
+            WpfDataUi.Controls.DataUiKeyboard.BackspaceDeletes.ShouldBe(isMacOS);
+        }
+        finally
+        {
+            WpfDataUi.Controls.DataUiKeyboard.BackspaceDeletes = original;
+        }
+    }
+
     [Fact]
     public void WireEnumFixups_PromotesIntValuedEnumVariableSave_ToBoxedEnum()
     {

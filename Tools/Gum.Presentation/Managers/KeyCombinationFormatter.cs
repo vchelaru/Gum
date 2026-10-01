@@ -105,6 +105,7 @@ public class KeyCombinationFormatter : IKeyCombinationFormatter
             GumKey.Left when isMacOS => "←",
             GumKey.Right when isMacOS => "→",
             GumKey.Delete when isMacOS => "⌦",
+            GumKey.Back => isMacOS ? "⌫" : "Backspace",
             GumKey.Add => "Numpad +",
             GumKey.Subtract => "Numpad -",
             GumKey.Oemplus => "=",

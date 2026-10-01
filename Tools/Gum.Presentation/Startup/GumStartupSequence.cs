@@ -55,6 +55,7 @@ public class GumStartupSequence
 
         // Grid file-picking editors are created by the grid, not the container, so they share one picker.
         WpfDataUi.Controls.FilePickingLogic.FilePicker = _services.GetRequiredService<WpfDataUi.Controls.IDataUiFilePicker>();
+        ApplyPlatformKeyboard(_services.GetRequiredService<IOperatingSystemInfo>());
 
         _head.InitializeElementTreeView();
         StartupTiming.Mark("ElementTreeViewManager.Initialize");
@@ -103,6 +104,15 @@ public class GumStartupSequence
         };
 
         fileWatchTimer.Start(TimeSpan.FromMilliseconds(500));
+    }
+
+    /// <summary>
+    /// Applies the platform's keyboard conventions to the grid's editors, which the grid creates
+    /// outside the container. Called by <see cref="RunAsync"/>.
+    /// </summary>
+    public static void ApplyPlatformKeyboard(IOperatingSystemInfo operatingSystemInfo)
+    {
+        WpfDataUi.Controls.DataUiKeyboard.BackspaceDeletes = operatingSystemInfo.IsMacOS;
     }
 
     /// <summary>

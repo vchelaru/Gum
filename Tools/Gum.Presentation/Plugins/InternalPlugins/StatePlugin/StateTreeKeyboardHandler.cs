@@ -66,7 +66,7 @@ public class StateTreeKeyboardHandler
             return false;
         }
 
-        if (_hotkeyManager.Delete.IsPressed(e))
+        if (_hotkeyManager.IsDeletePressed(e))
         {
             if (_selectedState.SelectedStateSave != null)
             {

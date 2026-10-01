@@ -701,7 +701,7 @@ public class ListBoxDisplay : DataUiDisplayBase
         bool isCtrlDown = e.KeyModifiers.HasCommand();
         global::Avalonia.Input.Platform.IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
 
-        if (e.Key == Key.Delete)
+        if (e.Key.IsDelete())
         {
             RemoveSelected();
         }
@@ -871,7 +871,7 @@ public class MultiFileDisplay : DataUiDisplayBase
         _listBox.SelectionChanged += (_, _) => RefreshButtonVisibility();
         _listBox.KeyDown += (_, e) =>
         {
-            if (e.Key == Key.Delete && InstanceMember?.IsReadOnly != true)
+            if (e.Key.IsDelete() && InstanceMember?.IsReadOnly != true)
             {
                 RemoveSelected();
                 e.Handled = true;
