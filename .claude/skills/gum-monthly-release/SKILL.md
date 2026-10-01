@@ -34,16 +34,18 @@ Wait for answers before proceeding. If they answer some but not others, ask the 
 
 With the boundary established, gather all merged PRs and commits since that point.
 
+The range ends at the release branch (`release/<YYYY-MM>`, see `docs/contributing/building-and-releasing-gum.md`), not `main`: PRs merged to `main` after the branch was cut don't ship.
+
 **`git log` is the canonical PR set — not the `merged:>=DATE` search.** A release tag is often *published* days after the commit it points to (e.g. `Release_May_02_2026` was published May 2 but tags a late-April commit). A `merged:>=<publish-date>` filter then silently drops every PR merged between the tagged commit and the publish date — this burned a release once, undercounting by ~70 PRs. So derive the authoritative list from the commits actually reachable since the tag, and parse the squash-merge PR number from each subject:
 
 ```bash
 # Canonical set: every squashed PR since the boundary tag. The trailing (#N) is the merge PR.
 git fetch origin --tags -q
-git log --no-merges <prev-tag>..origin/main --format="%s" \
+git log --no-merges <prev-tag>..origin/release/<YYYY-MM> --format="%s" \
   | grep -oE '\(#[0-9]+\)$' | grep -oE '[0-9]+' | sort -un   # → the PR numbers to cover
 
 # Full clean subjects (already end in "(#N)") — used directly for the What's Changed list (Step 7.5):
-git log --no-merges <prev-tag>..origin/main --format="%s"
+git log --no-merges <prev-tag>..origin/release/<YYYY-MM> --format="%s"
 ```
 
 Use the `merged:>=DATE` search only as a *secondary* source for `files`/`labels`/`author` metadata, and reconcile it against the git-log set — anything in git log but missing from the search is a real PR the date filter dropped.
@@ -126,7 +128,9 @@ gh release view <prior-release-tag> --repo vchelaru/Gum
 
 This fan-out is a **prose-described** pipeline — the running agent still has to choose to batch the PRs, spawn the waves, and not shortcut. That's a softer guarantee than a deterministic harness. If a future run still comes back compressed (roll-up PRs collapsed to one line, whole sections thinner than the commit history warrants), **that's the signal this prose step wasn't enough, and the next step is to promote Step 3 to a `Workflow`** rather than to add more "be thorough" wording (which won't help — see the diagnosis in the changelog comment that introduced this step).
 
-A Workflow makes the fan-out deterministic: `pipeline(prNumbers, fetchCommits, expandToBullets, tagSection)` loops over the canonical PR set with no opportunity to skip or summarize the batch, returning the same structured `{number, section, bullets, confidence}` objects this step's subagents return. The main loop then runs Steps 4–5 over the workflow's output exactly as it does today. Note that a Workflow spawns dozens of agents and costs more tokens, so it requires the user's explicit opt-in each run — surface the option, don't auto-launch it.
+A Workflow makes the fan-out deterministic: `pipeline(prNumbers, fetchCommits, expandToBullets, tagSection)` loops over the canonical PR set with no opportunity to skip or summarize the batch, returning the same structured `{number, section, bullets, confidence}` objects this step's subagents return. The main loop then runs Steps 4–5 over the workflow's output exactly as it does today. Note that a Workflow spawns dozens of agents and costs more tokens, so it requires the user's explicit opt-in each run — surface the option, don't auto-launch it. Offer it up front, not as a fallback, when the canonical set is well past ~250 PRs.
+
+**Check coverage against what the agents wrote, not what they report.** Have each agent write its JSON to a file and return only a summary, then diff the PR numbers in the files against the canonical set. Agents misreport both ways: a batch can report nothing yet have written its file, or report success without writing one.
 
 ## Step 4: Categorize
 
@@ -194,7 +198,7 @@ Below the curated sections (and above the Full Changelog placeholder), emit a `#
 **Build it from `git log` subjects, not the PR-title API.** The squash-merge subject is the full PR title already suffixed with `(#N)` — clean and untruncated. The `gh pr list --json title` field, by contrast, comes back **truncated with `…`** for some older PRs, which leaks ellipses into the list. So:
 
 ```bash
-git log --no-merges <prev-tag>..origin/main --format="%s" \
+git log --no-merges <prev-tag>..origin/release/<YYYY-MM> --format="%s" \
   | grep -vE '^GITBOOK-' \
   | grep -vE '^FRB fixes' \
   | grep -vE '^Oops fixed FRB' \
