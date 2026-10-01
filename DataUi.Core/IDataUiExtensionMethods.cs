@@ -28,6 +28,11 @@ public sealed class DataUiContextMenuEntry
 
 public static class IDataUiExtensionMethods
 {
+    // The editor whose commit is running. A commit can rebuild the grid (a rejected value refreshes
+    // it), and the editor torn down by that rebuild loses focus and would commit again from inside
+    // its own commit (#5580), so that editor's nested commit is skipped. Another editor's still commits.
+    private static IDataUi? _committingDataUi;
+
     public static bool HasEnoughInformationToWork(this IDataUi dataUi)
     {
         return dataUi.InstanceMember?.IsDefined == true;
@@ -51,6 +56,24 @@ public static class IDataUiExtensionMethods
     }
 
     public static ApplyValueResult TrySetValueOnInstance(this IDataUi dataUi)
+    {
+        if (ReferenceEquals(_committingDataUi, dataUi))
+        {
+            return ApplyValueResult.Skipped;
+        }
+        IDataUi? outerDataUi = _committingDataUi;
+        _committingDataUi = dataUi;
+        try
+        {
+            return SetValueOnUiOnInstance(dataUi);
+        }
+        finally
+        {
+            _committingDataUi = outerDataUi;
+        }
+    }
+
+    private static ApplyValueResult SetValueOnUiOnInstance(IDataUi dataUi)
     {
         if (CanSetValuesOnInstance(dataUi, out ApplyValueResult result, out InstanceMember? member))
         {
@@ -82,6 +105,24 @@ public static class IDataUiExtensionMethods
     }
 
     public static ApplyValueResult TrySetValueOnInstance(this IDataUi dataUi, object? valueToSet, SetPropertyCommitType commitType = SetPropertyCommitType.Full)
+    {
+        if (ReferenceEquals(_committingDataUi, dataUi))
+        {
+            return ApplyValueResult.Skipped;
+        }
+        IDataUi? outerDataUi = _committingDataUi;
+        _committingDataUi = dataUi;
+        try
+        {
+            return SetValueOnInstance(dataUi, valueToSet, commitType);
+        }
+        finally
+        {
+            _committingDataUi = outerDataUi;
+        }
+    }
+
+    private static ApplyValueResult SetValueOnInstance(IDataUi dataUi, object? valueToSet, SetPropertyCommitType commitType)
     {
         if (CanSetValuesOnInstance(dataUi, out ApplyValueResult result, out InstanceMember? member))
         {
