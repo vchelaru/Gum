@@ -30,7 +30,6 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
         CameraZoomScope.SetOwnsCameraZoom(this, true);
 
         Core = new WireframeCanvasCore(this, dialogService, outputManager, pluginManager);
-        KeyboardInputLost += Core.HandleFocusLost;
         Gestures.AddPointerTouchPadGestureMagnifyHandler(this, HandlePinch);
     }
 

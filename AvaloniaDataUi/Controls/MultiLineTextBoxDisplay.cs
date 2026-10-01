@@ -11,9 +11,8 @@ using WpfDataUi.Controls;
 namespace AvaloniaDataUi.Controls;
 
 /// <summary>
-/// A multi-line string editor. Enter inserts a line; edits apply on focus loss, Ctrl+Enter (Cmd+Enter
-/// on macOS), or the Apply button, which shows only while edits are unapplied. Escape reverts
-/// unapplied edits.
+/// A multi-line string editor. Enter inserts a line; edits apply on focus loss, Ctrl+Enter, or the
+/// Apply button, which shows only while edits are unapplied. Escape reverts unapplied edits.
 /// Subclasses change how the member's value maps to and from the text.
 /// </summary>
 public class MultiLineTextBoxDisplay : DataUiDisplayBase
@@ -52,7 +51,7 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
             }
         };
         _textBox.LostFocus += (_, _) => Apply();
-        // Tunnel so the apply gesture is handled before the text box inserts a line.
+        // Tunnel so Ctrl+Enter is handled before the text box inserts a line.
         _textBox.AddHandler(KeyDownEvent, HandleTextBoxKeyDown, RoutingStrategies.Tunnel);
 
         // Not focusable, so clicking it leaves the caret in the text box and Tab skips it.
@@ -66,7 +65,7 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
             VerticalAlignment = VerticalAlignment.Bottom,
             Margin = new Thickness(0, 0, 4, 4),
         };
-        ToolTip.SetTip(ApplyButton, ApplyToolTip(PlatformKeyModifiers.Command));
+        ToolTip.SetTip(ApplyButton, "Apply (Ctrl+Enter)");
         ApplyButton.Click += (_, _) => Apply();
 
         _hint = CreateHintTextBlock();
@@ -176,7 +175,7 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
 
     private void HandleTextBoxKeyDown(object? sender, KeyEventArgs e)
     {
-        if (IsApplyGesture(e.Key, e.KeyModifiers, PlatformKeyModifiers.Command))
+        if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
             Apply();
             e.Handled = true;
@@ -188,13 +187,11 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
         }
     }
 
-    /// <summary>Whether <paramref name="key"/> with <paramref name="modifiers"/> applies the edit: Enter with the command modifier.</summary>
+    // REVERT CHECK: stubs with the old behavior.
     public static bool IsApplyGesture(Key key, KeyModifiers modifiers, KeyModifiers commandModifiers) =>
-        key == Key.Enter && modifiers.HasFlag(commandModifiers);
+        key == Key.Enter && modifiers.HasFlag(KeyModifiers.Control);
 
-    /// <summary>The Apply button's tooltip, naming the apply gesture for <paramref name="commandModifiers"/>.</summary>
-    public static string ApplyToolTip(KeyModifiers commandModifiers) =>
-        commandModifiers == KeyModifiers.Meta ? "Apply (⌘Enter)" : "Apply (Ctrl+Enter)";
+    public static string ApplyToolTip(KeyModifiers commandModifiers) => "Apply (Ctrl+Enter)";
 
     private void RefreshApplyButton()
     {
