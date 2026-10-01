@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Wireframe;
 using Gum.Wireframe.Editors.Visuals;
 using Moq;
@@ -21,6 +22,7 @@ public class RectangleSelectorTests
     private readonly Mock<ISelectionRectangleVisual> _mockSelectionRectangleVisual;
     private readonly Mock<IGumCursorState> _mockCursor;
     private readonly Camera _camera;
+    private readonly CanvasDisplayScale _displayScale;
     private readonly RectangleSelector _rectangleSelector;
     private bool _isShiftPressed;
 
@@ -33,6 +35,7 @@ public class RectangleSelectorTests
         _mockSelectionRectangleVisual = new Mock<ISelectionRectangleVisual>();
         _mockCursor = new Mock<IGumCursorState>();
         _camera = new Camera { Zoom = 1f };
+        _displayScale = new CanvasDisplayScale();
 
         // Setup the hotkey manager to use our test flag
         _mockHotkeyManager.Setup(x => x.IsPressedInControl(It.IsAny<KeyCombination>()))
@@ -45,7 +48,8 @@ public class RectangleSelectorTests
             _mockGuiCommands.Object,
             _camera,
             _mockCursor.Object,
-            _mockSelectionRectangleVisual.Object);
+            _mockSelectionRectangleVisual.Object,
+            _displayScale);
     }
 
     private void SetShiftPressed(bool pressed)
@@ -126,6 +130,26 @@ public class RectangleSelectorTests
         _rectangleSelector.IsActive.ShouldBeTrue();
         _rectangleSelector.HasMovedEnough.ShouldBeTrue();
         _rectangleSelector.Bounds.ShouldBe((10f, 10f, 20f, 25f));
+    }
+
+    // The minimum drag is in device-independent pixels, so on a 200% display it covers twice the
+    // physical pixels (#5554).
+    [Theory]
+    [InlineData(1f, 2f, false)]
+    [InlineData(1f, 3f, true)]
+    [InlineData(2f, 5f, false)]
+    [InlineData(2f, 6f, true)]
+    public void HandleDrag_MinimumDragScalesWithDisplayScale(float displayScale, float dragDistance, bool expected)
+    {
+        _displayScale.DisplayScale = displayScale;
+        _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
+        SetCursorPosition(10f, 10f);
+        _rectangleSelector.HandlePush(10f, 10f);
+
+        SetCursorPosition(10f + dragDistance, 10f);
+        _rectangleSelector.HandleDrag();
+
+        _rectangleSelector.IsActive.ShouldBe(expected);
     }
 
     #endregion

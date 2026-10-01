@@ -48,6 +48,8 @@ The base class `HandlePush` automatically checks `Context.IsSelectionLocked()` a
 
 The rectangle selector activates on drag when no handler is active and the cursor is not over the element body (or Shift is held for additive selection), after a minimum drag distance is exceeded. `SelectionManager` passes `isHandlerActive` based on whether any handler's `IsActive` is `true`.
 
+**Pixel thresholds scale with `ICanvasDisplayScale`.** Cursor positions are physical pixels (`AvaloniaInputHostAdapter` converts them), so a threshold constant is in device-independent pixels and is multiplied by `DisplayScale` where it is compared: `GrabbedState.PixelsToMoveBeforeDrag`, `RectangleSelector.MinimumDragDistance`, and `InputLibrary.Cursor`'s drag and double-click distances. A new threshold that skips this is half-size on a Retina display.
+
 `GetElementsInRectangle()` finds visible elements whose bounds intersect the drag rectangle, skipping `ScreenSave` elements and instances where `Locked == true`. On release, it either replaces the selection or toggles additively (Shift held).
 
 ## Locking (`InstanceSave.Locked`)

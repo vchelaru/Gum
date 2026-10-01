@@ -102,7 +102,8 @@ public class SelectionManagerEditorFactoryTests : BaseTestClass
             Mock.Of<IGumCursorState>(),
             Mock.Of<ISelectionRectangleVisual>(),
             Mock.Of<IHighlightOutlineVisual>(),
-            Mock.Of<IHighlightOverlayVisual>());
+            Mock.Of<IHighlightOverlayVisual>(),
+            new CanvasDisplayScale());
     }
 
     private GraphicalUiElement SelectNewStandardInstance()

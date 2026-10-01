@@ -1,4 +1,5 @@
 using InputLibrary;
+using Gum.Services;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using Shouldly;
@@ -22,12 +23,58 @@ public class CursorTests
         public KeyboardState GetKeyboardState() => new KeyboardState();
     }
 
-    private static (Cursor cursor, FakeHost host) Create()
+    private static (Cursor cursor, FakeHost host) Create(float displayScale = 1)
     {
         FakeHost host = new FakeHost();
         Cursor cursor = new Cursor();
-        cursor.Initialize(host);
+        cursor.Initialize(host, new CanvasDisplayScale { DisplayScale = displayScale });
         return (cursor, host);
+    }
+
+    private static void PushMoveRelease(Cursor cursor, FakeHost host, float pushX, float farthestX, float releaseX, double time)
+    {
+        host.Pointer = new HostPointerState(pushX, 10, true, false, false);
+        cursor.Activity(time);
+        host.Pointer = new HostPointerState(farthestX, 10, true, false, false);
+        cursor.Activity(time + 0.01);
+        host.Pointer = new HostPointerState(releaseX, 10, true, false, false);
+        cursor.Activity(time + 0.02);
+        host.Pointer = new HostPointerState(releaseX, 10, false, false, false);
+        cursor.Activity(time + 0.03);
+    }
+
+    // The thresholds are in device-independent pixels, so on a 200% display they cover twice the
+    // physical pixels (#5554).
+    [Theory]
+    [InlineData(1f, 6f, true)]
+    [InlineData(1f, 7f, false)]
+    [InlineData(2f, 7f, true)]
+    [InlineData(2f, 12f, true)]
+    [InlineData(2f, 13f, false)]
+    public void PrimaryDoubleClick_DragDeadZoneScalesWithDisplayScale(float displayScale, float wobble, bool expected)
+    {
+        (Cursor cursor, FakeHost host) = Create(displayScale);
+
+        PushMoveRelease(cursor, host, pushX: 60, farthestX: 60 + wobble, releaseX: 60, time: 0);
+        PushMoveRelease(cursor, host, pushX: 60, farthestX: 60 + wobble, releaseX: 60, time: 0.1);
+
+        cursor.PrimaryDoubleClick.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(1f, 4f, true)]
+    [InlineData(1f, 5f, false)]
+    [InlineData(2f, 8f, true)]
+    [InlineData(2f, 9f, false)]
+    public void PrimaryDoubleClick_ClickDistanceScalesWithDisplayScale(float displayScale, float secondClickOffset, bool expected)
+    {
+        (Cursor cursor, FakeHost host) = Create(displayScale);
+
+        PushMoveRelease(cursor, host, pushX: 60, farthestX: 60, releaseX: 60, time: 0);
+        float secondX = 60 + secondClickOffset;
+        PushMoveRelease(cursor, host, pushX: secondX, farthestX: secondX, releaseX: secondX, time: 0.1);
+
+        cursor.PrimaryDoubleClick.ShouldBe(expected);
     }
 
     [Fact]

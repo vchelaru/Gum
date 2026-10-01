@@ -3,6 +3,7 @@ using System.Linq;
 using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Wireframe;
 using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
@@ -24,6 +25,7 @@ public class RectangleSelector
     private readonly Camera _camera;
     private readonly IGumCursorState _cursor;
     private readonly ISelectionRectangleVisual _selectionRectangleVisual;
+    private readonly ICanvasDisplayScale _displayScale;
 
     private bool _isActive;
     private bool _hasMovedEnough;
@@ -34,7 +36,8 @@ public class RectangleSelector
     private float _currentY;
     private bool _isAdditive;
 
-    private const float MinimumDragDistance = 3; // pixels before considering it a drag
+    // Device-independent pixels the cursor must move before the push becomes a marquee.
+    private const float MinimumDragDistance = 3;
 
     #endregion
 
@@ -55,7 +58,8 @@ public class RectangleSelector
         IGuiCommands guiCommands,
         Camera camera,
         IGumCursorState cursor,
-        ISelectionRectangleVisual selectionRectangleVisual)
+        ISelectionRectangleVisual selectionRectangleVisual,
+        ICanvasDisplayScale displayScale)
     {
         _hotkeyManager = hotkeyManager;
         _wireframeObjectManager = wireframeObjectManager;
@@ -64,6 +68,7 @@ public class RectangleSelector
         _camera = camera;
         _cursor = cursor;
         _selectionRectangleVisual = selectionRectangleVisual;
+        _displayScale = displayScale;
     }
 
     public void HandlePush(float worldX, float worldY)
@@ -103,7 +108,7 @@ public class RectangleSelector
                 System.Math.Pow((_currentX - _startX) * zoom, 2) +
                 System.Math.Pow((_currentY - _startY) * zoom, 2));
 
-            if (screenDragDistance >= MinimumDragDistance)
+            if (screenDragDistance >= MinimumDragDistance * _displayScale.DisplayScale)
             {
                 _hasMovedEnough = true;
                 _isActive = true; // Activate only when drag threshold is reached
