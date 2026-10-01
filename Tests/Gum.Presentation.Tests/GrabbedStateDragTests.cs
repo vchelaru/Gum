@@ -1,4 +1,5 @@
 using Gum.Input;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
@@ -13,7 +14,7 @@ namespace Gum.Presentation.Tests;
 /// </summary>
 public class GrabbedStateDragTests
 {
-    private static (GrabbedState sut, Mock<IGumCursorState> cursor) CreatePushedSut(float pushX, float pushY)
+    private static (GrabbedState sut, Mock<IGumCursorState> cursor) CreatePushedSut(float pushX, float pushY, float displayScale = 1)
     {
         Mock<IGumCursorState> cursor = new Mock<IGumCursorState>();
         cursor.SetupGet(c => c.X).Returns(pushX);
@@ -21,7 +22,8 @@ public class GrabbedStateDragTests
         GrabbedState sut = new GrabbedState(
             Mock.Of<ISelectedState>(),
             Mock.Of<IWireframeObjectManager>(),
-            cursor.Object);
+            cursor.Object,
+            new CanvasDisplayScale { DisplayScale = displayScale });
         sut.HandlePush();
         cursor.SetupGet(c => c.PrimaryDown).Returns(true);
         return (sut, cursor);
@@ -53,6 +55,23 @@ public class GrabbedStateDragTests
         sut.BeginDragFrame();
         sut.DragXChange.ShouldBe(2);
         sut.DragYChange.ShouldBe(-1);
+    }
+
+    // The dead zone is in device-independent pixels, so on a 200% display it covers twice the
+    // physical pixels (#5554).
+    [Theory]
+    [InlineData(1f, 6f, false)]
+    [InlineData(1f, 7f, true)]
+    [InlineData(2f, 7f, false)]
+    [InlineData(2f, 12f, false)]
+    [InlineData(2f, 13f, true)]
+    public void HasMovedEnough_DeadZoneScalesWithDisplayScale(float displayScale, float offset, bool expected)
+    {
+        (GrabbedState sut, Mock<IGumCursorState> cursor) = CreatePushedSut(pushX: 100, pushY: 50, displayScale);
+
+        MoveCursor(cursor, x: 100, y: 50 + offset, xChange: 0, yChange: offset);
+
+        sut.HasMovedEnough.ShouldBe(expected);
     }
 
     [Fact]

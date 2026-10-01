@@ -5,6 +5,7 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Input;
+using Gum.Services;
 using Gum.ToolStates;
 using Vector2 = System.Numerics.Vector2;
 
@@ -24,6 +25,7 @@ public class GrabbedState
     private readonly ISelectedState _selectedState;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IGumCursorState _cursor;
+    private readonly ICanvasDisplayScale _displayScale;
 
     /// <summary>A copy of the selected state at the last push, or null if no state was selected yet.</summary>
     public StateSave? StateSave { get; private set; }
@@ -153,8 +155,9 @@ public class GrabbedState
     }
 
     /// <summary>
-    /// How far, in screen pixels on either axis, the cursor may move from the push before the
-    /// gesture becomes a drag. A release inside this dead zone is a click.
+    /// How far, in device-independent pixels on either axis, the cursor may move from the push
+    /// before the gesture becomes a drag. A release inside this dead zone is a click. Multiply by
+    /// the canvas display scale to get screen pixels.
     /// </summary>
     public const float PixelsToMoveBeforeDrag = 6;
 
@@ -174,9 +177,10 @@ public class GrabbedState
                 return false;
             }
 
+            float threshold = PixelsToMoveBeforeDrag * _displayScale.DisplayScale;
             return _hasDragStarted ||
-                Math.Abs(cursor.X - CursorPushScreenX) > PixelsToMoveBeforeDrag ||
-                Math.Abs(cursor.Y - CursorPushScreenY) > PixelsToMoveBeforeDrag;
+                Math.Abs(cursor.X - CursorPushScreenX) > threshold ||
+                Math.Abs(cursor.Y - CursorPushScreenY) > threshold;
         }
     }
 
@@ -213,11 +217,13 @@ public class GrabbedState
 
     public GrabbedState(ISelectedState selectedState,
         IWireframeObjectManager wireframeObjectManager,
-        IGumCursorState cursor)
+        IGumCursorState cursor,
+        ICanvasDisplayScale displayScale)
     {
         _selectedState = selectedState;
         _wireframeObjectManager = wireframeObjectManager;
         _cursor = cursor;
+        _displayScale = displayScale;
     }
 
     public void HandlePush()

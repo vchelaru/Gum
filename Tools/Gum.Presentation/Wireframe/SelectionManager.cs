@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -255,7 +256,8 @@ public class SelectionManager : ISelectionManager
         IGumCursorState cursor,
         ISelectionRectangleVisual selectionRectangleVisual,
         IHighlightOutlineVisual highlightOutline,
-        IHighlightOverlayVisual highlightOverlay)
+        IHighlightOverlayVisual highlightOverlay,
+        ICanvasDisplayScale displayScale)
     {
         _overlayLayer = overlayLayer;
         _camera = camera;
@@ -272,7 +274,8 @@ public class SelectionManager : ISelectionManager
             _guiCommands,
             _camera,
             _cursor,
-            selectionRectangleVisual);
+            selectionRectangleVisual,
+            displayScale);
     }
 
     /// <summary>

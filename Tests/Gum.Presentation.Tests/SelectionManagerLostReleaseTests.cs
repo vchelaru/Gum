@@ -73,7 +73,8 @@ public class SelectionManagerLostReleaseTests : BaseTestClass
             _cursor.Object,
             Mock.Of<ISelectionRectangleVisual>(),
             Mock.Of<IHighlightOutlineVisual>(),
-            Mock.Of<IHighlightOverlayVisual>());
+            Mock.Of<IHighlightOverlayVisual>(),
+            new CanvasDisplayScale());
 
         _selectionManager.SelectedGue = new GraphicalUiElement { Tag = new InstanceSave { Name = "Instance" } };
     }

@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -45,7 +46,8 @@ public class SelectionManagerHighlightTests : BaseTestClass
             Mock.Of<IGumCursorState>(),
             Mock.Of<ISelectionRectangleVisual>(),
             Mock.Of<IHighlightOutlineVisual>(),
-            Mock.Of<IHighlightOverlayVisual>());
+            Mock.Of<IHighlightOverlayVisual>(),
+            new CanvasDisplayScale());
     }
 
     [Fact]

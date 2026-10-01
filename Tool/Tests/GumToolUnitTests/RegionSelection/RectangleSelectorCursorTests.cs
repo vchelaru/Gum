@@ -37,7 +37,7 @@ public class RectangleSelectorCursorTests
     private static Cursor CreateCursorOver(IInputHostControl host)
     {
         Cursor cursor = new Cursor();
-        cursor.Initialize(host);
+        cursor.Initialize(host, new CanvasDisplayScale());
         cursor.Activity(0);
         return cursor;
     }
