@@ -15,9 +15,12 @@ name: Test Runtimes
 # branch (e.g. avalonia-migration-work) collects PRs targeting itself, and a
 # filter of [main] would leave every one of them unchecked until the whole
 # branch lands on main (#4695).
+#
+# release/** is in the push filter so a cherry-pick pushed straight to a release
+# branch is still built and tested on that branch's base.
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/**']
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
   workflow_dispatch:
