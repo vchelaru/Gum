@@ -130,7 +130,13 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     protected double RenderScaling => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
 
     /// <inheritdoc/>
-    public double DisplayScale => RenderScaling;
+    public double DisplayScale => DisplayScaleOverride ?? RenderScaling;
+
+    /// <summary>
+    /// Replaces the render scale as <see cref="DisplayScale"/> when set. Tests use it to run the
+    /// canvas at 200%, which the headless platform cannot do.
+    /// </summary>
+    internal double? DisplayScaleOverride { get; set; }
 
     /// <summary>A provider holding the device service, for content managers.</summary>
     public IServiceProvider Services => DeviceHost.Services;

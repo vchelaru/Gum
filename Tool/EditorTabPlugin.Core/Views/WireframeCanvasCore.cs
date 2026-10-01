@@ -279,7 +279,7 @@ public sealed class WireframeCanvasCore
             Camera.Y = -30;
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
-            InputLibrary.Cursor.Self.Initialize(_host.InputHost, displayScale);
+            InputLibrary.Cursor.Self.Initialize(_host.InputHost, new CanvasDisplayScale());
 
             mCanvasBounds = new LineRectangle();
             mCanvasBounds.IsDotted = true;

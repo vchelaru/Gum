@@ -553,7 +553,7 @@ public class ImageRegionSelectionCore
             mInputHost = _host.InputHost;
 
             mCursor = new InputLibrary.Cursor();
-            mCursor.Initialize(mInputHost, _displayScale);
+            mCursor.Initialize(mInputHost, new CanvasDisplayScale());
 
             mKeyboard = new InputLibrary.Keyboard();
             mKeyboard.Initialize(mInputHost);
