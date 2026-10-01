@@ -31,7 +31,7 @@ public class RectangleSelectorNudgeTests
         _host.SetupProperty(h => h.Cursor, CursorKind.Arrow);
         _host.Setup(h => h.GetPointerState()).Returns(() => new HostPointerState(150, 150, false, false, false));
         _host.Setup(h => h.GetKeyboardState()).Returns(() => new KeyboardState(_keysDown));
-        _cursor.Initialize(_host.Object);
+        _cursor.Initialize(_host.Object, new CanvasDisplayScale());
         _keyboard.Initialize(_host.Object);
 
         _selector = new TexCoordRectangleSelector(new SystemManagers { Renderer = new Renderer() }, new CanvasDisplayScale())
