@@ -68,7 +68,7 @@ public class VariableRowScenarioTests
         grid.PickComboItem("Parent", "Holder");
 
         VariableGridHarness.StoredValue(button, "Label.Parent").ShouldBe("Holder");
-        grid.Combo("Parent").SelectedItem?.ToString().ShouldBe("Holder");
+        grid.ComboText("Parent").ShouldBe("Holder");
     }
 
     [AvaloniaFact]
@@ -86,7 +86,7 @@ public class VariableRowScenarioTests
         grid.PickComboItem("LooksState", "Small");
 
         VariableGridHarness.StoredValue(button, "IconInstance.LooksState").ShouldBe("Small");
-        grid.Combo("LooksState").SelectedItem?.ToString().ShouldBe("Small");
+        grid.ComboText("LooksState").ShouldBe("Small");
     }
 
     [AvaloniaFact]

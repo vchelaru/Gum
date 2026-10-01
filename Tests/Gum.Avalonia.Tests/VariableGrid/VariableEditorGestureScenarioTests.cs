@@ -111,7 +111,7 @@ public class VariableEditorGestureScenarioTests
         grid.Settle();
 
         VariableGridHarness.StoredValue(button, "IconInstance.LooksState").ShouldBe("Small");
-        grid.Combo("LooksState").SelectedItem?.ToString().ShouldBe("Small");
+        grid.ComboText("LooksState").ShouldBe("Small");
         grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyBefore);
     }
 

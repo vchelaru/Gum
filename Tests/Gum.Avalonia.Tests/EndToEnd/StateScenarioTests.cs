@@ -56,7 +56,7 @@ public class StateScenarioTests
         states.Shown().ShouldBe(new[] { "Looks: Pressed, Hover", "Size: " });
 
         states.Click(states.ItemFor("Looks", "Hover"));
-        tree.SelectedState.SelectedStateSave?.Name.ShouldBe("Hover");
+        tree.SelectedState.SelectedStateSave.ShouldNotBeNull().Name.ShouldBe("Hover");
         grid.TypeAndEnter("Width", "200");
         states.RightClick(states.ItemFor("Looks", "Hover"));
         states.PickMenu("Duplicate [Hover]");

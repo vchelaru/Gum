@@ -262,7 +262,7 @@ public class CodeGenScenarioTests
         File.Exists(code.CodeFile("Components/CardCopy.Generated.cs")).ShouldBeFalse("a manually generated copy waits for Generate");
         code.Select(copy);
         code.Member("Using Statements").Value.ShouldBe("using System.Numerics;");
-        code.Member("Generation Behavior").Value?.ToString().ShouldBe("GenerateManually");
+        code.Member("Generation Behavior").Value.ShouldNotBeNull().ToString().ShouldBe("GenerateManually");
         code.Member("Generated File Name").Value.ShouldBe("", "two elements must not share one generated file");
 
         code.AssertOracles();
