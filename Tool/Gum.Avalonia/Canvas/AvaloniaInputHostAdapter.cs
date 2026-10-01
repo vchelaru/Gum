@@ -33,6 +33,7 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
     private bool _isRightDown;
     private bool _isMiddleDown;
     private CursorKind _cursorKind;
+    private WindowBase? _window;
 
     /// <summary>
     /// Starts tracking input on <paramref name="control"/>. A macOS Ctrl+left press reads as the right
@@ -54,7 +55,11 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         control.AddHandler(InputElement.PointerCaptureLostEvent, HandleCaptureLost, routes, handledEventsToo: true);
         control.AddHandler(InputElement.KeyDownEvent, HandleKeyDown, routes, handledEventsToo: true);
         control.AddHandler(InputElement.KeyUpEvent, HandleKeyUp, routes, handledEventsToo: true);
-        control.LostFocus += (_, _) => _keysDown.Clear();
+        // A key released after either of these lands elsewhere, so nothing is held any more.
+        control.LostFocus += (_, _) => HandleKeyboardInputLost();
+        control.AttachedToVisualTree += (_, _) => TrackWindow();
+        control.DetachedFromVisualTree += (_, _) => UntrackWindow();
+        TrackWindow();
 
         // A native OS drag-and-drop (dragging a tree item or a file from Explorer onto the
         // canvas) does not raise PointerMoved on the control it's hovering, so without this the
@@ -64,6 +69,12 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         control.AddHandler(DragDrop.DragOverEvent, HandleDrag, routes, handledEventsToo: true);
         control.AddHandler(DragDrop.DropEvent, HandleDrag, routes, handledEventsToo: true);
     }
+
+    /// <summary>
+    /// Raised when the control loses keyboard focus or its window deactivates, after the held keys
+    /// are forgotten: a key released after that never reaches the control.
+    /// </summary>
+    public event Action? KeyboardInputLost;
 
     /// <inheritdoc/>
     public bool Focused
@@ -124,6 +135,9 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         Key.Return => XnaKeys.Enter,
         Key.LeftCtrl => XnaKeys.LeftControl,
         Key.RightCtrl => XnaKeys.RightControl,
+        // Cmd on macOS.
+        Key.LWin => XnaKeys.LeftWindows,
+        Key.RWin => XnaKeys.RightWindows,
         Key.OemPeriod => XnaKeys.OemPeriod,
         Key.OemComma => XnaKeys.OemComma,
         _ => Enum.TryParse(key.ToString(), ignoreCase: true, out XnaKeys parsed) ? parsed : null,
@@ -180,6 +194,33 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         _isLeftDown = false;
         _isRightDown = false;
         _isMiddleDown = false;
+    }
+
+    private void TrackWindow()
+    {
+        UntrackWindow();
+        _window = TopLevel.GetTopLevel(_control) as WindowBase;
+        if (_window != null)
+        {
+            _window.Deactivated += HandleWindowDeactivated;
+        }
+    }
+
+    private void UntrackWindow()
+    {
+        if (_window != null)
+        {
+            _window.Deactivated -= HandleWindowDeactivated;
+            _window = null;
+        }
+    }
+
+    private void HandleWindowDeactivated(object? sender, EventArgs e) => HandleKeyboardInputLost();
+
+    private void HandleKeyboardInputLost()
+    {
+        _keysDown.Clear();
+        KeyboardInputLost?.Invoke();
     }
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)

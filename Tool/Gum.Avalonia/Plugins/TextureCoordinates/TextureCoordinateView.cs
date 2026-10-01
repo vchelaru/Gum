@@ -34,6 +34,7 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         _canvasControl = new ImageRegionCanvasControl(redrawScheduler);
         _canvasControl.AddHandler(KeyDownEvent, HandleCanvasKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         _canvasControl.AddHandler(KeyUpEvent, HandleCanvasKeyUp, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        _canvasControl.KeyboardInputLost += () => KeyboardFocusLost?.Invoke();
         _canvasControl.PointerPressed += (_, e) =>
             MouseDown?.Invoke(e.ToGumMouseEventArgs(_canvasControl, e.GetCurrentPoint(_canvasControl).Properties.PointerUpdateKind));
         _canvasControl.PointerMoved += (_, e) =>
@@ -143,6 +144,9 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
     public new event Action<GumKeyEventArgs>? KeyUp;
 
     /// <inheritdoc/>
+    public event Action? KeyboardFocusLost;
+
+    /// <inheritdoc/>
     public event Action<GumMouseEventArgs>? MouseDown;
 
     /// <inheritdoc/>
@@ -215,8 +219,8 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
 
 /// <summary>
 /// The Avalonia texture-coordinate canvas: an <see cref="AvaloniaGraphicsDeviceControl"/> that
-/// hosts an <see cref="ImageRegionSelectionCore"/> and translates its double-click input. The
-/// owning <see cref="TextureCoordinateView"/> forwards its mouse and key events.
+/// hosts an <see cref="ImageRegionSelectionCore"/>. The owning <see cref="TextureCoordinateView"/>
+/// forwards its mouse and key events.
 /// </summary>
 public sealed class ImageRegionCanvasControl : AvaloniaGraphicsDeviceControl
 {
@@ -230,17 +234,6 @@ public sealed class ImageRegionCanvasControl : AvaloniaGraphicsDeviceControl
         // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
         CameraZoomScope.SetOwnsCameraZoom(this, true);
         Core = new ImageRegionSelectionCore(this);
-    }
-
-    /// <inheritdoc/>
-    protected override void OnPointerPressed(PointerPressedEventArgs e)
-    {
-        base.OnPointerPressed(e);
-        PointerPoint point = e.GetCurrentPoint(this);
-        if (point.Properties.IsLeftButtonPressed && e.ClickCount == 2)
-        {
-            Core.RaiseDoubleClick();
-        }
     }
 
     /// <inheritdoc/>

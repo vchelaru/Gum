@@ -480,12 +480,15 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             {
                 bool changed = false;
 
-                // don't do this if CTRL is held - that's reserved for camera movement
-                bool isCtrlHeld =
+                // The command modifier plus an arrow moves the camera: Ctrl, or Cmd (the Windows
+                // key's slot) on macOS.
+                bool isCommandHeld =
                     keyBoard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) ||
-                    keyBoard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl);
+                    keyBoard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl) ||
+                    keyBoard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftWindows) ||
+                    keyBoard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightWindows);
 
-                if (!isCtrlHeld)
+                if (!isCommandHeld)
                 {
 
                     if (keyBoard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Left)

@@ -36,6 +36,12 @@ public interface ITextureCoordinateView
     /// <summary>Raised for a key released over the canvas.</summary>
     event Action<GumKeyEventArgs>? KeyUp;
 
+    /// <summary>
+    /// Raised when the canvas loses keyboard focus or its window deactivates; a key released after
+    /// that never raises <see cref="KeyUp"/>.
+    /// </summary>
+    event Action? KeyboardFocusLost;
+
     /// <summary>Raised for a mouse button pressed over the canvas, in the canvas's pixel coordinates.</summary>
     event Action<GumMouseEventArgs>? MouseDown;
 

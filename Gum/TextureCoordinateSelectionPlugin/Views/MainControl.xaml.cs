@@ -54,6 +54,14 @@ namespace TextureCoordinateSelectionPlugin.Views
         public new event Action<GumKeyEventArgs>? KeyUp;
 
         /// <inheritdoc/>
+        /// <remarks>Never raised: the frozen WPF head keeps its old focus behavior.</remarks>
+        public event Action? KeyboardFocusLost
+        {
+            add { }
+            remove { }
+        }
+
+        /// <inheritdoc/>
         public new event Action<GumMouseEventArgs>? MouseDown;
 
         /// <inheritdoc/>
