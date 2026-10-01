@@ -204,6 +204,20 @@ internal sealed class VariableGridHarness : IDisposable
         Row(memberName).GetVisualDescendants().OfType<ComboBox>().FirstOrDefault()
         ?? throw new InvalidOperationException($"The {memberName} row has no combo box.");
 
+    /// <summary>
+    /// What a combo row shows when closed: the typed-text field of an editable combo, otherwise the
+    /// selection box. Null when it shows nothing.
+    /// </summary>
+    public string? ComboText(string memberName)
+    {
+        ComboBox combo = Combo(memberName);
+        if (combo.IsEditable)
+        {
+            return combo.GetVisualDescendants().OfType<TextBox>().FirstOrDefault()?.Text;
+        }
+        return combo.SelectionBoxItem?.ToString();
+    }
+
     /// <summary>The toggle buttons of an option row (units, origins, alignment).</summary>
     public List<ToggleButton> Toggles(string memberName) => Editor<ToggleButtonOptionDisplay>(memberName).Buttons.ToList();
 

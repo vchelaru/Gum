@@ -90,6 +90,57 @@ public class VariableRowScenarioTests
     }
 
     [AvaloniaFact]
+    public void StateCombo_ShowsAStateNameTheCategoryNoLongerHas_WithoutWritingIt_AndPickingAnotherCommitsIt()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave icon = grid.Project.AddComponent("Icon");
+        StateSaveCategory looks = grid.Project.AddCategory(icon, "Looks");
+        grid.Project.AddState(icon, looks, "Big");
+        grid.Project.AddState(icon, looks, "Small");
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave iconInstance = grid.Project.AddInstance(button, "IconInstance", "Icon");
+        button.DefaultState!.SetValue("IconInstance.LooksState", "Deleted", "Looks");
+        grid.Select(button);
+        int historyBefore = grid.UndoManager.CurrentElementHistory!.Actions.Count;
+
+        grid.Select(iconInstance);
+
+        grid.ComboText("LooksState").ShouldBe("Deleted");
+        VariableGridHarness.StoredValue(button, "IconInstance.LooksState").ShouldBe("Deleted");
+        grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyBefore);
+
+        grid.PickComboItem("LooksState", "Small");
+
+        VariableGridHarness.StoredValue(grid.SelectedState.SelectedElement!, "IconInstance.LooksState").ShouldBe("Small");
+        grid.ComboText("LooksState").ShouldBe("Small");
+        grid.Combo("LooksState").Items.Cast<object?>().ShouldNotContain("Deleted");
+    }
+
+    [AvaloniaFact]
+    public void FontCombo_ShowsAFontThatIsNotInstalled_WithoutWritingIt_AndPickingAnotherCommitsIt()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave label = grid.Project.AddInstance(button, "Label", "Text");
+        button.DefaultState!.SetValue("Label.Font", "Not Installed Sans", "string");
+        grid.Select(button);
+        int historyBefore = grid.UndoManager.CurrentElementHistory!.Actions.Count;
+
+        grid.Select(label);
+
+        grid.ComboText("Font").ShouldBe("Not Installed Sans");
+        // The font field is editable, so it shows the name as text and lists only installed families.
+        grid.Combo("Font").Items.Cast<object?>().ShouldBe(new object?[] { "Arial", "Verdana" });
+        VariableGridHarness.StoredValue(button, "Label.Font").ShouldBe("Not Installed Sans");
+        grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyBefore);
+
+        grid.PickComboItem("Font", "Verdana");
+
+        VariableGridHarness.StoredValue(grid.SelectedState.SelectedElement!, "Label.Font").ShouldBe("Verdana");
+        grid.ComboText("Font").ShouldBe("Verdana");
+    }
+
+    [AvaloniaFact]
     public void AddVariable_AddsARowForTheNewVariable()
     {
         using VariableGridHarness grid = new VariableGridHarness();

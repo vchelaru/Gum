@@ -3,6 +3,7 @@ using Gum.Avalonia.Services;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Managers;
 using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 using Gum.ProjectServices.FontGeneration;
 using Gum.Services;
 using Gum.Settings;
@@ -52,6 +53,8 @@ public static class HeadTestServices
         services.Replace(ServiceDescriptor.Singleton<IClipboardService, RecordingClipboardService>());
         // View in explorer, Open Settings Folder and the Help links would start a real file manager or browser.
         services.Replace(ServiceDescriptor.Singleton<IFileSystemRevealService, RecordingFileSystemRevealService>());
+        // The Font drop-down lists the same families on every machine.
+        services.Replace(ServiceDescriptor.Singleton<IInstalledFontProvider, FixedInstalledFontProvider>());
         ServiceProvider provider = services.BuildServiceProvider();
         // The plugin host and a few not-yet-drained services still reach the container through the locator.
         Locator.Register(provider);

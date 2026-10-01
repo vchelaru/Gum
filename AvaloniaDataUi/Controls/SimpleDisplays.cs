@@ -8,6 +8,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using WpfDataUi;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
@@ -318,25 +319,15 @@ public class ComboBoxDisplay : DataUiDisplayBase
         if (this.HasEnoughInformationToWork())
         {
             _propertyType = this.GetPropertyType();
-            PopulateItems();
         }
 
         if (this.TryGetValueOnInstance(out object? valueOnInstance))
         {
-            if (valueOnInstance != null)
-            {
-                TrySetValueOnUi(valueOnInstance);
-            }
-            else
-            {
-                SuppressSettingProperty = true;
-                _comboBox.SelectedItem = _logic.GetItemToSelect(null, _propertyType);
-                if (IsEditable)
-                {
-                    _comboBox.Text = _comboBox.SelectedItem?.ToString();
-                }
-                SuppressSettingProperty = false;
-            }
+            TrySetValueOnUi(valueOnInstance);
+        }
+        else
+        {
+            PopulateItems(valueToShow: null);
         }
 
         RefreshHint(_hint);
@@ -348,8 +339,10 @@ public class ComboBoxDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
-        SuppressSettingProperty = true;
         object? itemToSelect = _logic.GetItemToSelect(valueOnInstance, _propertyType);
+        // An editable combo shows any value as its text; a fixed one can only show an item.
+        PopulateItems(IsEditable ? null : itemToSelect);
+        SuppressSettingProperty = true;
         _comboBox.SelectedItem = itemToSelect;
         if (IsEditable)
         {
@@ -368,9 +361,14 @@ public class ComboBoxDisplay : DataUiDisplayBase
         return ApplyValueResult.Success;
     }
 
-    private void PopulateItems()
+    private void PopulateItems(object? valueToShow)
     {
-        List<object> options = _logic.GetOptions(InstanceMember, _propertyType).ToList();
+        if (!this.HasEnoughInformationToWork())
+        {
+            return;
+        }
+
+        List<object> options = _logic.GetOptionsShowing(InstanceMember, _propertyType, valueToShow);
 
         bool same = _comboBox.Items.Count == options.Count;
         for (int i = 0; same && i < options.Count; i++)
@@ -378,7 +376,13 @@ public class ComboBoxDisplay : DataUiDisplayBase
             same = options[i].Equals(_comboBox.Items[i]);
         }
 
-        if (!same)
+        if (!same && _isInSelectionChanged)
+        {
+            // Changing the items while the combo raises SelectionChanged corrupts its selection
+            // model, so rebuild once the event returns (picking past a value that was not an option).
+            Dispatcher.UIThread.Post(() => Refresh());
+        }
+        else if (!same)
         {
             SuppressSettingProperty = true;
             _comboBox.Items.Clear();
