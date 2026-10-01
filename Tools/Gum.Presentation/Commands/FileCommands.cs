@@ -87,10 +87,30 @@ public class FileCommands : IFileCommands
         FileManager.ClearDirectoryContents(directory.FullPath);
 
     public void MoveToRecycleBin(FilePath filePath) =>
-        _recycleBinService.MoveToRecycleBin(filePath);
+        MoveToRecycleBin(new[] { filePath }, () => _recycleBinService.MoveToRecycleBin(filePath));
 
     public void MoveToRecycleBin(IReadOnlyList<FilePath> filePaths) =>
-        _recycleBinService.MoveToRecycleBin(filePaths);
+        MoveToRecycleBin(filePaths, () => _recycleBinService.MoveToRecycleBin(filePaths));
+
+    // A head's trash can fail with any exception type (e.g. Win32Exception when Linux has no gio), so
+    // failures are reported here and surfaced as IOException, the one type callers handle.
+    private void MoveToRecycleBin(IReadOnlyList<FilePath> filePaths, Action moveToRecycleBin)
+    {
+        try
+        {
+            moveToRecycleBin();
+        }
+        catch (Exception exception)
+        {
+            string files = string.Join(", ", filePaths.Select(filePath => filePath.FullPath));
+            _outputManager.AddError($"Could not move to the recycle bin: {files}\n{exception.Message}");
+            if (exception is IOException)
+            {
+                throw;
+            }
+            throw new IOException(exception.Message, exception);
+        }
+    }
 
     public string[] GetFiles(string path) => System.IO.Directory.GetFiles(path);
 

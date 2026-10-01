@@ -47,7 +47,8 @@ public class FileWatchManagerTests : IDisposable
         out Mock<IFileWatchIgnoreList> ignoreListMock,
         FilePath projectDirectory,
         IDispatcher? dispatcher = null,
-        ICrashReporter? crashReporter = null)
+        ICrashReporter? crashReporter = null,
+        IFileSystemWatcherFactory? watcherFactory = null)
     {
         guiCommandsMock = new Mock<IGuiCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
@@ -78,7 +79,26 @@ public class FileWatchManagerTests : IDisposable
             fileChangeReactionLogic,
             ignoreListMock.Object,
             dispatcher ?? new SynchronousDispatcher(),
+            watcherFactory ?? new FileSystemWatcherFactory(),
             crashReporter);
+    }
+
+    /// <summary>A watcher whose Error event a test can raise.</summary>
+    private sealed class ErrorRaisingWatcher : FileSystemWatcher
+    {
+        public void RaiseError(Exception exception) => OnError(new ErrorEventArgs(exception));
+    }
+
+    private sealed class ErrorRaisingWatcherFactory : IFileSystemWatcherFactory
+    {
+        public List<ErrorRaisingWatcher> Created { get; } = new();
+
+        public FileSystemWatcher Create()
+        {
+            ErrorRaisingWatcher watcher = new ErrorRaisingWatcher();
+            Created.Add(watcher);
+            return watcher;
+        }
     }
 
     private sealed class SynchronousDispatcher : IDispatcher
@@ -114,6 +134,36 @@ public class FileWatchManagerTests : IDisposable
             Thread.Sleep(50);
         }
         return condition();
+    }
+
+    [Fact]
+    public void EnableWithDirectories_ShouldReportEachWatchersErrorToOutput()
+    {
+        string firstDirectory = Path.Combine(_tempDirectory, "First");
+        string secondDirectory = Path.Combine(_tempDirectory, "Second");
+        Directory.CreateDirectory(firstDirectory);
+        Directory.CreateDirectory(secondDirectory);
+        ErrorRaisingWatcherFactory watcherFactory = new ErrorRaisingWatcherFactory();
+        FileWatchManager sut = BuildSut(out Mock<IGuiCommands> guiCommandsMock, out _, out _,
+            new FilePath(_tempDirectory + "/"), watcherFactory: watcherFactory);
+        sut.EnableWithDirectories(new HashSet<FilePath>
+        {
+            new FilePath(firstDirectory + "/"),
+            new FilePath(secondDirectory + "/")
+        });
+
+        watcherFactory.Created.Count.ShouldBe(2);
+        foreach (ErrorRaisingWatcher watcher in watcherFactory.Created)
+        {
+            watcher.RaiseError(new InternalBufferOverflowException("too many changes"));
+        }
+
+        foreach (ErrorRaisingWatcher watcher in watcherFactory.Created)
+        {
+            guiCommandsMock.Verify(g => g.PrintOutput(It.Is<string>(s =>
+                s.Contains(watcher.Path) && s.Contains("too many changes"))), Times.Once);
+            watcher.Dispose();
+        }
     }
 
     [Fact]

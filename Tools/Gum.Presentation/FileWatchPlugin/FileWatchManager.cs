@@ -50,6 +50,7 @@ public class FileWatchManager : IFileWatchManager
     private readonly FileChangeReactionLogic _fileChangeReactionLogic;
     private readonly IFileWatchIgnoreList _ignoreList;
     private readonly IDispatcher _dispatcher;
+    private readonly IFileSystemWatcherFactory _watcherFactory;
     private readonly ICrashReporter? _crashReporter;
 
     public bool PrintFileChangesToOutput { get; set; }
@@ -73,6 +74,7 @@ public class FileWatchManager : IFileWatchManager
         FileChangeReactionLogic fileChangeReactionLogic,
         IFileWatchIgnoreList ignoreList,
         IDispatcher dispatcher,
+        IFileSystemWatcherFactory watcherFactory,
         // Only the Avalonia head registers a crash reporter; without one, errors go to Output only.
         ICrashReporter? crashReporter = null)
     {
@@ -81,6 +83,7 @@ public class FileWatchManager : IFileWatchManager
         _fileChangeReactionLogic = fileChangeReactionLogic;
         _ignoreList = ignoreList;
         _dispatcher = dispatcher;
+        _watcherFactory = watcherFactory;
         _crashReporter = crashReporter;
     }
 
@@ -129,7 +132,7 @@ public class FileWatchManager : IFileWatchManager
 
     FileSystemWatcher CreateFileSystemWatcher()
     {
-        var fileSystemWatcher = new FileSystemWatcher();
+        var fileSystemWatcher = _watcherFactory.Create();
         fileSystemWatcher.Filter = "*.*";
         fileSystemWatcher.IncludeSubdirectories = true;
         fileSystemWatcher.NotifyFilter =
@@ -144,6 +147,7 @@ public class FileWatchManager : IFileWatchManager
         // Gum files get deleted and then created, rather than changed
         fileSystemWatcher.Created += HandleFileSystemChange;
         fileSystemWatcher.Renamed += HandleRename;
+        fileSystemWatcher.Error += HandleWatcherError;
 
         return fileSystemWatcher;
     }
@@ -166,6 +170,22 @@ public class FileWatchManager : IFileWatchManager
 
     internal void HandleFileSystemChange(object? sender, FileSystemEventArgs e)
         => RunOnUiThread(isOnIgnoreList => ReactToChangeOrCreate(e, isOnIgnoreList), e.FullPath);
+
+    // Raised on a watcher thread when the watcher overflows its buffer or loses a watch (e.g. the
+    // Linux inotify limit), after which external changes can go unnoticed.
+    private void HandleWatcherError(object? sender, ErrorEventArgs e)
+    {
+        try
+        {
+            string path = (sender as FileSystemWatcher)?.Path ?? "a watched directory";
+            _guiCommands.PrintOutput(
+                $"File watching failed for {path}, so external changes there may not reload: {e.GetException().Message}");
+        }
+        catch
+        {
+            // Watcher thread: an escaping exception would end the process.
+        }
+    }
 
     private void RunOnUiThread(Action<bool> reaction, string path)
     {
