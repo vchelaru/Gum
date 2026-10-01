@@ -6,6 +6,11 @@ type: skill
 
 # Gum Docs Writing Reference
 
+## Before You Write and Before You Commit
+
+1. **Before writing prose:** read the page you are editing and one or two sibling pages in the same folder, and match their sentence length and voice.
+2. **Before committing:** re-read every new paragraph against those pages and the **Prose Style** and **Tone and Style** sections below. Cut explanation the neighbors would not include.
+
 ## Organize by Functionality, Not API Type
 
 A page's home is the functional section a user browses when they have the problem it solves, not a type-indexed folder chosen because that's where the class lives. A new feature's primary explanation goes in its task-based section (e.g. cursor hit-testing for scaled/render-target rendering under `events-and-interactivity/`); the `gum-code-reference/<Type>/` folders hold only terse per-member stubs that link back to it.

@@ -67,3 +67,61 @@ slider.Maximum = 75; // this sets Value to 75
 slider.Value = 20;
 slider.Minimum = 25; // this sets Value to 25
 ```
+
+## Clicking the Track
+
+`IsMoveToPointEnabled` controls what happens when the user clicks the track. It defaults to `false`.
+
+### Stepping with LargeChange
+
+When `IsMoveToPointEnabled` is `false`, each click on the track changes `Value` by `LargeChange` toward the cursor. Holding the button repeats the step until the thumb reaches the cursor.
+
+```csharp
+// Initialize
+var label = new Label();
+label.AddToRoot();
+label.X = 50;
+label.Y = 24;
+
+var slider = new Slider();
+slider.AddToRoot();
+slider.X = 50;
+slider.Y = 50;
+slider.Width = 250;
+slider.Minimum = 0;
+slider.Maximum = 100;
+slider.LargeChange = 10;
+slider.ValueChanged += (_, _) =>
+    label.Text = $"Value: {slider.Value}";
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA12P0QqCMBSGX-UwuiiQMKsbxYuKiMBuSipBiMVGDeYE3SoK3705h412te_7z_5xPmhbb1SBQlkp6iEmmGSYszdFIXrgCji-Ug4xCPqEpL0PR1EujB0vCEnLfVlKx5317NzvMdMYzDTmom2rOSO0snUHA-Zt5_8KrewbLWd_fGJE3ttvXLnTixSq0NqV-GXlxHd0gqsbXd2xuFET_ZIj5somBHLl-8EyhuHFg8sI4pan61yAPt2yKX1J3TAwk4F5HMLH7Wq6KELNF2tmwsF4AQAA)
+
+`LargeChange` defaults to 25 regardless of `Minimum` and `Maximum`. On a slider from 0 to 1, one click jumps the whole range. On a slider from 0 to 1000, one click barely moves the thumb. Set `LargeChange` to fit your range, or set `IsMoveToPointEnabled` to `true`.
+
+### Moving to the Cursor
+
+When `IsMoveToPointEnabled` is `true`, clicking the track moves the thumb to the cursor. The thumb follows the cursor while the button is held. `LargeChange` is not used.
+
+```csharp
+// Initialize
+var label = new Label();
+label.AddToRoot();
+label.X = 50;
+label.Y = 24;
+
+var slider = new Slider();
+slider.AddToRoot();
+slider.X = 50;
+slider.Y = 50;
+slider.Width = 250;
+slider.Minimum = 0;
+slider.Maximum = 100;
+slider.IsMoveToPointEnabled = true;
+slider.ValueChanged += (_, _) =>
+    label.Text = $"Value: {slider.Value}";
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA12QUWvCMBDHv8oR9qAgo1b3UunDJiKCgmxFJxQkkkMDaQJtoqL43XdJiwvmKb_f3f3D5c4WzdxVLLO1wwGTWlrJlbwhy9iZ16D4ARXkoPECS3_v9SelDvb9U4jCfBtjI_dLvR_JE3eE6Ziw1D6tUVJg3cX9BAizrX8J7OQzsePdC2-lsCf_TCxXtEjlKtKx5NdODpNIL5qVOWNh1kZqO9P8oFBQj_-Q_6YNVw6nJ66PVCxdkqRfOfT2A9j3Ifc8mpUa6LR7F3i1lPEWOtMwnME9znq0pQl7_AHKGcQUgwEAAA)
+
+`ValueChanged` is raised as the thumb moves. `ValueChangeCompleted` is raised once when the button is released, so use it for work that should not run every frame, such as saving a setting. `IsSnapToTickEnabled` applies in both modes.
