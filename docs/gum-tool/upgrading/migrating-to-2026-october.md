@@ -40,7 +40,7 @@ The [September 2, 2026 release](https://github.com/vchelaru/Gum/releases/tag/Rel
 
 ## Upgrading the Runtime
 
-This release's runtime ships as NuGet version **`PLACEHOLDER!!!! NuGet version`**. Upgrade your Gum NuGet packages to this version. For more information, see the NuGet packages for your particular platform:
+The `2026 October` runtime ships as NuGet version **`2026.10.1.1`**. Upgrade your Gum NuGet packages to this version. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
