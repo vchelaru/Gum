@@ -57,7 +57,7 @@ public class ImportLogic : IImportLogic
         var result = _screenImportService.ImportScreen(project, screenSave);
         if (!result.Success)
         {
-            _dialogService.ShowMessage($"This project already a screen named {result.ConflictingScreenName} in this project");
+            _dialogService.ShowMessage($"This project already has a screen named {result.ConflictingScreenName}");
             return null;
         }
 

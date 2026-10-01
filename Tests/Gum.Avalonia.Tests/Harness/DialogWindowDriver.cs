@@ -20,16 +20,28 @@ namespace Gum.Avalonia.Tests.Harness;
 internal sealed class DialogWindowDriver : IDisposable
 {
     public DialogWindowDriver(DialogViewModel viewModel)
+        : this(ShowNew(viewModel))
     {
-        Control view = TestAppBuilder.Services.GetRequiredService<DialogViewRegistry>().CreateView(viewModel);
-        Window = new DialogWindow(viewModel, view);
-        Window.Show();
+    }
+
+    /// <summary>Drives a dialog window the head's own dialog service already shows.</summary>
+    public DialogWindowDriver(DialogWindow shownWindow)
+    {
+        Window = shownWindow;
         // As HeadlessWindowDriver: two render ticks so hit testing sees this window's first frame.
         Dispatcher.UIThread.RunJobs();
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         Dispatcher.UIThread.RunJobs();
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         Layout();
+    }
+
+    private static DialogWindow ShowNew(DialogViewModel viewModel)
+    {
+        Control view = TestAppBuilder.Services.GetRequiredService<DialogViewRegistry>().CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view);
+        window.Show();
+        return window;
     }
 
     public DialogWindow Window { get; }

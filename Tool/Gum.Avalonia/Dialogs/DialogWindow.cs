@@ -254,11 +254,9 @@ public sealed class DialogWindow : Window
         // its control attaches during Show) still wins by running its Focus() second.
         Opened += (_, _) => Dispatcher.UIThread.Post(() =>
         {
-            Button fallback = affirmative.IsVisible ? affirmative : negative;
-            if (fallback.IsVisible)
-            {
-                fallback.Focus();
-            }
+            // Skip a disabled OK (Import from .gumx opens with nothing checked), or nothing gets focus.
+            Button? fallback = new[] { affirmative, negative }.FirstOrDefault(button => button.IsVisible && button.IsEffectivelyEnabled);
+            fallback?.Focus();
         }, DispatcherPriority.Input);
     }
 

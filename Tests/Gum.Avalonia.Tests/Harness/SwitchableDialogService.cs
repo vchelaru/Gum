@@ -30,6 +30,17 @@ internal sealed class SwitchableDialogService : IDialogService
         return new Restore(this);
     }
 
+    /// <summary>
+    /// Routes every dialog to the head's own service until the returned handle is disposed, then
+    /// back to whatever harness scripted them before.
+    /// </summary>
+    public IDisposable UseHeadDialogs()
+    {
+        IDialogService? previous = _override;
+        _override = null;
+        return new RestoreTo(this, previous);
+    }
+
     /// <inheritdoc/>
     public MessageDialogResult ShowMessage(string message, string? title = null, MessageDialogStyle? style = null) =>
         Current.ShowMessage(message, title, style);
@@ -53,6 +64,27 @@ internal sealed class SwitchableDialogService : IDialogService
 
     /// <inheritdoc/>
     public string? OpenFolder(OpenFolderDialogOptions? options = null) => Current.OpenFolder(options);
+
+    private sealed class RestoreTo : IDisposable
+    {
+        private SwitchableDialogService? _owner;
+        private readonly IDialogService? _previous;
+
+        public RestoreTo(SwitchableDialogService owner, IDialogService? previous)
+        {
+            _owner = owner;
+            _previous = previous;
+        }
+
+        public void Dispose()
+        {
+            if (_owner != null)
+            {
+                _owner._override = _previous;
+                _owner = null;
+            }
+        }
+    }
 
     private sealed class Restore : IDisposable
     {
