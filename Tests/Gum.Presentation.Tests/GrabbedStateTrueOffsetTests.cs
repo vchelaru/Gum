@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.Input;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
@@ -19,7 +20,8 @@ public class GrabbedStateTrueOffsetTests
         return new GrabbedState(
             Mock.Of<ISelectedState>(),
             Mock.Of<IWireframeObjectManager>(),
-            Mock.Of<IGumCursorState>());
+            Mock.Of<IGumCursorState>(),
+            new CanvasDisplayScale());
     }
 
     [Fact]

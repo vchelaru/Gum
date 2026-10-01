@@ -153,7 +153,7 @@ public class EditorContext
         HotkeyManager = hotkeyManager;
         WireframeObjectManager = wireframeObjectManager;
         OverlayLayer = overlayLayer;
-        GrabbedState = new GrabbedState(selectedState, wireframeObjectManager, cursor);
+        GrabbedState = new GrabbedState(selectedState, wireframeObjectManager, cursor, displayScale);
         LineColor = lineColor;
         TextColor = textColor;
     }

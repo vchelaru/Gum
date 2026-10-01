@@ -183,6 +183,12 @@ public sealed class WireframeCanvasCore
             isCtrlDown: keyArgs.IsCtrlDown,
             isAltDown: keyArgs.IsAltDown);
 
+    /// <summary>
+    /// The host calls this when the canvas loses keyboard focus or its window deactivates, so a key
+    /// released elsewhere (Space for panning) is not still held here.
+    /// </summary>
+    public void HandleFocusLost() => _cameraController?.HandleFocusLost();
+
     public void HandleMouseDown(GumMouseEventArgs e) => _cameraController?.HandleMouseDown(e);
 
     public void HandleMouseMove(GumMouseEventArgs e) => _cameraController?.HandleMouseMove(e);
@@ -279,7 +285,7 @@ public sealed class WireframeCanvasCore
             Camera.Y = -30;
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
-            InputLibrary.Cursor.Self.Initialize(_host.InputHost);
+            InputLibrary.Cursor.Self.Initialize(_host.InputHost, displayScale);
 
             mCanvasBounds = new LineRectangle();
             mCanvasBounds.IsDotted = true;

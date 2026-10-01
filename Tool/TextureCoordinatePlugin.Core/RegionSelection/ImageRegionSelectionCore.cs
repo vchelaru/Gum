@@ -438,8 +438,8 @@ public class ImageRegionSelectionCore
     public event EventHandler? EndRegionChanged;
 
     /// <summary>
-    /// Raised when the canvas is double-clicked. WPF panels have no built-in double-click event,
-    /// so this stands in for the WinForms <c>Control.DoubleClick</c> the control used to expose.
+    /// Raised on a double click over the canvas, as the canvas cursor reads it each frame
+    /// (<see cref="InputLibrary.Cursor.PrimaryDoubleClick"/>).
     /// </summary>
     public event EventHandler? DoubleClick;
 
@@ -553,7 +553,7 @@ public class ImageRegionSelectionCore
             mInputHost = _host.InputHost;
 
             mCursor = new InputLibrary.Cursor();
-            mCursor.Initialize(mInputHost);
+            mCursor.Initialize(mInputHost, _displayScale);
 
             mKeyboard = new InputLibrary.Keyboard();
             mKeyboard.Initialize(mInputHost);
@@ -563,9 +563,6 @@ public class ImageRegionSelectionCore
             ZoomNumbers = new ZoomNumbers();
         }
     }
-
-    /// <summary>The host calls this on a double click over the canvas.</summary>
-    public void RaiseDoubleClick() => DoubleClick?.Invoke(this, EventArgs.Empty);
 
     private RectangleSelector CreateNewSelector()
     {
@@ -638,6 +635,13 @@ public class ImageRegionSelectionCore
             foreach (var item in mRectangleSelectors.ToArray())
             {
                 item.Activity(mCursor, mKeyboard, mInputHost);
+            }
+
+            // The canvas cursor's double click, like the editor canvas's: a release that ended a
+            // drag is not a click (#5286).
+            if (mCursor.PrimaryDoubleClick)
+            {
+                DoubleClick?.Invoke(this, EventArgs.Empty);
             }
         }
     }

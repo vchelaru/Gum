@@ -33,7 +33,7 @@ public class RectangleSelectorLostReleaseTests
         _host.SetupGet(h => h.Height).Returns(200);
         _host.SetupProperty(h => h.Cursor, CursorKind.Arrow);
         _host.Setup(h => h.GetPointerState()).Returns(() => _pointer);
-        _cursor.Initialize(_host.Object);
+        _cursor.Initialize(_host.Object, new CanvasDisplayScale());
         _keyboard.Initialize(_host.Object);
 
         // Camera transform needs no graphics device - see RectangleSelectorCursorTests.

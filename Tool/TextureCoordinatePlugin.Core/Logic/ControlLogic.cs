@@ -127,6 +127,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         innerControl.DisplayScaleChanged += HandleDisplayScaleChanged;
         _view.KeyDown += HandleKeyDown;
         _view.KeyUp += HandleKeyUp;
+        _view.KeyboardFocusLost += HandleKeyboardFocusLost;
         _view.MouseDown += HandleMouseDown;
         _view.MouseMove += HandleMouseMove;
         _view.MouseUp += HandleMouseUp;
@@ -201,6 +202,12 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     private void HandleKeyUp(GumKeyEventArgs e)
     {
         _cameraController.HandleKeyUp(e);
+        SyncCameraPanning();
+    }
+
+    private void HandleKeyboardFocusLost()
+    {
+        _cameraController.HandleFocusLost();
         SyncCameraPanning();
     }
 

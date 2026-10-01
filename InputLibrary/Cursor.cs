@@ -1,5 +1,6 @@
 using System;
 using Gum.Input;
+using Gum.Services;
 using Gum.Wireframe;
 
 namespace InputLibrary
@@ -19,12 +20,14 @@ namespace InputLibrary
         HostPointerState mLastFramePointerState;
 
         IInputHostControl? mControl;
+        ICanvasDisplayScale? _displayScale;
 
         public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
 
         /// <summary>
-        /// How far, in pixels on either axis, the second click of a double click may land from the
-        /// first; Windows' default double-click rectangle is 4 pixels wide.
+        /// How far, in device-independent pixels on either axis, the second click of a double click
+        /// may land from the first; Windows' default double-click rectangle is 4 pixels wide.
+        /// Multiplied by the display scale passed to <see cref="Initialize"/>.
         /// </summary>
         public const float MaximumPixelsBetweenClicksForDoubleClick = 4;
         // Negative infinity so the first click after startup can never read as a double click.
@@ -186,6 +189,9 @@ namespace InputLibrary
             PrimaryDoubleClick = false;
 
             mPointerState = mControl?.GetPointerState() ?? default;
+            float displayScale = _displayScale?.DisplayScale ?? 1;
+            float dragThreshold = GrabbedState.PixelsToMoveBeforeDrag * displayScale;
+            float doubleClickDistance = MaximumPixelsBetweenClicksForDoubleClick * displayScale;
 
             if (mPointerState.IsLeftDown && !mLastFramePointerState.IsLeftDown)
             {
@@ -194,8 +200,8 @@ namespace InputLibrary
                 _hasDraggedSincePush = false;
             }
             else if (mPointerState.IsLeftDown &&
-                (Math.Abs(X - _pushX) > GrabbedState.PixelsToMoveBeforeDrag ||
-                 Math.Abs(Y - _pushY) > GrabbedState.PixelsToMoveBeforeDrag))
+                (Math.Abs(X - _pushX) > dragThreshold ||
+                 Math.Abs(Y - _pushY) > dragThreshold))
             {
                 _hasDraggedSincePush = true;
             }
@@ -211,8 +217,8 @@ namespace InputLibrary
                     currentTime - mLastClickTime;
 
                 if (timeSinceLastClick < MaximumSecondsBetweenClickForDoubleClick &&
-                    Math.Abs(X - mLastClickX) <= MaximumPixelsBetweenClicksForDoubleClick &&
-                    Math.Abs(Y - mLastClickY) <= MaximumPixelsBetweenClicksForDoubleClick)
+                    Math.Abs(X - mLastClickX) <= doubleClickDistance &&
+                    Math.Abs(Y - mLastClickY) <= doubleClickDistance)
                 {
                     PrimaryDoubleClick = true;
                 }
@@ -223,9 +229,14 @@ namespace InputLibrary
             }
         }
 
-        public void Initialize(IInputHostControl control)
+        /// <summary>
+        /// Connects the cursor to the host it samples and the display scale of the canvas it is
+        /// on, which scales the drag and double-click distances.
+        /// </summary>
+        public void Initialize(IInputHostControl control, ICanvasDisplayScale displayScale)
         {
             mControl = control;
+            _displayScale = displayScale;
         }
 
         /// <summary>

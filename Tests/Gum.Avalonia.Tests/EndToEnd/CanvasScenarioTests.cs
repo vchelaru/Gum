@@ -459,6 +459,38 @@ public class CanvasScenarioTests
         });
     }
 
+    // #5540: a Space released after focus left the canvas never reached it, so the next left drag
+    // panned the camera instead of moving the selection.
+    [SkippableFact]
+    [Trait("Feature", "CANV-022")]
+    public void SpaceReleasedAfterFocusLeftTheCanvas_DoesNotTurnTheNextDragIntoAPan()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            InstanceSave box = canvas.AddInstance(button, "Box", "Rectangle", x: 40, y: 40, width: 60, height: 40);
+            canvas.Tree.Click(canvas.Tree.NodeFor(box));
+            canvas.HoldKey(Key.Space, PhysicalKey.Space, RawInputModifiers.None);
+            try
+            {
+                canvas.SnapToGridCheckBox.Focus();
+                canvas.Frame();
+                canvas.Drag(canvas.WindowPointOf(70, 60), canvas.WindowPointOf(110, 90));
+
+                canvas.SavedValue(button, "Box.X").ShouldBe(80f, canvas.Describe());
+                canvas.SavedValue(button, "Box.Y").ShouldBe(70f);
+            }
+            finally
+            {
+                // The canvas is shared by every scenario; a Space it still holds after a failure
+                // would turn the next scenario's clicks into pans.
+                canvas.Canvas.Focus();
+                canvas.ReleaseKey(Key.Space, PhysicalKey.Space);
+            }
+            canvas.AssertOracles();
+        });
+    }
+
     [SkippableFact]
     [Trait("Feature", "CANV-027")]
     [Trait("Feature", "CANV-028")]

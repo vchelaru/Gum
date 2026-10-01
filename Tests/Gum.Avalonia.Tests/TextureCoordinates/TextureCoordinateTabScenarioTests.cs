@@ -1,4 +1,6 @@
 using Avalonia;
+using Avalonia.Headless;
+using Avalonia.Input;
 using Gum.DataTypes;
 using Gum.Avalonia.Shell;
 using Gum.Dialogs;
@@ -297,6 +299,67 @@ public class TextureCoordinateTabScenarioTests
 
             checker.Visible.ShouldBe(originalChecker);
             tab.Editor.AssertOracles();
+        });
+    }
+
+    // #5540: a Space released while focus was elsewhere never reached the canvas, so its next
+    // left drag panned the camera instead of moving the region.
+    [SkippableFact]
+    [Trait("Feature", "TEX-002")]
+    public void SpaceReleasedAfterFocusLeftTheCanvas_DoesNotTurnTheNextDragIntoAPan()
+    {
+        OnTab(tab =>
+        {
+            ComponentSave button = tab.Project.AddComponent("Button");
+            string atlas = tab.AddTextureFile("Atlas.png");
+            InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
+            tab.Select(icon);
+            tab.CanvasControl.Focus();
+            tab.Input.Window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, null);
+            tab.Frame();
+            try
+            {
+                tab.SnapToGridCheckBox.Focus();
+                tab.Frame();
+                tab.Drag(tab.WindowPointOf(64, 64), tab.WindowPointOf(104, 64));
+
+                tab.Editor.SavedValue(button, "Icon.TextureLeft").ShouldBe(72, tab.Describe());
+            }
+            finally
+            {
+                // The tab is shared by every scenario; a Space it still holds after a failure
+                // would turn the next scenario's drags into pans.
+                tab.CanvasControl.Focus();
+                tab.Input.Window.KeyRelease(Key.Space, RawInputModifiers.None, PhysicalKey.Space, null);
+                tab.Frame();
+            }
+        });
+    }
+
+    // #5540: the double click that replaces the region with an auto-detected one follows the
+    // canvas cursor's rules, where a release that ended a drag is not a click (#5286).
+    [SkippableFact]
+    [Trait("Feature", "TEX-002")]
+    public void AQuickClickAfterADrag_IsNotADoubleClick_ButTwoQuickClicksAre()
+    {
+        OnTab(tab =>
+        {
+            ComponentSave button = tab.Project.AddComponent("Button");
+            string atlas = tab.AddTextureFile("Atlas.png");
+            InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
+            tab.Select(icon);
+            int doubleClicks = 0;
+            tab.Canvas.DoubleClick += (_, _) => doubleClicks++;
+            Point press = tab.WindowPointOf(64, 64);
+
+            tab.Drag(press, tab.WindowPointOf(104, 64));
+            tab.Drag(press, press);
+
+            doubleClicks.ShouldBe(0, "the first release ended a drag");
+
+            tab.Drag(press, press);
+
+            doubleClicks.ShouldBe(1, tab.Describe());
         });
     }
 

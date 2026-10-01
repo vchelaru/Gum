@@ -2,6 +2,7 @@ using Gum;
 using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Wireframe;
 using Gum.Wireframe.Editors.Visuals;
 using Moq;
@@ -48,7 +49,8 @@ public class RectangleSelectorHandlerInteractionTests
             _mockGuiCommands.Object,
             _camera,
             _mockCursor.Object,
-            _mockSelectionRectangleVisual.Object);
+            _mockSelectionRectangleVisual.Object,
+            new CanvasDisplayScale());
     }
 
     private void SetShiftPressed(bool pressed)

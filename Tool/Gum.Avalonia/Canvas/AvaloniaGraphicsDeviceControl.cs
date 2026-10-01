@@ -130,13 +130,31 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     protected double RenderScaling => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
 
     /// <inheritdoc/>
-    public double DisplayScale => RenderScaling;
+    public double DisplayScale => DisplayScaleOverride ?? RenderScaling;
+
+    /// <summary>
+    /// Replaces the render scale as <see cref="DisplayScale"/> when set. Tests use it to run the
+    /// canvas at 200%, which the headless platform cannot do.
+    /// </summary>
+    internal double? DisplayScaleOverride { get; set; }
 
     /// <summary>A provider holding the device service, for content managers.</summary>
     public IServiceProvider Services => DeviceHost.Services;
 
     /// <inheritdoc/>
-    public IInputHostControl InputHost => _inputHost ??= new AvaloniaInputHostAdapter(this);
+    public IInputHostControl InputHost => InputAdapter;
+
+    private AvaloniaInputHostAdapter InputAdapter => _inputHost ??= new AvaloniaInputHostAdapter(this);
+
+    /// <summary>
+    /// Raised when the canvas loses keyboard focus or its window deactivates. A key released after
+    /// that never reaches the canvas, so anything tracking a held key (Space to pan) lets go here.
+    /// </summary>
+    public event Action? KeyboardInputLost
+    {
+        add => InputAdapter.KeyboardInputLost += value;
+        remove => InputAdapter.KeyboardInputLost -= value;
+    }
 
     /// <summary>Raised once per rendered frame, after <see cref="PreDrawUpdate"/> and before <see cref="Draw"/>.</summary>
     public event Action? XnaUpdate;

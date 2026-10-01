@@ -23,12 +23,14 @@ namespace Gum.Presentation.Tests;
 /// A push with Shift held also reaches the marquee, which records it as pending. When a handler
 /// claims that push (an axis-locked move, #5258, or a Shift resize or rotation), its release must
 /// clear the pending push, or a later drag that never pushed on the canvas starts a marquee from it.
+/// Also pins that the marquee's minimum drag uses the canvas display scale.
 /// </summary>
 public class SelectionManagerShiftHandlerPushTests : BaseTestClass
 {
     private readonly Mock<IGumCursorState> _cursor = new();
     private readonly Mock<IInputHandler> _handler = new();
     private readonly Mock<ISelectionRectangleVisual> _rectangleVisual = new();
+    private readonly CanvasDisplayScale _displayScale = new();
     private readonly SelectionManager _selectionManager;
 
     public SelectionManagerShiftHandlerPushTests()
@@ -78,7 +80,8 @@ public class SelectionManagerShiftHandlerPushTests : BaseTestClass
             _cursor.Object,
             _rectangleVisual.Object,
             Mock.Of<IHighlightOutlineVisual>(),
-            Mock.Of<IHighlightOverlayVisual>());
+            Mock.Of<IHighlightOverlayVisual>(),
+            _displayScale);
 
         _selectionManager.SelectedGue = new GraphicalUiElement { Tag = new InstanceSave { Name = "Instance" } };
     }
@@ -114,5 +117,22 @@ public class SelectionManagerShiftHandlerPushTests : BaseTestClass
         _selectionManager.LateActivity();
 
         _rectangleVisual.VerifySet(v => v.Visible = true, Times.Never);
+    }
+
+    // The marquee's minimum drag is 3 device-independent pixels, so 6 physical pixels at 200% (#5554).
+    [Theory]
+    [InlineData(5f, false)]
+    [InlineData(6f, true)]
+    public void MarqueeMinimumDrag_UsesTheCanvasDisplayScale(float dragDistance, bool expected)
+    {
+        _displayScale.DisplayScale = 2;
+
+        SetCursor(x: 0, push: true, down: true, click: false);
+        _selectionManager.Activity(forceNoHighlight: false);
+        SetCursor(x: dragDistance, push: false, down: true, click: false);
+        _selectionManager.Activity(forceNoHighlight: false);
+        _selectionManager.LateActivity();
+
+        _rectangleVisual.VerifySet(v => v.Visible = true, expected ? Times.AtLeastOnce() : Times.Never());
     }
 }
