@@ -29,6 +29,11 @@ public class ContentMenuScenarioTests
 
     private static IProjectManager ProjectManager => Services.GetRequiredService<IProjectManager>();
 
+    // The head starts without the HTML import item when no converter is found, as in the test
+    // output; a test that picks the item adds it once its converter folder is set.
+    private static MainHtmlToGumPlugin HtmlPlugin =>
+        Services.GetRequiredService<PluginManager>().InitializedPlugins.OfType<MainHtmlToGumPlugin>().Single();
+
     [AvaloniaFact]
     [Trait("Feature", "CONT-001")]
     public void FindFileReferences_ListsTheElementsUsingTheFile_OrSaysNothingDoes()
@@ -184,6 +189,7 @@ public class ContentMenuScenarioTests
         {
             // An empty converter folder: the import stops before it would start Node.js.
             Environment.SetEnvironmentVariable("HTMLTOGUM_CONVERTER", converter);
+            HtmlPlugin.AddImportMenuEntryIfConverterFound();
             tree.Dialogs.AnswerNextOpenFile(page);
             tree.Dialogs.AnswerNextInWindow<ImportHtmlOptionsViewModel>(window =>
             {
@@ -231,7 +237,7 @@ public class ContentMenuScenarioTests
         File.WriteAllText(page, "<html><body><h1>Hi</h1></body></html>");
         byte[] logo = { 0x89, 0x50, 0x4E, 0x47, 1, 2, 3 };
         FakeHtmlConverter fake = new FakeHtmlConverter(titleText: "Welcome", logo);
-        MainHtmlToGumPlugin plugin = Services.GetRequiredService<PluginManager>().InitializedPlugins.OfType<MainHtmlToGumPlugin>().Single();
+        MainHtmlToGumPlugin plugin = HtmlPlugin;
         IHtmlConverterProcessRunner originalRunner = plugin.ProcessRunner;
         string? originalConverter = Environment.GetEnvironmentVariable("HTMLTOGUM_CONVERTER");
         string resultMessage = "";
@@ -240,6 +246,7 @@ public class ContentMenuScenarioTests
         try
         {
             Environment.SetEnvironmentVariable("HTMLTOGUM_CONVERTER", converter);
+            plugin.AddImportMenuEntryIfConverterFound();
             plugin.ProcessRunner = fake;
             tree.Dialogs.AnswerNextOpenFile(page);
             tree.Dialogs.AnswerNextInWindow<ImportHtmlOptionsViewModel>(window =>

@@ -77,7 +77,7 @@
 - CONT-004 Force re-create all font files
 - CONT-005 View Font Cache
 - CONT-006 Scan for Orphaned Code Files. tested: OrphanCodeFileReporterTests
-- CONT-007 Import > HTML. tested: ImportHtmlOptionsViewModelTests, ContentMenuScenarioTests
+- CONT-007 Import > HTML, shown only when a converter folder is found (none ships in packaged builds until #5544). tested: ImportHtmlOptionsViewModelTests, MainHtmlToGumPluginMenuTests, ContentMenuScenarioTests
 - CONT-008 Import > .gumx. tested: ImportFromGumxViewModelTests, FormsAndImportScenarioTests
 - CONT-009 Convert to JSON. tested: ConvertToJsonLogicTests
 - CONT-010 Add Forms Components. tested: GumFormsLogicTests, FormsAndImportScenarioTests
