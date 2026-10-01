@@ -69,7 +69,7 @@ Each internal plugin has a `Main[FeatureName]Plugin.cs` entry point in `[Feature
 Most events are defined on `PluginBase` — subscribe in `StartUp()`. The full list is in `PluginBase.cs`; WPF-shell events such as the `DeleteOptionsWindow` pair live on `WpfPluginBase` instead. Most-used categories:
 
 - **Selection**: `ElementSelected`, `InstanceSelected`, `ReactToStateSaveSelected`, `BehaviorSelected`, `TreeNodeSelected`
-- **Variable changes**: `VariableSet`, `VariableSetLate`
+- **Variable changes**: `VariableSet`, `VariableSetLate`, `VariableSetThroughReference` (a variable reference re-applied the value, often on a non-selected element; plugins that don't subscribe get `VariableSet` instead)
 - **Element lifecycle**: `ElementAdd`, `ElementDelete`, `ElementRename`, `ElementDuplicate`, `ElementReloaded`
 - **Instance lifecycle**: `InstanceAdd`, `InstanceDelete`, `InstanceRename`, `InstanceReordered`
 - **Project**: `ProjectLoad`, `BeforeProjectSave`, `AfterProjectSave`

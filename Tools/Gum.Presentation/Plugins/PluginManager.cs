@@ -371,6 +371,18 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit), "VariableSet (Late)");
     }
 
+    /// <summary>
+    /// Notifies plugins that a variable changed because a variable reference re-applied it. Plugins
+    /// see it as <see cref="PluginBase.VariableSetThroughReference"/> or, if they don't handle that,
+    /// <see cref="PluginBase.VariableSet"/>.
+    /// </summary>
+    public void VariableSetThroughReference(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName,
+        object? oldValue, bool isFullCommit = true)
+    {
+        CallMethodOnPlugin(plugin => plugin.CallVariableSetThroughReference(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit));
+        CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit), "VariableSet (Late)");
+    }
+
     public virtual void VariableSelected(IStateContainer? container, VariableSave? variable) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableSelected(container, variable));
 

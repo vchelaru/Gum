@@ -60,7 +60,7 @@ SetVariableLogic (variable change entry point)
 
 `ApplyVariableReferences` has two overloads:
 
-1. **`ElementSave` overload (tool-time):** Iterates `VariableListSave` entries, evaluates right sides, writes hard values into the `StateSave` via `SetValue`. Fires `VariableChangedThroughReference` delegate when a value actually changes, which routes through `PluginManager.Self.VariableSet` — this triggers downstream reactions (font generation, etc.).
+1. **`ElementSave` overload (tool-time):** Iterates `VariableListSave` entries, evaluates right sides, writes hard values into the `StateSave` via `SetValue`. Fires `VariableChangedThroughReference` delegate when a value actually changes, which routes through `PluginManager.VariableSetThroughReference`: plugins that subscribe to `PluginBase.VariableSetThroughReference` get that event (codegen and errors defer non-selected elements to once per commit), every other plugin gets a plain `VariableSet` (font generation, etc.).
 
 2. **`GraphicalUiElement` overload (runtime):** Similar iteration but calls `referenceOwner.SetProperty(left, value)` on the runtime object. Used for wireframe preview in the tool and at game runtime.
 
