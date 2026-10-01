@@ -150,6 +150,27 @@ jobs:
               ;;
           esac
 
+      # Preview raises its window through its own SDL import (#5557). Checks the shipped Native AOT
+      # build and the ReadyToRun build local dev falls back to, before the smoke test installs a
+      # system SDL on Linux.
+      - name: Probe SDL in published GumPreview
+        shell: bash
+        run: |
+          set -euo pipefail
+          rid="${{ matrix.rid }}"
+          if [ "$rid" = "osx-x64" ] && [ "$(uname -m)" = "arm64" ] && ! /usr/bin/arch -x86_64 /usr/bin/true 2>/dev/null; then
+            echo "::warning::Rosetta is not installed on this runner; skipping the osx-x64 SDL probe"
+            exit 0
+          fi
+          exe_suffix=""
+          if [ "$RUNNER_OS" = "Windows" ]; then exe_suffix=".exe"; fi
+          r2r="$RUNNER_TEMP/preview-r2r"
+          dotnet publish Tool/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -o "$r2r"
+          for exe in "publish/$rid/Preview-Aot/GumPreview$exe_suffix" "$r2r/GumPreview$exe_suffix"; do
+            echo "== $exe --probe-sdl"
+            "$exe" --probe-sdl
+          done
+
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:

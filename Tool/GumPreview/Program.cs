@@ -1,6 +1,14 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using GumPreview;
+
+NativeLibrary.SetDllImportResolver(typeof(Program).Assembly, SdlLibrary.Resolve);
+
+if (Array.IndexOf(args, SdlLibrary.ProbeFlag) >= 0)
+{
+    return SdlLibrary.Probe(Console.Out);
+}
 
 PreviewOptions options = PreviewOptions.Parse(args);
 if (options.Error != null)
