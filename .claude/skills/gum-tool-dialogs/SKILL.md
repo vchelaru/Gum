@@ -67,7 +67,7 @@ The WPF `DeleteDialogService` creates the `DeleteOptionsWindow`, fires the WPF e
 ## Avalonia head
 
 The Avalonia head (`Tool/Gum.Avalonia`) has its own synchronous `IDialogService`
-(`Dialogs/AvaloniaDialogService.cs`, a nested dispatcher loop per dialog). It does not scan
+(`Dialogs/AvaloniaDialogService.cs`, a nested dispatcher loop per dialog). A new dialog or file picker is owned by the topmost open `DialogWindow` (`AvaloniaDialogService.CurrentOwner`), and pickers go through `IFilePickers` so tests can fake them. It does not scan
 assemblies: `Dialogs/DialogViewRegistry.cs` maps each `DialogViewModel` type to a C# view factory
 (`Register<TViewModel>(() => new SomeView())`; a registration covers subclasses, so every
 `GetUserStringDialogBaseViewModel` shares one view). `DialogWindow` supplies the OK/Cancel row from
