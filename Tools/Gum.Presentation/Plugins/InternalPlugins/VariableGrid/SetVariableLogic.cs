@@ -344,6 +344,10 @@ public class SetVariableLogic : ISetVariableLogic
             changedMemberWithPrefix = instance.Name + "." + rootVariableName;
         }
 
+        // The variable being set, not the selected one: an exposed variable set on the element
+        // itself reaches here without updating the selection.
+        VariableSave? changedVariable = stateSave?.GetVariableSave(changedMemberWithPrefix);
+
         var parentElement = instanceContainer as ElementSave;
         if (parentElement != null)
         {
@@ -368,11 +372,11 @@ public class SetVariableLogic : ISetVariableLogic
 
             ReactIfChangedMemberIsTextureAddress(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsParent(parentElement, instance, rootVariableName, oldValue, response);
+            ReactIfChangedMemberIsParent(parentElement, instance, changedVariable, rootVariableName, oldValue, response);
 
-            ReactIfChangedMemberIsDefaultChildContainer(parentElement, instance, rootVariableName, oldValue);
+            ReactIfChangedMemberIsDefaultChildContainer(changedVariable, rootVariableName);
 
-            ReactIfChangedMemberIsRenderTargetTextureSource(rootVariableName);
+            ReactIfChangedMemberIsRenderTargetTextureSource(changedVariable, rootVariableName);
 
             if (stateSave != null)
             {
@@ -409,10 +413,8 @@ public class SetVariableLogic : ISetVariableLogic
         }
     }
 
-    private void ReactIfChangedMemberIsRenderTargetTextureSource(string rootVariableName)
+    private void ReactIfChangedMemberIsRenderTargetTextureSource(VariableSave? variable, string rootVariableName)
     {
-        VariableSave? variable = _selectedState.SelectedVariableSave;
-
         if (variable != null && rootVariableName == "RenderTargetTextureSource")
         {
             if ((variable.Value as string) == "<NONE>")
@@ -422,10 +424,8 @@ public class SetVariableLogic : ISetVariableLogic
         }
     }
 
-    private void ReactIfChangedMemberIsDefaultChildContainer(ElementSave parentElement, InstanceSave? instance, string rootVariableName, object? oldValue)
+    private void ReactIfChangedMemberIsDefaultChildContainer(VariableSave? variable, string rootVariableName)
     {
-        VariableSave? variable = _selectedState.SelectedVariableSave;
-
         if (variable != null && rootVariableName == "DefaultChildContainer")
         {
             if ((variable.Value as string) == "<NONE>")
@@ -961,9 +961,8 @@ public class SetVariableLogic : ISetVariableLogic
 
     }
 
-    private void ReactIfChangedMemberIsParent(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue, GeneralResponse response)
+    private void ReactIfChangedMemberIsParent(ElementSave parentElement, InstanceSave? instance, VariableSave? variable, string changedMember, object? oldValue, GeneralResponse response)
     {
-        VariableSave? variable = _selectedState.SelectedVariableSave;
         // Eventually need to handle tunneled variables
         if (variable != null && changedMember == "Parent" && response.Succeeded)
         {
