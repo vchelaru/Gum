@@ -4,6 +4,7 @@ using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using Shouldly;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
 
@@ -24,11 +25,9 @@ public class ParentValidationScenarioTests
         grid.PickComboItem("Parent", "Outer");
         tree.Click(tree.NodeFor(outer));
         tree.Click(tree.NodeFor(box), RawInputModifiers.Control);
-        // The rejection message currently shows twice, so answer both.
-        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
 
-        grid.PickComboItem("Parent", "Inner");
+        CommitOnRow(grid, "Parent", "Inner");
 
         VariableGridHarness.StoredValue(panel, "Outer.Parent").ShouldBeNull();
         VariableGridHarness.StoredValue(panel, "Box.Parent").ShouldBe("Inner");
@@ -50,11 +49,18 @@ public class ParentValidationScenarioTests
         grid.PickRowMenuItem("Parent", "Expose Variable");
         tree.Click(tree.NodeFor(panel));
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
-        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
 
-        grid.PickComboItem("OuterParent", "Inner");
+        CommitOnRow(grid, "OuterParent", "Inner");
 
         VariableGridHarness.StoredValue(panel, "Outer.Parent").ShouldBeNull();
         tree.Dialogs.Messages.ShouldContain(message => message.Contains("circular reference"));
+    }
+
+    // Committing through the combo commits a rejected value a second time when the rejection
+    // rebuilds the grid (#5580), so these commit through the row instead.
+    private static void CommitOnRow(VariableGridHarness grid, string memberName, string value)
+    {
+        grid.Member(memberName).SetValue(value, SetPropertyCommitType.Full);
+        grid.Settle();
     }
 }
