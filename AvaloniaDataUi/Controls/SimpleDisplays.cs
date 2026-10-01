@@ -14,6 +14,25 @@ using WpfDataUi.DataTypes;
 
 namespace AvaloniaDataUi.Controls;
 
+/// <summary>
+/// A combo box that ignores the mouse wheel while closed, so scrolling the grid over it never cycles
+/// and commits its value; the wheel still scrolls the grid. An open drop-down scrolls as usual.
+/// </summary>
+public class WheelIgnoringComboBox : ComboBox
+{
+    /// <inheritdoc/>
+    protected override Type StyleKeyOverride => typeof(ComboBox);
+
+    /// <inheritdoc/>
+    protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
+    {
+        if (IsDropDownOpen)
+        {
+            base.OnPointerWheelChanged(e);
+        }
+    }
+}
+
 /// <summary>A check box for a <see cref="bool"/>; its text turns green for a default value.</summary>
 public class CheckBoxDisplay : DataUiDisplayBase
 {
@@ -244,7 +263,7 @@ public class ComboBoxDisplay : DataUiDisplayBase
     {
         _logic = new ComboBoxDisplayLogic();
         _label = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-        _comboBox = new ComboBox { MinWidth = 60, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center };
+        _comboBox = new WheelIgnoringComboBox { MinWidth = 60, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center };
         _comboBox.SelectionChanged += HandleSelectionChanged;
         _comboBox.LostFocus += (_, _) =>
         {
@@ -440,6 +459,7 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     private double _minValue;
     private double _maxValue;
     private bool _isSettingSliderValueProgrammatically;
+    private double? _sliderValueAtLeftPress;
 
     /// <summary>Builds the displayer.</summary>
     public SliderDisplay()
@@ -448,7 +468,11 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Top, TextWrapping = TextWrapping.Wrap };
         _slider = new Slider { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
         _slider.PropertyChanged += HandleSliderPropertyChanged;
-        _slider.AddHandler(PointerReleasedEvent, (_, _) => HandleSliderCommitted(), RoutingStrategies.Bubble, handledEventsToo: true);
+        // Tunnel, so the value is read before the slider moves the thumb to the press.
+        _slider.AddHandler(PointerPressedEvent, HandleSliderPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        _slider.AddHandler(PointerReleasedEvent, (_, e) => HandleSliderPointerReleased(e.InitialPressMouseButton), RoutingStrategies.Bubble, handledEventsToo: true);
+        // The thumb ends its drag here when it loses the pointer capture, with no release.
+        _slider.AddHandler(Thumb.DragCompletedEvent, (_, _) => HandleSliderPointerReleased(MouseButton.Left), RoutingStrategies.Bubble, handledEventsToo: true);
         _textBox = new EditTrackingTextBox { Margin = new Thickness(3, 1, 1, 1), VerticalAlignment = VerticalAlignment.Center };
         _textBox.EditCommitRequested += HandleEditCommitRequested;
         _minValueText = new TextBlock { FontSize = 10, IsHitTestVisible = false };
@@ -615,6 +639,29 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         {
             // Show the value while dragging; it is committed when the pointer is released.
             _textBox.Text = _sliderLogic.FormatSliderValue(_slider.Value, InstanceMember?.PropertyType);
+        }
+    }
+
+    private void HandleSliderPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _sliderValueAtLeftPress = e.GetCurrentPoint(_slider).Properties.IsLeftButtonPressed ? _slider.Value : null;
+    }
+
+    /// <summary>
+    /// Ends a left-button interaction: commits only when it moved the slider, so a right-click or a
+    /// click that leaves the thumb in place writes nothing.
+    /// </summary>
+    private void HandleSliderPointerReleased(MouseButton button)
+    {
+        if (button != MouseButton.Left || _sliderValueAtLeftPress is not double valueAtPress)
+        {
+            return;
+        }
+
+        _sliderValueAtLeftPress = null;
+        if (_slider.Value != valueAtPress)
+        {
+            HandleSliderCommitted();
         }
     }
 

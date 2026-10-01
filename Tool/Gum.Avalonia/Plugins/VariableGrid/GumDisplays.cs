@@ -408,7 +408,7 @@ public class CornerRadiusDisplay : DataUiDisplayBase
     private bool _isSyncing;
     private TextBox? _draggingTextBox;
     private Point? _dragLastPosition;
-    private Point? _dragPressedPosition;
+    private bool _hasScrubbed;
 
     /// <summary>Builds the editor.</summary>
     public CornerRadiusDisplay()
@@ -478,6 +478,9 @@ public class CornerRadiusDisplay : DataUiDisplayBase
 
     /// <summary>The uniform field, for tests.</summary>
     internal TextBox UniformTextBox => _uniformTextBox;
+
+    /// <summary>The label that scrubs the uniform radius, for tests.</summary>
+    internal Control UniformLabel => _label;
 
     /// <summary>The TL, TR, BL, BR fields, for tests.</summary>
     internal IReadOnlyList<TextBox> CornerTextBoxes => _cornerTextBoxes;
@@ -622,44 +625,40 @@ public class CornerRadiusDisplay : DataUiDisplayBase
     private void AddDragTarget(Control label, TextBox target)
     {
         _dragTargets[label] = target;
-        label.PointerPressed += (_, e) =>
-        {
-            if (!e.GetCurrentPoint(label).Properties.IsLeftButtonPressed)
+        CapturedPointerDrag.Attach(label,
+            e =>
             {
-                return;
-            }
-            _draggingTextBox = target;
-            _dragLastPosition = e.GetPosition(this);
-            _dragPressedPosition = _dragLastPosition;
-            _scrubLogic.Begin(_logic.ParseFloat(target.Text) ?? _current.Uniform);
-            e.Pointer.Capture(label);
-            e.Handled = true;
-        };
-        label.PointerMoved += (_, e) =>
-        {
-            if (_dragLastPosition == null || _draggingTextBox == null)
+                _draggingTextBox = target;
+                _dragLastPosition = e.GetPosition(this);
+                _hasScrubbed = false;
+                _scrubLogic.Begin(_logic.ParseFloat(target.Text) ?? _current.Uniform);
+                return true;
+            },
+            e =>
             {
-                return;
-            }
-            Point position = e.GetPosition(this);
-            double difference = position.X - _dragLastPosition.Value.X;
-            _dragLastPosition = position;
-            if (difference != 0)
+                if (_dragLastPosition == null || _draggingTextBox == null)
+                {
+                    return;
+                }
+                Point position = e.GetPosition(this);
+                double difference = position.X - _dragLastPosition.Value.X;
+                _dragLastPosition = position;
+                if (difference != 0)
+                {
+                    ScrubDraggedField(difference);
+                    _hasScrubbed = true;
+                }
+            },
+            () =>
             {
-                ScrubDraggedField(difference);
-            }
-        };
-        label.PointerReleased += (_, e) =>
-        {
-            if (_draggingTextBox != null && _dragPressedPosition != null && e.GetPosition(this).X != _dragPressedPosition.Value.X)
-            {
-                Commit(SetPropertyCommitType.Full);
-            }
-            _draggingTextBox = null;
-            _dragLastPosition = null;
-            _dragPressedPosition = null;
-            e.Pointer.Capture(null);
-        };
+                if (_hasScrubbed)
+                {
+                    Commit(SetPropertyCommitType.Full);
+                }
+                _draggingTextBox = null;
+                _dragLastPosition = null;
+                _hasScrubbed = false;
+            });
     }
 
     private void ScrubDraggedField(double difference)
