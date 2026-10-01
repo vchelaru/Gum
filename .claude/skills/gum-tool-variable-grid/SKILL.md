@@ -43,6 +43,7 @@ Headless Variables grid scenarios and their harness: `Tests/Gum.Avalonia.Tests/V
 | DataUiGrid XAML template | `WpfDataUi/Themes/Generic.xaml` |
 | Avalonia DataUiGrid control and row host | `AvaloniaDataUi/DataUiGrid.cs`, `AvaloniaDataUi/SingleDataUiContainer.cs` |
 | Avalonia editors | `AvaloniaDataUi/Controls/SimpleDisplays.cs`, `CompositeDisplays.cs`, `TextBoxDisplay.cs` over `DataUiDisplayBase` |
+| Avalonia drag/scrub capture (ends once on release or capture loss) and wheel-ignoring closed combo | `AvaloniaDataUi/Controls/CapturedPointerDrag.cs`, `WheelIgnoringComboBox` in `SimpleDisplays.cs` |
 | MemberCategory / InstanceMember models | `DataUi.Core/DataTypes/` |
 | Gum-specific member subclass | `Tools/Gum.Presentation/PropertyGridHelpers/StateReferencingInstanceMember.cs` |
 | Plugin wiring selection events | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/VariableGridPluginBase.cs` (each head exports a `MainVariableGridPlugin` subclass) |

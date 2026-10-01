@@ -92,6 +92,8 @@ Only write after the user confirms (e.g. "looks good", "apply it", "go ahead"). 
 
 **Corrections need no approval.** Fixing text that is wrong, or that a code change made untrue (a moved file, a renamed symbol, a behavior that no longer holds), is applied directly and mentioned afterwards. Only net-new additions wait for approval.
 
+**The repo's `CLAUDE.md` wins.** When it says guidance changes go in the work PR without asking (Gum's does), write the change directly and name it in the PR and the final report instead of waiting for approval.
+
 ## File Structure
 
 Minimum skill is a single `SKILL.md` with YAML frontmatter:
