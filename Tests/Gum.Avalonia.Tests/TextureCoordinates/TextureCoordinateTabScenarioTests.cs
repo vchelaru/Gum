@@ -317,12 +317,22 @@ public class TextureCoordinateTabScenarioTests
             tab.CanvasControl.Focus();
             tab.Input.Window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, null);
             tab.Frame();
+            try
+            {
+                tab.SnapToGridCheckBox.Focus();
+                tab.Frame();
+                tab.Drag(tab.WindowPointOf(64, 64), tab.WindowPointOf(104, 64));
 
-            tab.SnapToGridCheckBox.Focus();
-            tab.Frame();
-            tab.Drag(tab.WindowPointOf(64, 64), tab.WindowPointOf(104, 64));
-
-            tab.Editor.SavedValue(button, "Icon.TextureLeft").ShouldBe(72, tab.Describe());
+                tab.Editor.SavedValue(button, "Icon.TextureLeft").ShouldBe(72, tab.Describe());
+            }
+            finally
+            {
+                // The tab is shared by every scenario; a Space it still holds after a failure
+                // would turn the next scenario's drags into pans.
+                tab.CanvasControl.Focus();
+                tab.Input.Window.KeyRelease(Key.Space, RawInputModifiers.None, PhysicalKey.Space, null);
+                tab.Frame();
+            }
         });
     }
 
