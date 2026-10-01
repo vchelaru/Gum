@@ -54,6 +54,13 @@
     <!-- GumPreview is an executable that publishes itself on a Debug build, so its pure logic is linked. -->
     <Compile Include="..\..\Tool\GumPreview\PreviewOptions.cs" Link="GumPreview\PreviewOptions.cs" />
     <Compile Include="..\..\Tool\GumPreview\UnattendedPreviewRun.cs" Link="GumPreview\UnattendedPreviewRun.cs" />
+    <Compile Include="..\..\Tool\GumPreview\SdlLibrary.cs" Link="GumPreview\SdlLibrary.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Native-only package: the SDL files GumPreview ships, for SdlLibraryTests. Keep the version in
+         step with the one MonoGame.Framework.DesktopGL in GumPreview.csproj depends on. -->
+    <PackageReference Include="MonoGame.Library.SDL" VersionOverride="2.32.2.1" />
   </ItemGroup>
 
 </Project>

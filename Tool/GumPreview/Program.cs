@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using GumPreview;
 
@@ -9,6 +10,8 @@ if (options.Error != null)
     Console.Error.WriteLine(PreviewOptions.Usage);
     return 1;
 }
+
+NativeLibrary.SetDllImportResolver(typeof(Program).Assembly, SdlLibrary.Resolve);
 
 UnattendedPreviewRun? unattended = null;
 Timer? deadline = null;

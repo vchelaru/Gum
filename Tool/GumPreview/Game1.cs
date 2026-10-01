@@ -270,8 +270,9 @@ public class Game1 : Game
         Renderer.SiblingOrdering = _selection.SortByBatchKey ? BatchKeyGroupedOrderer.Instance : HierarchicalOrderer.Instance;
 
     // SDL_RaiseWindow is the same call MonoGame's own SDL backend uses internally, so it works
-    // uniformly across the Windows/X11/Wayland/macOS backends SDL abstracts.
-    [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
+    // uniformly across the Windows/X11/Wayland/macOS backends SDL abstracts. Program.cs registers
+    // SdlLibrary.Resolve so this finds the per-OS SDL file name.
+    [DllImport(SdlLibrary.ImportName, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SDL_RaiseWindow(IntPtr window);
 
     private void ActivateWindow()
