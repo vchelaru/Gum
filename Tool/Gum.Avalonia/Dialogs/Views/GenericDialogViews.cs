@@ -93,22 +93,37 @@ public sealed class GetUserStringDialogView : Grid
     }
 }
 
-/// <summary>Shows a message and a list of options to pick one from.</summary>
+/// <summary>
+/// Shows a message and a list of options to pick one from. The selected option has keyboard focus
+/// once the window opens, so the arrow keys change the choice and Enter confirms it.
+/// </summary>
 public sealed class ChoiceDialogView : StackPanel
 {
     /// <summary>Builds the view.</summary>
     public ChoiceDialogView()
     {
+        // The WPF view's width; a long option wraps at it instead of widening the window.
+        Width = 450;
         Spacing = 8;
-        MinWidth = 360;
         TextBlock message = new TextBlock { TextWrapping = TextWrapping.Wrap };
         message.Bind(TextBlock.TextProperty, new Binding(nameof(ChoiceDialogViewModel.Message)));
         Children.Add(message);
 
-        ListBox options = new ListBox { MaxHeight = 300 };
+        ListBox options = new ListBox
+        {
+            MaxHeight = 300,
+            ItemTemplate = new FuncDataTemplate<string>((_, _) =>
+            {
+                TextBlock option = new TextBlock { TextWrapping = TextWrapping.Wrap };
+                option.Bind(TextBlock.TextProperty, new Binding());
+                return option;
+            }),
+        };
         options.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(ChoiceDialogViewModel.OptionValues)));
         options.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(ChoiceDialogViewModel.SelectedValue)) { Mode = BindingMode.TwoWay });
         Children.Add(options);
+
+        DialogWindow.FocusWhenOpened(options, () => options.ContainerFromIndex(options.SelectedIndex)?.Focus());
     }
 }
 
