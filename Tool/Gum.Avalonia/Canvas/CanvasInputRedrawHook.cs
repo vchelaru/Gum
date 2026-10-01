@@ -17,7 +17,7 @@ public static class CanvasInputRedrawHook
     public static IDisposable Install(ICanvasRedrawScheduler scheduler)
     {
         // Tunnel routing starts at the TopLevel, so a class handler there sees every input event in
-        // every window, handled or not. Drag-and-drop events only bubble.
+        // every window, handled or not. Drag-and-drop and trackpad gesture events only bubble.
         List<IDisposable> handlers = new List<IDisposable>
         {
             AddTunnel(InputElement.PointerPressedEvent, scheduler),
@@ -27,8 +27,11 @@ public static class CanvasInputRedrawHook
             AddTunnel(InputElement.KeyDownEvent, scheduler),
             AddTunnel(InputElement.KeyUpEvent, scheduler),
             AddTunnel(InputElement.TextInputEvent, scheduler),
-            DragDrop.DragOverEvent.AddClassHandler<TopLevel>((_, _) => scheduler.RequestRedraw(), RoutingStrategies.Bubble, handledEventsToo: true),
-            DragDrop.DropEvent.AddClassHandler<TopLevel>((_, _) => scheduler.RequestRedraw(), RoutingStrategies.Bubble, handledEventsToo: true),
+            AddBubble(DragDrop.DragOverEvent, scheduler),
+            AddBubble(DragDrop.DropEvent, scheduler),
+            AddBubble(Gestures.PointerTouchPadGestureMagnifyEvent, scheduler),
+            AddBubble(Gestures.PointerTouchPadGestureRotateEvent, scheduler),
+            AddBubble(Gestures.PointerTouchPadGestureSwipeEvent, scheduler),
         };
         return new HandlerSet(handlers);
     }
@@ -36,6 +39,10 @@ public static class CanvasInputRedrawHook
     private static IDisposable AddTunnel<TEventArgs>(RoutedEvent<TEventArgs> routedEvent, ICanvasRedrawScheduler scheduler)
         where TEventArgs : RoutedEventArgs =>
         routedEvent.AddClassHandler<TopLevel>((_, _) => scheduler.RequestRedraw(), RoutingStrategies.Tunnel, handledEventsToo: true);
+
+    private static IDisposable AddBubble<TEventArgs>(RoutedEvent<TEventArgs> routedEvent, ICanvasRedrawScheduler scheduler)
+        where TEventArgs : RoutedEventArgs =>
+        routedEvent.AddClassHandler<TopLevel>((_, _) => scheduler.RequestRedraw(), RoutingStrategies.Bubble, handledEventsToo: true);
 
     private sealed class HandlerSet : IDisposable
     {

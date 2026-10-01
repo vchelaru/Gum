@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -269,20 +268,7 @@ public class Game1 : Game
     private void ApplySiblingOrdering() =>
         Renderer.SiblingOrdering = _selection.SortByBatchKey ? BatchKeyGroupedOrderer.Instance : HierarchicalOrderer.Instance;
 
-    // SDL_RaiseWindow is the same call MonoGame's own SDL backend uses internally, so it works
-    // uniformly across the Windows/X11/Wayland/macOS backends SDL abstracts.
-    [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SDL_RaiseWindow(IntPtr window);
-
-    private void ActivateWindow()
-    {
-        try
-        {
-            SDL_RaiseWindow(Window.Handle);
-        }
-        catch (DllNotFoundException) { }
-        catch (EntryPointNotFoundException) { }
-    }
+    private void ActivateWindow() => SdlLibrary.TryRaiseWindow(Window.Handle);
 
     private void ApplyCanvasSizeFromProject()
     {

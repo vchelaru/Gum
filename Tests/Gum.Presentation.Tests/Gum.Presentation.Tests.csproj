@@ -54,6 +54,6 @@
     <!-- GumPreview is an executable that publishes itself on a Debug build, so its pure logic is linked. -->
     <Compile Include="..\..\Tool\GumPreview\PreviewOptions.cs" Link="GumPreview\PreviewOptions.cs" />
     <Compile Include="..\..\Tool\GumPreview\UnattendedPreviewRun.cs" Link="GumPreview\UnattendedPreviewRun.cs" />
+    <Compile Include="..\..\Tool\GumPreview\SdlLibrary.cs" Link="GumPreview\SdlLibrary.cs" />
   </ItemGroup>
-
 </Project>

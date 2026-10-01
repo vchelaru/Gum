@@ -462,12 +462,14 @@ public class SetVariableLogicTests : BaseTestClass
         (variable.Value as string).ShouldBe("image.png");
     }
 
-    [Fact]
-    public void ReactToPropertyValueChanged_ShouldClearRenderTargetTextureSource_WhenNoneSelected()
+    [Theory]
+    [InlineData("RenderTargetTextureSource")]
+    [InlineData("DefaultChildContainer")]
+    public void ReactToPropertyValueChanged_ShouldClearVariable_WhenNoneSelected(string variableName)
     {
-        // Picking "<NONE>" in the render-target dropdown must clear the variable back to default
-        // rather than persisting the sentinel string (which would read as a set value), mirroring
-        // how Parent and DefaultChildContainer normalize "<NONE>".
+        // Picking "<NONE>" in the dropdown must clear the variable back to default rather than
+        // persisting the sentinel string, which would read as a set value. The variable comes from
+        // the state being set, not from the selection.
         ComponentSave container = new ComponentSave();
         container.States.Add(new StateSave());
         container.DefaultState.ParentContainer = container;
@@ -476,19 +478,16 @@ public class SetVariableLogicTests : BaseTestClass
         instance.Name = "SpriteInstance";
         instance.BaseType = "Sprite";
 
-        container.DefaultState.SetValue("SpriteInstance.RenderTargetTextureSource", "<NONE>");
-        VariableSave variable = container.DefaultState.GetVariableSave("SpriteInstance.RenderTargetTextureSource");
+        container.DefaultState.SetValue($"SpriteInstance.{variableName}", "<NONE>");
+        VariableSave variable = container.DefaultState.GetVariableSave($"SpriteInstance.{variableName}").ShouldNotBeNull();
 
         Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
         selectedState
             .Setup(x => x.SelectedStateSave)
             .Returns(container.DefaultState);
-        selectedState
-            .Setup(x => x.SelectedVariableSave)
-            .Returns(variable);
 
         _setVariableLogic.ReactToPropertyValueChanged(
-            "RenderTargetTextureSource",
+            variableName,
             null,
             container,
             instance,
@@ -657,7 +656,6 @@ public class SetVariableLogicTests : BaseTestClass
         component.Instances.Add(new InstanceSave { Name = "Child", BaseType = "Container", ParentContainer = component });
         VariableSave parentVariable = new VariableSave { Name = "Parent", Type = "string", Value = "Child", SetsValue = true };
         state.Variables.Add(parentVariable);
-        mocker.GetMock<ISelectedState>().Setup(x => x.SelectedVariableSave).Returns(parentVariable);
 
         GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
             "Parent",
