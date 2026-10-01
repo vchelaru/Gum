@@ -94,6 +94,27 @@ public class CanvasRedrawTests
     }
 
     [AvaloniaFact]
+    public void InputHook_RequestsARedraw_ForATrackpadPinch()
+    {
+        CanvasRedrawScheduler scheduler = new CanvasRedrawScheduler(new ManualTimeProvider());
+        int requestCount = 0;
+        scheduler.RedrawRequested += () => requestCount++;
+        using IDisposable hook = CanvasInputRedrawHook.Install(scheduler);
+        Border canvas = new Border();
+        Window window = new Window { Content = canvas };
+        window.Show();
+        // The canvas handles the pinch itself (it zooms), so the hook must see handled events too.
+        canvas.AddHandler(Gestures.PointerTouchPadGestureMagnifyEvent, (_, e) => e.Handled = true);
+
+        canvas.RaiseEvent(new PointerDeltaEventArgs(Gestures.PointerTouchPadGestureMagnifyEvent, canvas,
+            new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, isPrimary: true), window, default, 0,
+            new PointerPointProperties(), KeyModifiers.None, new global::Avalonia.Vector(0.1, 0)));
+
+        requestCount.ShouldBeGreaterThan(0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void EditorTab_RequestsARedraw_WhenTheWireframeRefreshes()
     {
         ToolStartup.EnsureInitialized();
