@@ -105,7 +105,7 @@ public class VariableMenuScenarioTests
         grid.Settle();
 
         VariableGridHarness.StoredValue(button, "Label.Parent").ShouldBe("Holder");
-        grid.Combo("Parent").SelectedItem?.ToString().ShouldBe("Holder");
+        grid.ComboText("Parent").ShouldBe("Holder");
     }
 
     [AvaloniaFact]

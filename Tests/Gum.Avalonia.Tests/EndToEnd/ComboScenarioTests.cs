@@ -824,7 +824,7 @@ public class ComboScenarioTests
         File.Exists(Path.Combine(components, "ButtonCopy.codsj")).ShouldBeTrue("the copy keeps the element's code settings");
         code.Select(copy);
         code.Member("Using Statements").Value.ShouldBe("using System.Numerics;");
-        code.Member("Generation Behavior").Value?.ToString().ShouldBe("GenerateManually");
+        code.Member("Generation Behavior").Value.ShouldNotBeNull().ToString().ShouldBe("GenerateManually");
 
         code.AssertOracles();
     }

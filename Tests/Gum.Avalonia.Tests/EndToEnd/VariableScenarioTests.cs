@@ -168,7 +168,7 @@ public class VariableScenarioTests
         tree.Redo();
         VariableGridHarness.StoredValue(Component(tree, "Button"), "ChildrenLayout").ShouldBe(ChildrenLayout.TopToBottomStack);
         tree.Click(tree.NodeFor(Component(tree, "Button").Instances.Single()));
-        grid.Combo("TextureAddress").SelectedItem?.ToString().ShouldBe(nameof(TextureAddress.Custom));
+        grid.ComboText("TextureAddress").ShouldBe(nameof(TextureAddress.Custom));
 
         tree.AssertOracles();
     }

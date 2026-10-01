@@ -389,7 +389,7 @@ public class VariablesTabTests
 
             PluginContainer container = pluginManager.PluginContainers
                 .Single(pair => pair.Key is MainVariableGridPlugin).Value;
-            container.FailureException?.ToString().ShouldBeNull(container.FailureDetails);
+            container.FailureException.ShouldBeNull(container.FailureDetails);
             container.IsEnabled.ShouldBeTrue();
             selectedState.SelectedElement.ShouldBeSameAs(component);
             gridManager.VariableViewModel.ShowVariableGrid.ShouldBeTrue();

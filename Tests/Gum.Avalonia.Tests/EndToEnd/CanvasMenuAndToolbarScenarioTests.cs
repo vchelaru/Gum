@@ -63,7 +63,7 @@ public class CanvasMenuAndToolbarScenarioTests
             canvas.Click(overB);
             ProjectFileSnapshot start = canvas.Tree.SnapshotFiles();
             canvas.RightClick(overA);
-            canvas.Project.SelectedState.SelectedInstance?.Name.ShouldBe("A", canvas.Describe());
+            canvas.Project.SelectedState.SelectedInstance.ShouldNotBeNull(canvas.Describe()).Name.ShouldBe("A", canvas.Describe());
             canvas.ContextMenu.IsOpen.ShouldBeTrue();
             canvas.MenuHeaders().ShouldBe(new[] { "Bring to Front", "Move Forward", "Move In Front Of", "Move Backward", "Send to Back", "Add child object to 'A'", "Lock A" });
 
@@ -99,7 +99,7 @@ public class CanvasMenuAndToolbarScenarioTests
             canvas.SavedValue(button, "A.Y").ShouldBe(20f);
             canvas.Click(overB);
             canvas.Click(overA);
-            canvas.Project.SelectedState.SelectedInstance?.Name.ShouldNotBe("A");
+            (canvas.Project.SelectedState.SelectedInstance?.Name).ShouldNotBe("A");
 
             // Selected from the tree, it unlocks from the menu and moves again.
             canvas.Tree.Click(canvas.Tree.NodeFor(button.GetInstance("A")!));
@@ -329,7 +329,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
             // Hovering an instance that isn't selected highlights it; empty canvas clears it.
             canvas.MoveTo(canvas.WindowPointOf(320, 120));
-            canvas.Plugin.CanvasSelectionManager.HighlightedIpso?.Name.ShouldBe("Other", canvas.Describe());
+            canvas.Plugin.CanvasSelectionManager.HighlightedIpso.ShouldNotBeNull(canvas.Describe()).Name.ShouldBe("Other", canvas.Describe());
             canvas.MoveTo(canvas.WindowPointOf(600, 500));
             canvas.Plugin.CanvasSelectionManager.HighlightedIpso.ShouldBeNull();
 
@@ -384,7 +384,7 @@ public class CanvasMenuAndToolbarScenarioTests
 
             // A click on the card's own child selects the card instance, not the child inside it.
             canvas.Click(canvas.WindowPointOf(150, 130));
-            canvas.Project.SelectedState.SelectedInstance?.Name.ShouldBe("CardInstance", canvas.Describe());
+            canvas.Project.SelectedState.SelectedInstance.ShouldNotBeNull(canvas.Describe()).Name.ShouldBe("CardInstance", canvas.Describe());
 
             // An edit in the Variables tab redraws the canvas on its own, with no canvas input. The
             // app's input hook (installed at startup) is what asks for the frame.

@@ -524,7 +524,7 @@ public class CopyPasteRenameScenarioTests
         exposed.Name.ShouldBe("Glyph.ShapeState");
         VariableGridHarness.StoredValue(Screen(tree, "Title"), "OkButton.GlyphKind").ShouldBe("Square");
         tree.Click(tree.NodeFor(Screen(tree, "Title").Instances.Single()));
-        grid.Combo("GlyphKind").SelectedItem?.ToString().ShouldBe("Square");
+        grid.ComboText("GlyphKind").ShouldBe("Square");
 
         tree.AssertOracles();
     }
