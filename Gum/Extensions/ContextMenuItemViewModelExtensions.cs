@@ -30,7 +30,7 @@ public static class ContextMenuItemViewModelExtensions
 
         if (item.Shortcut != null)
         {
-            menuItem.InputGestureText = item.Shortcut;
+            menuItem.InputGestureText = item.Shortcut.ToString();
         }
 
         if (item.IconKey != null)

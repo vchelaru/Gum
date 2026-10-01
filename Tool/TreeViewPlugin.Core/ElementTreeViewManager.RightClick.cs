@@ -52,7 +52,7 @@ public partial class ElementTreeViewManager
     // The menu being built by BuildContextMenuItems.
     private List<ContextMenuItemViewModel> _contextMenuItems;
 
-    private void AddMenuItem(string text, Action clickAction, string? shortcut = null) =>
+    private void AddMenuItem(string text, Action clickAction, KeyCombination? shortcut = null) =>
         _contextMenuItems.Add(new ContextMenuItemViewModel { Text = text, Action = clickAction, Shortcut = shortcut });
 
     private void AddSeparator() => _contextMenuItems.Add(new ContextMenuItemViewModel { IsSeparator = true });
@@ -62,10 +62,10 @@ public partial class ElementTreeViewManager
         var folderCount = _selectedState.SelectedTreeNodes
             .Count(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode());
         var deleteText = folderCount > 1 ? $"Delete {folderCount} Folders" : "Delete Folder";
-        AddMenuItem(deleteText, HandleDeleteFolder, _hotkeyManager.Delete.ToString());
+        AddMenuItem(deleteText, HandleDeleteFolder, _hotkeyManager.Delete);
         if (folderCount == 1)
         {
-            AddMenuItem("Rename Folder", HandleRenameFolder, _hotkeyManager.Rename.ToString());
+            AddMenuItem("Rename Folder", HandleRenameFolder, _hotkeyManager.Rename);
         }
     }
 
@@ -247,7 +247,7 @@ public partial class ElementTreeViewManager
             if (typesPresent > 1)
             {
                 int totalCount = elementsFromTree.Count + behaviorsFromTree.Count + instancesFromTree.Count;
-                AddMenuItem($"Delete {totalCount} items", HandleDeleteObject, _hotkeyManager.Delete.ToString());
+                AddMenuItem($"Delete {totalCount} items", HandleDeleteObject, _hotkeyManager.Delete);
             }
 
             #region InstanceSave
@@ -255,7 +255,7 @@ public partial class ElementTreeViewManager
             else if (_selectedState.SelectedInstance != null)
             {
                 var containerElement = _selectedState.SelectedElement;
-                AddMenuItem("Go to definition", HandleGoToDefinition, _hotkeyManager.GoToDefinition.ToString());
+                AddMenuItem("Go to definition", HandleGoToDefinition, _hotkeyManager.GoToDefinition);
 
                 // "Create Component" promotes a single instance into a new component (the instance's
                 // children become the component's children). Multi-instance promotion isn't supported
@@ -279,12 +279,12 @@ public partial class ElementTreeViewManager
                 var duplicateText = instances.Count > 1
                     ? $"Duplicate {instances.Count} instances"
                     : $"Duplicate {_selectedState.SelectedInstance.Name}";
-                AddMenuItem(duplicateText, HandleDuplicateInstance, _hotkeyManager.Duplicate.ToString());
+                AddMenuItem(duplicateText, HandleDuplicateInstance, _hotkeyManager.Duplicate);
 
                 var deleteText = instances.Count > 1
                     ? $"Delete {instances.Count} instances"
                     : $"Delete {_selectedState.SelectedInstance.Name}";
-                AddMenuItem(deleteText, () => _editCommands.DeleteSelection(), _hotkeyManager.Delete.ToString());
+                AddMenuItem(deleteText, () => _editCommands.DeleteSelection(), _hotkeyManager.Delete);
 
                 if (containerElement != null)
                 {
@@ -329,7 +329,7 @@ public partial class ElementTreeViewManager
                 AddCreateInstanceMenuItems("Add object to " + selectedElement.Name, selectedElement);
 
                 var duplicateText = $"Duplicate {selectedElement.Name}";
-                AddMenuItem(duplicateText, HandleDuplicateElement, _hotkeyManager.Duplicate.ToString());
+                AddMenuItem(duplicateText, HandleDuplicateElement, _hotkeyManager.Duplicate);
 
                 AddSeparator();
 
@@ -350,7 +350,7 @@ public partial class ElementTreeViewManager
                 {
                     elementDeleteText = "Delete " + selectedElement.ToString();
                 }
-                AddMenuItem(elementDeleteText, HandleDeleteObject, _hotkeyManager.Delete.ToString());
+                AddMenuItem(elementDeleteText, HandleDeleteObject, _hotkeyManager.Delete);
 
                 AddSeparator();
 
@@ -381,7 +381,7 @@ public partial class ElementTreeViewManager
                 var selectedBehaviors = _selectedState.SelectedBehaviors.ToList();
                 if (selectedBehaviors.Count == 1)
                 {
-                    AddMenuItem("Rename", () => _editCommands.AskToRenameBehavior(_selectedState.SelectedBehavior), _hotkeyManager.Rename.ToString());
+                    AddMenuItem("Rename", () => _editCommands.AskToRenameBehavior(_selectedState.SelectedBehavior), _hotkeyManager.Rename);
                     AddSeparator();
                     AddCreateBehaviorInstanceMenuItems("Add object to " + _selectedState.SelectedBehavior.Name);
                 }
@@ -389,7 +389,7 @@ public partial class ElementTreeViewManager
                 var behaviorDeleteText = selectedBehaviors.Count > 1
                     ? $"Delete {selectedBehaviors.Count} Behaviors"
                     : "Delete " + _selectedState.SelectedBehavior.ToString();
-                AddMenuItem(behaviorDeleteText, HandleDeleteObject, _hotkeyManager.Delete.ToString());
+                AddMenuItem(behaviorDeleteText, HandleDeleteObject, _hotkeyManager.Delete);
             }
 
             #endregion
@@ -538,12 +538,12 @@ public partial class ElementTreeViewManager
 
     private void AddCopyMenuItems()
     {
-        AddMenuItem("Copy", () => _copyPasteLogic.OnCopy(CopyType.InstanceOrElement), _hotkeyManager.Copy.ToString());
+        AddMenuItem("Copy", () => _copyPasteLogic.OnCopy(CopyType.InstanceOrElement), _hotkeyManager.Copy);
     }
 
     private void AddCutMenuItems()
     {
-        AddMenuItem("Cut", () => _copyPasteLogic.OnCut(CopyType.InstanceOrElement), _hotkeyManager.Cut.ToString());
+        AddMenuItem("Cut", () => _copyPasteLogic.OnCut(CopyType.InstanceOrElement), _hotkeyManager.Cut);
     }
 
     private void AddPasteMenuItems()
@@ -552,7 +552,7 @@ public partial class ElementTreeViewManager
         {
             // Ctrl+V pastes Recursive (see HotkeyManager.HandleCopyCutPaste), so only this variant -
             // not "Paste Top Level Instance(s)" below - gets the shortcut label.
-            AddMenuItem("Paste", () => _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive), _hotkeyManager.Paste.ToString());
+            AddMenuItem("Paste", () => _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive), _hotkeyManager.Paste);
         }
         if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
         {
