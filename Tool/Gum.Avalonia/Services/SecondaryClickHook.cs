@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -10,49 +11,88 @@ namespace Gum.Avalonia.Services;
 /// Turns macOS's Ctrl+left-click into a right-click in every window, so each control that opens a
 /// menu or selects on a right-click (the trees, the canvas, the lists, a <see cref="Control.ContextMenu"/>)
 /// does the same for it (#5555). It raises a right-button press and release on the element the
-/// original press and release went to, and marks the originals handled. Does nothing on Windows and
-/// Linux, where Ctrl+click keeps its own meaning.
+/// original press and release went to, and marks the originals handled. Avalonia's tap gestures
+/// still read the originals as left clicks, so the Tapped and DoubleTapped they raise are handled
+/// before any control sees them. Does nothing on Windows and Linux, where Ctrl+click keeps its own
+/// meaning.
 /// </summary>
 public static class SecondaryClickHook
 {
     /// <summary>Starts translating secondary clicks; dispose the result to stop.</summary>
-    public static IDisposable Install(IOperatingSystemInfo operatingSystem)
-    {
-        SecondaryClickTracker tracker = new SecondaryClickTracker(operatingSystem);
-        // Tunnel routing starts at the TopLevel, so this sees every press before any control does.
-        IDisposable pressed = InputElement.PointerPressedEvent.AddClassHandler<TopLevel>(
-            (topLevel, e) => HandlePressed(topLevel, e, tracker), RoutingStrategies.Tunnel, handledEventsToo: true);
-        IDisposable released = InputElement.PointerReleasedEvent.AddClassHandler<TopLevel>(
-            (topLevel, e) => HandleReleased(topLevel, e, tracker), RoutingStrategies.Tunnel, handledEventsToo: true);
-        return new HandlerPair(pressed, released);
-    }
+    public static IDisposable Install(IOperatingSystemInfo operatingSystem) => new Installation(operatingSystem);
 
-    private static void HandlePressed(TopLevel topLevel, PointerPressedEventArgs e, SecondaryClickTracker tracker)
+    private sealed class Installation : IDisposable
     {
-        PointerUpdateKind kind = e.GetCurrentPoint(topLevel).Properties.PointerUpdateKind;
-        if (!tracker.Track(kind, e.KeyModifiers) || e.Source is not Interactive source)
-        {
-            return;
-        }
-        e.Handled = true;
-        KeyModifiers modifiers = WithoutControl(e.KeyModifiers);
-        source.RaiseEvent(new PointerPressedEventArgs(source, e.Pointer, topLevel, e.GetPosition(topLevel), e.Timestamp,
-            new PointerPointProperties(ToRaw(modifiers) | RawInputModifiers.RightMouseButton, PointerUpdateKind.RightButtonPressed),
-            modifiers, e.ClickCount));
-    }
+        private readonly SecondaryClickTracker _tracker;
+        private readonly List<IDisposable> _handlers;
+        // Whether the last press or release was a secondary click's original. Avalonia raises Tapped
+        // and DoubleTapped right after that event's route, before the next pointer event.
+        private bool _isLastButtonEventReplaced;
 
-    private static void HandleReleased(TopLevel topLevel, PointerReleasedEventArgs e, SecondaryClickTracker tracker)
-    {
-        PointerUpdateKind kind = e.GetCurrentPoint(topLevel).Properties.PointerUpdateKind;
-        if (!tracker.Track(kind, e.KeyModifiers) || e.Source is not Interactive source)
+        public Installation(IOperatingSystemInfo operatingSystem)
         {
-            return;
+            _tracker = new SecondaryClickTracker(operatingSystem);
+            // Tunnel routing starts at the TopLevel, so these see every press before any control does.
+            _handlers = new List<IDisposable>
+            {
+                InputElement.PointerPressedEvent.AddClassHandler<TopLevel>(HandlePressed, RoutingStrategies.Tunnel, handledEventsToo: true),
+                InputElement.PointerReleasedEvent.AddClassHandler<TopLevel>(HandleReleased, RoutingStrategies.Tunnel, handledEventsToo: true),
+                // Class handlers run on each element before its own handlers, so the gesture's
+                // source handles it first.
+                InputElement.TappedEvent.AddClassHandler<Interactive>(HandleTap),
+                InputElement.DoubleTappedEvent.AddClassHandler<Interactive>(HandleTap),
+            };
         }
-        e.Handled = true;
-        KeyModifiers modifiers = WithoutControl(e.KeyModifiers);
-        source.RaiseEvent(new PointerReleasedEventArgs(source, e.Pointer, topLevel, e.GetPosition(topLevel), e.Timestamp,
-            new PointerPointProperties(ToRaw(modifiers), PointerUpdateKind.RightButtonReleased),
-            modifiers, MouseButton.Right));
+
+        public void Dispose()
+        {
+            foreach (IDisposable handler in _handlers)
+            {
+                handler.Dispose();
+            }
+            _handlers.Clear();
+        }
+
+        private void HandlePressed(TopLevel topLevel, PointerPressedEventArgs e)
+        {
+            PointerUpdateKind kind = e.GetCurrentPoint(topLevel).Properties.PointerUpdateKind;
+            if (!_tracker.Track(kind, e.KeyModifiers) || e.Source is not Interactive source)
+            {
+                // The replacement right press comes through here too.
+                _isLastButtonEventReplaced = false;
+                return;
+            }
+            e.Handled = true;
+            KeyModifiers modifiers = WithoutControl(e.KeyModifiers);
+            source.RaiseEvent(new PointerPressedEventArgs(source, e.Pointer, topLevel, e.GetPosition(topLevel), e.Timestamp,
+                new PointerPointProperties(ToRaw(modifiers) | RawInputModifiers.RightMouseButton, PointerUpdateKind.RightButtonPressed),
+                modifiers, e.ClickCount));
+            _isLastButtonEventReplaced = true;
+        }
+
+        private void HandleReleased(TopLevel topLevel, PointerReleasedEventArgs e)
+        {
+            PointerUpdateKind kind = e.GetCurrentPoint(topLevel).Properties.PointerUpdateKind;
+            if (!_tracker.Track(kind, e.KeyModifiers) || e.Source is not Interactive source)
+            {
+                _isLastButtonEventReplaced = false;
+                return;
+            }
+            e.Handled = true;
+            KeyModifiers modifiers = WithoutControl(e.KeyModifiers);
+            source.RaiseEvent(new PointerReleasedEventArgs(source, e.Pointer, topLevel, e.GetPosition(topLevel), e.Timestamp,
+                new PointerPointProperties(ToRaw(modifiers), PointerUpdateKind.RightButtonReleased),
+                modifiers, MouseButton.Right));
+            _isLastButtonEventReplaced = true;
+        }
+
+        private void HandleTap(Interactive target, TappedEventArgs e)
+        {
+            if (_isLastButtonEventReplaced)
+            {
+                e.Handled = true;
+            }
+        }
     }
 
     // Ctrl is what made the click secondary, so the right-click carries no Ctrl of its own.
@@ -60,24 +100,6 @@ public static class SecondaryClickHook
 
     // KeyModifiers and RawInputModifiers share the Alt, Control, Shift and Meta bits.
     private static RawInputModifiers ToRaw(KeyModifiers modifiers) => (RawInputModifiers)(int)modifiers;
-
-    private sealed class HandlerPair : IDisposable
-    {
-        private readonly IDisposable _pressed;
-        private readonly IDisposable _released;
-
-        public HandlerPair(IDisposable pressed, IDisposable released)
-        {
-            _pressed = pressed;
-            _released = released;
-        }
-
-        public void Dispose()
-        {
-            _pressed.Dispose();
-            _released.Dispose();
-        }
-    }
 }
 
 /// <summary>

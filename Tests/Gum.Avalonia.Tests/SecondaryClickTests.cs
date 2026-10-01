@@ -116,6 +116,66 @@ public class SecondaryClickTests
         window.Close();
     }
 
+    [AvaloniaTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DoubleCtrlClick_OnATreeRow_IsTwoRightClicksOnMacOS_NotADoubleTap(bool isMacOS)
+    {
+        using IDisposable hook = SecondaryClickHook.Install(OperatingSystemOf(isMacOS));
+        AvaloniaGumTreeView tree = new AvaloniaGumTreeView();
+        tree.Selection.IsSelectingOnPush = false;
+        GumTreeNode screens = new GumTreeNode("Screens");
+        screens.Nodes.Add(new GumTreeNode("First"));
+        tree.Nodes.Add(screens);
+        Window window = new Window { Width = 300, Height = 400, Content = tree };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+        int menuRequests = 0;
+        int taps = 0;
+        int doubleTaps = 0;
+        tree.ContextMenuRequested += () => menuRequests++;
+        tree.AddHandler(InputElement.TappedEvent, (_, _) => taps++);
+        tree.AddHandler(InputElement.DoubleTappedEvent, (_, _) => doubleTaps++);
+
+        Click(window, tree, screens, RawInputModifiers.Control);
+        Click(window, tree, screens, RawInputModifiers.Control);
+
+        // Elsewhere the second click is a double click, which toggles the row's expansion.
+        doubleTaps.ShouldBe(isMacOS ? 0 : 1);
+        taps.ShouldBe(isMacOS ? 0 : 1);
+        screens.IsExpanded.ShouldBe(!isMacOS);
+        menuRequests.ShouldBe(isMacOS ? 2 : 0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void AppInputHooks_InstallEachHookOnce()
+    {
+        Mock<ICanvasRedrawScheduler> scheduler = new Mock<ICanvasRedrawScheduler>();
+        using IDisposable hooks = AppInputHooks.Install(scheduler.Object, OperatingSystemOf(isMacOS: true));
+        int rightPresses = 0;
+        Border target = new Border { Width = 100, Height = 40, Background = global::Avalonia.Media.Brushes.Red };
+        target.AddHandler(InputElement.PointerPressedEvent, (_, e) =>
+        {
+            if (e.GetCurrentPoint(target).Properties.IsRightButtonPressed)
+            {
+                rightPresses++;
+            }
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+        Window window = new Window { Width = 300, Height = 300, Content = new global::Avalonia.Controls.Canvas { Children = { target } } };
+        window.Show();
+        window.UpdateLayout();
+
+        window.MouseMove(new Point(50, 20));
+        scheduler.Verify(s => s.RequestRedraw(), Times.Once());
+        window.MouseDown(new Point(50, 20), MouseButton.Left, RawInputModifiers.Control);
+        window.MouseUp(new Point(50, 20), MouseButton.Left, RawInputModifiers.Control);
+
+        rightPresses.ShouldBe(1);
+        window.Close();
+    }
+
     private static IOperatingSystemInfo OperatingSystemOf(bool isMacOS) =>
         Mock.Of<IOperatingSystemInfo>(o => o.IsMacOS == isMacOS && o.IsWindows == !isMacOS);
 

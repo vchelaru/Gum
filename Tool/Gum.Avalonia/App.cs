@@ -96,8 +96,8 @@ public sealed class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             IMessenger messenger = _services.GetRequiredService<IMessenger>();
-            IDisposable canvasInputHook = CanvasInputRedrawHook.Install(_services.GetRequiredService<ICanvasRedrawScheduler>());
-            IDisposable secondaryClickHook = SecondaryClickHook.Install(_services.GetRequiredService<IOperatingSystemInfo>());
+            IDisposable inputHooks = AppInputHooks.Install(_services.GetRequiredService<ICanvasRedrawScheduler>(),
+                _services.GetRequiredService<IOperatingSystemInfo>());
             MainWindow window = _services.GetRequiredService<MainWindow>();
             // Agents and CI run this hundreds of times; don't take the user's focus.
             if (_options.ExitAfterSeconds != null)
@@ -111,8 +111,7 @@ public sealed class App : Application
             desktop.Exit += (_, _) =>
             {
                 new ApplicationTeardown(messenger).Run();
-                canvasInputHook.Dispose();
-                secondaryClickHook.Dispose();
+                inputHooks.Dispose();
                 _freezeDiagnostics.EndSessionCleanly();
             };
 
