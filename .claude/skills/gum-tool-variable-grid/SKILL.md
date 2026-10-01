@@ -95,6 +95,8 @@ WPF only. The Avalonia grid does not pool: rows are rebuilt (Avalonia editors ar
 
 When multiple instances are selected, `SetMultipleCategoryLists` is used instead of `SetCategories`. `MultiSelectInstanceMember` wrappers set every wrapped row in a loop; `MultiSelectCommitLogic` (`Tools/Gum.Presentation/.../VariableGrid/`) marks the rows `IsCallingRefresh = false` and does the undo record and the structural refresh (`ISetVariableLogic.RefreshInResponseToVariableChange`) once per batch.
 
+Landmine: a commit that rebuilds the grid detaches its own editor, and that editor's focus-loss handler then commits again from inside the first commit. `IDataUiExtensionMethods.TrySetValueOnInstance` skips a commit from an editor whose own commit is still running; without that skip, a nested multi-select commit overwrites `MultiSelectCommitLogic`'s single stored undo lock and leaks the first one, which stops undo recording for the rest of the session.
+
 Landmine: `IsCallingRefresh = false` only defers the grid/tree rebuild and undo. Everything else in `VariableGridEntry.NotifyVariableLogic` → `SetVariableLogic.ReactToPropertyValueChanged` (autosave, plugin `VariableSet`, codegen) still runs once per selected instance, so a new per-set side effect added there runs N times on a multi-select edit unless it is gated on `IsCallingRefresh` or moved into the batch.
 
 ### StateReferencingInstanceMember
