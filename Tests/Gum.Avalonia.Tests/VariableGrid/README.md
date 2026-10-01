@@ -39,3 +39,5 @@ VariableGridHarness.StoredValue(button, "Label.X").ShouldBe(42f);
 - Text is a multi-line field: Enter adds a line, so commit it with `TypeAndLeave`.
 - A combo's drop-down is its own top level that window input does not reach; `PickComboItem` makes
   the selection a click would make while it is open.
+- Assert what a combo shows with `ComboText`. `SelectedItem?.ToString().ShouldBe(...)` skips the
+  assertion when nothing is selected, and an editable combo (Font, Parent) shows its text, not an item.

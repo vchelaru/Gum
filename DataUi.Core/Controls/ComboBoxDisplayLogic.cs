@@ -48,6 +48,21 @@ public class ComboBoxDisplayLogic
     }
 
     /// <summary>
+    /// The options for <paramref name="member"/>, led by <paramref name="valueToShow"/> when it is not
+    /// one of them, so a stored value the options no longer offer (a deleted state, a font not
+    /// installed on this machine) still shows instead of a blank selection.
+    /// </summary>
+    public List<object> GetOptionsShowing(InstanceMember? member, Type? propertyType, object? valueToShow)
+    {
+        List<object> options = new List<object>(GetOptions(member, propertyType));
+        if (valueToShow != null && !options.Contains(valueToShow))
+        {
+            options.Insert(0, valueToShow);
+        }
+        return options;
+    }
+
+    /// <summary>
     /// The item to select for <paramref name="value"/>: the sentinel for a null nullable-enum value,
     /// otherwise the value itself.
     /// </summary>

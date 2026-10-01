@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
 using AvaloniaDataUi.Controls;
 using Shouldly;
 using WpfDataUi;
@@ -201,6 +202,28 @@ public class SimpleEditorTests
         display.ComboBox.SelectedItem = FixtureChoice.Third;
 
         fixture.Choice.ShouldBe(FixtureChoice.Third);
+    }
+
+    [AvaloniaFact]
+    public void ComboBoxDisplay_ShowsAValueThatIsNotAnOption_WithoutWritingIt()
+    {
+        EditorFixture fixture = new EditorFixture { Text = "missing" };
+        InstanceMember member = fixture.Member(nameof(EditorFixture.Text));
+        member.CustomOptions = new List<object> { "start", "other" };
+        int writes = 0;
+        member.AfterSetByUi += (_, _) => writes++;
+
+        ComboBoxDisplay display = new ComboBoxDisplay { InstanceMember = member };
+
+        display.ComboBox.SelectedItem.ShouldBe("missing");
+        writes.ShouldBe(0);
+        fixture.Text.ShouldBe("missing");
+
+        display.ComboBox.SelectedItem = "other";
+        Dispatcher.UIThread.RunJobs();
+
+        fixture.Text.ShouldBe("other");
+        display.ComboBox.Items.Cast<object>().ShouldBe(new object[] { "start", "other" });
     }
 
     [AvaloniaFact]
