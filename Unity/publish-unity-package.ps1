@@ -67,7 +67,7 @@ try {
     git -C $tree commit -m "com.vchelaru.gum $Version"
     if ($LASTEXITCODE -ne 0) { throw "Commit failed." }
     git -C $tree tag $tag
-    git -C $tree push origin $branch $tag
+    git -C $tree push --atomic origin $branch $tag
     if ($LASTEXITCODE -ne 0) { throw "Push failed." }
 } finally {
     git -C $repo worktree remove --force $tree
