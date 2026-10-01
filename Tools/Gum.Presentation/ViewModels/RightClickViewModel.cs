@@ -63,7 +63,7 @@ public class RightClickViewModel
         {
             Text = "Move Forward",
             Action = () => _reorderLogic.MoveSelectedInstanceForward(),
-            Shortcut = _hotkeyManager.ReorderDown.ToString()
+            Shortcut = _hotkeyManager.ReorderDown
         });
 
         var moveInFrontOf = new ContextMenuItemViewModel { Text = "Move In Front Of" };
@@ -74,7 +74,7 @@ public class RightClickViewModel
         {
             Text = "Move Backward",
             Action = () => _reorderLogic.MoveSelectedInstanceBackward(),
-            Shortcut = _hotkeyManager.ReorderUp.ToString()
+            Shortcut = _hotkeyManager.ReorderUp
         });
 
         items.Add(new ContextMenuItemViewModel

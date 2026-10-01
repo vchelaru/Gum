@@ -191,8 +191,8 @@ public class RightClickViewModelTests
 
         var result = _sut.GetMenuItems();
 
-        result[1].Shortcut.ShouldBe("Alt+Down"); // Move Forward
-        result[3].Shortcut.ShouldBe("Alt+Up");   // Move Backward
+        result[1].Shortcut.ShouldNotBeNull().ToString().ShouldBe("Alt+Down"); // Move Forward
+        result[3].Shortcut.ShouldNotBeNull().ToString().ShouldBe("Alt+Up");   // Move Backward
     }
 
     [Fact]

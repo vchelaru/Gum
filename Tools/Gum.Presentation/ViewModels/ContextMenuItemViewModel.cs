@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gum.Managers;
 
 namespace Gum.ViewModels;
 
@@ -10,7 +11,12 @@ public class ContextMenuItemViewModel
     public List<ContextMenuItemViewModel> Children { get; set; } = new();
     public bool IsSeparator { get; set; }
     public bool IsEnabled { get; set; } = true;
-    public string? Shortcut { get; set; }
+
+    /// <summary>
+    /// The bound shortcut shown beside the item, or null for none. Each head renders it in its
+    /// platform's spelling (Cmd on macOS), so builders never pre-format it as text.
+    /// </summary>
+    public KeyCombination? Shortcut { get; set; }
 
     /// <summary>
     /// Framework-neutral key identifying which icon this item should show, or null for none.

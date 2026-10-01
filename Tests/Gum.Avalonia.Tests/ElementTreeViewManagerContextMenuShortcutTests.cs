@@ -1,29 +1,31 @@
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Gum.Avalonia.Shell;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
+using Gum.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
 
 /// <summary>
-/// Issue #4910: right-click menu items whose action already has a bound keyboard shortcut
-/// (<see cref="IHotkeyManager"/>) should show that shortcut, the way "Move state up/down"
-/// already does. Drives <see cref="ElementTreeViewManager"/> through the head's real service
-/// graph so the shortcut text reflects the actual bound <see cref="KeyCombination"/>, not a
-/// hand-typed guess.
+/// The element tree's right-click menu shows each bound <see cref="IHotkeyManager"/> shortcut
+/// (#4910) with the platform's command modifier: Cmd on macOS, which Avalonia renders as ⌘ (#5569).
 /// </summary>
 public class ElementTreeViewManagerContextMenuShortcutTests
 {
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    [AvaloniaFact]
-    public void BuildContextMenuItems_ForInstance_ShowsShortcutsMatchingHotkeyManager()
+    [AvaloniaTheory]
+    [InlineData(KeyModifiers.Meta)]
+    [InlineData(KeyModifiers.Control)]
+    public void ContextMenu_ForInstance_ShowsEachShortcutWithThePlatformCommandModifier(KeyModifiers command)
     {
         ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
-        IHotkeyManager hotkeyManager = Services.GetRequiredService<IHotkeyManager>();
         IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
         projectManager.CreateNewProject();
         GumProjectSave project = projectManager.GumProjectSave!;
@@ -44,17 +46,18 @@ public class ElementTreeViewManagerContextMenuShortcutTests
             treeViewManager.RefreshUi();
             GumTreeNode componentNode = treeViewManager.GetTreeNodeFor(component)!;
             GumTreeNode instanceNode = treeViewManager.GetTreeNodeFor(instance, componentNode)!;
-
             treeViewManager.SelectedNode = instanceNode;
             selectedState.SelectedInstance = instance;
 
-            var items = treeViewManager.BuildContextMenuItems();
+            List<ContextMenuItemViewModel> items = treeViewManager.BuildContextMenuItems().ToList();
+            ContextMenu menu = new ContextMenu();
+            AvaloniaContextMenus.Populate(menu, items, AvaloniaContextMenus.DefaultIconSize, command);
 
-            items.Single(item => item.Text == "Go to definition").Shortcut.ShouldBe(hotkeyManager.GoToDefinition.ToString());
-            items.Single(item => item.Text == "Copy").Shortcut.ShouldBe(hotkeyManager.Copy.ToString());
-            items.Single(item => item.Text == "Cut").Shortcut.ShouldBe(hotkeyManager.Cut.ToString());
-            items.Single(item => item.Text == "Duplicate Child").Shortcut.ShouldBe(hotkeyManager.Duplicate.ToString());
-            items.Single(item => item.Text == "Delete Child").Shortcut.ShouldBe(hotkeyManager.Delete.ToString());
+            Gesture(menu, "Go to definition").ShouldBe(new KeyGesture(Key.F12));
+            Gesture(menu, "Copy").ShouldBe(new KeyGesture(Key.C, command));
+            Gesture(menu, "Cut").ShouldBe(new KeyGesture(Key.X, command));
+            Gesture(menu, "Duplicate Child").ShouldBe(new KeyGesture(Key.D, command));
+            Gesture(menu, "Delete Child").ShouldBe(new KeyGesture(Key.Delete));
         }
         finally
         {
@@ -67,4 +70,22 @@ public class ElementTreeViewManagerContextMenuShortcutTests
             project.FullFileName = null!;
         }
     }
+
+    [AvaloniaFact]
+    public void ToMenuItem_ShowsSubmenuShortcutsWithThePlatformCommandModifier()
+    {
+        // Every view-model menu (States tree, Animations, canvas) renders through this, submenus included.
+        ContextMenuItemViewModel parent = new ContextMenuItemViewModel { Text = "Edit" };
+        parent.Children.Add(new ContextMenuItemViewModel { Text = "Paste", Shortcut = KeyCombination.Ctrl(Gum.Input.GumKey.V) });
+        parent.Children.Add(new ContextMenuItemViewModel { Text = "Move Up", Shortcut = KeyCombination.Alt(Gum.Input.GumKey.Up) });
+
+        MenuItem menuItem = (MenuItem)AvaloniaContextMenus.ToMenuItem(parent, AvaloniaContextMenus.DefaultIconSize, KeyModifiers.Meta);
+
+        MenuItem[] children = menuItem.Items.OfType<MenuItem>().ToArray();
+        children[0].InputGesture.ShouldBe(new KeyGesture(Key.V, KeyModifiers.Meta));
+        children[1].InputGesture.ShouldBe(new KeyGesture(Key.Up, KeyModifiers.Alt));
+    }
+
+    private static KeyGesture? Gesture(ContextMenu menu, string header) =>
+        menu.Items.OfType<MenuItem>().Single(item => (string?)item.Header == header).InputGesture;
 }

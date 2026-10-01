@@ -5,7 +5,9 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
+using Gum.Input;
 using Gum.Logic;
+using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -138,7 +140,7 @@ public class StateTreeRightClickViewModel
                     {
                         Text = "^ Move Up",
                         Action = moveUpClick ?? MoveUpClick,
-                        Shortcut = "Alt+Up"
+                        Shortcut = KeyCombination.Alt(GumKey.Up)
                     });
                 }
                 if (GetIfCanMoveDown(_selectedState.SelectedStateSave, _selectedState.SelectedStateCategorySave))
@@ -147,7 +149,7 @@ public class StateTreeRightClickViewModel
                     {
                         Text = "v Move Down",
                         Action = moveDownClick ?? MoveDownClick,
-                        Shortcut = "Alt+Down"
+                        Shortcut = KeyCombination.Alt(GumKey.Down)
                     });
                 }
             }

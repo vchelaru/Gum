@@ -153,7 +153,7 @@ public class StateTreeRightClickViewModelTests
         List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
 
         ContextMenuItemViewModel moveDown = result.First(item => item.Text == "v Move Down");
-        moveDown.Shortcut.ShouldBe("Alt+Down");
+        moveDown.Shortcut.ShouldNotBeNull().ToString().ShouldBe("Alt+Down");
         result.Any(item => item.Text == "^ Move Up").ShouldBeFalse();
     }
 
@@ -175,7 +175,7 @@ public class StateTreeRightClickViewModelTests
         List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
 
         ContextMenuItemViewModel moveUp = result.First(item => item.Text == "^ Move Up");
-        moveUp.Shortcut.ShouldBe("Alt+Up");
+        moveUp.Shortcut.ShouldNotBeNull().ToString().ShouldBe("Alt+Up");
         result.Any(item => item.Text == "v Move Down").ShouldBeFalse();
     }
 
