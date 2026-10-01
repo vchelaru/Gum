@@ -128,6 +128,19 @@ ew-scratch-projects.ps1
 - The combo-dropdown shot is unreliable (the dropdown does not open from the driver's click).
 - An OK-only dialog closes on Escape (as in WPF); the driver's trailing Escape relies on that.
 - WPF's tab content is not in its UI Automation tree (menus are); the Avalonia head exposes everything.
+- An agent driving the tool on someone's machine minimizes every window it opened before it waits
+  on that person (a question, a manual check, the end of its turn). A full-screen tool window
+  hides the agent's messages, and the person's next mouse move can land in a test still running.
+- The Avalonia tree's UI Automation children are not in on-screen order once rows have been added
+  (a pasted instance's row is the last child). Sort rows by `BoundingRectangle.Y` to read the order.
+- UI Automation `Invoke` still works on a window a modal dialog has disabled, while mouse clicks do
+  nothing. List the process's visible windows before each step so a dialog left open (behind
+  another app's window, say) is not mistaken for a dead button.
+- A file dragged from Explorer with synthetic mouse input (`SetCursorPos` + `mouse_event`) drops
+  into Notepad but never reaches the Avalonia head, though a real hand drag does. File drops from
+  outside the tool need a person.
+- Launched with no last project, the Avalonia head opens the New Project dialog about 5 s after its
+  window appears. Wait for it before driving the main window.
 
 ## 6. Diagnosing a hang
 
