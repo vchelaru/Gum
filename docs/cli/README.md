@@ -56,4 +56,4 @@ When debugging, capture both streams with `2>&1`.
 |------|---------|
 | 0 | Success |
 | 1 | Errors found (`check`) or elements blocked by errors (`codegen`) or font generation error (`fonts`) |
-| 2 | Project could not be loaded, invalid arguments, settings already exist, or non-Windows platform (`fonts`) |
+| 2 | Project could not be loaded, invalid arguments, or settings already exist |

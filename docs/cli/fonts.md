@@ -9,10 +9,10 @@ Scans all elements and states for font references and generates any missing bitm
 The backend used to bake fonts is chosen by the project's **Font Generator** setting (see [Project Properties](../gum-tool/project-properties.md#font-generator)):
 
 * **KernSmith** — cross-platform. Runs on Windows, Linux, and macOS. This is the default for new projects.
-* **BMFont** — Windows-only. Runs `bmfont.exe` under the hood; invoking it on Linux or macOS fails with exit code 1.
+* **BMFont** — runs `bmfont.exe`, which only exists on Windows. On Linux and macOS, `gumcli fonts` generates a BMFont project's fonts with KernSmith instead.
 
 {% hint style="info" %}
-If you need `gumcli fonts` to run in a Linux or macOS CI container, switch the project's Font Generator to **KernSmith** in Project Properties first. Switching wipes and re-creates the FontCache — review the [Font Generator section of Project Properties](../gum-tool/project-properties.md#font-generator) before flipping the setting.
+The two generators are different programs, so a BMFont project's `FontCache` built on Linux or macOS may not match one built on Windows. To get the same files everywhere, switch the project's Font Generator to **KernSmith**. Switching wipes and re-creates the FontCache, so review the [Font Generator section of Project Properties](../gum-tool/project-properties.md#font-generator) first.
 {% endhint %}
 
 ## Options
@@ -36,5 +36,5 @@ gumcli fonts MyProject/MyProject.gumx
 | Code | Meaning |
 |------|---------|
 | 0 | All missing fonts generated successfully |
-| 1 | An error occurred during font generation (including running the **BMFont** backend on a non-Windows host) |
+| 1 | An error occurred during font generation |
 | 2 | Project could not be loaded |
