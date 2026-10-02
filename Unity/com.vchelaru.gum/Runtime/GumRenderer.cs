@@ -5,15 +5,14 @@ using System.Runtime.InteropServices;
 using SkiaGameRendering.Unity;
 using SkiaSharp;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Gum.Unity
 {
     /// <summary>
     /// Initializes <see cref="GumService.Default"/> and draws it every frame into a texture the size of
-    /// the screen. On Windows Direct3D 11 Gum draws on the GPU through SkiaGameRendering's
-    /// <see cref="SkiaUnityRenderTarget"/>; anywhere else it draws into a CPU raster surface that is
-    /// uploaded to a <see cref="Texture2D"/> each frame. Either way <see cref="Texture"/> has Unity's
+    /// the screen. Gum draws on the GPU through SkiaGameRendering's <see cref="SkiaUnityRenderTarget"/>
+    /// wherever SkiaGameRendering supports the graphics device; otherwise it draws into a CPU raster surface
+    /// that is uploaded to a <see cref="Texture2D"/> each frame. Either way <see cref="Texture"/> has Unity's
     /// orientation (row 0 at the bottom). Add <see cref="GumInput"/> next to it for mouse and keyboard.
     ///
     /// Gum is initialized in <c>Awake</c>, so other scripts can build UI from <c>Start</c> on:
@@ -32,6 +31,7 @@ namespace Gum.Unity
         [SerializeField] bool _forceCpu;
 
         SkiaUnityRenderTarget? _gpuTarget;
+        bool _gpuUnavailable;
         SKSurface? _cpuSurface;
         Texture2D? _cpuTexture;
         byte[]? _cpuFlipBuffer;
@@ -197,7 +197,9 @@ namespace Gum.Unity
             CanvasPixelWidth = width;
             CanvasPixelHeight = height;
 
-            if (!_forceCpu && SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11)
+            // SkiaGameRendering decides which graphics devices it supports and throws for the rest, so the
+            // GPU path is simply tried. The failure is remembered so a resize doesn't throw and warn again.
+            if (!_forceCpu && !_gpuUnavailable)
             {
                 try
                 {
@@ -206,6 +208,7 @@ namespace Gum.Unity
                 }
                 catch (Exception exception)
                 {
+                    _gpuUnavailable = true;
                     Debug.LogWarning($"Gum: SkiaGameRendering could not create a GPU target, using the CPU fallback. {exception.Message}");
                 }
             }

@@ -45,9 +45,9 @@ controls is off until you call `GumService.Default.UseKeyboardDefaults()` or `Us
 
 ## Rendering
 
-On Direct3D 11, Gum draws on the GPU through SkiaGameRendering. On any other graphics API, including
-Metal on macOS, it draws on the CPU and uploads a texture each frame. `GumRenderer.Texture` holds the
-result either way; turn off `DrawToScreen` to show it yourself.
+Gum draws on the GPU through SkiaGameRendering wherever SkiaGameRendering supports the graphics API.
+On any other API it draws on the CPU and uploads a texture each frame, and the console logs a warning
+saying why. `GumRenderer.Texture` holds the result either way; turn off `DrawToScreen` to show it yourself.
 
 ## IL2CPP
 
