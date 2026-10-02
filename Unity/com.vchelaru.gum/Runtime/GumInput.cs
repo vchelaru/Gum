@@ -4,17 +4,19 @@ using Gum.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using GumCursor = Gum.Input.Cursor;
+using GumGamePad = Gum.Input.GamePad;
 using GumKeys = Gum.Forms.Input.Keys;
 using GumKeyboard = Gum.Input.Keyboard;
 using TouchLocation = Gum.Input.TouchLocation;
 using UnityKey = UnityEngine.InputSystem.Key;
+using UnityGamepad = UnityEngine.InputSystem.Gamepad;
 using UnityKeyboard = UnityEngine.InputSystem.Keyboard;
 
 namespace Gum.Unity
 {
     /// <summary>
-    /// Reads Unity's Input System every frame and pushes the mouse, touches and keyboard into
-    /// <see cref="GumService.Default"/>'s cursor and keyboard, before <see cref="GumRenderer"/> runs
+    /// Reads Unity's Input System every frame and pushes the mouse, touches, keyboard and gamepads into
+    /// <see cref="GumService.Default"/>'s cursor, keyboard and gamepads, before <see cref="GumRenderer"/> runs
     /// Gum's update. Put it on the same GameObject as the <see cref="GumRenderer"/>.
     /// </summary>
     [DefaultExecutionOrder(-100)]
@@ -140,6 +142,7 @@ namespace Gum.Unity
 
         readonly ScreenToCanvasMapper _mapper = new ScreenToCanvasMapper();
         readonly HashSet<GumKeys> _downThisFrame = new HashSet<GumKeys>();
+        readonly List<UnityGamepadState> _gamepadStates = new List<UnityGamepadState>();
         readonly List<TouchLocation> _touches = new List<TouchLocation>();
         UnityKeyboard? _subscribedKeyboard;
         GumRenderer? _renderer;
@@ -172,6 +175,8 @@ namespace Gum.Unity
             {
                 PushKeyboard(keyboard);
             }
+
+            PushGamepads(gum.Gamepads);
         }
 
         void OnDisable() => UnsubscribeTextInput();
@@ -251,6 +256,44 @@ namespace Gum.Unity
             {
                 gumKeyboard.SetKeyDown(gum, _downThisFrame.Contains(gum));
             }
+        }
+
+        // Reads each connected pad into a plain snapshot; UnityGamepadMapper (in UnityGum, testable
+        // without Unity) maps the snapshots onto Gum's slots.
+        void PushGamepads(GumGamePad[] gumGamepads)
+        {
+            _gamepadStates.Clear();
+            var unityGamepads = UnityGamepad.all;
+            for (int i = 0; i < unityGamepads.Count; i++)
+            {
+                UnityGamepad pad = unityGamepads[i];
+                Vector2 leftStick = pad.leftStick.ReadValue();
+                Vector2 rightStick = pad.rightStick.ReadValue();
+                _gamepadStates.Add(new UnityGamepadState
+                {
+                    DPadUp = pad.dpad.up.isPressed,
+                    DPadDown = pad.dpad.down.isPressed,
+                    DPadLeft = pad.dpad.left.isPressed,
+                    DPadRight = pad.dpad.right.isPressed,
+                    ButtonSouth = pad.buttonSouth.isPressed,
+                    ButtonEast = pad.buttonEast.isPressed,
+                    ButtonWest = pad.buttonWest.isPressed,
+                    ButtonNorth = pad.buttonNorth.isPressed,
+                    LeftShoulder = pad.leftShoulder.isPressed,
+                    RightShoulder = pad.rightShoulder.isPressed,
+                    Start = pad.startButton.isPressed,
+                    Select = pad.selectButton.isPressed,
+                    LeftStickButton = pad.leftStickButton.isPressed,
+                    RightStickButton = pad.rightStickButton.isPressed,
+                    LeftTrigger = pad.leftTrigger.ReadValue(),
+                    RightTrigger = pad.rightTrigger.ReadValue(),
+                    LeftStickX = leftStick.x,
+                    LeftStickY = leftStick.y,
+                    RightStickX = rightStick.x,
+                    RightStickY = rightStick.y,
+                });
+            }
+            UnityGamepadMapper.Push(gumGamepads, _gamepadStates);
         }
 
         void HandleTextInput(char character) => GumService.Default.Keyboard?.AddTypedText(character);

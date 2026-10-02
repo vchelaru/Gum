@@ -62,6 +62,24 @@ public class GumServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void Update_PushedGamepadState_ConnectsGamepadWithButtonsAndSticks()
+    {
+        GamePad gamepad = GumService.Default.Gamepads[1];
+
+        gamepad.SetConnected(true);
+        gamepad.SetButtonState(GamepadButton.A, isDown: true);
+        gamepad.SetLeftStickPosition(0.75f, -0.5f);
+        GumService.Default.Update(0);
+
+        gamepad.IsConnected.ShouldBeTrue();
+        gamepad.ButtonPushed(GamepadButton.A).ShouldBeTrue();
+        gamepad.ButtonDown(GamepadButton.B).ShouldBeFalse();
+        gamepad.LeftStick.X.ShouldBeGreaterThan(0);
+        gamepad.LeftStick.Y.ShouldBeLessThan(0);
+        GumService.Default.Gamepads[0].IsConnected.ShouldBeFalse();
+    }
+
+    [Fact]
     public void UseClipboard_SetsClipboard()
     {
         IGumClipboard clipboard = new FakeClipboard();

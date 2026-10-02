@@ -36,6 +36,17 @@ public class BaseTestClass : IDisposable
         FormsUtilities.SetCursor(new Cursor());
         FormsUtilities.SetKeyboard(new Keyboard());
 
+        // Pushed gamepad state persists until the host overwrites it, so disconnect and clear every slot.
+        foreach (GamePad gamepad in GumService.Default.Gamepads)
+        {
+            gamepad.Clear();
+            gamepad.SetConnected(false);
+            gamepad.Activity(0);
+            gamepad.Activity(0);
+        }
+
+        FrameworkElement.GamePadsForUiControl.Clear();
+
         InteractiveGue.CurrentInputReceiver = null;
         InteractiveGue.ClearNextClickActions();
 
