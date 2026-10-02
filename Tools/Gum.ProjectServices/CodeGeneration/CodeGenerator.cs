@@ -3651,7 +3651,7 @@ public class CodeGenerator
             GenerateAssignGumReferences(context);
         }
 
-        GenerateApplyLocalizationMethod(element, context.TabCount, stringBuilder);
+        GenerateApplyLocalizationMethod(element, projectSettings, context.TabCount, stringBuilder);
 
         stringBuilder.AppendLine(context.Tabs + "partial void CustomInitialize();");
 
@@ -5749,7 +5749,7 @@ public class CodeGenerator
         }
     }
 
-    private void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
+    private void GenerateApplyLocalizationMethod(ElementSave element, CodeOutputProjectSettings projectSettings, int tabCount, StringBuilder stringBuilder)
     {
         if (_localizationService.HasDatabase)
         {
@@ -5761,6 +5761,8 @@ public class CodeGenerator
             tabCount++;
             var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
             context.TabCount = tabCount;
+            context.CodeOutputProjectSettings = projectSettings;
+            context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
             foreach (var variable in element.DefaultState!.Variables)
             {
                 InstanceSave? instance = null;

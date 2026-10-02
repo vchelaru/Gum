@@ -60,7 +60,7 @@ partial class MainScreen : global::Gum.Forms.Controls.FrameworkElement
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
     public void ApplyLocalization()
     {
-        this.LabelInstance.Text = GumService.Default.LocalizationService.Translate("T_Greeting");
+        this.LabelInstance.Visual.Text = GumService.Default.LocalizationService.Translate("T_Greeting");
     }
     partial void CustomInitialize();
 }
