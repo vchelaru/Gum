@@ -201,8 +201,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     # Which OS to run on
     runs-on: windows-latest
-    outputs:
-      upm_version: ${{ steps.meta.outputs.upm_version }}
 
     # A list of "named" steps
     steps:
@@ -243,11 +241,6 @@ jobs:
           "title=$title"           >> $env:GITHUB_OUTPUT
           "prerelease=$prerelease" >> $env:GITHUB_OUTPUT
           "draft=$draft"           >> $env:GITHUB_OUTPUT
-          # The Unity package's version. Unity wants SemVer, which forbids leading zeros. A prerelease
-          # adds the run number so several in one day each get their own upm/v tag.
-          $upmVersion = (Get-Date).ToString('yyyy.M.d')
-          if ($kind -eq 'prerelease') { $upmVersion = "$upmVersion-pre.$($env:GITHUB_RUN_NUMBER)" }
-          "upm_version=$upmVersion" >> $env:GITHUB_OUTPUT
 
       # 2b) Capture the previous tag BEFORE this run creates its own tag, so the
       # auto-generated release notes diff against the actual prior release. Without this,
@@ -315,15 +308,11 @@ jobs:
           files: |
             dist/avalonia/*
 
-  # Unity doesn't read NuGet. Its package, binaries included, goes to the upm branch and a
-  # upm/v<version> tag, which users install as a git URL (Unity/publish-unity-package.ps1). Releases
-  # and prereleases push to the same upm branch; pull requests and test runs only pack it, so a
-  # broken pack fails before a release does.
+  # Packs the Unity package on pull requests so a broken pack fails before a release does. Publishing
+  # to the upm branch happens in the NuGet workflow (dotnet-nuget.yaml).
   # Windows because the package ships the win-x64 HarfBuzz native.
-  publish-unity:
-    needs: build
-    # Also runs when build is skipped (pull requests), not when it failed.
-    if: ${{ !failure() && !cancelled() }}
+  pack-unity:
+    if: github.event_name == 'pull_request'
     runs-on: windows-latest
     steps:
       - name: Checkout code
@@ -340,19 +329,10 @@ jobs:
         shell: pwsh
         run: |
           ./Unity/build-unity-package.ps1
-          ./Unity/publish-unity-package.ps1 -Version '${{ needs.build.outputs.upm_version || '0.0.0-ci' }}'
+          ./Unity/publish-unity-package.ps1 -Version '0.0.0-ci'
 
       - name: Upload Unity package
         uses: actions/upload-artifact@v4
         with:
           name: unity-package
           path: Unity/.artifacts/*.tgz
-
-      # Skips if upm/v<version> is already on the remote, so rerunning a release is safe.
-      - name: Push to the upm branch
-        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.release_kind == 'release' || github.event.inputs.release_kind == 'prerelease')
-        shell: pwsh
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          ./Unity/publish-unity-package.ps1 -Version '${{ needs.build.outputs.upm_version }}' -Push
