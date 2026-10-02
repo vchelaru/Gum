@@ -24,6 +24,7 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
     private const int PreV3 = (int)GumProjectSave.GumxVersions.AttributeVersion;     // 2
     private const int V3 = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion;  // 3
     private const int V4 = (int)GumProjectSave.GumxVersions.LocalizeTextExpansion;   // 4
+    private const int V5 = (int)GumProjectSave.GumxVersions.ColorOperationExpansion; // 5
 
     // Variables added to the plain Circle / Rectangle in the v3 shape-variable expansion
     // (#2929/#2931/#2950). None existed on a pre-v3 shape, and none exist on the older FRB-pinned
@@ -356,6 +357,34 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
 
         VariableSave variable = defaultState.Variables.First(v => v.Name == "LocalizeText");
         variable.MinimumGumxVersion.ShouldBe(V4);
+    }
+
+    // ColorOperation (#4880) is absent from older runtimes' NineSliceRuntime/SpriteRuntime, so a
+    // project saved before it existed must not have it back-filled (same FRB1 failure mode as above).
+    [Theory]
+    [InlineData("Sprite")]
+    [InlineData("NineSlice")]
+    public void Initialize_DoesNotInjectColorOperation_IntoPreV5Standard(string standardName)
+    {
+        GumProjectSave project = MakeProjectWithBareStandard(standardName, V4, "Width", "Height", "Visible");
+
+        StateSave defaultState = DefaultStateAfterInitialize(project, standardName);
+
+        defaultState.Variables.Any(v => v.Name == "ColorOperation").ShouldBeFalse(
+            "A pre-v5 project must not have ColorOperation back-filled into its standard.");
+    }
+
+    [Theory]
+    [InlineData("Sprite")]
+    [InlineData("NineSlice")]
+    public void Initialize_InjectsColorOperation_IntoV5Standard(string standardName)
+    {
+        GumProjectSave project = MakeProjectWithBareStandard(standardName, V5, "Width", "Height", "Visible");
+
+        StateSave defaultState = DefaultStateAfterInitialize(project, standardName);
+
+        defaultState.Variables.Any(v => v.Name == "ColorOperation").ShouldBeTrue(
+            "A v5 project should get ColorOperation back-filled into its standard.");
     }
 
     [Fact]

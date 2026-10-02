@@ -4276,6 +4276,22 @@ public class CodeGenerator
         stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
     }
 
+    /// <summary>
+    /// Variables whose runtime property only exists from a given syntax version on, keyed by root
+    /// name. Codegen omits them below that version so generated code still compiles against older runtimes.
+    /// </summary>
+    private static readonly Dictionary<string, int> MinimumSyntaxVersionByVariableRootName = new Dictionary<string, int>
+    {
+        // #4880: older NineSliceRuntime/SpriteRuntime lack ColorOperation.
+        ["ColorOperation"] = 5,
+    };
+
+    private static bool GetIfVariableSupportedBySyntaxVersion(VariableSave variable, CodeGenerationContext context)
+    {
+        return !MinimumSyntaxVersionByVariableRootName.TryGetValue(variable.GetRootName(), out int minimumVersion) ||
+            context.ResolvedSyntaxVersion >= minimumVersion;
+    }
+
     private void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
     {
 #if DEBUG
@@ -4284,7 +4300,9 @@ public class CodeGenerator
             throw new NullReferenceException("context.CodeOutputProjectSettings should not be null");
         }
 #endif
-        VariableSave[] variablesToConsider = GetVariablesToAssignOnState(stateSave);
+        VariableSave[] variablesToConsider = GetVariablesToAssignOnState(stateSave)
+            .Where(item => GetIfVariableSupportedBySyntaxVersion(item, context))
+            .ToArray();
 
         var variableGroups = variablesToConsider.GroupBy(item => item.SourceObject);
 
@@ -4448,6 +4466,11 @@ public class CodeGenerator
                     {
                         shouldInclude = false;
                     }
+
+                    if (!GetIfVariableSupportedBySyntaxVersion(item, context))
+                    {
+                        shouldInclude = false;
+                    }
                 }
 
                 return shouldInclude;
@@ -4479,6 +4502,7 @@ public class CodeGenerator
 
         var variablesToAssignValues = GetVariablesForValueAssignmentCode(context.Instance, context.Element)
             .Where(item => item.GetRootName() != "Parent")
+            .Where(item => GetIfVariableSupportedBySyntaxVersion(item, context))
             .ToList();
 
         #endregion

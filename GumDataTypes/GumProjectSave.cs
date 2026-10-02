@@ -126,6 +126,16 @@ public class GumProjectSave
         /// same failure mode as FRB #1881).
         /// </summary>
         LocalizeTextExpansion = 4,
+
+        /// <summary>
+        /// Reserves a version slot for the Sprite and NineSlice standard elements' <c>ColorOperation</c>
+        /// variable (#4880). Files saved at this version use the same XML format as
+        /// <see cref="LocalizeTextExpansion"/>; the bump exists purely so the back-fill gate
+        /// (<see cref="Gum.DataTypes.Variables.VariableSave.MinimumGumxVersion"/>) can tell a
+        /// pre-ColorOperation project apart from a newer one and skip injecting the variable into
+        /// the older one, whose pinned runtime (notably FRB1's generated one) lacks the property.
+        /// </summary>
+        ColorOperationExpansion = 5,
     }
 
     /// <summary>
@@ -142,7 +152,7 @@ public class GumProjectSave
     /// explicitly stamp this version. Marking them at the native version is honest — the project
     /// genuinely uses those features — and lets the gate show those variables immediately.
     /// </remarks>
-    public const int NativeVersion = (int)GumxVersions.LocalizeTextExpansion;
+    public const int NativeVersion = (int)GumxVersions.ColorOperationExpansion;
 
     #region Fields
 

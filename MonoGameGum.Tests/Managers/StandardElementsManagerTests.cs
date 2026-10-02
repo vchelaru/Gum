@@ -223,4 +223,32 @@ public class StandardElementsManagerTests
 
         self.SeedableStandardTypes.ShouldNotContain("Screen");
     }
+    [Theory]
+    [InlineData("Sprite")]
+    [InlineData("NineSlice")]
+    public void DefaultStates_SpriteAndNineSlice_ShouldExposeColorOperation_DefaultingToModulate(string standardName)
+    {
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        StateSave state = self.DefaultStates[standardName];
+
+        VariableSave variable = state.Variables.First(v => v.Name == "ColorOperation");
+        variable.Type.ShouldBe("ColorOperation");
+        variable.Value.ShouldBe(RenderingLibrary.Graphics.ColorOperation.Modulate);
+        variable.SetsValue.ShouldBeTrue();
+        variable.Category.ShouldBe("Rendering");
+        // Older runtimes (and FRB1's generated ones) lack the property, so the load-time back-fill
+        // must skip it for projects saved before the version that introduced it.
+        variable.MinimumGumxVersion.ShouldBe((int)GumProjectSave.GumxVersions.ColorOperationExpansion);
+    }
+
+    [Fact]
+    public void DefaultStates_Container_ShouldNotExposeColorOperation()
+    {
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        self.DefaultStates["Container"].Variables.ShouldNotContain(v => v.Name == "ColorOperation");
+    }
 }

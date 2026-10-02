@@ -34,6 +34,8 @@ public class GumSyntaxVersionAttribute : Attribute
     /// Version 4 adds <c>RenderingLibrary.Math.Geometry.FilledStrokedRectangle</c>, the flat fill+stroke
     /// renderable FlatRedBall's Glue codegen backs a v3 (gumx <c>ShapeVariableExpansion</c>) Rectangle
     /// with. See PR #4342 / issue #4341.
+    /// Version 5 lets codegen assign <c>ColorOperation</c> on <c>SpriteRuntime</c>/<c>NineSliceRuntime</c>
+    /// (the tool-editable Sprite/NineSlice variable). See issue #4880.
     /// </summary>
     public int Version;
 }

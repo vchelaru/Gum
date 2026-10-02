@@ -594,7 +594,7 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
         SyntaxVersionResult result = sut.Detect(settings, gameDir);
 
         result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
-        result.Version.ShouldBe(4);
+        result.Version.ShouldBe(5);
     }
 
     [Fact]
