@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,16 +26,42 @@ public interface IHtmlConverterProcessRunner
 /// <inheritdoc cref="IHtmlConverterProcessRunner"/>
 public class HtmlConverterProcessRunner : IHtmlConverterProcessRunner
 {
+    private string? _nodeDirectory;
+
     /// <inheritdoc/>
     public bool TryFindNode(out string nodePath, out string hint)
     {
+        // Plain "node" first (PATH). A Finder-launched app on macOS has a minimal PATH, so fall
+        // back to probing known install locations and the login shell.
+        if (TryRunNode("node", out hint))
+        {
+            nodePath = "node";
+            _nodeDirectory = null;
+            return true;
+        }
+
+        string firstHint = hint;
+        string? resolved = new NodeResolver(new NodeSearchEnvironment()).Resolve();
+        if (resolved != null && TryRunNode(resolved, out hint))
+        {
+            nodePath = resolved;
+            _nodeDirectory = Path.GetDirectoryName(resolved);
+            return true;
+        }
+
         nodePath = "node";
+        hint = firstHint;
+        return false;
+    }
+
+    private static bool TryRunNode(string fileName, out string hint)
+    {
         hint = "";
         try
         {
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = "node",
+                FileName = fileName,
                 Arguments = "-v",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -80,6 +107,12 @@ public class HtmlConverterProcessRunner : IHtmlConverterProcessRunner
                 RedirectStandardError = true,
                 CreateNoWindow = true,
             };
+
+            if (_nodeDirectory != null)
+            {
+                // npm and the converter's postinstall find node through PATH.
+                psi.Environment["PATH"] = _nodeDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH");
+            }
 
             using Process proc = Process.Start(psi)
                 ?? throw new InvalidOperationException("Failed to start node.");

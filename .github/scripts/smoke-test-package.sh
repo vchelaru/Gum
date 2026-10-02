@@ -99,6 +99,9 @@ done
 plugin_count=$(find "$app/Plugins" -name '*.dll' | wc -l | tr -d ' ')
 [ "$plugin_count" -gt 0 ] || fail "no plugins in $app/Plugins"
 echo "plugins: $plugin_count dlls"
+# Content > Import > HTML is hidden when the plugin finds no converter beside the app (#5573).
+[ -f "$app/converter/convert.ts" ] || fail "missing $app/converter/convert.ts"
+[ -f "$app/converter/package.json" ] || fail "missing $app/converter/package.json"
 
 if command -v file >/dev/null; then
   for f in "$gum" "$preview"; do

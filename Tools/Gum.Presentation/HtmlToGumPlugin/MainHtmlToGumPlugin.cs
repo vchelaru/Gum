@@ -76,8 +76,8 @@ public class MainHtmlToGumPlugin : PluginBase
     }
 
     /// <summary>
-    /// Adds Content > Import > HTML… once, and only when a converter folder is found. Packaged
-    /// builds do not ship the converter yet (#5544), so they show no item.
+    /// Adds Content > Import > HTML… once, and only when a converter folder is found. A build
+    /// without the converter folder shows no item.
     /// </summary>
     internal void AddImportMenuEntryIfConverterFound()
     {
@@ -148,7 +148,7 @@ public class MainHtmlToGumPlugin : PluginBase
         if (!ProcessRunner.TryFindNode(out string nodePath, out string nodeHint))
         {
             _dialogService.ShowMessage(
-                "Node.js was not found on PATH.\n\n" +
+                "Node.js was not found.\n\n" +
                 "Install Node.js LTS and ensure `node` works in a terminal, then restart Gum.\n\n" +
                 nodeHint);
             return;
