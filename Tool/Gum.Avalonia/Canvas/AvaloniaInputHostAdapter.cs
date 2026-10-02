@@ -27,6 +27,7 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
 {
     private readonly Control _control;
     private readonly SecondaryClickTracker _secondaryClick;
+    private readonly bool _isMacOS;
     private readonly HashSet<XnaKeys> _keysDown = new HashSet<XnaKeys>();
     private Point _pointerPosition;
     private bool _isLeftDown;
@@ -42,7 +43,9 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
     public AvaloniaInputHostAdapter(Control control, IOperatingSystemInfo? operatingSystem = null)
     {
         _control = control ?? throw new ArgumentNullException(nameof(control));
-        _secondaryClick = new SecondaryClickTracker(operatingSystem ?? new OperatingSystemInfo());
+        IOperatingSystemInfo os = operatingSystem ?? new OperatingSystemInfo();
+        _isMacOS = os.IsMacOS;
+        _secondaryClick = new SecondaryClickTracker(os);
         _pointerPosition = new Point(-1, -1);
         _cursorKind = CursorKind.Arrow;
 
@@ -113,7 +116,7 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         set
         {
             _cursorKind = value;
-            _control.Cursor = new AvaloniaCursor(ToStandardCursor(value));
+            _control.Cursor = new AvaloniaCursor(ToStandardCursor(value, _isMacOS));
         }
     }
 
@@ -144,11 +147,12 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
     };
 
     /// <summary>Maps a neutral cursor kind to the Avalonia standard cursor that draws it.</summary>
-    public static StandardCursorType ToStandardCursor(CursorKind kind) => kind switch
+    public static StandardCursorType ToStandardCursor(CursorKind kind, bool isMacOS = false) => kind switch
     {
         CursorKind.Cross => StandardCursorType.Cross,
         CursorKind.Hand => StandardCursorType.Hand,
-        CursorKind.SizeAll => StandardCursorType.SizeAll,
+        // Avalonia's macOS backend draws SizeAll as a crosshair; DragMove is the native open hand (#5585).
+        CursorKind.SizeAll => isMacOS ? StandardCursorType.DragMove : StandardCursorType.SizeAll,
         CursorKind.SizeNS => StandardCursorType.SizeNorthSouth,
         CursorKind.SizeWE => StandardCursorType.SizeWestEast,
         CursorKind.SizeNESW => StandardCursorType.TopRightCorner,

@@ -328,6 +328,16 @@ public class CanvasHostTests
         window.Close();
     }
 
+    [Theory]
+    [InlineData(CursorKind.SizeAll, true, StandardCursorType.DragMove)]
+    [InlineData(CursorKind.SizeAll, false, StandardCursorType.SizeAll)]
+    [InlineData(CursorKind.SizeWE, true, StandardCursorType.SizeWestEast)]
+    public void ToStandardCursor_UsesTheOpenHandForMoveOnlyOnMacOS(CursorKind kind, bool isMacOS, StandardCursorType expected)
+    {
+        // #5585: Avalonia's macOS backend draws SizeAll as a crosshair.
+        AvaloniaInputHostAdapter.ToStandardCursor(kind, isMacOS).ShouldBe(expected);
+    }
+
     [AvaloniaFact]
     public void InputAdapter_ReportsPointerAndCursorOnTheControl()
     {
