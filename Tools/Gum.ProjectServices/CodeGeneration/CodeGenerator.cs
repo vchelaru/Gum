@@ -5761,6 +5761,10 @@ public class CodeGenerator
             tabCount++;
             var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
             context.TabCount = tabCount;
+            // Assigns on the instance itself (e.g. LabelInstance.Text), never through .Visual, because Forms
+            // controls expose Text directly and Visual is typed InteractiveGue. This needs the non-Forms prefix,
+            // so pin it rather than relying on CodeOutputProjectSettings's default library.
+            context.CodeOutputProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGame };
             foreach (var variable in element.DefaultState!.Variables)
             {
                 InstanceSave? instance = null;

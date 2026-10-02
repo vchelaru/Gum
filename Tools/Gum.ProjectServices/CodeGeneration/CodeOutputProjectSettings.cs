@@ -99,7 +99,7 @@ using System.Linq;
     /// </summary>
     public string DefaultScreenBase { get; set; } = "";
 
-    public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.MonoGame;
+    public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.MonoGameForms;
 
     public bool AdjustPixelValuesForDensity { get; set; } = false;
 

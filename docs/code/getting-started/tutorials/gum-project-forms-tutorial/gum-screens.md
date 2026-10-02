@@ -78,7 +78,7 @@ If code generation seems to not be working correctly, this section can provide s
 
 #### Verifying Output Library
 
-Verify that the Output Library value is set to MonoGame + Forms. If you are not using this Output Library, code generation may not work properly.
+Verify that the Output Library value is set to Gum Forms (recommended). If you are not using this Output Library, code generation may not work properly.
 
 You can also verify that your screens and components classes match the names in Gum without any suffix (such as Runtime).
 

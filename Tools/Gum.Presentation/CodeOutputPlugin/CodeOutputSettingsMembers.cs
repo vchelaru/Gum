@@ -24,9 +24,9 @@ public class CodeOutputSettingsMembers
 
     private static readonly Dictionary<OutputLibrary, string> LibraryNames = new Dictionary<OutputLibrary, string>
     {
-        { OutputLibrary.MonoGameForms, "MonoGame + Forms" },
-        { OutputLibrary.Skia, "SkiaSharp" },
-        { OutputLibrary.MonoGame, "MonoGame (no forms, deprecated)" },
+        { OutputLibrary.MonoGameForms, "Gum Forms (recommended)" },
+        { OutputLibrary.Skia, "SkiaSharp (deprecated)" },
+        { OutputLibrary.MonoGame, "MonoGame (deprecated)" },
         { OutputLibrary.Raylib, "Raylib" },
         { OutputLibrary.Silk, "Silk.NET" },
     };
@@ -470,7 +470,7 @@ public class CodeOutputSettingsMembers
             {
                 if (ProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
-                    detailText = "Full code generation in MonoGame + Forms is considered experimental";
+                    detailText = "Full code generation in Gum Forms is considered experimental";
                 }
             }
             else if (ProjectSettings?.OutputLibrary == OutputLibrary.Raylib)
