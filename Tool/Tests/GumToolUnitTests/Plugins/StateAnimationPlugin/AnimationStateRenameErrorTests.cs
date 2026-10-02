@@ -161,6 +161,7 @@ public class AnimationStateRenameErrorTests : BaseTestClass
             _wireframeObjectManager,
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<Gum.Undo.IUndoManager>(),
             Mock.Of<IUiTimer>());
         foreach (AnimationViewModel animation in animations)
         {

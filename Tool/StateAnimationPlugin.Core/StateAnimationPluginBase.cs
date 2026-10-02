@@ -125,7 +125,7 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
         _animationVmFactory = () => new ElementAnimationsViewModel(
             _nameVerifier, _dialogService, _animationCollectionViewModelManager!, _renameManager!,
             _selectedState, _wireframeObjectManager, _outputManager, _animationFilePathService,
-            CreateUiTimer(), _keyframeClipboard, PlaybackClock);
+            _undoManager, CreateUiTimer(), _keyframeClipboard, PlaybackClock);
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
             _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
         _renameManager = new RenameManager(
