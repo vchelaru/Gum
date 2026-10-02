@@ -1,31 +1,23 @@
 name: "Samples"
 
-# Push/PR triggers make this the regression test for Samples/SilkNetGum, the
-# proof-of-concept that SkiaGum is drop-in for a Silk.NET host (#2738). Without
-# them it only ran on manual dispatch and could silently bitrot (#3570).
+# This is the regression test for Samples/SilkNetGum, the proof-of-concept that SkiaGum is
+# drop-in for a Silk.NET host (#2738), and for every other sample building against the runtimes
+# (#3570). It takes ~20 minutes on one Windows runner and does not gate merges, so it runs nightly
+# against main. A PR runs it only when it edits a sample or this build; a runtime change that
+# breaks a sample shows up the next morning.
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
+  schedule:
+    # 06:17 UTC is midnight in Denver (11pm in winter). Scheduled runs can start hours late, and
+    # this keeps a late run out of the working day. Off the hour because the top of the hour is busiest.
+    - cron: '17 6 * * *'
   pull_request:
-    # No branches filter: PRs into integration branches need checks too (#4695).
-    # The tool-only paths are skipped: no sample references the tool, its plugins or its tests.
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.gitbook/**'
-      - 'Gum/**'
-      - 'Tool/**'
-      - 'Tools/Gum.Presentation/**'
-      - 'DataUi.Core/**'
-      - 'AvaloniaDataUi/**'
-      - 'Tests/Gum.Avalonia.Tests/**'
-      - 'Tests/Gum.Presentation.Tests/**'
-      - 'Direction/**'
-      - '.claude/**'
+    paths:
+      - 'Samples/**'
+      - '.github/scripts/build-all.ps1'
+      - '.github/workflows/build-samples.yaml'
   workflow_dispatch:
 
-# A new push to a PR cancels the run it supersedes; main and manual runs are never cancelled.
+# A new push to a PR cancels the run it supersedes; the nightly and manual runs are never cancelled.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
