@@ -26,7 +26,7 @@ on:
   # The nightly run covers the Avalonia head on macOS, which pull requests skip to save runner
   # time (see Build-Avalonia-Head). Every other job skips the schedule event.
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 # A new push to a PR cancels the run it supersedes. Pushes to main, the nightly run and manual
