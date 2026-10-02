@@ -23,7 +23,7 @@ public static class SampleBuild
         bool mac = Application.platform == RuntimePlatform.OSXEditor;
         BuildTarget buildTarget = mac ? BuildTarget.StandaloneOSX : BuildTarget.StandaloneWindows64;
 
-        // SkiaGameRendering's GPU path is Direct3D 11 only so far; anything else, Metal included, uses Gum's CPU fallback.
+        // Windows is pinned to Direct3D 11 so the build exercises SkiaGameRendering's GPU path; macOS uses Unity's default (Metal).
         if (!mac)
         {
             PlayerSettings.SetUseDefaultGraphicsAPIs(buildTarget, false);
