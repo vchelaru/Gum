@@ -57,7 +57,9 @@ public class ElementTreeViewManagerContextMenuShortcutTests
             Gesture(menu, "Copy").ShouldBe(new KeyGesture(Key.C, command));
             Gesture(menu, "Cut").ShouldBe(new KeyGesture(Key.X, command));
             Gesture(menu, "Duplicate Child").ShouldBe(new KeyGesture(Key.D, command));
-            Gesture(menu, "Delete Child").ShouldBe(new KeyGesture(Key.Delete));
+            // Delete's primary key is Backspace on macOS (#5620), whatever modifier the test simulates.
+            Key deleteKey = OperatingSystem.IsMacOS() ? Key.Back : Key.Delete;
+            Gesture(menu, "Delete Child").ShouldBe(new KeyGesture(deleteKey));
         }
         finally
         {
