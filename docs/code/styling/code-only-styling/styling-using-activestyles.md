@@ -10,6 +10,8 @@ For information on upgrading, see the [Migrating to 2025 November](../../../gum-
 
 Gum can be restyled using an `ActiveStyle` object. Changes to `ActiveStyle` result in style changes for all controls created after the change is made. `ActiveStyle` can make it easy to restyle all controls without needing to make changes to each individual control.
 
+If you are using a Gum project with Forms components, `ActiveStyle` does not restyle controls whose visuals come from your project. See [Gum Tool Styling and the Styling Object](../control-customization-in-gum-tool.md#gum-tool-styling-and-the-styling-object) for how the two relate.
+
 ## Styling.ActiveStyle.Colors
 
 Gum includes a `Styling` object which contains multiple color values for default styling. For example the `Primary` color can be changed using the following code:
