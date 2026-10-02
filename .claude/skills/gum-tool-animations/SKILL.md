@@ -56,6 +56,10 @@ non-FRB docs.
   brand, NOT the FRB engine. The animation data model serializes these into `.ganx`.
 - **Sidecar must follow the element.** Element rename/duplicate/delete must move the `.ganx`;
   wired via RenameManager/DuplicateService/ElementDeleteService in `AssignEvents`.
+- **One user action, one undo step.** Each reported `AnyChange` saves and records an undo. Wrap an
+  action that changes the keyframe/animation lists several times in
+  `using (viewModel.BatchChanges())` (public on `ElementAnimationsViewModel`, nests, reports once at
+  the end). Never let a list be reported mid-sort. `AddKeyframe` inserts in time order for that reason.
 - **Save is whitelist-filtered.** `HandleDataChange` only re-saves on specific property
   changes; a new persisted keyframe field won't save unless added there.
 

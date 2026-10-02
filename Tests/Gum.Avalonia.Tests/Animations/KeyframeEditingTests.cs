@@ -326,4 +326,37 @@ public class KeyframeEditingTests
         editor.ViewModel.Animations.Single().Keyframes.Select(keyframe => keyframe.StateName).ShouldBe(new[] { $"{Category}/Pressed" });
         editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().States.Count.ShouldBe(1);
     }
+
+    [AvaloniaFact]
+    public void ABatchOfKeyframeEdits_UndoesInOneStep_AndRedoesToTheSameOrder()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        AnimatedKeyframeViewModel pressed = editor.AddStateKeyframe($"{Category}/Pressed");
+        AnimatedKeyframeViewModel released = editor.AddStateKeyframe($"{Category}/Released");
+        string Order() => string.Join(",", editor.ViewModel.Animations.Single().Keyframes.Select(keyframe => $"{keyframe.StateName}@{keyframe.Time}"));
+        string before = Order();
+        int actionsBefore = editor.UndoManager.CurrentElementHistory.ShouldNotBeNull().Actions.Count;
+
+        using (editor.ViewModel.BatchChanges())
+        {
+            pressed.Time = released.Time + 5;
+            released.Time = pressed.Time + 5;
+        }
+        string after = Order();
+
+        editor.ThrowIfPluginFailed();
+        after.ShouldNotBe(before);
+        editor.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(actionsBefore + 1);
+
+        editor.UndoManager.PerformUndo();
+        editor.Layout();
+        Order().ShouldBe(before);
+
+        editor.UndoManager.PerformRedo();
+        editor.Layout();
+        Order().ShouldBe(after);
+    }
 }

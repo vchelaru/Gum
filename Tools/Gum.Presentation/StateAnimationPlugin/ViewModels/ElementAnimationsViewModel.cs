@@ -263,9 +263,10 @@ public partial class ElementAnimationsViewModel : ViewModel
     /// (for <see cref="Animations"/>) if anything changed. The plugin saves and records an undo per
     /// reported change, so a gesture that edits several things at once (a rename and the keyframes
     /// that play the renamed animation, a squash of every keyframe) must report once, or an undo
-    /// takes the gesture apart piece by piece.
+    /// takes the gesture apart piece by piece. Wrap any action that changes the keyframe or animation
+    /// lists more than once (append then sort, bulk edits) in this scope; it nests.
     /// </summary>
-    private IDisposable BatchChanges()
+    public IDisposable BatchChanges()
     {
         _batchDepth++;
         return new BatchToken(this);

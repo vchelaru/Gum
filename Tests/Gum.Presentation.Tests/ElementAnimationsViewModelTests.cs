@@ -260,6 +260,29 @@ public class ElementAnimationsViewModelTests
     }
 
     [Fact]
+    public void BatchChanges_ReportsOneChange_ForAppendingAndSortingKeyframes()
+    {
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>());
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/A", Time = 0, HasValidState = true });
+        viewModel.Animations.Add(walk);
+        viewModel.SelectedAnimation = walk;
+        List<string> reported = new List<string>();
+        viewModel.AnyChange += (_, _) => reported.Add(string.Join(",", walk.Keyframes.Select(keyframe => $"{keyframe.StateName}@{keyframe.Time}")));
+
+        using (viewModel.BatchChanges())
+        {
+            AnimatedKeyframeViewModel b = new AnimatedKeyframeViewModel { StateName = "Cat/B", Time = 1, HasValidState = true };
+            walk.Keyframes.Add(b);
+            walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/C", Time = 2, HasValidState = true });
+            b.Time = 3;
+            reported.ShouldBeEmpty("nothing is reported while the batch is open");
+        }
+
+        reported.ShouldBe(new[] { "Cat/A@0,Cat/C@2,Cat/B@3" });
+    }
+
+    [Fact]
     public void PastingAKeyframe_BeforeALaterOne_ReportsOnlyTheSortedList_AndReturnsThePastedKeyframe()
     {
         // Each reported change is saved and recorded as its own undo, so a paste reported mid-sort
