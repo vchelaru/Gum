@@ -19,9 +19,10 @@ namespace Gum.Managers;
 
 public class HotkeyManager : IHotkeyManager
 {
-    public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(GumKey.Delete);
+    // Delete, except on macOS where the key labeled "delete" sends Backspace and forward delete is the
+    // alternate (null elsewhere). Both are set in the constructor.
+    public KeyCombination Delete { get; private set; }
 
-    // Backspace on macOS, where the key labeled "delete" sends Backspace; null elsewhere. Set in the constructor.
     public KeyCombination? DeleteAlt { get; private set; }
 
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(GumKey.C);
@@ -118,7 +119,8 @@ public class HotkeyManager : IHotkeyManager
         KeyCombination ctrlShiftZ = new KeyCombination { IsCtrlDown = true, IsShiftDown = true, Key = GumKey.Z };
         Redo = operatingSystemInfo.IsMacOS ? ctrlShiftZ : ctrlY;
         RedoAlt = operatingSystemInfo.IsMacOS ? ctrlY : ctrlShiftZ;
-        DeleteAlt = operatingSystemInfo.IsMacOS ? KeyCombination.Pressed(GumKey.Back) : null;
+        Delete = KeyCombination.Pressed(operatingSystemInfo.IsMacOS ? GumKey.Back : GumKey.Delete);
+        DeleteAlt = operatingSystemInfo.IsMacOS ? KeyCombination.Pressed(GumKey.Delete) : null;
 
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
