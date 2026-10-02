@@ -73,7 +73,7 @@ The heuristic fallback (`EstimateBlocksNeeded`) uses a lookup table mapping effe
 
 ## Embedded Resources
 
-`bmfont.exe` and `BmfcTemplate.bmfc` are embedded in the `Gum.ProjectServices` assembly and extracted on first use by `EnsureToolsExtracted`. The template uses placeholder tokens like `FontNameVariable`, `FontSizeVariable`, `{UseSmoothing}`, etc.
+`bmfont.exe` and `BmfcTemplate.bmfc` are embedded in the `Gum.ProjectServices` assembly and extracted on first use by `EnsureToolsExtracted` into `FileManager.UserApplicationDataForThisApplication/FontTools`, never the install folder (it may be read-only). The template uses placeholder tokens like `FontNameVariable`, `FontSizeVariable`, `{UseSmoothing}`, etc.
 
 ## Standalone CLI
 
