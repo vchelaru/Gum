@@ -1,60 +1,88 @@
 # Unity
 
-## Introduction
-
 {% hint style="warning" %}
-The Unity package is experimental. It currently supports Windows x64 only. Other platforms are in progress.
+The Unity package is experimental. It supports Windows x64 and macOS (Intel and Apple silicon). Linux, Android, iOS, and WebGL are not supported yet.
 {% endhint %}
 
-Gum for Unity draws Gum UI (layout, Forms controls, and `.gumx` projects) with SkiaSharp. It has two Unity packages: Gum, and SkiaGameRendering, which supplies SkiaSharp.
+Gum for Unity draws Gum UI (layout, Forms controls, and `.gumx` projects) with SkiaSharp. It needs two Unity packages: Gum, and SkiaGameRendering, which supplies SkiaSharp.
 
-## Installing the Packages
+## Quick Start
 
-Unity cannot resolve a git dependency from inside a package, so add both packages to your project's `Packages/manifest.json`:
+1. Install the two packages (see **Install the Packages** below). Gum requires Unity 6 or newer.
+2. In **Edit > Project Settings > Player**, set **Active Input Handling** to **Input System Package (New)** or **Both**.
+3. In your scene, create an empty GameObject (**GameObject > Create Empty**) and name it `Gum`.
+4. Select the `Gum` GameObject. In the Inspector, click **Add Component** and add `GumRenderer`, then add `GumInput`.
+5. Create a new C# script named `GumExample` (**Assets > Create > Scripting > MonoBehaviour Script**) and replace its contents with:
+
+```csharp
+using UnityEngine;
+
+public class GumExample : MonoBehaviour
+{
+    void Start()
+    {
+        var button = new Gum.Forms.Controls.Button();
+        button.Text = "Click me";
+        button.AddToRoot();
+    }
+}
+```
+
+6. Drag the `GumExample` script onto the `Gum` GameObject, so it sits next to `GumRenderer` and `GumInput`.
+7. Press **Play**. A button labeled "Click me" appears in the Game view.
+
+`GumRenderer` sets up Gum in `Awake`, so your own code can create UI from `Start` or later.
+
+## Install the Packages
+
+1. Open **Window > Package Manager**.
+2. Click the **+** button, then **Install package from git URL**.
+3. Paste this URL and click **Install**:
+
+   ```
+   https://github.com/vchelaru/SkiaGameRendering.git#upm
+   ```
+
+4. Repeat with this URL:
+
+   ```
+   https://github.com/vchelaru/Gum.git#upm
+   ```
+
+You can also add both lines to `Packages/manifest.json` instead:
 
 ```json
 "com.vchelaru.skiagamerendering": "https://github.com/vchelaru/SkiaGameRendering.git#upm",
 "com.vchelaru.gum": "https://github.com/vchelaru/Gum.git#upm"
 ```
 
-Each Gum release publishes the package to the `upm` branch. To pin a version, use `#upm/v<version>` (for example `#upm/v2026.10.1`) instead of `#upm`.
+The `#upm` at the end of each URL selects the packaged Unity version of the library. To stay on a specific Gum release, end the Gum URL with `#upm/v<version>` instead, for example `#upm/v2026.10.1`.
 
 {% hint style="info" %}
-The `#upm` URL works once the first Gum release that includes the package has shipped. Until then, install Gum from a Gum checkout by pointing a `file:` path at the `Unity/com.vchelaru.gum` folder.
+The Gum URL works once the first Gum release that includes the Unity package has shipped. Until then, install Gum from a Gum checkout: in Package Manager, choose **Install package from disk** and select `Unity/com.vchelaru.gum/package.json`.
 {% endhint %}
 
-## Input System
+## What the Components Do
 
-The Gum package depends on `com.unity.inputsystem`. In **Player Settings**, set **Active Input Handling** to **Input System Package** or **Both**.
-
-## Adding Gum to a Scene
-
-Add the `GumRenderer` and `GumInput` components to a GameObject. `GumRenderer` initializes `GumService.Default` in `Awake` and draws Gum over the screen, so create your UI from `Start`:
-
-```csharp
-// Initialize
-var button = new Gum.Forms.Controls.Button();
-button.Text = "Click me";
-button.AddToRoot();
-```
-
-`GumInput` reads Unity's Input System (mouse, touches, and keyboard) and passes it to Gum each frame, so add it to the same GameObject as `GumRenderer`.
+* `GumRenderer` sets up Gum and draws the UI over the screen.
+* `GumInput` passes Unity's mouse, touch, and keyboard input to Gum each frame. It belongs on the same GameObject as `GumRenderer`.
 
 ## Loading a Gum Project
 
-Place the project folder under `Assets/StreamingAssets`, then set `GumRenderer.ProjectFile` to the project's path inside that folder, for example `GumProject/GumProject.gumx`.
+1. Copy your Gum project folder into `Assets/StreamingAssets`.
+2. Set `GumRenderer.ProjectFile` to the `.gumx` path inside that folder, for example `GumProject/GumProject.gumx`.
 
 If you add the components from code, add them to an inactive GameObject, set `ProjectFile`, then activate the GameObject.
 
 ## Rendering
 
-On Direct3D 11, Gum draws on the GPU through SkiaGameRendering. On any other graphics API, Gum draws on the CPU and uploads a texture each frame. `GumRenderer.Texture` holds the result either way. Turn off `GumRenderer.DrawToScreen` to display the texture yourself.
+On Direct3D 11, Gum draws on the GPU. On any other graphics API, including Metal on macOS, Gum currently draws on the CPU and uploads a texture each frame. `GumRenderer.Texture` holds the result either way. Turn off `GumRenderer.DrawToScreen` to display the texture yourself.
 
 ## IL2CPP
 
-A package cannot contain a `link.xml`, so add these to your project when building with IL2CPP:
+If you build with IL2CPP, add both of these to your project:
 
-* An `Assets/link.xml` that preserves `netstandard`. Stripped SkiaSharp still references the `netstandard` facade, and IL2CPP fails to resolve it otherwise:
+* An `Assets/link.xml` file that keeps `netstandard`:
 
 ```xml
 <linker>
@@ -62,6 +90,6 @@ A package cannot contain a `link.xml`, so add these to your project when buildin
 </linker>
 ```
 
-* A **Managed Stripping Level** of at least **Low**. IL2CPP at **Minimal** has not been verified.
+* A **Managed Stripping Level** of at least **Low** in **Player Settings**.
 
 The `Samples/UnityGum` project in the Gum repository has both.
