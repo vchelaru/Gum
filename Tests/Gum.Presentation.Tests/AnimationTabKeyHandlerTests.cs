@@ -36,7 +36,7 @@ public class AnimationTabKeyHandlerTests
         _viewModel = new ElementAnimationsViewModel(
             Mock.Of<INameVerifier>(), _dialogService.Object, Mock.Of<IAnimationCollectionViewModelManager>(),
             Mock.Of<IRenameManager>(), Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>(),
-            Mock.Of<IOutputManager>(), Mock.Of<IAnimationFilePathService>(), Mock.Of<IUiTimer>());
+            Mock.Of<IOutputManager>(), Mock.Of<IAnimationFilePathService>(), Mock.Of<Gum.Undo.IUndoManager>(), Mock.Of<IUiTimer>());
     }
 
     [Fact]

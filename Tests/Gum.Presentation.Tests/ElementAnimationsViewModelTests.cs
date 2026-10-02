@@ -260,26 +260,31 @@ public class ElementAnimationsViewModelTests
     }
 
     [Fact]
-    public void BatchChanges_ReportsOneChange_ForAppendingAndSortingKeyframes()
+    public void SquashingAnAnimation_HoldsOneUndoLock_UntilItsSingleChangeIsReported()
     {
-        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>());
+        int held = 0;
+        List<int> heldWhenReported = new List<int>();
+        Mock<Gum.Undo.IUndoManager> undoManager = new Mock<Gum.Undo.IUndoManager>();
+        undoManager.Setup(u => u.RequestLock()).Returns(() =>
+        {
+            held++;
+            return new Gum.Undo.UndoLock(() => held--);
+        });
+        Mock<IDialogService> dialogs = new Mock<IDialogService>();
+        dialogs.Setup(d => d.GetUserString(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<GetUserStringOptions?>())).Returns("4");
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>(), dialogs: dialogs.Object, undoManager: undoManager.Object);
         AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
         walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/A", Time = 0, HasValidState = true });
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/B", Time = 1, HasValidState = true });
         viewModel.Animations.Add(walk);
         viewModel.SelectedAnimation = walk;
-        List<string> reported = new List<string>();
-        viewModel.AnyChange += (_, _) => reported.Add(string.Join(",", walk.Keyframes.Select(keyframe => $"{keyframe.StateName}@{keyframe.Time}")));
+        viewModel.AnyChange += (_, _) => heldWhenReported.Add(held);
 
-        using (viewModel.BatchChanges())
-        {
-            AnimatedKeyframeViewModel b = new AnimatedKeyframeViewModel { StateName = "Cat/B", Time = 1, HasValidState = true };
-            walk.Keyframes.Add(b);
-            walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/C", Time = 2, HasValidState = true });
-            b.Time = 3;
-            reported.ShouldBeEmpty("nothing is reported while the batch is open");
-        }
+        viewModel.AnimationRightClickItems.Single(item => item.Text == "Squash/Stretch Frame Times").Action!();
 
-        reported.ShouldBe(new[] { "Cat/A@0,Cat/C@2,Cat/B@3" });
+        heldWhenReported.Count.ShouldBe(1, "the change is reported once");
+        heldWhenReported[0].ShouldBe(1, "the undo lock is still held when it is reported");
+        held.ShouldBe(0);
     }
 
     [Fact]
@@ -373,7 +378,7 @@ public class ElementAnimationsViewModelTests
         public void Advance(TimeSpan amount) => _timestamp += amount.Ticks;
     }
 
-    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null, IDialogService? dialogs = null, IRenameManager? renameManager = null, TimeProvider? playbackClock = null)
+    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null, IDialogService? dialogs = null, IRenameManager? renameManager = null, TimeProvider? playbackClock = null, Gum.Undo.IUndoManager? undoManager = null)
     {
         ComponentSave element = new() { Name = "Foo" };
         ISelectedState selectedState = Mock.Of<ISelectedState>(s => s.SelectedElement == element);
@@ -387,6 +392,7 @@ public class ElementAnimationsViewModelTests
             Mock.Of<IWireframeObjectManager>(),
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
+            undoManager ?? Mock.Of<Gum.Undo.IUndoManager>(),
             uiTimer,
             clipboard,
             playbackClock);

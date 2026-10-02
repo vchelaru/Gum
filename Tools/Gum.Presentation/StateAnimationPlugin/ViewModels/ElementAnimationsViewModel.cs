@@ -17,6 +17,7 @@ using Gum.Services;
 using Gum.Wireframe;
 using Gum.Services.Dialogs;
 using Gum.ViewModels;
+using Gum.Undo;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -41,6 +42,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly IOutputManager _outputManager;
     private readonly IAnimationFilePathService _animationFilePathService;
     private readonly IKeyframeClipboard _keyframeClipboard;
+    private readonly IUndoManager _undoManager;
 
     private int _batchDepth;
     private bool _batchHasChange;
@@ -198,7 +200,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService,
         IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager,
         ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager,
-        IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUiTimer playTimer,
+        IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUndoManager undoManager, IUiTimer playTimer,
         IKeyframeClipboard? keyframeClipboard = null, TimeProvider? playbackClock = null)
     {
         // The plugin shares one clipboard across the view models it creates; on its own (tests) a
@@ -225,6 +227,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         _wireframeObjectManager = wireframeObjectManager;
         _outputManager = outputManager;
         _animationFilePathService = animationFilePathService;
+        _undoManager = undoManager;
 
         RefreshAnimationsRightClickMenuItems();
     }
@@ -259,20 +262,20 @@ public partial class ElementAnimationsViewModel : ViewModel
     }
 
     /// <summary>
-    /// Holds every <see cref="AnyChange"/> until the returned token is disposed, then raises one
-    /// (for <see cref="Animations"/>) if anything changed. The plugin saves and records an undo per
-    /// reported change, so a gesture that edits several things at once (a rename and the keyframes
-    /// that play the renamed animation, a squash of every keyframe) must report once, or an undo
-    /// takes the gesture apart piece by piece. Wrap any action that changes the keyframe or animation
-    /// lists more than once (append then sort, bulk edits) in this scope; it nests.
+    /// Save coalescing only; it has no undo role. Holds every <see cref="AnyChange"/> until the scope
+    /// closes, then reports one (for <see cref="Animations"/>) if anything changed. The plugin writes
+    /// the .ganx once per reported change, so a gesture that edits several things at once (a rename
+    /// and the keyframes that play the renamed animation, a squash of every keyframe) reports, and
+    /// so saves, once. Undo grouping is separate: hold <c>IUndoManager.RequestLock()</c> around the
+    /// whole gesture, declared before this scope so it is released after the final save.
     /// </summary>
-    public IDisposable BatchChanges()
+    private IDisposable CoalesceSaves()
     {
         _batchDepth++;
-        return new BatchToken(this);
+        return new CoalesceToken(this);
     }
 
-    private void EndBatch()
+    private void EndCoalesce()
     {
         _batchDepth--;
         if (_batchDepth == 0 && _batchHasChange)
@@ -282,18 +285,18 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private sealed class BatchToken : IDisposable
+    private sealed class CoalesceToken : IDisposable
     {
         private ElementAnimationsViewModel? _owner;
 
-        public BatchToken(ElementAnimationsViewModel owner)
+        public CoalesceToken(ElementAnimationsViewModel owner)
         {
             _owner = owner;
         }
 
         public void Dispose()
         {
-            _owner?.EndBatch();
+            _owner?.EndCoalesce();
             _owner = null;
         }
     }
@@ -406,7 +409,8 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         if (_dialogService.GetUserString(message, null, options) is { } result)
         {
-            using (BatchChanges())
+            using UndoLock undoLock = _undoManager.RequestLock();
+            using (CoalesceSaves())
             {
                 var oldAnimationName = SelectedAnimation.Name;
                 SelectedAnimation.Name = result;
@@ -445,7 +449,8 @@ public partial class ElementAnimationsViewModel : ViewModel
             {
                 var multiplier = value / animationLengthBeforeChange;
 
-                using (BatchChanges())
+                using UndoLock undoLock = _undoManager.RequestLock();
+                using (CoalesceSaves())
                 {
                     foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
                     {
@@ -804,6 +809,8 @@ public partial class ElementAnimationsViewModel : ViewModel
     {
         if (SelectedAnimation != null && _keyframeClipboard.Copied is { } copied)
         {
+            using UndoLock undoLock = _undoManager.RequestLock();
+            using IDisposable coalesce = CoalesceSaves();
             var copiedKeyframe = copied.Clone();
             copiedKeyframe.Time += .1f;
             SelectedAnimation.AddKeyframe(copiedKeyframe);

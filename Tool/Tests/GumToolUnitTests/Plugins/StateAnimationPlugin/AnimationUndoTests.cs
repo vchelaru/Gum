@@ -249,6 +249,7 @@ public class AnimationUndoTests : BaseTestClass
             _wireframeObjectManager,
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<Gum.Undo.IUndoManager>(),
             Mock.Of<IUiTimer>());
         viewModel.Animations.Add(animation);
         return viewModel;
@@ -270,6 +271,7 @@ public class AnimationUndoTests : BaseTestClass
             _wireframeObjectManager,
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<Gum.Undo.IUndoManager>(),
             Mock.Of<IUiTimer>());
         viewModel.Animations.Add(animation);
         viewModel.SelectedAnimation = animation;

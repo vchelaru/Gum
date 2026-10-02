@@ -179,5 +179,6 @@ public class AnimationTabControllerTests
             Mock.Of<IWireframeObjectManager>(),
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<Gum.Undo.IUndoManager>(),
             timer);
 }

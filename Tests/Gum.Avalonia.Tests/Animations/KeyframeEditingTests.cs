@@ -328,7 +328,7 @@ public class KeyframeEditingTests
     }
 
     [AvaloniaFact]
-    public void ABatchOfKeyframeEdits_UndoesInOneStep_AndRedoesToTheSameOrder()
+    public void KeyframeEditsMadeUnderOneUndoLock_UndoInOneStep_AndRedoesToTheSameOrder()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
         ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
@@ -340,7 +340,7 @@ public class KeyframeEditingTests
         string before = Order();
         int actionsBefore = editor.UndoManager.CurrentElementHistory.ShouldNotBeNull().Actions.Count;
 
-        using (editor.ViewModel.BatchChanges())
+        using (editor.UndoManager.RequestLock())
         {
             pressed.Time = released.Time + 5;
             released.Time = pressed.Time + 5;

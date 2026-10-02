@@ -29,7 +29,7 @@ public class AnimationRenameManagerTests
         ElementAnimationsViewModel viewModel = new(
             Mock.Of<INameVerifier>(), Mock.Of<IDialogService>(), Mock.Of<IAnimationCollectionViewModelManager>(),
             Mock.Of<IRenameManager>(), Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>(),
-            Mock.Of<IOutputManager>(), Mock.Of<IAnimationFilePathService>(), Mock.Of<IUiTimer>());
+            Mock.Of<IOutputManager>(), Mock.Of<IAnimationFilePathService>(), Mock.Of<Gum.Undo.IUndoManager>(), Mock.Of<IUiTimer>());
         ComponentSave renamed = new() { Name = "NewName" };
 
         Should.NotThrow(() => sut.HandleRename(renamed, "OldName", viewModel));

@@ -64,6 +64,7 @@ public class AnimationTabControllerTests : BaseTestClass
         _wireframeObjectManager,
         Mock.Of<IOutputManager>(),
         _animationFilePathService.Object,
+        Mock.Of<Gum.Undo.IUndoManager>(),
         Mock.Of<IUiTimer>());
 
     [Fact]
@@ -80,7 +81,7 @@ public class AnimationTabControllerTests : BaseTestClass
         controller.HandleDataChange(new ElementAnimationsViewModel(
                 Mock.Of<INameVerifier>(), _dialogService.Object, _animationCollectionViewModelManager.Object,
                 _renameManager.Object, _selectedState.Object, _wireframeObjectManager, Mock.Of<IOutputManager>(),
-                _animationFilePathService.Object, Mock.Of<IUiTimer>()),
+                _animationFilePathService.Object, Mock.Of<Gum.Undo.IUndoManager>(), Mock.Of<IUiTimer>()),
             new PropertyChangedEventArgs("Animations"));
 
         _undoManager.Verify(u => u.RequestLock(), Times.Never);
@@ -96,7 +97,7 @@ public class AnimationTabControllerTests : BaseTestClass
         controller.HandleDataChange(new ElementAnimationsViewModel(
                 Mock.Of<INameVerifier>(), _dialogService.Object, _animationCollectionViewModelManager.Object,
                 _renameManager.Object, _selectedState.Object, _wireframeObjectManager, Mock.Of<IOutputManager>(),
-                _animationFilePathService.Object, Mock.Of<IUiTimer>()),
+                _animationFilePathService.Object, Mock.Of<Gum.Undo.IUndoManager>(), Mock.Of<IUiTimer>()),
             new PropertyChangedEventArgs("Animations"));
 
         _undoManager.Verify(u => u.RequestLock(), Times.Once);
