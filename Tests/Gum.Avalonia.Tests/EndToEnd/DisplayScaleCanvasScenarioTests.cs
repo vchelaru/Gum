@@ -2,8 +2,10 @@ using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Gum.Avalonia.Canvas;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.TextureCoordinates;
 using Gum.DataTypes;
+using Gum.Wireframe;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
@@ -27,17 +29,20 @@ public class DisplayScaleCanvasScenarioTests
             ComponentSave button = canvas.Project.AddComponent("Button");
             canvas.Tree.Click(canvas.Tree.NodeFor(button));
             canvas.Canvas.DisplayScaleOverride = 2;
+            ManualTimeProvider time = new ManualTimeProvider();
+            TimeManager.Self.SetTimeProvider(time);
             try
             {
                 Point first = canvas.WindowPointOf(300, 300);
 
                 bool isDoubleClick = ClickTwice(canvas.Input.Window, first, new Point(first.X + 8, first.Y), canvas.Frame,
-                    () => InputLibrary.Cursor.Self.PrimaryDoubleClick);
+                    time, TimeSpan.FromMilliseconds(100), () => InputLibrary.Cursor.Self.PrimaryDoubleClick);
 
                 isDoubleClick.ShouldBeTrue(canvas.Describe());
             }
             finally
             {
+                TimeManager.Self.SetTimeProvider(TimeProvider.System);
                 canvas.Canvas.DisplayScaleOverride = null;
                 canvas.Frame();
             }
@@ -56,12 +61,14 @@ public class DisplayScaleCanvasScenarioTests
             InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
             tab.Select(icon);
             tab.CanvasControl.DisplayScaleOverride = 2;
+            ManualTimeProvider time = new ManualTimeProvider();
+            tab.Canvas.TimeManager.SetTimeProvider(time);
             try
             {
                 Point first = tab.WindowPointOf(200, 200);
 
                 bool isDoubleClick = ClickTwice(tab.Input.Window, first, new Point(first.X + 8, first.Y), tab.Frame,
-                    () => tab.Canvas.XnaCursor.PrimaryDoubleClick);
+                    time, TimeSpan.FromMilliseconds(100), () => tab.Canvas.XnaCursor.PrimaryDoubleClick);
 
                 isDoubleClick.ShouldBeTrue(tab.Describe());
             }
@@ -73,9 +80,42 @@ public class DisplayScaleCanvasScenarioTests
         });
     }
 
-    // Two left clicks with as few frames as possible between them, since the double-click time
-    // is measured on the real clock. Returns whether the cursor read a double click on the second.
-    private static bool ClickTwice(global::Avalonia.Controls.Window window, Point first, Point second, Action frame, Func<bool> isDoubleClick)
+    [SkippableFact]
+    public void TextureCoordinatesCanvas_ASecondClickAfterTheDoubleClickWindow_IsNotADoubleClick()
+    {
+        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        TextureCoordinateTabHarness.OnUiThread(() =>
+        {
+            using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
+            ComponentSave button = tab.Project.AddComponent("Button");
+            string atlas = tab.AddTextureFile("Atlas.png");
+            InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
+            tab.Select(icon);
+            tab.CanvasControl.DisplayScaleOverride = 2;
+            ManualTimeProvider time = new ManualTimeProvider();
+            tab.Canvas.TimeManager.SetTimeProvider(time);
+            try
+            {
+                Point first = tab.WindowPointOf(200, 200);
+
+                bool isDoubleClick = ClickTwice(tab.Input.Window, first, first, tab.Frame,
+                    time, TimeSpan.FromMilliseconds(500), () => tab.Canvas.XnaCursor.PrimaryDoubleClick);
+
+                isDoubleClick.ShouldBeFalse(tab.Describe());
+            }
+            finally
+            {
+                tab.CanvasControl.DisplayScaleOverride = null;
+                tab.Frame();
+            }
+        });
+    }
+
+    // Two left clicks a fixed, known time apart on a manual clock, so a slow runner cannot push
+    // the second click outside the double-click window. Returns whether the cursor read a double
+    // click on the second.
+    private static bool ClickTwice(global::Avalonia.Controls.Window window, Point first, Point second, Action frame,
+        ManualTimeProvider time, TimeSpan between, Func<bool> isDoubleClick)
     {
         window.MouseMove(first, RawInputModifiers.None);
         frame();
@@ -83,6 +123,7 @@ public class DisplayScaleCanvasScenarioTests
         frame();
         window.MouseUp(first, MouseButton.Left, RawInputModifiers.None);
         frame();
+        time.Advance(between);
         window.MouseDown(second, MouseButton.Left, RawInputModifiers.None);
         frame();
         window.MouseUp(second, MouseButton.Left, RawInputModifiers.None);

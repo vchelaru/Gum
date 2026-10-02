@@ -60,6 +60,9 @@ public class ImageRegionSelectionCore
 
     TimeManager mTimeManager;
 
+    /// <summary>The clock this canvas's cursor reads; tests swap its provider.</summary>
+    public TimeManager TimeManager => mTimeManager;
+
     Sprite? mCurrentTextureSprite;
 
     public ZoomNumbers ZoomNumbers
