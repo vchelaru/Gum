@@ -144,6 +144,7 @@ public sealed class MainPanelView : Grid
             Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Dismiss, 10),
         }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
         close.Classes.Add(GumChromeStyles.FlatButtonClass);
+        ToolTip.SetTip(close, "Close tab");
         close.Bind(IsVisibleProperty, new Binding(nameof(AvaloniaPluginTab.CanClose)));
         close.Click += (_, e) =>
         {
