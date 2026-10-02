@@ -338,8 +338,8 @@ public class FileMenuScenarioTests
             ComponentSave button = canvas.Project.AddComponent("Button");
             if (inRenderTarget)
             {
-                // The holder matches the box so its dotted outline (the project's Show Outlines)
-                // lands on the box's own edge.
+                // The holder matches the box. Show Outlines is off in this harness, so the holder
+                // draws no outline.
                 canvas.AddInstance(button, "Holder", "Container", x: 20, y: 20, width: 60, height: 40);
                 canvas.AddInstance(button, "Box", "Rectangle", x: 0, y: 0, width: 60, height: 40);
                 button.DefaultState!.SetValue("Holder.IsRenderTarget", true, "bool");
