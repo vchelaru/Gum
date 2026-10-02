@@ -27,8 +27,8 @@ public class CodeOutputSettingsMembers
         { OutputLibrary.MonoGameForms, "Gum Forms (recommended)" },
         { OutputLibrary.Skia, "SkiaSharp (deprecated)" },
         { OutputLibrary.MonoGame, "MonoGame (deprecated)" },
-        { OutputLibrary.Raylib, "Raylib" },
-        { OutputLibrary.Silk, "Silk.NET" },
+        { OutputLibrary.Raylib, "Raylib (deprecated)" },
+        { OutputLibrary.Silk, "Silk.NET (deprecated)" },
     };
 
     private static readonly Dictionary<string, OutputLibrary> LibrariesByName =

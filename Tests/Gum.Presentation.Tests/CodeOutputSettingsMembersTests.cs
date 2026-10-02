@@ -141,10 +141,10 @@ public class CodeOutputSettingsMembersTests
         _sut.RebuildRequested += (_, _) => rebuilds++;
         InstanceMember library = Member("Output Library");
 
-        library.SetValue("Raylib", SetPropertyCommitType.Full);
+        library.SetValue("Raylib (deprecated)", SetPropertyCommitType.Full);
 
         _sut.ProjectSettings.OutputLibrary.ShouldBe(OutputLibrary.Raylib);
-        library.Value.ShouldBe("Raylib");
+        library.Value.ShouldBe("Raylib (deprecated)");
         rebuilds.ShouldBe(1);
     }
 
