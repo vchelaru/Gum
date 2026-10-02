@@ -12,24 +12,24 @@ Gum for Unity draws Gum UI (layout, Forms controls, and `.gumx` projects) with S
 2. In **Edit > Project Settings > Player**, set **Active Input Handling** to **Input System Package (New)** or **Both**.
 3. In your scene, create an empty GameObject (**GameObject > Create Empty**) and name it `Gum`.
 4. Select the `Gum` GameObject. In the Inspector, click **Add Component** and add `GumRenderer`, then add `GumInput`.
-5. Create a new C# script named `GumExample` (**Assets > Create > Scripting > MonoBehaviour Script**) and replace its contents with:
+5. With the `Gum` GameObject still selected, click **Add Component > New script**, name it `GumExample`, and replace its contents with:
 
 ```csharp
+using Gum.Forms.Controls;
 using UnityEngine;
 
 public class GumExample : MonoBehaviour
 {
     void Start()
     {
-        var button = new Gum.Forms.Controls.Button();
+        var button = new Button();
         button.Text = "Click me";
         button.AddToRoot();
     }
 }
 ```
 
-6. Drag the `GumExample` script onto the `Gum` GameObject, so it sits next to `GumRenderer` and `GumInput`.
-7. Press **Play**. A button labeled "Click me" appears in the Game view.
+6. Press **Play**. A button labeled "Click me" appears in the Game view.
 
 `GumRenderer` sets up Gum in `Awake`, so your own code can create UI from `Start` or later.
 
