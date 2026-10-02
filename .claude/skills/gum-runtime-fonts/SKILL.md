@@ -53,6 +53,10 @@ All platforms (MonoGame/KNI/FNA and Raylib) raise `CustomSetPropertyOnRenderable
 
 A `.fnt` that loads but names a page PNG that is missing or undecodable is a different failure: `BitmapFont.LoadPageTextureOrPlaceholder` swaps in `Sprite.InvalidTexture` (red X) and raises the same event once per page path. A missing `.fnt` is never reported this way; that is the normal "not generated yet" case above.
 
+### Raylib `.fnt` loading
+
+`RaylibGum`'s `ContentLoader.LoadFont` parses every `.fnt` with Gum's `ParsedFontFile`, whether it comes from the `CustomGetStreamFromFile` hook or a loose file; `Raylib.LoadFont` is never called, because it can't see the hook and crashes the process on a `.fnt` it can't parse. A raylib `Font` holds one texture, so a multi-page font's pages are stacked vertically into one texture (`BitmapFontAtlasMerger`, pure and unit-tested) and each glyph's rec Y is shifted by its page's offset. A `.fnt` that fails to parse, or whose page can't be read, raises `PropertyAssignmentError` and yields an empty `Font` (`BaseSize == 0`). Binary `.fnt` is unsupported (see encodings above). `RaylibGum.Tests` needs a GL context, so it runs in Windows CI only; on macOS the test host hangs in `InitWindow`.
+
 ### Path 3: In-Memory Font Creation (IInMemoryFontCreator) — New
 
 Generates a `BitmapFont` entirely in memory at runtime — no pre-built `.fnt` files needed. The loading code already checks for this; it slots into the cascade between embedded resources and disk-based generation.

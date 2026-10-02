@@ -1,6 +1,7 @@
 ﻿using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
+using RaylibGum.Renderables;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -77,53 +78,37 @@ public sealed class ContentLoader : IContentLoader
         Font? font = null;
 
         var isFnt = contentName.ToLower().EndsWith(".fnt");
-        // The CustomGetStreamFromFile hook wins over a loose file at the same path, as it does for
-        // every other content load, so a loaded bundle overrides stale loose copies (#5299).
-        string? hookedFntText = isFnt ? TryReadFntFromStreamHook(contentName) : null;
-        // raylib's native loaders take a raw path, so resolve the macOS .app Contents/Resources/
-        // copy up front (#5450).
-        string? diskPath = hookedFntText == null ? FileManager.ResolveExistingFilePath(contentName) : null;
-        if (hookedFntText != null)
+        if (isFnt)
         {
-            font = BuildBitmapFontWithShadowSibling(contentName, hookedFntText);
-        }
-        else if (diskPath != null)
-        {
-            if (isFnt)
+            // Every .fnt goes through Gum's parser, never Raylib.LoadFont: raylib's native loader
+            // can't see the CustomGetStreamFromFile hook, can't be reported on when it fails (it
+            // crashes the process on a .fnt it can't parse), and Gum merges multi-page atlases itself
+            // (#5316). A .fnt that can't be loaded reports through PropertyAssignmentError and falls
+            // through to an empty Font, which callers detect via BaseSize == 0.
+            try
             {
-                Font loadedFont = Raylib.LoadFont(diskPath);
-                // Apply the project's texture filter (#3496); raylib defaults new textures to point
-                // filtering. Bitmap font atlases pack glyphs edge-to-edge with little/no padding, so
-                // Linear filtering can bleed adjacent glyphs' pixels at the seams — an inherent
-                // tradeoff of the project's chosen filter, already present identically on MonoGame.
-                TextureFilterApplier(loadedFont.Texture, DefaultTextureFilter);
-                font = loadedFont;
-                // raylib's native loader discards the .fnt's lineHeight/base, so re-parse the on-disk
-                // file to record them (same registry the in-memory/KernSmith path populates via
-                // BuildFont). Keyed by atlas texture id so the Text renderable can recover them.
-                RegisterFontMetricsFromFnt(File.ReadAllText(diskPath), loadedFont.Texture.Id);
-                // #4057: if a "-shadow.fnt" sibling exists (written by the font generator for a
-                // dropshadow font, sharing the same PNG - see BitmapFont.LoadShadowSiblingIfPresent on
-                // the MonoGame side), load it too and record it against the primary's texture id.
-                RegisterShadowSiblingIfPresent(contentName, loadedFont.Texture.Id);
+                font = TryLoadBitmapFont(contentName, registerShadowSibling: true);
             }
-            else
+            catch (Exception exception)
+            {
+                CustomSetPropertyOnRenderable.RaisePropertyAssignmentError(
+                    $"Could not load bitmap font '{contentName}': {exception.Message}");
+            }
+            if (font == null)
+            {
+                font = default(Font);
+            }
+        }
+        else
+        {
+            // raylib's native loaders take a raw path, so resolve the macOS .app Contents/Resources/
+            // copy up front (#5450).
+            string? diskPath = FileManager.ResolveExistingFilePath(contentName);
+            if (diskPath != null)
             {
                 font = LoadFontEx(diskPath, 24, null, 0);
                 TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
             }
-        }
-        else if (isFnt)
-        {
-            // Neither the hook text read nor the disk found the .fnt; GetStreamForFile gets a last
-            // try. Null falls through to the default(Font) handling below. (#3037)
-            font = TryLoadBitmapFontThroughStreamHook(contentName);
-        }
-
-        if (isFnt && font == null)
-        {
-            // If we got here, but we have an FNT file, then we should just return null:
-            font = default(Font);
         }
 
         string? ttfPath = font == null ? FileManager.ResolveExistingFilePath(contentName + ".ttf") : null;
@@ -229,62 +214,59 @@ public sealed class ContentLoader : IContentLoader
         return toReturn;
     }
 
-    // Loads an AngelCode bitmap font (.fnt + .png page) through FileManager.GetStreamForFile so the
-    // CustomGetStreamFromFile hook and FileManager's disk fallbacks are honored. Returns null when
-    // nothing can supply the .fnt, letting the caller fall back to default(Font). #3037
-    private static Font? TryLoadBitmapFontThroughStreamHook(string fntPath)
+    // Loads an AngelCode bitmap font (.fnt plus its .png pages) through Gum's own parser. Returns
+    // null when nothing can supply the .fnt, letting the caller fall back to default(Font) (#3037);
+    // throws when the .fnt is found but can't be parsed or a page can't be read.
+    private static Font? TryLoadBitmapFont(string fntPath, bool registerShadowSibling)
     {
-        string fntContents;
-        try
+        if (!TryReadFntText(fntPath, out string fntText, out string pageDirectory))
         {
-            fntContents = FileManager.FromFileText(fntPath);
-        }
-        catch
-        {
-            // No hook, or neither the hook nor disk can supply this .fnt — fall back.
             return null;
         }
 
-        return BuildBitmapFontWithShadowSibling(fntPath, fntContents);
-    }
-
-    // raylib's path-based LoadFont can't see the hook, and LoadFontFromMemory can't resolve a bitmap
-    // font's separate .png page, so parse the .fnt ourselves and load the page through the hooked
-    // texture path.
-    private static Font? BuildBitmapFontWithShadowSibling(string fntPath, string fntContents)
-    {
-        Font? font = BuildBitmapFontThroughStreamHook(fntPath, fntContents);
-        if (font != null)
+        Font font = BuildBitmapFont(fntText, pageDirectory);
+        if (registerShadowSibling)
         {
             // #5253: a bundled dropshadow font ships its "-shadow.fnt" sibling in the same bundle.
-            RegisterShadowSiblingIfPresent(fntPath, font.Value.Texture.Id);
+            RegisterShadowSiblingIfPresent(fntPath, font.Texture.Id);
         }
         return font;
     }
 
-    // Reads a .fnt's text from CustomGetStreamFromFile alone, skipping GetStreamForFile's disk
-    // fallback, so a caller can prefer the hook and still load loose files with raylib's native
-    // loader. Returns null when no hook is installed, it misses, or it serves a multi-page font that
-    // also exists on disk: only the native loader can merge pages, so the loose copy is used.
-    private static string? TryReadFntFromStreamHook(string fntPath)
+    // Reads a .fnt's text, and reports the directory its page names are relative to. The
+    // CustomGetStreamFromFile hook wins over a loose file at the same path, as it does for every
+    // other content load, so a loaded bundle overrides stale loose copies (#5299). A loose file is
+    // read from its resolved path, which may be the macOS .app Contents/Resources/ copy (#5450), so
+    // its pages are looked up beside that copy. FileManager's other fallbacks get a last try.
+    private static bool TryReadFntText(string fntPath, out string fntText, out string pageDirectory)
     {
-        string? text = TryReadTextFromStreamHook(fntPath);
-        if (text != null && FileManager.ResolveExistingFilePath(fntPath) != null && HasMultiplePages(text))
+        string? hookedText = TryReadTextFromStreamHook(fntPath);
+        if (hookedText != null)
         {
-            return null;
+            fntText = hookedText;
+            pageDirectory = FileManager.GetDirectory(fntPath);
+            return true;
         }
-        return text;
-    }
 
-    private static bool HasMultiplePages(string fntText)
-    {
+        string? diskPath = FileManager.ResolveExistingFilePath(fntPath);
+        if (diskPath != null)
+        {
+            fntText = File.ReadAllText(diskPath);
+            pageDirectory = FileManager.GetDirectory(diskPath);
+            return true;
+        }
+
         try
         {
-            return new ParsedFontFile(fntText).GetPagesAsArrayOfStrings.Length > 1;
+            fntText = FileManager.FromFileText(fntPath);
+            pageDirectory = FileManager.GetDirectory(fntPath);
+            return true;
         }
         catch
         {
-            // Malformed text is reported by the load that follows, not here.
+            // No hook, or neither the hook nor disk can supply this .fnt.
+            fntText = string.Empty;
+            pageDirectory = string.Empty;
             return false;
         }
     }
@@ -315,40 +297,100 @@ public sealed class ContentLoader : IContentLoader
         catch (DirectoryNotFoundException) { return null; }
     }
 
-    // Parses fntContents and loads its page through the hooked texture path. Does not probe for a
-    // shadow sibling, so loading the sibling itself through here cannot recurse.
-    private static Font? BuildBitmapFontThroughStreamHook(string fntPath, string fntContents)
+    // Parses fntText and loads its page(s) through the hooked texture path. A multi-page font's pages
+    // are merged into one stacked texture, because a raylib Font holds a single atlas texture, and
+    // every glyph's atlas Y is shifted by its page's offset. Does not probe for a shadow sibling, so
+    // loading the sibling itself through here cannot recurse.
+    private static Font BuildBitmapFont(string fntText, string pageDirectory)
     {
-        ParsedFontFile parsedFontFile = new ParsedFontFile(fntContents);
+        ParsedFontFile parsedFontFile = new ParsedFontFile(fntText);
 
         string[] pageFileNames = parsedFontFile.GetPagesAsArrayOfStrings;
         if (pageFileNames.Length == 0)
         {
-            return null;
+            throw new InvalidOperationException("Font file did not list any pages");
         }
 
-        // Multi-page fonts loaded through this hand-rolled path are a rare edge case (bundled AND
-        // multi-page) that Gum has decided not to support — this is the intended terminal state, not
-        // a TODO. raylib's native LoadFont merges multi-page .fnt atlases into one stacked texture
-        // internally when loading straight off disk, but that native loader can't be used here (it
-        // does its own file I/O with no concept of Gum's stream hook), and silently using only page 0
-        // would mis-map every glyph on page 1+ against the wrong atlas texture with no error. #3496
-        if (pageFileNames.Length > 1)
+        // Checked before any texture is uploaded so a bad glyph can't leak the atlas.
+        foreach (FontFileCharLine charLine in parsedFontFile.Chars)
         {
-            throw new NotSupportedException(
-                $"Multi-page bitmap font '{fntPath}' has {pageFileNames.Length} pages, but multi-page " +
-                "fonts loaded through a custom stream (bundle/zip/in-memory asset) are not supported. " +
-                "Only single-page .fnt atlases work through this path; multi-page fonts work fine when " +
-                "loaded as plain on-disk files, where raylib merges pages natively.");
+            if (charLine.Page < 0 || charLine.Page >= pageFileNames.Length)
+            {
+                throw new InvalidOperationException(
+                    $"Character {charLine.Id} is on page {charLine.Page}, but the font lists {pageFileNames.Length} page(s)");
+            }
         }
 
-        // Gum's FontCache fonts are single-page, and raylib's Font has a single atlas texture, so
-        // the first page is the atlas. The page path is relative to the .fnt; load it through the
-        // already-hooked texture path so it resolves from the same bundle/stream as the .fnt.
-        string pagePath = FileManager.GetDirectory(fntPath) + pageFileNames[0];
-        Texture2D pageTexture = LoadTextureFromFile(pagePath);
+        // The page paths are relative to the .fnt; load them through the already-hooked texture path
+        // so they resolve from the same bundle/stream as the .fnt.
+        if (pageFileNames.Length == 1)
+        {
+            Texture2D pageTexture = LoadTextureFromFile(pageDirectory + pageFileNames[0]);
+            return BuildFont(parsedFontFile, pageTexture);
+        }
 
-        return BuildFont(parsedFontFile, pageTexture);
+        int[] pageWidths = new int[pageFileNames.Length];
+        int[] pageHeights = new int[pageFileNames.Length];
+        byte[][] pagePixels = new byte[pageFileNames.Length][];
+        for (int i = 0; i < pageFileNames.Length; i++)
+        {
+            pagePixels[i] = LoadPageRgba(pageDirectory + pageFileNames[i], out pageWidths[i], out pageHeights[i]);
+        }
+
+        BitmapFontAtlasMerger.Layout layout = BitmapFontAtlasMerger.ComputeLayout(pageWidths, pageHeights);
+        byte[] atlasPixels = BitmapFontAtlasMerger.MergeRgba(pagePixels, pageWidths, pageHeights, layout);
+        Texture2D atlasTexture = UploadRgbaTexture(atlasPixels, layout.Width, layout.Height);
+        return BuildFont(parsedFontFile, atlasTexture, layout.PageYOffsets);
+    }
+
+    // Reads an image through FileManager.GetStreamForFile (so the stream hook is honored, as in
+    // LoadTextureFromFile) and returns its pixels as RGBA, whatever the file's own format was.
+    private static unsafe byte[] LoadPageRgba(string pagePath, out int width, out int height)
+    {
+        byte[] fileData;
+        using (var stream = FileManager.GetStreamForFile(pagePath))
+        using (var memoryStream = new MemoryStream())
+        {
+            stream.CopyTo(memoryStream);
+            fileData = memoryStream.ToArray();
+        }
+
+        Image image = LoadImageFromMemory("." + FileManager.GetExtension(pagePath), fileData);
+        try
+        {
+            if (image.Data == null || image.Width <= 0 || image.Height <= 0)
+            {
+                throw new InvalidOperationException($"Could not decode font page '{pagePath}'");
+            }
+            Raylib.ImageFormat(ref image, Raylib_cs.PixelFormat.UncompressedR8G8B8A8);
+            width = image.Width;
+            height = image.Height;
+            byte[] pixels = new byte[width * height * BitmapFontAtlasMerger.BytesPerPixel];
+            System.Runtime.InteropServices.Marshal.Copy((IntPtr)image.Data, pixels, 0, pixels.Length);
+            return pixels;
+        }
+        finally
+        {
+            UnloadImage(image);
+        }
+    }
+
+    private static unsafe Texture2D UploadRgbaTexture(byte[] pixels, int width, int height)
+    {
+        fixed (byte* pixelPointer = pixels)
+        {
+            Image image = new Image
+            {
+                Data = pixelPointer,
+                Width = width,
+                Height = height,
+                Mipmaps = 1,
+                Format = Raylib_cs.PixelFormat.UncompressedR8G8B8A8,
+            };
+            // LoadTextureFromImage copies the pixels to the GPU, so the pinned pointer only needs to
+            // stay valid for this call.
+            return LoadTextureFromImage(image);
+        }
     }
 
     // Entry point for in-memory font creators in other assemblies (e.g. KernSmith.RaylibGum):
@@ -412,33 +454,13 @@ public sealed class ContentLoader : IContentLoader
         RaylibFontMetricsRegistry.Register(pageTexture.Id, common.LineHeight, common.Base);
 
         // Apply the project's texture filter (#3496) once, here, since every bitmap-font
-        // construction path (TryLoadBitmapFontThroughStreamHook, KernSmith's BuildFontFromFntText)
+        // construction path (BuildBitmapFont, KernSmith's BuildFontFromFntText)
         // funnels through BuildFont. Bitmap font atlases pack glyphs edge-to-edge with little/no
         // padding, so Linear filtering can bleed adjacent glyphs' pixels at the seams — an inherent
         // tradeoff of the project's chosen filter, already present identically on MonoGame.
         TextureFilterApplier(pageTexture, DefaultTextureFilter);
 
         return font;
-    }
-
-    // Parses just the lineHeight/base out of a .fnt's text and records them against the loaded font's
-    // atlas texture id. Used by the native on-disk path, which loads through raylib's own .fnt loader
-    // (so it never goes through BuildFont). A malformed .fnt simply skips registration — the Text
-    // renderable then falls back to native measurement.
-    private static void RegisterFontMetricsFromFnt(string fntText, uint textureId)
-    {
-        try
-        {
-            ParsedFontFile parsedFontFile = new ParsedFontFile(fntText);
-            if (parsedFontFile.Common != null)
-            {
-                RaylibFontMetricsRegistry.Register(textureId, parsedFontFile.Common.LineHeight, parsedFontFile.Common.Base);
-            }
-        }
-        catch
-        {
-            // Leave unregistered; line height falls back to MeasureTextEx in the Text renderable.
-        }
     }
 
     // #4057: loads the "-shadow.fnt" sibling next to primaryFntPath (if present) and records it in
@@ -463,21 +485,7 @@ public sealed class ContentLoader : IContentLoader
         {
             // Same order as the primary: the hook, then a loose file, then FileManager's other
             // disk fallbacks (#5299).
-            string? hookedShadowText = TryReadFntFromStreamHook(shadowFntPath);
-            if (hookedShadowText != null)
-            {
-                shadowFont = BuildBitmapFontThroughStreamHook(shadowFntPath, hookedShadowText);
-            }
-            else if (FileManager.ResolveExistingFilePath(shadowFntPath) is string shadowDiskPath)
-            {
-                Font loadedShadowFont = Raylib.LoadFont(shadowDiskPath);
-                TextureFilterApplier(loadedShadowFont.Texture, DefaultTextureFilter);
-                shadowFont = loadedShadowFont;
-            }
-            else if (FileManager.FileExists(shadowFntPath))
-            {
-                shadowFont = BuildBitmapFontThroughStreamHook(shadowFntPath, FileManager.FromFileText(shadowFntPath));
-            }
+            shadowFont = TryLoadBitmapFont(shadowFntPath, registerShadowSibling: false);
         }
         catch (Exception exception)
         {
