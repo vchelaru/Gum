@@ -1483,7 +1483,6 @@ public class StandardElementsManager
             Name = "ColorOperation",
             Category = "Rendering",
             MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ColorOperationExpansion,
-            DetailText = "Modulate multiplies the texture by Color. Add draws the texture untinted, then adds Color on top. ColorTextureAlpha uses Color for RGB and the texture for alpha.",
         };
 
         stateSave.Variables.Add(variable);

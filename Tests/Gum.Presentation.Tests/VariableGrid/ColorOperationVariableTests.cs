@@ -182,4 +182,16 @@ public class ColorOperationVariableTests : BaseTestClass
             }
         }
     }
+    [Fact]
+    public void ColorOperationOptions_AreModulateAddThenColorTextureAlpha()
+    {
+        VariableGridToggleOptions options = new VariableGridToggleOptions(_mocker.GetMock<ISelectedState>().Object);
+
+        options.ColorOperation.Select(item => item.Value).ShouldBe(new object[]
+        {
+            ColorOperation.Modulate,
+            ColorOperation.Add,
+            ColorOperation.ColorTextureAlpha,
+        });
+    }
 }

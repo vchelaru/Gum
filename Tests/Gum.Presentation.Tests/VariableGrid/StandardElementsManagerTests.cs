@@ -22,6 +22,19 @@ public class StandardElementsManagerTests : BaseTestClass
     private static StandardElementsManagerGumTool CreateSut(ISelectedState? selectedState = null) =>
         new(Mock.Of<IPluginManager>(), selectedState ?? Mock.Of<ISelectedState>());
 
+    // The Sprite/NineSlice ColorOperation enum is three exclusive modes, so it gets the toggle-button
+    // strip the tool uses for its other small enums instead of a drop-down (#4880).
+    [Fact]
+    public void SetPreferredDisplayers_AssignsToggleButtons_ToColorOperation()
+    {
+        var state = new StateSave();
+        state.Variables.Add(new VariableSave { Type = "ColorOperation", Name = "ColorOperation" });
+
+        CreateSut().SetPreferredDisplayers(state);
+
+        state.Variables.First().PreferredDisplayer.ShouldBe(typeof(GumDisplayers.ColorOperation));
+    }
+
     // FillAlpha / StrokeAlpha / DropshadowAlpha are 0-255 byte channels just like the legacy
     // Alpha, so they should get the same SliderDisplay with a [0, 255] range rather than a
     // plain int textbox.

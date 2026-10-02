@@ -67,6 +67,10 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
             {
                 variable.PreferredDisplayer = typeof(GumDisplayers.TextOverflowHorizontalMode);
             }
+            else if (variable.Type == "ColorOperation")
+            {
+                variable.PreferredDisplayer = typeof(GumDisplayers.ColorOperation);
+            }
             else if (variable.Type == nameof(ChildrenLayout))
             {
                 variable.PreferredDisplayer = typeof(GumDisplayers.ChildrenLayout);

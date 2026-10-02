@@ -150,6 +150,9 @@ public class TextOverflowHorizontalModeDisplay : GumToggleOptionDisplay { protec
 /// <summary>Vertical text overflow toggles.</summary>
 public class TextOverflowVerticalModeDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.TextOverflowVerticalMode; }
 
+/// <summary>Sprite and NineSlice color operation toggles.</summary>
+public class ColorOperationDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.ColorOperation; }
+
 /// <summary>
 /// The color composite's editor: a swatch that opens a color picker (a spectrum, red, green and
 /// blue sliders and fields; intermediate writes while it changes, a full write on release or when
