@@ -99,6 +99,18 @@ public class BmFontExeFileGenerator : IFontFileGenerator
         return toReturn;
     }
 
+    private const string BmFontResourceName = "Gum.ProjectServices.Libraries.bmfont.exe";
+
+    /// <summary>
+    /// Whether <paramref name="assembly"/> carries bmfont.exe. Packages published for macOS and
+    /// Linux leave it out (#5457), so this is false there even though the type is still present.
+    /// </summary>
+    internal static bool IsEmbedded(Assembly assembly) =>
+        assembly.GetManifestResourceInfo(BmFontResourceName) != null;
+
+    /// <summary>Whether this build of Gum.ProjectServices carries bmfont.exe.</summary>
+    internal static bool IsEmbeddedInThisAssembly => IsEmbedded(typeof(BmFontExeFileGenerator).Assembly);
+
     /// <summary>
     /// Extracts embedded bmfont.exe and BmfcTemplate.bmfc resources if they are not already present on disk.
     /// </summary>
@@ -106,7 +118,7 @@ public class BmFontExeFileGenerator : IFontFileGenerator
     {
         Assembly assembly = typeof(BmFontExeFileGenerator).Assembly;
         ExtractResourceIfMissing(assembly,
-            "Gum.ProjectServices.Libraries.bmfont.exe",
+            BmFontResourceName,
             BmFontExeLocation);
 
         ExtractResourceIfMissing(assembly,

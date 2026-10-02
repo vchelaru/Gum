@@ -86,7 +86,11 @@ jobs:
           rid="${{ matrix.rid }}"
           version=$(date +%Y.%m.%d)
           out="publish/$rid"
-          dotnet publish Tool/Gum.Avalonia/Gum.Avalonia.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out"
+          # bmfont.exe only runs on Windows, so only the win-* packages embed it (#5457); the
+          # global property reaches Gum.ProjectServices, which the head, GumPreview and gumcli share.
+          embed_bmfont=true
+          case "$rid" in win-*) ;; *) embed_bmfont=false ;; esac
+          dotnet publish Tool/Gum.Avalonia/Gum.Avalonia.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -p:EmbedBmFont="$embed_bmfont" -o "$out"
           # GumPreview (issue #4697): the runtime host the tool's Preview button launches, shipped in
           # a Preview-Aot/ folder beside the head so PreviewExecutableLocator's published-layout
           # candidate finds it without resolving from PATH. Only the Native AOT build ships in the
@@ -96,7 +100,7 @@ jobs:
           # missing the Native AOT toolchain (see GumPreview.csproj's PublishPreviewVariants target),
           # just not published here - every release RID runs on its own native OS in this job, so
           # Native AOT publishing works without a separate cross-compile runner.
-          dotnet publish Tool/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -p:PublishAot=true -p:Version="$version" -o "$out/Preview-Aot"
+          dotnet publish Tool/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -p:PublishAot=true -p:Version="$version" -p:EmbedBmFont="$embed_bmfont" -o "$out/Preview-Aot"
           # Native AOT publishes the binary's debug symbols beside it (GumPreview.pdb on Windows,
           # .dbg on Linux, .dSYM on macOS), 78-86 MB that nothing in the package reads (#4743).
           find "$out/Preview-Aot" \( -name '*.dSYM' -o -name '*.dbg' -o -name '*.pdb' \) -prune -exec rm -rf {} +
@@ -110,7 +114,7 @@ jobs:
           # in-process through an isolated AssemblyLoadContext (Gum.Services.IsolatedPluginHost)
           # instead of spawning it as a subprocess, so it runs on the head's own already-loaded
           # runtime rather than shipping a second self-contained copy just for SVG export (#4723).
-          dotnet publish Tools/Gum.Cli/Gum.Cli.csproj -c Release -r "$rid" --self-contained false -p:Version="$version" -o "$out/GumCli"
+          dotnet publish Tools/Gum.Cli/Gum.Cli.csproj -c Release -r "$rid" --self-contained false -p:Version="$version" -p:EmbedBmFont="$embed_bmfont" -o "$out/GumCli"
           # XML doc files next to assemblies are pure waste in a packaged release - they exist
           # because GenerateDocumentationFile is on for the runtime libraries so they ship as NuGet
           # packages (#4745). Content/ is excluded since its .xml (if any) is Gum project content,
