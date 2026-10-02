@@ -20,19 +20,22 @@ internal class ScreenshotService
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
     private readonly BackgroundManager _backgroundManager;
+    private readonly EditorRenderableFactory _editorRenderableFactory;
 
     public ScreenshotService(
         SelectionManager selectionManager,
         IWireframeCommands wireframeCommands,
         IGuiCommands guiCommands,
         IDialogService dialogService,
-        BackgroundManager backgroundManager)
+        BackgroundManager backgroundManager,
+        EditorRenderableFactory editorRenderableFactory)
     {
         _selectionManager = selectionManager;
         _wireframeCommands = wireframeCommands;
         _guiCommands = guiCommands;
         _dialogService = dialogService;
         _backgroundManager = backgroundManager;
+        _editorRenderableFactory = editorRenderableFactory;
     }
 
     /// <summary>
@@ -80,6 +83,8 @@ internal class ScreenshotService
             _backgroundManager.IsHiddenForExport = true;
             _wireframeCommands.AreHighlightsVisible = false;
             _wireframeCommands.IsGridOverlayVisible = false;
+            // Container/Component outlines are editor-only; a game draws nothing for them.
+            _editorRenderableFactory.AreOutlinesHiddenForExport = true;
 
             _selectionManager.SelectedGue = null;
 
@@ -128,6 +133,7 @@ internal class ScreenshotService
             _wireframeCommands.AreRulersVisible = wereRulersVisible;
             _wireframeCommands.AreCanvasBoundsVisible = wereCanvasBoundsVisible;
             _backgroundManager.IsHiddenForExport = false;
+            _editorRenderableFactory.AreOutlinesHiddenForExport = false;
             _wireframeCommands.AreHighlightsVisible = wereHighlightsVisible;
             _wireframeCommands.IsGridOverlayVisible = wasGridOverlayVisible;
 

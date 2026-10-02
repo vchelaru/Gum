@@ -52,6 +52,35 @@ public class EditorRenderableFactoryTests : IDisposable
         result.ShouldBeOfType<InvisibleRenderable>();
     }
 
+    [Fact]
+    public void AreOutlinesHiddenForExport_HidesExistingAndLaterOutlinesAndRestoresThem()
+    {
+        EditorRenderableFactory factory = new EditorRenderableFactory(ProjectStateWithOutlineColor(r: 10, g: 20, b: 30));
+        LineRectangle existing = factory.CreateRenderableForType("Container", null).ShouldBeOfType<LineRectangle>();
+
+        factory.AreOutlinesHiddenForExport = true;
+        LineRectangle created = factory.CreateRenderableForType("Component", null).ShouldBeOfType<LineRectangle>();
+
+        existing.LocalVisible.ShouldBeFalse();
+        created.LocalVisible.ShouldBeFalse();
+
+        factory.AreOutlinesHiddenForExport = false;
+
+        existing.LocalVisible.ShouldBeTrue();
+        created.LocalVisible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AreOutlinesHiddenForExport_DoesNotHideRectangleRenderables()
+    {
+        EditorRenderableFactory factory = new EditorRenderableFactory(ProjectStateWithOutlineColor(r: 10, g: 20, b: 30));
+        LineRectangle rectangle = factory.CreateRenderableForType("Rectangle", null).ShouldBeAssignableTo<LineRectangle>()!;
+
+        factory.AreOutlinesHiddenForExport = true;
+
+        rectangle.LocalVisible.ShouldBeTrue();
+    }
+
     private static IProjectState ProjectStateWithOutlineColor(byte r, byte g, byte b)
     {
         Mock<IProjectState> projectState = new Mock<IProjectState>();
