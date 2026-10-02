@@ -15,13 +15,14 @@ Gum for Unity draws Gum UI (layout, Forms controls, and `.gumx` projects) with S
 5. With the `Gum` GameObject still selected, click **Add Component > New script**, name it `GumExample`, and replace its contents with:
 
 ```csharp
+using Gum.Forms.Controls;
 using UnityEngine;
 
 public class GumExample : MonoBehaviour
 {
     void Start()
     {
-        var button = new Gum.Forms.Controls.Button();
+        var button = new Button();
         button.Text = "Click me";
         button.AddToRoot();
     }
