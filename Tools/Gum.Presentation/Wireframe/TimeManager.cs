@@ -1,4 +1,6 @@
-﻿namespace Gum.Wireframe
+﻿using System;
+
+namespace Gum.Wireframe
 {
     /// <summary>
     /// A singleton intended to simplify timing.  Activity on TimeManager should
@@ -11,7 +13,8 @@
 
         static TimeManager? mSelf;
 
-        System.Diagnostics.Stopwatch mStopWatch;
+        TimeProvider _timeProvider;
+        long _startTimestamp;
 
         public double CurrentTime
         {
@@ -35,26 +38,36 @@
 
         #endregion
 
-        public TimeManager()
+        public TimeManager() : this(TimeProvider.System)
         {
-            InitializeStopwatch();
+        }
+
+        public TimeManager(TimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider;
+            _startTimestamp = timeProvider.GetTimestamp();
+        }
+
+        /// <summary>
+        /// Switches the clock this reads. Time restarts at zero, so tests can drive the
+        /// double-click window and similar timing with a manual clock.
+        /// </summary>
+        public void SetTimeProvider(TimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider;
+            _startTimestamp = timeProvider.GetTimestamp();
+            CurrentTime = 0;
+            SecondDifference = 0;
         }
 
 
         public void Activity()
         {
             var lastTime = CurrentTime; 
-            CurrentTime = mStopWatch.Elapsed.TotalSeconds;
+            CurrentTime = _timeProvider.GetElapsedTime(_startTimestamp).TotalSeconds;
 
             SecondDifference = (float)(CurrentTime - lastTime);
         }
 
-
-        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mStopWatch))]
-        void InitializeStopwatch()
-        {
-            mStopWatch = new System.Diagnostics.Stopwatch();
-            mStopWatch.Start();
-        }
     }
 }

@@ -5,7 +5,8 @@
 
         static TimeManager? mSelf;
 
-        System.Diagnostics.Stopwatch mStopWatch;
+        System.TimeProvider _timeProvider;
+        long _startTimestamp;
 
 
         public double CurrentTime
@@ -27,16 +28,31 @@
         }
 
 
-        public TimeManager()
+        public TimeManager() : this(System.TimeProvider.System)
         {
-            mStopWatch = new System.Diagnostics.Stopwatch();
-            mStopWatch.Start();
+        }
+
+        public TimeManager(System.TimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider;
+            _startTimestamp = timeProvider.GetTimestamp();
+        }
+
+        /// <summary>
+        /// Switches the clock this reads. Time restarts at zero, so tests can drive the
+        /// double-click window with a manual clock.
+        /// </summary>
+        public void SetTimeProvider(System.TimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider;
+            _startTimestamp = timeProvider.GetTimestamp();
+            CurrentTime = 0;
         }
 
 
         public void Activity()
         {
-            CurrentTime = mStopWatch.Elapsed.TotalSeconds;
+            CurrentTime = _timeProvider.GetElapsedTime(_startTimestamp).TotalSeconds;
         }
     }
 }
