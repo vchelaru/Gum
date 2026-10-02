@@ -4,7 +4,7 @@
 
 Gum Forms controls can be fully customized in Gum. Customization using the Gum tool allows immediate previewing of states.
 
-This page covers customizing controls in the Gum tool. Controls can also be restyled in code through the `Styling` object. See [Gum Tool Styling vs. the Styling Object](#gum-tool-styling-vs.-the-styling-object) at the end of this page to decide which one fits your project.
+This page covers customizing controls in the Gum tool. Controls can also be restyled in code through the `Styling` object. See [Gum Tool Styling and the Styling Object](#gum-tool-styling-and-the-styling-object) at the end of this page to decide which one fits your project.
 
 ## Setup
 
@@ -52,7 +52,7 @@ After you are finished, you can use this new component in any other screen or co
 
 <figure><img src="../../.gitbook/assets/08_06 56 26.png" alt=""><figcaption><p>Standard and orange button in a screen called GameScreen</p></figcaption></figure>
 
-## Gum Tool Styling vs. the Styling Object
+## Gum Tool Styling and the Styling Object
 
 Gum has two separate ways to restyle Forms controls, and they apply to different controls.
 
