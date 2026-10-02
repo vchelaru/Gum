@@ -269,7 +269,7 @@ Topten.RichTextKit — Copyright © 2019 Topten Software. All Rights Reserved.
     https://github.com/toptensoftware/RichTextKit
     NuGet: Gum.Topten.RichTextKit
     Used by GumCli (SkiaGum). The shipped build is Gum's patched fork of
-    Topten.RichTextKit 0.4.167, rebuilt against SkiaSharp 3.
+    Topten.RichTextKit 0.4.167.
 
 --------------------------------------------------------------------------------
 zlib License
