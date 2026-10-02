@@ -142,7 +142,11 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
 
             bool isMonoGameBased =
                 contents.Contains("<PackageReference Include=\"MonoGame.Framework.", StringComparison.Ordinal) ||
-                contents.Contains("<PackageReference Include=\"nkast.Xna.Framework", StringComparison.Ordinal);
+                contents.Contains("<PackageReference Include=\"nkast.Xna.Framework", StringComparison.Ordinal) ||
+                // A project can get the framework only transitively through the Gum runtime package.
+                contents.Contains("<PackageReference Include=\"Gum.MonoGame\"", StringComparison.Ordinal) ||
+                contents.Contains("<PackageReference Include=\"Gum.KNI\"", StringComparison.Ordinal) ||
+                contents.Contains("<PackageReference Include=\"Gum.FNA\"", StringComparison.Ordinal);
 
             bool isRaylibBased =
                 contents.Contains("<PackageReference Include=\"Raylib-cs\"", StringComparison.Ordinal);

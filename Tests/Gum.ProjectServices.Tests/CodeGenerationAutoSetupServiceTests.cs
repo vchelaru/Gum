@@ -138,6 +138,24 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
         result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
     }
 
+    [Theory]
+    [InlineData("Gum.MonoGame")]
+    [InlineData("Gum.KNI")]
+    [InlineData("Gum.FNA")]
+    public void Run_WhenOnlyGumXnaFamilyPackageReferenced_SetsOutputLibraryToMonoGameForms(string packageName)
+    {
+        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
+        File.WriteAllText(csprojPath,
+            $"<Project><ItemGroup><PackageReference Include=\"{packageName}\" Version=\"*\" /></ItemGroup></Project>");
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath);
+
+        result.Success.ShouldBeTrue();
+        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
+    }
+
     [Fact]
     public void Run_WhenRaylibPackageReferencePresent_SetsOutputLibraryToRaylib()
     {
