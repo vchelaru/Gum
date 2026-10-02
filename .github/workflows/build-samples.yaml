@@ -9,8 +9,26 @@ on:
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
     # No branches filter: PRs into integration branches need checks too (#4695).
-    paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
+    # The tool-only paths are skipped: no sample references the tool, its plugins or its tests.
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.gitbook/**'
+      - 'Gum/**'
+      - 'Tool/**'
+      - 'Tools/Gum.Presentation/**'
+      - 'DataUi.Core/**'
+      - 'AvaloniaDataUi/**'
+      - 'Tests/Gum.Avalonia.Tests/**'
+      - 'Tests/Gum.Presentation.Tests/**'
+      - 'Direction/**'
+      - '.claude/**'
   workflow_dispatch:
+
+# A new push to a PR cancels the run it supersedes; main and manual runs are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
     Build-Samples:
