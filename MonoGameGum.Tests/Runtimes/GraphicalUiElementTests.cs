@@ -1733,10 +1733,94 @@ public class GraphicalUiElementTests : BaseTestClass
 
         GraphicalUiElement clone = source.Clone();
         clone.SetBinding(nameof(clone.Height), nameof(viewModel.Height));
+        clone.BindingContext = viewModel;
         viewModel.Height = 77;
 
         clone.Height.ShouldBe(77);
         source.Height.ShouldNotBe(77, "because the clone's binding must not be added to the source");
+    }
+
+    [Fact]
+    public void Clone_OfBoundElement_ShouldFollowItsOwnViewModel()
+    {
+        ContainerRuntime source = new();
+        source.SetBinding(nameof(source.Width), nameof(CloneViewModel.Width));
+        source.SetBinding(nameof(source.Height), "Child.Value");
+        source.SetBinding(nameof(source.X), nameof(CloneViewModel.Height), "{0:N0}");
+
+        GraphicalUiElement clone = source.Clone();
+        CloneViewModel cloneViewModel = new() { Width = 40, Child = new CloneChild { Value = 12 } };
+        clone.BindingContext = cloneViewModel;
+        cloneViewModel.Width = 55;
+        cloneViewModel.Height = 66;
+        cloneViewModel.Child.Value = 13;
+
+        clone.Width.ShouldBe(55);
+        clone.Height.ShouldBe(13);
+        clone.X.ShouldBe(66);
+        source.Width.ShouldNotBe(55, "because the clone's context must not reach the source");
+    }
+
+    [Fact]
+    public void Clone_ChangingBindingOnClone_ShouldNotChangeSourceBindings()
+    {
+        CloneViewModel viewModel = new();
+        ContainerRuntime source = new();
+        source.BindingContext = viewModel;
+        source.SetBinding(nameof(source.Width), nameof(CloneViewModel.Width));
+
+        GraphicalUiElement clone = source.Clone();
+        clone.SetBinding(nameof(clone.Width), nameof(CloneViewModel.Height));
+        clone.BindingContext = viewModel;
+        viewModel.Height = 33;
+        viewModel.Width = 44;
+
+        clone.Width.ShouldBe(33, "because the clone's Width was rebound to Height");
+        source.Width.ShouldBe(44, "because the source's Width binding must be unchanged");
+    }
+
+    [Fact]
+    public void Clone_ShouldNotCopyExplicitBindingContext()
+    {
+        ContainerRuntime source = new();
+        source.BindingContext = new CloneViewModel();
+        source.SetBinding(nameof(source.Width), nameof(CloneViewModel.Width));
+
+        GraphicalUiElement clone = source.Clone();
+
+        clone.BindingContext.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Clone_ShouldReplayBindingContextBinding()
+    {
+        ContainerRuntime parent = new();
+        ContainerRuntime source = new();
+        parent.AddChild(source);
+        source.SetBinding(nameof(source.BindingContext), nameof(CloneViewModel.Child));
+
+        ContainerRuntime cloneParent = new();
+        GraphicalUiElement clone = source.Clone();
+        cloneParent.AddChild(clone);
+        CloneViewModel cloneViewModel = new() { Child = new CloneChild { Value = 3 } };
+        cloneParent.BindingContext = cloneViewModel;
+
+        clone.BindingContext.ShouldBe(cloneViewModel.Child);
+        source.BindingContext.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Clone_OfBoundText_ShouldNotWriteToSourceRenderable()
+    {
+        TextRuntime source = new();
+        source.Text = "source";
+        source.SetBinding(nameof(source.Text), nameof(CloneViewModel.Name));
+
+        GraphicalUiElement clone = source.Clone();
+        clone.BindingContext = new CloneViewModel { Name = "from clone view model" };
+
+        ((TextRuntime)clone).Text.ShouldBe("from clone view model");
+        source.Text.ShouldBe("source");
     }
 
     [Theory]
@@ -1946,7 +2030,6 @@ public class GraphicalUiElementTests : BaseTestClass
         "name", // immutable string
         "<ElementSave>k__BackingField", // the element definition
         "mTagIfNoContainedObject", // user data, like an assigned BindingContext
-        "mBindingContext", // an explicitly assigned value (see ResetBindingStateForClone)
         "<ExplicitIVisibleParent>k__BackingField", // assigned by FlatRedBall, never read by Gum
     };
 
@@ -1973,6 +2056,7 @@ public class GraphicalUiElementTests : BaseTestClass
         "mLayer",
         "vmPropsToUiProps",
         "vmEventsToUiMethods",
+        "mBindingContext",
         "mInheritedBindingContext",
         "<BindingContextBinding>k__BackingField",
         "<BindingContextBindingPropertyOwner>k__BackingField",
@@ -2081,6 +2165,27 @@ public class GraphicalUiElementTests : BaseTestClass
         }
 
         public float Height
+        {
+            get => Get<float>();
+            set => Set(value);
+        }
+
+        public string Name
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
+        public CloneChild Child
+        {
+            get => Get<CloneChild>();
+            set => Set(value);
+        }
+    }
+
+    private class CloneChild : Gum.Mvvm.ViewModel
+    {
+        public float Value
         {
             get => Get<float>();
             set => Set(value);

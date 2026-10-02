@@ -1947,6 +1947,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// Creates a copy of this element. The clone starts detached, with no children or parent. It gets its
+    /// own copies of this element's property bindings, built from each binding's path and format, but not
+    /// this element's <see cref="BindingContext"/>, so whoever places the clone supplies its context.
+    /// </summary>
     public virtual GraphicalUiElement Clone()
     {
 

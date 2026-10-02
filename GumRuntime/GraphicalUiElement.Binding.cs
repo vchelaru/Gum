@@ -79,20 +79,39 @@ public partial class GraphicalUiElement
         this.ParentChanged += HandleBindingParentChanged;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Replays bindings the source already registered, so the trim risk was surfaced " +
+            "at the source's SetBinding call.")]
     partial void ResetBindingStateForClone()
     {
         // MemberwiseClone shares the binding dictionaries and their path observers, whose handlers
-        // apply values to the source, so a binding added on the clone would bind the source. The
-        // clone starts with no bindings and no inherited context, since it has no parent. An
-        // explicitly assigned BindingContext is a value, not wiring, so it is kept.
+        // apply values to the source, so the clone gets empty ones and its own copies of the
+        // source's bindings are replayed below. The clone has no parent to inherit a context from
+        // and does not copy an explicit one; whoever places the clone supplies its context.
+        Dictionary<string, VmToUiProperty> sourceBindings = vmPropsToUiProps;
+        string? sourceContextBinding = BindingContextBinding;
+
         vmPropsToUiProps = new Dictionary<string, VmToUiProperty>();
         vmEventsToUiMethods = new Dictionary<string, VmToUiProperty>();
         _isSubscribedToViewModelPropertyChanged = false;
+        mBindingContext = null;
         mInheritedBindingContext = null;
         BindingContextBinding = null;
         BindingContextBindingPropertyOwner = null;
         BindingContextChanged = null;
         InheritedBindingContextChanged = null;
+
+        // The clone has no BindingContext yet, so SetBinding only registers the binding and writes
+        // no value; nothing here can reach a renderable that a runtime's Clone override has yet
+        // to reset. The new entries are built from path and format, never the source's objects.
+        foreach (VmToUiProperty binding in sourceBindings.Values)
+        {
+            SetBinding(binding.UiProperty, binding.VmProperty, binding.ToStringFormat);
+        }
+        if (sourceContextBinding != null)
+        {
+            SetBinding(nameof(BindingContext), sourceContextBinding);
+        }
     }
 
     partial void CustomRemoveFromManagers()
