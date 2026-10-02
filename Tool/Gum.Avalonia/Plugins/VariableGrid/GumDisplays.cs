@@ -99,7 +99,19 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
             }
         }
 
-        return null;
+        // An option with no icon yet shows its name, padded and centered so the button keeps the
+        // icon buttons' height and a similar breathing room.
+        return new Border
+        {
+            Margin = new Thickness(8, 0),
+            MinHeight = 28,
+            Child = new TextBlock
+            {
+                Text = option.Name,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextAlignment = TextAlignment.Center,
+            },
+        };
     }
 }
 
