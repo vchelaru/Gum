@@ -75,15 +75,35 @@ foreach ($file in ($changedFiles | Where-Object { $_ -like '*.cs' })) {
 $failed = $false
 $warningsOnChangedLines = [System.Collections.Generic.HashSet[string]]::new()
 
+# Runs dotnet with a hard time limit. A hung test host (for example RaylibGum.Tests on macOS, whose
+# host spins at 100% CPU) otherwise stalls the whole run silently; on timeout the process tree is
+# killed and the step is reported as TIMED OUT, which is not the same as a failing test.
+function Invoke-Dotnet {
+    param([string[]]$Command, [int]$TimeoutSeconds)
+    $psi = [System.Diagnostics.ProcessStartInfo]::new('dotnet')
+    foreach ($argument in $Command) { $psi.ArgumentList.Add($argument) }
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $process = [System.Diagnostics.Process]::Start($psi)
+    $standardOutput = $process.StandardOutput.ReadToEndAsync()
+    $standardError = $process.StandardError.ReadToEndAsync()
+    $timedOut = -not $process.WaitForExit($TimeoutSeconds * 1000)
+    if ($timedOut) { $process.Kill($true); $process.WaitForExit() }
+    $lines = (($standardOutput.Result + "`n" + $standardError.Result) -split "`r?`n") | ForEach-Object { "$_" }
+    return @{ Output = $lines; Exit = $(if ($timedOut) { -1 } else { $process.ExitCode }); TimedOut = $timedOut }
+}
+
 function Invoke-Step {
-    param([string]$Name, [string[]]$Command)
+    param([string]$Name, [string[]]$Command, [int]$TimeoutSeconds = 600)
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    $output = & dotnet @Command 2>&1 | ForEach-Object { "$_" }
-    $exit = $LASTEXITCODE
+    $result = Invoke-Dotnet -Command $Command -TimeoutSeconds $TimeoutSeconds
+    $output = $result.Output
+    $exit = $result.Exit
     $sw.Stop()
-    $status = if ($exit -eq 0) { 'ok' } else { 'FAILED' }
+    $status = if ($result.TimedOut) { 'TIMEDOUT' } elseif ($exit -eq 0) { 'ok' } else { 'FAILED' }
     Write-Host ("{0,-7} {1,6:N0}s  {2}" -f $status, $sw.Elapsed.TotalSeconds, $Name)
 
+    if ($result.TimedOut) { Write-Host "  killed after ${TimeoutSeconds}s with no result: a hung test host or build, not a failing test. Check the process list for a spinning dotnet." }
     $output | Where-Object { $_ -match ': error ' } | Sort-Object -Unique | ForEach-Object { Write-Host "  $_" }
     for ($i = 0; $i -lt $output.Count; $i++) {
         $line = $output[$i]
@@ -125,7 +145,13 @@ foreach ($project in $testFilters.Keys | Sort-Object) {
         # unit tests").
         $command += "-p:SolutionDir=$repo\"
     }
-    Invoke-Step -Name "test $relativeProject ($filter)" -Command $command
+    if ($IsMacOS -and $project -match 'RaylibGum\.Tests\.csproj$') {
+        # Its test host hangs at 100% CPU on macOS (the raylib window cannot be created there), so
+        # these tests only run in CI on Windows.
+        Write-Host ("skipped      test $relativeProject ($filter): hangs on macOS, CI only")
+        continue
+    }
+    Invoke-Step -Name "test $relativeProject ($filter)" -Command $command -TimeoutSeconds 300
 }
 
 foreach ($project in $sourceProjects | Sort-Object) {
