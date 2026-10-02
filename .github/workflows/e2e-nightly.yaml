@@ -11,7 +11,7 @@ name: End-to-End Nightly
 # Not a required check. A failure only fails the run; nothing files an issue.
 on:
   schedule:
-    - cron: '17 6 * * *'
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 jobs:

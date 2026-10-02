@@ -26,7 +26,7 @@ on:
       - 'Tools/project-sweep*'
       - '.github/workflows/project-sweep.yaml'
   schedule:
-    - cron: '17 6 * * *'
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 # A new push to a PR cancels the run it supersedes; the nightly run and manual runs are never cancelled.

@@ -7,9 +7,9 @@ name: "Samples"
 # breaks a sample shows up the next morning.
 on:
   schedule:
-    # 06:17 UTC is midnight in Denver (11pm in winter). Scheduled runs can start hours late, and
-    # this keeps a late run out of the working day. Off the hour because the top of the hour is busiest.
-    - cron: '17 6 * * *'
+    # 03:17 UTC is 9pm in Denver (8pm in winter). Scheduled runs have started up to ~6 hours late,
+    # and this keeps a late run out of the morning. Off the hour because the top of the hour is busiest.
+    - cron: '17 3 * * *'
   pull_request:
     paths:
       - 'Samples/**'
