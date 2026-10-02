@@ -324,7 +324,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             new PreciseHitTester());
 
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
-        _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService, _backgroundManager);
+        _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService, _backgroundManager, _editorRenderableFactory);
         _singlePixelTextureService = new SinglePixelTextureService();
         _fileDropTargetFilter = new FileDropTargetFilter();
         _gridSnapWarningService = new GridSnapWarningService(_selectionManager);

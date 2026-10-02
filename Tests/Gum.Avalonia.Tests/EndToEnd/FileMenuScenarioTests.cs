@@ -12,6 +12,7 @@ using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using ToolsUtilities;
+using RenderingLibrary.Math.Geometry;
 
 namespace Gum.Avalonia.Tests.EndToEnd;
 
@@ -337,8 +338,8 @@ public class FileMenuScenarioTests
             ComponentSave button = canvas.Project.AddComponent("Button");
             if (inRenderTarget)
             {
-                // The holder matches the box so its dotted outline (the project's Show Outlines)
-                // lands on the box's own edge.
+                // The holder matches the box. Show Outlines is off in this harness, so the holder
+                // draws no outline.
                 canvas.AddInstance(button, "Holder", "Container", x: 20, y: 20, width: 60, height: 40);
                 canvas.AddInstance(button, "Box", "Rectangle", x: 0, y: 0, width: 60, height: 40);
                 button.DefaultState!.SetValue("Holder.IsRenderTarget", true, "bool");
@@ -384,6 +385,47 @@ public class FileMenuScenarioTests
             }
 
             canvas.AssertOracles();
+        });
+    }
+
+    // The dotted Container outline is editor-only chrome, so it is left out of the export and is
+    // back on the canvas afterward.
+    [SkippableFact]
+    [Trait("Feature", "FILE-007")]
+    public void ExportAsImage_LeavesOutContainerOutlines_AndRestoresThem()
+    {
+        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        CanvasHarness.OnUiThread(() =>
+        {
+            using CanvasHarness canvas = new CanvasHarness();
+            // The project's Show Outlines setting; a Container is an invisible renderable without it.
+            Gum.Wireframe.GraphicalUiElement.ShowLineRectangles = true;
+            ComponentSave group = canvas.Project.AddComponent("Group");
+            canvas.AddInstance(group, "Holder", "Container", x: 20, y: 20, width: 60, height: 40);
+            canvas.Tree.Click(canvas.Tree.NodeFor(group));
+            canvas.Frame();
+            string folder = Path.Combine(Path.GetTempPath(), "GumFileMenuScenarios", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+            string png = Path.Combine(folder, "Group.png");
+            try
+            {
+                canvas.Project.Dialogs.AnswerNextSaveFile(png);
+                canvas.Tree.PickMainMenu("File", "Export", "Export as Image");
+                canvas.Frame();
+
+                File.Exists(png).ShouldBeTrue(canvas.Describe());
+                using SkiaSharp.SKBitmap image = SkiaSharp.SKBitmap.Decode(png);
+                PixelsOf(image, new SkiaSharp.SKRectI(0, 0, 0, 0), inside: false)
+                    .ShouldAllBe(pixel => pixel.Alpha == 0, "the dotted outline is not exported");
+
+                LineRectangle outline = canvas.Wireframe.GetRepresentation(group.Instances.Single())!.RenderableComponent.ShouldBeOfType<LineRectangle>();
+                outline.LocalVisible.ShouldBeTrue("the outline is back on the canvas");
+            }
+            finally
+            {
+                Gum.Wireframe.GraphicalUiElement.ShowLineRectangles = false;
+                TryDeleteFolder(folder);
+            }
         });
     }
 
