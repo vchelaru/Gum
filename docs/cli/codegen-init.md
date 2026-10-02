@@ -22,12 +22,8 @@ Most projects do not need to run `codegen-init` explicitly. The `codegen` comman
 - If that folder has several `.csproj` files, uses `Assembly-CSharp.csproj`, then the shortest name
 - Derives `CodeProjectRoot` as a relative path from the `.gumx` directory to the `.csproj` directory
 - Extracts `RootNamespace` from the `.csproj`, falling back to the `.csproj` filename (with `.`, `-`, and spaces replaced by `_`)
-- Detects MonoGame or KNI package references and sets the output library accordingly. A `Raylib-cs` package reference sets `OutputLibrary` to `Raylib`.
+- Sets `OutputLibrary` to `MonoGameForms` (shown as **Gum Forms** in the Code tab), the preferred output for every runtime including MonoGame, KNI, FNA, Skia, and Raylib
 - For a Unity project (`Assembly-CSharp.csproj` next to an `Assets` folder), sets `GeneratedCodeFolder` to `Assets/`, because Unity compiles only code under `Assets`
-
-{% hint style="info" %}
-`Raylib-cs` detection is available in the Gum July 2026 release and newer.
-{% endhint %}
 
 {% hint style="info" %}
 `--csproj` recording `CsprojPath`, and the Unity `Assets/` default, are available in October 2026, or now if building Gum from source.

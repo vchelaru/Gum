@@ -86,9 +86,9 @@ Since the path is saved as relative to your .gumx location, this path will break
 
 ### Output Library
 
-Select the desired Output Library, such as **Gum Forms (recommended)**. This should match the type of project you are developing.
+New projects use **Gum Forms (recommended)** regardless of the runtime. Change the Output Library only if you need one of the deprecated options below.
 
-* **Gum Forms (recommended)** is the preferred code generation. It works with MonoGame, KNI, FNA, and Skia. This code generation generates code with classes containing properties which inherit from FrameworkElement such as Button and Textbox wherever possible. If a non-forms instance (such as a Sprite or Text instance) is added to a screen or component, then code will _fall back_ to generating non-forms properties (such as SpriteRuntime or TextRuntime).
+* **Gum Forms (recommended)** is the preferred code generation. It works with MonoGame, KNI, FNA, Skia, and Raylib. This code generation generates code with classes containing properties which inherit from FrameworkElement such as Button and Textbox wherever possible. If a non-forms instance (such as a Sprite or Text instance) is added to a screen or component, then code will _fall back_ to generating non-forms properties (such as SpriteRuntime or TextRuntime).
 * **MonoGame (deprecated)** generates code without creating forms controls. Use this if your game does not use Forms, or if your game predates Forms support in MonoGame.
 * **SkiaSharp (deprecated)** generates code without creating forms controls, for runtimes which use SkiaSharp for graphics. Prefer **Gum Forms (recommended)**, which also works on Skia.
 * **Raylib (deprecated)** generates code for projects using the Raylib runtime. Raylib code generation currently supports only the **Reference Loaded Gum Project** instantiation type (see below); the **Fully in Code** type is not yet supported and Gum displays a warning if you select it.
