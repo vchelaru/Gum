@@ -1,7 +1,7 @@
 # Fills Unity/com.vchelaru.gum/Plugins/ with the DLLs the Unity package ships: UnityGum's
 # netstandard2.1 build, everything it depends on, and the HarfBuzzSharp native for each player
 # platform. Unity doesn't consume NuGet, so they come out of the build output and the NuGet cache.
-# Platforms: Windows x64, macOS (x64 + arm64), Linux x64, Android (arm64-v8a, armeabi-v7a, x86_64), iOS.
+# Platforms: Windows x64 and macOS universal.
 #
 # The DLLs are build output, so they are not committed (Plugins/ is gitignored). Run this before
 # opening Samples/UnityGum, and before publish-unity-package.ps1.
@@ -55,12 +55,7 @@ $harfBuzzVersion = ($harfBuzz -split '/')[1]
 # also enables the native in the Editor on that OS.
 $natives = @(
     @{ Package = 'HarfBuzzSharp.NativeAssets.Win32'; Source = 'runtimes/win-x64/native/libHarfBuzzSharp.dll'; Dest = 'x86_64'; Platform = 'Win64'; CPU = 'x86_64'; EditorOS = 'Windows' },
-    @{ Package = 'HarfBuzzSharp.NativeAssets.macOS'; Source = 'runtimes/osx/native/libHarfBuzzSharp.dylib'; Dest = 'macOS'; Platform = 'OSXUniversal'; CPU = 'AnyCPU'; EditorOS = 'OSX' },
-    @{ Package = 'HarfBuzzSharp.NativeAssets.Linux'; Source = 'runtimes/linux-x64/native/libHarfBuzzSharp.so'; Dest = 'Linux/x86_64'; Platform = 'Linux64'; CPU = 'x86_64'; EditorOS = 'Linux' },
-    @{ Package = 'HarfBuzzSharp.NativeAssets.Android'; Source = 'runtimes/android-arm64/native/libHarfBuzzSharp.so'; Dest = 'Android/arm64-v8a'; Platform = 'Android'; CPU = 'ARM64' },
-    @{ Package = 'HarfBuzzSharp.NativeAssets.Android'; Source = 'runtimes/android-arm/native/libHarfBuzzSharp.so'; Dest = 'Android/armeabi-v7a'; Platform = 'Android'; CPU = 'ARMv7' },
-    @{ Package = 'HarfBuzzSharp.NativeAssets.Android'; Source = 'runtimes/android-x64/native/libHarfBuzzSharp.so'; Dest = 'Android/x86_64'; Platform = 'Android'; CPU = 'X86_64' },
-    @{ Package = 'HarfBuzzSharp.NativeAssets.iOS'; Source = 'runtimes/ios/native/libHarfBuzzSharp.framework'; Dest = 'iOS'; Platform = 'iOS'; CPU = 'AnyCPU' }
+    @{ Package = 'HarfBuzzSharp.NativeAssets.macOS'; Source = 'runtimes/osx/native/libHarfBuzzSharp.dylib'; Dest = 'macOS'; Platform = 'OSXUniversal'; CPU = 'AnyCPU'; EditorOS = 'OSX' }
 )
 foreach ($entry in $natives) {
     $source = Join-Path $nuget "$($entry.Package.ToLower())/$harfBuzzVersion/$($entry.Source)"
@@ -69,7 +64,7 @@ foreach ($entry in $natives) {
     }
     $destination = Join-Path $plugins $entry.Dest
     New-Item -ItemType Directory -Force $destination | Out-Null
-    Copy-Item $source $destination -Recurse
+    Copy-Item $source $destination
     $entry.Path = Join-Path $destination (Split-Path $entry.Source -Leaf)
 }
 
@@ -123,27 +118,16 @@ PluginImporter:
     OSXUniversal:
       enabled: 1
       settings: {}
-    Linux64:
-      enabled: 1
-      settings: {}
-    Android:
-      enabled: 1
-      settings: {}
-    iOS:
-      enabled: 1
-      settings: {}
   userData:
   assetBundleName:
   assetBundleVariant:
 "@ | Set-Content "$path.meta"
 }
 
-# Enabled only for its one player platform and CPU, plus the Editor on the matching OS. An iOS
-# framework is embedded in the app bundle, which a dynamic framework needs at launch.
+# Enabled only for its one player platform and CPU, plus the Editor on the matching OS.
 function Write-NativeMeta([string]$path, [string]$key, [hashtable]$native) {
     $editorEnabled = if ($native.EditorOS) { 1 } else { 0 }
     $editorOS = if ($native.EditorOS) { $native.EditorOS } else { 'AnyOS' }
-    $embed = if ($native.Platform -eq 'iOS') { "`n        AddToEmbeddedBinaries: true" } else { '' }
     @"
 fileFormatVersion: 2
 guid: $(Get-StableGuid $key)
@@ -170,7 +154,7 @@ PluginImporter:
     $($native.Platform):
       enabled: 1
       settings:
-        CPU: $($native.CPU)$embed
+        CPU: $($native.CPU)
   userData:
   assetBundleName:
   assetBundleVariant:
@@ -182,9 +166,7 @@ function Get-PluginKey([string]$path) {
 }
 
 Write-FolderMeta $plugins 'Plugins'
-# Unity imports a .framework as one asset, so the folders inside it get no .meta.
 Get-ChildItem $plugins -Directory -Recurse |
-    Where-Object { $_.FullName -notmatch '\.framework([\\/]|$)' } |
     ForEach-Object { Write-FolderMeta $_.FullName (Get-PluginKey $_.FullName) }
 Get-ChildItem $plugins -Filter *.dll | ForEach-Object { Write-ManagedMeta $_.FullName "Plugins/$($_.Name)" }
 foreach ($entry in $natives) { Write-NativeMeta $entry.Path (Get-PluginKey $entry.Path) $entry }

@@ -8,10 +8,7 @@
     "includePlatforms": [
         "Editor",
         "WindowsStandalone64",
-        "macOSStandalone",
-        "LinuxStandalone64",
-        "Android",
-        "iOS"
+        "macOSStandalone"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

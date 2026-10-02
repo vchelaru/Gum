@@ -2,7 +2,7 @@
   "name": "com.vchelaru.gum",
   "version": "0.1.0",
   "displayName": "Gum",
-  "description": "Gum UI (layout, Forms controls, .gumx projects) drawn with SkiaSharp. Requires the SkiaGameRendering package (https://github.com/vchelaru/SkiaGameRendering.git#upm), which supplies SkiaSharp. Windows x64, macOS, Linux x64, Android and iOS.",
+  "description": "Gum UI (layout, Forms controls, .gumx projects) drawn with SkiaSharp. Requires the SkiaGameRendering package (https://github.com/vchelaru/SkiaGameRendering.git#upm), which supplies SkiaSharp. Windows x64 and macOS only so far.",
   "unity": "6000.0",
   "license": "MIT",
   "dependencies": {
