@@ -177,7 +177,7 @@ internal sealed class CodeTabHarness : IDisposable
     /// Types the Code Project Root, picks the output library and instantiation type, and switches
     /// the selected element to manual generation: the setup a user does before the first Generate.
     /// </summary>
-    public void SetUpManualGeneration(string library = "MonoGame + Forms", string instantiation = "Reference loaded Gum Project")
+    public void SetUpManualGeneration(string library = "Gum Forms (recommended)", string instantiation = "Reference loaded Gum Project")
     {
         TypeAndEnter("Code Project Root", CodeFolderName);
         PickComboItem("Output Library", library);

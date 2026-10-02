@@ -49,7 +49,7 @@ public class CodeGenScenarioTests
         code.Project.Dialogs.Messages.Last().ShouldContain("Card.Generated.cs");
 
         code.PickComboItem("Object Instantiation Type", "Fully in Code (no loaded Gum Project)");
-        code.PickComboItem("Output Library", "SkiaSharp");
+        code.PickComboItem("Output Library", "SkiaSharp (deprecated)");
         code.Preview.ShouldContain("partial class CardRuntime : SkiaGum.GueDeriving.ContainerRuntime");
         code.ClickGenerate();
 
@@ -350,7 +350,7 @@ public class CodeGenScenarioTests
 
         code.Grid.IsEffectivelyVisible.ShouldBeTrue();
         code.Member("Root Namespace").Value.ShouldBe("MyGame.Client");
-        code.Member("Output Library").Value.ShouldBe("MonoGame + Forms");
+        code.Member("Output Library").Value.ShouldBe("Gum Forms (recommended)");
         code.PickComboItem("Generation Behavior", "GenerateManually");
         code.ClickGenerate();
 

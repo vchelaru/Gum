@@ -108,41 +108,15 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
         result.Settings!.CodeProjectRoot.ShouldBe("./");
     }
 
-    [Fact]
-    public void Run_WhenKniPackageReferencePresent_SetsOutputLibraryToMonoGameForms()
-    {
-        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
-        File.WriteAllText(csprojPath,
-            "<Project><ItemGroup><PackageReference Include=\"nkast.Xna.Framework.Game\" Version=\"3.8.0\" /></ItemGroup></Project>");
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
-        File.WriteAllText(gumxPath, "");
-
-        AutoSetupResult result = _sut.Run(gumxPath);
-
-        result.Success.ShouldBeTrue();
-        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
-    }
-
-    [Fact]
-    public void Run_WhenMonoGamePackageReferencePresent_SetsOutputLibraryToMonoGameForms()
-    {
-        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
-        File.WriteAllText(csprojPath,
-            "<Project><ItemGroup><PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.1.303\" /></ItemGroup></Project>");
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
-        File.WriteAllText(gumxPath, "");
-
-        AutoSetupResult result = _sut.Run(gumxPath);
-
-        result.Success.ShouldBeTrue();
-        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
-    }
-
     [Theory]
+    [InlineData("nkast.Xna.Framework.Game")]
+    [InlineData("MonoGame.Framework.DesktopGL")]
     [InlineData("Gum.MonoGame")]
     [InlineData("Gum.KNI")]
     [InlineData("Gum.FNA")]
-    public void Run_WhenOnlyGumXnaFamilyPackageReferenced_SetsOutputLibraryToMonoGameForms(string packageName)
+    [InlineData("Raylib-cs")]
+    [InlineData("SkiaSharp")]
+    public void Run_WhateverPackageReferenced_SetsOutputLibraryToMonoGameForms(string packageName)
     {
         string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
         File.WriteAllText(csprojPath,
@@ -154,21 +128,6 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
 
         result.Success.ShouldBeTrue();
         result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
-    }
-
-    [Fact]
-    public void Run_WhenRaylibPackageReferencePresent_SetsOutputLibraryToRaylib()
-    {
-        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
-        File.WriteAllText(csprojPath,
-            "<Project><ItemGroup><PackageReference Include=\"Raylib-cs\" Version=\"7.0.1\" /></ItemGroup></Project>");
-        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
-        File.WriteAllText(gumxPath, "");
-
-        AutoSetupResult result = _sut.Run(gumxPath);
-
-        result.Success.ShouldBeTrue();
-        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.Raylib);
     }
 
     [Fact]
@@ -186,7 +145,7 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
     }
 
     [Fact]
-    public void Run_WhenOnlyShprojFound_LeavesRootNamespaceAndOutputLibraryAsDefaults()
+    public void Run_WhenOnlyShprojFound_LeavesRootNamespaceAsDefaultAndUsesMonoGameForms()
     {
         string shprojPath = Path.Combine(_tempDirectory, "MyGame.shproj");
         File.WriteAllText(shprojPath,
@@ -198,7 +157,7 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
 
         result.Success.ShouldBeTrue();
         result.Settings!.RootNamespace.ShouldBe(string.Empty);
-        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGame);
+        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
     }
 
     [Fact]
@@ -215,7 +174,7 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
         result.Success.ShouldBeTrue();
         result.Settings!.CodeProjectRoot.ShouldBe("./");
         result.Settings!.RootNamespace.ShouldBe(string.Empty);
-        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGame);
+        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
         // Detection reads only a .csproj, so a shared project isn't recorded.
         result.Settings!.CsprojPath.ShouldBeEmpty();
     }
@@ -281,7 +240,7 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
     }
 
     [Fact]
-    public void Run_WhenNoMonoGameReference_DoesNotSetMonoGameForms()
+    public void Run_WhenNoMonoGameReference_StillSetsMonoGameForms()
     {
         string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
         File.WriteAllText(csprojPath,
@@ -292,7 +251,7 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
         AutoSetupResult result = _sut.Run(gumxPath);
 
         result.Success.ShouldBeTrue();
-        result.Settings!.OutputLibrary.ShouldNotBe(OutputLibrary.MonoGameForms);
+        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
     }
 
     [Fact]

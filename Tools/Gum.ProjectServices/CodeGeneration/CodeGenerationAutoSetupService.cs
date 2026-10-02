@@ -131,7 +131,7 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
         }
 
         // Shared projects (.shproj) don't carry PackageReference/RootNamespace MSBuild metadata like a
-        // .csproj does, so leave OutputLibrary/RootNamespace at their defaults for the user to fill in
+        // .csproj does, so leave RootNamespace at its default for the user to fill in
         // manually — same as the no-project-found fallback does today.
         bool isSharedProject = projectFilePath != null
             && string.Equals(Path.GetExtension(projectFilePath), ".shproj", StringComparison.OrdinalIgnoreCase);
@@ -139,29 +139,6 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
         if (projectFilePath != null && !isSharedProject)
         {
             string contents = File.ReadAllText(projectFilePath);
-
-            bool isMonoGameBased =
-                contents.Contains("<PackageReference Include=\"MonoGame.Framework.", StringComparison.Ordinal) ||
-                contents.Contains("<PackageReference Include=\"nkast.Xna.Framework", StringComparison.Ordinal) ||
-                // A project can get the framework only transitively through the Gum runtime package.
-                contents.Contains("<PackageReference Include=\"Gum.MonoGame\"", StringComparison.Ordinal) ||
-                contents.Contains("<PackageReference Include=\"Gum.KNI\"", StringComparison.Ordinal) ||
-                contents.Contains("<PackageReference Include=\"Gum.FNA\"", StringComparison.Ordinal);
-
-            bool isRaylibBased =
-                contents.Contains("<PackageReference Include=\"Raylib-cs\"", StringComparison.Ordinal);
-
-            if (isMonoGameBased)
-            {
-                settings.OutputLibrary = OutputLibrary.MonoGameForms;
-            }
-            else if (isRaylibBased)
-            {
-                // Raylib codegen only supports FindByName for now (see AssertSupportedCombination) —
-                // there is no "RaylibForms" OutputLibrary equivalent to MonoGameForms yet, so this is
-                // the only value auto-detection can offer.
-                settings.OutputLibrary = OutputLibrary.Raylib;
-            }
 
             settings.RootNamespace = ExtractRootNamespace(contents, projectFilePath);
         }
