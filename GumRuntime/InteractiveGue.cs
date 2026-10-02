@@ -997,6 +997,13 @@ public partial class InteractiveGue : GraphicalUiElement
     }
 
 
+    /// <summary>
+    /// Creates a copy of this visual. The clone is visual-only: it has no Forms control
+    /// (<see cref="FormsControlAsObject"/> is null, so a cloned <c>ButtonVisual</c> is not a working
+    /// button) and none of this visual's event handlers. A Forms control is not recreated for the
+    /// clone because a custom control often assigns its own Forms object during initialization, and
+    /// the order of that assignment relative to other property assignments can change behavior.
+    /// </summary>
     public override GraphicalUiElement Clone()
     {
         InteractiveGue clone = (InteractiveGue)base.Clone();
