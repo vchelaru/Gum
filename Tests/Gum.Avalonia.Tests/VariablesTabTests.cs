@@ -80,7 +80,7 @@ public class VariablesTabTests
         ToggleButtonOption[][] sets =
         {
             options.XUnits, options.YUnits, options.XOrigin, options.AllYOrigins, options.AllWidthUnits,
-            options.AllHeightUnits, options.ChildrenLayout, options.TextOverflowHorizontalMode, options.TextOverflowVerticalMode,
+            options.AllHeightUnits, options.ChildrenLayout, options.TextOverflowHorizontalMode, options.TextOverflowVerticalMode, options.ColorOperation,
         };
 
         foreach (ToggleButtonOption option in sets.SelectMany(set => set))

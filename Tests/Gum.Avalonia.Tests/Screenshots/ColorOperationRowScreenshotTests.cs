@@ -21,6 +21,9 @@ public class ColorOperationRowScreenshotTests
         grid.Select(sprite);
         grid.ViewModel.VariableFilterText = "ColorOperation";
         grid.Settle();
+        // The harness window is tall; shrink it to the filter box, the category header and one row.
+        grid.Input.Window.Height = 110;
+        grid.Settle();
 
         PrScreenshot.SaveWindow(grid.Input.Window, "color-operation-row");
     });

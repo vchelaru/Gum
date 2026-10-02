@@ -108,12 +108,11 @@ public class VariableGridToggleOptions
             new ToggleButtonOption("Spill", global::RenderingLibrary.Graphics.TextOverflowVerticalMode.SpillOver) { GumIconName = "TextOverflowVerticalSpill" },
             new ToggleButtonOption("Truncate Line", global::RenderingLibrary.Graphics.TextOverflowVerticalMode.TruncateLine) { GumIconName = "TextOverflowVerticalTruncateLine" },
         };
-        // No icons yet: the buttons show these names.
         ColorOperation = new[]
         {
-            new ToggleButtonOption("Modulate", global::RenderingLibrary.Graphics.ColorOperation.Modulate),
-            new ToggleButtonOption("Add", global::RenderingLibrary.Graphics.ColorOperation.Add),
-            new ToggleButtonOption("Color Texture Alpha", global::RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha),
+            new ToggleButtonOption("Modulate", global::RenderingLibrary.Graphics.ColorOperation.Modulate) { GumIconName = "ColorOperationModulate" },
+            new ToggleButtonOption("Add", global::RenderingLibrary.Graphics.ColorOperation.Add) { GumIconName = "ColorOperationAdd" },
+            new ToggleButtonOption("Color Texture Alpha", global::RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha) { GumIconName = "ColorOperationColorTextureAlpha" },
         };
     }
 
