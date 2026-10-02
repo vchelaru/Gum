@@ -211,7 +211,9 @@ namespace Gum.Unity
             }
 
             _cpuSurface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
-            _cpuTexture = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false, linear: false)
+            // Skia's premultiplied pixels are already sRGB-encoded. This texture is drawn by IMGUI,
+            // which expects gamma output even in a Linear project, so sampling must not decode them.
+            _cpuTexture = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false, linear: true)
             {
                 name = "Gum",
                 wrapMode = TextureWrapMode.Clamp,
