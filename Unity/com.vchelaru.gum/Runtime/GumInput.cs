@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using GumCursor = Gum.Input.Cursor;
 using GumGamePad = Gum.Input.GamePad;
-using GumGamepadButton = Gum.Input.GamepadButton;
 using GumKeys = Gum.Forms.Input.Keys;
 using GumKeyboard = Gum.Input.Keyboard;
 using TouchLocation = Gum.Input.TouchLocation;
@@ -143,6 +142,7 @@ namespace Gum.Unity
 
         readonly ScreenToCanvasMapper _mapper = new ScreenToCanvasMapper();
         readonly HashSet<GumKeys> _downThisFrame = new HashSet<GumKeys>();
+        readonly List<UnityGamepadState> _gamepadStates = new List<UnityGamepadState>();
         readonly List<TouchLocation> _touches = new List<TouchLocation>();
         UnityKeyboard? _subscribedKeyboard;
         GumRenderer? _renderer;
@@ -258,51 +258,42 @@ namespace Gum.Unity
             }
         }
 
-        // Gamepads fill Gum's slots in Gamepad.all order; slots past the connected pads are disconnected.
-        static void PushGamepads(GumGamePad[] gumGamepads)
+        // Reads each connected pad into a plain snapshot; UnityGamepadMapper (in UnityGum, testable
+        // without Unity) maps the snapshots onto Gum's slots.
+        void PushGamepads(GumGamePad[] gumGamepads)
         {
+            _gamepadStates.Clear();
             var unityGamepads = UnityGamepad.all;
-            for (int i = 0; i < gumGamepads.Length; i++)
+            for (int i = 0; i < unityGamepads.Count; i++)
             {
-                GumGamePad gumGamepad = gumGamepads[i];
-                if (i >= unityGamepads.Count)
-                {
-                    gumGamepad.SetConnected(false);
-                    continue;
-                }
-
                 UnityGamepad pad = unityGamepads[i];
-                gumGamepad.SetConnected(true);
-
-                gumGamepad.SetButtonState(GumGamepadButton.DPadUp, pad.dpad.up.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.DPadDown, pad.dpad.down.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.DPadLeft, pad.dpad.left.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.DPadRight, pad.dpad.right.isPressed);
-
-                // Gum uses Xbox face-button names; Unity names them by position.
-                gumGamepad.SetButtonState(GumGamepadButton.A, pad.buttonSouth.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.B, pad.buttonEast.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.X, pad.buttonWest.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.Y, pad.buttonNorth.isPressed);
-
-                gumGamepad.SetButtonState(GumGamepadButton.LeftShoulder, pad.leftShoulder.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.RightShoulder, pad.rightShoulder.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.Start, pad.startButton.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.Back, pad.selectButton.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.LeftStick, pad.leftStickButton.isPressed);
-                gumGamepad.SetButtonState(GumGamepadButton.RightStick, pad.rightStickButton.isPressed);
-
-                // Matches the other runtimes' 0.5 trigger threshold.
-                const float TriggerThreshold = 0.5f;
-                gumGamepad.SetButtonState(GumGamepadButton.LeftTrigger, pad.leftTrigger.ReadValue() >= TriggerThreshold);
-                gumGamepad.SetButtonState(GumGamepadButton.RightTrigger, pad.rightTrigger.ReadValue() >= TriggerThreshold);
-
-                // Unity's stick Y is positive-up, the same convention as Gum's.
                 Vector2 leftStick = pad.leftStick.ReadValue();
                 Vector2 rightStick = pad.rightStick.ReadValue();
-                gumGamepad.SetLeftStickPosition(leftStick.x, leftStick.y);
-                gumGamepad.SetRightStickPosition(rightStick.x, rightStick.y);
+                _gamepadStates.Add(new UnityGamepadState
+                {
+                    DPadUp = pad.dpad.up.isPressed,
+                    DPadDown = pad.dpad.down.isPressed,
+                    DPadLeft = pad.dpad.left.isPressed,
+                    DPadRight = pad.dpad.right.isPressed,
+                    ButtonSouth = pad.buttonSouth.isPressed,
+                    ButtonEast = pad.buttonEast.isPressed,
+                    ButtonWest = pad.buttonWest.isPressed,
+                    ButtonNorth = pad.buttonNorth.isPressed,
+                    LeftShoulder = pad.leftShoulder.isPressed,
+                    RightShoulder = pad.rightShoulder.isPressed,
+                    Start = pad.startButton.isPressed,
+                    Select = pad.selectButton.isPressed,
+                    LeftStickButton = pad.leftStickButton.isPressed,
+                    RightStickButton = pad.rightStickButton.isPressed,
+                    LeftTrigger = pad.leftTrigger.ReadValue(),
+                    RightTrigger = pad.rightTrigger.ReadValue(),
+                    LeftStickX = leftStick.x,
+                    LeftStickY = leftStick.y,
+                    RightStickX = rightStick.x,
+                    RightStickY = rightStick.y,
+                });
             }
+            UnityGamepadMapper.Push(gumGamepads, _gamepadStates);
         }
 
         void HandleTextInput(char character) => GumService.Default.Keyboard?.AddTypedText(character);

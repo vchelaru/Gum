@@ -45,6 +45,8 @@ public class BaseTestClass : IDisposable
             gamepad.Activity(0);
         }
 
+        FrameworkElement.GamePadsForUiControl.Clear();
+
         InteractiveGue.CurrentInputReceiver = null;
         InteractiveGue.ClearNextClickActions();
 
