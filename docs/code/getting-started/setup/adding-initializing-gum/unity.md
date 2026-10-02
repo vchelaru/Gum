@@ -56,16 +56,16 @@ You can also add both lines to `Packages/manifest.json` instead:
 "com.vchelaru.gum": "https://github.com/vchelaru/Gum.git#upm"
 ```
 
-The `#upm` at the end of each URL selects the packaged Unity version of the library. To stay on a specific Gum release, end the Gum URL with `#upm/v<version>` instead, for example `#upm/v2026.10.1`.
+The `#upm` at the end of each URL tells Unity to use the ready-to-install copy of the package that Gum publishes with each release. It always points at the newest one. Unity does not update on its own, so to upgrade, reinstall the package or use the update button in Package Manager.
 
-{% hint style="info" %}
-The Gum URL works once the first Gum release that includes the Unity package has shipped. Until then, install Gum from a Gum checkout: in Package Manager, choose **Install package from disk** and select `Unity/com.vchelaru.gum/package.json`.
-{% endhint %}
+To stay on a specific Gum version, end the Gum URL with `#upm/v<version>` instead, for example `#upm/v2026.10.2-preview.2.2`. Each version is listed under [Gum's tags on GitHub](https://github.com/vchelaru/Gum/tags) as `upm/v<version>`.
 
 ## What the Components Do
 
 * `GumRenderer` sets up Gum and draws the UI over the screen.
-* `GumInput` passes Unity's mouse, touch, and keyboard input to Gum each frame. It belongs on the same GameObject as `GumRenderer`.
+* `GumInput` passes Unity's mouse, touch, keyboard, and gamepad input to Gum each frame. It belongs on the same GameObject as `GumRenderer`.
+
+Mouse and touch work right away. To move between Forms controls with the keyboard or a gamepad, call `GumService.Default.UseKeyboardDefaults()` or `GumService.Default.UseGamepadDefaults()` in your script.
 
 ## Loading a Gum Project
 
