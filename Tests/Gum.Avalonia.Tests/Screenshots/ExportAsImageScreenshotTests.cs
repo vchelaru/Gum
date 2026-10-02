@@ -23,12 +23,15 @@ public class ExportAsImageScreenshotTests
         badge.DefaultState!.SetValue("Fill.IsFilled", true, "bool");
         badge.DefaultState.SetValue("Fill.FillGreen", 60, "int");
         badge.DefaultState.SetValue("Fill.FillBlue", 60, "int");
-        canvas.AddInstance(badge, "Frame", "Rectangle", x: 40, y: 40, width: 120, height: 40);
+        canvas.AddInstance(badge, "Frame", "Container", x: 40, y: 40, width: 120, height: 40);
         canvas.Tree.Click(canvas.Tree.NodeFor(badge));
         canvas.Frame();
 
         canvas.Project.Dialogs.AnswerNextSaveFile(Path.Combine(PrScreenshot.OutputDirectory!, "exported-badge.png"));
         canvas.Tree.PickMainMenu("File", "Export", "Export as Image");
         canvas.Frame();
+
+        // The editor canvas still shows the dotted outline after the export.
+        PrScreenshot.SaveWindow(canvas.Input.Window, "canvas-after-export");
     });
 }
