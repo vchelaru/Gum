@@ -8,6 +8,12 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(EmbedBmFont)' == 'false'">
+		<!-- Own obj folder, so a build without bmfont.exe never reuses (or leaves behind) the other variant's
+		     incremental output. -->
+		<IntermediateOutputPath>obj/nobmfont/$(Configuration)/</IntermediateOutputPath>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<InternalsVisibleTo Include="Gum.ProjectServices.Tests" />
 	</ItemGroup>
@@ -27,7 +33,14 @@
 		<EmbeddedResource Include="Templates\FormsBehaviors\*.behx">
 			<LogicalName>Gum.ProjectServices.Templates.FormsTemplate.Behaviors.%(Filename)%(Extension)</LogicalName>
 		</EmbeddedResource>
-		<EmbeddedResource Include="..\..\Gum\Libraries\bmfont.exe" Link="Libraries\bmfont.exe" />
+		<!-- bmfont.exe is legacy and runs only on Windows (FontGeneratorResolver switches BmFont to KernSmith
+		     elsewhere), so a package for another OS must not carry its ~2 MB (#5457). The release workflow
+		     passes -p:EmbedBmFont=false to the head, GumPreview and gumcli publishes for non-Windows RIDs; a
+		     global property reaches this project, while RuntimeIdentifier itself does not (the SDK strips it
+		     from library references). Any other build (dev, tests, the frozen WPF head) keeps it.
+		     BmFontExeFileGenerator.IsEmbedded reports which. -->
+		<EmbeddedResource Include="..\..\Gum\Libraries\bmfont.exe" Link="Libraries\bmfont.exe"
+		                  Condition="'$(EmbedBmFont)' != 'false'" />
 		<EmbeddedResource Include="..\..\Gum\Content\BmfcTemplate.bmfc" Link="Content\BmfcTemplate.bmfc" />
 	</ItemGroup>
 

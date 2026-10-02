@@ -100,6 +100,19 @@ plugin_count=$(find "$app/Plugins" -name '*.dll' | wc -l | tr -d ' ')
 [ "$plugin_count" -gt 0 ] || fail "no plugins in $app/Plugins"
 echo "plugins: $plugin_count dlls"
 
+# bmfont.exe runs only on Windows, so only the win-* packages embed it in Gum.ProjectServices.dll (#5457).
+echo "== bmfont.exe embedding"
+services_dlls=$(find "$app" -name 'Gum.ProjectServices.dll')
+[ -n "$services_dlls" ] || fail "no Gum.ProjectServices.dll in $app"
+while IFS= read -r dll; do
+  if grep -aq 'Libraries.bmfont.exe' "$dll"; then has_bmfont=true; else has_bmfont=false; fi
+  case "$rid" in
+    win-*) [ "$has_bmfont" = true ] || fail "$dll lacks the embedded bmfont.exe a $rid package needs" ;;
+    *) [ "$has_bmfont" = false ] || fail "$dll embeds bmfont.exe, which only runs on Windows" ;;
+  esac
+  echo "$dll: bmfont.exe embedded=$has_bmfont"
+done <<< "$services_dlls"
+
 if command -v file >/dev/null; then
   for f in "$gum" "$preview"; do
     desc=$(file -b "$f")

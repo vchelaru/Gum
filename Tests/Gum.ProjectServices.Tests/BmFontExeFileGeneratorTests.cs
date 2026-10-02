@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.IO;
+using System.Reflection;
 
 namespace Gum.ProjectServices.Tests;
 
@@ -28,6 +29,21 @@ public class BmFontExeFileGeneratorTests : IDisposable
 
         File.Exists(Path.Combine(_toolsDirectory, "Libraries", "bmfont.exe")).ShouldBeTrue();
         File.Exists(Path.Combine(_toolsDirectory, "Content", "BmfcTemplate.bmfc")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsEmbedded_ShouldBeFalse_WhenAssemblyLacksBmFontResource()
+    {
+        // The test assembly never embeds bmfont.exe, like a ProjectServices published for macOS/Linux (#5457).
+        BmFontExeFileGenerator.IsEmbedded(typeof(BmFontExeFileGeneratorTests).Assembly).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsEmbedded_ShouldBeTrue_WhenAssemblyHasBmFontResource()
+    {
+        Assembly projectServices = typeof(BmFontExeFileGenerator).Assembly;
+
+        BmFontExeFileGenerator.IsEmbedded(projectServices).ShouldBeTrue();
     }
 
     [Fact]

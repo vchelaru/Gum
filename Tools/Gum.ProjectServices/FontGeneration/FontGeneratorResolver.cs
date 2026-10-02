@@ -10,8 +10,12 @@ namespace Gum.ProjectServices.FontGeneration;
 /// </summary>
 public static class FontGeneratorResolver
 {
-    /// <summary>Whether the bmfont.exe backend can run on the current operating system.</summary>
-    public static bool IsBmFontSupported => OperatingSystem.IsWindows();
+    /// <summary>
+    /// Whether the bmfont.exe backend can run here: on Windows, in a build that still embeds it
+    /// (packages published for other operating systems leave it out, #5457).
+    /// </summary>
+    public static bool IsBmFontSupported =>
+        OperatingSystem.IsWindows() && BmFontExeFileGenerator.IsEmbeddedInThisAssembly;
 
     /// <summary>Resolves against the current operating system.</summary>
     public static FontGeneratorType Resolve(FontGeneratorType requested) =>
