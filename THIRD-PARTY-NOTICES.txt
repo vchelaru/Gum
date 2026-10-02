@@ -360,7 +360,7 @@ Content/FormsThemes/<Theme>/Fonts/, as the OFL requires:
         Content/Fonts/Font18LiberationSans_o1, and Font18LiberationSans embedded
         in XnaAndWinforms.dll (regenerate with Tools/regenerate-tool-fonts.ps1).
         Also the source of the runtime default bitmap font (Font18Arial,
-        regular/Bold/Italic/Bold_Italic, kept under those names), embedded in
+        regular/Bold/Italic/Bold_Italic, kept under those names; Liberation Sans 2.1.5), embedded in
         MonoGameGum.dll, KniGum.dll and FnaGum.dll. These are rasterized glyph
         images generated with KernSmith, not font software.
 
