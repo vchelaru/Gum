@@ -3651,7 +3651,7 @@ public class CodeGenerator
             GenerateAssignGumReferences(context);
         }
 
-        GenerateApplyLocalizationMethod(element, projectSettings, context.TabCount, stringBuilder);
+        GenerateApplyLocalizationMethod(element, context.TabCount, stringBuilder);
 
         stringBuilder.AppendLine(context.Tabs + "partial void CustomInitialize();");
 
@@ -5749,7 +5749,7 @@ public class CodeGenerator
         }
     }
 
-    private void GenerateApplyLocalizationMethod(ElementSave element, CodeOutputProjectSettings projectSettings, int tabCount, StringBuilder stringBuilder)
+    private void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
     {
         if (_localizationService.HasDatabase)
         {
@@ -5761,8 +5761,10 @@ public class CodeGenerator
             tabCount++;
             var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
             context.TabCount = tabCount;
-            context.CodeOutputProjectSettings = projectSettings;
-            context.ResolvedSyntaxVersion = ResolveSyntaxVersion(projectSettings);
+            // Assigns on the instance itself (e.g. LabelInstance.Text), never through .Visual, because Forms
+            // controls expose Text directly and Visual is typed InteractiveGue. This needs the non-Forms prefix,
+            // so pin it rather than relying on CodeOutputProjectSettings's default library.
+            context.CodeOutputProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGame };
             foreach (var variable in element.DefaultState!.Variables)
             {
                 InstanceSave? instance = null;
