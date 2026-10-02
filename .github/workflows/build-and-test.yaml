@@ -23,7 +23,17 @@ on:
     branches: [main, 'release/**']
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
+  # The nightly run covers the Avalonia head on macOS, which pull requests skip to save runner
+  # time (see Build-Avalonia-Head). Every other job skips the schedule event.
+  schedule:
+    - cron: '0 8 * * *'
   workflow_dispatch:
+
+# A new push to a PR cancels the run it supersedes. Pushes to main, the nightly run and manual
+# dispatches each get their own group so they are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # The WPF Gum tool (Gum.Wpf.sln) builds with neither submodules nor .NET mobile
@@ -39,7 +49,7 @@ jobs:
   # Skipped on push to main: the tool was already validated in the PR, and unlike
   # Build-and-Test this lane seeds no cache, so there is nothing to do on push.
   Build-Tool:
-    if: github.event_name != 'push'
+    if: github.event_name != 'push' && github.event_name != 'schedule'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,12 +77,16 @@ jobs:
   # The Avalonia head (Direction/avalonia-migration/phase-30) must build and its headless tests must
   # pass on all three desktop OSes from the first PR that adds it. Plain net10.0, no submodules, no
   # workloads; the matrix is what proves the purity guard (a WPF/WinForms leak fails on macOS/Linux).
+  #
+  # Pull requests run Windows and Linux only: macOS is the scarcest runner pool and Build-and-Test
+  # (macos-15) already proves the shared code there. The nightly run and workflow_dispatch run all
+  # three, so a macOS-only break shows up within a day.
   Build-Avalonia-Head:
     if: github.event_name != 'push'
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["windows-latest","ubuntu-latest"]' || '["windows-latest","macos-latest","ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -150,7 +164,7 @@ jobs:
   # MonoGameGum/GumCommon, and mobile TFMs are opt-in (IncludeIOS/IncludeAndroid), so restore
   # stays on just net8.0 with no flags needed.
   Native-AOT-Smoke:
-    if: github.event_name != 'push'
+    if: github.event_name != 'push' && github.event_name != 'schedule'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -198,7 +212,7 @@ jobs:
   # needs one — maui — so this job installs just that, with its own cache key,
   # rather than duplicating the full set.
   Build-Generated-Code:
-    if: github.event_name != 'push'
+    if: github.event_name != 'push' && github.event_name != 'schedule'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -325,6 +339,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   Build-and-Test:
+    if: github.event_name != 'schedule'
     strategy:
       matrix:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos

@@ -26,6 +26,11 @@ on:
 permissions:
   contents: write
 
+# A new push to a PR cancels the run it supersedes; manual releases are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # Define the jobs to run
 jobs:
   # The Avalonia head (Direction/avalonia-migration/phase-110): self-contained builds for Windows,
