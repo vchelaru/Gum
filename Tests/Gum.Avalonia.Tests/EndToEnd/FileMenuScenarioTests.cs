@@ -418,7 +418,7 @@ public class FileMenuScenarioTests
                 PixelsOf(image, new SkiaSharp.SKRectI(0, 0, 0, 0), inside: false)
                     .ShouldAllBe(pixel => pixel.Alpha == 0, "the dotted outline is not exported");
 
-                LineRectangle outline = (LineRectangle)canvas.Wireframe.GetRepresentation(group.Instances.Single())!.RenderableComponent;
+                LineRectangle outline = canvas.Wireframe.GetRepresentation(group.Instances.Single())!.RenderableComponent.ShouldBeOfType<LineRectangle>();
                 outline.LocalVisible.ShouldBeTrue("the outline is back on the canvas");
             }
             finally
