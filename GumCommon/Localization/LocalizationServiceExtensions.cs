@@ -168,7 +168,12 @@ public static class LocalizationServiceExtensions
             // unintended ones like Strings.backup.resx. Callers are responsible for keeping the
             // directory clean of non-localization files matching this shape.
             var searchPattern = fileNameWithoutExtension + ".*.resx";
-            foreach (var satelliteFile in Directory.GetFiles(directory, searchPattern).OrderBy(f => f))
+            // Directory.GetFiles has no CustomGetStreamFromFile equivalent, so satellites are found on
+            // disk only; a hook-only host gets just the base file. A missing directory is not an error.
+            string[] satelliteFiles = Directory.Exists(directory)
+                ? Directory.GetFiles(directory, searchPattern)
+                : new string[0];
+            foreach (var satelliteFile in satelliteFiles.OrderBy(f => f))
             {
                 var satelliteFileName = Path.GetFileNameWithoutExtension(satelliteFile);
                 var cultureName = satelliteFileName.Substring(fileNameWithoutExtension.Length + 1);
@@ -183,7 +188,7 @@ public static class LocalizationServiceExtensions
 
             foreach (var (languageName, filePath) in filesForGroup)
             {
-                using var stream = File.OpenRead(filePath);
+                using Stream stream = OpenLooseFile(filePath);
                 group.LanguageEntries.Add((languageName, ReadResxStream(stream)));
             }
 
@@ -191,6 +196,21 @@ public static class LocalizationServiceExtensions
         }
 
         BuildAndAddDatabase(service, fileGroups, onWarning);
+    }
+
+    // GetStreamForFile asks FileManager.CustomGetStreamFromFile first, then disk. It wraps every
+    // failure in IOException; callers of the path overloads expect FileNotFoundException.
+    private static Stream OpenLooseFile(string filePath)
+    {
+        try
+        {
+            return FileManager.GetStreamForFile(filePath);
+        }
+        catch (IOException e) when (e.InnerException is FileNotFoundException or DirectoryNotFoundException)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+            throw;
+        }
     }
 
     /// <summary>

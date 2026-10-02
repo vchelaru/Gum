@@ -78,7 +78,7 @@ public static class ProjectLocalizationLoader
         {
             bool exists = bundleFileProvider != null
                 ? bundleFileProvider.Exists(relativePath)
-                : FileManager.ResolveExistingFilePath(ToLooseFilePath(projectDirectory, relativePath)) != null;
+                : FileManager.FileExists(ToLooseFilePath(projectDirectory, relativePath));
             if (exists)
             {
                 existingPaths.Add(relativePath);
@@ -150,7 +150,9 @@ public static class ProjectLocalizationLoader
     {
         if (bundleFileProvider == null)
         {
-            // Loose files: the path overload discovers satellites with Directory.GetFiles.
+            // Loose files: the path overload reads through FileManager.CustomGetStreamFromFile when
+            // installed, but discovers satellites with Directory.GetFiles. The hook has no directory
+            // listing, so a host serving files only through the hook loads just the base .resx files.
             service.AddResxDatabase(relativePaths.Select(path => ToLooseFilePath(projectDirectory, path)), onWarning);
             return;
         }

@@ -920,6 +920,33 @@ namespace ToolsUtilities
         }
 
         /// <summary>
+        /// Asks <see cref="CustomGetStreamFromFile"/> for <paramref name="fileName"/>, standardized the
+        /// way <see cref="GetStreamForFile"/> does. Returns <see langword="null"/> when no hook is
+        /// installed or the hook doesn't have the file (null result, <see cref="FileNotFoundException"/>
+        /// or <see cref="DirectoryNotFoundException"/>). Does not touch disk.
+        /// </summary>
+        public static Stream? TryOpenFromHook(string fileName)
+        {
+            Func<string, Stream>? hook = CustomGetStreamFromFile;
+            if (hook == null)
+            {
+                return null;
+            }
+
+            if (!IsUrl(fileName))
+            {
+                fileName = Standardize(fileName, preserveCase: true, makeAbsolute: true);
+            }
+
+            try
+            {
+                return hook(fileName);
+            }
+            catch (FileNotFoundException) { return null; }
+            catch (DirectoryNotFoundException) { return null; }
+        }
+
+        /// <summary>
         /// Opens <paramref name="fileName"/> from disk, falling back to the macOS <c>.app</c>
         /// <c>Contents/Resources/</c> copy (see <see cref="ResolveExistingFilePath"/>). Returns
         /// <see langword="null"/> when neither exists. Does not consult <see cref="CustomGetStreamFromFile"/>.

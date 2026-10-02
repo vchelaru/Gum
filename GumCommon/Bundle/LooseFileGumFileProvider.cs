@@ -10,6 +10,9 @@ namespace Gum.Bundle;
 /// <see cref="IGumFileProvider"/> backed by loose files in a directory on disk.
 /// Lookups are case-sensitive at the API layer even on case-insensitive filesystems (Windows/macOS),
 /// so that dev-time casing bugs surface here instead of exploding in case-sensitive production environments.
+/// <see cref="FileManager.CustomGetStreamFromFile"/> is consulted first when installed, so hosts whose
+/// files aren't on disk (Android StreamingAssets) still work. <see cref="EnumerateFiles"/> lists disk only:
+/// the hook has no directory enumeration.
 /// </summary>
 public class LooseFileGumFileProvider : IGumFileProvider
 {
@@ -39,6 +42,13 @@ public class LooseFileGumFileProvider : IGumFileProvider
             throw new ArgumentNullException(nameof(relativePath));
         }
         string fullPath = Path.Combine(_rootDirectory, relativePath);
+        using (Stream? hookStream = FileManager.TryOpenFromHook(fullPath))
+        {
+            if (hookStream != null)
+            {
+                return true;
+            }
+        }
         return File.Exists(fullPath) && CasingMatchesOnDisk(fullPath, relativePath);
     }
 
@@ -50,6 +60,11 @@ public class LooseFileGumFileProvider : IGumFileProvider
             throw new ArgumentNullException(nameof(relativePath));
         }
         string fullPath = Path.Combine(_rootDirectory, relativePath);
+        Stream? hookStream = FileManager.TryOpenFromHook(fullPath);
+        if (hookStream != null)
+        {
+            return hookStream;
+        }
         if (!File.Exists(fullPath) || !CasingMatchesOnDisk(fullPath, relativePath))
         {
             throw new FileNotFoundException($"File '{relativePath}' was not found under '{_rootDirectory}'.", relativePath);
