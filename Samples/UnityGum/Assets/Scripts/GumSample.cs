@@ -126,7 +126,7 @@ public sealed class GumSample : MonoBehaviour
             $"result: {(pass ? "PASSED" : "FAILED")}\n" +
             $"graphicsDevice: {SystemInfo.graphicsDeviceType}\n" +
             $"renderPath: {(_renderer.IsUsingGpu ? "GPU (SkiaGameRendering)" : "CPU fallback")}\n" +
-            $"scriptingBackend: {(Application.platform == RuntimePlatform.WindowsPlayer ? ScriptingBackend() : "Editor")}\n" +
+            $"scriptingBackend: {(Application.isEditor ? "Editor" : ScriptingBackend())}\n" +
             $"canvas: {width}x{height}\n" +
             $"clicks: {_clickCount}, label: {_label.Text}\n" +
             $"pixel at ({sampleX},{sampleY}): {pixel}\n";

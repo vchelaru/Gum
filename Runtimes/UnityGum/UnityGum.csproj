@@ -39,6 +39,14 @@
 	<!-- The input host half SkiaGum omits because it is render-only. -->
 	<Import Project="..\CursorInput.props" />
 
+	<!-- HarfBuzzSharp's native library for each supported Unity platform (Windows x64, macOS), which the Unity package's build
+	     script copies into Plugins/. Must match the HarfBuzzSharp version this project resolves; the
+	     script fails if it doesn't. -->
+	<ItemGroup>
+		<PackageDownload Include="HarfBuzzSharp.NativeAssets.Win32" Version="[7.3.0.2]" />
+		<PackageDownload Include="HarfBuzzSharp.NativeAssets.macOS" Version="[7.3.0.2]" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />

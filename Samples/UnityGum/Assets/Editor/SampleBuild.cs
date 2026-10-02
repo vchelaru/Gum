@@ -3,10 +3,11 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.SceneManagement;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 /// <summary>
-/// Batch-mode entry point that builds the sample as a Windows x64 player:
+/// Batch-mode entry point that builds the sample as a player for the host OS (Windows x64 or macOS):
 /// <c>Unity.exe -batchmode -quit -projectPath Samples/UnityGum -executeMethod SampleBuild.Build [-il2cpp] [-stripping Low]</c>.
 /// Output goes to Build/Mono or Build/IL2CPP. Run Unity/build-unity-package.ps1 first so the Gum package
 /// has its DLLs.
@@ -19,10 +20,15 @@ public static class SampleBuild
     {
         bool il2cpp = Array.IndexOf(Environment.GetCommandLineArgs(), "-il2cpp") >= 0;
         var target = NamedBuildTarget.Standalone;
+        bool mac = Application.platform == RuntimePlatform.OSXEditor;
+        BuildTarget buildTarget = mac ? BuildTarget.StandaloneOSX : BuildTarget.StandaloneWindows64;
 
-        // SkiaGameRendering's GPU path is Direct3D 11 only so far; anything else uses Gum's CPU fallback.
-        PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.StandaloneWindows64, false);
-        PlayerSettings.SetGraphicsAPIs(BuildTarget.StandaloneWindows64, new[] { GraphicsDeviceType.Direct3D11 });
+        // SkiaGameRendering's GPU path is Direct3D 11 only so far; anything else, Metal included, uses Gum's CPU fallback.
+        if (!mac)
+        {
+            PlayerSettings.SetUseDefaultGraphicsAPIs(buildTarget, false);
+            PlayerSettings.SetGraphicsAPIs(buildTarget, new[] { GraphicsDeviceType.Direct3D11 });
+        }
         PlayerSettings.SetScriptingBackend(target, il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
 
         // IL2CPP uses Low stripping until a Minimal build is verified (#5529). -stripping overrides it.
@@ -42,8 +48,8 @@ public static class SampleBuild
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
             scenes = new[] { ScenePath },
-            locationPathName = $"Build/{(il2cpp ? "IL2CPP" : "Mono")}/UnityGumSample.exe",
-            target = BuildTarget.StandaloneWindows64,
+            locationPathName = $"Build/{(il2cpp ? "IL2CPP" : "Mono")}/UnityGumSample{(mac ? ".app" : ".exe")}",
+            target = buildTarget,
             options = BuildOptions.None,
         });
 
