@@ -58,6 +58,22 @@ public class HotkeyManagerTests
     }
 
     [Theory]
+    [InlineData(false, GumKey.Delete, null)]
+    [InlineData(true, GumKey.Back, GumKey.Delete)]
+    public void Delete_IsBackspaceWithForwardDeleteAsAlternate_OnMacOS(bool isMacOS,
+        GumKey deleteKey, GumKey? deleteAltKey)
+    {
+        AutoMocker mocker = new AutoMocker();
+        mocker.GetMock<IOperatingSystemInfo>().Setup(o => o.IsMacOS).Returns(isMacOS);
+
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+
+        hotkeyManager.Delete.Key.ShouldBe(deleteKey);
+        hotkeyManager.DeleteAlt?.Key.ShouldBe(deleteAltKey);
+        (hotkeyManager.DeleteAlt == null).ShouldBe(deleteAltKey == null);
+    }
+
+    [Theory]
     [InlineData(true, 1)]
     [InlineData(false, 0)]
     public void Backspace_DeletesTheSelectionInTheTreeAndCanvas_OnlyOnMacOS(bool isMacOS, int deletesPerKey)

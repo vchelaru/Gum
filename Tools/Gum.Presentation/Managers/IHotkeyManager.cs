@@ -9,8 +9,8 @@ public interface IHotkeyManager
     KeyCombination Delete { get; }
 
     /// <summary>
-    /// A second key that deletes, or null when the platform has none: Backspace on macOS, the key a
-    /// Mac keyboard labels "delete". Match both through <see cref="HotkeyManagerExtensions.IsDeletePressed"/>.
+    /// A second key that deletes, or null when the platform has none: forward delete on macOS, where
+    /// <see cref="Delete"/> is Backspace (the key a Mac keyboard labels "delete"). Match both through <see cref="HotkeyManagerExtensions.IsDeletePressed"/>.
     /// </summary>
     KeyCombination? DeleteAlt { get; }
 
