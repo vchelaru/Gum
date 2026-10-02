@@ -53,11 +53,11 @@
       }
     },
     "com.vchelaru.skiagamerendering": {
-      "version": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.17.0",
+      "version": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.17.2",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "49cd68982b06193b1c9c66aab7c22b8e6d7c6f86"
+      "hash": "1bead4eba39f311adcfcb3acb9c366919f6c50d3"
     },
     "com.unity.modules.animation": {
       "version": "1.0.0",
@@ -68,6 +68,12 @@
     "com.unity.modules.hierarchycore": {
       "version": "1.0.0",
       "depth": 2,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.imageconversion": {
+      "version": "1.0.0",
+      "depth": 1,
       "source": "builtin",
       "dependencies": {}
     },
@@ -88,6 +94,14 @@
       "depth": 2,
       "source": "builtin",
       "dependencies": {}
+    },
+    "com.unity.modules.screencapture": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.imageconversion": "1.0.0"
+      }
     },
     "com.unity.modules.ui": {
       "version": "1.0.0",

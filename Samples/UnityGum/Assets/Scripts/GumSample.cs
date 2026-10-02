@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.IO;
 using Gum;
 using Gum.DataTypes;
@@ -18,7 +19,7 @@ using UnityEngine;
 /// --force-cpu uses the CPU fallback even on Direct3D 11.
 /// --smoke-test runs without GumInput, pushes a click onto the button itself, and after a few frames
 /// checks that the click reached the button and that the loaded screen's blue rectangle was drawn. It
-/// writes the result to --smoke-result (default smoke-result.txt next to the player) and quits with 0
+/// writes the result to --smoke-result (default smoke-result.txt next to the player), and the screen to --smoke-screenshot if given, and quits with 0
 /// on success, 1 otherwise.
 /// </summary>
 public sealed class GumSample : MonoBehaviour
@@ -106,14 +107,17 @@ public sealed class GumSample : MonoBehaviour
         bool down = _frame == 3;
         GumService.Default.Cursor.SetMouseState(x, y, leftDown: down, middleDown: false, rightDown: false);
 
-        if (_frame == 8)
+        if (_frame == (int.TryParse(ArgumentAfter("--smoke-frames"), out int frames) ? frames : 60))
         {
-            FinishSmokeTest();
+            StartCoroutine(FinishSmokeTest());
         }
     }
 
-    void FinishSmokeTest()
+    IEnumerator FinishSmokeTest()
     {
+        // The screen is only readable once the frame has been drawn, which is after OnGUI.
+        yield return new WaitForEndOfFrame();
+
         // The loaded screen centers a 312x77 blue rectangle; sample inside it, clear of its text.
         int width = _renderer.CanvasPixelWidth;
         int height = _renderer.CanvasPixelHeight;
@@ -121,9 +125,24 @@ public sealed class GumSample : MonoBehaviour
         int sampleY = height / 2 + 28;
         Color32 pixel = ReadPixel(sampleX, sampleY);
 
+        // The same pixel on the screen, after Unity's own color handling. It matches Gum's output only if
+        // the texture is sampled and drawn without a color space conversion (see #5648).
+        Texture2D screenshot = ScreenCapture.CaptureScreenshotAsTexture();
+        Color32 screenPixel = screenshot.GetPixel(sampleX, screenshot.height - 1 - sampleY);
+        Color32 emptyScreenPixel = screenshot.GetPixel(100, 100);
+        string screenshotPath = ArgumentAfter("--smoke-screenshot");
+        if (screenshotPath != null)
+        {
+            File.WriteAllBytes(screenshotPath, screenshot.EncodeToPNG());
+        }
+        Destroy(screenshot);
+        int screenDifference = Mathf.Max(Mathf.Abs(screenPixel.r - pixel.r),
+            Mathf.Abs(screenPixel.g - pixel.g), Mathf.Abs(screenPixel.b - pixel.b));
+
         bool clicked = _clickCount == 1 && _label.Text == "Clicks: 1";
         bool drewScreen = pixel.b > 150 && pixel.r < 60 && pixel.g < 60;
-        bool pass = clicked && drewScreen;
+        bool screenMatches = screenDifference <= 6;
+        bool pass = clicked && drewScreen && screenMatches;
 
         string result =
             $"result: {(pass ? "PASSED" : "FAILED")}\n" +
@@ -132,7 +151,11 @@ public sealed class GumSample : MonoBehaviour
             $"scriptingBackend: {(Application.isEditor ? "Editor" : ScriptingBackend())}\n" +
             $"canvas: {width}x{height}\n" +
             $"clicks: {_clickCount}, label: {_label.Text}\n" +
-            $"pixel at ({sampleX},{sampleY}): {pixel}\n";
+            $"colorSpace: {QualitySettings.activeColorSpace}\n" +
+            $"pixel at ({sampleX},{sampleY}): {pixel}\n" +
+            $"texture pixel in the empty area: {ReadPixel(100, height - 100)}\n" +
+            $"screen pixel in the empty area: {emptyScreenPixel}\n" +
+            $"screen pixel: {screenPixel} (difference {screenDifference})\n";
 
         string path = ArgumentAfter("--smoke-result") ?? Path.Combine(Application.dataPath, "..", "smoke-result.txt");
         File.WriteAllText(path, result);
