@@ -517,30 +517,37 @@ public class ContentLoaderTests : BaseTestClass
         }
     }
 
-    // #3496: a multi-page .fnt loaded through the stream hook must fail loudly instead of silently
-    // building a Font against only page 0 (glyphs on page 1+ would get real .fnt coordinates mapped
-    // onto the wrong atlas texture, mis-rendering with no error). Merging pages here isn't supported —
-    // that only happens natively when raylib loads the .fnt straight off disk.
+    // #5316: a multi-page .fnt (bundle/zip/in-memory) is parsed by Gum and its pages are merged into
+    // one stacked texture, since a raylib Font holds a single atlas texture. Page 1's glyph rects
+    // must be shifted down by page 0's height or they would sample the wrong region of the atlas.
     [Fact]
-    public void LoadContent_Font_WithMultiPageFntServedThroughHook_ShouldThrowNotSupportedException()
+    public void LoadContent_Font_WithMultiPageFntServedThroughHook_ShouldMergePagesIntoOneTexture()
     {
         const string multiPageFntText =
             "info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
             "common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=2 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
             "page id=0 file=\"Page0.png\"\n" +
             "page id=1 file=\"Page1.png\"\n" +
-            "chars count=1\n" +
-            "char id=65   x=0     y=0     width=4     height=13    xoffset=1     yoffset=4     xadvance=6     page=0  chnl=15\n";
+            "chars count=2\n" +
+            "char id=65   x=3     y=7     width=4     height=13    xoffset=1     yoffset=4     xadvance=6     page=0  chnl=15\n" +
+            "char id=66   x=5     y=10    width=4     height=13    xoffset=1     yoffset=4     xadvance=6     page=1  chnl=15\n";
+        byte[] pageBytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Content", "FontCache", "Font18Arial_0.png"));
 
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
         Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         try
         {
+            LoaderManager.Self.CacheTextures = false;
             FileManager.CustomGetStreamFromFile = incomingPath =>
             {
                 string fileNameOnly = Path.GetFileName(incomingPath);
                 if (string.Equals(fileNameOnly, "MultiPage.fnt", StringComparison.OrdinalIgnoreCase))
                 {
                     return new MemoryStream(Encoding.UTF8.GetBytes(multiPageFntText));
+                }
+                if (fileNameOnly.StartsWith("Page", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new MemoryStream(pageBytes);
                 }
                 // null is the hook's documented "I don't have this file" signal.
                 return null!;
@@ -549,19 +556,92 @@ public class ContentLoaderTests : BaseTestClass
             string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
                 "GumRaylibMultiPageFontTest_" + Guid.NewGuid().ToString("N"), "MultiPage.fnt");
 
-            Should.Throw<NotSupportedException>(() =>
-                LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath));
+            Font font = LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath);
+
+            font.GlyphCount.ShouldBe(2);
+            font.Texture.Width.ShouldBe(256);
+            font.Texture.Height.ShouldBe(512);
+
+            Rectangle pageZeroGlyph = Raylib.GetGlyphAtlasRec(font, 'A');
+            pageZeroGlyph.X.ShouldBe(3f);
+            pageZeroGlyph.Y.ShouldBe(7f);
+
+            Rectangle pageOneGlyph = Raylib.GetGlyphAtlasRec(font, 'B');
+            pageOneGlyph.X.ShouldBe(5f);
+            pageOneGlyph.Y.ShouldBe(10f + 256f);
+
+            new ManagedFont(font).Dispose();
         }
         finally
         {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
             FileManager.CustomGetStreamFromFile = savedHook;
         }
     }
 
+    // #5316: a .fnt Gum cannot parse, or whose page cannot be read, reports through the normal font
+    // error path (PropertyAssignmentError plus an empty Font that callers detect via BaseSize == 0)
+    // instead of throwing or taking the process down the way raylib's native loader does. Covers
+    // both the stream-hook route and a loose file on disk.
+    [Theory]
+    [InlineData(true, "MalformedText")]
+    [InlineData(false, "MalformedText")]
+    [InlineData(true, "MissingPage")]
+    [InlineData(false, "MissingPage")]
+    public void LoadContent_Font_WithUnloadableFnt_ShouldReportErrorAndReturnEmptyFont(bool serveThroughHook, string problem)
+    {
+        string fntText = problem == "MalformedText"
+            ? "info face=\"Arial\" size=-18\nthis is not a valid font file\n"
+            : "info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+              "common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+              "page id=0 file=\"NoSuchPage.png\"\n" +
+              "chars count=1\n" +
+              "char id=65   x=0     y=0     width=4     height=13    xoffset=1     yoffset=4     xadvance=6     page=0  chnl=15\n";
+
+        string directory = Path.Combine(Path.GetTempPath(), "GumRaylibBadFntTest_" + Guid.NewGuid().ToString("N"));
+        string fntPath = Path.Combine(directory, "Bad.fnt");
+        if (!serveThroughHook)
+        {
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(fntPath, fntText);
+        }
+
+        List<string> errors = new List<string>();
+        Action<string> errorHandler = errors.Add;
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = serveThroughHook
+                ? incomingPath => string.Equals(Path.GetFileName(incomingPath), "Bad.fnt", StringComparison.OrdinalIgnoreCase)
+                    ? new MemoryStream(Encoding.UTF8.GetBytes(fntText))
+                    : null!
+                : null;
+            RaylibGum.Renderables.CustomSetPropertyOnRenderable.PropertyAssignmentError += errorHandler;
+
+            Font font = default;
+            Should.NotThrow(() => font = LoaderManager.Self.LoadContent<Font>(fntPath));
+
+            font.BaseSize.ShouldBe(0);
+            errors.ShouldContain(message => message.Contains("Bad.fnt"));
+        }
+        finally
+        {
+            RaylibGum.Renderables.CustomSetPropertyOnRenderable.PropertyAssignmentError -= errorHandler;
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     // #5299: when the hook also serves a multi-page .fnt that exists on disk (e.g. a pass-through
-    // hook), the loose file loads through raylib's native loader instead of throwing.
+    // hook), it loads (the hook wins, and Gum merges the pages).
     [Fact]
-    public void LoadContent_Font_WithMultiPageFntOnDiskAlsoServedThroughHook_ShouldLoadFromDisk()
+    public void LoadContent_Font_WithMultiPageFntOnDiskAlsoServedThroughHook_ShouldLoad()
     {
         const string multiPageFntText =
             "info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
