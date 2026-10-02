@@ -1,4 +1,4 @@
-using ToolsUtilities;
+﻿using ToolsUtilities;
 using System.IO;
 using System;
 using System.Collections.Generic;
@@ -268,11 +268,16 @@ public class BmfcSave
         // The template ships next to the tool executable. AppContext.BaseDirectory is that folder
         // (with a trailing separator), and unlike Assembly.Location it is not empty in a
         // single-file publish.
-        string directory = AppContext.BaseDirectory;
+        Save(fileName, AppContext.BaseDirectory + "Content/BmfcTemplate.bmfc");
+    }
 
-        var bmfcTemplateFullPath =
-            directory + "Content/BmfcTemplate.bmfc";
-
+    /// <summary>
+    /// Saves this configuration as a .bmfc file using the template at the given path.
+    /// </summary>
+    /// <param name="fileName">The output file path for the generated .bmfc file.</param>
+    /// <param name="bmfcTemplateFullPath">The BmfcTemplate.bmfc file to substitute values into.</param>
+    public void Save(string fileName, string bmfcTemplateFullPath)
+    {
         if(!System.IO.File.Exists(bmfcTemplateFullPath))
         {
             throw new FileNotFoundException(bmfcTemplateFullPath);

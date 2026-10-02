@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -17,6 +17,7 @@ namespace Gum.ProjectServices.FontGeneration;
 public class BmFontExeFileGenerator : IFontFileGenerator
 {
     private readonly IFontGenerationCallbacks _callbacks;
+    private readonly string _toolsDirectory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="BmFontExeFileGenerator"/>.
@@ -24,12 +25,20 @@ public class BmFontExeFileGenerator : IFontFileGenerator
     /// <param name="callbacks">
     /// Optional callbacks for output logging. When <c>null</c>, all feedback is suppressed.
     /// </param>
-    public BmFontExeFileGenerator(IFontGenerationCallbacks? callbacks = null)
+    /// <param name="toolsDirectory">
+    /// Folder that bmfont.exe and the .bmfc template are extracted into. When <c>null</c>, a per-user
+    /// folder under the user app-data folder is used, so a read-only install folder (Program Files) works.
+    /// </param>
+    public BmFontExeFileGenerator(IFontGenerationCallbacks? callbacks = null, string? toolsDirectory = null)
     {
         _callbacks = callbacks ?? new NoOpFontGenerationCallbacks();
+        _toolsDirectory = toolsDirectory ??
+            Path.Combine(FileManager.UserApplicationDataForThisApplication, "FontTools");
     }
 
-    private string BmFontExeLocation => Path.Combine(AppContext.BaseDirectory, "Libraries", "bmfont.exe");
+    private string BmFontExeLocation => Path.Combine(_toolsDirectory, "Libraries", "bmfont.exe");
+
+    private string BmfcTemplateLocation => Path.Combine(_toolsDirectory, "Content", "BmfcTemplate.bmfc");
 
     /// <inheritdoc/>
     public bool RequiresSizeEstimation => true;
@@ -43,7 +52,7 @@ public class BmFontExeFileGenerator : IFontFileGenerator
         string bmfcFileToSave = Path.ChangeExtension(outputFntPath, ".bmfc");
         System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
-        bmfcSave.Save(bmfcFileToSave);
+        bmfcSave.Save(bmfcFileToSave, BmfcTemplateLocation);
 
         ProcessStartInfo info = new ProcessStartInfo();
         info.FileName = BmFontExeLocation;
@@ -96,15 +105,13 @@ public class BmFontExeFileGenerator : IFontFileGenerator
     internal void EnsureToolsExtracted()
     {
         Assembly assembly = typeof(BmFontExeFileGenerator).Assembly;
-        string baseDir = AppContext.BaseDirectory;
-
         ExtractResourceIfMissing(assembly,
             "Gum.ProjectServices.Libraries.bmfont.exe",
-            Path.Combine(baseDir, "Libraries", "bmfont.exe"));
+            BmFontExeLocation);
 
         ExtractResourceIfMissing(assembly,
             "Gum.ProjectServices.Content.BmfcTemplate.bmfc",
-            Path.Combine(baseDir, "Content", "BmfcTemplate.bmfc"));
+            BmfcTemplateLocation);
     }
 
     private static void ExtractResourceIfMissing(Assembly assembly, string resourceName, string destinationPath)
