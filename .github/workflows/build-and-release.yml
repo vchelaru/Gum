@@ -243,8 +243,11 @@ jobs:
           "title=$title"           >> $env:GITHUB_OUTPUT
           "prerelease=$prerelease" >> $env:GITHUB_OUTPUT
           "draft=$draft"           >> $env:GITHUB_OUTPUT
-          # The Unity package's version. Unity wants SemVer, which forbids leading zeros.
-          "upm_version=$((Get-Date).ToString('yyyy.M.d'))" >> $env:GITHUB_OUTPUT
+          # The Unity package's version. Unity wants SemVer, which forbids leading zeros. A prerelease
+          # adds the run number so several in one day each get their own upm/v tag.
+          $upmVersion = (Get-Date).ToString('yyyy.M.d')
+          if ($kind -eq 'prerelease') { $upmVersion = "$upmVersion-pre.$($env:GITHUB_RUN_NUMBER)" }
+          "upm_version=$upmVersion" >> $env:GITHUB_OUTPUT
 
       # 2b) Capture the previous tag BEFORE this run creates its own tag, so the
       # auto-generated release notes diff against the actual prior release. Without this,
@@ -313,8 +316,9 @@ jobs:
             dist/avalonia/*
 
   # Unity doesn't read NuGet. Its package, binaries included, goes to the upm branch and a
-  # upm/v<version> tag, which users install as a git URL (Unity/publish-unity-package.ps1). Pull
-  # requests and test/prerelease runs only pack it, so a broken pack fails before a release does.
+  # upm/v<version> tag, which users install as a git URL (Unity/publish-unity-package.ps1). Releases
+  # and prereleases push to the same upm branch; pull requests and test runs only pack it, so a
+  # broken pack fails before a release does.
   # Windows because the package ships the win-x64 HarfBuzz native.
   publish-unity:
     needs: build
@@ -346,7 +350,7 @@ jobs:
 
       # Skips if upm/v<version> is already on the remote, so rerunning a release is safe.
       - name: Push to the upm branch
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_kind == 'release'
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.release_kind == 'release' || github.event.inputs.release_kind == 'prerelease')
         shell: pwsh
         run: |
           git config user.name  "github-actions[bot]"
