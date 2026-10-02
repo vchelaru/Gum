@@ -1,4 +1,7 @@
 ﻿using System;
+#if !NET8_0_OR_GREATER
+using System.Diagnostics;
+#endif
 
 namespace Gum.Wireframe
 {
@@ -13,7 +16,9 @@ namespace Gum.Wireframe
 
         static TimeManager? mSelf;
 
+#if NET8_0_OR_GREATER
         TimeProvider _timeProvider;
+#endif
         long _startTimestamp;
 
         public double CurrentTime
@@ -38,6 +43,7 @@ namespace Gum.Wireframe
 
         #endregion
 
+#if NET8_0_OR_GREATER
         public TimeManager() : this(TimeProvider.System)
         {
         }
@@ -59,12 +65,22 @@ namespace Gum.Wireframe
             CurrentTime = 0;
             SecondDifference = 0;
         }
-
+#else
+        // TimeProvider is .NET 8+; older targets (FRB's net6 build) read Stopwatch directly.
+        public TimeManager()
+        {
+            _startTimestamp = Stopwatch.GetTimestamp();
+        }
+#endif
 
         public void Activity()
         {
             var lastTime = CurrentTime; 
+#if NET8_0_OR_GREATER
             CurrentTime = _timeProvider.GetElapsedTime(_startTimestamp).TotalSeconds;
+#else
+            CurrentTime = (Stopwatch.GetTimestamp() - _startTimestamp) / (double)Stopwatch.Frequency;
+#endif
 
             SecondDifference = (float)(CurrentTime - lastTime);
         }
