@@ -13,12 +13,19 @@ on:
         required: false
         default: false
         type: boolean
+      publish_unity:
+        description: 'Publish the Unity package to the upm branch'
+        required: false
+        default: false
+        type: boolean
       version:
         description: |
           Package version to publish.
           Stable release:  2026.4.23.1
           Pre-release:     2026.4.23.1-preview.1
           Leave empty to use the version currently in each .csproj file.
+          The Unity package needs three-part SemVer, so 2026.4.23.1-preview.1 becomes
+          2026.4.23-preview.1.1 there. Empty publishes Unity as <today>-preview.<run number>.
         required: false
         default: ''
         type: string
@@ -138,3 +145,59 @@ jobs:
           Write-Host "Publishing $($_.Name)..."
           dotnet nuget push $_.FullName --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
         }
+
+  # Unity doesn't read NuGet. Its package, binaries included, goes to the upm branch and a
+  # upm/v<version> tag, which users install as a git URL (Unity/publish-unity-package.ps1).
+  # Windows because the package ships the win-x64 HarfBuzz native.
+  publish-unity:
+    if: github.event.inputs.publish_unity == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      # Unity wants three-part SemVer, so the fourth NuGet part moves into the prerelease label:
+      # 2026.4.23.1-preview.1 -> 2026.4.23-preview.1.1. A stable 2026.4.23.1 becomes 2026.4.23, so a
+      # second stable on one day is skipped (the publish script skips a tag that already exists).
+      - name: Compute Unity version
+        id: unityver
+        shell: pwsh
+        run: |
+          $v = '${{ github.event.inputs.version }}'.Trim()
+          if ($v -match '^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:-(.+))?$') {
+            $base = "$($Matches[1]).$($Matches[2]).$($Matches[3])"
+            if ($Matches[5]) { $unity = "$base-$($Matches[5]).$($Matches[4])" } else { $unity = $base }
+          } else {
+            $unity = (Get-Date).ToString('yyyy.M.d') + "-preview.$($env:GITHUB_RUN_NUMBER)"
+          }
+          Write-Host "Unity package version: $unity"
+          "version=$unity" >> $env:GITHUB_OUTPUT
+
+      - name: Build and pack the Unity package
+        shell: pwsh
+        run: |
+          ./Unity/build-unity-package.ps1
+          ./Unity/publish-unity-package.ps1 -Version '${{ steps.unityver.outputs.version }}'
+
+      - name: Upload Unity package
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-package
+          path: Unity/.artifacts/*.tgz
+
+      # Skips if upm/v<version> is already on the remote, so rerunning is safe.
+      - name: Push to the upm branch
+        shell: pwsh
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          ./Unity/publish-unity-package.ps1 -Version '${{ steps.unityver.outputs.version }}' -Push
