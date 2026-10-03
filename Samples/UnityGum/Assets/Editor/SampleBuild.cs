@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 
 /// <summary>
 /// Batch-mode entry point that builds the sample as a player for the host OS (Windows x64 or macOS):
-/// <c>Unity.exe -batchmode -quit -projectPath Samples/UnityGum -executeMethod SampleBuild.Build [-il2cpp] [-stripping Low]</c>.
+/// <c>Unity.exe -batchmode -quit -projectPath Samples/UnityGum -executeMethod SampleBuild.Build [-il2cpp] [-stripping Low] [-linear]</c>.
 /// Output goes to Build/Mono or Build/IL2CPP. Run Unity/build-unity-package.ps1 first so the Gum package
 /// has its DLLs.
 /// </summary>
@@ -23,12 +23,14 @@ public static class SampleBuild
         bool mac = Application.platform == RuntimePlatform.OSXEditor;
         BuildTarget buildTarget = mac ? BuildTarget.StandaloneOSX : BuildTarget.StandaloneWindows64;
 
-        // SkiaGameRendering's GPU path is Direct3D 11 only so far; anything else, Metal included, uses Gum's CPU fallback.
+        // Windows is pinned to Direct3D 11 so the build exercises SkiaGameRendering's GPU path; macOS uses Unity's default (Metal).
         if (!mac)
         {
             PlayerSettings.SetUseDefaultGraphicsAPIs(buildTarget, false);
             PlayerSettings.SetGraphicsAPIs(buildTarget, new[] { GraphicsDeviceType.Direct3D11 });
         }
+        // -linear builds with the Linear color space (the default is Gamma), which #5648 needed.
+        PlayerSettings.colorSpace = Array.IndexOf(Environment.GetCommandLineArgs(), "-linear") >= 0 ? ColorSpace.Linear : ColorSpace.Gamma;
         PlayerSettings.SetScriptingBackend(target, il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
 
         // IL2CPP uses Low stripping until a Minimal build is verified: RichTextKit is still built
