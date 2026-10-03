@@ -1,0 +1,9 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs>
+<clipPath id="in"><rect x="5" y="5" width="22" height="22" rx="2"></rect></clipPath>
+<clipPath id="a"><rect width="16" height="32"></rect></clipPath>
+<clipPath id="b"><rect x="16" width="16" height="32"></rect></clipPath>
+</defs>
+<g clip-path="url(#in)"><g clip-path="url(#a)"><path d="M5 27V25L16 14L27 25V27Z" fill="black" fill-opacity="0.3"></path></g></g>
+<path d="M5 25L16 14L27 25" stroke="black" stroke-linejoin="round"></path>
+<rect x="4.5" y="4.5" width="23" height="23" rx="2.5" stroke="black"></rect>
+</svg>

@@ -212,6 +212,8 @@ namespace Gum.DataTypes
                     case "Gum.Converters.GeneralUnitType":
                     case "Gum.RenderingLibrary.Blend":
                     case "Blend":
+                    case "RenderingLibrary.Graphics.ColorOperation":
+                    case "ColorOperation":
                     case "Gum.Managers.TextureAddress":
                     case "TextureAddress":
                     case "Gum.Managers.ChildrenLayout":
@@ -312,6 +314,12 @@ namespace Gum.DataTypes
                         case "Gum.RenderingLibrary.Blend":
                         case "Blend":
                             variableSave.Value = (Gum.RenderingLibrary.Blend)valueAsInt;
+                            toReturn = true;
+                            break;
+
+                        case "RenderingLibrary.Graphics.ColorOperation":
+                        case "ColorOperation":
+                            variableSave.Value = (global::RenderingLibrary.Graphics.ColorOperation)valueAsInt;
                             toReturn = true;
                             break;
 

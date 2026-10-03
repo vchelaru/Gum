@@ -15,6 +15,9 @@
     <Variable Type="int" Name="Blue" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
+    <Variable Type="ColorOperation" Name="ColorOperation" Category="Rendering" SetsValue="true">
+      <Value xsi:type="xsd:int">3</Value>
+    </Variable>
     <Variable Type="string" Name="CurrentChainName" Category="Animation" SetsValue="true" />
     <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>

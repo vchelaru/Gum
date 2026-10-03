@@ -426,14 +426,13 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
-    public void NativeVersion_MatchesLocalizeTextExpansion()
+    public void NativeVersion_MatchesColorOperationExpansion()
     {
-        // The v4 slot is reserved for the Text standard element's LocalizeText variable
-        // (#4133/#4134). Files saved at v4 use the same XML format as ShapeVariableExpansion;
-        // the bump only changes the rejection ceiling and the back-fill gate so tool builds
-        // without the new variable definition refuse to silently drop/back-fill it.
-        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.LocalizeTextExpansion);
-        ((int)GumProjectSave.GumxVersions.LocalizeTextExpansion).ShouldBe(4);
+        // The v5 slot is reserved for the Sprite/NineSlice ColorOperation variable (#4880). Files
+        // saved at v5 use the same XML format as v4; the bump only changes the rejection ceiling and
+        // the back-fill gate so older runtimes that lack the property are not handed the variable.
+        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.ColorOperationExpansion);
+        ((int)GumProjectSave.GumxVersions.ColorOperationExpansion).ShouldBe(5);
     }
 
     [Fact]

@@ -108,6 +108,12 @@ public class VariableGridToggleOptions
             new ToggleButtonOption("Spill", global::RenderingLibrary.Graphics.TextOverflowVerticalMode.SpillOver) { GumIconName = "TextOverflowVerticalSpill" },
             new ToggleButtonOption("Truncate Line", global::RenderingLibrary.Graphics.TextOverflowVerticalMode.TruncateLine) { GumIconName = "TextOverflowVerticalTruncateLine" },
         };
+        ColorOperation = new[]
+        {
+            new ToggleButtonOption("Modulate", global::RenderingLibrary.Graphics.ColorOperation.Modulate) { GumIconName = "ColorOperationModulate" },
+            new ToggleButtonOption("Add", global::RenderingLibrary.Graphics.ColorOperation.Add) { GumIconName = "ColorOperationAdd" },
+            new ToggleButtonOption("Silhouette (Color + Texture Alpha)", global::RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha) { GumIconName = "ColorOperationColorTextureAlpha" },
+        };
     }
 
     public ToggleButtonOption[] XUnits { get; }
@@ -118,6 +124,7 @@ public class VariableGridToggleOptions
     public ToggleButtonOption[] ChildrenLayout { get; }
     public ToggleButtonOption[] TextOverflowHorizontalMode { get; }
     public ToggleButtonOption[] TextOverflowVerticalMode { get; }
+    public ToggleButtonOption[] ColorOperation { get; }
 
     /// <summary>Every Y origin, before exclusions.</summary>
     public ToggleButtonOption[] AllYOrigins { get; }

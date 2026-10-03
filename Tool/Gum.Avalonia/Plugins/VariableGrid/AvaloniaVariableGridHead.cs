@@ -46,6 +46,7 @@ public class AvaloniaVariableGridHead : IVariableGridHead
         registry.Register(typeof(GumDisplayers.TextOverflowVerticalMode), typeof(TextOverflowVerticalModeDisplay));
         registry.Register(typeof(GumDisplayers.TextOverflowHorizontalMode), typeof(TextOverflowHorizontalModeDisplay));
         registry.Register(typeof(GumDisplayers.ChildrenLayout), typeof(ChildrenLayoutDisplay));
+        registry.Register(typeof(GumDisplayers.ColorOperation), typeof(ColorOperationDisplay));
         registry.Register(typeof(GumDisplayers.WidthUnits), typeof(WidthUnitsDisplay));
         registry.Register(typeof(GumDisplayers.HeightUnits), typeof(HeightUnitsDisplay));
         registry.Register(typeof(GumDisplayers.XUnits), typeof(XUnitsDisplay));

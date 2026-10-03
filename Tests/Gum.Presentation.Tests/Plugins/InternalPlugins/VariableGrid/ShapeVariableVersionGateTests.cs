@@ -10,6 +10,7 @@ public class ShapeVariableVersionGateTests
     private const int OlderThanV3 = (int)GumProjectSave.GumxVersions.AttributeVersion;
     private const int V3 = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion;
     private const int V4 = (int)GumProjectSave.GumxVersions.LocalizeTextExpansion;
+    private const int V5 = (int)GumProjectSave.GumxVersions.ColorOperationExpansion;
 
     private readonly ShapeVariableVersionGate _gate = new();
 
@@ -138,5 +139,23 @@ public class ShapeVariableVersionGateTests
     public void GetIfHidden_KeepsLocalizeText_OnV4Text()
     {
         _gate.GetIfHiddenForProjectVersion("LocalizeText", "Text", V4).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("Sprite", OlderThanV3)]
+    [InlineData("Sprite", V4)]
+    [InlineData("NineSlice", V3)]
+    [InlineData("NineSlice", V4)]
+    public void GetIfHidden_HidesColorOperation_OnPreV5SpriteAndNineSlice(string standardType, int projectVersion)
+    {
+        _gate.GetIfHiddenForProjectVersion("ColorOperation", standardType, projectVersion).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("Sprite")]
+    [InlineData("NineSlice")]
+    public void GetIfHidden_KeepsColorOperation_OnV5SpriteAndNineSlice(string standardType)
+    {
+        _gate.GetIfHiddenForProjectVersion("ColorOperation", standardType, V5).ShouldBeFalse();
     }
 }

@@ -22,7 +22,7 @@ A tool UI PR gets a before/after table from screenshot tests. `PrScreenshot.cs` 
 model in the head's `DialogWindow` (`ShowDialog`) or any control in a plain window (`Show`), with an
 optional light or dark theme; the returned `ScreenshotWindow` pumps frames, finds and clicks
 controls, hovers one for its tooltip (`HoverForToolTip`, a real-time wait), and saves a PNG.
-`PrScreenshot.SaveWindow` captures a window another harness owns, such as `CanvasHarness.Input.Window`.
+`PrScreenshot.SaveWindow` captures a window another harness owns, such as `CanvasHarness.Input.Window`. That captures the whole window, so a harness window much larger than the control (the variable grid's is tall and narrow) gives a PNG that is mostly empty space; size the window to the control, or use `Show(control, width, height)`, and look at the image before attaching it.
 `ManagePluginsScreenshotTests` is the example:
 
 ```csharp

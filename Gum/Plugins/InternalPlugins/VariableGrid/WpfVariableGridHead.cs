@@ -33,6 +33,7 @@ public class WpfVariableGridHead : IVariableGridHead
         registry.Register(typeof(GumDisplayers.TextOverflowVerticalMode), typeof(TextOverflowVerticalModeControl));
         registry.Register(typeof(GumDisplayers.TextOverflowHorizontalMode), typeof(TextOverflowHorizontalModeControl));
         registry.Register(typeof(GumDisplayers.ChildrenLayout), typeof(ChildrenLayoutControl));
+        registry.Register(typeof(GumDisplayers.ColorOperation), typeof(ColorOperationControl));
         registry.Register(typeof(GumDisplayers.WidthUnits), typeof(WidthUnitsControl));
         registry.Register(typeof(GumDisplayers.HeightUnits), typeof(HeightUnitsControl));
         registry.Register(typeof(GumDisplayers.XUnits), typeof(XUnitsControl));

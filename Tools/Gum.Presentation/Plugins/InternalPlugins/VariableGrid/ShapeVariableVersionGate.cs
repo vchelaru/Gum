@@ -16,7 +16,8 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// </summary>
 internal class ShapeVariableVersionGate
 {
-    // Only the plain Circle / Rectangle standard elements are gated. The legacy Skia shapes
+    // Only the plain Circle / Rectangle standard elements (plus Text, Sprite and NineSlice for their
+    // own gated names below) are gated. The legacy Skia shapes
     // (ColoredCircle / RoundedRectangle / Arc) carried gradient / dropshadow / fill long before
     // v3, so they must stay visible on older projects. Text's dropshadow surface (issue #4005) and
     // LocalizeText (issue #4222) are gated here too — the fill/gradient names in the map below
@@ -26,6 +27,8 @@ internal class ShapeVariableVersionGate
         "Circle",
         "Rectangle",
         "Text",
+        "Sprite",
+        "NineSlice",
     };
 
     // Gated variable names mapped to the minimum project version that unlocks them. Most are the
@@ -92,6 +95,8 @@ internal class ShapeVariableVersionGate
             // Issue #4222 — Text's LocalizeText variable, gated at v4 (a version past the rest of
             // this list, which is why a per-variable map is needed instead of one cutoff).
             ["LocalizeText"] = (int)GumProjectSave.GumxVersions.LocalizeTextExpansion,
+            // Issue #4880 - Sprite/NineSlice ColorOperation, gated at v5.
+            ["ColorOperation"] = (int)GumProjectSave.GumxVersions.ColorOperationExpansion,
         };
     }
 

@@ -195,6 +195,11 @@ namespace Gum.Controls
         protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.ChildrenLayout;
     }
 
+    class ColorOperationControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.ColorOperation;
+    }
+
     class TextOverflowHorizontalModeControl : ToggleButtonOptionContainer
     {
         protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.TextOverflowHorizontalMode;

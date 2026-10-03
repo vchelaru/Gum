@@ -23,6 +23,9 @@ public static class GumDisplayers
     /// <summary>Toggle buttons for <c>TextOverflowHorizontalMode</c>.</summary>
     public sealed class TextOverflowHorizontalMode { private TextOverflowHorizontalMode() { } }
 
+    /// <summary>Toggle buttons for a Sprite or NineSlice's <c>ColorOperation</c>.</summary>
+    public sealed class ColorOperation { private ColorOperation() { } }
+
     /// <summary>Toggle buttons for <c>ChildrenLayout</c>.</summary>
     public sealed class ChildrenLayout { private ChildrenLayout() { } }
 

@@ -290,6 +290,7 @@ public class StandardElementsManager
 
             AddColorVariables(stateSave);
             stateSave.Variables.Add(CreateBlendVariable());
+            AddColorOperationVariable(stateSave);
 
             AddEventVariables(stateSave);
 
@@ -574,6 +575,7 @@ public class StandardElementsManager
 
             AddColorVariables(stateSave);
             stateSave.Variables.Add(CreateBlendVariable());
+            AddColorOperationVariable(stateSave);
 
             var ninesliceTextureAddressVariable =
                 new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "TextureAddress", Category = "Source" };
@@ -1465,6 +1467,25 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillBlue", Category = category });
 
         TagMinimumGumxVersion(stateSave, startIndex, minimumGumxVersion);
+    }
+
+    /// <summary>
+    /// Adds the Sprite/NineSlice <c>ColorOperation</c> variable (#4880). Tagged with the version
+    /// that introduced it because older runtimes (including FRB1's generated ones) lack the property.
+    /// </summary>
+    public static void AddColorOperationVariable(StateSave stateSave)
+    {
+        VariableSave variable = new VariableSave
+        {
+            SetsValue = true,
+            Type = "ColorOperation",
+            Value = ColorOperation.Modulate,
+            Name = "ColorOperation",
+            Category = "Rendering",
+            MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ColorOperationExpansion,
+        };
+
+        stateSave.Variables.Add(variable);
     }
 
     public static void AddBlendVariable(StateSave stateSave, int minimumGumxVersion = 0)

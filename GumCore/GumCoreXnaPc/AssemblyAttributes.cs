@@ -13,4 +13,4 @@ using Gum.DataTypes;
 //
 // Keep this value in lock-step with GumCommon/MonoGameGum/RaylibGum/SkiaGum/SilkNetGum's own
 // AssemblyAttributes.cs - see GumDataTypes/GumSyntaxVersionAttribute.cs for the version history.
-[assembly: GumSyntaxVersion(Version = 4)]
+[assembly: GumSyntaxVersion(Version = 5)]

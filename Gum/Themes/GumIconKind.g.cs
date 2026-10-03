@@ -28,6 +28,9 @@ public enum GumIconKind
     ChildrenLayoutLeftToRightStack, // ChildrenLayoutLeftToRightStack
     ChildrenLayoutRegular, // ChildrenLayoutRegular
     ChildrenLayoutTopToBottomStack, // ChildrenLayoutTopToBottomStack
+    ColorOperationAdd, // ColorOperationAdd
+    ColorOperationColorTextureAlpha, // ColorOperationColorTextureAlpha
+    ColorOperationModulate, // ColorOperationModulate
     DockBottom, // DockBottom
     DockFill, // DockFill
     DockLeft, // DockLeft
@@ -99,6 +102,9 @@ public static class GumIconKindMap
         "ChildrenLayoutLeftToRightStack",
         "ChildrenLayoutRegular",
         "ChildrenLayoutTopToBottomStack",
+        "ColorOperationAdd",
+        "ColorOperationColorTextureAlpha",
+        "ColorOperationModulate",
         "DockBottom",
         "DockFill",
         "DockLeft",
