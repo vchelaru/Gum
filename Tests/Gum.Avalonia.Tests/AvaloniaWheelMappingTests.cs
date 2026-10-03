@@ -121,6 +121,45 @@ public class AvaloniaWheelMappingTests
         AvaloniaMouseMapping.GetWindowsWheelSource(nowMs, lastTouchpadReportMs).ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData(0.0, -1.0, 1000L, null, WheelSource.Wheel)]
+    [InlineData(0.0, 3.0, 1000L, null, WheelSource.Wheel)]
+    [InlineData(0.0, 0.4, 1000L, null, WheelSource.LinuxTouchpad)]
+    [InlineData(1.6, 0.0, 1000L, null, WheelSource.LinuxTouchpad)]
+    [InlineData(0.0, 1.0, 1000L, 900L, WheelSource.LinuxTouchpad)]
+    [InlineData(0.0, 1.0, 1000L, 700L, WheelSource.Wheel)]
+    public void GetLinuxWheelSource_FractionalDeltaIsATouchpadUntilItPauses(double deltaX, double deltaY, long nowMs,
+        long? lastTouchpadMs, WheelSource expected)
+    {
+        // A notched wheel scrolls whole steps; a touchpad scrolls fractions, and an occasional whole
+        // step mid-gesture still belongs to the touchpad.
+        AvaloniaMouseMapping.GetLinuxWheelSource(new Vector(deltaX, deltaY), nowMs, lastTouchpadMs).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ApplyWheelDelta_LinuxTouchpadScroll_PansFifteenPixelsPerUnitOfDelta()
+    {
+        GumMouseEventArgs args = new GumMouseEventArgs();
+
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0.5, -2), KeyModifiers.None, WheelSource.LinuxTouchpad, dpiScale: 2);
+
+        args.IsPanScroll.ShouldBeTrue();
+        args.PanX.ShouldBe(15f, tolerance: 0.001f);
+        args.PanY.ShouldBe(-60f, tolerance: 0.001f);
+        args.Delta.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ApplyWheelDelta_LinuxTouchpadScrollWithCtrl_Zooms()
+    {
+        GumMouseEventArgs args = new GumMouseEventArgs();
+
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0, 0.25), KeyModifiers.Control, WheelSource.LinuxTouchpad, dpiScale: 2);
+
+        args.IsPanScroll.ShouldBeFalse();
+        args.Delta.ShouldBe(30);
+    }
+
     [Fact]
     public void PinchToWheelDelta_ZoomsOneNotchPerFifteenPercentOfPinch()
     {
