@@ -162,6 +162,37 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
         child.X.ShouldBe(55f);
     }
 
+    [Fact]
+    public void ApplyVariableReferences_AtPrefixOnInstanceRow_ResolvesAgainstOwningInstance()
+    {
+        ContainerRuntime parent = new ContainerRuntime();
+        ContainerRuntime child = new ContainerRuntime();
+        child.Name = "MyChild";
+        child.Tag = new InstanceSave { Name = "MyChild" };
+        child.X = 0;
+        child.Parent = parent;
+
+        StateSave state = BuildStateWithVariableReference(
+            "X = @Y",
+            sourceObject: "MyChild",
+            ("MyChild.Y", 77f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        child.X.ShouldBe(77f);
+    }
+
+    [Theory]
+    [InlineData("@Index * 2", "Item1", "Item1.Index * 2")]
+    [InlineData("@Child.Prop", "Item1", "Item1.Child.Prop")]
+    [InlineData("@Height", null, "Height")]
+    [InlineData("Other.Width", "Item1", "Other.Width")]
+    [InlineData("\"@Name\"", "Item1", "\"@Name\"")]
+    public void ResolveOwnerPrefix_RewritesOutsideLiteralsOnly(string expression, string? owner, string expected)
+    {
+        ElementSaveExtensions.ResolveOwnerPrefix(expression, owner).ShouldBe(expected);
+    }
+
     #endregion
 
     #region MalformedInput

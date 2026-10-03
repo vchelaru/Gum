@@ -328,6 +328,28 @@ The left side of an assignment can be omitted if referencing the same variable o
 
 Note that this only works when assigning one variable directly to another variable. Complex assignments will not be prefixed.
 
+### Referencing the Owning Instance with @
+
+A name qualified with an instance name, such as `Item1.Index`, keeps pointing at `Item1` after the instance is copied and pasted. The `@` prefix instead means "the instance that owns this row", so the same text works on every copy:
+
+```csharp
+Width = @Index * 10
+```
+
+If this row is on `Item1`, `@Index` reads `Item1.Index`. After pasting `Item1` as `Item2`, the row is unchanged and `@Index` reads `Item2.Index`.
+
+`@` works on any variable, and can be followed by a nested instance when the owner is a component instance:
+
+```csharp
+Text = @Child.Text
+```
+
+Gum does not auto-qualify names that start with `@`. On a component or screen row, `@` refers to the element itself, so `Width = @Height` is the same as `Width = Height`.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Color Expansion
 
 Assigning color values is a common part of styling, so to help with this situation, Gum also expands the "Color" variable into all three components when the Variable References text box loses focus. For example, the following text can be used to assign all three values at once:
