@@ -112,7 +112,7 @@ public class VariableGridToggleOptions
         {
             new ToggleButtonOption("Modulate", global::RenderingLibrary.Graphics.ColorOperation.Modulate) { GumIconName = "ColorOperationModulate" },
             new ToggleButtonOption("Add", global::RenderingLibrary.Graphics.ColorOperation.Add) { GumIconName = "ColorOperationAdd" },
-            new ToggleButtonOption("Color Texture Alpha", global::RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha) { GumIconName = "ColorOperationColorTextureAlpha" },
+            new ToggleButtonOption("Silhouette (Color + Texture Alpha)", global::RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha) { GumIconName = "ColorOperationColorTextureAlpha" },
         };
     }
 
