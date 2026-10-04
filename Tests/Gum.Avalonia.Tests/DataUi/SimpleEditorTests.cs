@@ -4,6 +4,7 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using AvaloniaDataUi.Controls;
 using Shouldly;
 using WpfDataUi;
@@ -293,6 +294,37 @@ public class SimpleEditorTests
         display.HandleSliderCommitted();
 
         fixture.Number.ShouldBe(0.6f, 0.0001f);
+    }
+
+    [AvaloniaFact]
+    public void SliderDisplay_MinMaxLabels_SitCloseToTheTrack()
+    {
+        EditorFixture fixture = new EditorFixture { Number = 0.5f };
+        SliderDisplay display = new SliderDisplay { MinValue = 0, MaxValue = 255, InstanceMember = fixture.Member(nameof(EditorFixture.Number)) };
+        Window window = new Window { Content = display, Width = 400, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        // At its default ~50px the slider leaves the labels floating far below the track.
+        display.Slider.DesiredSize.Height.ShouldBeLessThanOrEqualTo(30);
+    }
+
+    [AvaloniaFact]
+    public void SliderDisplay_MinMaxLabels_FollowTheCaptionFontSize()
+    {
+        EditorFixture fixture = new EditorFixture { Number = 0.5f };
+        SliderDisplay display = new SliderDisplay { MinValue = 0, MaxValue = 255, InstanceMember = fixture.Member(nameof(EditorFixture.Number)) };
+        Window window = new Window { Content = display, Width = 400, Height = 200 };
+        window.Resources["Frb.FontSize.Caption"] = 9.0;
+        window.Show();
+        window.UpdateLayout();
+        TextBlock maxLabel = display.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == "255");
+        maxLabel.FontSize.ShouldBe(9);
+
+        // Zooming the UI changes the resource; the label must follow.
+        window.Resources["Frb.FontSize.Caption"] = 18.0;
+
+        maxLabel.FontSize.ShouldBe(18);
     }
 
     [AvaloniaFact]
