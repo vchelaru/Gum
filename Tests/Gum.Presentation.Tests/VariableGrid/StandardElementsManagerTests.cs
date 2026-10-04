@@ -87,6 +87,21 @@ public class StandardElementsManagerTests : BaseTestClass
         variable.PropertiesToSetOnDisplayer.ContainsKey("MaxValue").ShouldBeFalse();
     }
 
+    // FontScale is a multiplier near 1, so scrubbing the label moves in 0.1 steps (not whole numbers)
+    // and the tool floors it at 0 (#5720).
+    [Fact]
+    public void SetPreferredDisplayers_FloorsFontScaleAtZero_AndScrubsInTenths()
+    {
+        StateSave state = StandardElementsManager.Self.DefaultStates["Text"];
+        VariableSave fontScale = state.Variables.First(item => item.Name == "FontScale");
+
+        CreateSut().SetPreferredDisplayers(state);
+
+        fontScale.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
+        fontScale.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"].ShouldBe(.02m);
+        fontScale.PropertiesToSetOnDisplayer["LabelDragValueRounding"].ShouldBe(.1m);
+    }
+
     // Pins the static->instance drain: the Parent variable's type converter is built from the
     // injected ISelectedState. Before the drain SetPreferredDisplayers pulled ISelectedState from
     // the static Locator (which throws in a unit test); now it must come from the constructor.

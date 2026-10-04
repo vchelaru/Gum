@@ -224,7 +224,11 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsBold", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "UseFontSmoothing", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "FontScale", Category = "Font" });
+            VariableSave fontScaleVariable =
+                new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "FontScale", Category = "Font" };
+            fontScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
+            fontScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .1m;
+            stateSave.Variables.Add(fontScaleVariable);
 
             AddRotationVariable(stateSave);
 
