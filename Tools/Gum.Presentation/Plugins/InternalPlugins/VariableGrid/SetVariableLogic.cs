@@ -760,7 +760,10 @@ public class SetVariableLogic : ISetVariableLogic
             if (!string.IsNullOrEmpty(value))
             {
                 var projectDirectory = _projectState.ProjectDirectory;
-                var filePath = new FilePath(projectDirectory + value);
+                // A file dropped from another drive has no relative form, so value can be absolute.
+                var filePath = FileManager.IsRelative(value)
+                    ? new FilePath(projectDirectory + value)
+                    : new FilePath(value);
 
                 // See if this is relative to the project. A project that was never saved has no
                 // directory to copy into, so there is nothing to ask.
