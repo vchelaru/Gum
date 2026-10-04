@@ -16,16 +16,28 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 
 /// <summary>
 /// #5709: #5707 left every descendant of an inflated component suspended (blank UI) while all unit
-/// tests stayed green. This inflates every Screen and Component of the GameUiSamples project and
+/// tests stayed green. This inflates every Screen and Component of each headless-loadable sample project and
 /// asserts the invariant that would have caught it: once inflation returns and
 /// <see cref="GraphicalUiElement.IsAllLayoutSuspended"/> is false, no node is still suspended.
 /// </summary>
 public class SampleInflationLayoutSuspensionTests : BaseTestClass
 {
-    [Fact]
-    public void InflatingEveryScreenAndComponent_ShouldLeaveNoNodeSuspended()
+    public static TheoryData<string> SampleProjects => new()
     {
-        using MinimalGame game = new();
+        "Samples/GameUiSamples/Content/GumProject/GameUiSamplesGumProject.gumx",
+        "Samples/GumFormsSample/MonoGameGumFormsSample/Content/FormsGumProject/GumProject.gumx",
+        "Samples/MonoGameGumCodeGeneration/Content/GumProject/GumProject.gumx",
+        "Samples/MonoGameGumFromFile/MonoGameGumFromFile/Content/GumProject.gumx",
+        "Samples/MVVM/Content/GumProject/GumProject.gumx",
+        "Samples/KniGumFromFile/KniGumFromFileContent/GumProject.gumx",
+        "Samples/FnaGum/FnaSample/Content/GumProject/GumProject.gumx",
+    };
+
+    [Theory]
+    [MemberData(nameof(SampleProjects))]
+    public void InflatingEveryScreenAndComponent_ShouldLeaveNoNodeSuspended(string projectRelativePath)
+    {
+        using MinimalGame game = new(projectRelativePath);
         game.RunOneFrame();
 
         SystemManagers managers = SystemManagers.Default;
@@ -35,7 +47,7 @@ public class SampleInflationLayoutSuspensionTests : BaseTestClass
         List<ElementSave> elements = new();
         elements.AddRange(project!.Screens);
         elements.AddRange(project.Components);
-        elements.Count.ShouldBeGreaterThan(10);
+        elements.Count.ShouldBeGreaterThan(0);
 
         RegisterComponentFactoriesLikeGeneratedCode(project, managers);
 
@@ -108,10 +120,12 @@ public class SampleInflationLayoutSuspensionTests : BaseTestClass
     private class MinimalGame : Game
     {
         private readonly GraphicsDeviceManager _graphics;
+        private readonly string _projectRelativePath;
         public Gum.GumService GumService { get; }
 
-        public MinimalGame()
+        public MinimalGame(string projectRelativePath)
         {
+            _projectRelativePath = projectRelativePath;
             LoaderManager.Self?.DisposeAndClear();
             _graphics = new GraphicsDeviceManager(this);
             GumService = new Gum.GumService();
@@ -120,16 +134,15 @@ public class SampleInflationLayoutSuspensionTests : BaseTestClass
         protected override void Initialize()
         {
             base.Initialize();
-            GumService.Initialize(this, FindProjectFile());
+            GumService.Initialize(this, FindProjectFile(_projectRelativePath));
         }
 
-        private static string FindProjectFile()
+        private static string FindProjectFile(string projectRelativePath)
         {
             string current = AppContext.BaseDirectory;
             for (int i = 0; i < 10; i++)
             {
-                string candidate = Path.Combine(
-                    current, "Samples", "GameUiSamples", "Content", "GumProject", "GameUiSamplesGumProject.gumx");
+                string candidate = Path.Combine(current, projectRelativePath);
                 if (File.Exists(candidate))
                 {
                     return candidate;
@@ -141,7 +154,7 @@ public class SampleInflationLayoutSuspensionTests : BaseTestClass
                 }
                 current = parent;
             }
-            throw new InvalidOperationException("could not locate GameUiSamples project from " + AppContext.BaseDirectory);
+            throw new InvalidOperationException("could not locate " + projectRelativePath + " from " + AppContext.BaseDirectory);
         }
 
         protected override void Update(GameTime gameTime) { }
