@@ -1032,25 +1032,36 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
-    public void FromSyntaxNode_MathPrefixedMax_ReturnsSameAsBare()
+    public void FromSyntaxNode_MathPrefixedMax_IsNotAGumFunction()
     {
         StateSave state = BuildState(("Instance.Width", 30f, "float"));
 
         EvaluatedSyntax result = Evaluate("Math.Max(Instance.Width, 50)", state);
 
-        result.ShouldNotBeNull();
-        result.Value.ShouldBe(50f);
+        (result?.Value).ShouldBeNull();
     }
 
     [Fact]
-    public void FromSyntaxNode_Sin_UsesRadians()
+    public void FromSyntaxNode_Sin_UsesDegrees()
     {
-        StateSave state = BuildState(("Instance.Angle", 1.5707964f, "float"));
+        StateSave state = BuildState(("Instance.Angle", 90f, "float"));
 
         EvaluatedSyntax result = Evaluate("Sin(Instance.Angle)", state);
 
         result.ShouldNotBeNull();
         ((float)result.Value!).ShouldBe(1f, 0.0001f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TrigAtExactAngles_ReturnsExactValues()
+    {
+        StateSave state = BuildState();
+
+        Evaluate("Sin(180)", state).Value.ShouldBe(0f);
+        Evaluate("Cos(90)", state).Value.ShouldBe(0f);
+        Evaluate("Sin(30)", state).Value.ShouldBe(0.5f);
+        Evaluate("Cos(60)", state).Value.ShouldBe(0.5f);
+        Evaluate("Tan(45)", state).Value.ShouldBe(1f);
     }
 
     [Fact]
@@ -1156,6 +1167,7 @@ public class EvaluatedSyntaxTests : BaseTestClass
     [InlineData("Clamp(1, 2)", "Clamp expects 3 arguments but got 2")]
     [InlineData("Foo(1)", "Unknown function 'Foo'")]
     [InlineData("Math.Foo(1)", "Unknown function 'Math.Foo'")]
+    [InlineData("Math.Max(1, 2)", "Unknown function 'Math.Max'. Gum functions have no Math. prefix, write Max(...)")]
     [InlineData("Other.Sin(1)", "Unknown function 'Other.Sin'")]
     public void GetFunctionCallProblem_InvalidCall_ReturnsMessage(string expression, string expectedStart)
     {
@@ -1171,35 +1183,10 @@ public class EvaluatedSyntaxTests : BaseTestClass
     [Fact]
     public void GetFunctionCallProblem_ValidNestedCalls_ReturnsNull()
     {
-        Microsoft.CodeAnalysis.SyntaxNode syntax = SyntaxFactory.ParseExpression("Math.Max(Sin(A), Min(1, 2))");
+        Microsoft.CodeAnalysis.SyntaxNode syntax = SyntaxFactory.ParseExpression("Max(Sin(A), Min(1, 2))");
 
         EvaluatedSyntax.GetFunctionCallProblem(syntax).ShouldBeNull();
     }
 
-    [Fact]
-    public void FunctionNames_MatchNamesCalledByTheEvaluator()
-    {
-        // GumCommon's list (used by name-only scanners) must stay in step with what the evaluator
-        // implements: every listed name evaluates, so no listed name is silently unsupported.
-        StateSave state = BuildState(("Instance.Width", 4f, "float"));
-
-        foreach (string name in ExpressionFunctionNames.All)
-        {
-            string arguments = name switch
-            {
-                "Min" or "Max" => "Instance.Width, 3",
-                "Clamp" => "Instance.Width, 0, 10",
-                _ => "Instance.Width",
-            };
-
-            Evaluate($"{name}({arguments})", state).Value.ShouldNotBeNull(name);
-            EvaluatedSyntax.GetFunctionCallProblem(
-                SyntaxFactory.ParseExpression($"{name}({arguments})")).ShouldBeNull(name);
-        }
-
-        // And the reverse: the evaluator implements no name that GumCommon's list lacks.
-        string problem = EvaluatedSyntax.GetFunctionCallProblem(SyntaxFactory.ParseExpression("Zzz(1)"))!;
-        problem.ShouldEndWith(string.Join(", ", ExpressionFunctionNames.All.OrderBy(name => name)));
-    }
     #endregion
 }

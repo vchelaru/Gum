@@ -1655,7 +1655,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     {
         ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Background",
             "Height = 50 + Sin(@X/180)",
-            "Width = Math.Max(Background.Width, 5) + Clamp(Background.Height, 0, 10)");
+            "Width = Max(Background.Width, 5) + Clamp(Background.Height, 0, 10)");
         component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle", ParentContainer = component });
 
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);

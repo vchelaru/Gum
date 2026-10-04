@@ -261,13 +261,13 @@ public class VariableReferenceLogicTests : BaseTestClass
     public void ReactIfChangedMemberIsVariableReference_FunctionCallOnInstance_QualifiesArgumentsButNotFunctionName()
     {
         var instance = new InstanceSave { Name = "myInstance" };
-        StateSave stateSave = BuildStateWithVariableReferences("myInstance.VariableReferences", "Width=Sin(Angle) + Math.Max(Angle, 1)");
+        StateSave stateSave = BuildStateWithVariableReferences("myInstance.VariableReferences", "Width=Sin(Angle) + Max(Angle, 1)");
 
         _sut.ReactIfChangedMemberIsVariableReference(
             instance, stateSave, changedMember: "VariableReferences", oldValue: null);
 
-        var varList = (List<string>)stateSave.GetVariableListSave("myInstance.VariableReferences").ValueAsIList;
-        varList[0].ShouldBe("Width=Sin(myInstance.Angle) + Math.Max(myInstance.Angle, 1)");
+        var varList = (List<string>)stateSave.GetVariableListSave("myInstance.VariableReferences")!.ValueAsIList;
+        varList[0].ShouldBe("Width=Sin(myInstance.Angle) + Max(myInstance.Angle, 1)");
     }
 
     #endregion
@@ -617,7 +617,7 @@ public class VariableReferenceLogicTests : BaseTestClass
         ObjectFinder.Self.GumProjectSave = project;
 
         ScreenSave screen = BuildScreenWithVariableReference(
-            line: "Width = 100 * Math.Cos(Angle)",
+            line: "Width = 100 * Cos(Angle)",
             out StateSave defaultState,
             out VariableListSave<string> varList);
         defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
@@ -632,7 +632,7 @@ public class VariableReferenceLogicTests : BaseTestClass
             qualifiedName: "VariableReferences",
             trySave: false);
 
-        varList.Value[0].ShouldBe("Width = 100 * Math.Cos(Angle)");
+        varList.Value[0].ShouldBe("Width = 100 * Cos(Angle)");
         defaultState.GetValue("Width").ShouldBe(100f);
     }
 

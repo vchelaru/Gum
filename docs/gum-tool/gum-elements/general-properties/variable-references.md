@@ -200,7 +200,7 @@ Visible = !LoadingSpinner.Visible
 
 ### Math Functions
 
-Variable references can call a fixed set of math functions. Each function can be written with or without the `Math.` prefix, so `Max(Width, 50)` and `Math.Max(Width, 50)` are the same:
+Variable references can call a fixed set of functions. These are Gum's own functions, not C# methods: write `Max(Width, 50)`, not `Math.Max(Width, 50)`.
 
 ```csharp
 Width = Max(Container.Width / 2, 100)
@@ -213,7 +213,7 @@ The supported functions are:
 
 | Function | Result |
 | --- | --- |
-| `Sin(x)`, `Cos(x)`, `Tan(x)` | Trigonometric functions. The angle `x` is in radians. |
+| `Sin(angle)`, `Cos(angle)`, `Tan(angle)` | Trigonometric functions. The angle is in degrees, the same unit as `Rotation`. |
 | `Sqrt(x)` | Square root. |
 | `Abs(x)` | Absolute value. |
 | `Floor(x)`, `Ceiling(x)`, `Round(x)` | Rounds down, up, or to the nearest whole number. `Round` rounds halves to the nearest even number, so `Round(2.5)` is `2`. |
@@ -222,8 +222,7 @@ The supported functions are:
 
 Function names are case sensitive. A reference that calls an unknown function, passes the wrong number of values, or produces no number (such as `Sqrt` of a negative value) is commented out and the tool explains why.
 
-Because the angle is in radians, a full circle is about `6.2832`. To drive circular motion from a variable that animates from `0` to `1`, multiply it by `6.2832` inside `Sin` and `Cos`.
-
+Because angles are in degrees, a variable that animates from `0` to `360` drives a full circle through `Sin` and `Cos`.
 ### Category-State Assignment
 
 Variable references can drive a component's categorical state by assigning to `<CategoryName>State`. The right side must resolve to a `string` matching one of the state names defined in that category. This is useful for switching visual states from another instance's variable. For example, on a button-derived component with a `ButtonCategory` containing `Enabled` and `Disabled` states:

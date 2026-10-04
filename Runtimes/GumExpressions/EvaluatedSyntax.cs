@@ -160,9 +160,9 @@ public class EvaluatedSyntax
     {
         foreach (var invocation in syntaxNode.DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>())
         {
-            if (!ExpressionFunctions.TryGetFunctionName(invocation, out string name, out string displayName))
+            if (!TryGetFunctionName(invocation, out string name))
             {
-                return $"Unknown function '{displayName}'. Supported functions: {ExpressionFunctions.SupportedNames}";
+                return DescribeUnknownFunction(invocation);
             }
 
             int expected = ExpressionFunctions.GetArgumentCount(name);
@@ -174,6 +174,28 @@ public class EvaluatedSyntax
         }
 
         return null;
+    }
+
+    // Gum functions are plain names like Max(a, b). A qualified callee such as Math.Max is not one.
+    private static bool TryGetFunctionName(InvocationExpressionSyntax invocation, out string name)
+    {
+        name = invocation.Expression is IdentifierNameSyntax identifier ? identifier.Identifier.ValueText : string.Empty;
+        return ExpressionFunctions.IsFunction(name);
+    }
+
+    private static string DescribeUnknownFunction(InvocationExpressionSyntax invocation)
+    {
+        string callee = invocation.Expression.ToString();
+        string supported = $"Supported functions: {string.Join(", ", ExpressionFunctions.Names)}";
+
+        if (invocation.Expression is MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.ValueText: "Math" } } memberAccess
+            && ExpressionFunctions.IsFunction(memberAccess.Name.Identifier.ValueText))
+        {
+            string bareName = memberAccess.Name.Identifier.ValueText;
+            return $"Unknown function '{callee}'. Gum functions have no Math. prefix, write {bareName}(...). {supported}";
+        }
+
+        return $"Unknown function '{callee}'. {supported}";
     }
 
     /// <summary>
@@ -297,7 +319,7 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is InvocationExpressionSyntax invocation)
         {
-            if (!ExpressionFunctions.TryGetFunctionName(invocation, out string functionName, out _))
+            if (!TryGetFunctionName(invocation, out string functionName))
             {
                 return null;
             }
@@ -658,7 +680,7 @@ public class EvaluatedSyntax
                type == typeof(decimal);
     }
 
-    internal static Type GetWiderNumericType(Type type1, Type type2)
+    static Type GetWiderNumericType(Type type1, Type type2)
     {
         // Define a precedence list for numeric types
         var typeOrder = new[]
