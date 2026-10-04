@@ -128,7 +128,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
-        var assignmentSyntax = GetAssignmentSyntax(line);
+        // Failures are reported against the original line (so CommentFailures can find it), but the
+        // expression is validated with "@" already resolved to the owning instance.
+        var assignmentSyntax = GetAssignmentSyntax(
+            ElementSaveExtensions.ResolveOwnerPrefix(line, leftSideInstance?.Name));
 
         if (assignmentSyntax == null)
         {
@@ -764,7 +767,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         var syntax = CSharpSyntaxTree.ParseText(asCSharp).GetCompilationUnitRoot();
 
         var itemsToReplace = syntax.DescendantNodes()
-            .Where(item => item is IdentifierNameSyntax && 
+            .Where(item => item is IdentifierNameSyntax identifier &&
+                !identifier.Identifier.Text.StartsWith("@") &&
                 item.Parent is not MemberAccessExpressionSyntax
                     and not AliasQualifiedNameSyntax);
 

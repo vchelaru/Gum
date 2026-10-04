@@ -1147,7 +1147,7 @@ namespace GumRuntime
             }
 
 
-            var right = split[1];
+            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name);
             var value = GetRightSideValue(stateSave, right, leftSideType, liveRootForRightSide ?? referenceOwner);
 
 
@@ -1155,6 +1155,52 @@ namespace GumRuntime
             {
                 referenceOwner.SetProperty(left, value);
             }
+        }
+
+        /// <summary>
+        /// Rewrites the <c>@</c> owner prefix in a reference expression. <c>@Index</c> means "the instance
+        /// that owns this row", so on an instance row it becomes <c>Owner.Index</c>; on an element-level row
+        /// (<paramref name="ownerInstanceName"/> null) the owner is the element itself, so the <c>@</c> is
+        /// dropped. String and char literals are left untouched, as is a verbatim string opener (<c>@"</c>).
+        /// </summary>
+        public static string ResolveOwnerPrefix(string expression, string? ownerInstanceName)
+        {
+            if (expression.IndexOf('@') < 0)
+            {
+                return expression;
+            }
+
+            var builder = new System.Text.StringBuilder(expression.Length + 16);
+
+            for (int i = 0; i < expression.Length; i++)
+            {
+                char c = expression[i];
+
+                if (c == '"' || c == '\'')
+                {
+                    int end = i + 1;
+                    while (end < expression.Length && expression[end] != c)
+                    {
+                        end += expression[end] == '\\' ? 2 : 1;
+                    }
+                    end = System.Math.Min(end + 1, expression.Length);
+                    builder.Append(expression, i, end - i);
+                    i = end - 1;
+                }
+                else if (c == '@' && i + 1 < expression.Length && (char.IsLetter(expression[i + 1]) || expression[i + 1] == '_'))
+                {
+                    if (ownerInstanceName != null)
+                    {
+                        builder.Append(ownerInstanceName).Append('.');
+                    }
+                }
+                else
+                {
+                    builder.Append(c);
+                }
+            }
+
+            return builder.ToString();
         }
 
         private static string? GetRootVariableType(string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
@@ -1217,7 +1263,7 @@ namespace GumRuntime
                 leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
             }
 
-            var right = split[1];
+            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name);
             object? value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
 
             object? valueBefore = null;
@@ -1348,7 +1394,7 @@ namespace GumRuntime
                 leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
             }
 
-            var right = split[1];
+            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name);
             var values = GetAllRightSideValues(stateSave, right, leftSideType, liveRoot).ToList();
 
             return (leftVariableName, values);

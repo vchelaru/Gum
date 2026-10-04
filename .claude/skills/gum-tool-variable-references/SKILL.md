@@ -19,6 +19,7 @@ LeftProperty = RightSide
 
 - **Left side:** An unqualified property name on the owning instance/element (e.g. `X`, `FontSize`, `Red`).
 - **Scoping (the two sides differ):** On an instance's row, the left side is the instance's variable (`X =` writes `Instance.X`). A bare right-side name resolves against the **containing element**, so `X = X` assigns the containing component's `X` to the instance's `X`. Naming another instance needs `Other.X`. Runtime-computed names such as `AbsoluteWidth` follow the same rule (bare means the containing element). See `ApplyVariableReferencesOnSpecificOwner` in `ElementSaveExtensions.GumRuntime.cs`.
+- **Owner prefix `@`:** `@Index` on an instance row means "the instance that owns this row" and survives copy/paste, unlike `Item1.Index`. `ElementSaveExtensions.ResolveOwnerPrefix` rewrites it to `Owner.Index` (or drops it on an element row) before every evaluation, so `EvaluatedSyntax` never sees `@`. A new place that evaluates or validates a right side must call it first, and `QualifyInstanceVariables` must skip `@` names.
 - **Right side:** A variable path, which can be:
   - Local: `OtherInstance.X` (same element)
   - Cross-element: `Components/MyComp.InstanceName.Width` (slash-separated element path)

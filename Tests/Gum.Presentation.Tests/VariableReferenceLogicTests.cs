@@ -436,6 +436,97 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactIfChangedMemberIsVariableReference_AtPrefixOnInstanceRow_IsNotQualifiedWithInstanceName()
+    {
+        // "@Index" means "the instance that owns this row", so it must stay verbatim to survive duplication.
+        var instance = new InstanceSave { Name = "myInstance" };
+        StateSave stateSave = BuildStateWithVariableReferences("myInstance.VariableReferences", "Width=@Index * 10");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance, stateSave, changedMember: "VariableReferences", oldValue: null);
+
+        var varList = (List<string>)stateSave.GetVariableListSave("myInstance.VariableReferences").ValueAsIList;
+        varList[0].ShouldContain("@Index");
+        varList[0].ShouldNotContain("myInstance.");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_AtPrefixOnInstanceRow_ResolvesAgainstEachOwningInstance()
+    {
+        GumExpressionService.Initialize();
+
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        project.Screens.Add(screen);
+
+        ComponentSave itemComponent = new ComponentSave { Name = "ItemComp" };
+        StateSave itemState = new StateSave { Name = "Default", ParentContainer = itemComponent };
+        itemState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        itemComponent.States.Add(itemState);
+        project.Components.Add(itemComponent);
+
+        foreach ((string name, float index) in new[] { ("Item1", 3f), ("Item2", 5f) })
+        {
+            screen.Instances.Add(new InstanceSave { Name = name, BaseType = "ItemComp", ParentContainer = screen });
+            defaultState.Variables.Add(new VariableSave { Name = name + ".Width", SetsValue = true, Value = 0f, Type = "float" });
+            defaultState.Variables.Add(new VariableSave { Name = name + ".Index", SetsValue = true, Value = index, Type = "float" });
+
+            // The identical row text on both instances, as a copy/paste would leave it.
+            VariableListSave<string> varList = new VariableListSave<string> { Type = "string", Name = name + ".VariableReferences" };
+            varList.Value.Add("Width = @Index * 10");
+            defaultState.VariableLists.Add(varList);
+        }
+
+        foreach (InstanceSave instance in screen.Instances)
+        {
+            _sut.DoVariableReferenceReaction(
+                parentElement: screen,
+                leftSideInstance: instance,
+                unqualifiedMember: "VariableReferences",
+                stateSave: defaultState,
+                qualifiedName: instance.Name + ".VariableReferences",
+                trySave: false);
+        }
+
+        defaultState.GetVariableListSave("Item1.VariableReferences")!.ValueAsIList[0].ShouldBe("Width = @Index * 10");
+        defaultState.GetValue("Item1.Width").ShouldBe(30f);
+        defaultState.GetValue("Item2.Width").ShouldBe(50f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_AtPrefixOnElementRow_ResolvesAgainstTheElement()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        defaultState.Variables.Add(new VariableSave { Name = "Height", SetsValue = true, Value = 40f, Type = "float" });
+        screen.States.Add(defaultState);
+        project.Screens.Add(screen);
+
+        VariableListSave<string> varList = new VariableListSave<string> { Type = "string", Name = "VariableReferences" };
+        varList.Value.Add("Width = @Height");
+        defaultState.VariableLists.Add(varList);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("Width = @Height");
+        defaultState.GetValue("Width").ShouldBe(40f);
+    }
+
+    [Fact]
     public void DoVariableReferenceReaction_NotOperatorOnBoolean_InvertsValue()
     {
         // "Visible = !OtherInstance.Visible" should invert the boolean.
