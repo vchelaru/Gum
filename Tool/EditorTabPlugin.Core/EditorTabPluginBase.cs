@@ -63,7 +63,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     #region PropertiesSupportingIncrementalChange
 
-    HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
+    internal static readonly HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
         {
             "Animate",
             "Alpha",
@@ -89,6 +89,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             "HorizontalAlignment",
             nameof(GraphicalUiElement.IgnoredByParentSize),
             "IsBold",
+            "IsItalic",
             "IsRenderTarget",
             "MaxLettersToShow",
             nameof(GraphicalUiElement.MaxHeight),
@@ -96,6 +97,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             nameof(GraphicalUiElement.MaxWidth),
             nameof(GraphicalUiElement.MinHeight),
             nameof(GraphicalUiElement.MinWidth),
+            "OutlineThickness",
             "Red",
             "Rotation",
             "SourceFile",

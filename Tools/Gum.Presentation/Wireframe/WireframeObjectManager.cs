@@ -150,6 +150,11 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         }
         else if (forceLayout || forceReloadTextures)
         {
+            // A rebuild runs mid-scrub for variables that can't be pushed incrementally (e.g. FontScale),
+            // while font regeneration is suppressed. The new Text objects must still resolve their fonts
+            // or they render with the default font, so lift the suppression for the rebuild.
+            bool wasFontRegenerationSuppressed = GraphicalUiElement.SuppressFontRegeneration;
+            GraphicalUiElement.SuppressFontRegeneration = false;
             ObjectFinder.Self.EnableCache();
             {
                 ClearAll();
@@ -224,6 +229,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                 }
             }
             ObjectFinder.Self.DisableCache();
+            GraphicalUiElement.SuppressFontRegeneration = wasFontRegenerationSuppressed;
         }
         ElementShowing = elementSave;
 
