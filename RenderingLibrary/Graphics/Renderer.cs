@@ -999,6 +999,39 @@ public class Renderer : IRenderer
     /// </summary>
     public bool IsBakingRenderTarget => _isBakingRenderTarget;
 
+    // #5696: bake targets carry a stencil buffer only when something baked into them draws through
+    // it (alpha-mask shapes). A nested render target bakes into its own target, so it ends the scan.
+    private static bool SubtreeRequiresStencil(IRenderableIpso container)
+    {
+        var children = container.Children;
+        if (children == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < children.Count; i++)
+        {
+            IRenderableIpso child = children[i];
+            if (!child.Visible)
+            {
+                continue;
+            }
+
+            IRenderableIpso resolved = ResolveRenderTargetCacheOwner(child);
+            if (resolved is IStencilRenderable { RequiresStencilBuffer: true })
+            {
+                return true;
+            }
+
+            if (!child.IsRenderTarget && SubtreeRequiresStencil(child))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
 
@@ -1025,7 +1058,8 @@ public class Renderer : IRenderer
         // source bakes under the wrapper while the referencing Sprite looks up the raw renderable
         // and misses.
         var renderTarget = renderTargetService.GetRenderTargetFor(
-            InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
+            InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera,
+            needsStencil: SubtreeRequiresStencil(renderable));
 
         if(renderTarget != null)
         {
@@ -1660,6 +1694,7 @@ public class Renderer : IRenderer
 class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
 {
     private GraphicsDevice? _graphicsDeviceForCreate;
+    private bool _stencilForCreate;
 
     protected override RenderTarget2D Create(int width, int height)
     {
@@ -1669,9 +1704,10 @@ class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
         var device = _graphicsDeviceForCreate
             ?? throw new System.InvalidOperationException(
                 "GraphicsDevice was not staged before Create — use GetRenderTargetFor.");
-        // Depth24Stencil8 so Apos.Shapes alpha-mask shapes (#5689) can mark their body in the
-        // stencil buffer while baking. No depth testing is enabled anywhere, so the depth bits go unused.
-        return new RenderTarget2D(device, width, height, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
+        // Depth24Stencil8 only when a baked shape needs the stencil (#5689, #5696); no depth testing
+        // is enabled anywhere, so the depth bits go unused.
+        DepthFormat depthFormat = _stencilForCreate ? DepthFormat.Depth24Stencil8 : DepthFormat.None;
+        return new RenderTarget2D(device, width, height, false, SurfaceFormat.Color, depthFormat);
     }
 
     protected override void Destroy(RenderTarget2D renderTarget) => renderTarget.Dispose();
@@ -1686,14 +1722,26 @@ class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
         return renderTarget is { IsDisposed: false } ? renderTarget : null;
     }
 
-    public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
+    /// <param name="needsStencil">True when this bake draws something that needs a stencil buffer.
+    /// A cached target without one is replaced; a target that already has one keeps it (including
+    /// across a resize), so a container never thrashes between the two. Blit-only callers pass false
+    /// and get whatever the bake made.</param>
+    public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera, bool needsStencil = false)
     {
         // Shared clamp+size helper (#3478) — the same one raylib's bake/composite path uses — so the
         // camera-visible-bounds math can't drift between backends. GetFor returns null for a
         // non-positive size (off-camera / degenerate), which the callers treat as "render nothing".
         var bounds = camera.GetRenderTargetBounds(renderable);
 
+        RenderTarget2D? existing = TryGetExisting(renderable);
+        bool existingHasStencil = existing is { IsDisposed: false, DepthStencilFormat: not DepthFormat.None };
+        if (needsStencil && existing != null && !existingHasStencil)
+        {
+            Remove(renderable);
+        }
+
         _graphicsDeviceForCreate = graphicsDevice;
+        _stencilForCreate = needsStencil || existingHasStencil;
         try
         {
             return GetFor(renderable, bounds.Width, bounds.Height);

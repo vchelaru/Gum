@@ -98,6 +98,16 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
         return _renderTargets.ContainsKey(owner);
     }
 
+    /// <summary>Destroys and forgets the owner's cached render target, if any.</summary>
+    public void Remove(IRenderableIpso owner)
+    {
+        if (_renderTargets.TryGetValue(owner, out TRenderTarget? existing))
+        {
+            Destroy(existing);
+            _renderTargets.Remove(owner);
+        }
+    }
+
     /// <summary>
     /// Returns the cached render target for this owner without allocating or marking it used.
     /// Returns <c>default</c> if none exists. Useful when a later pass needs to read what an
