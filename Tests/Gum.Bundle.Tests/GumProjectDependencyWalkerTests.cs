@@ -265,6 +265,23 @@ public class GumProjectDependencyWalkerTests : IDisposable
     }
 
     [Fact]
+    public void Walk_ignores_web_url_source_files_instead_of_reporting_them_missing()
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddSpriteInstance(screen, "Sprite", "https://picsum.photos/100/100");
+        GumProjectSave project = TestProjectBuilder.BuildProject(screens: new[] { screen });
+        string root = CreateProjectRoot(new[]
+        {
+            ("Screens/MainMenu.gusx", EmptyContent),
+        });
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
+
+        result.MissingFiles.ShouldBeEmpty();
+        result.ExternalFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Walk_returns_relative_paths_not_absolute()
     {
         ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
