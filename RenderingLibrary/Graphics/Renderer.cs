@@ -1088,6 +1088,9 @@ public class Renderer : IRenderer
             // above. _isBakingRenderTarget tells AdjustRenderStates/AdjustNonClipRenderStates to
             // substitute the bake-safe blend for that case instead (#1696). A child with an
             // explicitly custom BlendState is unaffected, same as the composite-back override.
+            // A plain set/reset is safe: PreRender bakes post-order (a nested render target is baked
+            // before its parent starts) and SubmitBake only blits an already-baked nested target, so
+            // a bake never starts inside another one (#5677).
             _isBakingRenderTarget = true;
             SubmitBake(renderable, systemManagers, _layers[0]);
             _isBakingRenderTarget = false;
