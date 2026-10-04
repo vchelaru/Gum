@@ -566,6 +566,19 @@ public class SetVariableLogic : ISetVariableLogic
                 _guiCommands.RefreshVariableValues();
                 return GeneralResponse.UnsuccessfulWith("File copy was cancelled");
             }
+
+            // The picker returns an absolute path, and Font is not an IsFile variable, so nothing
+            // else makes it project-relative. An absolute path breaks the project on any other machine,
+            // and a backslash is a file-name character on macOS and Linux, so save forward slashes.
+            if (projectDirectory != null &&
+                variable.Value is string pickedPath &&
+                !FileManager.IsRelative(pickedPath) &&
+                !FileManager.IsUrl(pickedPath))
+            {
+                variable.Value = FileManager
+                    .MakeRelative(pickedPath, projectDirectory, preserveCase: true)
+                    .Replace('\\', '/');
+            }
         }
 
         return GeneralResponse.SuccessfulResponse;

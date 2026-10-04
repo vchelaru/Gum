@@ -627,6 +627,35 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public async Task LoadProjectAsync_ByFilePath_RunsFontPathRepairOnTheProjectFolder_AndNamesItInTheOutputWhenItChangesSomething()
+    {
+        // #5665: absolute font paths that resolve inside the project are made relative on load.
+        string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
+        _projectManager.RunOffCallingThread = work => Task.FromResult(work());
+        _gumProjectRepairLogic
+            .Setup(x => x.MakeFontFilePathsRelative(It.IsAny<GumProjectSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        try
+        {
+            await _projectManager.LoadProjectAsync(gumxPath);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+
+        _gumProjectRepairLogic.Verify(
+            x => x.MakeFontFilePathsRelative(
+                It.IsAny<GumProjectSave>(),
+                new FilePath(tempDirectory + "/").FullPath),
+            Times.Once);
+        _guiCommands.Verify(
+            g => g.PrintOutput(It.Is<string>(m => m.Contains("MakeFontFilePathsRelative"))),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task LoadProjectAsync_ByFilePath_AfterALoadWhoseDeserializeFinishedBeforeItWasAwaited_LoadsAgain()
     {
         // A busy machine can finish the background deserialize before the load awaits it; the load

@@ -33,4 +33,12 @@ public interface IGumProjectRepairLogic
     /// occurrence of each name.
     /// </summary>
     bool RemoveDuplicateVariables(GumProjectSave gumProjectSave);
+
+    /// <summary>
+    /// Rewrites an absolute font-file path (a <c>.ttf</c>/<c>.otf</c> in <c>Font</c> or
+    /// <c>CustomFontFile</c>) to a project-relative one, when it points at an existing file inside
+    /// <paramref name="projectDirectory"/>. A path that does not resolve on this machine, or resolves
+    /// outside the project, is left alone: guessing where it moved to is not safe unprompted.
+    /// </summary>
+    bool MakeFontFilePathsRelative(GumProjectSave gumProjectSave, string projectDirectory);
 }

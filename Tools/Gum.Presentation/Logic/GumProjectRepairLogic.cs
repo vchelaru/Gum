@@ -2,8 +2,11 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using RenderingLibrary.Graphics.Fonts;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using ToolsUtilities;
 
 namespace Gum.Logic;
 
@@ -212,6 +215,36 @@ public class GumProjectRepairLogic : IGumProjectRepairLogic
         foreach (StandardElementSave standard in gumProjectSave.StandardElements)
         {
             didChange = RemoveDuplicateVariables(standard) || didChange;
+        }
+        return didChange;
+    }
+
+    /// <inheritdoc/>
+    public bool MakeFontFilePathsRelative(GumProjectSave gumProjectSave, string projectDirectory)
+    {
+        bool didChange = false;
+        foreach (ElementSave element in gumProjectSave.AllElements)
+        {
+            foreach (StateSave state in element.AllStates)
+            {
+                foreach (VariableSave variable in state.Variables)
+                {
+                    string rootName = variable.GetRootName();
+                    if ((rootName == "Font" || rootName == "CustomFontFile") &&
+                        variable.Value is string path &&
+                        BmfcSave.IsFontFilePath(path) &&
+                        !FileManager.IsRelative(path) &&
+                        !FileManager.IsUrl(path) &&
+                        File.Exists(path) &&
+                        FileManager.IsRelativeTo(path, projectDirectory))
+                    {
+                        variable.Value = FileManager
+                            .MakeRelative(path, projectDirectory, preserveCase: true)
+                            .Replace('\\', '/');
+                        didChange = true;
+                    }
+                }
+            }
         }
         return didChange;
     }

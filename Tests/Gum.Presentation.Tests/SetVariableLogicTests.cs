@@ -789,6 +789,69 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToPropertyValueChanged_ShouldStoreRelativeFontPath_WhenTtfIsInsideProject()
+    {
+        // Repro for #5665: the Font row's file picker returns an absolute path. A TTF inside the
+        // project must be saved relative to it, or the project breaks on any other machine.
+        mocker.GetMock<IProjectState>()
+            .Setup(x => x.ProjectDirectory)
+            .Returns("/TestProject/");
+
+        (ComponentSave container, InstanceSave instance, VariableSave variable) =
+            CreateTextInstanceWithFont("/TestProject/Fonts/Sins 7.ttf");
+
+        GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
+            "Font", null, container, instance, container.DefaultState, refresh: false,
+            recordUndo: false, trySave: false);
+
+        response.Succeeded.ShouldBeTrue();
+        _fakeDialogService.ShowChoiceCallCount.ShouldBe(0);
+        variable.Value.ShouldBe("Fonts/Sins 7.ttf");
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldStoreRelativeFontPath_WhenTtfIsOutsideProjectAndReferencedInPlace()
+    {
+        // Choosing "Reference the file in its current location" must still not bake this
+        // machine's absolute path into the project; other file variables get a ../ path.
+        mocker.GetMock<IProjectState>()
+            .Setup(x => x.ProjectDirectory)
+            .Returns("/TestProject/");
+
+        (ComponentSave container, InstanceSave instance, VariableSave variable) =
+            CreateTextInstanceWithFont("/SharedFonts/Sins 7.ttf");
+
+        _setVariableLogic.SetBatchFileCopyDecision(shouldCopy: false);
+
+        GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
+            "Font", null, container, instance, container.DefaultState, refresh: false,
+            recordUndo: false, trySave: false);
+
+        _setVariableLogic.SetBatchFileCopyDecision(shouldCopy: null);
+
+        response.Succeeded.ShouldBeTrue();
+        variable.Value.ShouldBe("../SharedFonts/Sins 7.ttf");
+    }
+
+    private (ComponentSave container, InstanceSave instance, VariableSave variable) CreateTextInstanceWithFont(string fontPath)
+    {
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new StateSave());
+        container.DefaultState.ParentContainer = container;
+
+        InstanceSave instance = new InstanceSave { Name = "TextInstance", BaseType = "Text" };
+
+        container.DefaultState.SetValue("TextInstance.Font", fontPath);
+        VariableSave variable = container.DefaultState.GetVariableSave("TextInstance.Font").ShouldNotBeNull();
+
+        mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave)
+            .Returns(container.DefaultState);
+
+        return (container, instance, variable);
+    }
+
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldNotShowCopyDialog_WhenBatchFileCopyDecisionIsSetToFalse()
     {
         // A SourceFile path that resolves outside the project folder should normally
