@@ -49,7 +49,7 @@ namespace Gum.Avalonia.Plugins.EditorTab;
 /// this head renders through KNI's SDL2/GL backend.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCanvasFrameRequestMessage>
+public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCanvasFrameRequestMessage>, IRecipient<EditorCanvasStateRequestMessage>
 {
     private readonly ICanvasRedrawScheduler _canvasRedrawScheduler;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -203,6 +203,11 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
     void IRecipient<EditorCanvasFrameRequestMessage>.Receive(EditorCanvasFrameRequestMessage message)
     {
         message.Reply(WaitForCanvasFrameAsync());
+    }
+
+    void IRecipient<EditorCanvasStateRequestMessage>.Receive(EditorCanvasStateRequestMessage message)
+    {
+        message.Reply(_canvasControl?.DescribeFrameState() ?? "the Editor canvas was never created");
     }
 
     private async Task<bool> WaitForCanvasFrameAsync()
