@@ -284,11 +284,17 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureHeight", Category = "Source" });
 
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureWidthScale", Category = "Source",
-                DetailText="Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as wide"});
+            VariableSave textureWidthScaleVariable = new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureWidthScale", Category = "Source",
+                DetailText="Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as wide"};
+            textureWidthScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
+            textureWidthScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .1m;
+            stateSave.Variables.Add(textureWidthScaleVariable);
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureHeightScale", Category = "Source",
-                DetailText = "Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as tall"});
+            VariableSave textureHeightScaleVariable = new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureHeightScale", Category = "Source",
+                DetailText = "Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as tall"};
+            textureHeightScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
+            textureHeightScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .1m;
+            stateSave.Variables.Add(textureHeightScaleVariable);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 

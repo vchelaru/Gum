@@ -62,4 +62,15 @@ public class VariableGridToggleOptionsTests : BaseTestClass
         logic.FormatNullableFloat(null).ShouldBe("");
         logic.ParseFloat("1.25").ShouldBe(1.25f);
     }
+
+    // A radius has no meaningful negative, so a typed negative is floored at 0 (#5720).
+    [Fact]
+    public void CornerRadiusDisplayLogic_FloorsTypedNegativesAtZero()
+    {
+        CornerRadiusDisplayLogic logic = new CornerRadiusDisplayLogic();
+        CornerRadiusComposite current = new CornerRadiusComposite(4, null, null, null, null);
+
+        logic.Compose(isLinked: false, "-6", "-1", "", "3", "-0.5", current)
+            .ShouldBe(new CornerRadiusComposite(0, 0, null, 3, 0));
+    }
 }

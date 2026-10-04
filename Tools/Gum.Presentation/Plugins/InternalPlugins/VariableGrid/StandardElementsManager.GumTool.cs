@@ -155,9 +155,13 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
                 variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
                 variable.PreferredDisplayer = typeof(StandardDisplayers.Slider);
             }
-            else if (variable.Name == "StrokeWidth" || variable.Name == "DropshadowBlur" || variable.Name == "FontScale")
+            else if (variable.Name == "StrokeWidth" || variable.Name == "DropshadowBlur" ||
+                variable.Name == "FontScale" || variable.Name == "TextureWidthScale" ||
+                variable.Name == "TextureHeightScale" || variable.Name == "BorderScale" ||
+                variable.Name == "CornerRadius" || variable.Name == "StrokeDashLength" ||
+                variable.Name == "StrokeGapLength")
             {
-                // FontScale is a multiplier, so a negative is meaningless.
+                // Scales, radii and dash/gap lengths have no meaningful negative either.
                 // Neither has a meaningful negative value but neither has a natural maximum either, so
                 // they stay plain numeric fields (not sliders) with only a floor of 0. DropshadowBlur is
                 // a radius; the runtime already clamps it, and this stops the tool from storing negatives.
