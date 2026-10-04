@@ -139,6 +139,31 @@ public class ChromeStylesTests
     }
 
     [AvaloniaFact]
+    public void TextBoxHorizontalScrollBar_DoesNotCoverTheLastLine()
+    {
+        // A no-wrap box with an overlong line shows a horizontal bar; it must sit below the text (#5669).
+        TextBox box = new TextBox
+        {
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.NoWrap,
+            Height = 80,
+            Width = 120,
+            Text = new string('x', 200),
+        };
+        Window window = new Window { Content = box, Width = 300, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        ScrollBar bar = box.GetVisualDescendants().OfType<ScrollBar>().Single(b => b.Orientation == Orientation.Horizontal);
+        TextPresenter presenter = box.GetVisualDescendants().OfType<TextPresenter>().Single();
+        double barTop = bar.TranslatePoint(new Point(0, 0), box)!.Value.Y;
+        double textViewportBottom = presenter.TranslatePoint(new Point(0, 0), box)!.Value.Y + presenter.Bounds.Height;
+        bar.IsVisible.ShouldBeTrue();
+        textViewportBottom.ShouldBeLessThanOrEqualTo(barTop + 0.5);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void FluentControls_FollowTheBaseFontSize()
     {
         IResourceDictionary resources = Application.Current!.Resources;

@@ -161,6 +161,31 @@ public class SimpleEditorTests
         fixture.Text.ShouldBe("three");
     }
 
+    [AvaloniaFact]
+    public void MultiLineDisplays_ApplyButtonSitsAboveTheEditor_NotOverItsText()
+    {
+        EditorFixture fixture = new EditorFixture();
+        MultiLineTextBoxDisplay[] displays =
+        {
+            new MultiLineTextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Text)) },
+            new StringListTextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Lines)) },
+        };
+
+        foreach (MultiLineTextBoxDisplay display in displays)
+        {
+            Window window = new Window { Content = display, Width = 400, Height = 300 };
+            window.Show();
+            display.EditorTextBox.Text += "edited";
+            window.UpdateLayout();
+
+            display.ApplyButton.IsVisible.ShouldBeTrue();
+            double buttonBottom = display.ApplyButton.TranslatePoint(new Point(0, display.ApplyButton.Bounds.Height), window)!.Value.Y;
+            double editorTop = display.EditorTextBox.TranslatePoint(new Point(0, 0), window)!.Value.Y;
+            buttonBottom.ShouldBeLessThanOrEqualTo(editorTop + 0.5, display.GetType().Name);
+            window.Close();
+        }
+    }
+
     // Apply is on the platform command key: Cmd+Enter on macOS, Ctrl+Enter elsewhere (#5540).
     [Theory]
     [InlineData(KeyModifiers.Meta, KeyModifiers.Meta, true, "Apply (⌘Enter)")]

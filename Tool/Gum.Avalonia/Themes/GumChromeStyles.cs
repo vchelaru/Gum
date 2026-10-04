@@ -364,6 +364,12 @@ public static class GumChromeStyles
         {
             Setters = { new Setter(ScrollViewer.AllowAutoHideProperty, false) },
         },
+        // A text box's inner viewer takes its setting from the box's attached property through a
+        // template binding, which outranks the viewer style above, so set it on the box too (#5669).
+        new Style(selector => selector.OfType<TextBox>())
+        {
+            Setters = { new Setter(ScrollViewer.AllowAutoHideProperty, false) },
+        },
         new Style(selector => selector.OfType<ScrollBar>())
         {
             Setters = { new Setter(ScrollBar.AllowAutoHideProperty, false) },

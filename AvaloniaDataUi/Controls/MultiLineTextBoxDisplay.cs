@@ -21,7 +21,6 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
     private readonly Grid _grid;
     private readonly TextBlock _label;
     private readonly TextBox _textBox;
-    private readonly Grid _editorArea;
     private readonly TextBlock _hint;
     private string _appliedText;
 
@@ -63,29 +62,29 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
             IsTabStop = false,
             IsVisible = false,
             HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 4, 4),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 4, 0),
         };
         ToolTip.SetTip(ApplyButton, ApplyToolTip(PlatformKeyModifiers.Command));
         ApplyButton.Click += (_, _) => Apply();
 
         _hint = CreateHintTextBlock();
 
-        // The button overlays the text box so showing it doesn't push the rows below.
-        _editorArea = new Grid();
-        _editorArea.Children.Add(_textBox);
-        _editorArea.Children.Add(ApplyButton);
-
+        // The editor takes its own full-width row under the label. The button sits on the label row,
+        // so showing it neither covers the text or scroll bars nor pushes the rows below.
         _grid = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("100,*"),
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
         };
-        Grid.SetColumn(_editorArea, 1);
+        Grid.SetRow(_textBox, 1);
+        Grid.SetColumnSpan(_textBox, 2);
+        Grid.SetColumn(ApplyButton, 1);
         Grid.SetRow(_hint, 2);
         Grid.SetColumnSpan(_hint, 2);
         _grid.Children.Add(_label);
-        _grid.Children.Add(_editorArea);
+        _grid.Children.Add(ApplyButton);
+        _grid.Children.Add(_textBox);
         _grid.Children.Add(_hint);
         Content = _grid;
     }
@@ -95,14 +94,6 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
 
     /// <summary>The text editor.</summary>
     public TextBox EditorTextBox => _textBox;
-
-    /// <summary>Puts the editor on its own full-width row under the label.</summary>
-    protected void UseAboveBelowLayout()
-    {
-        Grid.SetRow(_editorArea, 1);
-        Grid.SetColumn(_editorArea, 0);
-        Grid.SetColumnSpan(_editorArea, 2);
-    }
 
     /// <summary>The text shown for <paramref name="value"/>.</summary>
     protected virtual string ConvertToText(object? value) => value as string ?? string.Empty;
