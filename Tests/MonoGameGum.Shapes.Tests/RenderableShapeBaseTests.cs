@@ -36,6 +36,54 @@ public class RenderableShapeBaseTests
         shape.GetEffectiveXnaBlendState().ShouldBeNull();
     }
 
+    // #5673/#5682 — while baking a render target, ReplaceAlpha/MinAlpha scale the destination color by
+    // the source alpha so baked color stays premultiplied against the alpha they write. Shapes
+    // resolve their own blend, so this seam is where they pick it up.
+    [Theory]
+    [InlineData(Gum.RenderingLibrary.Blend.ReplaceAlpha, Microsoft.Xna.Framework.Graphics.BlendFunction.Add, Microsoft.Xna.Framework.Graphics.Blend.Zero)]
+    [InlineData(Gum.RenderingLibrary.Blend.MinAlpha, Microsoft.Xna.Framework.Graphics.BlendFunction.Min, Microsoft.Xna.Framework.Graphics.Blend.One)]
+    public void GetEffectiveXnaBlendState_AlphaOnlyBlend_WhileBaking_ScalesDestinationColorBySourceAlpha(
+        Gum.RenderingLibrary.Blend blend,
+        Microsoft.Xna.Framework.Graphics.BlendFunction expectedAlphaFunction,
+        Microsoft.Xna.Framework.Graphics.Blend expectedAlphaDestination)
+    {
+        TestShape shape = new() { Blend = blend };
+
+        Microsoft.Xna.Framework.Graphics.BlendState? result = shape.GetEffectiveXnaBlendState(isBakingRenderTarget: true);
+
+        result.ShouldNotBeNull();
+        result.ColorSourceBlend.ShouldBe(Microsoft.Xna.Framework.Graphics.Blend.Zero);
+        result.ColorDestinationBlend.ShouldBe(Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha);
+        result.AlphaSourceBlend.ShouldBe(Microsoft.Xna.Framework.Graphics.Blend.One);
+        result.AlphaBlendFunction.ShouldBe(expectedAlphaFunction);
+        result.AlphaDestinationBlend.ShouldBe(expectedAlphaDestination);
+    }
+
+    [Theory]
+    [InlineData(Gum.RenderingLibrary.Blend.ReplaceAlpha)]
+    [InlineData(Gum.RenderingLibrary.Blend.MinAlpha)]
+    public void GetEffectiveXnaBlendState_AlphaOnlyBlend_OutsideBake_KeepsDestinationColor(Gum.RenderingLibrary.Blend blend)
+    {
+        TestShape shape = new() { Blend = blend };
+
+        Microsoft.Xna.Framework.Graphics.BlendState? result = shape.GetEffectiveXnaBlendState();
+
+        result.ShouldNotBeNull();
+        result.ColorSourceBlend.ShouldBe(Microsoft.Xna.Framework.Graphics.Blend.Zero);
+        result.ColorDestinationBlend.ShouldBe(Microsoft.Xna.Framework.Graphics.Blend.One);
+    }
+
+    [Fact]
+    public void GetEffectiveXnaBlendState_AdditiveAndNormal_WhileBaking_AreUnchanged()
+    {
+        new TestShape { Blend = Gum.RenderingLibrary.Blend.Additive }
+            .GetEffectiveXnaBlendState(isBakingRenderTarget: true)
+            .ShouldBe(Microsoft.Xna.Framework.Graphics.BlendState.Additive);
+        new TestShape()
+            .GetEffectiveXnaBlendState(isBakingRenderTarget: true)
+            .ShouldBeNull();
+    }
+
     // Issue #2937 — BatchKey names the rendering tech, NOT internal state like blend (mirroring
     // how all SpriteBatch renderables share one key and SpriteBatchStack handles blend changes
     // internally). Blend differences are resolved by ShapeRenderer.EnsureBlend re-opening the

@@ -37,6 +37,7 @@ public static class UnattendedRun
     /// <param name="capture">Writes the screenshot; null unless <c>--screenshot</c>.</param>
     /// <param name="output">Where the zoom-to-fit description goes.</param>
     /// <param name="error">Where a failure's reason goes.</param>
+    /// <param name="describeCanvas">Describes the canvas's frame state; appended to a failure that waited on a frame (#5680).</param>
     public static async Task<int?> RunAsync(
         Task<UnattendedStartupOutcome> startup,
         Task deadline,
@@ -45,7 +46,8 @@ public static class UnattendedRun
         Func<string?>? zoomToFit,
         Action? capture,
         TextWriter output,
-        TextWriter error)
+        TextWriter error,
+        Func<string?>? describeCanvas = null)
     {
         if (!await CompletesBefore(startup, deadline))
         {
@@ -63,7 +65,7 @@ public static class UnattendedRun
         // The first frame also brings the camera's view size up to date for the fit.
         if (!await CompletesBefore(nextCanvasFrame(), deadline))
         {
-            return Fail(error, exitAfterSeconds, "the canvas had not drawn a frame after the project loaded");
+            return Fail(error, exitAfterSeconds, "the canvas had not drawn a frame after the project loaded", describeCanvas);
         }
 
         if (zoomToFit != null)
@@ -71,7 +73,7 @@ public static class UnattendedRun
             output.WriteLine(zoomToFit() ?? "Zoom to fit: nothing is selected, or the selection has nothing visible; the camera was left alone.");
             if (!await CompletesBefore(nextCanvasFrame(), deadline))
             {
-                return Fail(error, exitAfterSeconds, "the canvas had not drawn a frame after zooming to fit");
+                return Fail(error, exitAfterSeconds, "the canvas had not drawn a frame after zooming to fit", describeCanvas);
             }
         }
 
@@ -91,13 +93,26 @@ public static class UnattendedRun
         return false;
     }
 
-    private static int Fail(TextWriter error, double exitAfterSeconds, string reason)
+    private static int Fail(TextWriter error, double exitAfterSeconds, string reason, Func<string?>? describeCanvas = null)
     {
         error.WriteLine(string.Format(
             CultureInfo.InvariantCulture,
             "Gum was not ready within --exit-after {0:0.#} s: {1}. No screenshot was taken.",
             exitAfterSeconds,
             reason));
+        if (describeCanvas != null)
+        {
+            string state;
+            try
+            {
+                state = describeCanvas() ?? "unavailable";
+            }
+            catch (Exception exception)
+            {
+                state = "unavailable (" + exception.Message + ")";
+            }
+            error.WriteLine("Canvas state: " + state);
+        }
         error.Flush();
         return 1;
     }

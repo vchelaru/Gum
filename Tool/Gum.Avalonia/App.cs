@@ -194,7 +194,8 @@ public sealed class App : Application
                 zoomToFit: _options.ZoomToFit ? () => messenger.Send(new ZoomCanvasToFitSelectionMessage()).Response?.ToString() : null,
                 capture: _options.ScreenshotPath is { } path ? () => CaptureWindow(window, path) : null,
                 Console.Out,
-                Console.Error);
+                Console.Error,
+                describeCanvas: () => messenger.Send(new EditorCanvasStateRequestMessage()).Response);
         }
         catch (Exception exception)
         {

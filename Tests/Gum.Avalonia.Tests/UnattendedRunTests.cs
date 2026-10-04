@@ -18,7 +18,7 @@ public class UnattendedRunTests
         public StringWriter Output { get; } = new();
         public StringWriter Error { get; } = new();
 
-        public Task<int?> Run(bool zoomToFit = false, bool screenshot = true) =>
+        public Task<int?> Run(bool zoomToFit = false, bool screenshot = true, Func<string?>? describeCanvas = null) =>
             UnattendedRun.RunAsync(
                 Startup.Task,
                 Deadline.Task,
@@ -33,7 +33,8 @@ public class UnattendedRunTests
                 zoomToFit: zoomToFit ? () => { Events.Add("zoom"); return "zoomed"; } : null,
                 capture: screenshot ? () => Events.Add("capture") : null,
                 Output,
-                Error);
+                Error,
+                describeCanvas);
 
         public void PresentFrame() => FrameRequests[^1].SetResult();
     }
@@ -104,6 +105,20 @@ public class UnattendedRunTests
         (await run.WaitAsync(TimeSpan.FromSeconds(10))).ShouldBe(1);
         probe.Error.ToString().ShouldContain("frame");
         probe.Events.ShouldNotContain("capture");
+    }
+
+    [Fact]
+    public async Task DeadlineBeforeTheCanvasDraws_ReportsTheCanvasState()
+    {
+        Probe probe = new Probe();
+
+        Task<int?> run = probe.Run(describeCanvas: () => "ticks=7");
+        probe.Startup.SetResult(UnattendedStartupOutcome.Ready);
+        await WaitUntil(() => probe.FrameRequests.Count == 1);
+        probe.Deadline.SetResult();
+
+        (await run.WaitAsync(TimeSpan.FromSeconds(10))).ShouldBe(1);
+        probe.Error.ToString().ShouldContain("Canvas state: ticks=7");
     }
 
     [Fact]

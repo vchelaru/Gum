@@ -50,6 +50,11 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     private readonly CanvasFrameGate _frameGate;
     private float _desiredFramesPerSecondBeforeInit = 30;
     private WindowBase? _hostWindow;
+    private int _tickCount;
+    private int _hiddenTickCount;
+    private int _gatedTickCount;
+    private int _notRenderedCount;
+    private int _presentedFrameCount;
 
     /// <summary>
     /// Creates the control, drawing only when <paramref name="redrawScheduler"/> or its own surface
@@ -265,9 +270,11 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         {
             return;
         }
+        _tickCount++;
         WindowState? hostWindowState = (TopLevel.GetTopLevel(this) as Window)?.WindowState;
         if (!ShouldRenderFrame(IsVisible && IsEffectivelyVisible, hostWindowState))
         {
+            _hiddenTickCount++;
             _frameGate.MarkSkipped();
             return;
         }
@@ -286,13 +293,37 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         // own keeps the scheduler asking for frames.
         if (!_frameGate.ShouldDraw(width, height, _frameLoop!.Error.HasErrors))
         {
+            _gatedTickCount++;
             return;
         }
         if (_frameLoop.TryRenderFrame(width, height, this))
         {
+            _presentedFrameCount++;
             _frameGate.MarkDrawn(width, height);
             FramePresented?.Invoke();
         }
+        else
+        {
+            _notRenderedCount++;
+        }
+    }
+
+    /// <summary>
+    /// One line on why the canvas may not be drawing: what became of its timer ticks, plus the state
+    /// the frame decision reads. Added to the unattended run's not-ready failure (#5680).
+    /// </summary>
+    public string DescribeFrameState()
+    {
+        WindowState? hostWindowState = (TopLevel.GetTopLevel(this) as Window)?.WindowState;
+        return string.Format(
+            System.Globalization.CultureInfo.InvariantCulture,
+            "timerRunning={0} ticks={1} skippedHiddenOrMinimized={2} skippedByGate={3} presented={4} notRendered={5} " +
+            "isVisible={6} isEffectivelyVisible={7} windowState={8} bounds={9}x{10} deviceCreated={11} hasRenderError={12} " +
+            "renderError={13} redrawNeeded={14}",
+            _frameTimer.IsEnabled, _tickCount, _hiddenTickCount, _gatedTickCount, _presentedFrameCount, _notRenderedCount,
+            IsVisible, IsEffectivelyVisible, hostWindowState?.ToString() ?? "none", Bounds.Width, Bounds.Height,
+            _frameLoop != null, _frameLoop?.Error.HasErrors, _frameLoop?.Error.ProcessedMessage ?? "none",
+            _redrawScheduler.IsRedrawNeeded);
     }
 
     /// <summary>
