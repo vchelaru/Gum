@@ -1086,6 +1086,20 @@ public class VariableReferenceLogicTests : BaseTestClass
         return button;
     }
 
+    [Theory]
+    [InlineData("Width = 10", false)]
+    [InlineData("Width = Item0.Width", false)]
+    [InlineData("Width = @Index * 10", true)]
+    public void ReapplySiblingDependentReferences_OnlyTouchesTheWireframeWhenARowUsesIndex(string line, bool expectsRefresh)
+    {
+        ScreenSave screen = BuildScreenWithVariableReference(line, out _, out _);
+
+        _sut.ReapplySiblingDependentReferences(screen);
+
+        _wireframeObjectManagerMock.Verify(w => w.RefreshAll(true, It.IsAny<bool>()),
+            expectsRefresh ? Times.AtLeastOnce() : Times.Never());
+    }
+
     private static ScreenSave BuildScreenWithVariableReference(string line, out StateSave defaultState, out VariableListSave<string> varList)
     {
         ScreenSave screen = new ScreenSave { Name = "TestScreen" };

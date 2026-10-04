@@ -18,5 +18,12 @@ public interface IVariableReferenceLogic
     /// </summary>
     void ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true);
 
+    /// <summary>
+    /// Re-applies the rows of <paramref name="element"/> that read a sibling-dependent name
+    /// (<c>Index</c>), after paste, delete, reorder or a Parent change moved instances around. Does
+    /// nothing, and does not touch the wireframe, when no row uses such a name.
+    /// </summary>
+    void ReapplySiblingDependentReferences(ElementSave element);
+
     void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue);
 }
