@@ -1512,8 +1512,28 @@ public class Renderer : IRenderer
     // reaches AdjustRenderStates, can apply the same swap.
     public static BlendState AdjustBlendStateForRenderTargetBake(BlendState renderBlendState, bool isBakingRenderTarget)
     {
-        if (!isBakingRenderTarget || Renderer.NormalBlendState == BlendState.AlphaBlend)
+        if (!isBakingRenderTarget)
         {
+            return renderBlendState;
+        }
+
+        if (Renderer.NormalBlendState == BlendState.AlphaBlend)
+        {
+            // Premultiplied pipeline (FRB): ToBlendState hands out the *Premultiplied mask states, and
+            // SubtractAlphaPremultiplied already is a destination-out. ReplaceAlphaPremultiplied and
+            // MinAlphaPremultiplied are not: they replace/Min the destination color with the mask's own
+            // color, so a white mask whitens the baked color instead of scaling it. Scale it by the
+            // mask alpha like the straight pipeline does.
+            if (IsFieldEquivalent(renderBlendState, BlendState.MinAlphaPremultiplied))
+            {
+                return BlendState.MinAlphaOnPremultipliedTarget;
+            }
+
+            if (IsFieldEquivalent(renderBlendState, BlendState.ReplaceAlphaPremultiplied))
+            {
+                return BlendState.ReplaceAlphaOnPremultipliedTarget;
+            }
+
             return renderBlendState;
         }
 
