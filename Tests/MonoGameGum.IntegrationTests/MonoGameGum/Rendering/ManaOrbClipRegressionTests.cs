@@ -78,6 +78,121 @@ public class ManaOrbClipRegressionTests : BaseTestClass
         System.Math.Abs(sampled.B - background.B).ShouldBeLessThan(10);
     }
 
+    // #5707: the test above only asserts that a pixel OUTSIDE the orb is transparent, so a sample
+    // that renders nothing at all passes it. This pins the other half: the orb's own content must
+    // be visible inside the circle.
+    [Fact]
+    public void ManaOrb_HalfFull_DrawsItsContentInsideTheOrb()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        var elementSave = ObjectFinder.Self.GetElementSave("HollowKnightComponents/ManaOrb");
+        elementSave.ShouldNotBeNull();
+
+        GraphicalUiElement manaOrb = elementSave!.ToGraphicalUiElement(managers, addToManagers: true);
+        manaOrb.X = 50;
+        manaOrb.Y = 50;
+        manaOrb.UpdateLayout();
+
+        var emptyState = manaOrb.ElementSave!.AllStates.First(item => item.Name == "Empty");
+        var fullState = manaOrb.ElementSave!.AllStates.First(item => item.Name == "Full");
+        manaOrb.InterpolateBetween(emptyState, fullState, 0.5f);
+        manaOrb.UpdateLayout();
+
+        renderer.Draw(managers);
+        renderer.Draw(managers);
+
+        // The orb is the 100x100 component at absolute (50,50); (100,130) is inside the circle, in
+        // the lower (filled) half at 50%.
+        Color sampled = SampleMainLayerPixel(gd, renderer, managers, sampleX: 100, sampleY: 130);
+
+        Color background = Color.CornflowerBlue;
+        int difference = System.Math.Abs(sampled.R - background.R)
+            + System.Math.Abs(sampled.G - background.G)
+            + System.Math.Abs(sampled.B - background.B);
+        difference.ShouldBeGreaterThan(60);
+    }
+
+    // #5707: the sample draws the orb as a component nested inside the HollowKnightHudScreen. Inflating
+    // the whole screen from its ElementSave (rather than the orb alone, as the tests above do) is the
+    // path that stopped drawing the orb after #4666 batched layout during inflation.
+    [Fact]
+    public void ManaOrb_NestedInHudScreen_DrawsItsContent()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        var screenSave = ObjectFinder.Self.GetElementSave("HollowKnightHudScreen");
+        screenSave.ShouldNotBeNull();
+
+        // Mirrors ManaOrb.Generated.cs RegisterRuntimeType: the sample instantiates the orb through a
+        // registered factory that calls SetGraphicalUiElement directly, nested inside the screen's
+        // own inflation.
+        var orbElement = ObjectFinder.Self.GetElementSave("HollowKnightComponents/ManaOrb");
+        orbElement.ShouldNotBeNull();
+        ElementSaveExtensions.RegisterGueInstantiation("HollowKnightComponents/ManaOrb", () =>
+        {
+            var visual = new Gum.GueDeriving.ContainerRuntime();
+            orbElement!.SetGraphicalUiElement(visual, managers);
+
+            // ManaOrb's Forms wrapper runs CustomInitialize (PercentFull = 50) as it is created,
+            // which interpolates between the Empty and Full states while the screen's inflation is
+            // still in progress.
+            var emptyState = orbElement!.AllStates.First(item => item.Name == "Empty");
+            var fullState = orbElement!.AllStates.First(item => item.Name == "Full");
+            visual.InterpolateBetween(emptyState, fullState, 0.5f);
+            return visual;
+        });
+
+        GraphicalUiElement screen = screenSave!.ToGraphicalUiElement(managers, addToManagers: true);
+        screen.UpdateLayout();
+
+
+        renderer.Draw(managers);
+        renderer.Draw(managers);
+
+        const int w = 400;
+        const int h = 300;
+        using RenderTarget2D capture = new(gd, w, h, false, SurfaceFormat.Color, DepthFormat.None, 0,
+            RenderTargetUsage.PreserveContents);
+        gd.SetRenderTarget(capture);
+        gd.Clear(Color.CornflowerBlue);
+        renderer.Draw(managers);
+        gd.SetRenderTarget(null);
+        Color[] pixels = new Color[w * h];
+        capture.GetData(pixels);
+
+        // In the sample the orb occupies x 25..125, y 27..127 of the HUD. Count pixels there that
+        // differ from the empty HUD background sampled in the clear area beside the buttons.
+        Color background = pixels[(150 * w) + 300];
+        int drawn = 0;
+        for (int y = 27; y < 127; y++)
+        {
+            for (int x = 25; x < 125; x++)
+            {
+                Color pixel = pixels[(y * w) + x];
+                int difference = System.Math.Abs(pixel.R - background.R)
+                    + System.Math.Abs(pixel.G - background.G)
+                    + System.Math.Abs(pixel.B - background.B);
+                if (difference > 24)
+                {
+                    drawn++;
+                }
+            }
+        }
+
+        drawn.ShouldBeGreaterThan(1000);
+    }
+
     private static Color SampleMainLayerPixel(GraphicsDevice gd, Renderer renderer, SystemManagers managers, int sampleX, int sampleY)
     {
         const int w = 300;
