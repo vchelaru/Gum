@@ -126,7 +126,14 @@ internal sealed class EditorToolbar : DockPanel
         SetDock(PreviewButton, global::Avalonia.Controls.Dock.Right);
 
         Children.Add(PreviewButton);
-        Children.Add(panel);
+        // The controls scroll horizontally in the space beside the Preview button rather than
+        // drawing over it when the window is narrow (#5695).
+        Children.Add(new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Content = panel,
+        });
     }
 
     /// <summary>The "Preview in runtime" button at the right end.</summary>
