@@ -76,6 +76,66 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
         }
     }
 
+    // On FRB's premultiplied pipeline ToBlendState returns ReplaceAlphaPremultiplied, which replaces the
+    // baked color with the mask's own color (a white mask whitens the fill). The bake must scale the
+    // destination color by the mask alpha instead.
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_ScalesDestinationColor_ForReplaceAlphaPremultiplied_WhenPremultipliedPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            var result = Renderer.AdjustBlendStateForRenderTargetBake(
+                BlendState.ReplaceAlphaPremultiplied, isBakingRenderTarget: true);
+
+            result.ShouldBeSameAs(BlendState.ReplaceAlphaOnPremultipliedTarget);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_ScalesDestinationColor_ForMinAlphaPremultiplied_WhenPremultipliedPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            var result = Renderer.AdjustBlendStateForRenderTargetBake(
+                BlendState.MinAlphaPremultiplied, isBakingRenderTarget: true);
+
+            result.ShouldBeSameAs(BlendState.MinAlphaOnPremultipliedTarget);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_KeepsSubtractAlphaPremultiplied_WhenPremultipliedPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            // Already a destination-out (color and alpha scaled by 1 - srcAlpha); no swap needed.
+            Renderer.AdjustBlendStateForRenderTargetBake(
+                BlendState.SubtractAlphaPremultiplied, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.SubtractAlphaPremultiplied);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
     [Fact]
     public void AdjustBlendStateForRenderTargetBake_SubstitutesBakeBlend_WhenStraightAlphaPipeline()
     {

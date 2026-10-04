@@ -5,7 +5,7 @@ description: Verify FlatRedBall (FRB1) still compiles after editing Gum source i
 
 # FRB Build Verification
 
-FRB1 (FlatRedBall) compiles Gum **source** (not the DLLs) under a `net6.0` target with the `FRB` constant defined, via shared `.projitems`. A change that builds fine in the Gum solutions can still break FRB1 — so when you touch shared source, build an FRB canary.
+FRB1 (FlatRedBall) compiles Gum **source** (not the DLLs) under a `net6.0` target with the `FRB` constant defined, via shared `.projitems`. A change that builds fine in the Gum solutions can still break FRB1 — so when you touch shared source, build an FRB canary. A canary only proves it compiles; for rendering behavior (blend states, premultiplied alpha, render targets) see `frb-pixel-harness`.
 
 ## What FRB1 pulls in, and what to keep in sync when you touch it
 

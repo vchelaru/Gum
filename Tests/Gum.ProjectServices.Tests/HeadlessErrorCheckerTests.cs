@@ -1687,6 +1687,43 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         error.Message.ShouldContain("Background.VariableReferences");
     }
 
+    [Theory]
+    [InlineData("Container")]
+    [InlineData("Text")]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenOwnerPrefixNamesVariableOfOwningInstance(string baseType)
+    {
+        // A screen has no base type, so Height only resolves through the instance.
+        ScreenSave screen = AddScreenWithReferences("RefScreen", sourceObject: "Item1", "Width = @Height", "Height = @Width * 2");
+        screen.Instances.Add(new InstanceSave { Name = "Item1", BaseType = baseType, ParentContainer = screen });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(screen, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenOwnerPrefixIsUsedOnElementLevelRow()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, "Width = @Height");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenOwnerPrefixNamesVariableOwningInstanceDoesNotHave()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Item1", "Width = @Nope");
+        component.Instances.Add(new InstanceSave { Name = "Item1", BaseType = "Container", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain("Item1.Nope");
+    }
+
     [Fact]
     public void GetErrorsFor_ShouldReportGum0009AsMissingElement_WhenReferencedElementFileIsMissing()
     {
@@ -1707,6 +1744,22 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         styles.Instances.Add(new InstanceSave { Name = colorInstanceName, BaseType = "ColoredRectangle", ParentContainer = styles });
         Project.Components.Add(styles);
         return styles;
+    }
+
+    private ScreenSave AddScreenWithReferences(string name, string? sourceObject, params string[] lines)
+    {
+        ScreenSave screen = new ScreenSave { Name = name };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+        VariableListSave<string> references = new VariableListSave<string>
+        {
+            Name = sourceObject == null ? "VariableReferences" : sourceObject + ".VariableReferences",
+            Type = "string"
+        };
+        references.Value.AddRange(lines);
+        state.VariableLists.Add(references);
+        Project.Screens.Add(screen);
+        return screen;
     }
 
     private ComponentSave AddComponentWithReferences(string name, string? sourceObject, params string[] lines)
