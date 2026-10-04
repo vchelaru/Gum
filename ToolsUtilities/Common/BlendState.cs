@@ -177,15 +177,18 @@ namespace Gum
                 SubtractAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
             }
             {
+                // #5678: destination-out. Both color and alpha become dest * (1 - srcAlpha), keeping a
+                // premultiplied destination premultiplied. The mask's own color never contributes. The
+                // old One + ReverseSubtract subtracted the mask color from the destination color, which
+                // only matched the lowered alpha when the mask color happened to equal the destination.
                 SubtractAlphaPremultiplied = new BlendState();
-                SubtractAlphaPremultiplied.ColorSourceBlend = Blend.One;
-                SubtractAlphaPremultiplied.ColorBlendFunction = BlendFunction.ReverseSubtract;
-                SubtractAlphaPremultiplied.ColorDestinationBlend = Blend.One;
+                SubtractAlphaPremultiplied.ColorSourceBlend = Blend.Zero;
+                SubtractAlphaPremultiplied.ColorBlendFunction = BlendFunction.Add;
+                SubtractAlphaPremultiplied.ColorDestinationBlend = Blend.InverseSourceAlpha;
 
-
-                SubtractAlphaPremultiplied.AlphaSourceBlend = Blend.One;
-                SubtractAlphaPremultiplied.AlphaBlendFunction = BlendFunction.ReverseSubtract;
-                SubtractAlphaPremultiplied.AlphaDestinationBlend = Blend.One;
+                SubtractAlphaPremultiplied.AlphaSourceBlend = Blend.Zero;
+                SubtractAlphaPremultiplied.AlphaBlendFunction = BlendFunction.Add;
+                SubtractAlphaPremultiplied.AlphaDestinationBlend = Blend.InverseSourceAlpha;
 
                 SubtractAlphaPremultiplied.BlendFactor = Color.White;
                 SubtractAlphaPremultiplied.ColorWriteChannels = ColorWriteChannels.All;

@@ -2,6 +2,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
 using Blend = Gum.Blend;
+using BlendFunction = Gum.BlendFunction;
 using BlendState = Gum.BlendState;
 
 namespace MonoGameGum.Tests.RenderingLibraries;
@@ -164,5 +165,21 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
         {
             Renderer.NormalBlendState = previous;
         }
+    }
+
+    // #5678: the premultiplied mask must be a destination-out (dest * (1 - srcAlpha) for color and
+    // alpha, source color ignored), not One + ReverseSubtract, which subtracted the mask's color
+    // from the destination color and so left color inconsistent with the lowered alpha.
+    [Fact]
+    public void SubtractAlphaPremultiplied_IsDestinationOut()
+    {
+        BlendState blend = BlendState.SubtractAlphaPremultiplied;
+
+        blend.ColorSourceBlend.ShouldBe(Blend.Zero);
+        blend.ColorBlendFunction.ShouldBe(BlendFunction.Add);
+        blend.ColorDestinationBlend.ShouldBe(Blend.InverseSourceAlpha);
+        blend.AlphaSourceBlend.ShouldBe(Blend.Zero);
+        blend.AlphaBlendFunction.ShouldBe(BlendFunction.Add);
+        blend.AlphaDestinationBlend.ShouldBe(Blend.InverseSourceAlpha);
     }
 }
