@@ -198,6 +198,32 @@ The `!` operator inverts a `bool` value:
 Visible = !LoadingSpinner.Visible
 ```
 
+### Math Functions
+
+Variable references can call a fixed set of math functions. Each function can be written with or without the `Math.` prefix, so `Max(Width, 50)` and `Math.Max(Width, 50)` are the same:
+
+```csharp
+Width = Max(Container.Width / 2, 100)
+Width = Clamp(Container.Width, 100, 400)
+X = 100 * Cos(Angle)
+Y = 100 * Sin(Angle)
+```
+
+The supported functions are:
+
+| Function | Result |
+| --- | --- |
+| `Sin(x)`, `Cos(x)`, `Tan(x)` | Trigonometric functions. The angle `x` is in radians. |
+| `Sqrt(x)` | Square root. |
+| `Abs(x)` | Absolute value. |
+| `Floor(x)`, `Ceiling(x)`, `Round(x)` | Rounds down, up, or to the nearest whole number. `Round` rounds halves to the nearest even number, so `Round(2.5)` is `2`. |
+| `Min(a, b)`, `Max(a, b)` | The smaller or larger of two values. |
+| `Clamp(value, min, max)` | Limits `value` to the range from `min` to `max`. |
+
+Function names are case sensitive. A reference that calls an unknown function, passes the wrong number of values, or produces no number (such as `Sqrt` of a negative value) is commented out and the tool explains why.
+
+Because the angle is in radians, a full circle is about `6.2832`. To drive circular motion from a variable that animates from `0` to `1`, multiply it by `6.2832` inside `Sin` and `Cos`.
+
 ### Category-State Assignment
 
 Variable references can drive a component's categorical state by assigning to `<CategoryName>State`. The right side must resolve to a `string` matching one of the state names defined in that category. This is useful for switching visual states from another instance's variable. For example, on a button-derived component with a `ButtonCategory` containing `Enabled` and `Disabled` states:

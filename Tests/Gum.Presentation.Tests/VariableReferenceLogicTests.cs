@@ -257,6 +257,19 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList[0].ShouldContain("myInstance.SomeVar");
     }
 
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_FunctionCallOnInstance_QualifiesArgumentsButNotFunctionName()
+    {
+        var instance = new InstanceSave { Name = "myInstance" };
+        StateSave stateSave = BuildStateWithVariableReferences("myInstance.VariableReferences", "Width=Sin(Angle) + Math.Max(Angle, 1)");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance, stateSave, changedMember: "VariableReferences", oldValue: null);
+
+        var varList = (List<string>)stateSave.GetVariableListSave("myInstance.VariableReferences").ValueAsIList;
+        varList[0].ShouldBe("Width=Sin(myInstance.Angle) + Math.Max(myInstance.Angle, 1)");
+    }
+
     #endregion
 
     #region DoVariableReferenceReaction
@@ -595,6 +608,69 @@ public class VariableReferenceLogicTests : BaseTestClass
             trySave: false);
 
         defaultState.GetValue("Width").ShouldBe(800f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_FunctionCallOnRightSide_EvaluatesAndKeepsLine()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "Width = 100 * Math.Cos(Angle)",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        defaultState.Variables.Add(new VariableSave { Name = "Angle", SetsValue = true, Value = 0f, Type = "float" });
+        project.Screens.Add(screen);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("Width = 100 * Math.Cos(Angle)");
+        defaultState.GetValue("Width").ShouldBe(100f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_UnknownFunction_CommentsLineAndNamesTheFunction()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "Width = Foo(Angle)",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        defaultState.Variables.Add(new VariableSave { Name = "Angle", SetsValue = true, Value = 0f, Type = "float" });
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldStartWith("//");
+        postedAction.ShouldNotBeNull();
+        postedAction!.Invoke();
+        _dialogServiceMock.Verify(
+            x => x.ShowMessage(
+                It.Is<string>(message => message.Contains("Unknown function 'Foo'")),
+                It.IsAny<string?>(),
+                It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
     }
 
     #endregion

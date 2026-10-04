@@ -192,6 +192,53 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_ScreenWithInstanceAndFunctionCall_QualifiesArgumentsButNotFunctionName()
+    {
+        // "Max(Spacing, 10)" on an instance: Spacing must become StackInstance.Spacing, but the
+        // function name Max must be left alone or the call stops evaluating.
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "float", Name = "Spacing", Value = 0f });
+        behavior.ToolOnlyVariableReferences.Add("Width = Max(Spacing, 10)");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        screen.Instances.Add(new InstanceSave
+        {
+            Name = "StackInstance",
+            BaseType = "Controls/StackPanel",
+            ParentContainer = screen
+        });
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "float",
+            Name = "StackInstance.Spacing",
+            Value = 40f,
+            SetsValue = true
+        });
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        StateSave containerDefault = new StateSave { Name = "Default", ParentContainer = containerStandard };
+        containerDefault.Variables.Add(new VariableSave { Type = "float", Name = "Width", Value = 0f, SetsValue = true });
+        containerStandard.States.Add(containerDefault);
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screenDefault);
+
+        screenDefault.GetValue("StackInstance.Width").ShouldBe(40f);
+    }
+
+    [Fact]
     public void Apply_ScreenWithButtonInstanceIsEnabledFalse_WritesQualifiedDisabledCategoryState()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };

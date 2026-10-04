@@ -151,6 +151,39 @@ public class EvaluatedSyntax
         }
     }
 
+    /// <summary>
+    /// Describes the first invalid function call in <paramref name="syntaxNode"/> (an unsupported
+    /// function name, or the wrong number of arguments), or null if every call is valid. Evaluation
+    /// itself just yields no value for these, so tool-side validation uses this to say why.
+    /// </summary>
+    public static string? GetFunctionCallProblem(SyntaxNode syntaxNode)
+    {
+        foreach (var invocation in syntaxNode.DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>())
+        {
+            if (!ExpressionFunctions.TryGetFunctionName(invocation, out string name, out string displayName))
+            {
+                return $"Unknown function '{displayName}'. Supported functions: {ExpressionFunctions.SupportedNames}";
+            }
+
+            int expected = ExpressionFunctions.GetArgumentCount(name);
+            int actual = invocation.ArgumentList.Arguments.Count;
+            if (expected != actual)
+            {
+                return $"{name} expects {expected} argument{(expected == 1 ? "" : "s")} but got {actual}";
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// True if <paramref name="identifier"/> is the name being called in a function call such as the
+    /// <c>Sin</c> in <c>Sin(Angle)</c>, rather than a variable. Code that rewrites or collects the
+    /// variables an expression reads must skip these.
+    /// </summary>
+    public static bool IsFunctionName(IdentifierNameSyntax identifier) =>
+        identifier.Parent is InvocationExpressionSyntax invocation && invocation.Expression == identifier;
+
     private static EvaluatedSyntax? Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
     {
         if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
@@ -261,6 +294,22 @@ public class EvaluatedSyntax
                 }
             }
             return null;
+        }
+        else if (syntaxNode is InvocationExpressionSyntax invocation)
+        {
+            if (!ExpressionFunctions.TryGetFunctionName(invocation, out string functionName, out _))
+            {
+                return null;
+            }
+
+            var arguments = invocation.ArgumentList.Arguments;
+            object?[] argumentValues = new object?[arguments.Count];
+            for (int i = 0; i < arguments.Count; i++)
+            {
+                argumentValues[i] = Evaluate(arguments[i].Expression, stateForUnqualifiedRightSide, fallback, liveRoot)?.Value;
+            }
+
+            return FromSyntaxAndValue(syntaxNode, ExpressionFunctions.Invoke(functionName, argumentValues));
         }
         else if (syntaxNode is PrefixUnaryExpressionSyntax prefixUnary)
         {
@@ -609,7 +658,7 @@ public class EvaluatedSyntax
                type == typeof(decimal);
     }
 
-    static Type GetWiderNumericType(Type type1, Type type2)
+    internal static Type GetWiderNumericType(Type type1, Type type2)
     {
         // Define a precedence list for numeric types
         var typeOrder = new[]

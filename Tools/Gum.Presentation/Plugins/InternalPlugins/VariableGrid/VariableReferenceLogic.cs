@@ -157,6 +157,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
+        if (EvaluatedSyntax.GetFunctionCallProblem(assignmentSyntax.Right) is { } functionProblem)
+        {
+            failures.Add((line, GeneralResponse.UnsuccessfulWith(functionProblem)));
+            return;
+        }
+
         EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot: liveRoot);
 
         if (evaluatedSyntax == null)
@@ -769,6 +775,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         var itemsToReplace = syntax.DescendantNodes()
             .Where(item => item is IdentifierNameSyntax identifier &&
                 !identifier.Identifier.Text.StartsWith("@") &&
+                !EvaluatedSyntax.IsFunctionName(identifier) &&
                 item.Parent is not MemberAccessExpressionSyntax
                     and not AliasQualifiedNameSyntax);
 
