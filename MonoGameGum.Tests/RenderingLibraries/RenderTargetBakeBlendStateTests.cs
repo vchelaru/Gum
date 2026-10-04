@@ -41,6 +41,41 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
         }
     }
 
+    // A container's renderable defaults to NonPremultiplied. On FRB's premultiplied pipeline that is
+    // not NormalBlendState, and it used to be read as a deliberate custom blend, so the composite-back
+    // blit drew the premultiplied target with straight alpha and multiplied its color by alpha twice.
+    [Fact]
+    public void IsUnconfiguredRenderTargetCompositeBlend_IsTrue_ForDefaultContainerBlend_WhenPremultipliedPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            Renderer.IsUnconfiguredRenderTargetCompositeBlend(BlendState.NonPremultiplied).ShouldBeTrue();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void IsUnconfiguredRenderTargetCompositeBlend_IsFalse_ForExplicitAdditive()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            Renderer.IsUnconfiguredRenderTargetCompositeBlend(BlendState.Additive).ShouldBeFalse();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
     [Fact]
     public void AdjustBlendStateForRenderTargetBake_SubstitutesBakeBlend_WhenStraightAlphaPipeline()
     {
