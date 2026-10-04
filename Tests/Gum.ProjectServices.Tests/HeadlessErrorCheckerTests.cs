@@ -1651,6 +1651,30 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceCallsMathFunction()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Background",
+            "Height = 50 + Sin(@X/180)",
+            "Width = Max(Background.Width, 5) + Clamp(Background.Height, 0, 10)");
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenMathFunctionArgumentIsMissing()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null,
+            "Height = Sin(Ghost.Width)");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldHaveSingleItem().Message.ShouldContain("Ghost.Width");
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldReportGum0009_WhenInstanceScopedReferenceNamesMissingElement()
     {
         ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Background", "Color = Components/Styles.Primary.FillColor");

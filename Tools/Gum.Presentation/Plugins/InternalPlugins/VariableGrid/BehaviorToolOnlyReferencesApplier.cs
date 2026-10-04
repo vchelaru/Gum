@@ -147,7 +147,7 @@ public static class BehaviorToolOnlyReferencesApplier
         SyntaxNode tree = CSharpSyntaxTree.ParseText(right).GetCompilationUnitRoot();
         return tree.DescendantNodes()
             .OfType<IdentifierNameSyntax>()
-            .Any(id => id.Identifier.ValueText == identifier);
+            .Any(id => id.Identifier.ValueText == identifier && !EvaluatedSyntax.IsFunctionName(id));
     }
 
     private static void ApplyBehaviorsOf(ComponentSave component, InstanceSave? instance, StateSave stateSave)
@@ -323,7 +323,8 @@ public static class BehaviorToolOnlyReferencesApplier
 
         var bareIdentifiers = tree.DescendantNodes()
             .OfType<IdentifierNameSyntax>()
-            .Where(id => id.Parent is not MemberAccessExpressionSyntax
+            .Where(id => !EvaluatedSyntax.IsFunctionName(id)
+                         && id.Parent is not MemberAccessExpressionSyntax
                          && id.Parent is not AliasQualifiedNameSyntax)
             .ToList();
 

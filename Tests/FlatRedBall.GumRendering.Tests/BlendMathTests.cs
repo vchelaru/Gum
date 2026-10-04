@@ -58,9 +58,8 @@ public class BlendMathTests
         Assert(MaskedFill(), Center(FrbGumHost.Instance.Render(root)));
     }
 
-    // Container Alpha 128 over opaque content. The tint is premultiplied in DrawRenderTargetToScreen and
-    // again in Sprite.Render, so the color comes out at 25% instead of 50%.
-    [Fact(Skip = "Known FRB bug: render-target container Alpha is premultiplied twice (#5690). Un-skip when fixed.")]
+    // Container Alpha 128 over opaque content: the color is scaled by alpha once, not twice (25%).
+    [Fact]
     public void RenderTarget_ContainerAlpha_ScalesColorOnce()
     {
         GraphicalUiElement root = Container(renderTarget: false);

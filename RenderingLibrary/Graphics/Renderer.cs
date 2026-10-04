@@ -1312,7 +1312,7 @@ public class Renderer : IRenderer
         // tint would re-lighten group alpha on top of that, so the tint must be premultiplied too
         // (#1696) — otherwise group alpha renders too light relative to the same content drawn
         // directly.
-        var color = System.Drawing.Color.FromArgb(renderableAlpha, renderableAlpha, renderableAlpha, renderableAlpha);
+        var color = CreateRenderTargetCompositeTint(renderableAlpha);
 
         renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
         renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
@@ -1469,6 +1469,16 @@ public class Renderer : IRenderer
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, ClipExitStateLabel);
         }
     }
+
+    // The tint DrawRenderTargetToScreen hands to Sprite.Render. It must reach the blit premultiplied
+    // exactly once. On a premultiplied pipeline without a custom effect, Sprite.Render premultiplies
+    // the tint itself, so passing an already-premultiplied one scaled color by alpha twice (a 50%
+    // container drew its content at 25%). Elsewhere Sprite.Render passes the tint through, so it is
+    // premultiplied here.
+    public static System.Drawing.Color CreateRenderTargetCompositeTint(int alpha) =>
+        !UseCustomEffectRendering && NormalBlendState == BlendState.AlphaBlend
+            ? System.Drawing.Color.FromArgb(alpha, 255, 255, 255)
+            : System.Drawing.Color.FromArgb(alpha, alpha, alpha, alpha);
 
     // Whether a render-target container's blend is its unconfigured default, so the composite-back
     // blit can substitute a premultiplied blend. A container's renderable defaults to
