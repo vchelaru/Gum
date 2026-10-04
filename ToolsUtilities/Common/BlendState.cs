@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Drawing;
 
 namespace Gum
@@ -123,6 +123,16 @@ namespace Gum
         // dest * (1 - srcAlpha), so a premultiplied destination stays premultiplied. The source's
         // own color never contributes.
         public static readonly BlendState SubtractAlphaFromPremultipliedTarget;
+
+        // #5673 / #5682: ReplaceAlpha and MinAlpha as applied while baking a render target. Both keep
+        // the destination color and rewrite only alpha, which leaves the baked texture's
+        // premultiplied color inconsistent with its new alpha (same fault as #5671). These scale the
+        // destination color by the source alpha, so color shrinks in lockstep with the alpha that
+        // is written (ReplaceAlpha: alpha = srcAlpha; MinAlpha: alpha = min(srcAlpha, dstAlpha)).
+        // Exact over an opaque destination, which is the documented masking use; fixed-function
+        // blending cannot divide by a translucent destination's own alpha. Same factors RaylibGum uses.
+        public static readonly BlendState ReplaceAlphaOnPremultipliedTarget;
+        public static readonly BlendState MinAlphaOnPremultipliedTarget;
 
         static BlendState()
         {
@@ -286,6 +296,11 @@ namespace Gum
             SubtractAlphaFromPremultipliedTarget.ColorWriteChannels2 = ColorWriteChannels.All;
             SubtractAlphaFromPremultipliedTarget.ColorWriteChannels3 = ColorWriteChannels.All;
 
+            ReplaceAlphaOnPremultipliedTarget = CreateScaleDestinationColorBySourceAlpha(
+                alphaSource: Blend.One, alphaFunction: BlendFunction.Add, alphaDestination: Blend.Zero);
+            MinAlphaOnPremultipliedTarget = CreateScaleDestinationColorBySourceAlpha(
+                alphaSource: Blend.One, alphaFunction: BlendFunction.Min, alphaDestination: Blend.One);
+
             AddColorPreserveDestinationAlpha = new BlendState();
             AddColorPreserveDestinationAlpha.ColorSourceBlend = Blend.One;
             AddColorPreserveDestinationAlpha.ColorBlendFunction = BlendFunction.Add;
@@ -300,6 +315,19 @@ namespace Gum
             AddColorPreserveDestinationAlpha.ColorWriteChannels1 = ColorWriteChannels.All;
             AddColorPreserveDestinationAlpha.ColorWriteChannels2 = ColorWriteChannels.All;
             AddColorPreserveDestinationAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
+        }
+
+        private static BlendState CreateScaleDestinationColorBySourceAlpha(Blend alphaSource, BlendFunction alphaFunction, Blend alphaDestination)
+        {
+            BlendState blendState = new BlendState();
+            blendState.ColorSourceBlend = Blend.Zero;
+            blendState.ColorBlendFunction = BlendFunction.Add;
+            blendState.ColorDestinationBlend = Blend.SourceAlpha;
+
+            blendState.AlphaSourceBlend = alphaSource;
+            blendState.AlphaBlendFunction = alphaFunction;
+            blendState.AlphaDestinationBlend = alphaDestination;
+            return blendState;
         }
 
         public BlendState()
