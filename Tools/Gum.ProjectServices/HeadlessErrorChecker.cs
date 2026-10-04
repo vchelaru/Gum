@@ -385,7 +385,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                         continue;
                     }
                     string? problem = ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner)
-                        .Select(expanded => FindUnresolvableReference(element, expanded))
+                        .Select(expanded => FindUnresolvableReference(element, variableList.SourceObject, expanded))
                         .FirstOrDefault(found => found != null);
                     if (problem == null)
                     {
@@ -406,9 +406,11 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     /// <summary>
     /// Returns a description of the first thing the right side of <paramref name="line"/> reads
-    /// that does not exist, or null when every path it reads resolves.
+    /// that does not exist, or null when every path it reads resolves. An <c>@</c> prefix is resolved
+    /// against <paramref name="ownerInstanceName"/>, the instance that owns the line (null on an
+    /// element-level line, where <c>@</c> means the element itself).
     /// </summary>
-    private static string? FindUnresolvableReference(ElementSave owner, string line)
+    private static string? FindUnresolvableReference(ElementSave owner, string? ownerInstanceName, string line)
     {
         int equalsIndex = line.IndexOf('=');
         if (equalsIndex <= 0 || equalsIndex + 1 >= line.Length || line[equalsIndex + 1] == '=' || "!<>".IndexOf(line[equalsIndex - 1]) >= 0)
@@ -417,7 +419,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             return null;
         }
 
-        string rightSide = NonReferenceTextRegex.Replace(line.Substring(equalsIndex + 1), " ");
+        string rightSide = ElementSaveExtensions.ResolveOwnerPrefix(line.Substring(equalsIndex + 1), ownerInstanceName);
+        rightSide = NonReferenceTextRegex.Replace(rightSide, " ");
 
         string? problem = null;
         rightSide = QualifiedReferencePathRegex.Replace(rightSide, match =>
