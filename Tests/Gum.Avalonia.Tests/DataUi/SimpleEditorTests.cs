@@ -271,6 +271,19 @@ public class SimpleEditorTests
     }
 
     [AvaloniaFact]
+    public void SliderDisplay_MinMaxLabels_SitCloseToTheTrack()
+    {
+        EditorFixture fixture = new EditorFixture { Number = 0.5f };
+        SliderDisplay display = new SliderDisplay { MinValue = 0, MaxValue = 255, InstanceMember = fixture.Member(nameof(EditorFixture.Number)) };
+        Window window = new Window { Content = display, Width = 400, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        // At its default ~50px the slider leaves the labels floating far below the track.
+        display.Slider.Bounds.Height.ShouldBeLessThanOrEqualTo(30);
+    }
+
+    [AvaloniaFact]
     public void SliderDisplay_Drag_WritesIntermediateValuesThenOneFullOnRelease()
     {
         EditorFixture fixture = new EditorFixture { Number = 0 };

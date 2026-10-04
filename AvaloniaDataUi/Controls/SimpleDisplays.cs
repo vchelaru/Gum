@@ -471,6 +471,8 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         _sliderLogic = new SliderDisplayLogic();
         _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Top, TextWrapping = TextWrapping.Wrap };
         _slider = new Slider { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
+        // The template is ~50px tall, which strands the min/max labels well below the track.
+        _slider.Height = 24;
         _slider.PropertyChanged += HandleSliderPropertyChanged;
         // Tunnel, so the value is read before the slider moves the thumb to the press.
         _slider.AddHandler(PointerPressedEvent, HandleSliderPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
