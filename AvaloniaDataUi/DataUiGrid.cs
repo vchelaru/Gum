@@ -12,6 +12,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using AvaloniaDataUi.Controls;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -30,6 +31,10 @@ public class DataUiGrid : UserControl, IDataUiGrid
     private readonly HashSet<SingleDataUiContainer> _liveContainers;
     private readonly Style[] _rowStripes;
     private bool _alternatesRowBackgrounds = true;
+    private readonly ItemsControl _categories;
+    private readonly ScrollViewer _scrollViewer;
+    private SingleDataUiContainer? _anchorRow;
+    private double _anchorViewportTop;
 
     /// <summary>Creates a grid that uses the standard editors.</summary>
     public DataUiGrid() : this(CreateStandardRegistry())
@@ -49,12 +54,15 @@ public class DataUiGrid : UserControl, IDataUiGrid
             ItemTemplate = new FuncDataTemplate<MemberCategory>((category, _) => new DataUiCategoryView(this, category)),
         };
 
-        Content = new ScrollViewer
+        _categories = categories;
+        _scrollViewer = new ScrollViewer
         {
             Content = categories,
             HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
         };
+        _scrollViewer.ScrollChanged += HandleScrollChanged;
+        Content = _scrollViewer;
 
         // Rows alternate a faint dark stripe, as in the WPF grid: 10% black, then 5%.
         _rowStripes = new[] { RowStripe(offset: 1, opacity: 0.10), RowStripe(offset: 0, opacity: 0.05) };
@@ -236,6 +244,53 @@ public class DataUiGrid : UserControl, IDataUiGrid
                 }
             }
         }
+    }
+
+    // Wrapping rows change height when the grid's width changes, which would push the content under
+    // the viewport around. The first visible row is remembered while the user scrolls, and when the
+    // extent changes without a scroll the offset is shifted so that row stays where it was.
+    private void HandleScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        bool extentChangedWithoutScroll = e.ExtentDelta.Y != 0 && e.OffsetDelta.Y == 0;
+        if (extentChangedWithoutScroll
+            && _anchorRow != null
+            && _anchorRow.IsVisible
+            && _anchorRow.GetVisualRoot() != null
+            && _anchorRow.TranslatePoint(new Point(0, 0), _categories) is Point anchorTop)
+        {
+            double desiredOffset = anchorTop.Y - _anchorViewportTop;
+            double maxOffset = Math.Max(0, _scrollViewer.Extent.Height - _scrollViewer.Viewport.Height);
+            double clamped = Math.Clamp(desiredOffset, 0, maxOffset);
+            if (Math.Abs(clamped - _scrollViewer.Offset.Y) > 0.5)
+            {
+                _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, clamped);
+                return;
+            }
+        }
+
+        CaptureAnchor();
+    }
+
+    private void CaptureAnchor()
+    {
+        double offsetY = _scrollViewer.Offset.Y;
+        SingleDataUiContainer? best = null;
+        double bestTop = double.MaxValue;
+        foreach (SingleDataUiContainer container in _liveContainers)
+        {
+            if (!container.IsVisible || container.GetVisualRoot() == null)
+            {
+                continue;
+            }
+            Point? top = container.TranslatePoint(new Point(0, 0), _categories);
+            if (top is Point point && point.Y + container.Bounds.Height > offsetY && point.Y < bestTop)
+            {
+                best = container;
+                bestTop = point.Y;
+            }
+        }
+        _anchorRow = best;
+        _anchorViewportTop = bestTop - offsetY;
     }
 
     internal void RegisterContainer(SingleDataUiContainer container) => _liveContainers.Add(container);

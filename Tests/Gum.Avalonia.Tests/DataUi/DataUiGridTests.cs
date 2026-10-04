@@ -50,6 +50,49 @@ public class DataUiGridTests
     }
 
     [AvaloniaFact]
+    public void WidthChange_KeepsTheTopVisibleRowInPlace_WhenRowsAboveItChangeHeight()
+    {
+        EditorFixture fixture = new EditorFixture();
+        MemberCategory category = new MemberCategory("GridResizeAnchor");
+        for (int i = 0; i < 40; i++)
+        {
+            category.Members.Add(fixture.Member(nameof(EditorFixture.Text)));
+        }
+        DataUiGrid grid = new DataUiGrid();
+        // Each row carries a wrapping caption, so its height depends on the grid's width.
+        grid.RowDecorator = editor => new StackPanel
+        {
+            Children =
+            {
+                new TextBlock { Text = "A long caption that wraps onto more lines as the grid gets narrower.", TextWrapping = global::Avalonia.Media.TextWrapping.Wrap },
+                editor,
+            },
+        };
+        grid.SetCategories(new List<MemberCategory> { category });
+        Window window = new Window { Content = grid, Width = 500, Height = 400 };
+        window.Show();
+        window.UpdateLayout();
+        ScrollViewer scrollViewer = window.GetVisualDescendantsOfType<ScrollViewer>().First();
+        scrollViewer.Offset = new Vector(0, 600);
+        window.UpdateLayout();
+        SingleDataUiContainer anchor = grid.LiveContainers
+            .Where(container => container.IsVisible)
+            .OrderBy(container => container.TranslatePoint(new global::Avalonia.Point(0, 0), scrollViewer)!.Value.Y)
+            .First(container => container.TranslatePoint(new global::Avalonia.Point(0, container.Bounds.Height), scrollViewer)!.Value.Y > 0);
+        double topBefore = anchor.TranslatePoint(new global::Avalonia.Point(0, 0), scrollViewer)!.Value.Y;
+        double extentBefore = scrollViewer.Extent.Height;
+
+        grid.Width = 250;
+        window.UpdateLayout();
+        window.UpdateLayout();
+
+        scrollViewer.Extent.Height.ShouldBeGreaterThan(extentBefore);
+        double topAfter = anchor.TranslatePoint(new global::Avalonia.Point(0, 0), scrollViewer)!.Value.Y;
+        topAfter.ShouldBe(topBefore, 1.0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void Rows_GetTheEditorForTheirType()
     {
         EditorFixture fixture = new EditorFixture();
