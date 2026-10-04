@@ -482,8 +482,10 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         _slider.AddHandler(Thumb.DragCompletedEvent, (_, _) => HandleSliderPointerReleased(MouseButton.Left), RoutingStrategies.Bubble, handledEventsToo: true);
         _textBox = new EditTrackingTextBox { Margin = new Thickness(3, 1, 1, 1), VerticalAlignment = VerticalAlignment.Center };
         _textBox.EditCommitRequested += HandleEditCommitRequested;
-        _minValueText = new TextBlock { FontSize = 10, IsHitTestVisible = false };
-        _maxValueText = new TextBlock { FontSize = 10, IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Right };
+        _minValueText = new TextBlock { IsHitTestVisible = false };
+        _maxValueText = new TextBlock { IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Right };
+        BindCaptionFontSize(_minValueText);
+        BindCaptionFontSize(_maxValueText);
         _hint = CreateHintTextBlock();
 
         Grid minMax = new Grid();

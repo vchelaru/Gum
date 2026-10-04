@@ -107,14 +107,26 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     /// <summary>Creates the small wrapping text under a row that shows <see cref="InstanceMember.DetailText"/>.</summary>
     protected static TextBlock CreateHintTextBlock()
     {
-        return new TextBlock
+        TextBlock hint = new TextBlock
         {
-            FontSize = 11,
             Opacity = 0.8,
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(8, 0, 4, 4),
             IsVisible = false,
         };
+        BindCaptionFontSize(hint);
+        return hint;
+    }
+
+    /// <summary>
+    /// Sizes <paramref name="textBlock"/> from the tool's caption font size, which follows the
+    /// user's UI font size. A fixed size would stay put when the user zooms the UI. The key is
+    /// <c>FrbThemeResources.CaptionFontSizeKey</c>; with no such resource (a bare test window) the
+    /// text keeps the inherited size.
+    /// </summary>
+    protected static void BindCaptionFontSize(TextBlock textBlock)
+    {
+        textBlock.Bind(TextBlock.FontSizeProperty, textBlock.GetResourceObservable("Frb.FontSize.Caption"));
     }
 
     /// <summary>Shows the member's detail text in <paramref name="hint"/>, hiding it when empty.</summary>
