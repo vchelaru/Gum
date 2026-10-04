@@ -241,21 +241,28 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is IdentifierNameSyntax or VariableDeclarationSyntax)
         {
-            if (TryResolveAbsoluteValue(liveRoot, syntaxNode.ToString(), out var absoluteValue))
+            var identifierText = GumRuntime.ElementSaveExtensions.DecodeOwnerName(syntaxNode.ToString());
+
+            if (TryResolveAbsoluteValue(liveRoot, identifierText, out var absoluteValue))
             {
                 return FromSyntaxAndValue(syntaxNode, absoluteValue);
             }
 
             var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide) { Fallback = fallback };
 
-            var value = rfv.GetValue(syntaxNode.ToString());
+            var value = rfv.GetValue(identifierText);
+
+            if (value == null && TryResolveSiblingIndex(liveRoot, stateForUnqualifiedRightSide, identifierText, out var siblingIndex))
+            {
+                value = siblingIndex;
+            }
 
             return FromSyntaxAndValue(syntaxNode, value);
         }
         else if (syntaxNode is MemberAccessExpressionSyntax memberAccess)
         {
             // we just need to evaluate the right-side
-            var rightSideToEvaluate = memberAccess.ToString();
+            var rightSideToEvaluate = GumRuntime.ElementSaveExtensions.DecodeOwnerName(memberAccess.ToString());
 
             if (TryResolveLocalizationValue(rightSideToEvaluate, out var localizationValue))
             {
@@ -298,6 +305,11 @@ public class EvaluatedSyntax
                 var rfv = new RecursiveVariableFinder(stateForRfv) { Fallback = fallback };
 
                 var value = rfv.GetValue(rightSideToEvaluate);
+
+                if (value == null && !isCrossElement && TryResolveSiblingIndex(liveRoot, stateForUnqualifiedRightSide, rightSideToEvaluate, out var siblingIndex))
+                {
+                    value = siblingIndex;
+                }
 
                 return FromSyntaxAndValue(syntaxNode, value);
             }
@@ -425,7 +437,6 @@ public class EvaluatedSyntax
         }
 
         var lastDot = path.LastIndexOf('.');
-        var instanceName = lastDot < 0 ? null : path.Substring(0, lastDot);
         var propertyName = lastDot < 0 ? path : path.Substring(lastDot + 1);
 
         if (!AbsoluteValueSelectors.TryGetValue(propertyName, out var selector))
@@ -433,7 +444,7 @@ public class EvaluatedSyntax
             return false;
         }
 
-        var target = instanceName == null ? liveRoot : liveRoot.GetGraphicalUiElementByName(instanceName);
+        var target = FindLiveTarget(liveRoot, path);
         if (target == null)
         {
             return false;
@@ -441,6 +452,151 @@ public class EvaluatedSyntax
 
         value = selector(target);
         return true;
+    }
+
+    private const string SiblingIndexName = "Index";
+
+    /// <summary>
+    /// Whether <paramref name="name"/> is read from the live layout rather than authored data:
+    /// <c>Index</c> or one of the Absolute* names. These are read-only, so assigning one in a
+    /// reference is a mistake worth explaining rather than a plain unknown variable.
+    /// </summary>
+    public static bool IsLiveLayoutName(string name) =>
+        name == SiblingIndexName || AbsoluteValueSelectors.ContainsKey(name);
+
+    /// <summary>
+    /// Resolves <c>Index</c> (or <c>Instance.Index</c>): the position of the instance among the
+    /// instances that share its <c>Parent</c>, counted from zero. It is read from the live tree when one
+    /// is available (the order the displayed element actually holds) and otherwise from
+    /// <paramref name="state"/>'s element, so it also resolves when nothing is displayed. Callers try
+    /// authored variables first, so a component that defines its own <c>Index</c> variable keeps it.
+    /// Returns false (rather than throwing) when the instance cannot be found or the path is not an
+    /// <c>Index</c> path.
+    /// </summary>
+    private static bool TryResolveSiblingIndex(GraphicalUiElement? liveRoot, StateSave state, string path, out object? value)
+    {
+        value = null;
+
+        var lastDot = path.LastIndexOf('.');
+        var propertyName = lastDot < 0 ? path : path.Substring(lastDot + 1);
+
+        if (propertyName != SiblingIndexName)
+        {
+            return false;
+        }
+
+        var index = liveRoot != null ? GetLiveSiblingIndex(liveRoot, path) : -1;
+        if (index < 0)
+        {
+            index = GetSiblingIndexFromData(state, path);
+        }
+
+        if (index < 0)
+        {
+            return false;
+        }
+
+        value = index;
+        return true;
+    }
+
+    private static int GetLiveSiblingIndex(GraphicalUiElement liveRoot, string path)
+    {
+        var target = FindLiveTarget(liveRoot, path);
+        if (target == null)
+        {
+            return -1;
+        }
+
+        if (target.Parent is GraphicalUiElement parentGue)
+        {
+            return parentGue.Children.IndexOf(target);
+        }
+
+        if (target.Parent == null && target.ElementGueContainingThis is { } container)
+        {
+            // No Parent variable: the instance sits directly in its containing element. That
+            // element's list is flat (it also holds nested instances), so count only the
+            // instances that likewise have no Parent.
+            var index = 0;
+            foreach (var item in container.ContainedElements)
+            {
+                if (item == target)
+                {
+                    return index;
+                }
+                if (item.Parent == null)
+                {
+                    index++;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// The sibling index of the instance named by <paramref name="path"/> (<c>Item.Index</c>) computed
+    /// from the element that owns <paramref name="state"/>: its instances in order, base element
+    /// instances first, grouped by each instance's <c>Parent</c> value. -1 when the path names no
+    /// instance of that element (a bare <c>Index</c> is the element itself, which has no siblings).
+    /// </summary>
+    private static int GetSiblingIndexFromData(StateSave state, string path)
+    {
+        var lastDot = path.LastIndexOf('.');
+        if (lastDot < 0 || state.ParentContainer is not { } element)
+        {
+            return -1;
+        }
+
+        var instanceName = path.Substring(0, lastDot);
+
+        // Most base first, matching the order the instances are created in.
+        var chain = new List<ElementSave>(ObjectFinder.Self.GetBaseElements(element));
+        chain.Remove(element);
+        chain.Reverse();
+        chain.Add(element);
+        var instances = chain.SelectMany(item => item.Instances).Distinct().ToList();
+
+        var target = instances.FirstOrDefault(instance => instance.Name == instanceName);
+        if (target == null)
+        {
+            return -1;
+        }
+
+        var finder = new RecursiveVariableFinder(state);
+        var targetParent = GetParentValue(finder, target.Name);
+        var index = 0;
+        foreach (var instance in instances)
+        {
+            if (instance == target)
+            {
+                return index;
+            }
+            if (GetParentValue(finder, instance.Name) == targetParent)
+            {
+                index++;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string? GetParentValue(RecursiveVariableFinder finder, string instanceName)
+    {
+        var parent = finder.GetValue(instanceName + ".Parent") as string;
+        return string.IsNullOrEmpty(parent) ? null : parent;
+    }
+
+    /// <summary>
+    /// The live element a path like <c>Source.AbsoluteWidth</c> reads from: everything before the last
+    /// dot is the instance name within <paramref name="liveRoot"/>'s own element, and no dot means
+    /// <paramref name="liveRoot"/> itself. Null when no such instance exists.
+    /// </summary>
+    private static GraphicalUiElement? FindLiveTarget(GraphicalUiElement liveRoot, string path)
+    {
+        var lastDot = path.LastIndexOf('.');
+        return lastDot < 0 ? liveRoot : liveRoot.GetGraphicalUiElementByName(path.Substring(0, lastDot));
     }
 
     private const string LocalizationCurrentLanguagePath = "global::Localization.CurrentLanguage";

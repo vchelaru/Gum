@@ -183,6 +183,45 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData("gum-logo-256")]
+    [InlineData("3d icon")]
+    [InlineData("Item1")]
+    public void ResolveOwnerPrefix_OwnerNameThatIsNotAnIdentifier_IsEncodedAndDecodesBack(string owner)
+    {
+        // The rewritten expression is parsed as C#, where "gum-logo-256.Index" is a subtraction.
+        string rewritten = ElementSaveExtensions.ResolveOwnerPrefix("@Index * 2", owner);
+
+        System.Text.RegularExpressions.Regex.IsMatch(rewritten, @"^[A-Za-z_]\w*\.Index \* 2$").ShouldBeTrue(rewritten);
+        ElementSaveExtensions.DecodeOwnerName(rewritten).ShouldBe(owner + ".Index * 2");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ApplyVariableReferences_AtPrefixOnInstanceWithHyphenatedName_ResolvesAgainstOwningInstance(bool useExpressionService)
+    {
+        if (useExpressionService)
+        {
+            GumExpressionService.Initialize();
+        }
+        ContainerRuntime parent = new ContainerRuntime();
+        ContainerRuntime child = new ContainerRuntime();
+        child.Name = "my-item";
+        child.Tag = new InstanceSave { Name = "my-item" };
+        child.Parent = parent;
+
+        StateSave state = BuildStateWithVariableReference(
+            "X = @Y",
+            sourceObject: "my-item",
+            ("my-item.X", 0f, "float"),
+            ("my-item.Y", 77f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        child.X.ShouldBe(77f);
+    }
+
+    [Theory]
     [InlineData("@Index * 2", "Item1", "Item1.Index * 2")]
     [InlineData("@Child.Prop", "Item1", "Item1.Child.Prop")]
     [InlineData("@Height", null, "Height")]
@@ -470,6 +509,140 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
         parent.ApplyVariableReferences(state);
 
         parent.Height.ShouldBe(15f);
+    }
+
+    #endregion
+
+    #region SiblingIndex
+
+    [Fact]
+    public void ApplyVariableReferences_AtIndexOnInstanceRows_ResolvesPositionAmongParentChildren()
+    {
+        GumExpressionService.Initialize();
+
+        ContainerRuntime parent = new ContainerRuntime();
+        ContainerRuntime[] items = new ContainerRuntime[3];
+        for (int i = 0; i < items.Length; i++)
+        {
+            items[i] = new ContainerRuntime();
+            items[i].Name = "Item" + i;
+            items[i].Tag = new InstanceSave { Name = "Item" + i };
+            items[i].Parent = parent;
+        }
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+        foreach (ContainerRuntime item in items)
+        {
+            state.Variables.Add(new VariableSave { Name = item.Name + ".X", Value = 0f, Type = "float", SetsValue = true });
+            VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = item.Name + ".VariableReferences" };
+            list.Value.Add("X = @Index * 10");
+            state.VariableLists.Add(list);
+        }
+
+        parent.ApplyVariableReferences(state);
+
+        items.Select(item => item.X).ShouldBe(new[] { 0f, 10f, 20f });
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_AtIndexWithNoParent_CountsOnlyOtherParentlessInstances()
+    {
+        // Instances with no Parent variable all sit in the containing element's flat list, which
+        // also holds nested instances. Only the ones that share the null Parent are siblings.
+        GumExpressionService.Initialize();
+
+        ContainerRuntime root = new ContainerRuntime();
+        ContainerRuntime first = CreateContained("First", root);
+        ContainerRuntime nested = CreateContained("Nested", root);
+        nested.Parent = first;
+        ContainerRuntime last = CreateContained("Last", root);
+
+        StateSave state = BuildStateWithVariableReference("X = @Index", "Last", ("Last.X", 0f, "float"));
+
+        root.ApplyVariableReferences(state);
+
+        last.X.ShouldBe(1f);
+
+        static ContainerRuntime CreateContained(string name, ContainerRuntime container)
+        {
+            ContainerRuntime item = new ContainerRuntime();
+            item.Name = name;
+            item.Tag = new InstanceSave { Name = name };
+            item.ElementGueContainingThis = container;
+            return item;
+        }
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_AtIndexWhenInstanceAuthorsIndexVariable_UsesAuthoredValue()
+    {
+        GumExpressionService.Initialize();
+
+        ContainerRuntime parent = new ContainerRuntime();
+        ContainerRuntime item = new ContainerRuntime();
+        item.Name = "Item";
+        item.Tag = new InstanceSave { Name = "Item" };
+        item.Parent = parent;
+
+        StateSave state = BuildStateWithVariableReference(
+            "X = @Index",
+            "Item",
+            ("Item.X", 0f, "float"),
+            ("Item.Index", 42f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        item.X.ShouldBe(42f);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ApplyVariableReferences_ToolPathWithMaterializedScreen_AtIndexResolvesEachInstancePosition(bool useParentContainer)
+    {
+        // The tool applies references against the element's real materialized tree (ToGraphicalUiElement),
+        // where a screen's instances have no Parent GraphicalUiElement unless a Parent variable says so.
+        GumExpressionService.Initialize();
+
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        StandardElementSave standard = new StandardElementSave { Name = "Container" };
+        standard.States.Add(new StateSave { Name = "Default", ParentContainer = standard });
+        project.StandardElements.Add(standard);
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+        project.Screens.Add(screen);
+
+        if (useParentContainer)
+        {
+            screen.Instances.Add(new InstanceSave { Name = "Holder", BaseType = "Container", ParentContainer = screen });
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            string name = "Item" + i;
+            screen.Instances.Add(new InstanceSave { Name = name, BaseType = "Container", ParentContainer = screen });
+            state.Variables.Add(new VariableSave { Name = name + ".Y", Value = 0f, Type = "float", SetsValue = true });
+            if (useParentContainer)
+            {
+                state.Variables.Add(new VariableSave { Name = name + ".Parent", Value = "Holder", Type = "string", SetsValue = true });
+            }
+            VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = name + ".VariableReferences" };
+            list.Value.Add("Y=@Index * 40");
+            state.VariableLists.Add(list);
+        }
+
+        GraphicalUiElement screenGue = Gum.ElementSaveExtensionMethods.ToGraphicalUiElement(screen);
+
+        screen.ApplyVariableReferences(state, screenGue);
+
+        state.GetValue("Item0.Y").ShouldBe(0f);
+        state.GetValue("Item1.Y").ShouldBe(40f);
+        state.GetValue("Item2.Y").ShouldBe(80f);
     }
 
     #endregion

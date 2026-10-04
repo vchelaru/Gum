@@ -671,6 +671,63 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
     #endregion
 
+    #region SiblingIndex
+
+    [Fact]
+    public void FromSyntaxNode_IndexWithNoLiveRoot_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("Item.Index", state, liveRoot: null);
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_IndexWithNoLiveRoot_CountsInstancesSharingTheSameParentValue()
+    {
+        // Nothing is displayed (no live tree), so Index comes from the element's own data: instance
+        // order plus each instance's Parent variable. Siblings share the same Parent value.
+        StateSave state = BuildState(
+            ("Item1.Parent", "Holder", "string"),
+            ("Item2.Parent", "Other", "string"),
+            ("Item3.Parent", "Holder", "string"),
+            ("Item4.Parent", "Holder", "string"));
+        ElementSave element = state.ParentContainer!;
+        foreach (string name in new[] { "Holder", "Other", "Item1", "Item2", "Item3", "Item4", "Loose" })
+        {
+            element.Instances.Add(new InstanceSave { Name = name, BaseType = "Container", ParentContainer = element });
+        }
+
+        object?[] indexes = new[] { "Holder", "Other", "Loose", "Item1", "Item2", "Item3", "Item4" }
+            .Select(name => Evaluate(name + ".Index", state)?.Value)
+            .ToArray();
+
+        indexes.ShouldBe([0, 1, 2, 0, 0, 1, 2]);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_IndexWithNoLiveRootOfInstanceTheElementDoesNotHave_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("Ghost.Index", state, liveRoot: null);
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_IndexOfUnknownInstance_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("Nonexistent.Index", state, new GraphicalUiElement());
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    #endregion
+
     #region LocalizationValues
 
     [Fact]

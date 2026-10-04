@@ -511,6 +511,43 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void DoVariableReferenceReaction_AtPrefixOnInstanceWithHyphenatedName_AcceptsLineAndResolves()
+    {
+        GumExpressionService.Initialize();
+
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        project.Screens.Add(screen);
+        ComponentSave itemComponent = new ComponentSave { Name = "ItemComp" };
+        StateSave itemState = new StateSave { Name = "Default", ParentContainer = itemComponent };
+        itemState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        itemComponent.States.Add(itemState);
+        project.Components.Add(itemComponent);
+
+        screen.Instances.Add(new InstanceSave { Name = "gum-logo-256", BaseType = "ItemComp", ParentContainer = screen });
+        defaultState.Variables.Add(new VariableSave { Name = "gum-logo-256.Width", SetsValue = true, Value = 0f, Type = "float" });
+        defaultState.Variables.Add(new VariableSave { Name = "gum-logo-256.Index", SetsValue = true, Value = 3f, Type = "float" });
+        VariableListSave<string> varList = new VariableListSave<string> { Type = "string", Name = "gum-logo-256.VariableReferences" };
+        varList.Value.Add("Width = @Index * 10");
+        defaultState.VariableLists.Add(varList);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: screen.Instances[0],
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "gum-logo-256.VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("Width = @Index * 10");
+        defaultState.GetValue("gum-logo-256.Width").ShouldBe(30f);
+    }
+
+    [Fact]
     public void DoVariableReferenceReaction_AtPrefixOnElementRow_ResolvesAgainstTheElement()
     {
         GumProjectSave project = new GumProjectSave();
@@ -608,6 +645,93 @@ public class VariableReferenceLogicTests : BaseTestClass
             trySave: false);
 
         defaultState.GetValue("Width").ShouldBe(800f);
+    }
+
+    [Theory]
+    [InlineData("Index = 5")]
+    [InlineData("AbsoluteWidth = 5")]
+    public void DoVariableReferenceReaction_AssigningLiveLayoutName_CommentsLineAndExplainsWhy(string line)
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(line, out StateSave defaultState, out VariableListSave<string> varList);
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+        string? shownMessage = null;
+        _dialogServiceMock.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shownMessage = message);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+        postedAction!.Invoke();
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("computed from the layout");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_AssigningAuthoredIndexVariable_AcceptsLine()
+    {
+        // A component can define its own variable named Index; only the layout-computed one is read-only.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference("Index = 5", out StateSave defaultState, out VariableListSave<string> varList);
+        defaultState.Variables.Add(new VariableSave { Name = "Index", SetsValue = true, Value = 0f, Type = "float", IsCustomVariable = true });
+        project.Screens.Add(screen);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("Index = 5");
+        defaultState.GetValue("Index").ShouldBe(5f);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_IndexCannotBeResolved_ExplainsItComesFromTheLayout()
+    {
+        // With nothing displayed for the element there is no live layout to read Index from.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference("Width = Item1.Index", out StateSave defaultState, out VariableListSave<string> varList);
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+        string? shownMessage = null;
+        _dialogServiceMock.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string?, MessageDialogStyle?>((message, _, _) => shownMessage = message);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+        postedAction!.Invoke();
+
+        varList.Value[0].ShouldStartWith("//");
+        shownMessage.ShouldNotBeNull();
+        shownMessage.ShouldContain("computed from the layout");
     }
 
     [Fact]

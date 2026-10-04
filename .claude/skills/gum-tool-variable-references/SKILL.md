@@ -19,7 +19,7 @@ LeftProperty = RightSide
 
 - **Left side:** An unqualified property name on the owning instance/element (e.g. `X`, `FontSize`, `Red`).
 - **Scoping (the two sides differ):** On an instance's row, the left side is the instance's variable (`X =` writes `Instance.X`). A bare right-side name resolves against the **containing element**, so `X = X` assigns the containing component's `X` to the instance's `X`. Naming another instance needs `Other.X`. Runtime-computed names such as `AbsoluteWidth` follow the same rule (bare means the containing element). See `ApplyVariableReferencesOnSpecificOwner` in `ElementSaveExtensions.GumRuntime.cs`.
-- **Owner prefix `@`:** `@Index` on an instance row means "the instance that owns this row" and survives copy/paste, unlike `Item1.Index`. `ElementSaveExtensions.ResolveOwnerPrefix` rewrites it to `Owner.Index` (or drops it on an element row) before every evaluation, so `EvaluatedSyntax` never sees `@`. A new place that evaluates or validates a right side must call it first, and `QualifyInstanceVariables` must skip `@` names.
+- **Owner prefix `@`:** `@Index` on an instance row means "the instance that owns this row" and survives copy/paste, unlike `Item1.Index`. `ElementSaveExtensions.ResolveOwnerPrefix` rewrites it to `Owner.Index` (or drops it on an element row) before every evaluation, so `EvaluatedSyntax` never sees `@`. A new place that evaluates or validates a right side must call it first, and `QualifyInstanceVariables` must skip `@` names. The expression is parsed as C#, so an owner name that is not an identifier (`gum-logo-256`) is written as `gum_x002D_logo_x002D_256`; any code that reads a name back out of the rewritten text must pass it through `ElementSaveExtensions.DecodeOwnerName`.
 - **Right side:** A variable path, which can be:
   - Local: `OtherInstance.X` (same element)
   - Cross-element: `Components/MyComp.InstanceName.Width` (slash-separated element path)
@@ -78,6 +78,10 @@ SetVariableLogic (variable change entry point)
 These exist only as computed properties on an already-laid-out `GraphicalUiElement` — never as authored `StateSave` data — so `RecursiveVariableFinder` can never resolve them. `EvaluatedSyntax` takes an optional `liveRoot` (a `GraphicalUiElement`) threaded all the way from the top of the apply chain; when the right side's final identifier is one of these names, it resolves against `liveRoot.GetGraphicalUiElementByName(...)` instead of falling through to state lookup. `liveRoot` is scoped to one element (mirrors how instance names are scoped), so a cross-element (`Components/Foo...`) reference never attempts this resolution.
 
 Both apply paths supply `liveRoot` when a live tree is available: the tool passes `IWireframeObjectManager.GetRepresentation(parentElement)` (null when nothing is currently rendered for that element); the runtime passes the top-level `GraphicalUiElement` already being applied against. Validation (`AddFailureForLine`) needs the same `liveRoot` as the apply call, or a valid Absolute* reference gets auto-commented out before it's ever applied.
+
+### Resolving `Index` (position among siblings)
+
+`Index` / `Instance.Index` (`TryResolveSiblingIndex` in `EvaluatedSyntax`) reads the live tree when there is one, and otherwise the element's own instance order and `Parent` values (`GetSiblingIndexFromData`), so it resolves with nothing displayed, unlike Absolute*. An authored variable named `Index` is tried first and wins, so a component can define its own. Siblings are the instances sharing a `Parent`; in the live tree an instance with no `Parent` counts only other parentless instances, because the containing element's `ContainedElements` list is flat. `EvaluatedSyntax.IsLiveLayoutName` marks `Index` and Absolute* as read-only for validation, and `HeadlessErrorChecker.RuntimeComputedVariableNames` keeps GUM0009 quiet; a new live-layout name needs all three places.
 
 ### `global::Localization.CurrentLanguage`
 

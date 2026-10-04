@@ -364,6 +364,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     {
         "AbsoluteX", "AbsoluteY", "AbsoluteLeft", "AbsoluteTop",
         "AbsoluteRight", "AbsoluteBottom", "AbsoluteWidth", "AbsoluteHeight",
+        "Index",
     };
 
     /// <summary>
@@ -456,9 +457,10 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
         foreach (Match match in LocalReferencePathRegex.Matches(rightSide))
         {
-            if (!ReferenceKeywords.Contains(match.Value) && !VariableExists(owner, match.Value))
+            string referencedName = ElementSaveExtensions.DecodeOwnerName(match.Value);
+            if (!ReferenceKeywords.Contains(referencedName) && !VariableExists(owner, referencedName))
             {
-                return $"\"{match.Value}\", which {owner.Name} does not have";
+                return $"\"{referencedName}\", which {owner.Name} does not have";
             }
         }
         return null;
