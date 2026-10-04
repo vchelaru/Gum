@@ -135,10 +135,16 @@ Text = "Hello"
 Visible = true
 ```
 
-Math operations can be used in variable assignments. This includes add, subtract, multiply, divide, and parenthesis to control order of operations:
+Math operations can be used in variable assignments. This includes add, subtract, multiply, divide, modulo (`%`, the remainder after dividing), and parenthesis to control order of operations:
 
 ```csharp
 Y = (TitleText.Y + 2) * 7 - 4
+```
+
+Modulo is useful for repeating patterns. For example, a ternary can pick a color for every fourth item (see [Conditional (Ternary) Expressions](#conditional-ternary-expressions)):
+
+```csharp
+Red = @Index % 4 == 0 ? 255 : 100
 ```
 
 Math operations can reference both constant values (1, 2, 3) or other variables:

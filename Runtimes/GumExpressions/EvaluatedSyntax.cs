@@ -716,6 +716,20 @@ public class EvaluatedSyntax
                 }
                 return result;
             }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PercentToken))
+            {
+                object result = dynamicValue1 % dynamicValue2;
+                // Float/double modulo by zero returns NaN instead of throwing
+                if (result is float f && float.IsNaN(f))
+                {
+                    return null;
+                }
+                if (result is double d && double.IsNaN(d))
+                {
+                    return null;
+                }
+                return result;
+            }
             else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.LessThanToken))
             {
                 return dynamicValue1 < dynamicValue2;

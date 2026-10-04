@@ -23,7 +23,7 @@ LeftProperty = RightSide
 - **Right side:** A variable path, which can be:
   - Local: `OtherInstance.X` (same element)
   - Cross-element: `Components/MyComp.InstanceName.Width` (slash-separated element path)
-  - Expressions: `OtherInstance.Width + 10`, `OtherInstance.Width * 2`, `!OtherInstance.Visible`
+  - Expressions: `OtherInstance.Width + 10`, `OtherInstance.Width * 2`, `Index % 4` (modulo by zero evaluates to null, like `/`), `!OtherInstance.Visible`
   - Conditional/comparison/logical operators: ternary `cond ? a : b`, `==`, `!=`, `<`, `>`, `<=`, `>=`, `&&`, `||`, `!`
   - Gum's own function set (`GumCommon/Runtime/ExpressionFunctions.cs`, the single table of names, arities and implementations): `Sin Cos Tan Sqrt Abs Floor Ceiling Round Min Max Clamp`. Plain names only, no `Math.` prefix (`Math.Max` is rejected with a hint), trig takes degrees to match `Rotation`. These are Gum semantics that look like C#, not .NET methods; to add one, add it to that table. Name-only scanners (`HeadlessErrorChecker`) read `ExpressionFunctions.Names`. Code that walks right-side identifiers (qualifying, dependency reads) must skip `EvaluatedSyntax.IsFunctionName`, or `Sin(X)` becomes `Inst.Sin(X)`. `GetFunctionCallProblem` supplies the validation message for unknown functions or wrong argument counts.
   - Category-state LHS: `<CategoryName>State = "StateName"` assigns the categorical state by name

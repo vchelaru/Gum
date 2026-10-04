@@ -111,6 +111,61 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
+    public void FromSyntaxNode_Modulo_ReturnsRemainder()
+    {
+        StateSave state = BuildState(("Instance.Index", 10, "int"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Index % 4", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(2);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_ModuloOfFloats_ReturnsRemainder()
+    {
+        StateSave state = BuildState(("Instance.Width", 10.5f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width % 4", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(2.5f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_ModuloByZeroInt_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Index", 10, "int"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Index % 0", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_ModuloByZeroFloat_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Width", 10f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Width % 0", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_ModuloInsideTernaryCondition_PicksBranch()
+    {
+        StateSave state = BuildState(("Instance.Index", 8, "int"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Index % 4 == 0 ? \"Even\" : \"Odd\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe("Even");
+    }
+
+    [Fact]
     public void FromSyntaxNode_DivisionOfTwoVariables_ReturnsDividedValue()
     {
         StateSave state = BuildState(
