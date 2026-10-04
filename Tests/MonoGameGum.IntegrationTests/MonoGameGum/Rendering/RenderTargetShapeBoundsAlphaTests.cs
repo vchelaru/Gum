@@ -141,6 +141,46 @@ public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
         System.Math.Abs(replace[(50 * CaptureSize) + 50].R - expectedHalf.R).ShouldBeGreaterThan(Tolerance);
     }
 
+    // Gum rotates counterclockwise around the shape's top-left corner. In y-down screen space a local
+    // offset (lx, ly) from that corner lands at (lx*cos(r) + ly*sin(r), -lx*sin(r) + ly*cos(r)) for r degrees.
+    private static (int X, int Y) ToPixel(float originX, float originY, float localX, float localY, float degrees)
+    {
+        double r = degrees * System.Math.PI / 180.0;
+        double dx = localX * System.Math.Cos(r) + localY * System.Math.Sin(r);
+        double dy = -localX * System.Math.Sin(r) + localY * System.Math.Cos(r);
+        return ((int)System.Math.Round(originX + dx), (int)System.Math.Round(originY + dy));
+    }
+
+    // 60x30 mask (a pill for the rectangle, a radius-15 circle centered in the bounds for the circle),
+    // rotated around its top-left at (originX, originY). Pixels inside the rotated bounds but outside the
+    // body are erased; pixels outside the rotated bounds (but inside the unrotated bounds) are untouched.
+    [Theory]
+    [InlineData(MaskShape.Circle, Gum.RenderingLibrary.Blend.MinAlpha, 30f, 15f, 50f, 70f, 70f)]
+    [InlineData(MaskShape.Circle, Gum.RenderingLibrary.Blend.ReplaceAlpha, 30f, 15f, 50f, 70f, 70f)]
+    [InlineData(MaskShape.RoundedRectangle, Gum.RenderingLibrary.Blend.MinAlpha, 30f, 15f, 50f, 70f, 70f)]
+    [InlineData(MaskShape.RoundedRectangle, Gum.RenderingLibrary.Blend.ReplaceAlpha, 30f, 15f, 50f, 70f, 70f)]
+    [InlineData(MaskShape.Circle, Gum.RenderingLibrary.Blend.MinAlpha, 90f, 30f, 80f, 70f, 90f)]
+    [InlineData(MaskShape.Circle, Gum.RenderingLibrary.Blend.ReplaceAlpha, 90f, 30f, 80f, 70f, 90f)]
+    [InlineData(MaskShape.RoundedRectangle, Gum.RenderingLibrary.Blend.MinAlpha, 90f, 30f, 80f, 70f, 90f)]
+    [InlineData(MaskShape.RoundedRectangle, Gum.RenderingLibrary.Blend.ReplaceAlpha, 90f, 30f, 80f, 70f, 90f)]
+    public void RotatedAlphaMask_ErasesRotatedBoundsOutsideBody_KeepsBodyAndOutsideRotatedBounds(
+        MaskShape shape, Gum.RenderingLibrary.Blend blend, float rotation, float originX, float originY,
+        float outsideX, float outsideY)
+    {
+        XnaColor[] pixels = Render(shape, blend, maskAlpha: 255, maskX: originX, maskY: originY,
+            maskWidth: 60, maskHeight: 30, maskCornerRadius: 15, maskRotation: rotation);
+
+        (int X, int Y) body = ToPixel(originX, originY, 30, 15, rotation);
+        (int X, int Y) nearCorner = ToPixel(originX, originY, 2, 2, rotation);
+        (int X, int Y) farCorner = ToPixel(originX, originY, 57, 3, rotation);
+
+        AssertNear(pixels[(body.Y * CaptureSize) + body.X], FillColor);
+        AssertNear(pixels[(nearCorner.Y * CaptureSize) + nearCorner.X], BackdropColor);
+        AssertNear(pixels[(farCorner.Y * CaptureSize) + farCorner.X], BackdropColor);
+        // Inside the unrotated bounds, outside the rotated ones: an unrotated cover would erase it.
+        AssertNear(pixels[((int)outsideY * CaptureSize) + (int)outsideX], FillColor);
+    }
+
     private static void AssertNear(XnaColor actual, XnaColor expected)
     {
         System.Math.Abs(actual.R - expected.R).ShouldBeLessThanOrEqualTo(Tolerance);
@@ -149,7 +189,9 @@ public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
     }
 
     private static XnaColor[] Render(MaskShape shape, Gum.RenderingLibrary.Blend blend, int maskAlpha,
-        bool normalShapeFirst = false, bool normalShapeAfter = false, int fillAlpha = 255)
+        bool normalShapeFirst = false, bool normalShapeAfter = false, int fillAlpha = 255,
+        float maskX = 20, float maskY = 20, float maskWidth = 60, float maskHeight = 60,
+        float maskCornerRadius = 30, float maskRotation = 0)
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -188,10 +230,11 @@ public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
         if (shape == MaskShape.Circle)
         {
             CircleRuntime circle = new();
-            circle.X = 20;
-            circle.Y = 20;
-            circle.Width = 60;
-            circle.Height = 60;
+            circle.X = maskX;
+            circle.Y = maskY;
+            circle.Width = maskWidth;
+            circle.Height = maskHeight;
+            circle.Rotation = maskRotation;
             circle.IsFilled = true;
             circle.StrokeWidth = 0;
             circle.FillColor = maskColor;
@@ -201,11 +244,12 @@ public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
         else
         {
             RectangleRuntime rect = new();
-            rect.X = 20;
-            rect.Y = 20;
-            rect.Width = 60;
-            rect.Height = 60;
-            rect.CornerRadius = 30;
+            rect.X = maskX;
+            rect.Y = maskY;
+            rect.Width = maskWidth;
+            rect.Height = maskHeight;
+            rect.CornerRadius = maskCornerRadius;
+            rect.Rotation = maskRotation;
             rect.IsFilled = true;
             rect.StrokeWidth = 0;
             rect.FillColor = maskColor;
