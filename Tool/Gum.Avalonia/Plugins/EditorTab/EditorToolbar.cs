@@ -114,9 +114,8 @@ internal sealed class EditorToolbar : DockPanel
         {
             Classes = { GumChromeStyles.FlatButtonClass },
             Content = previewIconHost,
-            Width = 26,
-            Margin = new Thickness(16, 0, 4, 0),
-            Padding = new Thickness(0),
+            Margin = new Thickness(0, 0, 4, 0),
+            Padding = new Thickness(6, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             [!Button.CommandProperty] = new Binding(nameof(EditorViewModel.PreviewCommand)),
