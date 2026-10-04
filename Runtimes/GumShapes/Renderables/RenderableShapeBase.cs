@@ -24,7 +24,7 @@ namespace MonoGameAndGum.Renderables;
 // implemented on the concrete shape classes (Circle, RoundedRectangle) directly, not the
 // shared base. The base no longer participates in any renderable-registry contract — only
 // the concrete shape classes do.
-public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBlendedRenderable
+public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBlendedRenderable, RenderingLibrary.Graphics.IStencilRenderable
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;
 
@@ -851,6 +851,13 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         }
         return 0.5f / cameraZoom;
     }
+
+    /// <summary>
+    /// True for the alpha-only blends whose bounds mask marks the stencil buffer (#5689), so the
+    /// render target this shape bakes into must have one (#5696).
+    /// </summary>
+    public bool RequiresStencilBuffer =>
+        Blend == Gum.RenderingLibrary.Blend.MinAlpha || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha;
 
     /// <summary>
     /// Issue #5689 — call from <c>Render</c> after <c>ShapeRenderer.EnsureBlend</c>, before any draw,

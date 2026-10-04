@@ -69,6 +69,17 @@ public interface IRenderTargetRenderable
 }
 
 /// <summary>
+/// Implemented by a renderable that needs a stencil buffer on the render target it is baked into
+/// (issue #5696). The xnalike <c>Renderer</c> allocates a stencil-capable bake target only for a
+/// container whose subtree holds a visible renderable reporting true here.
+/// </summary>
+public interface IStencilRenderable
+{
+    /// <summary>True while the renderable's current state draws through the stencil buffer.</summary>
+    bool RequiresStencilBuffer { get; }
+}
+
+/// <summary>
 /// Implemented by a renderable (or its runtime wrapper) that displays another container's baked
 /// render-target texture as its pixel source. The <c>Renderer</c>'s render-target detection walk
 /// (<c>CollectReferencedRenderTargets</c>) tests for this interface to discover which containers
