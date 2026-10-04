@@ -151,6 +151,61 @@ public class EvaluatedSyntax
         }
     }
 
+    /// <summary>
+    /// Describes the first invalid function call in <paramref name="syntaxNode"/> (an unsupported
+    /// function name, or the wrong number of arguments), or null if every call is valid. Evaluation
+    /// itself just yields no value for these, so tool-side validation uses this to say why.
+    /// </summary>
+    public static string? GetFunctionCallProblem(SyntaxNode syntaxNode)
+    {
+        foreach (var invocation in syntaxNode.DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>())
+        {
+            if (!TryGetFunctionName(invocation, out string name))
+            {
+                return DescribeUnknownFunction(invocation);
+            }
+
+            int expected = ExpressionFunctions.GetArgumentCount(name);
+            int actual = invocation.ArgumentList.Arguments.Count;
+            if (expected != actual)
+            {
+                return $"{name} expects {expected} argument{(expected == 1 ? "" : "s")} but got {actual}";
+            }
+        }
+
+        return null;
+    }
+
+    // Gum functions are plain names like Max(a, b). A qualified callee such as Math.Max is not one.
+    private static bool TryGetFunctionName(InvocationExpressionSyntax invocation, out string name)
+    {
+        name = invocation.Expression is IdentifierNameSyntax identifier ? identifier.Identifier.ValueText : string.Empty;
+        return ExpressionFunctions.IsFunction(name);
+    }
+
+    private static string DescribeUnknownFunction(InvocationExpressionSyntax invocation)
+    {
+        string callee = invocation.Expression.ToString();
+        string supported = $"Supported functions: {string.Join(", ", ExpressionFunctions.Names)}";
+
+        if (invocation.Expression is MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.ValueText: "Math" } } memberAccess
+            && ExpressionFunctions.IsFunction(memberAccess.Name.Identifier.ValueText))
+        {
+            string bareName = memberAccess.Name.Identifier.ValueText;
+            return $"Unknown function '{callee}'. Gum functions have no Math. prefix, write {bareName}(...). {supported}";
+        }
+
+        return $"Unknown function '{callee}'. {supported}";
+    }
+
+    /// <summary>
+    /// True if <paramref name="identifier"/> is the name being called in a function call such as the
+    /// <c>Sin</c> in <c>Sin(Angle)</c>, rather than a variable. Code that rewrites or collects the
+    /// variables an expression reads must skip these.
+    /// </summary>
+    public static bool IsFunctionName(IdentifierNameSyntax identifier) =>
+        identifier.Parent is InvocationExpressionSyntax invocation && invocation.Expression == identifier;
+
     private static EvaluatedSyntax? Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
     {
         if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
@@ -261,6 +316,22 @@ public class EvaluatedSyntax
                 }
             }
             return null;
+        }
+        else if (syntaxNode is InvocationExpressionSyntax invocation)
+        {
+            if (!TryGetFunctionName(invocation, out string functionName))
+            {
+                return null;
+            }
+
+            var arguments = invocation.ArgumentList.Arguments;
+            object?[] argumentValues = new object?[arguments.Count];
+            for (int i = 0; i < arguments.Count; i++)
+            {
+                argumentValues[i] = Evaluate(arguments[i].Expression, stateForUnqualifiedRightSide, fallback, liveRoot)?.Value;
+            }
+
+            return FromSyntaxAndValue(syntaxNode, ExpressionFunctions.Invoke(functionName, argumentValues));
         }
         else if (syntaxNode is PrefixUnaryExpressionSyntax prefixUnary)
         {

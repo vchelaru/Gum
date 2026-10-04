@@ -348,6 +348,12 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     private static readonly Regex NonReferenceTextRegex = new Regex(
         @"""(?:[^""\\]|\\.)*""|global::[\w.]+", RegexOptions.Compiled);
 
+    // A call to a supported function such as "Max(". Only the callee is matched
+    // (the arguments are still scanned), so "Sin(Ghost.Width)" still reports Ghost.Width.
+    private static readonly Regex FunctionCalleeRegex = new Regex(
+        @"(?<![\w.:])(?:" + string.Join("|", Gum.Expressions.ExpressionFunctions.Names) + @")(?=\s*\()",
+        RegexOptions.Compiled);
+
     private static readonly HashSet<string> ReferenceKeywords = new HashSet<string>(StringComparer.Ordinal)
     {
         "true", "false", "null",
@@ -421,6 +427,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
         string rightSide = ElementSaveExtensions.ResolveOwnerPrefix(line.Substring(equalsIndex + 1), ownerInstanceName);
         rightSide = NonReferenceTextRegex.Replace(rightSide, " ");
+        rightSide = FunctionCalleeRegex.Replace(rightSide, " ");
 
         string? problem = null;
         rightSide = QualifiedReferencePathRegex.Replace(rightSide, match =>

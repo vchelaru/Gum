@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using Gum.Localization;
@@ -1014,6 +1014,178 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
         result.ShouldNotBeNull();
         result.Value.ShouldBe(false);
+    }
+
+    #endregion
+
+    #region Functions
+
+    [Fact]
+    public void FromSyntaxNode_BareMax_ReturnsLarger()
+    {
+        StateSave state = BuildState(("Instance.Width", 30f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Max(Instance.Width, 50)", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(50f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_MathPrefixedMax_IsNotAGumFunction()
+    {
+        StateSave state = BuildState(("Instance.Width", 30f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Math.Max(Instance.Width, 50)", state);
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_Sin_UsesDegrees()
+    {
+        StateSave state = BuildState(("Instance.Angle", 90f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Sin(Instance.Angle)", state);
+
+        result.ShouldNotBeNull();
+        ((float)result.Value!).ShouldBe(1f, 0.0001f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TrigAtExactAngles_ReturnsExactValues()
+    {
+        StateSave state = BuildState();
+
+        Evaluate("Sin(180)", state).Value.ShouldBe(0f);
+        Evaluate("Cos(90)", state).Value.ShouldBe(0f);
+        Evaluate("Sin(30)", state).Value.ShouldBe(0.5f);
+        Evaluate("Cos(60)", state).Value.ShouldBe(0.5f);
+        Evaluate("Tan(45)", state).Value.ShouldBe(1f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_CosInsideArithmetic_Composes()
+    {
+        StateSave state = BuildState(("Instance.Angle", 0f, "float"));
+
+        EvaluatedSyntax result = Evaluate("100 * Cos(Instance.Angle) + 5", state);
+
+        result.ShouldNotBeNull();
+        ((float)result.Value!).ShouldBe(105f, 0.0001f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_NestedCalls_Evaluate()
+    {
+        StateSave state = BuildState(("Instance.Value", -7f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Clamp(Abs(Instance.Value), 0, 5)", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(5f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_AbsOfInt_StaysInt()
+    {
+        StateSave state = BuildState(("Instance.Red", -4, "int"));
+
+        EvaluatedSyntax result = Evaluate("Abs(Instance.Red)", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(4);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_MinOfIntAndFloat_WidensToFloat()
+    {
+        StateSave state = BuildState(("Instance.Red", 3, "int"));
+
+        EvaluatedSyntax result = Evaluate("Min(Instance.Red, 2.5f)", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(2.5f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_FloorCeilingRound_MatchMath()
+    {
+        StateSave state = BuildState(("Instance.Width", 2.5f, "float"));
+
+        Evaluate("Floor(Instance.Width)", state).Value.ShouldBe(2f);
+        Evaluate("Ceiling(Instance.Width)", state).Value.ShouldBe(3f);
+        // Math.Round default is banker's rounding.
+        Evaluate("Round(Instance.Width)", state).Value.ShouldBe(2f);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_SqrtOfNegative_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Width", -4f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Sqrt(Instance.Width)", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_ClampWithMinGreaterThanMax_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Width", 1f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Clamp(Instance.Width, 10, 0)", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_FunctionWithMissingVariable_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("Sin(Instance.Missing)", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_UnknownFunction_ReturnsNullValue()
+    {
+        StateSave state = BuildState(("Instance.Width", 1f, "float"));
+
+        EvaluatedSyntax result = Evaluate("Foo(Instance.Width)", state);
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("Sin(1, 2)", "Sin expects 1 argument but got 2")]
+    [InlineData("Clamp(1, 2)", "Clamp expects 3 arguments but got 2")]
+    [InlineData("Foo(1)", "Unknown function 'Foo'")]
+    [InlineData("Math.Foo(1)", "Unknown function 'Math.Foo'")]
+    [InlineData("Math.Max(1, 2)", "Unknown function 'Math.Max'. Gum functions have no Math. prefix, write Max(...)")]
+    [InlineData("Other.Sin(1)", "Unknown function 'Other.Sin'")]
+    public void GetFunctionCallProblem_InvalidCall_ReturnsMessage(string expression, string expectedStart)
+    {
+        Microsoft.CodeAnalysis.SyntaxNode syntax = SyntaxFactory.ParseExpression(
+            EvaluatedSyntax.ConvertToCSharpSyntax(expression));
+
+        string? problem = EvaluatedSyntax.GetFunctionCallProblem(syntax);
+
+        problem.ShouldNotBeNull();
+        problem.ShouldStartWith(expectedStart);
+    }
+
+    [Fact]
+    public void GetFunctionCallProblem_ValidNestedCalls_ReturnsNull()
+    {
+        Microsoft.CodeAnalysis.SyntaxNode syntax = SyntaxFactory.ParseExpression("Max(Sin(A), Min(1, 2))");
+
+        EvaluatedSyntax.GetFunctionCallProblem(syntax).ShouldBeNull();
     }
 
     #endregion
