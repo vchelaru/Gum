@@ -1476,7 +1476,7 @@ public class Renderer : IRenderer
     // pipeline but not on FRB's premultiplied one (NormalBlendState == AlphaBlend). Without this the
     // blit read the default as a deliberately custom blend and drew the premultiplied target with
     // straight alpha, multiplying its color by alpha a second time (a 50% target came out at 25%).
-    public static bool IsUnconfiguredRenderTargetCompositeBlend(BlendState blendState) =>
+    public static bool IsUnconfiguredRenderTargetCompositeBlend(BlendState? blendState) =>
         blendState == Renderer.NormalBlendState
         || blendState == _bakeToRenderTargetBlendState
         || blendState == BlendState.NonPremultiplied;
