@@ -280,7 +280,7 @@ public class SimpleEditorTests
         window.UpdateLayout();
 
         // At its default ~50px the slider leaves the labels floating far below the track.
-        display.Slider.Bounds.Height.ShouldBeLessThanOrEqualTo(30);
+        display.Slider.DesiredSize.Height.ShouldBeLessThanOrEqualTo(30);
     }
 
     [AvaloniaFact]
