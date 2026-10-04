@@ -772,6 +772,12 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         spriteRuntime.Alpha = valueAsInt;
                     }
+#if FRB
+                    else
+                    {
+                        sprite.Alpha = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
@@ -782,6 +788,12 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         spriteRuntime.Red = valueAsInt;
                     }
+#if FRB
+                    else
+                    {
+                        sprite.Red = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
@@ -792,6 +804,12 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         spriteRuntime.Green = valueAsInt;
                     }
+#if FRB
+                    else
+                    {
+                        sprite.Green = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
@@ -802,6 +820,12 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         spriteRuntime.Blue = valueAsInt;
                     }
+#if FRB
+                    else
+                    {
+                        sprite.Blue = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
@@ -848,6 +872,12 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         spriteRuntime.Blend = valueAsGumBlend;
                     }
+#if FRB
+                    else
+                    {
+                        sprite.BlendState = valueAsGumBlend.ToBlendState();
+                    }
+#endif
                     handled = true;
                     break;
                 }
