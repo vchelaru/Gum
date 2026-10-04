@@ -98,7 +98,16 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// this property existed — leaving existing content visually unchanged. Only an explicitly
     /// non-Normal blend (Additive, etc.) overrides it.
     /// </summary>
-    public Microsoft.Xna.Framework.Graphics.BlendState? GetEffectiveXnaBlendState(bool isBakingRenderTarget = false)
+    public Microsoft.Xna.Framework.Graphics.BlendState? GetEffectiveXnaBlendState() =>
+        GetEffectiveXnaBlendState(isBakingRenderTarget: false);
+
+    /// <summary>
+    /// Same as <see cref="GetEffectiveXnaBlendState()"/>, but resolves the blend for a render-target
+    /// bake when <paramref name="isBakingRenderTarget"/> is true (#5672). Internal use: called by
+    /// <see cref="ShapeRenderer"/>. A separate overload (not an optional parameter) keeps the
+    /// parameterless signature binary compatible (#5679).
+    /// </summary>
+    public Microsoft.Xna.Framework.Graphics.BlendState? GetEffectiveXnaBlendState(bool isBakingRenderTarget)
     {
         if (Blend == Gum.RenderingLibrary.Blend.Normal)
         {
