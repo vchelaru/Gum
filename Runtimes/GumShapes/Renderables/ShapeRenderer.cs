@@ -25,6 +25,7 @@ public class ShapeRenderer
     Gum.RenderingLibrary.Blend _currentBlend;
     BlendState? _currentXnaBlendState;
     bool _isBatchBegun;
+    bool _isBakingRenderTarget;
 
     // Issue #4509 — the view the batch was opened with, saved while a single renderable draws
     // through a transformed one. Apos.Shapes has no per-draw transform, so a non-uniformly scaled
@@ -50,12 +51,13 @@ public class ShapeRenderer
     /// the begin parameters so a later <see cref="EnsureBlend"/> can re-open with a different
     /// blend mid-run. Called by the batch owner from <c>RenderableShapeBase.StartBatch</c>.
     /// </summary>
-    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape, RenderStateChangeStatistics? statistics)
+    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape, RenderStateChangeStatistics? statistics, bool isBakingRenderTarget = false)
     {
         _currentView = view;
         _currentRasterizerState = rasterizerState;
         _currentBlend = shape.Blend;
-        _currentXnaBlendState = shape.GetEffectiveXnaBlendState();
+        _isBakingRenderTarget = isBakingRenderTarget;
+        _currentXnaBlendState = shape.GetEffectiveXnaBlendState(isBakingRenderTarget);
         _isBatchBegun = true;
         _isViewPushed = false;
         _statistics = statistics;
@@ -79,7 +81,7 @@ public class ShapeRenderer
         }
         _sb.End();
         _currentBlend = shape.Blend;
-        _currentXnaBlendState = shape.GetEffectiveXnaBlendState();
+        _currentXnaBlendState = shape.GetEffectiveXnaBlendState(_isBakingRenderTarget);
         _statistics?.RecordShapeBatchBegin();
         _sb.Begin(view: _currentView, blendState: _currentXnaBlendState, rasterizerState: _currentRasterizerState);
     }

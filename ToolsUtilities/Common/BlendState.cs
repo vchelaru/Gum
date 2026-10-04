@@ -116,6 +116,14 @@ namespace Gum
         // widened or punched by the overlay's own alpha.
         public static readonly BlendState AddColorPreserveDestinationAlpha;
 
+        // #5671: SubtractAlpha as applied while baking a render target. SubtractAlpha lowers only
+        // the destination alpha and leaves its color, which violates the premultiplied invariant
+        // of the baked texture (the composite-back blit then adds the leftover color back as a
+        // brightening instead of a hole). This is a destination-out: both color and alpha become
+        // dest * (1 - srcAlpha), so a premultiplied destination stays premultiplied. The source's
+        // own color never contributes.
+        public static readonly BlendState SubtractAlphaFromPremultipliedTarget;
+
         static BlendState()
         {
             Additive = new BlendState("BlendState.Additive", Blend.SourceAlpha, Blend.One);
@@ -262,6 +270,21 @@ namespace Gum
             NonPremultipliedAddAlpha.AlphaSourceBlend = Blend.SourceAlpha;
             NonPremultipliedAddAlpha.AlphaDestinationBlend = Blend.DestinationAlpha;
             NonPremultipliedAddAlpha.AlphaBlendFunction = BlendFunction.Add;
+
+            SubtractAlphaFromPremultipliedTarget = new BlendState();
+            SubtractAlphaFromPremultipliedTarget.ColorSourceBlend = Blend.Zero;
+            SubtractAlphaFromPremultipliedTarget.ColorBlendFunction = BlendFunction.Add;
+            SubtractAlphaFromPremultipliedTarget.ColorDestinationBlend = Blend.InverseSourceAlpha;
+
+            SubtractAlphaFromPremultipliedTarget.AlphaSourceBlend = Blend.Zero;
+            SubtractAlphaFromPremultipliedTarget.AlphaBlendFunction = BlendFunction.Add;
+            SubtractAlphaFromPremultipliedTarget.AlphaDestinationBlend = Blend.InverseSourceAlpha;
+
+            SubtractAlphaFromPremultipliedTarget.BlendFactor = Color.White;
+            SubtractAlphaFromPremultipliedTarget.ColorWriteChannels = ColorWriteChannels.All;
+            SubtractAlphaFromPremultipliedTarget.ColorWriteChannels1 = ColorWriteChannels.All;
+            SubtractAlphaFromPremultipliedTarget.ColorWriteChannels2 = ColorWriteChannels.All;
+            SubtractAlphaFromPremultipliedTarget.ColorWriteChannels3 = ColorWriteChannels.All;
 
             AddColorPreserveDestinationAlpha = new BlendState();
             AddColorPreserveDestinationAlpha.ColorSourceBlend = Blend.One;
