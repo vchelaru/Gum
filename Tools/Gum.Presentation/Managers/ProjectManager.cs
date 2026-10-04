@@ -485,6 +485,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 modifications.Add("FixRecursiveAssignments");
             }
+            if (_gumProjectRepairLogic.MakeFontFilePathsRelative(
+                _gumProjectSave, fileName.GetDirectoryContainingThis()!.FullPath))
+            {
+                modifications.Add("MakeFontFilePathsRelative");
+            }
             using (StartupTiming.Time("  PluginManager.ProjectLoad (total)"))
             {
                 FillAndNotifyPluginsOfLoad(_gumProjectSave);
