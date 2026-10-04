@@ -13,6 +13,7 @@ Run it by path: `dotnet test Tests/FlatRedBall.GumRendering.Tests`. It is in no 
 |---|---|
 | `Harness/FrbGumHost.cs` | One real FRB `Game` per process; `Render(...)` draws elements and returns the backbuffer |
 | `BlendMathTests.cs` | Solid colors at a known alpha, expected value computed in the test |
+| `SpriteTintTests.cs` | Sprite `Red`/`Green`/`Blue`/`Alpha` set through `SetProperty`, as a loaded project sets them |
 
 ## Gotchas
 
@@ -21,4 +22,5 @@ Run it by path: `dotnet test Tests/FlatRedBall.GumRendering.Tests`. It is in no 
 - Sprite textures must go through `TextureContentLoader.MakePremultiplied`, as real FRB loads do.
 - Inside `namespace FlatRedBall.*`, `Gum.` and `Sprite` resolve to FRB types. Use `global::Gum...` and `RenderingLibrary.Graphics.Sprite`.
 - The `FRB` compile constant makes `ToBlendState` return the premultiplied blend states; a plain `dotnet test` of `MonoGameGum.Tests` never exercises that path.
+- `Blend.Replace` on a translucent texture looks darker in FRB than in the tool. FRB's texture is premultiplied and `BlendState.Opaque` writes it unchanged, while the tool replaces with the straight color; matching it needs a shader that un-premultiplies, so the difference is accepted and not tested.
 - A `Skip`ped test documents a known FRB bug; remove the `Skip` in the same change that fixes it.
