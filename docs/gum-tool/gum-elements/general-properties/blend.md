@@ -103,6 +103,8 @@ As `Alpha` is reduced, the amount of opacity removed effect is also reduced. A S
 
 <figure><img src="../../../.gitbook/assets/09_07 28 50.gif" alt=""><figcaption><p>Reducing Alpha results in less opacity being removed</p></figcaption></figure>
 
+Each `Subtract Alpha` instance removes its share of whatever opacity remains. Two instances with an `Alpha` of `128` do not remove everything: the first leaves about half of the original opacity, and the second leaves about half of that, or roughly a quarter.
+
 ## Replace Alpha Blend
 
 Replace Alpha forcefully sets the opacity of whatever is below. Rather than subtracting alpha, replace can forcefully set the alpha.
@@ -123,11 +125,19 @@ Keep in mind that `Replace Alpha` can apply different alpha values if the instan
 
 <figure><img src="../../../.gitbook/assets/09_08 11 21.gif" alt=""><figcaption><p>Alpha being replaced to opaque in the center and transparent on the edges of the circle</p></figcaption></figure>
 
+A Circle or Rectangle using `Replace Alpha` applies to its whole bounding rectangle, not only the pixels the shape paints. The area inside the rectangle but outside the shape (such as the corners around a circle) has an alpha of `0`, so `Replace Alpha` makes it transparent.
+
 ## Min Alpha
 
 `Min Alpha` modifies the underlying object so that the result is the minimum alpha between the instance and what is below. This can be used to create an alpha mask.
 
 <figure><img src="../../../.gitbook/assets/09_08 16 44.gif" alt=""><figcaption><p>Min alpha creates a mask</p></figcaption></figure>
+
+A Circle or Rectangle using `Min Alpha` applies to its whole bounding rectangle, not only the pixels the shape paints. Pixels inside the shape keep their opacity, and pixels inside the rectangle but outside the shape (such as the corners around a circle) become transparent. This lets a Circle or a Rectangle with rounded corners mask a circular or rounded area without a custom texture.
+
+{% hint style="info" %}
+Applying `Min Alpha` and `Replace Alpha` to the whole bounding rectangle of a Circle or Rectangle is available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 If the instance alpha is reduced, then the resulting transparency is reduced as well. The following shows setting `Alpha` to 128 (about 50%).
 
