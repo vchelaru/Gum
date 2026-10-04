@@ -1,4 +1,4 @@
-﻿using Apos.Shapes;
+﻿﻿using Apos.Shapes;
 using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -107,11 +107,14 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
 
         Gum.BlendState gumBlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend);
 
-        // #5671 — SubtractAlpha must punch a hole in the premultiplied baked texture. Sprites get
-        // this swap in Renderer.AdjustRenderStates; shapes resolve their own blend here, so they
-        // apply the same swap. Only SubtractAlpha is routed: other blends keep their existing
-        // shape behavior.
-        if (isBakingRenderTarget && Blend == Gum.RenderingLibrary.Blend.SubtractAlpha)
+        // #5671/#5673/#5682 — the alpha-only blends must keep the premultiplied baked texture
+        // consistent. Sprites get this swap in Renderer.AdjustRenderStates; shapes resolve their
+        // own blend here, so they apply the same swap. Only these blends are routed: others keep
+        // their existing shape behavior.
+        if (isBakingRenderTarget
+            && (Blend == Gum.RenderingLibrary.Blend.SubtractAlpha
+                || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha
+                || Blend == Gum.RenderingLibrary.Blend.MinAlpha))
         {
             gumBlendState = RenderingLibrary.Graphics.Renderer.AdjustBlendStateForRenderTargetBake(
                 gumBlendState, isBakingRenderTarget: true);

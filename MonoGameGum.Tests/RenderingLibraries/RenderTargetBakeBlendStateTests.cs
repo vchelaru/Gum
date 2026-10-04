@@ -63,7 +63,8 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
         }
     }
 
-    // Pins the #4091 fix. MinAlpha (e.g. GameUiSamples' ManaOrb wave mask) deliberately leaves
+    // Pins the #4091 fix, whose swap target #5682 replaced: MinAlphaPremultiplied's color Min was a
+    // no-op against a white mask, so partially transparent masks still leaked color. MinAlpha (e.g. GameUiSamples' ManaOrb wave mask) deliberately leaves
     // color untouched (ColorSourceBlend=Zero, ColorDestinationBlend=One) and only clips alpha via
     // Min. Baked under _bakeToRenderTargetBlendState's premultiply-on-bake convention, that leaves
     // a masked-out pixel's color premultiplied against its OLD (pre-mask) alpha instead of its new
@@ -79,7 +80,7 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
     // Gum.BlendState with MinAlpha's exact field values rather than referencing the static
     // BlendState.MinAlpha, to pin the fix against structural (not reference) comparison.
     [Fact]
-    public void AdjustBlendStateForRenderTargetBake_SubstitutesMinAlphaPremultiplied_ForFieldEquivalentMinAlpha_WhenStraightAlphaPipeline()
+    public void AdjustBlendStateForRenderTargetBake_SubstitutesScaledDestinationColor_ForFieldEquivalentMinAlpha_WhenStraightAlphaPipeline()
     {
         var previous = Renderer.NormalBlendState;
         try
@@ -100,7 +101,7 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
             var result = Renderer.AdjustBlendStateForRenderTargetBake(
                 fieldEquivalentMinAlpha, isBakingRenderTarget: true);
 
-            result.ShouldBeSameAs(BlendState.MinAlphaPremultiplied);
+            result.ShouldBeSameAs(BlendState.MinAlphaOnPremultipliedTarget);
         }
         finally
         {
@@ -165,4 +166,66 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
             Renderer.NormalBlendState = previous;
         }
     }
+
+    // #5673/#5682: ReplaceAlpha and MinAlpha keep destination color while rewriting alpha, so the
+    // baked premultiplied color goes inconsistent with its new alpha. While baking they scale
+    // destination color by source alpha instead. Field-equivalent copies pin the structural match.
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_SubstitutesScaledDestinationColor_ForFieldEquivalentReplaceAndMinAlpha()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.NonPremultiplied;
+
+            Renderer.AdjustBlendStateForRenderTargetBake(CopyOf(BlendState.ReplaceAlpha), isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.ReplaceAlphaOnPremultipliedTarget);
+            Renderer.AdjustBlendStateForRenderTargetBake(CopyOf(BlendState.MinAlpha), isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.MinAlphaOnPremultipliedTarget);
+
+            BlendState.ReplaceAlphaOnPremultipliedTarget.ColorSourceBlend.ShouldBe(Blend.Zero);
+            BlendState.ReplaceAlphaOnPremultipliedTarget.ColorDestinationBlend.ShouldBe(Blend.SourceAlpha);
+            BlendState.ReplaceAlphaOnPremultipliedTarget.AlphaDestinationBlend.ShouldBe(Blend.Zero);
+            BlendState.MinAlphaOnPremultipliedTarget.ColorDestinationBlend.ShouldBe(Blend.SourceAlpha);
+            BlendState.MinAlphaOnPremultipliedTarget.AlphaBlendFunction.ShouldBe(Gum.BlendFunction.Min);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_KeepsReplaceAndMinAlpha_WhenNotBakingOrPremultipliedPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.NonPremultiplied;
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.ReplaceAlpha, isBakingRenderTarget: false)
+                .ShouldBeSameAs(BlendState.ReplaceAlpha);
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.MinAlpha, isBakingRenderTarget: false)
+                .ShouldBeSameAs(BlendState.MinAlpha);
+
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.ReplaceAlpha, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.ReplaceAlpha);
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.MinAlpha, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.MinAlpha);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    private static BlendState CopyOf(BlendState source) => new BlendState
+    {
+        ColorSourceBlend = source.ColorSourceBlend,
+        ColorBlendFunction = source.ColorBlendFunction,
+        ColorDestinationBlend = source.ColorDestinationBlend,
+        AlphaSourceBlend = source.AlphaSourceBlend,
+        AlphaBlendFunction = source.AlphaBlendFunction,
+        AlphaDestinationBlend = source.AlphaDestinationBlend,
+    };
 }

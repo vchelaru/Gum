@@ -1,4 +1,4 @@
-﻿#if MONOGAME || XNA || KNI || FNA
+﻿﻿#if MONOGAME || XNA || KNI || FNA
 #define XNALIKE
 #endif
 using System;
@@ -1452,6 +1452,12 @@ public class Renderer : IRenderer
     // Min-for-color-too formula drops the leftover color to whatever the mask's own
     // (premultiplied-authored) texture color contributes instead.
     //
+    // #5673/#5682: the #4091 MinAlphaPremultiplied swap only worked for a fully transparent mask
+    // (its color Min is a no-op against a white source), so a partially transparent MinAlpha mask,
+    // and ReplaceAlpha generally, still left the old color. MinAlpha and ReplaceAlpha now scale
+    // destination color by source alpha (BlendState.*OnPremultipliedTarget), in lockstep with the
+    // alpha they write.
+    //
     // SubtractAlpha (#5671) is the same class of fault: it lowers destination alpha but keeps the
     // destination color, so the leftover premultiplied color brightens at composite instead of
     // being cut. Swap to a destination-out that scales color and alpha together. Public (unlike
@@ -1471,7 +1477,12 @@ public class Renderer : IRenderer
 
         if (IsFieldEquivalent(renderBlendState, BlendState.MinAlpha))
         {
-            return BlendState.MinAlphaPremultiplied;
+            return BlendState.MinAlphaOnPremultipliedTarget;
+        }
+
+        if (IsFieldEquivalent(renderBlendState, BlendState.ReplaceAlpha))
+        {
+            return BlendState.ReplaceAlphaOnPremultipliedTarget;
         }
 
         if (IsFieldEquivalent(renderBlendState, BlendState.SubtractAlpha))
