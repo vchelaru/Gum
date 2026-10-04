@@ -554,6 +554,37 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     }
 
     /// <inheritdoc/>
+    public void ReapplySiblingDependentReferences(ElementSave element)
+    {
+        List<StateSave> states = element.AllStates
+            .Where(state => state.VariableLists.Any(IsSiblingDependentRow))
+            .ToList();
+        if (states.Count == 0)
+        {
+            return;
+        }
+
+        // Index reads the live layout, so the wireframe must already reflect the new structure.
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+        GraphicalUiElement? liveRoot = _wireframeObjectManager.GetRepresentation(element);
+        foreach (StateSave state in states)
+        {
+            ElementSaveExtensions.ApplyVariableReferences(element, state, liveRoot);
+        }
+
+        // The values written above are what the wireframe should now show.
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+        _fileCommands.TryAutoSaveElement(element);
+    }
+
+    private static bool IsSiblingDependentRow(VariableListSave list) =>
+        list.GetRootName() == "VariableReferences" &&
+        list.ValueAsIList.OfType<string>().Any(row => SiblingDependentName.IsMatch(row));
+
+    private static readonly System.Text.RegularExpressions.Regex SiblingDependentName =
+        new System.Text.RegularExpressions.Regex(@"\bIndex\b");
+
+    /// <inheritdoc/>
     public void ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
         // Every state that references this element, whichever of its values changed; simpler than

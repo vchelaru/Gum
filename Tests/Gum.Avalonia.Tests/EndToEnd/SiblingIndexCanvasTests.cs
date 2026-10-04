@@ -40,6 +40,106 @@ public class SiblingIndexCanvasTests
         });
     }
 
+    private static ComponentSave BuildThreeIndexDrivenItems(CanvasHarness canvas, out InstanceSave[] items)
+    {
+        ComponentSave button = canvas.Project.AddComponent("Button");
+        TestAppBuilder.Services.GetRequiredService<ISelectedState>().SelectedElement = button;
+        items =
+        [
+            canvas.AddInstance(button, "Item0", "Container", x: 0, y: 0),
+            canvas.AddInstance(button, "Item1", "Container", x: 0, y: 40),
+            canvas.AddInstance(button, "Item2", "Container", x: 0, y: 80),
+        ];
+        IVariableReferenceLogic logic = TestAppBuilder.Services.GetRequiredService<IVariableReferenceLogic>();
+        foreach (InstanceSave item in items)
+        {
+            VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = item.Name + ".VariableReferences" };
+            list.Value.Add("Y=@Index * 40");
+            button.DefaultState!.VariableLists.Add(list);
+            logic.DoVariableReferenceReaction(button, item, "VariableReferences", button.DefaultState,
+                item.Name + ".VariableReferences", trySave: false);
+        }
+        return button;
+    }
+
+    [SkippableFact]
+    public void Reorder_OfAnIndexDrivenSibling_ReappliesTheirIndexRows()
+    {
+        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        CanvasHarness.OnUiThread(() =>
+        {
+            using CanvasHarness canvas = new CanvasHarness();
+            ComponentSave button = BuildThreeIndexDrivenItems(canvas, out InstanceSave[] items);
+            ISelectedState selected = TestAppBuilder.Services.GetRequiredService<ISelectedState>();
+            selected.SelectedInstance = items[0];
+
+            TestAppBuilder.Services.GetRequiredService<Gum.Logic.IReorderLogic>().MoveSelectedInstanceToFront();
+
+            // order is now Item1, Item2, Item0
+            button.DefaultState!.GetValue("Item1.Y").ShouldBe(0f);
+            button.DefaultState.GetValue("Item2.Y").ShouldBe(40f);
+            button.DefaultState.GetValue("Item0.Y").ShouldBe(80f);
+        });
+    }
+
+    [SkippableFact]
+    public void Delete_OfAnIndexDrivenSibling_ReappliesTheRemainingIndexRows()
+    {
+        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        CanvasHarness.OnUiThread(() =>
+        {
+            using CanvasHarness canvas = new CanvasHarness();
+            ComponentSave button = BuildThreeIndexDrivenItems(canvas, out InstanceSave[] items);
+
+            TestAppBuilder.Services.GetRequiredService<Gum.Managers.IDeleteLogic>().RemoveInstance(items[0], button);
+
+            button.DefaultState!.GetValue("Item1.Y").ShouldBe(0f);
+            button.DefaultState.GetValue("Item2.Y").ShouldBe(40f);
+        });
+    }
+
+    [SkippableFact]
+    public void ParentChange_OfAnIndexDrivenSibling_ReappliesTheRemainingSiblingsIndexRows()
+    {
+        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        CanvasHarness.OnUiThread(() =>
+        {
+            using CanvasHarness canvas = new CanvasHarness();
+            ComponentSave button = BuildThreeIndexDrivenItems(canvas, out InstanceSave[] items);
+            canvas.AddInstance(button, "Holder", "Container", x: 200, y: 0);
+
+            button.DefaultState!.SetValue("Item0.Parent", "Holder", "string");
+            TestAppBuilder.Services.GetRequiredService<ISetVariableLogic>()
+                .PropertyValueChanged("Parent", null, items[0], button.DefaultState);
+
+            // root siblings are now Item1, Item2, Holder
+            button.DefaultState.GetValue("Item1.Y").ShouldBe(0f);
+            button.DefaultState.GetValue("Item2.Y").ShouldBe(40f);
+        });
+    }
+
+    [SkippableFact]
+    public void Paste_OfAnIndexDrivenInstance_EvaluatesThePastedInstanceAtItsNewPosition()
+    {
+        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        CanvasHarness.OnUiThread(() =>
+        {
+            using CanvasHarness canvas = new CanvasHarness();
+            ComponentSave button = BuildThreeIndexDrivenItems(canvas, out InstanceSave[] items);
+            ISelectedState selected = TestAppBuilder.Services.GetRequiredService<ISelectedState>();
+            selected.SelectedInstance = items[0];
+            Gum.Logic.ICopyPasteLogic copyPaste = TestAppBuilder.Services.GetRequiredService<Gum.Logic.ICopyPasteLogic>();
+
+            copyPaste.OnCopy(Gum.Logic.CopyType.InstanceOrElement);
+            copyPaste.OnPaste(Gum.Logic.CopyType.InstanceOrElement);
+
+            InstanceSave pasted = button.Instances.Last();
+            button.Instances.Count.ShouldBe(4);
+            button.DefaultState!.GetValue(pasted.Name + ".Y").ShouldBe(120f, "the pasted copy is the fourth sibling");
+            button.DefaultState.GetValue("Item0.Y").ShouldBe(0f);
+        });
+    }
+
     [SkippableTheory]
     [InlineData(false, false)]
     [InlineData(true, false)]

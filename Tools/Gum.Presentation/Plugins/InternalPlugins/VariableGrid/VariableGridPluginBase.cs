@@ -64,6 +64,19 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         this.VariableSet += HandleVariableSet;
         this.FocusVariableFilter += HandleFocusVariableFilter;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        this.InstanceAdd += (element, _) => _variableReferenceLogic.ReapplySiblingDependentReferences(element);
+        this.InstanceDelete += (element, _) => ReapplySiblingDependentReferencesOn(element);
+        this.InstanceReordered += _ => ReapplySiblingDependentReferencesOn(null);
+    }
+
+    // Index (position among siblings) goes stale when a structural change moves instances around.
+    private void ReapplySiblingDependentReferencesOn(ElementSave? element)
+    {
+        ElementSave? target = element ?? _selectedState.SelectedElement;
+        if (target != null)
+        {
+            _variableReferenceLogic.ReapplySiblingDependentReferences(target);
+        }
     }
 
     private void HandleBehaviorReferencesChanged(ElementSave element)
@@ -88,6 +101,10 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
     private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string strippedName, object? oldValue,
         bool isFullCommit)
     {
+        if (strippedName == "Parent" && isFullCommit && element != null)
+        {
+            _variableReferenceLogic.ReapplySiblingDependentReferences(element);
+        }
         _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue, isFullCommit);
     }
 
