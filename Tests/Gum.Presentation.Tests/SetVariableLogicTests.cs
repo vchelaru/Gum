@@ -885,6 +885,31 @@ public class SetVariableLogicTests : BaseTestClass
         _fakeDialogService.ShowChoiceCallCount.ShouldBe(0);
     }
 
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldShowCopyDialog_WhenSourceFileIsAbsolutePathOutsideProject()
+    {
+        // Repro for #5715: a file dropped from another drive reaches SourceFile as an absolute
+        // path (MakeRelative has no relative form across drives). It is outside the project, so
+        // the "copy or reference?" dialog must appear.
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new StateSave());
+        container.DefaultState.ParentContainer = container;
+
+        InstanceSave instance = new InstanceSave { Name = "SpriteInstance", BaseType = "Sprite" };
+
+        container.DefaultState.SetValue("SpriteInstance.SourceFile", "d:/OtherDrive/image.png");
+
+        mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave)
+            .Returns(container.DefaultState);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "SourceFile", null, container, instance, container.DefaultState, refresh: false,
+            recordUndo: false, trySave: false);
+
+        _fakeDialogService.ShowChoiceCallCount.ShouldBe(1);
+    }
+
     private class FakeDialogService : IDialogService
     {
         public int ShowChoiceCallCount { get; private set; }
