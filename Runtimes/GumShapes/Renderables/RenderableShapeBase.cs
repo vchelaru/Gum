@@ -98,13 +98,26 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// this property existed — leaving existing content visually unchanged. Only an explicitly
     /// non-Normal blend (Additive, etc.) overrides it.
     /// </summary>
-    public Microsoft.Xna.Framework.Graphics.BlendState? GetEffectiveXnaBlendState()
+    public Microsoft.Xna.Framework.Graphics.BlendState? GetEffectiveXnaBlendState(bool isBakingRenderTarget = false)
     {
         if (Blend == Gum.RenderingLibrary.Blend.Normal)
         {
             return null;
         }
-        return Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend).ToXNA();
+
+        Gum.BlendState gumBlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend);
+
+        // #5671 — SubtractAlpha must punch a hole in the premultiplied baked texture. Sprites get
+        // this swap in Renderer.AdjustRenderStates; shapes resolve their own blend here, so they
+        // apply the same swap. Only SubtractAlpha is routed: other blends keep their existing
+        // shape behavior.
+        if (isBakingRenderTarget && Blend == Gum.RenderingLibrary.Blend.SubtractAlpha)
+        {
+            gumBlendState = RenderingLibrary.Graphics.Renderer.AdjustBlendStateForRenderTargetBake(
+                gumBlendState, isBakingRenderTarget: true);
+        }
+
+        return gumBlendState.ToXNA();
     }
 
     #endregion
@@ -949,7 +962,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         // SpriteBatchStack re-Begins SpriteBatch on a blend/scissor change while keeping one
         // logical batch. GetEffectiveXnaBlendState returns null for Normal, so Begin keeps its
         // AlphaBlend default (the historical behavior).
-        ShapeRenderer.BeginBatch(view, rasterizerState, this, managers?.Renderer?.RenderStateChangeStatistics);
+        ShapeRenderer.BeginBatch(view, rasterizerState, this, managers?.Renderer?.RenderStateChangeStatistics, managers?.Renderer?.IsBakingRenderTarget ?? false);
     }
 
     public override void EndBatch(ISystemManagers systemManagers)

@@ -107,4 +107,62 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
             Renderer.NormalBlendState = previous;
         }
     }
+
+    // #5671: SubtractAlpha keeps destination color while lowering alpha, so the baked texture's
+    // premultiplied color stays too bright against its new alpha and the composite-back blit shows
+    // it instead of a hole. Same structural-match rule as MinAlpha above (Sprite.Blend round-trips
+    // through XNA and loses the singleton reference).
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_SubstitutesDestinationOut_ForFieldEquivalentSubtractAlpha_WhenStraightAlphaPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.NonPremultiplied;
+
+            var fieldEquivalentSubtractAlpha = new BlendState
+            {
+                ColorSourceBlend = BlendState.SubtractAlpha.ColorSourceBlend,
+                ColorBlendFunction = BlendState.SubtractAlpha.ColorBlendFunction,
+                ColorDestinationBlend = BlendState.SubtractAlpha.ColorDestinationBlend,
+                AlphaSourceBlend = BlendState.SubtractAlpha.AlphaSourceBlend,
+                AlphaBlendFunction = BlendState.SubtractAlpha.AlphaBlendFunction,
+                AlphaDestinationBlend = BlendState.SubtractAlpha.AlphaDestinationBlend,
+            };
+            fieldEquivalentSubtractAlpha.ShouldNotBeSameAs(BlendState.SubtractAlpha);
+
+            var result = Renderer.AdjustBlendStateForRenderTargetBake(
+                fieldEquivalentSubtractAlpha, isBakingRenderTarget: true);
+
+            result.ShouldBeSameAs(BlendState.SubtractAlphaFromPremultipliedTarget);
+            result.ColorSourceBlend.ShouldBe(Blend.Zero);
+            result.ColorDestinationBlend.ShouldBe(Blend.InverseSourceAlpha);
+            result.AlphaSourceBlend.ShouldBe(Blend.Zero);
+            result.AlphaDestinationBlend.ShouldBe(Blend.InverseSourceAlpha);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void AdjustBlendStateForRenderTargetBake_KeepsSubtractAlpha_WhenNotBakingOrPremultipliedPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.NonPremultiplied;
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.SubtractAlpha, isBakingRenderTarget: false)
+                .ShouldBeSameAs(BlendState.SubtractAlpha);
+
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+            Renderer.AdjustBlendStateForRenderTargetBake(BlendState.SubtractAlpha, isBakingRenderTarget: true)
+                .ShouldBeSameAs(BlendState.SubtractAlpha);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
 }

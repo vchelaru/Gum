@@ -992,6 +992,13 @@ public class Renderer : IRenderer
     // NormalBlendState (#1696).
     bool _isBakingRenderTarget = false;
 
+    /// <summary>
+    /// True while <see cref="RenderToRenderTarget"/> is baking a render-target container's
+    /// children. Batchers that resolve their own blend (Apos.Shapes) read this to apply
+    /// <see cref="AdjustBlendStateForRenderTargetBake"/>.
+    /// </summary>
+    public bool IsBakingRenderTarget => _isBakingRenderTarget;
+
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
 
@@ -1444,7 +1451,13 @@ public class Renderer : IRenderer
     // were still opaque instead of masked out (#4091). Swap to MinAlphaPremultiplied, whose
     // Min-for-color-too formula drops the leftover color to whatever the mask's own
     // (premultiplied-authored) texture color contributes instead.
-    internal static BlendState AdjustBlendStateForRenderTargetBake(BlendState renderBlendState, bool isBakingRenderTarget)
+    //
+    // SubtractAlpha (#5671) is the same class of fault: it lowers destination alpha but keeps the
+    // destination color, so the leftover premultiplied color brightens at composite instead of
+    // being cut. Swap to a destination-out that scales color and alpha together. Public (unlike
+    // the rest of this seam) so the Apos.Shapes batcher, which resolves its own blend and never
+    // reaches AdjustRenderStates, can apply the same swap.
+    public static BlendState AdjustBlendStateForRenderTargetBake(BlendState renderBlendState, bool isBakingRenderTarget)
     {
         if (!isBakingRenderTarget || Renderer.NormalBlendState == BlendState.AlphaBlend)
         {
@@ -1456,25 +1469,30 @@ public class Renderer : IRenderer
             return _bakeToRenderTargetBlendState;
         }
 
-        if (IsFieldEquivalentToMinAlpha(renderBlendState))
+        if (IsFieldEquivalent(renderBlendState, BlendState.MinAlpha))
         {
             return BlendState.MinAlphaPremultiplied;
+        }
+
+        if (IsFieldEquivalent(renderBlendState, BlendState.SubtractAlpha))
+        {
+            return BlendState.SubtractAlphaFromPremultipliedTarget;
         }
 
         return renderBlendState;
     }
 
-    // A Sprite's Blend setter round-trips MinAlpha through XNA's BlendState and back (Gum -> XNA ->
-    // Gum), and only the four core presets (Opaque/AlphaBlend/Additive/NonPremultiplied) survive
-    // that round-trip as the same static reference — MinAlpha arrives here as a field-identical but
-    // distinct instance. So detect it structurally instead of by reference.
-    private static bool IsFieldEquivalentToMinAlpha(BlendState blendState) =>
-        blendState.ColorSourceBlend == BlendState.MinAlpha.ColorSourceBlend
-        && blendState.ColorBlendFunction == BlendState.MinAlpha.ColorBlendFunction
-        && blendState.ColorDestinationBlend == BlendState.MinAlpha.ColorDestinationBlend
-        && blendState.AlphaSourceBlend == BlendState.MinAlpha.AlphaSourceBlend
-        && blendState.AlphaBlendFunction == BlendState.MinAlpha.AlphaBlendFunction
-        && blendState.AlphaDestinationBlend == BlendState.MinAlpha.AlphaDestinationBlend;
+    // A Sprite's Blend setter round-trips MinAlpha/SubtractAlpha through XNA's BlendState and back
+    // (Gum -> XNA -> Gum), and only the four core presets (Opaque/AlphaBlend/Additive/
+    // NonPremultiplied) survive that round-trip as the same static reference — they arrive here as
+    // field-identical but distinct instances. So detect them structurally instead of by reference.
+    private static bool IsFieldEquivalent(BlendState blendState, BlendState preset) =>
+        blendState.ColorSourceBlend == preset.ColorSourceBlend
+        && blendState.ColorBlendFunction == preset.ColorBlendFunction
+        && blendState.ColorDestinationBlend == preset.ColorDestinationBlend
+        && blendState.AlphaSourceBlend == preset.AlphaSourceBlend
+        && blendState.AlphaBlendFunction == preset.AlphaBlendFunction
+        && blendState.AlphaDestinationBlend == preset.AlphaDestinationBlend;
 
     private void AdjustNonClipRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
