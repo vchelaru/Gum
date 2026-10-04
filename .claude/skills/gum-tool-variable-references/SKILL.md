@@ -78,6 +78,10 @@ These exist only as computed properties on an already-laid-out `GraphicalUiEleme
 
 Both apply paths supply `liveRoot` when a live tree is available: the tool passes `IWireframeObjectManager.GetRepresentation(parentElement)` (null when nothing is currently rendered for that element); the runtime passes the top-level `GraphicalUiElement` already being applied against. Validation (`AddFailureForLine`) needs the same `liveRoot` as the apply call, or a valid Absolute* reference gets auto-commented out before it's ever applied.
 
+### Resolving `Index` (position among siblings)
+
+`Index` / `Instance.Index` is read from the live tree the same way as Absolute* (`TryResolveSiblingIndex` in `EvaluatedSyntax`). An authored variable named `Index` is tried first and wins, so a component can define its own. Siblings are the instances sharing a `Parent`; an instance with no `Parent` counts only other parentless instances, because the containing element's `ContainedElements` list is flat. `EvaluatedSyntax.IsLiveLayoutName` marks `Index` and Absolute* as read-only for validation, and `HeadlessErrorChecker.RuntimeComputedVariableNames` keeps GUM0009 quiet; a new live-layout name needs all three places.
+
 ### `global::Localization.CurrentLanguage`
 
 Reserved identifier resolving the current language index — see the **gum-runtime-variable-references** skill for the resolution mechanism. Tool preview works because every property change already triggers a full wireframe rebuild (`WireframeObjectManager.RefreshAll(forceLayout: true, ...)`), which re-applies variable references; `MainEditorTabPlugin.StartUp()` wires `CustomSetPropertyOnRenderable.LocalizationService` to the DI `ILocalizationService` singleton so that re-apply sees the tool's actual current language.

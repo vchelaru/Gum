@@ -167,6 +167,16 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (evaluatedSyntax.EvaluatedType == null)
         {
+            if (assignmentSyntax.Right.DescendantNodesAndSelf()
+                .OfType<IdentifierNameSyntax>()
+                .Any(identifier => EvaluatedSyntax.IsLiveLayoutName(identifier.Identifier.Text)))
+            {
+                failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                    "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth), " +
+                    "which is only available for an instance of this element while it is displayed")));
+                return;
+            }
+
             failures.Add((line, GeneralResponse.UnsuccessfulWith(
                 $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?")));
             return;
@@ -382,6 +392,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if(rootVar == null)
         {
+            if (EvaluatedSyntax.IsLiveLayoutName(leftSide))
+            {
+                return GeneralResponse<VariableSave>.UnsuccessfulWith(
+                    $"{leftSide} is computed from the layout and cannot be assigned in variable references");
+            }
+
             return GeneralResponse<VariableSave>.UnsuccessfulWith($"Could not find variable [{leftSide}]");
         }
 

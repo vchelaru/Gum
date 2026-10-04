@@ -671,6 +671,30 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
     #endregion
 
+    #region SiblingIndex
+
+    [Fact]
+    public void FromSyntaxNode_IndexWithNoLiveRoot_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("Item.Index", state, liveRoot: null);
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_IndexOfUnknownInstance_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("Nonexistent.Index", state, new GraphicalUiElement());
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    #endregion
+
     #region LocalizationValues
 
     [Fact]

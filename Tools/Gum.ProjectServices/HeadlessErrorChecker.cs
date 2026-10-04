@@ -358,6 +358,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     {
         "AbsoluteX", "AbsoluteY", "AbsoluteLeft", "AbsoluteTop",
         "AbsoluteRight", "AbsoluteBottom", "AbsoluteWidth", "AbsoluteHeight",
+        "Index",
     };
 
     /// <summary>

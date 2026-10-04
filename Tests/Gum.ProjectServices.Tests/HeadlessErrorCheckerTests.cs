@@ -1688,6 +1688,31 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsComputedIndex()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Item1",
+            "Height = @Index % 8 == 0 ? 40 : 15", "Width = Item2.Index");
+        component.Instances.Add(new InstanceSave { Name = "Item1", BaseType = "Container", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = "Item2", BaseType = "Container", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenIndexIsReadFromMissingInstance()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, "Width = Ghost.Index");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain("Ghost.Index");
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldReportGum0009_WhenOwnerPrefixNamesVariableOwningInstanceDoesNotHave()
     {
         ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Item1", "Width = @Nope");

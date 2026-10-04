@@ -195,6 +195,11 @@ public class EvaluatedSyntax
 
             var value = rfv.GetValue(syntaxNode.ToString());
 
+            if (value == null && TryResolveSiblingIndex(liveRoot, syntaxNode.ToString(), out var siblingIndex))
+            {
+                value = siblingIndex;
+            }
+
             return FromSyntaxAndValue(syntaxNode, value);
         }
         else if (syntaxNode is MemberAccessExpressionSyntax memberAccess)
@@ -243,6 +248,11 @@ public class EvaluatedSyntax
                 var rfv = new RecursiveVariableFinder(stateForRfv) { Fallback = fallback };
 
                 var value = rfv.GetValue(rightSideToEvaluate);
+
+                if (value == null && !isCrossElement && TryResolveSiblingIndex(liveRoot, rightSideToEvaluate, out var siblingIndex))
+                {
+                    value = siblingIndex;
+                }
 
                 return FromSyntaxAndValue(syntaxNode, value);
             }
@@ -354,7 +364,6 @@ public class EvaluatedSyntax
         }
 
         var lastDot = path.LastIndexOf('.');
-        var instanceName = lastDot < 0 ? null : path.Substring(0, lastDot);
         var propertyName = lastDot < 0 ? path : path.Substring(lastDot + 1);
 
         if (!AbsoluteValueSelectors.TryGetValue(propertyName, out var selector))
@@ -362,7 +371,7 @@ public class EvaluatedSyntax
             return false;
         }
 
-        var target = instanceName == null ? liveRoot : liveRoot.GetGraphicalUiElementByName(instanceName);
+        var target = FindLiveTarget(liveRoot, path);
         if (target == null)
         {
             return false;
@@ -370,6 +379,98 @@ public class EvaluatedSyntax
 
         value = selector(target);
         return true;
+    }
+
+    private const string SiblingIndexName = "Index";
+
+    /// <summary>
+    /// Whether <paramref name="name"/> is read from the live layout rather than authored data:
+    /// <c>Index</c> or one of the Absolute* names. These are read-only, so assigning one in a
+    /// reference is a mistake worth explaining rather than a plain unknown variable.
+    /// </summary>
+    public static bool IsLiveLayoutName(string name) =>
+        name == SiblingIndexName || AbsoluteValueSelectors.ContainsKey(name);
+
+    /// <summary>
+    /// Resolves <c>Index</c> (or <c>Instance.Index</c>): the position of the instance among the
+    /// instances that share its <c>Parent</c>, counted from zero in the order the live tree holds them.
+    /// Like Absolute*, it only exists on the live tree, so it is resolved here. Callers try authored
+    /// variables first, so a component that defines its own <c>Index</c> variable keeps it. Returns
+    /// false (rather than throwing) when there is no live root, the instance is not in it, or the
+    /// path is not an <c>Index</c> path.
+    /// </summary>
+    private static bool TryResolveSiblingIndex(GraphicalUiElement? liveRoot, string path, out object? value)
+    {
+        value = null;
+
+        if (liveRoot == null)
+        {
+            return false;
+        }
+
+        var lastDot = path.LastIndexOf('.');
+        var propertyName = lastDot < 0 ? path : path.Substring(lastDot + 1);
+
+        if (propertyName != SiblingIndexName)
+        {
+            return false;
+        }
+
+        var target = FindLiveTarget(liveRoot, path);
+        if (target == null)
+        {
+            return false;
+        }
+
+        int index;
+        if (target.Parent is GraphicalUiElement parentGue)
+        {
+            index = parentGue.Children.IndexOf(target);
+        }
+        else if (target.Parent == null && target.ElementGueContainingThis is { } container)
+        {
+            // No Parent variable: the instance sits directly in its containing element. That
+            // element's list is flat (it also holds nested instances), so count only the
+            // instances that likewise have no Parent.
+            index = 0;
+            var found = false;
+            foreach (var item in container.ContainedElements)
+            {
+                if (item == target)
+                {
+                    found = true;
+                    break;
+                }
+                if (item.Parent == null)
+                {
+                    index++;
+                }
+            }
+            index = found ? index : -1;
+        }
+        else
+        {
+            index = -1;
+        }
+
+        if (index < 0)
+        {
+            return false;
+        }
+
+        value = index;
+        return true;
+    }
+
+    /// <summary>
+    /// The live element a path like <c>Source.AbsoluteWidth</c> reads from: everything before the last
+    /// dot is the instance name within <paramref name="liveRoot"/>'s own element, and no dot means
+    /// <paramref name="liveRoot"/> itself. Null when no such instance exists.
+    /// </summary>
+    private static GraphicalUiElement? FindLiveTarget(GraphicalUiElement liveRoot, string path)
+    {
+        var lastDot = path.LastIndexOf('.');
+        return lastDot < 0 ? liveRoot : liveRoot.GetGraphicalUiElementByName(path.Substring(0, lastDot));
     }
 
     private const string LocalizationCurrentLanguagePath = "global::Localization.CurrentLanguage";
