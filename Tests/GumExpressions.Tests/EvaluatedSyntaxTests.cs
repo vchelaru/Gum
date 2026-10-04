@@ -1176,5 +1176,30 @@ public class EvaluatedSyntaxTests : BaseTestClass
         EvaluatedSyntax.GetFunctionCallProblem(syntax).ShouldBeNull();
     }
 
+    [Fact]
+    public void FunctionNames_MatchNamesCalledByTheEvaluator()
+    {
+        // GumCommon's list (used by name-only scanners) must stay in step with what the evaluator
+        // implements: every listed name evaluates, so no listed name is silently unsupported.
+        StateSave state = BuildState(("Instance.Width", 4f, "float"));
+
+        foreach (string name in ExpressionFunctionNames.All)
+        {
+            string arguments = name switch
+            {
+                "Min" or "Max" => "Instance.Width, 3",
+                "Clamp" => "Instance.Width, 0, 10",
+                _ => "Instance.Width",
+            };
+
+            Evaluate($"{name}({arguments})", state).Value.ShouldNotBeNull(name);
+            EvaluatedSyntax.GetFunctionCallProblem(
+                SyntaxFactory.ParseExpression($"{name}({arguments})")).ShouldBeNull(name);
+        }
+
+        // And the reverse: the evaluator implements no name that GumCommon's list lacks.
+        string problem = EvaluatedSyntax.GetFunctionCallProblem(SyntaxFactory.ParseExpression("Zzz(1)"))!;
+        problem.ShouldEndWith(string.Join(", ", ExpressionFunctionNames.All.OrderBy(name => name)));
+    }
     #endregion
 }
