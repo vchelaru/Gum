@@ -76,6 +76,44 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
         }
     }
 
+    // Sprite.Render premultiplies the tint on a premultiplied pipeline, so the composite tint must be
+    // handed over straight there; otherwise container alpha scales color twice (50% drew as 25%).
+    [Fact]
+    public void CreateRenderTargetCompositeTint_IsStraightWhite_WhenPremultipliedPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            System.Drawing.Color tint = Renderer.CreateRenderTargetCompositeTint(128);
+
+            tint.ShouldBe(System.Drawing.Color.FromArgb(128, 255, 255, 255));
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void CreateRenderTargetCompositeTint_IsPremultiplied_WhenStraightAlphaPipeline()
+    {
+        var previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.NonPremultiplied;
+
+            System.Drawing.Color tint = Renderer.CreateRenderTargetCompositeTint(128);
+
+            tint.ShouldBe(System.Drawing.Color.FromArgb(128, 128, 128, 128));
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
     // On FRB's premultiplied pipeline ToBlendState returns ReplaceAlphaPremultiplied, which replaces the
     // baked color with the mask's own color (a white mask whitens the fill). The bake must scale the
     // destination color by the mask alpha instead.
