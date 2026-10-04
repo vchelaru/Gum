@@ -479,7 +479,6 @@ public class StringListTextBoxDisplay : MultiLineTextBoxDisplay
         EditorTextBox.Height = 150;
         // A wrapped line would read as two entries.
         EditorTextBox.TextWrapping = TextWrapping.NoWrap;
-        UseAboveBelowLayout();
     }
 
     /// <summary>The text of the line under the caret.</summary>
