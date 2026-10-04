@@ -558,6 +558,54 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
         item.X.ShouldBe(42f);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ApplyVariableReferences_ToolPathWithMaterializedScreen_AtIndexResolvesEachInstancePosition(bool useParentContainer)
+    {
+        // The tool applies references against the element's real materialized tree (ToGraphicalUiElement),
+        // where a screen's instances have no Parent GraphicalUiElement unless a Parent variable says so.
+        GumExpressionService.Initialize();
+
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        StandardElementSave standard = new StandardElementSave { Name = "Container" };
+        standard.States.Add(new StateSave { Name = "Default", ParentContainer = standard });
+        project.StandardElements.Add(standard);
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+        project.Screens.Add(screen);
+
+        if (useParentContainer)
+        {
+            screen.Instances.Add(new InstanceSave { Name = "Holder", BaseType = "Container", ParentContainer = screen });
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            string name = "Item" + i;
+            screen.Instances.Add(new InstanceSave { Name = name, BaseType = "Container", ParentContainer = screen });
+            state.Variables.Add(new VariableSave { Name = name + ".Y", Value = 0f, Type = "float", SetsValue = true });
+            if (useParentContainer)
+            {
+                state.Variables.Add(new VariableSave { Name = name + ".Parent", Value = "Holder", Type = "string", SetsValue = true });
+            }
+            VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = name + ".VariableReferences" };
+            list.Value.Add("Y=@Index * 40");
+            state.VariableLists.Add(list);
+        }
+
+        GraphicalUiElement screenGue = Gum.ElementSaveExtensionMethods.ToGraphicalUiElement(screen);
+
+        screen.ApplyVariableReferences(state, screenGue);
+
+        state.GetValue("Item0.Y").ShouldBe(0f);
+        state.GetValue("Item1.Y").ShouldBe(40f);
+        state.GetValue("Item2.Y").ShouldBe(80f);
+    }
+
     #endregion
 
     #region LocalizationValues

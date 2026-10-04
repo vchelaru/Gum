@@ -81,7 +81,7 @@ Both apply paths supply `liveRoot` when a live tree is available: the tool passe
 
 ### Resolving `Index` (position among siblings)
 
-`Index` / `Instance.Index` is read from the live tree the same way as Absolute* (`TryResolveSiblingIndex` in `EvaluatedSyntax`). An authored variable named `Index` is tried first and wins, so a component can define its own. Siblings are the instances sharing a `Parent`; an instance with no `Parent` counts only other parentless instances, because the containing element's `ContainedElements` list is flat. `EvaluatedSyntax.IsLiveLayoutName` marks `Index` and Absolute* as read-only for validation, and `HeadlessErrorChecker.RuntimeComputedVariableNames` keeps GUM0009 quiet; a new live-layout name needs all three places.
+`Index` / `Instance.Index` (`TryResolveSiblingIndex` in `EvaluatedSyntax`) reads the live tree when there is one, and otherwise the element's own instance order and `Parent` values (`GetSiblingIndexFromData`), so it resolves with nothing displayed, unlike Absolute*. An authored variable named `Index` is tried first and wins, so a component can define its own. Siblings are the instances sharing a `Parent`; in the live tree an instance with no `Parent` counts only other parentless instances, because the containing element's `ContainedElements` list is flat. `EvaluatedSyntax.IsLiveLayoutName` marks `Index` and Absolute* as read-only for validation, and `HeadlessErrorChecker.RuntimeComputedVariableNames` keeps GUM0009 quiet; a new live-layout name needs all three places.
 
 ### `global::Localization.CurrentLanguage`
 

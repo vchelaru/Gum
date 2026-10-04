@@ -250,7 +250,7 @@ public class EvaluatedSyntax
 
             var value = rfv.GetValue(syntaxNode.ToString());
 
-            if (value == null && TryResolveSiblingIndex(liveRoot, syntaxNode.ToString(), out var siblingIndex))
+            if (value == null && TryResolveSiblingIndex(liveRoot, stateForUnqualifiedRightSide, syntaxNode.ToString(), out var siblingIndex))
             {
                 value = siblingIndex;
             }
@@ -304,7 +304,7 @@ public class EvaluatedSyntax
 
                 var value = rfv.GetValue(rightSideToEvaluate);
 
-                if (value == null && !isCrossElement && TryResolveSiblingIndex(liveRoot, rightSideToEvaluate, out var siblingIndex))
+                if (value == null && !isCrossElement && TryResolveSiblingIndex(liveRoot, stateForUnqualifiedRightSide, rightSideToEvaluate, out var siblingIndex))
                 {
                     value = siblingIndex;
                 }
@@ -464,20 +464,16 @@ public class EvaluatedSyntax
 
     /// <summary>
     /// Resolves <c>Index</c> (or <c>Instance.Index</c>): the position of the instance among the
-    /// instances that share its <c>Parent</c>, counted from zero in the order the live tree holds them.
-    /// Like Absolute*, it only exists on the live tree, so it is resolved here. Callers try authored
-    /// variables first, so a component that defines its own <c>Index</c> variable keeps it. Returns
-    /// false (rather than throwing) when there is no live root, the instance is not in it, or the
-    /// path is not an <c>Index</c> path.
+    /// instances that share its <c>Parent</c>, counted from zero. It is read from the live tree when one
+    /// is available (the order the displayed element actually holds) and otherwise from
+    /// <paramref name="state"/>'s element, so it also resolves when nothing is displayed. Callers try
+    /// authored variables first, so a component that defines its own <c>Index</c> variable keeps it.
+    /// Returns false (rather than throwing) when the instance cannot be found or the path is not an
+    /// <c>Index</c> path.
     /// </summary>
-    private static bool TryResolveSiblingIndex(GraphicalUiElement? liveRoot, string path, out object? value)
+    private static bool TryResolveSiblingIndex(GraphicalUiElement? liveRoot, StateSave state, string path, out object? value)
     {
         value = null;
-
-        if (liveRoot == null)
-        {
-            return false;
-        }
 
         var lastDot = path.LastIndexOf('.');
         var propertyName = lastDot < 0 ? path : path.Substring(lastDot + 1);
@@ -487,41 +483,10 @@ public class EvaluatedSyntax
             return false;
         }
 
-        var target = FindLiveTarget(liveRoot, path);
-        if (target == null)
+        var index = liveRoot != null ? GetLiveSiblingIndex(liveRoot, path) : -1;
+        if (index < 0)
         {
-            return false;
-        }
-
-        int index;
-        if (target.Parent is GraphicalUiElement parentGue)
-        {
-            index = parentGue.Children.IndexOf(target);
-        }
-        else if (target.Parent == null && target.ElementGueContainingThis is { } container)
-        {
-            // No Parent variable: the instance sits directly in its containing element. That
-            // element's list is flat (it also holds nested instances), so count only the
-            // instances that likewise have no Parent.
-            index = 0;
-            var found = false;
-            foreach (var item in container.ContainedElements)
-            {
-                if (item == target)
-                {
-                    found = true;
-                    break;
-                }
-                if (item.Parent == null)
-                {
-                    index++;
-                }
-            }
-            index = found ? index : -1;
-        }
-        else
-        {
-            index = -1;
+            index = GetSiblingIndexFromData(state, path);
         }
 
         if (index < 0)
@@ -531,6 +496,94 @@ public class EvaluatedSyntax
 
         value = index;
         return true;
+    }
+
+    private static int GetLiveSiblingIndex(GraphicalUiElement liveRoot, string path)
+    {
+        var target = FindLiveTarget(liveRoot, path);
+        if (target == null)
+        {
+            return -1;
+        }
+
+        if (target.Parent is GraphicalUiElement parentGue)
+        {
+            return parentGue.Children.IndexOf(target);
+        }
+
+        if (target.Parent == null && target.ElementGueContainingThis is { } container)
+        {
+            // No Parent variable: the instance sits directly in its containing element. That
+            // element's list is flat (it also holds nested instances), so count only the
+            // instances that likewise have no Parent.
+            var index = 0;
+            foreach (var item in container.ContainedElements)
+            {
+                if (item == target)
+                {
+                    return index;
+                }
+                if (item.Parent == null)
+                {
+                    index++;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// The sibling index of the instance named by <paramref name="path"/> (<c>Item.Index</c>) computed
+    /// from the element that owns <paramref name="state"/>: its instances in order, base element
+    /// instances first, grouped by each instance's <c>Parent</c> value. -1 when the path names no
+    /// instance of that element (a bare <c>Index</c> is the element itself, which has no siblings).
+    /// </summary>
+    private static int GetSiblingIndexFromData(StateSave state, string path)
+    {
+        var lastDot = path.LastIndexOf('.');
+        if (lastDot < 0 || state.ParentContainer is not { } element)
+        {
+            return -1;
+        }
+
+        var instanceName = path.Substring(0, lastDot);
+
+        // Most base first, matching the order the instances are created in.
+        var chain = new List<ElementSave>(ObjectFinder.Self.GetBaseElements(element));
+        chain.Remove(element);
+        chain.Reverse();
+        chain.Add(element);
+        var instances = chain.SelectMany(item => item.Instances).Distinct().ToList();
+
+        var target = instances.FirstOrDefault(instance => instance.Name == instanceName);
+        if (target == null)
+        {
+            return -1;
+        }
+
+        var finder = new RecursiveVariableFinder(state);
+        var targetParent = GetParentValue(finder, target.Name);
+        var index = 0;
+        foreach (var instance in instances)
+        {
+            if (instance == target)
+            {
+                return index;
+            }
+            if (GetParentValue(finder, instance.Name) == targetParent)
+            {
+                index++;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string? GetParentValue(RecursiveVariableFinder finder, string instanceName)
+    {
+        var parent = finder.GetValue(instanceName + ".Parent") as string;
+        return string.IsNullOrEmpty(parent) ? null : parent;
     }
 
     /// <summary>

@@ -178,8 +178,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 .Any(identifier => EvaluatedSyntax.IsLiveLayoutName(identifier.Identifier.Text)))
             {
                 failures.Add((line, GeneralResponse.UnsuccessfulWith(
-                    "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth), " +
-                    "which is only available for an instance of this element while it is displayed")));
+                    "The right side reads a value that is computed from the layout (such as Index or AbsoluteWidth). " +
+                    "Check that the instance exists in this element; Absolute* values also need the element to be displayed")));
                 return;
             }
 

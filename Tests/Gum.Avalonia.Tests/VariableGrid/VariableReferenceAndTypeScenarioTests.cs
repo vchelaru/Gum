@@ -34,6 +34,29 @@ public class VariableReferenceAndTypeScenarioTests
     }
 
     [AvaloniaFact]
+    public void AnAtIndexReference_OnEachInstance_ResolvesItsPositionAmongSiblings()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave[] items =
+        [
+            grid.Project.AddInstance(button, "Item0", "Container"),
+            grid.Project.AddInstance(button, "Item1", "Container"),
+            grid.Project.AddInstance(button, "Item2", "Container"),
+        ];
+
+        foreach (InstanceSave item in items)
+        {
+            grid.Select(item);
+            grid.TypeLinesAndApply("VariableReferences", "Y=@Index * 40");
+        }
+
+        VariableGridHarness.StoredValue(button, "Item0.Y").ShouldBe(0f);
+        VariableGridHarness.StoredValue(button, "Item1.Y").ShouldBe(40f);
+        VariableGridHarness.StoredValue(button, "Item2.Y").ShouldBe(80f);
+    }
+
+    [AvaloniaFact]
     public void UndoingAVariableReference_RestoresTheValue_AndTheRowIsEditableAgain()
     {
         using VariableGridHarness grid = new VariableGridHarness();
