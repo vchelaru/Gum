@@ -1712,6 +1712,17 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenOwnerPrefixIsUsedOnInstanceWithHyphenatedName()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: "gum-logo-256", "Width = @Height", "Height = @Index * 40");
+        component.Instances.Add(new InstanceSave { Name = "gum-logo-256", BaseType = "Container", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldNotReportGum0009_WhenReferenceReadsComputedIndex()
     {
         ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Item1",

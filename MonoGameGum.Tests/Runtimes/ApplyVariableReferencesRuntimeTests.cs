@@ -183,6 +183,45 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData("gum-logo-256")]
+    [InlineData("3d icon")]
+    [InlineData("Item1")]
+    public void ResolveOwnerPrefix_OwnerNameThatIsNotAnIdentifier_IsEncodedAndDecodesBack(string owner)
+    {
+        // The rewritten expression is parsed as C#, where "gum-logo-256.Index" is a subtraction.
+        string rewritten = ElementSaveExtensions.ResolveOwnerPrefix("@Index * 2", owner);
+
+        System.Text.RegularExpressions.Regex.IsMatch(rewritten, @"^[A-Za-z_]\w*\.Index \* 2$").ShouldBeTrue(rewritten);
+        ElementSaveExtensions.DecodeOwnerName(rewritten).ShouldBe(owner + ".Index * 2");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ApplyVariableReferences_AtPrefixOnInstanceWithHyphenatedName_ResolvesAgainstOwningInstance(bool useExpressionService)
+    {
+        if (useExpressionService)
+        {
+            GumExpressionService.Initialize();
+        }
+        ContainerRuntime parent = new ContainerRuntime();
+        ContainerRuntime child = new ContainerRuntime();
+        child.Name = "my-item";
+        child.Tag = new InstanceSave { Name = "my-item" };
+        child.Parent = parent;
+
+        StateSave state = BuildStateWithVariableReference(
+            "X = @Y",
+            sourceObject: "my-item",
+            ("my-item.X", 0f, "float"),
+            ("my-item.Y", 77f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        child.X.ShouldBe(77f);
+    }
+
+    [Theory]
     [InlineData("@Index * 2", "Item1", "Item1.Index * 2")]
     [InlineData("@Child.Prop", "Item1", "Item1.Child.Prop")]
     [InlineData("@Height", null, "Height")]

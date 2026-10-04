@@ -1191,7 +1191,7 @@ namespace GumRuntime
                 {
                     if (ownerInstanceName != null)
                     {
-                        builder.Append(ownerInstanceName).Append('.');
+                        builder.Append(EncodeOwnerName(ownerInstanceName)).Append('.');
                     }
                 }
                 else
@@ -1201,6 +1201,41 @@ namespace GumRuntime
             }
 
             return builder.ToString();
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex EncodedOwnerCharRegex =
+            new System.Text.RegularExpressions.Regex("_x([0-9A-F]{4})_", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        // The rewritten expression is parsed as C#, so an owner name such as "gum-logo-256" would read as
+        // a subtraction. Characters that cannot appear in an identifier are written as _xHHHH_.
+        private static string EncodeOwnerName(string name)
+        {
+            var builder = new System.Text.StringBuilder(name.Length + 8);
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                bool isIdentifierChar = c == '_' || (c < 128 && (char.IsLetter(c) || (i > 0 && char.IsDigit(c))));
+                if (isIdentifierChar)
+                {
+                    builder.Append(c);
+                }
+                else
+                {
+                    builder.Append("_x").Append(((int)c).ToString("X4")).Append('_');
+                }
+            }
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Undoes the encoding <see cref="ResolveOwnerPrefix"/> applies to an owner name that is not a valid
+        /// identifier, so a path read out of the parsed expression names the real instance again.
+        /// </summary>
+        public static string DecodeOwnerName(string text)
+        {
+            return text.IndexOf("_x", System.StringComparison.Ordinal) < 0
+                ? text
+                : EncodedOwnerCharRegex.Replace(text, match => ((char)System.Convert.ToInt32(match.Groups[1].Value, 16)).ToString());
         }
 
         private static string? GetRootVariableType(string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
@@ -1309,6 +1344,7 @@ namespace GumRuntime
                 // fallback (temporarily?)
                 // assume the owner of the right-side is the StateSave that was passed in...
                 var ownerOfRightSideVariable = stateSave;
+                right = DecodeOwnerName(right);
                 // ...but call this to change that in case the right-side is a variable belonging to some other component
                 GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
 

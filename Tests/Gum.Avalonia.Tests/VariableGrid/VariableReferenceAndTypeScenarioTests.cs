@@ -33,16 +33,18 @@ public class VariableReferenceAndTypeScenarioTests
         grid.FieldText("X").ShouldBe("70");
     }
 
-    [AvaloniaFact]
-    public void AnAtIndexReference_OnEachInstance_ResolvesItsPositionAmongSiblings()
+    [AvaloniaTheory]
+    [InlineData("Item")]
+    [InlineData("gum-logo-reverse-256")]
+    public void AnAtIndexReference_OnEachInstance_ResolvesItsPositionAmongSiblings(string prefix)
     {
         using VariableGridHarness grid = new VariableGridHarness();
         ComponentSave button = grid.Project.AddComponent("Button");
         InstanceSave[] items =
         [
-            grid.Project.AddInstance(button, "Item0", "Container"),
-            grid.Project.AddInstance(button, "Item1", "Container"),
-            grid.Project.AddInstance(button, "Item2", "Container"),
+            grid.Project.AddInstance(button, prefix + "0", "Container"),
+            grid.Project.AddInstance(button, prefix + "1", "Container"),
+            grid.Project.AddInstance(button, prefix + "2", "Container"),
         ];
 
         foreach (InstanceSave item in items)
@@ -51,9 +53,9 @@ public class VariableReferenceAndTypeScenarioTests
             grid.TypeLinesAndApply("VariableReferences", "Y=@Index * 40");
         }
 
-        VariableGridHarness.StoredValue(button, "Item0.Y").ShouldBe(0f);
-        VariableGridHarness.StoredValue(button, "Item1.Y").ShouldBe(40f);
-        VariableGridHarness.StoredValue(button, "Item2.Y").ShouldBe(80f);
+        VariableGridHarness.StoredValue(button, prefix + "0.Y").ShouldBe(0f);
+        VariableGridHarness.StoredValue(button, prefix + "1.Y").ShouldBe(40f);
+        VariableGridHarness.StoredValue(button, prefix + "2.Y").ShouldBe(80f);
     }
 
     [AvaloniaFact]

@@ -330,7 +330,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             VariableSave? rightSideRoot = null;
             // EvaluatedSyntax.FromSyntaxNode always sets SyntaxNode; it is nullable only because
             // the property is publicly settable.
-            string rightSide = assignment.SyntaxNode?.ToString() ?? string.Empty;
+            string rightSide = ElementSaveExtensions.DecodeOwnerName(assignment.SyntaxNode?.ToString() ?? string.Empty);
 
             if(rightSide.Contains("global::"))
             {

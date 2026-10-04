@@ -511,6 +511,43 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void DoVariableReferenceReaction_AtPrefixOnInstanceWithHyphenatedName_AcceptsLineAndResolves()
+    {
+        GumExpressionService.Initialize();
+
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        project.Screens.Add(screen);
+        ComponentSave itemComponent = new ComponentSave { Name = "ItemComp" };
+        StateSave itemState = new StateSave { Name = "Default", ParentContainer = itemComponent };
+        itemState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        itemComponent.States.Add(itemState);
+        project.Components.Add(itemComponent);
+
+        screen.Instances.Add(new InstanceSave { Name = "gum-logo-256", BaseType = "ItemComp", ParentContainer = screen });
+        defaultState.Variables.Add(new VariableSave { Name = "gum-logo-256.Width", SetsValue = true, Value = 0f, Type = "float" });
+        defaultState.Variables.Add(new VariableSave { Name = "gum-logo-256.Index", SetsValue = true, Value = 3f, Type = "float" });
+        VariableListSave<string> varList = new VariableListSave<string> { Type = "string", Name = "gum-logo-256.VariableReferences" };
+        varList.Value.Add("Width = @Index * 10");
+        defaultState.VariableLists.Add(varList);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: screen.Instances[0],
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "gum-logo-256.VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldBe("Width = @Index * 10");
+        defaultState.GetValue("gum-logo-256.Width").ShouldBe(30f);
+    }
+
+    [Fact]
     public void DoVariableReferenceReaction_AtPrefixOnElementRow_ResolvesAgainstTheElement()
     {
         GumProjectSave project = new GumProjectSave();

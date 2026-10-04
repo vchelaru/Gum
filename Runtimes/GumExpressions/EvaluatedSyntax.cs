@@ -241,16 +241,18 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is IdentifierNameSyntax or VariableDeclarationSyntax)
         {
-            if (TryResolveAbsoluteValue(liveRoot, syntaxNode.ToString(), out var absoluteValue))
+            var identifierText = GumRuntime.ElementSaveExtensions.DecodeOwnerName(syntaxNode.ToString());
+
+            if (TryResolveAbsoluteValue(liveRoot, identifierText, out var absoluteValue))
             {
                 return FromSyntaxAndValue(syntaxNode, absoluteValue);
             }
 
             var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide) { Fallback = fallback };
 
-            var value = rfv.GetValue(syntaxNode.ToString());
+            var value = rfv.GetValue(identifierText);
 
-            if (value == null && TryResolveSiblingIndex(liveRoot, stateForUnqualifiedRightSide, syntaxNode.ToString(), out var siblingIndex))
+            if (value == null && TryResolveSiblingIndex(liveRoot, stateForUnqualifiedRightSide, identifierText, out var siblingIndex))
             {
                 value = siblingIndex;
             }
@@ -260,7 +262,7 @@ public class EvaluatedSyntax
         else if (syntaxNode is MemberAccessExpressionSyntax memberAccess)
         {
             // we just need to evaluate the right-side
-            var rightSideToEvaluate = memberAccess.ToString();
+            var rightSideToEvaluate = GumRuntime.ElementSaveExtensions.DecodeOwnerName(memberAccess.ToString());
 
             if (TryResolveLocalizationValue(rightSideToEvaluate, out var localizationValue))
             {
