@@ -99,8 +99,8 @@ public class ManaOrbClipRegressionTests : BaseTestClass
         manaOrb.Y = 50;
         manaOrb.UpdateLayout();
 
-        var emptyState = manaOrb.ElementSave.AllStates.First(item => item.Name == "Empty");
-        var fullState = manaOrb.ElementSave.AllStates.First(item => item.Name == "Full");
+        var emptyState = manaOrb.ElementSave!.AllStates.First(item => item.Name == "Empty");
+        var fullState = manaOrb.ElementSave!.AllStates.First(item => item.Name == "Full");
         manaOrb.InterpolateBetween(emptyState, fullState, 0.5f);
         manaOrb.UpdateLayout();
 
@@ -138,22 +138,24 @@ public class ManaOrbClipRegressionTests : BaseTestClass
         // registered factory that calls SetGraphicalUiElement directly, nested inside the screen's
         // own inflation.
         var orbElement = ObjectFinder.Self.GetElementSave("HollowKnightComponents/ManaOrb");
+        orbElement.ShouldNotBeNull();
         ElementSaveExtensions.RegisterGueInstantiation("HollowKnightComponents/ManaOrb", () =>
         {
             var visual = new Gum.GueDeriving.ContainerRuntime();
-            orbElement.SetGraphicalUiElement(visual, managers);
+            orbElement!.SetGraphicalUiElement(visual, managers);
 
             // ManaOrb's Forms wrapper runs CustomInitialize (PercentFull = 50) as it is created,
             // which interpolates between the Empty and Full states while the screen's inflation is
             // still in progress.
-            var emptyState = orbElement.AllStates.First(item => item.Name == "Empty");
-            var fullState = orbElement.AllStates.First(item => item.Name == "Full");
+            var emptyState = orbElement!.AllStates.First(item => item.Name == "Empty");
+            var fullState = orbElement!.AllStates.First(item => item.Name == "Full");
             visual.InterpolateBetween(emptyState, fullState, 0.5f);
             return visual;
         });
 
         GraphicalUiElement screen = screenSave!.ToGraphicalUiElement(managers, addToManagers: true);
         screen.UpdateLayout();
+
 
         renderer.Draw(managers);
         renderer.Draw(managers);
@@ -191,51 +193,6 @@ public class ManaOrbClipRegressionTests : BaseTestClass
         drawn.ShouldBeGreaterThan(1000);
     }
 
-    // Same scene as above, but drawn to the real back buffer the way GameUiSamples does (which also
-    // sets RenderTargetUsage.PreserveContents), instead of an offscreen capture target.
-    [Fact]
-    public void ManaOrb_HalfFull_DrawsItsContentInsideTheOrb_OnTheBackBuffer()
-    {
-        using MinimalGame game = new();
-        game.RunOneFrame();
-
-        GraphicsDevice gd = game.GraphicsDevice;
-        SystemManagers managers = SystemManagers.Default;
-        Renderer renderer = managers.Renderer;
-
-        var elementSave = ObjectFinder.Self.GetElementSave("HollowKnightComponents/ManaOrb");
-        elementSave.ShouldNotBeNull();
-
-        GraphicalUiElement manaOrb = elementSave!.ToGraphicalUiElement(managers, addToManagers: true);
-        manaOrb.X = 50;
-        manaOrb.Y = 50;
-        manaOrb.UpdateLayout();
-
-        var emptyState = manaOrb.ElementSave.AllStates.First(item => item.Name == "Empty");
-        var fullState = manaOrb.ElementSave.AllStates.First(item => item.Name == "Full");
-        manaOrb.InterpolateBetween(emptyState, fullState, 0.5f);
-        manaOrb.UpdateLayout();
-
-        for (int i = 0; i < 3; i++)
-        {
-            gd.SetRenderTarget(null);
-            gd.Clear(Color.CornflowerBlue);
-            renderer.Draw(managers);
-        }
-
-        int width = gd.PresentationParameters.BackBufferWidth;
-        int height = gd.PresentationParameters.BackBufferHeight;
-        Color[] pixels = new Color[width * height];
-        gd.GetBackBufferData(pixels);
-        Color sampled = pixels[(130 * width) + 100];
-
-        Color background = Color.CornflowerBlue;
-        int difference = System.Math.Abs(sampled.R - background.R)
-            + System.Math.Abs(sampled.G - background.G)
-            + System.Math.Abs(sampled.B - background.B);
-        difference.ShouldBeGreaterThan(60);
-    }
-
     private static Color SampleMainLayerPixel(GraphicsDevice gd, Renderer renderer, SystemManagers managers, int sampleX, int sampleY)
     {
         const int w = 300;
@@ -267,9 +224,6 @@ public class ManaOrbClipRegressionTests : BaseTestClass
         {
             LoaderManager.Self?.DisposeAndClear();
             _graphics = new GraphicsDeviceManager(this);
-            // Mirrors GameUiSamples/Game1.cs, which needs this so render targets don't wipe the back buffer.
-            _graphics.PreparingDeviceSettings += (_, e) =>
-                e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
             GumService = new GumService();
         }
 

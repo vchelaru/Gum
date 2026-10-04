@@ -4718,6 +4718,81 @@ public class LayoutUnitTests : BaseTestClass
         child.AbsoluteWidth.ShouldBe(300);
     }
 
+    // #5707: a recursive suspend/resume pair that runs while IsAllLayoutSuspended is true (for example
+    // InterpolateBetween -> ApplyState nested inside a component being inflated from its ElementSave)
+    // used to leave every descendant's per-instance suspension set, because ResumeLayout(recursive)
+    // skipped the recursive resume. Those children then early-outed of every later layout and kept a
+    // size of 0.
+    [Fact]
+    public void ResumeLayoutRecursive_WhileIsAllLayoutSuspended_ShouldClearChildrenSuspension()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 400;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime child = new();
+        child.Width = 50;
+        child.WidthUnits = DimensionUnitType.PercentageOfParent;
+        parent.AddChild(child);
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            parent.SuspendLayout(recursive: true);
+            parent.ResumeLayout(recursive: true);
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+
+        child.IsLayoutSuspended.ShouldBeFalse();
+
+        parent.UpdateLayout();
+        child.AbsoluteWidth.ShouldBe(200);
+    }
+
+    // #5707: the exact entry point. InterpolateBetween -> ApplyState(list) does SuspendLayout(true) then
+    // ResumeLayout(true) unconditionally; ManaOrb's CustomInitialize (PercentFull = 50) hits it while the
+    // screen is still being inflated under IsAllLayoutSuspended.
+    [Fact]
+    public void InterpolateBetween_WhileIsAllLayoutSuspended_ShouldNotLeaveChildrenSuspended()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 400;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime child = new();
+        child.Width = 50;
+        child.WidthUnits = DimensionUnitType.PercentageOfParent;
+        parent.AddChild(child);
+
+        Gum.DataTypes.ScreenSave container = new();
+        Gum.DataTypes.Variables.StateSave first = new() { Name = "First", ParentContainer = container };
+        first.Variables.Add(new Gum.DataTypes.Variables.VariableSave { Name = "Width", Type = "float", Value = 400f, SetsValue = true });
+        Gum.DataTypes.Variables.StateSave second = new() { Name = "Second", ParentContainer = container };
+        second.Variables.Add(new Gum.DataTypes.Variables.VariableSave { Name = "Width", Type = "float", Value = 600f, SetsValue = true });
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            parent.InterpolateBetween(first, second, 0.5f);
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+
+        child.IsLayoutSuspended.ShouldBeFalse();
+
+        parent.UpdateLayout();
+        child.AbsoluteWidth.ShouldBe(250);
+    }
+
     [Fact]
     public void SuspendLayout_Recursive_ShouldSuspendChildren()
     {

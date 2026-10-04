@@ -5134,6 +5134,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 ResumeLayoutUpdateIfDirtyRecursive();
             }
+            else
+            {
+                // The global suspension defers the layout and font flush to whoever lifts it, but this
+                // call is still the explicit end of a SuspendLayout(true), which suspended every
+                // descendant. Without clearing them here they stay suspended forever, every later
+                // UpdateLayout early-outs for them, and they keep a size of 0 (#5707). Dirty state is
+                // left in place so the eventual flush lays them out.
+                ClearLayoutSuspensionRecursive();
+            }
         }
         else
         {
@@ -5150,6 +5159,27 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 UpdateLayout(EffectiveDirtyStateParentUpdateType,
                     currentDirtyState.ChildrenUpdateDepth,
                     currentDirtyState.XOrY);
+            }
+        }
+    }
+
+    private void ClearLayoutSuspensionRecursive()
+    {
+        mIsLayoutSuspended = false;
+
+        if (this.Children?.Count > 0)
+        {
+            var count = Children.Count;
+            for (int i = 0; i < count; i++)
+            {
+                Children[i].ClearLayoutSuspensionRecursive();
+            }
+        }
+        else
+        {
+            for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+            {
+                mWhatThisContains[i].ClearLayoutSuspensionRecursive();
             }
         }
     }
