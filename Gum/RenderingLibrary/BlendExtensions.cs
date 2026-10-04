@@ -23,7 +23,7 @@ public static class BlendExtensions
             case Blend.Normal:
                 return global::RenderingLibrary.Graphics.Renderer.NormalBlendState;
             case Blend.Additive:
-                return BlendState.Additive;
+                return isUsingPremultipliedAlpha ? BlendState.AdditivePremultiplied : BlendState.Additive;
             case Blend.Replace:
                 return BlendState.Opaque;
             case Blend.SubtractAlpha:
@@ -50,7 +50,7 @@ public static class BlendExtensions
         {
             return Blend.Normal;
         }
-        else if (blendState == BlendState.Additive)
+        else if (blendState == BlendState.Additive || blendState == BlendState.AdditivePremultiplied)
         {
             return Blend.Additive;
         }

@@ -7,9 +7,39 @@ namespace MonoGameGum.Tests.RenderingLibraries;
 public class BlendExtensionsTests : BaseTestClass
 {
     [Fact]
+    public void AdditivePremultiplied_AddsSourceColorWithoutScalingByAlpha()
+    {
+        // A premultiplied source already has alpha folded into its color, so adding it must not
+        // scale by source alpha again (that is what SourceAlpha, One does).
+        Gum.BlendState state = Gum.BlendState.AdditivePremultiplied;
+
+        state.ColorSourceBlend.ShouldBe(Gum.Blend.One);
+        state.ColorDestinationBlend.ShouldBe(Gum.Blend.One);
+        state.ColorBlendFunction.ShouldBe(Gum.BlendFunction.Add);
+    }
+
+    [Fact]
     public void ToBlend_ReturnsAdditive_WhenBlendStateIsAdditive()
     {
         Gum.BlendState.Additive.ToBlend().ShouldBe(Blend.Additive);
+    }
+
+    [Fact]
+    public void ToBlend_ReturnsAdditive_WhenBlendStateIsAdditivePremultiplied()
+    {
+        Gum.BlendState.AdditivePremultiplied.ToBlend().ShouldBe(Blend.Additive);
+    }
+
+    [Fact]
+    public void ToBlendState_ReturnsAdditive_WhenNotPremultiplied()
+    {
+        Blend.Additive.ToBlendState(isUsingPremultipliedAlpha: false).ShouldBeSameAs(Gum.BlendState.Additive);
+    }
+
+    [Fact]
+    public void ToBlendState_ReturnsAdditivePremultiplied_WhenPremultiplied()
+    {
+        Blend.Additive.ToBlendState(isUsingPremultipliedAlpha: true).ShouldBeSameAs(Gum.BlendState.AdditivePremultiplied);
     }
 
     [Fact]

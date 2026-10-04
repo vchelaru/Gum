@@ -101,6 +101,11 @@ namespace Gum
 
         public static readonly BlendState NonPremultipliedAddAlpha;
 
+        // Additive for a premultiplied pipeline (FRB). Additive above is SourceAlpha, One, which scales
+        // the source by its alpha; a premultiplied source already has alpha folded into its color, so
+        // that applies alpha twice and under-brightens translucent sources (a 50% source adds 25%).
+        public static readonly BlendState AdditivePremultiplied;
+
         public static readonly BlendState SubtractAlpha;
         public static readonly BlendState SubtractAlphaPremultiplied;
         public static readonly BlendState ReplaceAlpha;
@@ -137,6 +142,7 @@ namespace Gum
         static BlendState()
         {
             Additive = new BlendState("BlendState.Additive", Blend.SourceAlpha, Blend.One);
+            AdditivePremultiplied = new BlendState("BlendState.AdditivePremultiplied", Blend.One, Blend.One);
             AlphaBlend = new BlendState("BlendState.AlphaBlend", Blend.One, Blend.InverseSourceAlpha);
             NonPremultiplied = new BlendState("BlendState.NonPremultiplied", Blend.SourceAlpha, Blend.InverseSourceAlpha);
             Opaque = new BlendState("BlendState.Opaque", Blend.One, Blend.Zero);
