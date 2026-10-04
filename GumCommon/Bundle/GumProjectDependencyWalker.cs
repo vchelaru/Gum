@@ -617,6 +617,12 @@ public class GumProjectDependencyWalker
         HashSet<string> external,
         List<DependencyWarning> missing)
     {
+        if (ToolsUtilities.FileManager.IsUrl(referencedPath))
+        {
+            // A web URL is loaded over the network, so it is neither on disk nor bundled.
+            return;
+        }
+
         string relative = NormalizeRelative(referencedPath);
         bool isFontCache = relative.StartsWith("FontCache/", StringComparison.OrdinalIgnoreCase);
 
