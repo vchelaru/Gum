@@ -4793,6 +4793,185 @@ public class LayoutUnitTests : BaseTestClass
         child.AbsoluteWidth.ShouldBe(250);
     }
 
+    // #5709: the nested ApplyState(StateSave) path. Under IsAllLayoutSuspended the outer inflation owns
+    // the flush, so ApplyState must not suspend/resume on its own and must leave nothing suspended.
+    [Fact]
+    public void ApplyState_WhileIsAllLayoutSuspended_ShouldNotLeaveChildrenSuspended()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 400;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.Height = 400;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime child = new();
+        child.Name = "Child";
+        child.WidthUnits = DimensionUnitType.PercentageOfParent;
+        parent.AddChild(child);
+
+        Gum.DataTypes.ScreenSave container = new();
+        Gum.DataTypes.Variables.StateSave state = new() { Name = "Wide", ParentContainer = container };
+        state.Variables.Add(new Gum.DataTypes.Variables.VariableSave { Name = "Child.Width", Type = "float", Value = 25f, SetsValue = true });
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            parent.ApplyState(state);
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+
+        child.IsLayoutSuspended.ShouldBeFalse();
+
+        parent.UpdateLayout();
+        child.AbsoluteWidth.ShouldBe(100);
+    }
+
+    // #4567 guard: an ApplyState nested inside an already-suspended element (a state variable that
+    // assigns a category state) must not resume the outer suspension early.
+    [Fact]
+    public void ApplyState_WhenAlreadySuspended_ShouldNotResumeLayout()
+    {
+        ContainerRuntime parent = new();
+        parent.SuspendLayout(recursive: true);
+
+        Gum.DataTypes.ScreenSave container = new();
+        Gum.DataTypes.Variables.StateSave state = new() { Name = "Moved", ParentContainer = container };
+        state.Variables.Add(new Gum.DataTypes.Variables.VariableSave { Name = "X", Type = "float", Value = 10f, SetsValue = true });
+
+        parent.ApplyState(state);
+
+        parent.IsLayoutSuspended.ShouldBeTrue();
+    }
+
+    // #5709: ItemsControl suspends layout globally while it creates item visuals. When that happens
+    // inside an outer inflation, nothing in the list may be left suspended and the outer flush must
+    // give the items a real size.
+    [Fact]
+    public void ListBoxItemsAdded_WhileIsAllLayoutSuspended_ShouldNotLeaveItemsSuspended()
+    {
+        Gum.Forms.Controls.ListBox listBox = new();
+        listBox.Visual.Width = 200;
+        listBox.Visual.WidthUnits = DimensionUnitType.Absolute;
+        listBox.Visual.Height = 200;
+        listBox.Visual.HeightUnits = DimensionUnitType.Absolute;
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            listBox.Items!.Add("First");
+            listBox.Items!.Add("Second");
+            listBox.Visual.SuspendLayout(recursive: true);
+            listBox.Visual.ResumeLayout(recursive: true);
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+
+        listBox.Visual.UpdateLayout();
+
+        foreach (Gum.Forms.Controls.ListBoxItem item in listBox.ListBoxItems)
+        {
+            item.Visual.IsLayoutSuspended.ShouldBeFalse();
+            item.Visual.GetGraphicalUiElementByName("TextInstance")!.IsLayoutSuspended.ShouldBeFalse();
+            item.Visual.AbsoluteHeight.ShouldBeGreaterThan(0);
+        }
+    }
+
+    // #5709: Forms controls created from their VisualTemplate (createForms: true) while the screen that
+    // owns them is still inflating must come out with every descendant un-suspended and sized.
+    [Fact]
+    public void FormsControlsCreatedFromTemplates_WhileIsAllLayoutSuspended_ShouldHaveSizedUnsuspendedChildren()
+    {
+        ContainerRuntime screen = new();
+        screen.Width = 800;
+        screen.WidthUnits = DimensionUnitType.Absolute;
+        screen.Height = 600;
+        screen.HeightUnits = DimensionUnitType.Absolute;
+        screen.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        System.Type[] controlTypes =
+        {
+            typeof(Gum.Forms.Controls.Button),
+            typeof(Gum.Forms.Controls.ListBox),
+            typeof(Gum.Forms.Controls.ScrollViewer),
+            typeof(Gum.Forms.Controls.TextBox),
+        };
+
+        List<GraphicalUiElement> visuals = new();
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            foreach (System.Type controlType in controlTypes)
+            {
+                GraphicalUiElement visual = (GraphicalUiElement)Gum.Forms.Controls.FrameworkElement
+                    .DefaultFormsTemplates[controlType].CreateContent(null, true);
+                screen.AddChild(visual);
+                visuals.Add(visual);
+            }
+            screen.SuspendLayout(recursive: true);
+            screen.ResumeLayout(recursive: true);
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+
+        screen.UpdateLayout();
+
+        void AssertTree(GraphicalUiElement node)
+        {
+            node.IsLayoutSuspended.ShouldBeFalse(node.Name);
+            foreach (var child in node.Children!)
+            {
+                AssertTree((GraphicalUiElement)child);
+            }
+        }
+
+        foreach (GraphicalUiElement visual in visuals)
+        {
+            AssertTree(visual);
+            visual.AbsoluteWidth.ShouldBeGreaterThan(0, visual.GetType().Name);
+            visual.AbsoluteHeight.ShouldBeGreaterThan(0, visual.GetType().Name);
+        }
+    }
+
+    // #5709: MenuItem force-resumes an item visual that a state added to the sub-item container while
+    // suspended. Pinned with the global suspension on, the #5707 shape.
+    [Fact]
+    public void MenuItemSubItemAdded_WhileIsAllLayoutSuspended_ShouldNotLeaveVisualSuspended()
+    {
+        ContainerRuntime parentVisual = new();
+        ContainerRuntime subItemContainer = new() { Name = "SubItemContainerInstance" };
+        parentVisual.AddChild(subItemContainer);
+        Gum.Forms.Controls.MenuItem parentItem = new(parentVisual);
+
+        Gum.Forms.Controls.MenuItem subItem = new();
+        subItem.Visual.SuspendLayout(recursive: true);
+        subItemContainer.Children.Add(subItem.Visual);
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            Gum.GumService.Default.DeferredQueue.ProcessPending();
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+
+        subItem.Visual.IsLayoutSuspended.ShouldBeFalse();
+        subItem.Visual.Children!.Count.ShouldBeGreaterThan(0);
+        foreach (var descendant in subItem.Visual.Children!)
+        {
+            ((GraphicalUiElement)descendant).IsLayoutSuspended.ShouldBeFalse();
+        }
+        parentItem.Items!.Count.ShouldBe(1);
+    }
+
     [Fact]
     public void SuspendLayout_Recursive_ShouldSuspendChildren()
     {
