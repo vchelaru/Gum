@@ -114,9 +114,8 @@ internal sealed class EditorToolbar : DockPanel
         {
             Classes = { GumChromeStyles.FlatButtonClass },
             Content = previewIconHost,
-            Width = 26,
-            Margin = new Thickness(16, 0, 4, 0),
-            Padding = new Thickness(0),
+            Margin = new Thickness(0, 0, 4, 0),
+            Padding = new Thickness(6, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             [!Button.CommandProperty] = new Binding(nameof(EditorViewModel.PreviewCommand)),
@@ -126,7 +125,14 @@ internal sealed class EditorToolbar : DockPanel
         SetDock(PreviewButton, global::Avalonia.Controls.Dock.Right);
 
         Children.Add(PreviewButton);
-        Children.Add(panel);
+        // The controls scroll horizontally in the space beside the Preview button rather than
+        // drawing over it when the window is narrow (#5695).
+        Children.Add(new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Content = panel,
+        });
     }
 
     /// <summary>The "Preview in runtime" button at the right end.</summary>
