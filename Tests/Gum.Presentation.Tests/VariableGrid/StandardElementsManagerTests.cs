@@ -87,6 +87,75 @@ public class StandardElementsManagerTests : BaseTestClass
         variable.PropertiesToSetOnDisplayer.ContainsKey("MaxValue").ShouldBeFalse();
     }
 
+    // FontScale is a multiplier near 1, so scrubbing the label moves in 0.1 steps (not whole numbers)
+    // and the tool floors it at 0 (#5720).
+    [Fact]
+    public void SetPreferredDisplayers_FloorsFontScaleAtZero_AndScrubsInTenths()
+    {
+        StateSave state = StandardElementsManager.Self.DefaultStates["Text"];
+        VariableSave fontScale = state.Variables.First(item => item.Name == "FontScale");
+
+        CreateSut().SetPreferredDisplayers(state);
+
+        fontScale.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
+        fontScale.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"].ShouldBe(.02m);
+        fontScale.PropertiesToSetOnDisplayer["LabelDragValueRounding"].ShouldBe(.1m);
+    }
+
+    // Scales, radii and dash/gap lengths have no meaningful negative, so the tool floors them at 0 on
+    // every standard element that declares them (#5720).
+    [Theory]
+    [InlineData("TextureWidthScale")]
+    [InlineData("TextureHeightScale")]
+    [InlineData("BorderScale")]
+    [InlineData("CornerRadius")]
+    [InlineData("StrokeDashLength")]
+    [InlineData("StrokeGapLength")]
+    public void SetPreferredDisplayers_FloorsAtZero_OnEveryElementDeclaringTheVariable(string variableName)
+    {
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+        List<StateSave> states = StandardElementsManager.Self.DefaultStates.Values.ToList();
+        foreach (string extendedName in new[] { "Arc", "ColoredCircle", "RoundedRectangle", "Line" })
+        {
+            states.Add(StandardElementsManager.Self.GetDefaultStateFor(extendedName)!);
+        }
+
+        List<VariableSave> variables = states
+            .SelectMany(state => state.Variables)
+            .Where(item => item.Name == variableName)
+            .ToList();
+        variables.ShouldNotBeEmpty();
+
+        foreach (StateSave state in states)
+        {
+            CreateSut().SetPreferredDisplayers(state);
+        }
+
+        foreach (VariableSave variable in variables)
+        {
+            variable.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
+        }
+    }
+
+    // The texture scales are multipliers near 1, so label drag moves in 0.1 steps.
+    [Theory]
+    [InlineData("TextureWidthScale")]
+    [InlineData("TextureHeightScale")]
+    public void DefaultStates_ScrubTextureScalesInTenths(string variableName)
+    {
+        List<VariableSave> variables = StandardElementsManager.Self.DefaultStates.Values
+            .SelectMany(state => state.Variables)
+            .Where(item => item.Name == variableName)
+            .ToList();
+        variables.ShouldNotBeEmpty();
+
+        foreach (VariableSave variable in variables)
+        {
+            variable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"].ShouldBe(.02m);
+            variable.PropertiesToSetOnDisplayer["LabelDragValueRounding"].ShouldBe(.1m);
+        }
+    }
+
     // Pins the static->instance drain: the Parent variable's type converter is built from the
     // injected ISelectedState. Before the drain SetPreferredDisplayers pulled ISelectedState from
     // the static Locator (which throws in a unit test); now it must come from the constructor.

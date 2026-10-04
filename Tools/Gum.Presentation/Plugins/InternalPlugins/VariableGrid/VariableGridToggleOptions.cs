@@ -190,10 +190,10 @@ public class CornerRadiusDisplayLogic
     /// <summary>An optional corner radius as field text; empty when it inherits the uniform value.</summary>
     public string FormatNullableFloat(float? value) => value == null ? string.Empty : FormatFloat(value.Value);
 
-    /// <summary>Field text as a radius, or null when it is not a number.</summary>
+    /// <summary>Field text as a radius floored at 0, or null when it is not a number.</summary>
     public float? ParseFloat(string? text) =>
         float.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed)
-            ? parsed
+            ? Math.Max(parsed, 0f)
             : null;
 
     /// <summary>
