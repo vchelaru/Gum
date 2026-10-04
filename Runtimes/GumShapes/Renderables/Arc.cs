@@ -87,6 +87,7 @@ internal class Arc : RenderableShapeBase
         var center = GetRotatedCenter(absoluteLeft, absoluteTop, Width, Width, rotationRadians);
 
         var radius = Width / 2 - StrokeWidth / 2;
+        BeginAlphaBoundsMask();
 
         if(HasDropshadow)
         {
@@ -114,6 +115,7 @@ internal class Arc : RenderableShapeBase
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth);
+        EndAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Width, rotationRadians);
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,

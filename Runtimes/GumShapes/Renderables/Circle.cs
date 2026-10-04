@@ -137,6 +137,7 @@ public class Circle : RenderableShapeBase,
         var center = GetRotatedCenter(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         var radius = System.Math.Min(Width, Height) / 2.0f;
+        BeginAlphaBoundsMask();
 
         // Resolve camera zoom once: it scales the pixel-center AA inset (RenderInternal) and the
         // dropshadow halo/geometry so both hold a constant on-screen size as the tool zooms.
@@ -200,6 +201,7 @@ public class Circle : RenderableShapeBase,
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom);
+        EndAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
     }
 
     private void RenderInternal(ShapeBatch sb,

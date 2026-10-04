@@ -1669,7 +1669,9 @@ class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
         var device = _graphicsDeviceForCreate
             ?? throw new System.InvalidOperationException(
                 "GraphicsDevice was not staged before Create — use GetRenderTargetFor.");
-        return new RenderTarget2D(device, width, height);
+        // Depth24Stencil8 so Apos.Shapes alpha-mask shapes (#5689) can mark their body in the
+        // stencil buffer while baking. No depth testing is enabled anywhere, so the depth bits go unused.
+        return new RenderTarget2D(device, width, height, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
     }
 
     protected override void Destroy(RenderTarget2D renderTarget) => renderTarget.Dispose();
