@@ -1337,8 +1337,7 @@ public class Renderer : IRenderer
         // still true for that outer bake, so an unconfigured nested container's ambient blend has
         // already been substituted to _bakeToRenderTargetBlendState by AdjustRenderStates — treat
         // that the same as NormalBlendState here.
-        bool needsPremultipliedBlend = mRenderStateVariables.BlendState == Renderer.NormalBlendState
-            || mRenderStateVariables.BlendState == _bakeToRenderTargetBlendState;
+        bool needsPremultipliedBlend = IsUnconfiguredRenderTargetCompositeBlend(mRenderStateVariables.BlendState);
 
         if (renderTargetEffect == null && !needsPremultipliedBlend)
         {
@@ -1470,6 +1469,17 @@ public class Renderer : IRenderer
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, ClipExitStateLabel);
         }
     }
+
+    // Whether a render-target container's blend is its unconfigured default, so the composite-back
+    // blit can substitute a premultiplied blend. A container's renderable defaults to
+    // NonPremultiplied (RenderableBase.BlendState), which equals NormalBlendState on a straight-alpha
+    // pipeline but not on FRB's premultiplied one (NormalBlendState == AlphaBlend). Without this the
+    // blit read the default as a deliberately custom blend and drew the premultiplied target with
+    // straight alpha, multiplying its color by alpha a second time (a 50% target came out at 25%).
+    public static bool IsUnconfiguredRenderTargetCompositeBlend(BlendState? blendState) =>
+        blendState == Renderer.NormalBlendState
+        || blendState == _bakeToRenderTargetBlendState
+        || blendState == BlendState.NonPremultiplied;
 
     // While baking a render target's children over a transparent clear, an unconfigured child
     // (whose blend resolves to NormalBlendState) needs _bakeToRenderTargetBlendState so its
