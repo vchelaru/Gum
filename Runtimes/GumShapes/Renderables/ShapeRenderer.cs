@@ -62,7 +62,15 @@ public class ShapeRenderer
     /// the begin parameters so a later <see cref="EnsureBlend"/> can re-open with a different
     /// blend mid-run. Called by the batch owner from <c>RenderableShapeBase.StartBatch</c>.
     /// </summary>
-    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape, RenderStateChangeStatistics? statistics, bool isBakingRenderTarget = false)
+    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape, RenderStateChangeStatistics? statistics) =>
+        BeginBatch(view, rasterizerState, shape, statistics, isBakingRenderTarget: false);
+
+    /// <summary>
+    /// Same as the four-parameter overload, but records whether a render-target bake is in
+    /// progress (#5672). Internal use: called by <c>RenderableShapeBase.StartBatch</c>. A separate
+    /// overload (not an optional parameter) keeps the old signature binary compatible (#5679).
+    /// </summary>
+    public void BeginBatch(Microsoft.Xna.Framework.Matrix? view, RasterizerState? rasterizerState, RenderableShapeBase shape, RenderStateChangeStatistics? statistics, bool isBakingRenderTarget)
     {
         _currentView = view;
         _currentRasterizerState = rasterizerState;
@@ -82,6 +90,7 @@ public class ShapeRenderer
     /// any of its draws. For an alpha-only blend while baking, starts marking the stencil buffer
     /// with every pixel the shape draws, so <see cref="EndAlphaBoundsMask"/> can apply the blend to
     /// the rest of the shape's bounding rectangle. Pair with <see cref="EndAlphaBoundsMask"/>.
+    /// Internal use: only Gum's own shape renderables call this; game code should not.
     /// </summary>
     public void BeginAlphaBoundsMask()
     {
@@ -105,6 +114,7 @@ public class ShapeRenderer
     /// Issue #5689 — the second half of <see cref="BeginAlphaBoundsMask"/>, called after the shape's
     /// last draw. Draws an alpha-0 rectangle over the shape's bounds with the shape's blend, only
     /// where the shape did not draw: MinAlpha erases there (min(dst, 0)) and ReplaceAlpha sets alpha 0.
+    /// Internal use: only Gum's own shape renderables call this; game code should not.
     /// </summary>
     public void EndAlphaBoundsMask(Microsoft.Xna.Framework.Vector2 topLeft, Microsoft.Xna.Framework.Vector2 size, float rotationRadians)
     {
