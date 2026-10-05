@@ -2508,9 +2508,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         // special case - if the user has set both values to depend on the other value, we don't want to have an infinite recursion so we'll just apply the width and height values as pixel values.
         // This really doesn't make much sense but...the alternative would be an object that may grow or shrink infinitely, which may cause lots of other problems:
-        if ((mWidthUnit == DimensionUnitType.PercentageOfOtherDimension && mHeightUnit == DimensionUnitType.PercentageOfOtherDimension) ||
-            (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio && mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
-            )
+        if (IsSizedFromOtherDimension(mWidthUnit) && IsSizedFromOtherDimension(mHeightUnit))
         {
             RequiredContainedObject.Width = mWidth;
             RequiredContainedObject.Height = mHeight;
@@ -2560,6 +2558,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
     }
+
+    static bool IsSizedFromOtherDimension(DimensionUnitType unit) =>
+        unit == DimensionUnitType.PercentageOfOtherDimension || unit == DimensionUnitType.MaintainFileAspectRatio;
 
     public void UpdateHeight(float parentHeight, bool considerWrappedStacked)
     {
