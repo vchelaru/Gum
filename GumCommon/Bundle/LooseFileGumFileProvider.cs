@@ -35,6 +35,9 @@ public class LooseFileGumFileProvider : IGumFileProvider
     }
 
     /// <inheritdoc/>
+    public bool CanEnumerate => Directory.Exists(_rootDirectory);
+
+    /// <inheritdoc/>
     public bool Exists(string relativePath)
     {
         if (relativePath == null)

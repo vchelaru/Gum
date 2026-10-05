@@ -11,6 +11,13 @@ namespace Gum.Bundle;
 /// </summary>
 public interface IGumFileProvider
 {
+    /// <summary>
+    /// Whether <see cref="EnumerateFiles"/> can actually list this provider's files. False means an empty
+    /// enumeration result is meaningless (e.g. a loose provider whose root directory isn't reachable on
+    /// the file system, as on streaming platforms), so callers can tell "no matches" from "can't look".
+    /// </summary>
+    bool CanEnumerate { get; }
+
     /// <summary>Returns true if a file at <paramref name="relativePath"/> exists in the provider.</summary>
     bool Exists(string relativePath);
 
