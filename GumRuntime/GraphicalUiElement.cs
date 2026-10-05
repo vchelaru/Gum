@@ -839,9 +839,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     float stackSpacing;
     /// <summary>
-    /// The number of pixels spacing between each child if this has a ChildrenLayout of 
-    /// TopToBottomStack or LeftToRightStack. This has no affect on other types of ChildrenLayout, 
-    /// including AutoGridHorizontal or AutoGridVertical.
+    /// The number of pixels between children when ChildrenLayout is TopToBottomStack or
+    /// LeftToRightStack, and between cells when it is AutoGridHorizontal or AutoGridVertical.
+    /// It has no effect on Regular.
     /// </summary>
     public float StackSpacing
     {
@@ -948,27 +948,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endif
                 mX = value;
 
-                var parentGue = Parent as GraphicalUiElement;
-                var skipLayout = false;
-                // special case:
-                if (XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
+                var skipLayout = XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left &&
+                    CanPlacePositionDirectly(XOrY.X);
+                if (skipLayout)
                 {
-                    if (parentGue == null)
-                    {
-                        skipLayout = true;
-                    }
-                    else
-                    {
-                        // WE might be able to get away with more changes here to suppress layouts, but this is a start...
-                        if (parentGue.WidthUnits.GetDependencyType() != HierarchyDependencyType.DependsOnChildren &&
-                            parentGue.ChildrenLayout != ChildrenLayout.LeftToRightStack &&
-                            parentGue.ChildrenLayout != ChildrenLayout.TopToBottomStack)
-                        {
-                            skipLayout = true;
-                        }
-                    }
-
+                    var oldX = this.mContainedObjectAsIpso.X;
                     this.mContainedObjectAsIpso.X = mX;
+                    if (oldX != mX)
+                    {
+                        PositionChanged?.Invoke(this, EventArgs.Empty);
+                    }
                 }
                 if (!skipLayout)
                 {
@@ -1006,9 +995,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mY = value;
 
 
-                if (Parent as GraphicalUiElement == null && YUnits == GeneralUnitType.PixelsFromSmall && YOrigin == VerticalAlignment.Top)
+                if (Parent as GraphicalUiElement == null && YUnits == GeneralUnitType.PixelsFromSmall && YOrigin == VerticalAlignment.Top &&
+                    CanPlacePositionDirectly(XOrY.Y))
                 {
+                    var oldY = this.mContainedObjectAsIpso.Y;
                     this.mContainedObjectAsIpso.Y = mY;
+                    if (oldY != mY)
+                    {
+                        PositionChanged?.Invoke(this, EventArgs.Empty);
+                    }
                 }
                 else
                 {
@@ -1019,6 +1014,27 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+
+    // Whether a top-left, PixelsFromSmall position can be copied straight to the renderable instead of
+    // running layout: true only when no parent logic (stacking, grid cells, content sizing, flip or
+    // rotation) would move it or depend on it.
+    bool CanPlacePositionDirectly(XOrY axis)
+    {
+        var effectiveParent = EffectiveParentGue;
+        if (effectiveParent == null)
+        {
+            return true;
+        }
+        if (effectiveParent.ChildrenLayout != ChildrenLayout.Regular ||
+            effectiveParent.GetAbsoluteRotation() != 0 ||
+            effectiveParent.GetAbsoluteFlipHorizontal())
+        {
+            return false;
+        }
+        var parentUnits = axis == XOrY.X ? effectiveParent.WidthUnits : effectiveParent.HeightUnits;
+        return parentUnits.GetDependencyType() != HierarchyDependencyType.DependsOnChildren &&
+            parentUnits != DimensionUnitType.RelativeToMaxParentOrChildren;
+    }
 
     float? _maxWidth;
     public float? MaxWidth
@@ -2295,11 +2311,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.Children.Count > 1)
                 {
 
-                    //UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
-                    var firstChild = this.Children[0];
-                    var childLayout = firstChild.GetChildLayoutType(this);
+                    var firstChild = GetFirstVisibleChild();
 
-                    if (childLayout == ChildType.Absolute)
+                    if (firstChild == null)
+                    {
+                        // Nothing visible to measure.
+                    }
+                    else if (firstChild.GetChildLayoutType(this) == ChildType.Absolute)
                     {
                         firstChild.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         fullyUpdatedChildren.Add(firstChild);
@@ -2508,9 +2526,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         // special case - if the user has set both values to depend on the other value, we don't want to have an infinite recursion so we'll just apply the width and height values as pixel values.
         // This really doesn't make much sense but...the alternative would be an object that may grow or shrink infinitely, which may cause lots of other problems:
-        if ((mWidthUnit == DimensionUnitType.PercentageOfOtherDimension && mHeightUnit == DimensionUnitType.PercentageOfOtherDimension) ||
-            (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio && mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
-            )
+        if (IsSizedFromOtherDimension(mWidthUnit) && IsSizedFromOtherDimension(mHeightUnit))
         {
             RequiredContainedObject.Width = mWidth;
             RequiredContainedObject.Height = mHeight;
@@ -2560,6 +2576,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
     }
+
+    static bool IsSizedFromOtherDimension(DimensionUnitType unit) =>
+        unit == DimensionUnitType.PercentageOfOtherDimension || unit == DimensionUnitType.MaintainFileAspectRatio;
 
     public void UpdateHeight(float parentHeight, bool considerWrappedStacked)
     {
@@ -2632,13 +2651,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             mContainedObjectAsIpso.Width = oldWidth;
                         }
 
-                        if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
+                        if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1 &&
+                            GetFirstVisibleChild() is GraphicalUiElement element)
                         {
-                            var element = Children[0];
-
                             maxHeight = element.GetRequiredParentHeight();
                             var elementHeight = element.AbsoluteHeight;
-                            maxHeight += (StackSpacing + elementHeight) * (Children.Count - 1);
+                            maxHeight += (StackSpacing + elementHeight) * (GetVisibleChildCount() - 1);
                         }
                         else
                         {
@@ -2648,13 +2666,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                             if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
-                                var numberOfVerticalCells =
-                                    this.AutoGridVerticalCells;
+                                // Cell counts below 1 are placed as 1 (see GetCellDimensions), so size them the same way.
+                                var numberOfVerticalCells = System.Math.Max(1, this.AutoGridVerticalCells);
 
-                                if (this.AutoGridHorizontalCells > 0 &&
-                                    this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
+                                if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
                                 {
-                                    var requiredRowCount = (int)Math.Ceiling((float)Children.Count / this.AutoGridHorizontalCells);
+                                    var columnCount = System.Math.Max(1, this.AutoGridHorizontalCells);
+                                    var requiredRowCount = (int)Math.Ceiling((float)GetVisibleChildCount() / columnCount);
                                     numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
                                 }
 
@@ -2755,7 +2773,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     bool wasSet = false;
 
 
-                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
+                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject && IsUsableAspectRatio(aspectRatioObject.AspectRatio))
                     {
                         pixelHeightToSet = AbsoluteWidth * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
                         wasSet = true;
@@ -2807,6 +2825,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (this.Height == 0)
                     {
                         pixelHeightToSet = 0;
+                    }
+                    else if (GetIfParentIsAutoGrid())
+                    {
+                        // Each grid child has its own cell, so there are no siblings to share it with.
+                        pixelHeightToSet = parentHeight;
                     }
                     else
                     {
@@ -2860,6 +2883,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             var numberOfSpaces = numberOfVisibleChildren;
                             heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
                         }
+
+                        // Siblings that overflow the parent leave no space, not negative space.
+                        heightToSplit = System.Math.Max(0, heightToSplit);
 
                         float totalRatio = 0;
                         if (_parent != null)
@@ -2919,6 +2945,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         RequiredContainedObject.Height = pixelHeightToSet;
     }
+
+    // A zero, negative or non-finite aspect ratio (such as from an empty texture) cannot size the
+    // other axis, so MaintainFileAspectRatio falls back as if the renderable had no aspect ratio.
+    static bool IsUsableAspectRatio(float aspectRatio) => aspectRatio > 0 && !float.IsInfinity(aspectRatio);
 
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
     {
@@ -3078,14 +3108,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                         if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                         {
-                            var numberOfHorizontalCells =
-                                this.AutoGridHorizontalCells;
+                            // Cell counts below 1 are placed as 1 (see GetCellDimensions), so size them the same way.
+                            var numberOfHorizontalCells = System.Math.Max(1, this.AutoGridHorizontalCells);
 
-                            if (this.AutoGridVerticalCells > 0 && 
-                                // If auto grid vertical, then it can expand horizontally
-                                ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                            // If auto grid vertical, then it can expand horizontally
+                            if (ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
-                                var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / this.autoGridVerticalCells);
+                                var rowCount = System.Math.Max(1, this.AutoGridVerticalCells);
+                                var requiredColumnCount = (int)Math.Ceiling((float)GetVisibleChildCount() / rowCount);
                                 numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
                             }
                             // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
@@ -3183,7 +3213,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     bool wasSet = false;
 
-                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
+                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject && IsUsableAspectRatio(aspectRatioObject.AspectRatio))
                     {
                         // mWidth is a percent where 100 means maintain aspect ratio
                         pixelWidthToSet = AbsoluteHeight * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
@@ -3235,6 +3265,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (this.Width == 0)
                     {
                         pixelWidthToSet = 0;
+                    }
+                    else if (GetIfParentIsAutoGrid())
+                    {
+                        // Each grid child has its own cell, so there are no siblings to share it with.
+                        pixelWidthToSet = parentWidth;
                     }
                     else
                     {
@@ -3289,6 +3324,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                             widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
                         }
+
+                        // Siblings that overflow the parent leave no space, not negative space.
+                        widthToSplit = System.Math.Max(0, widthToSplit);
 
                         float totalRatio = 0;
                         if (_parent != null)
@@ -3506,7 +3544,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
+            var units = mYUnits;
             float positionValue = mY;
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
+            if (units == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
+            {
+                // Inverted Y positions upward, so both edges are measured from the negated value.
+                positionValue = -mY;
+            }
 
             // This GUE hasn't been set yet so it can't give
             // valid widths/heights
@@ -3515,14 +3561,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 return 0;
             }
             float smallEdge = positionValue;
-
-            var units = mYUnits;
-#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
-            if (units == GeneralUnitType.PixelsFromMiddleInverted)
-#pragma warning restore CS0618
-            {
-                smallEdge *= -1;
-            }
 
             if (mYOrigin == VerticalAlignment.Center)
             {
@@ -3589,22 +3627,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 var setCellCount = effectiveHorizontalCells * effectiveVerticalCells;
 
-                if (Parent.Children?.Count > setCellCount)
+                if (Parent.GetVisibleChildCount() > setCellCount)
                 {
-                    if (Parent.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                    // Matches GetCellDimensions: a horizontal grid fixes its columns and grows rows,
+                    // a vertical grid fixes its rows and grows columns.
+                    if (Parent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
                     {
-                        // If stacking vertically, the number of rows (vertical cell count) depends on the children count
-                        // if the parent's size depends on its children
                         if (Parent.HeightUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.Children.Count / effectiveHorizontalCells);
+                            effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.GetVisibleChildCount() / effectiveHorizontalCells);
                         }
                     }
                     else
                     {
                         if (Parent.WidthUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)Parent.Children.Count / effectiveVerticalCells);
+                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)Parent.GetVisibleChildCount() / effectiveVerticalCells);
                         }
                     }
                 }
@@ -4050,7 +4088,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             if (mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromMiddleInverted ||
 #pragma warning restore CS0618
-                mXUnits == GeneralUnitType.PixelsFromLarge)
+                mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.Percentage)
             {
                 if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
@@ -4521,7 +4559,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 var visibleIndex = this.GetIndexInVisibleSiblings();
                 if (visibleIndex > 0)
                 {
-                    var firstChildHeight = effectiveParent.Children[0].AbsoluteHeight;
+                    var firstChildHeight = effectiveParent.GetFirstVisibleChild()!.AbsoluteHeight;
                     unitOffsetY += visibleIndex * (firstChildHeight + effectiveParent.StackSpacing);
                 }
                 this.StackedRowOrColumnIndex = 0;
@@ -4681,7 +4719,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (columnCount < 1) columnCount = 1;
         if (rowCount < 1) rowCount = 1;
 
-        var childCount = effectiveParent.Children?.Count ?? 0;
+        var childCount = effectiveParent.GetVisibleChildCount();
 
         if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
         {
@@ -4734,6 +4772,46 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         //    cellWidth = effectiveParent.GetMaxCellWidth(true, 0);
         //}
 
+    }
+
+    private GraphicalUiElement? GetFirstVisibleChild()
+    {
+        for (int i = 0; i < Children.Count; i++)
+        {
+            if (Children[i].Visible)
+            {
+                return Children[i];
+            }
+        }
+        return null;
+    }
+
+    // Counts the children a grid or stack places: visible ones, from the same list GetIndexInVisibleSiblings walks.
+    private int GetVisibleChildCount()
+    {
+        int count = 0;
+        if (mContainedObjectAsIpso != null)
+        {
+            for (int i = 0; i < Children.Count; i++)
+            {
+                if (Children[i].Visible)
+                {
+                    count++;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < mWhatThisContains.Count; i++)
+            {
+                var child = mWhatThisContains[i];
+                if (child.Parent == null && child.Visible)
+                {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private int GetIndexInVisibleSiblings()
@@ -5229,6 +5307,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void Dock(Dock dock)
     {
+        var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended || this.IsLayoutSuspended;
+
+        if (!wasSuspended)
+        {
+            this.SuspendLayout();
+        }
+
+        ApplyDock(dock);
+
+        if (!wasSuspended)
+        {
+            this.ResumeLayout();
+        }
+    }
+
+    private void ApplyDock(Dock dock)
+    {
         switch (dock)
         {
             case Wireframe.Dock.Left:
@@ -5340,7 +5435,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.HeightUnits = DimensionUnitType.RelativeToParent;
                 if (RenderableComponent is IText)
                 {
-                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
                     SetProperty("VerticalAlignment", VerticalAlignment.Center);
                 }
                 break;
