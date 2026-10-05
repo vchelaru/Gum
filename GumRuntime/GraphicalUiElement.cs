@@ -2755,7 +2755,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     bool wasSet = false;
 
 
-                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
+                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject && IsUsableAspectRatio(aspectRatioObject.AspectRatio))
                     {
                         pixelHeightToSet = AbsoluteWidth * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
                         wasSet = true;
@@ -2919,6 +2919,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         RequiredContainedObject.Height = pixelHeightToSet;
     }
+
+    // A zero, negative or non-finite aspect ratio (such as from an empty texture) cannot size the
+    // other axis, so MaintainFileAspectRatio falls back as if the renderable had no aspect ratio.
+    static bool IsUsableAspectRatio(float aspectRatio) => aspectRatio > 0 && float.IsFinite(aspectRatio);
 
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
     {
@@ -3183,7 +3187,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     bool wasSet = false;
 
-                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
+                    if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject && IsUsableAspectRatio(aspectRatioObject.AspectRatio))
                     {
                         // mWidth is a percent where 100 means maintain aspect ratio
                         pixelWidthToSet = AbsoluteHeight * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
