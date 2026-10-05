@@ -1345,6 +1345,20 @@ public class StandardElementsManager
         yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
 
 
+        // The gradient renderers only honor pixels-from-small/middle/large and percentage, so the
+        // baseline and inverted-center Y units (which fall through to pixels-from-top) are hidden.
+        List<object> gradientYUnitsExclusions = new List<object>(yUnitsExclusions);
+        gradientYUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
+        gradientYUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
+
+        // Radii are measured against the shape's width; the renderers honor only these three.
+        List<object> gradientRadiusUnitsExclusions = Enum.GetValues(typeof(DimensionUnitType))
+            .Cast<object>()
+            .Where(unit => !unit.Equals(DimensionUnitType.Absolute) &&
+                !unit.Equals(DimensionUnitType.PercentageOfParent) &&
+                !unit.Equals(DimensionUnitType.RelativeToParent))
+            .ToList();
+
         state.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Rendering", Name = "UseGradient", SetsValue = true });
 
         state.Variables.Add(new VariableSave
@@ -1363,7 +1377,7 @@ public class StandardElementsManager
 
 
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientY1" });
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = gradientYUnitsExclusions });
 
         // Issue #3009 — the standalone gradient start (Color1) only exists on Arc and the legacy
         // shapes; Circle/Rectangle drive the start from the active body color, so they omit it.
@@ -1379,14 +1393,14 @@ public class StandardElementsManager
         state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX2Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
 
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientY2" });
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY2Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY2Units", Category = "Rendering", ExcludedValuesForEnum = gradientYUnitsExclusions });
 
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 50f, Category = "Rendering", Name = "GradientInnerRadius" });
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering", ExcludedValuesForEnum = gradientRadiusUnitsExclusions });
 
 
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientOuterRadius" });
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering", ExcludedValuesForEnum = gradientRadiusUnitsExclusions });
 
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha2", Category = "Rendering" });
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });

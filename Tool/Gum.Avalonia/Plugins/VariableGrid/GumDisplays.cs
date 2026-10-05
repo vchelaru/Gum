@@ -106,6 +106,9 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
 /// <summary>X units toggles.</summary>
 public class XUnitsDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.XUnits; }
 
+/// <summary>Gradient inner/outer radius units toggles.</summary>
+public class GradientRadiusUnitsDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GradientRadiusUnits; }
+
 /// <summary>Y units toggles.</summary>
 public class YUnitsDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.YUnits; }
 

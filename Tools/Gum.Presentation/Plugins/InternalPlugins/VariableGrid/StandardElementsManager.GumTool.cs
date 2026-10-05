@@ -85,6 +85,10 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
                 {
                     variable.PreferredDisplayer = typeof(GumDisplayers.HeightUnits);
                 }
+                else if (variable.Name == "GradientInnerRadiusUnits" || variable.Name == "GradientOuterRadiusUnits")
+                {
+                    variable.PreferredDisplayer = typeof(GumDisplayers.GradientRadiusUnits);
+                }
             }
             else if (variable.Type == nameof(PositionUnitType))
             {

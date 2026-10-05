@@ -1,4 +1,5 @@
 using System.Linq;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -27,6 +28,48 @@ public class VariableGridToggleOptionsTests : BaseTestClass
         {
             allowed.ShouldNotContain(option => option.Value.Equals(excluded));
         }
+    }
+
+    [Fact]
+    public void GradientRadiusUnits_OffersOnlyUnitsTheRenderersHonor()
+    {
+        VariableGridToggleOptions sut = new VariableGridToggleOptions(Mock.Of<ISelectedState>());
+
+        sut.GradientRadiusUnits.Select(option => option.Value).ShouldBe(new object[]
+        {
+            DimensionUnitType.Absolute,
+            DimensionUnitType.PercentageOfParent,
+            DimensionUnitType.RelativeToParent,
+        });
+        sut.GradientRadiusUnits.ShouldAllBe(option => option.GumIconName != null);
+    }
+
+    [Theory]
+    [InlineData("GradientInnerRadiusUnits")]
+    [InlineData("GradientOuterRadiusUnits")]
+    public void GradientRadiusUnits_ExcludeEveryUnitTheRenderersIgnore(string variableName)
+    {
+        VariableSave variable = StandardElementsManager.Self.GetDefaultStateFor("Circle").Variables
+            .First(v => v.Name == variableName);
+
+        variable.ExcludedValuesForEnum.ShouldNotContain(DimensionUnitType.Absolute);
+        variable.ExcludedValuesForEnum.ShouldNotContain(DimensionUnitType.PercentageOfParent);
+        variable.ExcludedValuesForEnum.ShouldNotContain(DimensionUnitType.RelativeToParent);
+        variable.ExcludedValuesForEnum.ShouldContain(DimensionUnitType.Ratio);
+        variable.ExcludedValuesForEnum.ShouldContain(DimensionUnitType.PercentageOfOtherDimension);
+        variable.ExcludedValuesForEnum.ShouldContain(DimensionUnitType.MaintainFileAspectRatio);
+    }
+
+    [Theory]
+    [InlineData("GradientY1Units")]
+    [InlineData("GradientY2Units")]
+    public void GradientYUnits_ExcludeBaselineAndInverted(string variableName)
+    {
+        VariableSave variable = StandardElementsManager.Self.GetDefaultStateFor("Circle").Variables
+            .First(v => v.Name == variableName);
+
+        variable.ExcludedValuesForEnum.ShouldContain(PositionUnitType.PixelsFromBaseline);
+        variable.ExcludedValuesForEnum.ShouldContain(PositionUnitType.PixelsFromCenterYInverted);
     }
 
     [Fact]
