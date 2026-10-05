@@ -8,6 +8,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Shell;
@@ -211,6 +212,34 @@ public class CanvasMenuAndToolbarScenarioTests
             canvas.PixelsAlong(strip, 60).ShouldBe(withoutGrid, "the grid overlay should go with snapping");
 
             canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
+    public void SnapToGridNote_FollowsTheUnitsAsTheyAreEdited_NotTheEditBefore()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            canvas.AddInstance(button, "Box", "Rectangle", x: 40, y: 40, width: 60, height: 40);
+            InstanceSave box = button.GetInstance("Box")!;
+            canvas.Tree.Click(canvas.Tree.NodeFor(box));
+            canvas.Input.Click(canvas.SnapToGridCheckBox);
+            canvas.Frame();
+            canvas.Editor.HasGridSnapWarning.ShouldBeFalse();
+
+            ISetVariableLogic setVariableLogic = Services.GetRequiredService<ISetVariableLogic>();
+            StateSave state = button.DefaultState!;
+
+            object? oldUnits = state.GetValue("Box.XUnits");
+            state.SetValue("Box.XUnits", PositionUnitType.PercentageWidth, "PositionUnitType");
+            setVariableLogic.PropertyValueChanged("XUnits", oldUnits, box, state);
+            canvas.Editor.HasGridSnapWarning.ShouldBeTrue("percent X Units won't snap, so the note shows right away");
+
+            oldUnits = state.GetValue("Box.XUnits");
+            state.SetValue("Box.XUnits", PositionUnitType.PixelsFromLeft, "PositionUnitType");
+            setVariableLogic.PropertyValueChanged("XUnits", oldUnits, box, state);
+            canvas.Editor.HasGridSnapWarning.ShouldBeFalse("back to pixels, so the note goes away right away");
         });
     }
 
