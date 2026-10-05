@@ -3833,7 +3833,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var widthUnitDependencyType = mWidthUnit.GetDependencyType();
             // RelativeToMaxParentOrChildren can compute a meaningful children-based size
             // without the parent, so treat it as Absolute for parent sizing purposes.
-            var isNotParentDependent = widthUnitDependencyType != HierarchyDependencyType.DependsOnParent ||
+            // A Ratio width is sized from the parent's remaining space, so it can't size the parent either.
+            var isNotParentDependent = (widthUnitDependencyType != HierarchyDependencyType.DependsOnParent &&
+                    widthUnitDependencyType != HierarchyDependencyType.DependsOnSiblings) ||
                 this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ||
                 mWidthUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
             isAbsolute = isNotParentDependent &&
@@ -3845,7 +3847,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else // Y
         {
-            var isNotParentDependent = mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent ||
+            var heightUnitDependencyType = mHeightUnit.GetDependencyType();
+            var isNotParentDependent = (heightUnitDependencyType != HierarchyDependencyType.DependsOnParent &&
+                    heightUnitDependencyType != HierarchyDependencyType.DependsOnSiblings) ||
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ||
                 mHeightUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
             // A wrapping stack measures its RelativeToChildren height from each child's laid-out Y.
