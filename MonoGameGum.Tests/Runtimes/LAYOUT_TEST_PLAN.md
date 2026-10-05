@@ -12,8 +12,9 @@ layout code and tests (`Forms/GridTests.cs`) and is not covered here; "grid" bel
 `TextRuntimeTests.cs`, `SpriteRuntimeTests.cs` and `DockAnchorTests.cs`, plus the bodies of the
 grid tests; a mark is a starting point, not proof that every assertion is right.
 
-**H-numbers** point to suspected defects in section 9. Each was found by reading the code and has
-not been run; a sweep confirms or clears it.
+**H-numbers** point to the defect table in section 10. Each was found by reading the code, then
+tested in `LayoutEdgeCaseTests.cs` and triaged. Leaves marked `[ ]` that cite an H-number are
+covered by that test now.
 
 ## Conventions
 
@@ -302,35 +303,39 @@ Named cases that must exist as explicit tests:
 7. Hiding and re-showing an element restores every sibling and ancestor.
 8. Building the tree in code and through `ApplyState` gives the same result.
 
-## 10. Suspected defects (read, not run)
+## 10. Defects found by reading, tested and triaged
 
-| # | Where | Suspicion |
-|---|---|---|
-| H1 | `AdjustOffsetsByUnits` | PercentageOfFile never sets `wasSet`, so X/Y always use the 64-pixel fallback even with a texture. |
-| H2 | `X` and `Y` setters | Fast path writes the renderable position directly, skipping AutoGrid cell offset, parent flip/rotation, a RelativeToMaxParentOrChildren-width parent, and a parentless child of a stacking containing element. |
-| H3 | `Parent` setter, collection handler | `RemoveChild`/`Children.Remove` leave the old parent unlaid-out; `Parent = null` lays it out. An existing test pins the manual `UpdateLayout()`. |
-| H4 | `UpdateChildren.UpdateChild` | `a && (b) \|\| (c)` precedence: the MaintainFileAspectRatio case ignores the width-depends-on-children check. |
-| H5 | `UpdateWidth`/`UpdateHeight` | RelativeToChildren AutoGrid sizing uses raw cell counts; 0 cells gives a negative size, while cell placement clamps to 1. |
-| H6 | `GetCellDimensions`, `GetParentDimensions` | Grid row/column count uses all children, cell index uses visible ones. |
-| H7 | `TryAdjustOffsetsByParentLayoutType`, `UpdateHeight` | Fixed-size fast path uses `Children[0]` even if invisible and counts invisible children. |
-| H8 | `UpdateWidth`/`UpdateHeight` | MaintainFileAspectRatio divides by `AspectRatio` with no zero check. |
-| H9 | `UpdateDimensions` | Only same-unit circular pairs fall back to raw values; a PercentageOfOtherDimension/MaintainFileAspectRatio pair is unguarded. |
-| H10 | `AdjustParentOriginOffsetsByUnits` | X Percentage check is dead code; X and Y handle Percentage in a stack differently. |
-| H11 | `RefreshParentRowColumnDimensionForThis` | Runs only for visible children, so hiding a row's tallest item may leave the row too tall. |
-| H12 | `GetRequiredParentHeight` | PixelsFromMiddleInverted inverts one edge but not the other. |
-| H13 | Ratio in `UpdateHeight`/`UpdateWidth` | Cross-axis ratio in a stack subtracts siblings that sit beside it. |
-| H14 | Ratio | Over-consumed space yields a negative size. |
-| H15 | `UpdateChildren` | Renderable-less path has no ratio-first ordering. |
-| H16 | end of `UpdateLayout` | `PositionChanged` has no reentrancy guard; `SizeChanged` does. |
-| H17 | `GetChildLayoutType(XOrY.X)` | Treats PixelsFromMiddle/Large X as measurable regardless of parent width dependency; the Y branch and two-axis overload check it. |
-| H18 | `GetParentDimensions` | On grid overflow it grows rows for AutoGridVertical and columns for AutoGridHorizontal, the opposite of `GetCellDimensions` and `UpdateWidth`/`UpdateHeight`, so children size against the wrong cell count. |
-| H19 | `GetCellDimensions` vs `GetParentDimensions` | Cell pitch always grows with overflow; the size given to children grows only when the parent is RelativeToChildren. A fixed-size grid with overflow should overlap. |
-| H20 | `StackSpacing` | Doc comment says it has no effect on AutoGrid; cell size and position both use it. |
-| H21 | `EffectiveDirtyStateParentUpdateType` | Adds stack, ratio and depends-on-children flags but not `IfParentIsAutoGrid`. |
-| H22 | `AdjustOffsetsByOrigin` in a stack | Main-axis origin (Center, Bottom/Right) still applies to later stacked children, shifting them into the previous sibling. |
-| H23 | `Dock` | Sets several properties without suspending layout (Anchor suspends), so intermediate sizes fire events and extra layouts; FillVertically also sets Text horizontal alignment. |
-| H24 | ScreenPixel units | Zoom is read at layout time; a zoom change or `AddToManagers` does not re-lay out. |
-| H25 | Ratio in a grid | Subtracts every grid sibling from a single cell's size. |
+FIX: fixed with a regression test. DOCUMENT: intended, pinned by a test. LOG: skipped test pointing
+at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
+
+| # | Where | Finding | Result |
+|---|---|---|---|
+| H1 | `AdjustOffsetsByUnits` | PercentageOfFile X/Y always use the 64-pixel fallback. | LOG #5769 |
+| H2 | `X` and `Y` setters | Shortcut skipped the AutoGrid cell offset, parent flip/rotation, a RelativeToMaxParentOrChildren parent, and a parentless child of a stacking component. | FIX |
+| H3 | `Parent` setter | `RemoveChild`/`Children.Clear` don't lay out the old parent; `Parent = null` does. | LOG #5764 |
+| H4 | `UpdateChildren.UpdateChild` | `a && b \|\| c` precedence for MaintainFileAspectRatio. | CLEARED (no observable effect) |
+| H5 | `UpdateWidth`/`UpdateHeight` | AutoGrid cell count 0 sized the grid to 0 or negative. | FIX |
+| H6 | grid sizing and placement | Invisible children counted toward rows/columns. | FIX |
+| H7 | fixed-size stack fast path | Used `Children[0]` even if hidden and counted hidden children. | FIX |
+| H8 | MaintainFileAspectRatio | Aspect ratio 0 threw from the renderable's Height setter. | FIX |
+| H9 | `UpdateDimensions` | PercentageOfOtherDimension + MaintainFileAspectRatio shrank every layout. | FIX |
+| H10 | `AdjustParentOriginOffsetsByUnits` | Later LeftToRightStack child with Percentage X lost its stack position. | FIX |
+| H11 | `RefreshParentRowColumnDimensionForThis` | Hiding a row's tallest item. | CLEARED |
+| H12 | `GetRequiredParentHeight` | PixelsFromMiddleInverted inverted one edge only. | FIX |
+| H13 | Ratio | Cross-axis Ratio in a stack subtracts siblings beside it. | LOG #5767 |
+| H14 | Ratio | Siblings larger than the parent gave a negative size. | FIX |
+| H15 | Ratio under a renderable-less parent | Parentless Ratio children ignore siblings. | LOG #5768 |
+| H16 | `PositionChanged` | Handler that sets X re-enters. | CLEARED |
+| H17 | `GetChildLayoutType(XOrY.X)` | Middle/Large X counted for content sizing. | CLEARED (intended, pinned by existing PixelsFromMiddle tests) |
+| H18 | `GetParentDimensions` | Grid overflow grew the wrong axis for child sizing. | FIX |
+| H19 | grid overflow, fixed-size parent | Packed cells but children sized for the minimum count overlap. | LOG #5765 |
+| H20 | `StackSpacing` | Doc said it doesn't affect AutoGrid; it does. | DOCUMENT (doc comment fixed) |
+| H21 | `EffectiveDirtyStateParentUpdateType` | Grid child dirtied while suspended. | CLEARED |
+| H22 | stacks | Main-axis origin pulls later children into the previous sibling. | LOG #5766 |
+| H23 | `Dock` | No layout suspension (SizeChanged per property); FillVertically recentered Text horizontally. | FIX (two commits) |
+| H24 | ScreenPixel | Zoom change does not re-lay out. | DOCUMENT (pinned; call `UpdateLayout()` after changing zoom) |
+| H25 | Ratio in a grid | Subtracted every grid sibling from one cell. | FIX |
+| H26 | `X`/`Y` setter shortcut | Moved the element without raising `PositionChanged`. | FIX |
 
 ## Sweep strategy
 
