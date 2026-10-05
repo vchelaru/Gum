@@ -4618,8 +4618,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             float cellWidth, cellHeight;
             GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
 
-            unitOffsetX += cellWidth * xIndex + Parent!.StackSpacing * (xIndex);
-            unitOffsetY += cellHeight * yIndex + Parent!.StackSpacing * (yIndex );
+            GraphicalUiElement gridParent = Parent!;
+            if (gridParent.GetAbsoluteFlipHorizontal())
+            {
+                // Mirror the column: the child's own units and origin already mirror inside the cell.
+                unitOffsetX += gridParent.AbsoluteWidth - cellWidth * (xIndex + 1) - gridParent.StackSpacing * xIndex;
+            }
+            else
+            {
+                unitOffsetX += cellWidth * xIndex + gridParent.StackSpacing * (xIndex);
+            }
+            unitOffsetY += cellHeight * yIndex + gridParent.StackSpacing * (yIndex );
         }
     }
 
