@@ -1901,6 +1901,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     partial void OnConstructor();
 
+    // Instances held through ElementGueContainingThis (an element that had no renderable, such as an
+    // old-style screen) are not reparented when a renderable is assigned here: they keep a null
+    // Parent, stay out of Children, and keep laying out against the canvas. This is intended (#5772).
     public void SetContainedObject(IRenderable? containedObject)
     {
         if (containedObject == this)

@@ -163,8 +163,12 @@ public class LayoutRenderableInterfaceTests : BaseTestClass
         second.AbsoluteLeft.ShouldBe(stackedLeft + 5);
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5772")]
-    public void SetContainedObject_ShouldResizeExistingChildren_WhenRenderableIsAssignedAfterChildren()
+    // An element without a renderable (an old-style screen) holds its instances through
+    // ElementGueContainingThis, not as Children. Assigning a renderable later does not reparent
+    // them: they stay contained, keep a null Parent, and are not positioned inside the element.
+    // Intended (#5772).
+    [Fact]
+    public void SetContainedObject_ShouldNotReparentContainedInstances_WhenRenderableIsAssignedLater()
     {
         GraphicalUiElement element = new(null);
         element.WidthUnits = DimensionUnitType.Absolute;
@@ -180,8 +184,11 @@ public class LayoutRenderableInterfaceTests : BaseTestClass
         element.SetContainedObject(new InvisibleRenderable());
         element.UpdateLayout();
 
-        child.AbsoluteWidth.ShouldBe(100);
-        child.AbsoluteLeft.ShouldBe(30);
+        child.Parent.ShouldBeNull();
+        child.ElementGueContainingThis.ShouldBe(element);
+        element.Children.ShouldNotContain(child);
+        child.AbsoluteLeft.ShouldBe(0);
+        child.AbsoluteWidth.ShouldBe(GraphicalUiElement.CanvasWidth * 50 / 100);
     }
 
     #endregion
