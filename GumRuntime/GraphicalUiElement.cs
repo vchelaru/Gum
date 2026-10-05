@@ -952,7 +952,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     CanPlacePositionDirectly(XOrY.X);
                 if (skipLayout)
                 {
+                    var oldX = this.mContainedObjectAsIpso.X;
                     this.mContainedObjectAsIpso.X = mX;
+                    if (oldX != mX)
+                    {
+                        PositionChanged?.Invoke(this, EventArgs.Empty);
+                    }
                 }
                 if (!skipLayout)
                 {
@@ -993,7 +998,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (Parent as GraphicalUiElement == null && YUnits == GeneralUnitType.PixelsFromSmall && YOrigin == VerticalAlignment.Top &&
                     CanPlacePositionDirectly(XOrY.Y))
                 {
+                    var oldY = this.mContainedObjectAsIpso.Y;
                     this.mContainedObjectAsIpso.Y = mY;
+                    if (oldY != mY)
+                    {
+                        PositionChanged?.Invoke(this, EventArgs.Empty);
+                    }
                 }
                 else
                 {
