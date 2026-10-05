@@ -214,6 +214,156 @@ public class LayoutMixedAxisTests : BaseTestClass
 
     #endregion
 
+    #region Named cases
+
+    [Fact]
+    public void M2_RelativeToChildrenWidthParent_ShouldMeasurePercentageOfOtherDimensionChild_DrivenByParentHeight()
+    {
+        ContainerRuntime parent = CreateContainer(0, DimensionUnitType.RelativeToChildren, 300, DimensionUnitType.Absolute);
+        ContainerRuntime child = CreateContainer(100, DimensionUnitType.PercentageOfOtherDimension, 50, DimensionUnitType.PercentageOfParent);
+        parent.AddChild(child);
+
+        child.AbsoluteHeight.ShouldBe(150);
+        child.AbsoluteWidth.ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
+    }
+
+    [Fact]
+    public void M3_RelativeToChildrenHeightParent_ShouldMeasureWrappedTextChild_AtParentGivenWidth()
+    {
+        float childWidth = 150;
+        float expectedHeight = MeasureWrappedHeight(childWidth);
+        MeasureWrappedLineCount(childWidth).ShouldBeGreaterThan(1);
+        ContainerRuntime parent = CreateContainer(300, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren);
+        TextRuntime text = CreateWrappingText(50, DimensionUnitType.PercentageOfParent);
+
+        parent.AddChild(text);
+
+        text.AbsoluteWidth.ShouldBe(childWidth);
+        text.AbsoluteHeight.ShouldBe(expectedHeight);
+        parent.AbsoluteHeight.ShouldBe(expectedHeight);
+    }
+
+    [Fact]
+    public void M4_RelativeToChildrenHeightParent_ShouldMeasureMaintainFileAspectRatioChild_AtParentGivenWidth()
+    {
+        ContainerRuntime parent = CreateContainer(400, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren);
+        GraphicalUiElement child = new(new TexturedRenderable { AspectRatio = 2 });
+        child.Width = 50;
+        child.WidthUnits = DimensionUnitType.PercentageOfParent;
+        child.Height = 100;
+        child.HeightUnits = DimensionUnitType.MaintainFileAspectRatio;
+
+        parent.AddChild(child);
+
+        child.AbsoluteWidth.ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
+    }
+
+    [Fact]
+    public void M5_RelativeToChildrenHeightParent_ShouldMeasureNestedWrappedText_ThroughRelativeToChildrenChild()
+    {
+        float childWidth = 150;
+        float expectedHeight = MeasureWrappedHeight(childWidth);
+        MeasureWrappedLineCount(childWidth).ShouldBeGreaterThan(1);
+        ContainerRuntime parent = CreateContainer(300, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren);
+        ContainerRuntime child = CreateContainer(50, DimensionUnitType.PercentageOfParent, 0, DimensionUnitType.RelativeToChildren);
+        TextRuntime text = CreateWrappingText(0, DimensionUnitType.RelativeToParent);
+        child.AddChild(text);
+
+        parent.AddChild(child);
+
+        text.AbsoluteWidth.ShouldBe(childWidth);
+        text.AbsoluteHeight.ShouldBe(expectedHeight);
+        child.AbsoluteHeight.ShouldBe(expectedHeight);
+        parent.AbsoluteHeight.ShouldBe(expectedHeight);
+    }
+
+    [Theory]
+    [InlineData(SelfDependency.PercentageOfOtherDimension)]
+    [InlineData(SelfDependency.MaintainFileAspectRatio)]
+    [InlineData(SelfDependency.WrappingText)]
+    [InlineData(SelfDependency.RelativeToChildrenHoldingWrappingText)]
+    public void M9_ChildHeight_ShouldFollowGrandparentWidth_WhenGrandparentNarrowsAndWidens(SelfDependency selfDependency)
+    {
+        float wideWidth = 400;
+        float narrowWidth = 200;
+        float percentageOfOther = 50;
+        float aspectRatio = 2;
+        // Parent is 50% of the grandparent and the child 50% of the parent.
+        float wideChildWidth = wideWidth / 4;
+        float narrowChildWidth = narrowWidth / 4;
+        float wideHeight = selfDependency switch
+        {
+            SelfDependency.PercentageOfOtherDimension => wideChildWidth * percentageOfOther / 100,
+            SelfDependency.MaintainFileAspectRatio => wideChildWidth / aspectRatio,
+            _ => MeasureWrappedHeight(wideChildWidth),
+        };
+        float narrowHeight = selfDependency switch
+        {
+            SelfDependency.PercentageOfOtherDimension => narrowChildWidth * percentageOfOther / 100,
+            SelfDependency.MaintainFileAspectRatio => narrowChildWidth / aspectRatio,
+            _ => MeasureWrappedHeight(narrowChildWidth),
+        };
+        Tree tree = BuildTree(ParentAxes.PercentageOfParentWidth_RelativeToChildrenHeight, wideWidth, 300, 0,
+            DimensionUnitType.PercentageOfParent, 50, selfDependency, percentageOfOther, aspectRatio);
+
+        tree.Grandparent.Width = narrowWidth;
+
+        tree.Child.AbsoluteWidth.ShouldBe(narrowChildWidth);
+        tree.Child.AbsoluteHeight.ShouldBe(narrowHeight);
+        tree.Parent.AbsoluteHeight.ShouldBe(narrowHeight);
+
+        tree.Grandparent.Width = wideWidth;
+
+        tree.Child.AbsoluteWidth.ShouldBe(wideChildWidth);
+        tree.Child.AbsoluteHeight.ShouldBe(wideHeight);
+        tree.Parent.AbsoluteHeight.ShouldBe(wideHeight);
+    }
+
+    [Fact]
+    public void M10_RelativeToMaxParentOrChildrenHeightParent_ShouldTakeLargerOfGrandparentAndChild_WithoutRatchet()
+    {
+        ContainerRuntime grandparent = CreateContainer(400, DimensionUnitType.Absolute, 300, DimensionUnitType.Absolute);
+        ContainerRuntime parent = CreateContainer(300, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToMaxParentOrChildren);
+        grandparent.AddChild(parent);
+        // Child is 150 wide; height is 100% (150) then 400% (600) of that.
+        ContainerRuntime child = CreateContainer(50, DimensionUnitType.PercentageOfParent, 100, DimensionUnitType.PercentageOfOtherDimension);
+        parent.AddChild(child);
+
+        parent.AbsoluteHeight.ShouldBe(300);
+
+        child.Height = 400;
+        parent.AbsoluteHeight.ShouldBe(600);
+        grandparent.UpdateLayout();
+        parent.AbsoluteHeight.ShouldBe(600);
+
+        child.Height = 100;
+        parent.AbsoluteHeight.ShouldBe(300);
+        child.AbsoluteHeight.ShouldBe(150);
+    }
+
+    [Fact]
+    public void M11_RelativeToChildrenParent_ShouldIgnorePercentageChildOnItsAxis_AndMeasureItOnTheOther()
+    {
+        // Width value is padding: the parent is 200 wide from padding alone.
+        ContainerRuntime parent = CreateContainer(200, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        ContainerRuntime child = CreateContainer(50, DimensionUnitType.PercentageOfParent, 80, DimensionUnitType.Absolute);
+        parent.AddChild(child);
+
+        parent.AbsoluteWidth.ShouldBe(200);
+        parent.AbsoluteHeight.ShouldBe(80);
+        child.AbsoluteWidth.ShouldBe(100);
+
+        parent.UpdateLayout();
+
+        parent.AbsoluteWidth.ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(100);
+    }
+
+    #endregion
+
     #region Matrix
 
     static readonly DimensionUnitType[] DrivenUnits =
