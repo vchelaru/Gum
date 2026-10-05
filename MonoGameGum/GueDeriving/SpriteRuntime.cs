@@ -344,6 +344,10 @@ public class SpriteRuntime : GraphicalUiElement
     }
 #endif
 
+    static bool IsSizedFromTexture(Gum.DataTypes.DimensionUnitType units) =>
+        units == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile ||
+        units == Gum.DataTypes.DimensionUnitType.MaintainFileAspectRatio;
+
     /// <summary>
     /// The underlying texture used by the sprite.
     /// </summary>
@@ -352,12 +356,11 @@ public class SpriteRuntime : GraphicalUiElement
         get => ContainedSprite.Texture;
         set
         {
-            var isUsingPercentage = WidthUnits == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile || 
-                                    HeightUnits == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            var isSizedFromTexture = IsSizedFromTexture(WidthUnits) || IsSizedFromTexture(HeightUnits);
 
             int widthBefore = -1, heightBefore = -1;
 
-            if (isUsingPercentage && ContainedSprite.Texture != null)
+            if (isSizedFromTexture && ContainedSprite.Texture != null)
             {
 #if RAYLIB
                 widthBefore = ContainedSprite.Texture.Value.Width;
@@ -370,7 +373,7 @@ public class SpriteRuntime : GraphicalUiElement
 
             ContainedSprite.Texture = value;
 
-            if (isUsingPercentage)
+            if (isSizedFromTexture)
             {
                 int widthAfter = -1, heightAfter = -1;
                 if (value != null)
