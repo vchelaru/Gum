@@ -72,6 +72,16 @@ For inline images without captions, use standard Markdown: `![](<path>)`.
 
 **HTML entities** — `&#x20;` (space) and `&#x64;` (`d`) appear in GitBook-generated content for spacing and special characters. Do not strip them; GitBook uses them intentionally.
 
+**Cards for listing subpages** — GitBook auto-lists subpages only on a page with no content, so a landing page that has intro text needs an explicit list. A Cards table in raw HTML renders correctly (see `adding-initializing-gum/README.md`). The second cell's `href` is the page path relative to the file, and GitBook fills in the card title from the first cell:
+
+```
+<table data-view="cards"><thead><tr><th></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td>Card title</td><td><a href="page.md">page.md</a></td></tr></tbody></table>
+```
+
+## Previewing Docs Changes
+
+Every PR that touches `docs/` gets two GitBook checks. Run `gh pr checks <number>` and open the `GitBook (./docs) - docs.flatredball.com/gum/` link for a live preview of the rendered site, or the `GitBook (./docs)` link for the diff in the GitBook editor. Check the preview before reporting a docs change as done, since GitBook-specific markup (cards, hints, tabs) can only be confirmed there.
+
 ## Internal Links
 
 Always use relative paths — no absolute URLs. Link to a section landing page using its `README.md`:
