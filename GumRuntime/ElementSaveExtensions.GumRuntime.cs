@@ -845,8 +845,10 @@ namespace GumRuntime
         // leaves those identifiers unresolved, same as before this parameter existed.
         // isFullCommit: reported to VariableChangedThroughReference so the tool can tell a committed
         // edit from an intermediate one produced while the user is still dragging.
+        // notifyChanges: false skips VariableChangedThroughReference, for callers that apply
+        // references only to read the result and restore the state afterwards (#5736).
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave, GraphicalUiElement? liveRoot = null,
-            bool isFullCommit = true)
+            bool isFullCommit = true, bool notifyChanges = true)
         {
             foreach (var variableList in stateSave.VariableLists)
             {
@@ -877,7 +879,7 @@ namespace GumRuntime
                                 {
                                     unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                                 }
-                                if (!ValueEquality(result.OldValue, result.NewValue))
+                                if (notifyChanges && !ValueEquality(result.OldValue, result.NewValue))
                                 {
                                     VariableChangedThroughReference?.Invoke(
                                         element, null, unqualified, result.OldValue, isFullCommit);
