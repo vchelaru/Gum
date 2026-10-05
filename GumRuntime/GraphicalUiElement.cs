@@ -948,26 +948,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endif
                 mX = value;
 
-                var parentGue = Parent as GraphicalUiElement;
-                var skipLayout = false;
-                // special case:
-                if (XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
+                var skipLayout = XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left &&
+                    CanPlacePositionDirectly(XOrY.X);
+                if (skipLayout)
                 {
-                    if (parentGue == null)
-                    {
-                        skipLayout = true;
-                    }
-                    else
-                    {
-                        // WE might be able to get away with more changes here to suppress layouts, but this is a start...
-                        if (parentGue.WidthUnits.GetDependencyType() != HierarchyDependencyType.DependsOnChildren &&
-                            parentGue.ChildrenLayout != ChildrenLayout.LeftToRightStack &&
-                            parentGue.ChildrenLayout != ChildrenLayout.TopToBottomStack)
-                        {
-                            skipLayout = true;
-                        }
-                    }
-
                     this.mContainedObjectAsIpso.X = mX;
                 }
                 if (!skipLayout)
@@ -1006,7 +990,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mY = value;
 
 
-                if (Parent as GraphicalUiElement == null && YUnits == GeneralUnitType.PixelsFromSmall && YOrigin == VerticalAlignment.Top)
+                if (Parent as GraphicalUiElement == null && YUnits == GeneralUnitType.PixelsFromSmall && YOrigin == VerticalAlignment.Top &&
+                    CanPlacePositionDirectly(XOrY.Y))
                 {
                     this.mContainedObjectAsIpso.Y = mY;
                 }
@@ -1019,6 +1004,27 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+
+    // Whether a top-left, PixelsFromSmall position can be copied straight to the renderable instead of
+    // running layout: true only when no parent logic (stacking, grid cells, content sizing, flip or
+    // rotation) would move it or depend on it.
+    bool CanPlacePositionDirectly(XOrY axis)
+    {
+        var effectiveParent = EffectiveParentGue;
+        if (effectiveParent == null)
+        {
+            return true;
+        }
+        if (effectiveParent.ChildrenLayout != ChildrenLayout.Regular ||
+            effectiveParent.GetAbsoluteRotation() != 0 ||
+            effectiveParent.GetAbsoluteFlipHorizontal())
+        {
+            return false;
+        }
+        var parentUnits = axis == XOrY.X ? effectiveParent.WidthUnits : effectiveParent.HeightUnits;
+        return parentUnits.GetDependencyType() != HierarchyDependencyType.DependsOnChildren &&
+            parentUnits != DimensionUnitType.RelativeToMaxParentOrChildren;
+    }
 
     float? _maxWidth;
     public float? MaxWidth
