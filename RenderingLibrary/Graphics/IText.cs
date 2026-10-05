@@ -13,6 +13,13 @@ namespace RenderingLibrary.Graphics
 
         void UpdatePreRenderDimensions();
 
+        /// <summary>
+        /// The distance from the baseline to the bottom of the line, in unscaled pixels. Every
+        /// implementation must return it without <see cref="FontScale"/> applied, even when its own
+        /// text measurement already includes the scale. Layout multiplies it by <see cref="FontScale"/>
+        /// wherever it positions against the baseline (the TextBaseline origin, PixelsFromBaseline
+        /// children, and content sizing).
+        /// </summary>
         float DescenderHeight { get; }
         float FontScale { get; }
 

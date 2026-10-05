@@ -654,6 +654,7 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
+    /// <inheritdoc/>
     public float DescenderHeight => _descenderHeight;
 
     public float FontScale { get; set; } = 1;

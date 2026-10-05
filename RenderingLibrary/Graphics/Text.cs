@@ -813,9 +813,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
-    /// <summary>
-    /// DescenderHeight in pixels as defined by the BitmapFont, ignoring FontScale.
-    /// </summary>
+    /// <inheritdoc/>
+    /// <remarks>Read from the BitmapFont.</remarks>
     public float DescenderHeight => BitmapFont?.DescenderHeight ?? 0;
 
     /// <summary>

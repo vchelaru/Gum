@@ -303,7 +303,7 @@ public class LayoutRenderableInterfaceTests : BaseTestClass
         text.AbsoluteTop.ShouldBe(70);
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5771")]
+    [Fact]
     public void PixelsFromBaselineChild_ShouldSitOnTextBaseline_WhenFontScaleIsNotOne()
     {
         ContainerRuntime parent = CreateContainer(400, 400);
