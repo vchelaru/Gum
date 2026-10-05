@@ -87,47 +87,71 @@ public class FontReferenceCollector
                 // Resolve variable references so font properties set via references
                 // (e.g. "FontSize = HeaderText.FontSize") are baked into the state before
                 // we read them. In the tool this happens on every edit, but in headless
-                // paths the references may not have been applied yet.
-                element.ApplyVariableReferences(state);
+                // paths the references may not have been applied yet. Collection is a read
+                // (an error check runs it on every selection), so the applied values are
+                // rolled back once this state is collected (#5736).
+                List<VariableSave> originalVariables = state.Variables.ToList();
+                List<(object? Value, bool SetsValue)> originalValues =
+                    originalVariables.Select(v => (v.Value, v.SetsValue)).ToList();
 
-                // A non-default state that sets nothing for a given owner resolves that owner's
-                // font properties identically to the default state, which is always collected -
-                // so it can only produce an already-deduplicated entry. Skipping those pairs is
-                // what keeps collection from costing (states x instances) recursive lookups on a
-                // project whose category states mostly touch one instance each.
-                bool isDefaultState = state == element.DefaultState;
-
-                if (isDefaultState || StateSetsAnythingFor(state, ownerName: null))
+                try
                 {
-                    foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, fontRanges, spacingHorizontal, spacingVertical))
-                    {
-                        bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
-                    }
+                    element.ApplyVariableReferences(state, notifyChanges: false);
+                    CollectForState(element, state, bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
                 }
-
-                foreach (InstanceSave instance in element.Instances)
+                finally
                 {
-                    if (!isDefaultState && !StateSetsAnythingFor(state, instance.Name))
+                    state.Variables.Clear();
+                    state.Variables.AddRange(originalVariables);
+                    for (int i = 0; i < originalVariables.Count; i++)
                     {
-                        continue;
+                        originalVariables[i].Value = originalValues[i].Value;
+                        originalVariables[i].SetsValue = originalValues[i].SetsValue;
                     }
-
-                    foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, fontRanges, spacingHorizontal, spacingVertical))
-                    {
-                        bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
-                    }
-
-                    // Direct read on the instance only finds font properties set on this element
-                    // (e.g., "MyComponentInstance.Font"). For component instances, font properties
-                    // live on inner Text instances and may be partially exposed. Use
-                    // RecursiveVariableFinder to resolve through the component hierarchy.
-                    CollectFontsFromNestedTextInstances(element, state, instance,
-                        bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
                 }
             }
         }
 
         return bitmapFonts;
+    }
+
+    private void CollectForState(ElementSave element, StateSave state, Dictionary<string, BmfcSave> bitmapFonts,
+        string fontRanges, int spacingHorizontal, int spacingVertical)
+    {
+        // A non-default state that sets nothing for a given owner resolves that owner's
+        // font properties identically to the default state, which is always collected -
+        // so it can only produce an already-deduplicated entry. Skipping those pairs is
+        // what keeps collection from costing (states x instances) recursive lookups on a
+        // project whose category states mostly touch one instance each.
+        bool isDefaultState = state == element.DefaultState;
+
+        if (isDefaultState || StateSetsAnythingFor(state, ownerName: null))
+        {
+            foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, fontRanges, spacingHorizontal, spacingVertical))
+            {
+                bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
+            }
+        }
+
+        foreach (InstanceSave instance in element.Instances)
+        {
+            if (!isDefaultState && !StateSetsAnythingFor(state, instance.Name))
+            {
+                continue;
+            }
+
+            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, fontRanges, spacingHorizontal, spacingVertical))
+            {
+                bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
+            }
+
+            // Direct read on the instance only finds font properties set on this element
+            // (e.g., "MyComponentInstance.Font"). For component instances, font properties
+            // live on inner Text instances and may be partially exposed. Use
+            // RecursiveVariableFinder to resolve through the component hierarchy.
+            CollectFontsFromNestedTextInstances(element, state, instance,
+                bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
+        }
     }
 
     /// <summary>
