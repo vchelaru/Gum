@@ -15,56 +15,44 @@ This tutorial covers:
 This tutorial presents the minimum amount of code necessary to work with Gum. You may need to adapt the code to fit in your game project.
 
 {% hint style="info" %}
-This tutorial is written for MonoGame, KNI, and FNA. If you are using Unity, the `.csproj` and `Game` class steps do not apply. Follow the [Unity setup page](../../setup/adding-initializing-gum/unity.md) instead, including its **Loading a Gum Project** section, then return to the [code-only tutorial](../code-only-gum-forms-tutorial/README.md) for working with controls in code.
+This tutorial is written for MonoGame, KNI, and FNA. If you are using Unity, the `.csproj` and `Game` class steps do not apply. Follow the [Unity setup page](../../setup/adding-initializing-gum/unity.md) instead, including its **Loading a Gum Project** section, then return to the [code-only tutorial](../code-only-gum-forms-tutorial/) for working with controls in code.
 {% endhint %}
 
 ## Adding Gum NuGet Packages
 
-Before writing any code, we must add the Gum NuGet package. Add the `Gum.MonoGame` package to your game. For more information see the [Setup page](../../setup/adding-initializing-gum/monogame-kni-fna/README.md).
+Before writing any code, we must add the Gum NuGet/UPM package. Add the packages to your game according to your project type. For setup instructions, see [Adding/Initializing Gum](../../setup/adding-initializing-gum/).
 
-Once you are finished, your game project should reference the `Gum.MonoGame` project.
+Once you are finished, your game project should reference the appropriate NuGet/UPM packages.
 
-<figure><img src="../../../../.gitbook/assets/NuGetGum.png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+## Deciding on the Location of Your Gum Project
+
+Before we create a Gum project, we need to decide where the project should be saved. The location depends on the runtime or game engine you are using. For example, MonoGame, KNI, and FNA projects usually save it inside the `Content` folder, while raylib projects use a `resources` folder. See [Loading a Gum Project](../../setup/loading-a-gum-project-.gumx.md) for the recommended location for each platform.
+
+Whichever location you choose, create a new empty folder for the project, such as `GumProject`. Gum creates many files, so keeping them in a dedicated folder keeps them separate from your other content.
 
 ## Creating a new Gum Project
 
 Next we'll create a project in the Gum UI tool. If you have not yet run the Gum tool, you can get setup instructions in the Gum [Setup page](../../../../gum-tool/setup/).
 
-Once you have the tool downloaded, run it. You should have an empty project.
+Once you have the tool downloaded, run it. You should have an empty project. If this is the first time you are running Gum, you will be prompted to save a Gum project. If you have run Gum before, you will need to select File->New to bring up the new project options.
 
-<figure><img src="../../../../.gitbook/assets/image (176).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+Later tutorials reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**. Don't worry, you can delete this screen later as you develop your game.
 
-We need to save our Gum project in the Content folder of our game. Gum projects include many files. it's best to keep a Gum project and all of its files in a dedicated folder.
+<figure><img src="../../../../.gitbook/assets/05_06_09_54.png" alt=""><figcaption><p>New Project Window</p></figcaption></figure>
 
-Add a new folder to your Game's Content folder which will contain the Gum project, such as GumProject.
+Leave the defaults, and click the OK button. These defaults add the Forms controls - the common controls that most projects need like Buttons and TextBoxes.
+
+After you click OK, Gum asks where you would like to save your proejct. The project should be saved in the location decided earlier. Make sure to create a new folder for your Gum project, otherwise Gum's files will mix with other files in your content folder, making management and portability more difficult. For example, if you are using MonoGame, you may want to save your project in a subfolder of your game's Content folder.
 
 <figure><img src="../../../../.gitbook/assets/image (177).png" alt=""><figcaption><p>GumProject folder in Visual Studio</p></figcaption></figure>
 
-In the Gum tool click File -> Save Project.
-
-<figure><img src="../../../../.gitbook/assets/image (178).png" alt=""><figcaption><p>File -> Save project menu item</p></figcaption></figure>
-
-Select the GumProject folder created earlier as the target location. Usually the save location is an empty folder inside your game's Content folder. Give your Gum project a name such as GumProject.
+Give your Gum project a name such as GumProject.
 
 <figure><img src="../../../../.gitbook/assets/image (179).png" alt=""><figcaption><p>Save GumProject in the newly-created GumProject folder</p></figcaption></figure>
 
 After your project is saved it should appear in Visual Studio.
 
 <figure><img src="../../../../.gitbook/assets/image (180).png" alt=""><figcaption><p>Gum project in Visual Studio</p></figcaption></figure>
-
-Next, add default Forms components to the Gum project. Forms components are premade components for standard UI elements such as Button, TextBox, and ListBox. We'll use these components in later tutorials.
-
-To add Gum Forms components in Gum, select **Content** -> **Add Forms Components**.
-
-<figure><img src="../../../../.gitbook/assets/AddForms.png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
-
-Later tutorials will reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**. Don't worry, you can delete this screen later as you develop your game.
-
-<figure><img src="../../../../.gitbook/assets/02_06 52 11.png" alt=""><figcaption><p>Include DemoScreenGum</p></figcaption></figure>
-
-If asked, click **Yes** when asked about overwriting the default standards.
-
-<figure><img src="../../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Click, Yes to modify standards with the default Forms styling</p></figcaption></figure>
 
 Your project now includes Forms components.
 
