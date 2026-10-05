@@ -3534,7 +3534,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
+            var units = mYUnits;
             float positionValue = mY;
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
+            if (units == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
+            {
+                // Inverted Y positions upward, so both edges are measured from the negated value.
+                positionValue = -mY;
+            }
 
             // This GUE hasn't been set yet so it can't give
             // valid widths/heights
@@ -3543,14 +3551,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 return 0;
             }
             float smallEdge = positionValue;
-
-            var units = mYUnits;
-#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
-            if (units == GeneralUnitType.PixelsFromMiddleInverted)
-#pragma warning restore CS0618
-            {
-                smallEdge *= -1;
-            }
 
             if (mYOrigin == VerticalAlignment.Center)
             {
