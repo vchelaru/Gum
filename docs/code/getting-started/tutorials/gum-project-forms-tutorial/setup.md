@@ -14,6 +14,10 @@ This tutorial covers:
 
 This tutorial presents the minimum amount of code necessary to work with Gum. You may need to adapt the code to fit in your game project.
 
+{% hint style="info" %}
+This tutorial is written for MonoGame, KNI, and FNA. If you are using Unity, the `.csproj` and `Game` class steps do not apply. Follow the [Unity setup page](../../setup/adding-initializing-gum/unity.md) instead, including its **Loading a Gum Project** section, then return to the [code-only tutorial](../code-only-gum-forms-tutorial/README.md) for working with controls in code.
+{% endhint %}
+
 ## Adding Gum NuGet Packages
 
 Before writing any code, we must add the Gum NuGet package. Add the `Gum.MonoGame` package to your game. For more information see the [Setup page](../../setup/adding-initializing-gum/monogame-kni-fna/README.md).

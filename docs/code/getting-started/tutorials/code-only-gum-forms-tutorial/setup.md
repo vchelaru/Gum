@@ -10,7 +10,7 @@ This tutorial uses Gum's default visuals to keep the dependency footprint minima
 
 ## Introduction
 
-This tutorial walks you through turning an empty MonoGame, Raylib, or Silk.NET project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.
+This tutorial walks you through turning an empty MonoGame, Raylib, Silk.NET, or Unity project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.
 
 This tutorial covers:
 
@@ -18,7 +18,7 @@ This tutorial covers:
 * Adding the code to initialize, update, and draw Gum
 * Adding your first Gum control (Button)
 
-Everything after you have a root container is identical across MonoGame, Raylib, and Silk.NET. The only part that differs is the host application skeleton on this Setup page — once Gum is initialized, the rest of the tutorial series is fully shared.
+Everything after you have a root container is identical across MonoGame, Raylib, Silk.NET, and Unity. The only part that differs is the host application skeleton on this Setup page. Once Gum is initialized, the rest of the tutorial series is fully shared.
 
 ## Adding Gum NuGet Packages
 
@@ -64,11 +64,19 @@ Or add through the command line:
 dotnet add package Gum.SilkNet
 ```
 {% endtab %}
+
+{% tab title="Unity" %}
+Install the SkiaGameRendering and Gum packages through the Unity Package Manager. Gum requires Unity 6 or newer. For the full steps see the [Unity setup page](../../setup/adding-initializing-gum/unity.md).
+
+{% hint style="warning" %}
+The Unity package is experimental. It supports Windows x64 and macOS.
+{% endhint %}
+{% endtab %}
 {% endtabs %}
 
 ## Adding Gum to Your Game
 
-Gum requires a few lines of code to get started. The host application skeleton differs by platform — MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, and Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame.
+Gum requires a few lines of code to get started. The host application skeleton differs by platform: MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair, and Unity uses a `MonoBehaviour` on a GameObject. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame. Unity is the exception: the `GumRenderer` and `GumInput` components initialize, update, and draw Gum for you.
 
 A simplified host with the required calls would look like the following code:
 
@@ -219,6 +227,24 @@ public class Program
 }
 ```
 {% endtab %}
+
+{% tab title="Unity" %}
+In your scene, create an empty GameObject and add the `GumRenderer` and `GumInput` components to it. `GumRenderer` initializes Gum in `Awake` and `GumInput` passes Unity's input to Gum, so a Unity script only creates controls. Add a script like the following to the same GameObject:
+
+```csharp
+using Gum.Forms.Controls;
+using UnityEngine;
+
+public class GumExample : MonoBehaviour
+{
+    void Start()
+    {
+        var mainPanel = new StackPanel();
+        mainPanel.AddToRoot();
+    }
+}
+```
+{% endtab %}
 {% endtabs %}
 
 The code above includes the following sections:
@@ -235,13 +261,13 @@ mainPanel.AddToRoot();
 
 * Draw - this draws all Gum objects to the screen. This does not yet perform any drawing since `StackPanels` are invisible, but we'll be adding controls later in this tutorial.
 
-We can run our project to see a blank screen filled with the clear color.
+We can run our project to see a blank screen filled with the clear color. In Unity, the scene shows as usual, since Gum draws over it.
 
 <figure><img src="../../../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>Empty project</p></figcaption></figure>
 
 ### Adding Controls
 
-Now that we have Gum running, we can add controls to our `StackPanel` (`mainPanel`). The following code adds a `Button` which responds to being clicked by modifying its `Text` property. Add it right after `mainPanel` is created:
+Now that we have Gum running, we can add controls to our `StackPanel` (`mainPanel`). The following code adds a `Button` which responds to being clicked by modifying its `Text` property. Add it right after `mainPanel` is created (in Unity, inside `Start`):
 
 ```csharp
 // Initialize
