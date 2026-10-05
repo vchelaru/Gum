@@ -45,7 +45,7 @@ Once installed, invoke it as `gumcli` from any terminal.
 `gumcli` writes machine-readable command output (JSON, file paths, summaries) to **stdout**, and informational chrome (the version banner, progress messages, error details) to **stderr**. This split means automation can consume stdout directly without filtering:
 
 ```
-gumcli check MyProject/MyProject.gumx --json | jq .
+gumcli check MyProject/MyProject.gumj --json | jq .
 ```
 
 When debugging, capture both streams with `2>&1`.

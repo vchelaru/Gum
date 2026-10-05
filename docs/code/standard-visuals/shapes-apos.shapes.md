@@ -461,6 +461,6 @@ For information on using these shapes in the Gum tool, see the [Arc](../../gum-t
 The MonoGame and KNI runtimes only supports the shapes listed above. Adding other Skia instances, such as SVG or Lottie, will result in compile time or runtime errors.
 {% endhint %}
 
-Screens and components containing shapes mentioned above can be loaded with no code gen, by reference code gen, or full code gen (no .gumx loaded at runtime).
+Screens and components containing shapes mentioned above can be loaded with no code gen, by reference code gen, or full code gen (no .gumj loaded at runtime).
 
 <figure><img src="../../.gitbook/assets/06_07 20 36.png" alt=""><figcaption><p>Shapes in the Gum tool</p></figcaption></figure>

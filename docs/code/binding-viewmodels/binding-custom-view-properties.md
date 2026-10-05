@@ -77,7 +77,7 @@ class ExampleViewModel : ViewModel
 protected override void Initialize()
 {
     // either one of these:
-    //GumUI.Initialize(this, "GumProject/GumProject.gumx");
+    //GumUI.Initialize(this, "GumProject/GumProject.gumj");
     GumUI.Initialize(this);
 
     ButtonWithSubtext button = new ();

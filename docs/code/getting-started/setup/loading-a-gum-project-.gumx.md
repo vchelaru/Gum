@@ -1,10 +1,10 @@
-# Loading a Gum Project (.gumx)
+# Loading a Gum Project (.gumj/.gumx)
 
 ## Introduction
 
 Gum projects can be loaded in a game project. Gum projects are made up of multiple files including:
 
-* .gumx - the main Gum project
+* .gumj - the main Gum project
 * .gusx - Gum screen files
 * .gucx - Gum component files
 * .gutx - Gum standard element files
@@ -12,7 +12,7 @@ Gum projects can be loaded in a game project. Gum projects are made up of multip
 * .fnt - font files
 
 {% hint style="info" %}
-You are not required to use the Gum tool or .gumx projects - you are free to do everything in code if you prefer. Of course using the Gum tool can make it much easier to iterate quickly and experiment.
+You are not required to use the Gum tool or .gumj projects - you are free to do everything in code if you prefer. Of course using the Gum tool can make it much easier to iterate quickly and experiment.
 {% endhint %}
 
 ## Creating a Gum Project
@@ -54,7 +54,7 @@ It's best to put your Gum project in a folder that is not shared with any other 
 To add the Gum files to your csproj:
 
 1. Open your .csproj in a text editor
-2. Add a line to copy all files in the Gum project folder including the .gumx file itself. For example, your .csproj might look this (see tabs below)
+2. Add a line to copy all files in the Gum project folder including the .gumj file itself. For example, your .csproj might look this (see tabs below)
 
 {% tabs %}
 {% tab title="MonoGame/KNI/FNA Desktop" %}
@@ -113,7 +113,7 @@ If you keep your Gum project outside `wwwroot` and want to include it via a wild
 ```
 
 {% hint style="warning" %}
-The Gum project files must end up under `wwwroot` in the published output. Files placed anywhere else are not served by the WebAssembly host and `GumService.Default.Initialize` will fail to load the `.gumx`.
+The Gum project files must end up under `wwwroot` in the published output. Files placed anywhere else are not served by the WebAssembly host and `GumService.Default.Initialize` will fail to load the `.gumj`.
 {% endhint %}
 {% endtab %}
 
@@ -126,7 +126,7 @@ For more information about wildcard support in .csproj files, see this page on h
 
 [https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards](https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards)
 
-### Sharing a .gumx File
+### Sharing a .gumj File
 
 If your game targets multiple platforms, you may have multiple .csproj files. A single .csproj file can be linked by multiple projects. One way to achieve this is to create a linked wildcard include. For example, Gum files which are relative to a DesktopGL project can be included in an Android project using the following item in a .csproj file:
 
@@ -153,7 +153,7 @@ protected override void Initialize()
 {
     GumUI.Initialize(
         this, 
-        "GumProject/GumProject.gumx");
+        "GumProject/GumProject.gumj");
 
     // This assumes that your project has at least 1 screen
     if(ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
@@ -170,18 +170,18 @@ protected override void Initialize()
 }
 ```
 
-By default the Gum path is relative to your game's Content folder. On KNI BlazorGL (and other WebAssembly hosts) this resolves under `wwwroot/Content`, so the same `"GumProject/GumProject.gumx"` value works on web as long as the project lives at `wwwroot/Content/GumProject/GumProject.gumx`.
+By default the Gum path is relative to your game's Content folder. On KNI BlazorGL (and other WebAssembly hosts) this resolves under `wwwroot/Content`, so the same `"GumProject/GumProject.gumj"` value works on web as long as the project lives at `wwwroot/Content/GumProject/GumProject.gumj`.
 
 {% hint style="info" %}
-On web, the browser can serve a cached copy of your `.gumx` project, so changes may not appear after a rebuild. If your content looks stale, see [Clearing Browser Cache (Web)](../../files-and-fonts/troubleshooting.md#clearing-browser-cache-web).
+On web, the browser can serve a cached copy of your `.gumj` project, so changes may not appear after a rebuild. If your content looks stale, see [Clearing Browser Cache (Web)](../../files-and-fonts/troubleshooting.md#clearing-browser-cache-web).
 {% endhint %}
 
-If your Gum project is not part of the the folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
+If your Gum project is not part of the the folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumj`:
 
 ```csharp
 // Initialize
 GumUI.Initialize(
-    this, "../GumProject/GumProject.gumx");
+    this, "../GumProject/GumProject.gumj");
 ```
 {% endtab %}
 
@@ -193,7 +193,7 @@ public static void Main()
 {
     // Additional code needed to initialize your raylib project goes here
     GumUI.Initialize(
-        "resources/GumProject/raylibGumProject.gumx");
+        "resources/GumProject/raylibGumProject.gumj");
     
     // This assumes that your project has at least 1 screen
     if(ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
@@ -214,7 +214,7 @@ public static void Main()
 {% tab title="Silk.NET" %}
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
 
 // This assumes that your project has at least 1 screen
 if (ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
@@ -228,15 +228,15 @@ var screen = ObjectFinder.Self.GumProjectSave.Screens[0]
 screen.AddToRoot();
 ```
 
-See the [Silk.NET setup page](adding-initializing-gum/silk.net.md) for where `canvas` and `inputContext` come from — window/GL/Skia surface setup is elided here since it's the same regardless of whether you load a `.gumx` project.
+See the [Silk.NET setup page](adding-initializing-gum/silk.net.md) for where `canvas` and `inputContext` come from — window/GL/Skia surface setup is elided here since it's the same regardless of whether you load a `.gumj` project.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
-.NET MAUI projects do not currently support loading .gumx projects.
+.NET MAUI projects do not currently support loading .gumj projects.
 {% endtab %}
 {% endtabs %}
 
-The code above loads the Gum project using the desired file path, such as `"GumProject/GumProject.gumx"`.
+The code above loads the Gum project using the desired file path, such as `"GumProject/GumProject.gumj"`.
 
 ## ToGraphicalUiElement
 

@@ -6,7 +6,7 @@ Gum provides a GumBatch object which works similar to SpriteBatch. It can be use
 
 This page assumes you have an existing project (empty or otherwise), and that you have already added Gum. For information on getting your project set up, see the [Adding/Initializing Gum section](adding-initializing-gum/).
 
-Usage of GumBatch is completely optional, and it is only needed if you want to draw Gum objects at a particular point in your drawing code. If you are using Gum to load .gumx projects, or if you would like Gum to handle all UI or HUD rendering, then you do not need to use GumBatch.
+Usage of GumBatch is completely optional, and it is only needed if you want to draw Gum objects at a particular point in your drawing code. If you are using Gum to load .gumj projects, or if you would like Gum to handle all UI or HUD rendering, then you do not need to use GumBatch.
 
 ### GumBatch Quick Start
 

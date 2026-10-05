@@ -66,7 +66,7 @@ You can load Screen1 by adding the following code to your Game class.
     {
         GumUI.Initialize(this,
             // This is relative to Content:
-            "GumProject/GumProject.gumx");
+            "GumProject/GumProject.gumj");
 
         var screen = new Screen1();
         screen.AddToRoot();
@@ -94,7 +94,7 @@ You can load Screen1 by adding the following code to your Game class.
     {
         GumUI.Initialize(this,
             // This is relative to Content:
-            "GumProject/GumProject.gumx");
+            "GumProject/GumProject.gumj");
 
 +       var screen = new Screen1();
 +       screen.AddToRoot();

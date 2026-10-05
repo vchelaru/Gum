@@ -41,7 +41,7 @@ dotnet run --project Tool/Gum.Avalonia
 To open a project on startup, add its path after `--`:
 
 ```sh
-dotnet run --project Tool/Gum.Avalonia -- path/to/MyProject.gumx
+dotnet run --project Tool/Gum.Avalonia -- path/to/MyProject.gumj
 ```
 
 ### Building Plugins
