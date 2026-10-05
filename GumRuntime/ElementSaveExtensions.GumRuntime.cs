@@ -1163,6 +1163,8 @@ namespace GumRuntime
         /// (<paramref name="ownerInstanceName"/> null) the owner is the element itself, so the <c>@</c> is
         /// dropped. String and char literals are left untouched, as is a verbatim string opener (<c>@"</c>).
         /// </summary>
+        /// <param name="expression">The reference expression, such as <c>@Index * 2</c>.</param>
+        /// <param name="ownerInstanceName">The instance that owns the row; null on an element-level row.</param>
         /// <param name="instanceNames">Names of the element's instances. Any that is not a valid C#
         /// identifier (such as <c>gum-logo-256</c>) is encoded wherever it appears at a token boundary
         /// followed by <c>.</c>, so the expression parses as a member access instead of a subtraction.
