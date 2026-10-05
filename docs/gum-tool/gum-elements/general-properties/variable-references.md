@@ -113,18 +113,18 @@ Y = OtherInstance.X
 Width = Components/OtherComponent.Height
 ```
 
-Instances can reference their own variables, but these must be qualified. For example, ColoredRectangleInstance can assign its Width to equal its own Height. Note that Gum will extend shorthand code as shown in a later section:
+Instances can reference their own variables, but these must be qualified. For example, ColoredRectangleInstance can assign its Width to equal its own Height. The [`@` prefix](#referencing-the-owning-instance-with) is a shorter way to write the same thing:
 
 ```csharp
 Width = ColoredRectangleInstance.Height
+// is equivalent to:
+Width = @Height
 ```
 
 <a id="unqualified-instance-warning"></a>
 
 {% hint style="warning" %}
-Skipping the qualification isn't an error, it's a different reference. `X = Height` on an instance resolves `Height` against the **containing component**, not the instance. To reference the instance's own `Height`, qualify it: `X = ColoredRectangleInstance.Height`.
-
-The Variable References grid protects you from this by auto-qualifying bare names to the selected instance when you tab out, so this mix-up mostly only happens in hand-edited or generated project XML.
+A name with no qualification always means the **containing component or screen**, including on an instance. `X = Height` on an instance reads `Height` from the containing component, not from the instance. Gum does not change what you type. To reference the instance's own `Height`, qualify it (`X = ColoredRectangleInstance.Height`) or use `@Height`.
 {% endhint %}
 
 Variables can be assigned to constant values, essentially locking the value:
@@ -339,19 +339,19 @@ Y = Components/SameComponent.InstanceInComponent.Y
 Y = InstanceInComponent.Y
 ```
 
-Instances must qualify their own variables. See [the warning above](#unqualified-instance-warning) for what an unqualified name means instead:
+Instances must qualify their own variables, or use `@`. See [the warning above](#unqualified-instance-warning) for what an unqualified name means instead:
 
 ```csharp
 X = SameInstance.Y
+// or:
+X = @Y
 ```
 
-Gum will automatically qualify assignments when an instance is selected. In other words, `X = Y` gets qualified to `X = SameInstance.Y` if SameInstance is the owner of the variable. This automatic qualification makes it easy for an instance to reference its own values. The following animation shows how the `Y` and `Height` values become qualified to the instance after tabbing out of the Variable Reference text box.
+An instance row can read a variable of its containing component without any qualification, such as a custom variable:
 
-<figure><img src="../../../.gitbook/assets/01_11 35 26.gif" alt=""><figcaption><p>Tabbing automatically qualifies variables to the selected instance</p></figcaption></figure>
-
-Complex assignments are automatically qualified as well.
-
-<figure><img src="../../../.gitbook/assets/01_11 41 15.gif" alt=""><figcaption><p>Y, Width, and Height are automatically qualified to the current instance</p></figcaption></figure>
+```csharp
+X = Sin(WaveValue)
+```
 
 The left side of an assignment can be omitted if referencing the same variable on another instance or component. For example, by typing `OtherInstance.YUnits` , Gum automatically expands the reference to `YUnits = OtherInstance.YUnits` .
 
@@ -375,7 +375,7 @@ If this row is on `Item1`, `@Index` reads `Item1.Index`. After pasting `Item1` a
 Text = @Child.Text
 ```
 
-Gum does not auto-qualify names that start with `@`. On a component or screen row, `@` refers to the element itself, so `Width = @Height` is the same as `Width = Height`.
+On a component or screen row, `@` refers to the element itself, so `Width = @Height` is the same as `Width = Height`.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
