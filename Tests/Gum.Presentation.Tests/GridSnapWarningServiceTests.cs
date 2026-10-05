@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Gum.Converters;
+using Gum.DataTypes;
+using Gum.ToolStates;
 using Gum.Services;
 using Gum.Wireframe;
 using Moq;
@@ -16,7 +18,7 @@ public class GridSnapWarningServiceTests : BaseTestClass
         var selectionManager = new Mock<ISelectionManager>();
         selectionManager.Setup(s => s.SnapToGrid).Returns(false);
         selectionManager.Setup(s => s.HasSelection).Returns(true);
-        var service = new GridSnapWarningService(selectionManager.Object);
+        var service = new GridSnapWarningService(selectionManager.Object, new Mock<ISelectedState>().Object);
 
         var info = service.GetInfo();
 
@@ -29,7 +31,7 @@ public class GridSnapWarningServiceTests : BaseTestClass
         var selectionManager = new Mock<ISelectionManager>();
         selectionManager.Setup(s => s.SnapToGrid).Returns(true);
         selectionManager.Setup(s => s.HasSelection).Returns(false);
-        var service = new GridSnapWarningService(selectionManager.Object);
+        var service = new GridSnapWarningService(selectionManager.Object, new Mock<ISelectedState>().Object);
 
         var info = service.GetInfo();
 
@@ -51,7 +53,7 @@ public class GridSnapWarningServiceTests : BaseTestClass
         selectionManager.Setup(s => s.SnapToGrid).Returns(true);
         selectionManager.Setup(s => s.HasSelection).Returns(true);
         selectionManager.Setup(s => s.SelectedGues).Returns(new List<GraphicalUiElement> { gue });
-        var service = new GridSnapWarningService(selectionManager.Object);
+        var service = new GridSnapWarningService(selectionManager.Object, new Mock<ISelectedState>().Object);
 
         var info = service.GetInfo();
 
@@ -73,12 +75,58 @@ public class GridSnapWarningServiceTests : BaseTestClass
         selectionManager.Setup(s => s.SnapToGrid).Returns(true);
         selectionManager.Setup(s => s.HasSelection).Returns(true);
         selectionManager.Setup(s => s.SelectedGues).Returns(new List<GraphicalUiElement> { gue });
-        var service = new GridSnapWarningService(selectionManager.Object);
+        var service = new GridSnapWarningService(selectionManager.Object, new Mock<ISelectedState>().Object);
 
         var info = service.GetInfo();
 
         info.HasWarning.ShouldBeTrue();
         info.WarningText.ShouldBe("Snap to Grid: MySprite uses non-pixel units and won't fully snap");
+    }
+
+    [Fact]
+    public void GetInfo_ListsOnlyNonPixelInstancesAsOffenders_WhenMultipleAreSelected()
+    {
+        InstanceSave pixelInstance = new() { Name = "PixelObject" };
+        InstanceSave percentInstance = new() { Name = "PercentageObject" };
+        GraphicalUiElement pixelGue = new(new InvisibleRenderable())
+        {
+            Name = "PixelObject",
+            Tag = pixelInstance,
+            XUnits = GeneralUnitType.PixelsFromSmall,
+            YUnits = GeneralUnitType.PixelsFromSmall,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute
+        };
+        GraphicalUiElement percentageGue = new(new InvisibleRenderable())
+        {
+            Name = "PercentageObject",
+            Tag = percentInstance,
+            XUnits = GeneralUnitType.Percentage,
+            YUnits = GeneralUnitType.PixelsFromSmall,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute
+        };
+        var selectionManager = new Mock<ISelectionManager>();
+        selectionManager.Setup(s => s.SnapToGrid).Returns(true);
+        selectionManager.Setup(s => s.HasSelection).Returns(true);
+        selectionManager.Setup(s => s.SelectedGues).Returns(new List<GraphicalUiElement> { pixelGue, percentageGue });
+        var service = new GridSnapWarningService(selectionManager.Object, new Mock<ISelectedState>().Object);
+
+        var info = service.GetInfo();
+
+        info.Offenders.ShouldBe(new[] { percentInstance });
+    }
+
+    [Fact]
+    public void SelectOffender_SelectsOnlyThatInstance()
+    {
+        InstanceSave instance = new() { Name = "ContainerInstance" };
+        var selectedState = new Mock<ISelectedState>();
+        var service = new GridSnapWarningService(new Mock<ISelectionManager>().Object, selectedState.Object);
+
+        service.SelectOffender(instance);
+
+        selectedState.VerifySet(s => s.SelectedInstance = instance);
     }
 
     [Fact]
@@ -104,7 +152,7 @@ public class GridSnapWarningServiceTests : BaseTestClass
         selectionManager.Setup(s => s.SnapToGrid).Returns(true);
         selectionManager.Setup(s => s.HasSelection).Returns(true);
         selectionManager.Setup(s => s.SelectedGues).Returns(new List<GraphicalUiElement> { pixelGue, percentageGue });
-        var service = new GridSnapWarningService(selectionManager.Object);
+        var service = new GridSnapWarningService(selectionManager.Object, new Mock<ISelectedState>().Object);
 
         var info = service.GetInfo();
 

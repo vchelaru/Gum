@@ -45,15 +45,27 @@ public partial class EditorViewModel : ViewModel, IZoomController
     }
 
     /// <summary>
+    /// The selected instances that trigger the warning; the UI shows each as a link that selects it.
+    /// </summary>
+    public IReadOnlyList<InstanceSave> GridSnapWarningOffenders
+    {
+        get => Get<IReadOnlyList<InstanceSave>>() ?? [];
+        set => Set(value);
+    }
+
+    /// <summary>
     /// Recomputes <see cref="HasGridSnapWarning"/>/<see cref="GridSnapWarningText"/>. Call after
     /// selection changes, a variable is set, or Snap to Grid is toggled.
     /// </summary>
     public void RefreshGridSnapWarning()
     {
         var info = _gridSnapWarningService.GetInfo();
-        HasGridSnapWarning = info.HasWarning;
+        GridSnapWarningOffenders = info.Offenders;
         GridSnapWarningText = info.WarningText;
+        HasGridSnapWarning = info.HasWarning;
     }
+
+    public void SelectGridSnapOffender(InstanceSave instance) => _gridSnapWarningService.SelectOffender(instance);
 
     public bool SnapToGrid
     {

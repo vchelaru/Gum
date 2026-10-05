@@ -329,7 +329,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService, _backgroundManager, _editorRenderableFactory);
         _singlePixelTextureService = new SinglePixelTextureService();
         _fileDropTargetFilter = new FileDropTargetFilter();
-        _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
+        _gridSnapWarningService = new GridSnapWarningService(_selectionManager, _selectedState);
 
         IPreviewGumxProjectionService previewGumxProjectionService =
             new PreviewGumxProjectionService(new ConvertProjectToJsonService(fileWatchIgnoreList), new PathCaseSensitivity());

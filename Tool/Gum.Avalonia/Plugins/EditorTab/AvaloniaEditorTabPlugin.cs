@@ -179,14 +179,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
         Grid.SetRow(horizontalScrollBar, 1);
         canvasGrid.Children.Add(horizontalScrollBar);
 
-        TextBlock gridSnapWarning = new TextBlock
-        {
-            Background = Brushes.Orange,
-            Foreground = Brushes.Black,
-            Padding = new Thickness(6, 3),
-            [!TextBlock.TextProperty] = new Binding(nameof(EditorViewModel.GridSnapWarningText)),
-            [!Visual.IsVisibleProperty] = new Binding(nameof(EditorViewModel.HasGridSnapWarning)),
-        };
+        GridSnapWarningBar gridSnapWarning = new GridSnapWarningBar();
 
         DockPanel tab = new DockPanel { DataContext = editorViewModel };
         EditorToolbar toolbar = new EditorToolbar();
