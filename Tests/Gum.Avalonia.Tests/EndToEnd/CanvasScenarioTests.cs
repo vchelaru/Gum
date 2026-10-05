@@ -600,6 +600,30 @@ public class CanvasScenarioTests
         });
     }
 
+    [SkippableFact]
+    [Trait("Feature", "DRAG-013")]
+    public void TextureFileDrop_FileNameWithDotsAndSpaces_AddsASpriteWithAValidName()
+    {
+        OnCanvas(canvas =>
+        {
+            // macOS names screenshots like this; the dots used to end up in the instance name,
+            // which then broke every "Instance.Variable" lookup and threw mid-drop.
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            string texture = Path.Combine(canvas.Project.ProjectFolder, "Screenshot 2026-09-25 at 04.52.17.png");
+            File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), texture);
+
+            canvas.DropOnCanvas(canvas.WindowPointOf(60, 70), FileDrop(texture)).ShouldBe(DragDropEffects.Copy);
+
+            InstanceSave added = button.Instances.ShouldHaveSingleItem();
+            added.Name.ShouldBe("Screenshot_2026_09_25_at_04_52_17");
+            canvas.SavedValue(button, $"{added.Name}.SourceFile").ShouldBe("Screenshot 2026-09-25 at 04.52.17.png");
+            canvas.SavedValue(button, $"{added.Name}.X").ShouldBe(60f);
+
+            canvas.AssertOracles();
+        });
+    }
+
     // What the Standards palette puts in its drag (AvaloniaStandardsPalette).
     private static DataTransfer StandardChip(string typeName)
     {
