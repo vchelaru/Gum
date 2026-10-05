@@ -2189,8 +2189,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // changed for them.
             if (!gateClimbOnSizeChange)
             {
-                // GetIfShouldCallUpdateOnParent only returns true for a GraphicalUiElement parent.
-                var asGue = (GraphicalUiElement)this.Parent!;
+                // GetIfShouldCallUpdateOnParent only returns true when there is an effective parent.
+                var asGue = this.EffectiveParentGue!;
                 // Just climb up one and update from there
                 asGue.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1, gateClimbOnSizeChange: true);
                 ChildrenUpdatingParentLayoutCalls++;
@@ -2520,7 +2520,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (gateClimbOnSizeChange && updateParent && GetIfShouldCallUpdateOnParent()
             && (sizeOrPositionChanged || dependsOnMaxOfParentOrChildren))
         {
-            (this.Parent as GraphicalUiElement)?.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1, gateClimbOnSizeChange: true);
+            this.EffectiveParentGue?.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1, gateClimbOnSizeChange: true);
             ChildrenUpdatingParentLayoutCalls++;
         }
         if (this.mContainedObjectAsIpso != null)
@@ -2865,12 +2865,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                         var numberOfVisibleChildren = 0;
 
-                        if (_parent != null)
+                        var ratioSiblings = GetLayoutSiblings(out bool onlyParentless);
+
+                        if (ratioSiblings != null)
                         {
-                            for (int i = 0; i < _parent.Children.Count; i++)
+                            for (int i = 0; i < ratioSiblings.Count; i++)
                             {
-                                var child = _parent.Children[i];
-                                if (child != this && child is GraphicalUiElement gue && gue.Visible)
+                                var child = ratioSiblings[i];
+                                if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
                                 {
                                     if (gue.HeightUnits == DimensionUnitType.Absolute)
                                     {
@@ -2906,7 +2908,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             }
                         }
 
-                        if (_parent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+                        if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
                         {
                             var numberOfSpaces = numberOfVisibleChildren;
                             heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
@@ -2916,12 +2918,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         heightToSplit = System.Math.Max(0, heightToSplit);
 
                         float totalRatio = 0;
-                        if (_parent != null)
+                        if (ratioSiblings != null)
                         {
-                            for (int i = 0; i < _parent.Children.Count; i++)
+                            for (int i = 0; i < ratioSiblings.Count; i++)
                             {
-                                var child = _parent.Children[i];
-                                if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
+                                var child = ratioSiblings[i];
+                                if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
                                     totalRatio += System.Math.Max(0, gue.Height);
                                 }
@@ -3306,12 +3308,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                         var numberOfVisibleChildren = 0;
 
-                        if (_parent != null)
+                        var ratioSiblings = GetLayoutSiblings(out bool onlyParentless);
+
+                        if (ratioSiblings != null)
                         {
-                            for (int i = 0; i < _parent.Children.Count; i++)
+                            for (int i = 0; i < ratioSiblings.Count; i++)
                             {
-                                var child = _parent.Children[i];
-                                if (child != this && child is GraphicalUiElement gue && gue.Visible)
+                                var child = ratioSiblings[i];
+                                if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
                                 {
                                     if (gue.WidthUnits == DimensionUnitType.Absolute)
                                     {
@@ -3347,7 +3351,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             }
                         }
 
-                        if (_parent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+                        if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
                         {
                             var numberOfSpaces = numberOfVisibleChildren;
 
@@ -3358,12 +3362,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         widthToSplit = System.Math.Max(0, widthToSplit);
 
                         float totalRatio = 0;
-                        if (_parent != null)
+                        if (ratioSiblings != null)
                         {
-                            for (int i = 0; i < _parent.Children.Count; i++)
+                            for (int i = 0; i < ratioSiblings.Count; i++)
                             {
-                                var child = _parent.Children[i];
-                                if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
+                                var child = ratioSiblings[i];
+                                if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
                                     totalRatio += System.Math.Max(0, gue.Width);
                                 }
@@ -3940,6 +3944,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         if (this.mContainedObjectAsIpso == null)
         {
+            // Same ratio-first pass as the renderable branch below: Ratio children read their
+            // siblings' sizes, so size the siblings that must be measured first.
+            bool doesAnyChildUseRatio = false;
+            bool doesAnyChildNeedUpdateFirst = false;
+            for (int i = 0; i < mWhatThisContains.Count; i++)
+            {
+                var child = mWhatThisContains[i];
+                if (child.Parent == null || child.Parent == this)
+                {
+                    doesAnyChildUseRatio |= child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio;
+                    doesAnyChildNeedUpdateFirst |= DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits);
+                }
+            }
+            if (doesAnyChildUseRatio && doesAnyChildNeedUpdateFirst)
+            {
+                for (int i = 0; i < mWhatThisContains.Count; i++)
+                {
+                    var child = mWhatThisContains[i];
+                    if ((child.Parent == null || child.Parent == this) &&
+                        (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits)) &&
+                        CanDoFullUpdate(child.GetChildLayoutType(this), child))
+                    {
+                        child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                    }
+                }
+            }
+
             for (int i = 0; i < mWhatThisContains.Count; i++)
             {
                 var child = mWhatThisContains[i];
@@ -4938,24 +4969,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private bool GetIfParentHasRatioChildren()
     {
-        var effectiveParentGue = this.EffectiveParentGue;
-
-        if (effectiveParentGue?.Children != null)
+        // A renderable-less element's Children is an empty collection, so read the layout siblings.
+        var siblings = GetLayoutSiblings(out bool onlyParentless);
+        if (siblings != null)
         {
-            // do we care about situations with no parent?
-            foreach (var child in effectiveParentGue.Children)
+            for (int i = 0; i < siblings.Count; i++)
             {
-                if (child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio)
-                {
-                    return true;
-                }
-            }
-        }
-        else if (effectiveParentGue != null)
-        {
-            foreach (var child in effectiveParentGue.ContainedElements)
-            {
-                if (child.Parent == null && (child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio))
+                var sibling = siblings[i];
+                if (IsLayoutSibling(sibling, onlyParentless) &&
+                    (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio))
                 {
                     return true;
                 }
@@ -4980,54 +5002,56 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </remarks>
     bool GetIfShouldCallUpdateOnParent()
     {
-        var asGue = this.Parent as GraphicalUiElement;
+        // EffectiveParentGue: a child with no Parent is laid out by the element containing it, but
+        // only when that element has no renderable (it then walks its contained instances); an element
+        // with a renderable lays out only its Children.
+        var parentGue = this.EffectiveParentGue;
 
-        if (asGue != null)
-        {
-            var shouldUpdateParent =
-                // parent needs to be resized based on this position or size
-                asGue.GetIfDimensionsDependOnChildren() ||
-                // parent stacks its children, so siblings need to adjust their position based on this
-                asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
-
-            if (!shouldUpdateParent)
-            {
-                // if any siblings are ratio-based, then we need to
-                if (this.Parent == null)
-                {
-                    if(ElementGueContainingThis != null)
-                    {
-                        for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
-                        {
-                            var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
-                            if (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                else if (this.Parent is GraphicalUiElement parentGue && parentGue.Children != null)
-                {
-                    var siblings = parentGue.Children;
-                    for (int i = 0; i < siblings.Count; i++)
-                    {
-                        var siblingAsGraphicalUiElement = siblings[i];
-                        if (siblingAsGraphicalUiElement.WidthUnits == DimensionUnitType.Ratio || siblingAsGraphicalUiElement.HeightUnits == DimensionUnitType.Ratio)
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-            }
-            return shouldUpdateParent;
-        }
-        else
+        if (parentGue == null || (Parent == null && parentGue.mContainedObjectAsIpso != null))
         {
             return false;
         }
+
+        if (// parent needs to be resized based on this position or size
+            parentGue.GetIfDimensionsDependOnChildren() ||
+            // parent stacks its children, so siblings need to adjust their position based on this
+            parentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular)
+        {
+            return true;
+        }
+
+        // if any siblings are ratio-based, then they need to re-split the space
+        var siblings = GetLayoutSiblings(out bool onlyParentless);
+        if (siblings != null)
+        {
+            for (int i = 0; i < siblings.Count; i++)
+            {
+                var sibling = siblings[i];
+                if (IsLayoutSibling(sibling, onlyParentless) &&
+                    (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
+
+    // The elements this one is laid out among: its Parent's Children or, for a child with no Parent,
+    // the instances of the element containing it that also have no Parent (see IsLayoutSibling).
+    IList<GraphicalUiElement>? GetLayoutSiblings(out bool onlyParentless)
+    {
+        if (_parent != null)
+        {
+            onlyParentless = false;
+            return _parent.Children;
+        }
+        onlyParentless = true;
+        return ElementGueContainingThis?.mWhatThisContains;
+    }
+
+    static bool IsLayoutSibling(GraphicalUiElement candidate, bool onlyParentless) =>
+        !onlyParentless || candidate.Parent == null;
 
     private static bool GetIfOneDimensionCanChangeOtherDimension(GraphicalUiElement gue)
     {

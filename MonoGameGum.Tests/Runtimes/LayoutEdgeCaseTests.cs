@@ -299,7 +299,7 @@ public class LayoutEdgeCaseTests : BaseTestClass
         ratioChild.AbsoluteWidth.ShouldBe(0);
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5768")]
+    [Fact]
     public void Ratio_UnderRenderablelessParent_ShouldAccountForRelativeToChildrenSibling()
     {
         GraphicalUiElement screen = new GraphicalUiElement(null);
@@ -315,6 +315,87 @@ public class LayoutEdgeCaseTests : BaseTestClass
         screen.UpdateLayout();
 
         ratioChild.AbsoluteWidth.ShouldBe(700);
+    }
+
+    // Children of an element without a renderable (an old-style screen) have no Parent; they are
+    // held through ElementGueContainingThis and size against the canvas.
+    static ContainerRuntime AddParentlessChild(GraphicalUiElement container, float width, float height)
+    {
+        ContainerRuntime child = CreateContainer(width, height);
+        child.ElementGueContainingThis = container;
+        return child;
+    }
+
+    [Fact]
+    public void Ratio_UnderRenderablelessParent_ShouldSubtractAbsoluteSibling()
+    {
+        GraphicalUiElement screen = new GraphicalUiElement(null);
+        AddParentlessChild(screen, 100, 10);
+        ContainerRuntime ratioChild = AddParentlessChild(screen, 1, 10);
+        ratioChild.WidthUnits = DimensionUnitType.Ratio;
+
+        screen.UpdateLayout();
+
+        ratioChild.AbsoluteWidth.ShouldBe(GraphicalUiElement.CanvasWidth - 100);
+    }
+
+    [Fact]
+    public void Ratio_UnderRenderablelessParent_ShouldSplitBetweenRatioSiblings()
+    {
+        GraphicalUiElement screen = new GraphicalUiElement(null);
+        ContainerRuntime first = AddParentlessChild(screen, 1, 10);
+        first.WidthUnits = DimensionUnitType.Ratio;
+        ContainerRuntime second = AddParentlessChild(screen, 3, 10);
+        second.WidthUnits = DimensionUnitType.Ratio;
+
+        screen.UpdateLayout();
+
+        first.AbsoluteWidth.ShouldBe(GraphicalUiElement.CanvasWidth / 4);
+        second.AbsoluteWidth.ShouldBe(GraphicalUiElement.CanvasWidth * 3 / 4);
+    }
+
+    [Fact]
+    public void Ratio_UnderRenderablelessParent_ShouldUpdate_WhenSiblingWidthChanges()
+    {
+        GraphicalUiElement screen = new GraphicalUiElement(null);
+        ContainerRuntime absoluteChild = AddParentlessChild(screen, 100, 10);
+        ContainerRuntime ratioChild = AddParentlessChild(screen, 1, 10);
+        ratioChild.WidthUnits = DimensionUnitType.Ratio;
+        screen.UpdateLayout();
+
+        absoluteChild.Width = 300;
+
+        ratioChild.AbsoluteWidth.ShouldBe(GraphicalUiElement.CanvasWidth - 300);
+    }
+
+    [Fact]
+    public void Ratio_UnderRenderablelessStackingParent_ShouldSubtractStackSpacing()
+    {
+        GraphicalUiElement container = new GraphicalUiElement(null);
+        container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        container.StackSpacing = 10;
+        AddParentlessChild(container, 50, 100);
+        ContainerRuntime ratioChild = AddParentlessChild(container, 50, 1);
+        ratioChild.HeightUnits = DimensionUnitType.Ratio;
+
+        container.UpdateLayout();
+
+        ratioChild.AbsoluteHeight.ShouldBe(GraphicalUiElement.CanvasHeight - 100 - 10);
+    }
+
+    [Fact]
+    public void ParentlessChildOfStackingContainer_ShouldRestackSiblings_WhenItsHeightChanges()
+    {
+        GraphicalUiElement container = new GraphicalUiElement(null);
+        container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        ContainerRuntime first = AddParentlessChild(container, 50, 50);
+        ContainerRuntime second = AddParentlessChild(container, 50, 50);
+        container.UpdateLayout();
+        second.AbsoluteTop.ShouldBe(50);
+
+        first.Height = 80;
+
+        second.AbsoluteTop.ShouldBe(80);
     }
 
     #endregion
