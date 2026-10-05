@@ -146,7 +146,7 @@ Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expressi
 
 ```csharp
 // Initialize
-GumUI.Initialize("GumProject/GumProject.gumx");
+GumUI.Initialize("GumProject/GumProject.gumj");
 GumExpressionService.Initialize();
 ```
 

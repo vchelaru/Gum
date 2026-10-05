@@ -8,7 +8,7 @@ Creates a new Gum project. The path is optional — when omitted, a `GumProject`
 
 ## Options
 
-- `<path>` *(optional)* — Path for the new project. If no `.gumx` extension is given, creates `<path>/<name>.gumx` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumx`.
+- `<path>` *(optional)* — Path for the new project. Pass a `.gumj` (JSON) or `.gumx` (XML) extension to choose the format. If no extension is given, creates `<path>/<name>.gumj` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumj`.
 - `--template` / `-t` — Template to use. Default: `forms`.
 
 ## Templates
@@ -36,7 +36,7 @@ Creates a minimal project with only the standard elements:
 ```
 gumcli new
 gumcli new MyProject
-gumcli new path/to/MyProject.gumx
+gumcli new path/to/MyProject.gumj
 gumcli new MyProject --template forms
 gumcli new MyProject -t empty
 ```
@@ -44,10 +44,10 @@ gumcli new MyProject -t empty
 Output on success:
 
 ```
-Created project: /full/path/to/MyProject/MyProject.gumx
+Created project: /full/path/to/MyProject/MyProject.gumj
 ```
 
 ## Notes
 
-- Exits with code 2 if the project file already exists (including when invoked with no path and a `GumProject/GumProject.gumx` is already present in the current directory).
+- Exits with code 2 if the project file already exists (including when invoked with no path and a `GumProject/GumProject.gumj` is already present in the current directory).
 - Exits with code 2 if an unknown template name is given.

@@ -18,11 +18,11 @@ If a Sprite has an empty Source File or if it references a missing file, then th
 
 Source File can be set by typing a value or using the **...** button to browser for a file.
 
-All files are added as paths relative to the .gumx project.
+All files are added as paths relative to the .gumj project.
 
-<figure><img src="../../../.gitbook/assets/image (94).png" alt=""><figcaption><p>Sprite referencing UISpriteSheet.png located in the same folder as the .gumx file</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (94).png" alt=""><figcaption><p>Sprite referencing UISpriteSheet.png located in the same folder as the .gumj file</p></figcaption></figure>
 
-If a file is referenced outside of the .gumx folder, then Gum asks if you would like to copy the file or reference it outside of the current directory. Usually files should be copied to the project folder to keep the entire Gum project portable.
+If a file is referenced outside of the .gumj folder, then Gum asks if you would like to copy the file or reference it outside of the current directory. Usually files should be copied to the project folder to keep the entire Gum project portable.
 
 <figure><img src="../../../.gitbook/assets/image (95).png" alt=""><figcaption><p>Gum asking whether a file should be copied or referenced in its current location.</p></figcaption></figure>
 

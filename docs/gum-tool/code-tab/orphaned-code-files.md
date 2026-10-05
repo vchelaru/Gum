@@ -26,6 +26,6 @@ Detection is deliberately conservative, so it never flags a file Gum did not wri
 
 ## Cleaning Up From the Command Line
 
-`gumcli codegen <project.gumx> --prune` regenerates the project and then deletes generated files with no matching element. This is often the better option for a project already under source control: it is explicit, it handles every file at once, and the result shows up as a reviewable diff.
+`gumcli codegen <project.gumj> --prune` regenerates the project and then deletes generated files with no matching element. This is often the better option for a project already under source control: it is explicit, it handles every file at once, and the result shows up as a reviewable diff.
 
 `--prune` never deletes custom code or `.codsj` settings files. It lists them so you can decide.

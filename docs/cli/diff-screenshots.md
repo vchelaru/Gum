@@ -1,14 +1,14 @@
 # diff-screenshots
 
 ```
-gumcli diff-screenshots <project.gumx> [--output <dir>] [--tolerance <0-255>] [--proximity <px>] [--json]
+gumcli diff-screenshots <project.gumj> [--output <dir>] [--tolerance <0-255>] [--proximity <px>] [--json]
 ```
 
 Renders every Screen and Component in a project through both the `monogame` and `raylib` [`screenshot`](screenshot.md) backends and reports any pixel-level mismatch between the two. Use this to catch a runtime backend silently rendering a project differently than the tool's preview, across an entire project at once.
 
 ## Options
 
-- `<project.gumx>` — Path to the `.gumx` project file
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
 - `--output` — Directory the rendered PNGs are written to, under `A/` (MonoGame) and `B/` (raylib) subfolders. Defaults to a new temp directory (the path is always printed)
 - `--tolerance` — Maximum per-channel pixel difference (0-255) still considered a color match. Defaults to `2`
 - `--proximity` — How many pixels away to search for a matching color before counting a pixel as a real mismatch. Defaults to `1`
@@ -21,10 +21,10 @@ Two different renderers never produce byte-identical antialiasing at an edge, so
 ## Examples
 
 ```
-gumcli diff-screenshots MyProject/MyProject.gumx
-gumcli diff-screenshots MyProject/MyProject.gumx --output diffs/
-gumcli diff-screenshots MyProject/MyProject.gumx --tolerance 4 --proximity 2
-gumcli diff-screenshots MyProject/MyProject.gumx --json
+gumcli diff-screenshots MyProject/MyProject.gumj
+gumcli diff-screenshots MyProject/MyProject.gumj --output diffs/
+gumcli diff-screenshots MyProject/MyProject.gumj --tolerance 4 --proximity 2
+gumcli diff-screenshots MyProject/MyProject.gumj --json
 ```
 
 ## Output
@@ -85,4 +85,4 @@ Every run also writes `report.html` into the output directory: one row per eleme
 |------|---------|
 | 0 | Every element matched |
 | 1 | One or more elements mismatched, or a backend failed to render an element |
-| 2 | Project `.gumx` file could not be loaded |
+| 2 | Project file could not be loaded |

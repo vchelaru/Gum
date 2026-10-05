@@ -78,7 +78,7 @@ SKCanvas canvas = surface.Canvas;
 // actually receives events.
 IInputContext inputContext = window.CreateInput();
 
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
 ```
 
 Each frame, pump window events before updating and drawing Gum:
@@ -117,7 +117,7 @@ Then call `GumExpressionService.Initialize()` after `GumService.Default.Initiali
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumj");
 GumExpressionService.Initialize();
 ```
 

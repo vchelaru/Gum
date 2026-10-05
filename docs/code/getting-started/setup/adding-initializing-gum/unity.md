@@ -4,7 +4,7 @@
 The Unity package is experimental. It supports Windows x64 and macOS (Intel and Apple silicon). Linux, Android, iOS, and WebGL are not supported yet.
 {% endhint %}
 
-Gum for Unity draws Gum UI (layout, Forms controls, and `.gumx` projects) with SkiaSharp. It needs two Unity packages: Gum, and SkiaGameRendering, which supplies SkiaSharp.
+Gum for Unity draws Gum UI (layout, Forms controls, and `.gumj` projects) with SkiaSharp. It needs two Unity packages: Gum, and SkiaGameRendering, which supplies SkiaSharp.
 
 ## Quick Start
 
@@ -81,7 +81,7 @@ Samples that use MonoGame types such as `GameTime`, `GraphicsDevice`, or `Micros
 ## Loading a Gum Project
 
 1. Copy your Gum project folder into `Assets/StreamingAssets`.
-2. Set `GumRenderer.ProjectFile` to the `.gumx` path inside that folder, for example `GumProject/GumProject.gumx`.
+2. Set `GumRenderer.ProjectFile` to the `.gumj` path inside that folder, for example `GumProject/GumProject.gumj`.
 
 If you add the components from code, add them to an inactive GameObject, set `ProjectFile`, then activate the GameObject.
 

@@ -1,7 +1,7 @@
 # fonts
 
 ```
-gumcli fonts <project.gumx>
+gumcli fonts <project.gumj>
 ```
 
 Scans all elements and states for font references and generates any missing bitmap font files (`.fnt` + `.png`) in the project's `FontCache/` folder.
@@ -17,19 +17,19 @@ The two generators are different programs, so a BMFont project's `FontCache` bui
 
 ## Options
 
-- `<project.gumx>` — Path to the `.gumx` project file
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
 
 ## Examples
 
 ```
-gumcli fonts MyProject/MyProject.gumx
+gumcli fonts MyProject/MyProject.gumj
 ```
 
 ## Notes
 
 - Scans all elements and states for Font + FontSize variable pairs
 - Skips fonts whose output files already exist in `FontCache/` — only missing files are generated
-- Output files are written to `FontCache/` next to the `.gumx` file
+- Output files are written to `FontCache/` next to the `.gumj` file
 
 ## Exit Codes
 

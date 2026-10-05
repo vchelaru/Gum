@@ -60,7 +60,7 @@ Next, add SkiaGum as a project reference in your game project. Your project migh
 `GumService` for this page's setup is available in `Gum.SkiaSharp` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
 {% endhint %}
 
-`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated Silk.NET host (see [Silk.NET](silk.net.md)), just without input. Call `GumService.Default.Initialize` once you have an `SKCanvas`, passing a `.gumx` project path only if you're loading one (omit it for a code-only setup):
+`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated Silk.NET host (see [Silk.NET](silk.net.md)), just without input. Call `GumService.Default.Initialize` once you have an `SKCanvas`, passing a `.gumj` project path only if you're loading one (omit it for a code-only setup):
 
 ```csharp
 // Initialize
@@ -68,7 +68,7 @@ using Gum;
 using SkiaSharp;
 
 var bounds = canvas.DeviceClipBounds;
-GumService.Default.Initialize(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumj");
 ```
 
 Each frame, update and then draw:
@@ -107,7 +107,7 @@ Then call `GumExpressionService.Initialize()` after `GumService.Default.Initiali
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumj");
 GumExpressionService.Initialize();
 ```
 

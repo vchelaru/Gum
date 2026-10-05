@@ -52,7 +52,7 @@ public class Game1 : Game
 </strong>
     protected override void Initialize()
     {
-        GumUI.Initialize(this, "GumProject/GumProject.gumx");
+        GumUI.Initialize(this, "GumProject/GumProject.gumj");
         GumUI.LoadAnimations();
 
 <strong>        _animatedScreen = new AnimatedScreen();
@@ -118,7 +118,7 @@ public class Game1 : Game
 </strong>
     protected override void Initialize()
     {
-        GumUI.Initialize(this, "GumProject/GumProject.gumx");
+        GumUI.Initialize(this, "GumProject/GumProject.gumj");
 <strong>        GumUI.LoadAnimations();
 </strong>
 <strong>        _animatedScreen = Gum.Managers.ObjectFinder.Self

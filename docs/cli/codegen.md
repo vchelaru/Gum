@@ -1,24 +1,24 @@
 # codegen
 
 ```
-gumcli codegen <project.gumx> [--element <name>...] [--prune]
+gumcli codegen <project.gumj> [--element <name>...] [--prune]
 ```
 
 Generates C# code for elements in a Gum project. Runs error checks before generating each element — elements with errors are skipped; elements with only warnings are still generated.
 
 ## Options
 
-- `<project.gumx>` — Path to the `.gumx` project file
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
 - `--element <name>` — Generate code only for the named element. Can be specified multiple times. Supports folder-qualified names.
 - `--prune` — After generating, delete `.Generated.cs` files under the code output folder (`CodeProjectRoot`, plus `GeneratedCodeFolder` when set) that no element in the project accounts for.
 
 ## Examples
 
 ```
-gumcli codegen MyProject/MyProject.gumx
-gumcli codegen MyProject/MyProject.gumx --element Button
-gumcli codegen MyProject/MyProject.gumx --element Button --element Slider
-gumcli codegen MyProject/MyProject.gumx --element Controls/Button
+gumcli codegen MyProject/MyProject.gumj
+gumcli codegen MyProject/MyProject.gumj --element Button
+gumcli codegen MyProject/MyProject.gumj --element Button --element Slider
+gumcli codegen MyProject/MyProject.gumj --element Controls/Button
 ```
 
 **Output on success:**
@@ -48,7 +48,7 @@ Generated code for 11 element(s).
 `--prune` runs after generation and removes generated code files that no longer have a matching element, so a deleted or renamed element does not leave a stale `.cs` file compiling into the game forever.
 
 ```
-gumcli codegen MyProject/MyProject.gumx --prune
+gumcli codegen MyProject/MyProject.gumj --prune
 ```
 
 ```

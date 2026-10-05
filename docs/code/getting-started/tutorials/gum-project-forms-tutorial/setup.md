@@ -66,7 +66,7 @@ Now that we have our Gum project created, we can load it in our game.
 {% tab title="Visual Studio" %}
 First, we'll set up our project so all Gum files are copied when the project is built. To do this:
 
-1. Right-click on any Gum file in your project, such as GumProject.gumx
+1. Right-click on any Gum file in your project, such as GumProject.gumj
 2.  Select the Properties item\\
 
     <figure><img src="../../../../.gitbook/assets/image (11).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
@@ -75,8 +75,8 @@ First, we'll set up our project so all Gum files are copied when the project is 
     <figure><img src="../../../../.gitbook/assets/image (12).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>
 4.  Double click your game's csproj file to open it in the text editor and find the entry for the file that you marked as Copy if newer.\\
 
-    <figure><img src="../../../../.gitbook/assets/image (13).png" alt=""><figcaption><p>Entry for GumProject.gumx in the csproj file.</p></figcaption></figure>
-5.  Modify the code to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumx` to `Content\GumProject\**\*.*`\\
+    <figure><img src="../../../../.gitbook/assets/image (13).png" alt=""><figcaption><p>Entry for GumProject.gumj in the csproj file.</p></figcaption></figure>
+5.  Modify the code to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumj` to `Content\GumProject\**\*.*`\\
 
     <figure><img src="../../../../.gitbook/assets/image (14).png" alt=""><figcaption><p>Wildcard entry for all files in the GumProject folder</p></figcaption></figure>
 
@@ -102,7 +102,7 @@ For example, you may add something like this to your .csproj:
 </ItemGroup>
 ```
 
-Notice that the folder includes the root of the Gum folder. You may need to adjust this path according to where your .gumx is located.
+Notice that the folder includes the root of the Gum folder. You may need to adjust this path according to where your .gumj is located.
 {% endtab %}
 {% endtabs %}
 
@@ -153,7 +153,7 @@ public class Game1 : Game
     {
         var gumProject = GumUI.Initialize(this,
             // This is relative to Content:
-            "GumProject/GumProject.gumx");
+            "GumProject/GumProject.gumj");
 
         base.Initialize();
     }
@@ -194,7 +194,7 @@ public class Game1 : Game
     {
 +        var gumProject = GumUI.Initialize(this,
 +            // This is relative to Content:
-+            "GumProject/GumProject.gumx");
++            "GumProject/GumProject.gumj");
 
         base.Initialize();
     }
@@ -224,7 +224,7 @@ The code above has the following three calls on Gum:
 // Initialize
 var gumProject = GumUI.Initialize(this,
     // This is relative to Content:
-    "GumProject/GumProject.gumx");
+    "GumProject/GumProject.gumj");
 ```
 
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.

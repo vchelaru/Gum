@@ -14,7 +14,7 @@ Everything else works without extra configuration. You do not need `TrimmerRootA
 From the command line:
 
 ```
-gumcli convert-to-json MyProject.gumx
+gumcli convert-to-json MyProject.gumj
 ```
 
 Or in the Gum tool, use **Content** and then **Convert to JSON**.

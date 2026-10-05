@@ -18,7 +18,7 @@ After loading a Gum project, you can modify style variables and call `ApplyAllVa
 
 ```csharp
 // Initialize
-var project = GumUI.Initialize(this, "GumProject/GumProject.gumx");
+var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
 
 // Find your style component and change values
 var styles = project.Components.First(item => item.Name == "Styles");
@@ -161,7 +161,7 @@ Then call `GumExpressionService.Initialize()` at startup:
 
 ```csharp
 // Initialize
-var project = GumUI.Initialize(this, "GumProject/GumProject.gumx");
+var project = GumUI.Initialize(this, "GumProject/GumProject.gumj");
 GumExpressionService.Initialize();
 ```
 

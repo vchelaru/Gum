@@ -68,7 +68,7 @@ The location of the folder containing the .csproj file. This path is used to det
 
 Gum also reads the .csproj in this folder to detect which version of the Gum runtime your game references, so keep this pointed at the .csproj folder. To put generated code somewhere else, use Generated Code Folder.
 
-If this folder has several .csproj files, Gum reads `Assembly-CSharp.csproj` first, then the one with the shortest name. To use a different .csproj, set `CsprojPath` in `ProjectCodeSettings.codsj` to its path relative to the .gumx, for example `"CsprojPath": "../MyGame.Ui.csproj"`.
+If this folder has several .csproj files, Gum reads `Assembly-CSharp.csproj` first, then the one with the shortest name. To use a different .csproj, set `CsprojPath` in `ProjectCodeSettings.codsj` to its path relative to the project file (.gumj or .gumx), for example `"CsprojPath": "../MyGame.Ui.csproj"`.
 
 {% hint style="info" %}
 The `CsprojPath` setting is available in October 2026, or now if building Gum from source.
@@ -82,7 +82,7 @@ This setting only moves files. Namespaces are still built from the Root Namespac
 
 If an absolute path is entered, it is saved to a relative path so that generation works for all users working on a project regardless of where a project is cloned even though it appears absolute in Gum. For example: `C:\Users\Owner\Documents\GitHub\Gum\Samples\MonoGameGumCodeGeneration\`
 
-Since the path is saved as relative to your .gumx location, this path will break if you move your Gum project to a new location. Be sure to update this if you are moving your .gumx.
+Since the path is saved as relative to your project file location, this path will break if you move your Gum project to a new location. Be sure to update this if you are moving your project file.
 
 ### Output Library
 
@@ -112,11 +112,11 @@ This generates minimal code for access to objects. Specifically this generates:
 * Access to instances through strongly typed property names
 * Setting of states through enums
 
-This approach allows for the customization of Gum files without requiring full code regeneration. Games which use this type of code generation can still support modding, so long as the modified files do not remove instances or change their names. This type of code generation still requires the loading of the Gum project (.gumx and associated files).
+This approach allows for the customization of Gum files without requiring full code regeneration. Games which use this type of code generation can still support modding, so long as the modified files do not remove instances or change their names. This type of code generation still requires the loading of the Gum project (.gumj or .gumx and associated files).
 
 #### Fully in Code
 
-This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially important if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
+This option enables working in Gum to create layouts which will work fully in code without loading a .gumj file. This is especially important if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumj file since it does not require file IO, XML parsing, and reflection.
 
 For more details see the [Runtime Generation Details](runtime-generation-details.md) page.
 

@@ -4,22 +4,22 @@
 
 Gum supports hot reload for rapid UI iteration during development. When hot reload is enabled, changes saved in the Gum tool are automatically reflected in your running game without restarting. This lets you adjust layouts, resize elements, change colors, and modify component structure while seeing results immediately.
 
-Hot reload watches for changes to Gum project files (`.gumx`, `.gusx`, `.gucx`, `.gutx`) and font files (`.fnt`) and reconstructs the element tree when changes are detected.
+Hot reload watches for changes to Gum project files (`.gumj`, `.gusj`, `.gucj`, `.gutj`, or their XML forms `.gumx`, `.gusx`, `.gucx`, `.gutx`) and font files (`.fnt`) and reconstructs the element tree when changes are detected.
 
 ## Enabling Hot Reload
 
-Call `EnableHotReload` after initializing Gum, passing the absolute path to your **source** `.gumx` file — not the copy in your `bin/Content` folder.
+Call `EnableHotReload` after initializing Gum, passing the absolute path to your **source** `.gumj` file — not the copy in your `bin/Content` folder.
 
 ```csharp
 // Initialize
-var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumx");
+var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumj");
 
 GumUI.EnableHotReload(
-    @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumx");
+    @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumj");
 ```
 
 {% hint style="info" %}
-The path must point to the original `.gumx` file that the Gum tool edits. If you point to the `bin/Content` copy, changes saved in the Gum tool will not be detected because that copy is only updated on build.
+The path must point to the original `.gumj` file that the Gum tool edits. If you point to the `bin/Content` copy, changes saved in the Gum tool will not be detected because that copy is only updated on build.
 {% endhint %}
 
 Once enabled, hot reload is fully automatic. `GumService` processes pending reloads during its `Update` call each frame, so no additional code is needed.
@@ -32,10 +32,10 @@ Hot reload monitors the following Gum file types:
 
 | Extension | Description                  |
 | --------- | ---------------------------- |
-| `.gumx`   | Gum project file             |
-| `.gusx`   | Screen definitions           |
-| `.gucx`   | Component definitions        |
-| `.gutx`   | Standard element definitions |
+| `.gumj` / `.gumx` | Gum project file |
+| `.gusj` / `.gusx` | Screen definitions |
+| `.gucj` / `.gucx` | Component definitions |
+| `.gutj` / `.gutx` | Standard element definitions |
 | `.fnt`    | Bitmap font definitions      |
 
 When any of these files change, Gum reloads the project in place: it diffs the new definitions against the live visual tree and updates only what changed. This covers variable edits (move, resize, color, state changes) as well as structural changes — instances added by copy/paste, instances deleted, instances whose `BaseType` was changed, and instance reorders.
@@ -59,7 +59,7 @@ If your code clears (`= null`) or replaces the `Tag` on a visual that was create
 ## Platform Support
 
 {% hint style="info" %}
-Hot reload requires loose project files on disk; it does not watch inside `.gumpkg` bundles. Initializing with a `.gumx` path loads loose files and watchers fire normally, even when a `.gumpkg` sits next to them (see [pack](../../cli/pack.md)). Initializing with a `.gumpkg` path loads at startup but cannot hot-reload.
+Hot reload requires loose project files on disk; it does not watch inside `.gumpkg` bundles. Initializing with a `.gumj` path loads loose files and watchers fire normally, even when a `.gumpkg` sits next to them (see [pack](../../cli/pack.md)). Initializing with a `.gumpkg` path loads at startup but cannot hot-reload.
 
 If hot reload from a `.gumpkg` (e.g. for a hot-swap-on-deploy workflow) would be useful to you, let us know on [Discord](https://discord.gg/EvqwmSQuBz) or file an issue on [GitHub](https://github.com/vchelaru/Gum/issues) — real usage reports help us prioritize.
 {% endhint %}
@@ -75,7 +75,7 @@ Hot reload is **not available** on iOS or Android. Calls to `EnableHotReload` ar
 
 ## How It Works
 
-When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the directory containing your `.gumx` file (including subdirectories). When a watched file is saved:
+When `EnableHotReload` is called, Gum creates a `FileSystemWatcher` on the directory containing your `.gumj` file (including subdirectories). When a watched file is saved:
 
 1. The change is detected and a 200ms debounce timer starts. Additional changes within that window reset the timer, so rapid saves (such as the Gum tool writing multiple files at once) are coalesced into a single reload.
 2. On the next `GumService.Update` call after the debounce window, Gum reloads the project from disk.
@@ -127,10 +127,10 @@ Hot reload is automatically stopped when `GumService.Uninitialize()` is called. 
 
 ```csharp
 // Initialize
-var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumx");
+var gumProject = GumUI.Initialize(this, "GumProject/GumProject.gumj");
 
 #if DEBUG
 GumUI.EnableHotReload(
-    @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumx");
+    @"c:\Users\YourName\source\YourGame\Content\GumProject\GumProject.gumj");
 #endif
 ```

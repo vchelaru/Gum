@@ -1,14 +1,14 @@
 # screenshot
 
 ```
-gumcli screenshot <project.gumx> <element> [--output <path>] [--width <px>] [--height <px>] [--backend <name>] [--background <hex>]
+gumcli screenshot <project.gumj> <element> [--output <path>] [--width <px>] [--height <px>] [--backend <name>] [--background <hex>]
 ```
 
 Renders a Gum Screen or Component to a PNG file. The element is laid out and drawn using the same backend a shipped game would use, so the output is pixel-accurate and suitable for visual regression testing, documentation screenshots, or asset pipelines.
 
 ## Arguments
 
-- `<project.gumx>` — Path to the `.gumx` project file.
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file.
 - `<element>` — Name of the Screen or Component to render (for example, `MainMenu` or `Controls/Button`).
 
 ## Options
@@ -22,11 +22,11 @@ Renders a Gum Screen or Component to a PNG file. The element is laid out and dra
 ## Examples
 
 ```
-gumcli screenshot MyProject/MyProject.gumx MainMenu
-gumcli screenshot MyProject/MyProject.gumx Controls/Button --output button.png
-gumcli screenshot MyProject/MyProject.gumx MainMenu --width 1920 --height 1080
-gumcli screenshot MyProject/MyProject.gumx MainMenu --backend raylib
-gumcli screenshot MyProject/MyProject.gumx MainMenu --background 1E2A38
+gumcli screenshot MyProject/MyProject.gumj MainMenu
+gumcli screenshot MyProject/MyProject.gumj Controls/Button --output button.png
+gumcli screenshot MyProject/MyProject.gumj MainMenu --width 1920 --height 1080
+gumcli screenshot MyProject/MyProject.gumj MainMenu --backend raylib
+gumcli screenshot MyProject/MyProject.gumj MainMenu --background 1E2A38
 ```
 
 Output on success:

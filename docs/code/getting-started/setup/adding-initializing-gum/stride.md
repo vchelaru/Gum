@@ -131,11 +131,11 @@ void Start(Scene rootScene)
 
 You can add controls as soon as `Initialize` returns.
 
-To load a Gum project (a `.gumx` file) at the same time, pass its path:
+To load a Gum project (a `.gumj` file) at the same time, pass its path:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
 ```
 
 ### Placing the Scene Renderer Yourself (Optional)
@@ -164,7 +164,7 @@ Then call `GumExpressionService.Initialize()` after `GumService.Default.Initiali
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
 Gum.Expressions.GumExpressionService.Initialize();
 ```
 

@@ -166,7 +166,7 @@ There are two ways to use a `.ttf` file with KernSmith:
 To register a `.ttf` file:
 
 1. Add the `.ttf` file to your project's **Content** folder.
-2. Set its **Copy to Output Directory** to **Copy if newer**. For an easier approach that handles all content files at once, see the wildcard `.csproj` setup in [Loading a Gum Project (.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
+2. Set its **Copy to Output Directory** to **Copy if newer**. For an easier approach that handles all content files at once, see the wildcard `.csproj` setup in [Loading a Gum Project (.gumj/.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
 3. Call `RegisterFont` before using the font. The method is on the font creator type for your runtime: `KernSmithFontCreator` on MonoGame, KNI, and FNA, and `KernSmithRaylibFontCreator` on raylib. The parameters are the same on both.
 
 {% tabs %}
@@ -230,7 +230,7 @@ text.FontSize = 24;
 text.AddToRoot();
 ```
 
-`CustomFontFile` accepts a `.ttf` path the same way when `UseCustomFont` is `true`. Both properties resolve their paths relative to `FileManager.RelativeDirectory`, which is your **Content** folder, or the folder holding your `.gumx` project. This is the same starting point every other Gum asset uses, including `RegisterFont`'s `filePath` overload. See [File Loading](file-loading.md).
+`CustomFontFile` accepts a `.ttf` path the same way when `UseCustomFont` is `true`. Both properties resolve their paths relative to `FileManager.RelativeDirectory`, which is your **Content** folder, or the folder holding your `.gumj` project. This is the same starting point every other Gum asset uses, including `RegisterFont`'s `filePath` overload. See [File Loading](file-loading.md).
 
 {% hint style="info" %}
 Gum recognizes only the `.ttf` extension here. It reads an `.otf` value as a family name, so an `.otf` path will not resolve. Register `.otf` files under a family name with `RegisterFont` instead.
@@ -393,7 +393,7 @@ Files are loaded from-file rather than using the content pipeline. This means th
 
 <figure><img src="../../.gitbook/assets/FontCopyIfNewer.png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
-The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your `.csproj`. For instructions (including Android), see [Loading a Gum Project (.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
+The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your `.csproj`. For instructions (including Android), see [Loading a Gum Project (.gumj/.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
 
 ### When to Use This Strategy
 

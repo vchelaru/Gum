@@ -18,10 +18,10 @@ Before performing this initialization, you must decide where you will store your
 <figure><img src="../../.gitbook/assets/19_06 01 46.png" alt=""><figcaption><p>Resources folder in a GumProject folder</p></figcaption></figure>
 
 {% hint style="info" %}
-If you are using a Gum (.gumx) project, adding resource files relative to the Gum project is recommended since it keeps your project portable.
+If you are using a Gum (.gumj) project, adding resource files relative to the Gum project is recommended since it keeps your project portable.
 {% endhint %}
 
-When using generated code, Gum generates all file loads relative to the .gumx location, so we need to tell the Gum runtime to use this as its relative path.
+When using generated code, Gum generates all file loads relative to the .gumj location, so we need to tell the Gum runtime to use this as its relative path.
 
 To do this, add the following code to where you initialize your code project, such as the CreateMauiApp function:
 

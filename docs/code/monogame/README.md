@@ -34,7 +34,7 @@ Gum is an _object oriented_ design tool, so projects can contain reusable compon
 
 <figure><img src="../../.gitbook/assets/image (34).png" alt=""><figcaption><p>PauseMenu in Gum</p></figcaption></figure>
 
-Gum produces a set of XML files (and PNG/FNT files for fonts) which can be added to any MonoGame project and loaded with a few lines of code. For information on loading projects, see the [Loading .gumx (Gum Project)](../getting-started/setup/loading-a-gum-project-.gumx.md) page.
+Gum produces a set of XML or JSON files (and PNG/FNT files for fonts) which can be added to any MonoGame project and loaded with a few lines of code. For information on loading projects, see the [Loading a Gum Project (.gumj/.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md) page.
 
 <figure><img src="../../.gitbook/assets/image (35).png" alt=""><figcaption><p>Example Gum project in Windows Explorer</p></figcaption></figure>
 

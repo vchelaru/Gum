@@ -31,7 +31,7 @@ Hand-maintaining a list of every combination drifts out of sync the first time a
 
 This isn't built into Gum yet. The pattern most projects end up with is something like:
 
-* Load the `.gumx` project at startup.
+* Load the `.gumj` project at startup.
 * Walk every element, looking at `Text` instances and their state variations.
 * Build a set of unique `(font, size, style, outline, smoothing)` tuples.
 * Drive a preload pass over each entry in the set.

@@ -1,14 +1,14 @@
 # svg
 
 ```
-gumcli svg <project.gumx> <element> [--output <path>] [--width <px>] [--height <px>]
+gumcli svg <project.gumj> <element> [--output <path>] [--width <px>] [--height <px>]
 ```
 
 Renders a Gum Screen or Component to a vector SVG file. Useful when you need scalable output for documentation, print, or design tooling rather than a fixed-resolution bitmap.
 
 ## Arguments
 
-- `<project.gumx>` — Path to the `.gumx` project file.
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file.
 - `<element>` — Name of the Screen or Component to render.
 
 ## Options
@@ -20,9 +20,9 @@ Renders a Gum Screen or Component to a vector SVG file. Useful when you need sca
 ## Examples
 
 ```
-gumcli svg MyProject/MyProject.gumx MainMenu
-gumcli svg MyProject/MyProject.gumx Controls/Button --output button.svg
-gumcli svg MyProject/MyProject.gumx MainMenu --width 1920 --height 1080
+gumcli svg MyProject/MyProject.gumj MainMenu
+gumcli svg MyProject/MyProject.gumj Controls/Button --output button.svg
+gumcli svg MyProject/MyProject.gumj MainMenu --width 1920 --height 1080
 ```
 
 Output on success:

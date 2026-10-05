@@ -79,7 +79,7 @@ As you change a Text object's properties, new files are added to the FontCache f
 * File extensions are part of the path (`Font24Arial.fnt`, not `Font24Arial`).
 * Every `.fnt` and `.png` file in the FontCache must have its **Copy to Output Directory** value set to **Copy if newer** (or the equivalent for your platform).
 
-The easiest way to handle this is a wildcard `<Content>` item in your `.csproj` — see [Loading a Gum Project (.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
+The easiest way to handle this is a wildcard `<Content>` item in your `.csproj` — see [Loading a Gum Project (.gumj/.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
 
 ## Known Limitations
 

@@ -237,7 +237,7 @@ while (running)
 }
 ```
 
-If your app manages a screen's `Width`/`Height` in pixels rather than relative units, for example a loaded `.gumx` screen sized once at startup to match the initial canvas, those pixel values do **not** track canvas size changes on their own. Re-apply them in the same block after `HandleResize`, or the screen will keep its original size while descendants anchored to its edges drift out of place as the canvas grows or shrinks:
+If your app manages a screen's `Width`/`Height` in pixels rather than relative units, for example a loaded `.gumj` screen sized once at startup to match the initial canvas, those pixel values do **not** track canvas size changes on their own. Re-apply them in the same block after `HandleResize`, or the screen will keep its original size while descendants anchored to its edges drift out of place as the canvas grows or shrinks:
 
 ```csharp
 gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
