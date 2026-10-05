@@ -4141,7 +4141,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 unitOffsetX += value;
             }
-            else if (mXUnits != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
+            // units, not mXUnits: a flipped parent turns PixelsFromSmall into PixelsFromLarge.
+            else if (units != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
             {
                 unitOffsetX = value;
             }
