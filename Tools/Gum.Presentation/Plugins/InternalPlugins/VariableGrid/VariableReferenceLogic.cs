@@ -813,6 +813,24 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         return didChange;
     }
 
+    /// <summary>
+    /// True when <paramref name="name"/> is a variable of the owning element (such as a custom variable
+    /// "WaveValue") that the instance's own type does not have. A bare name like that can only mean the
+    /// owner's variable, which is what an unqualified right side resolves to, so qualifying it with the
+    /// instance name would point it at a variable that doesn't exist. A name both have (Width) is still
+    /// qualified to the instance, since that is the mix-up the auto-qualification guards against.
+    /// </summary>
+    private static bool IsVariableOnlyOnOwner(string name, InstanceSave selectedInstance, ElementSave? ownerElement)
+    {
+        if (ownerElement == null)
+        {
+            return false;
+        }
+
+        return ObjectFinder.Self.GetRootVariable(name, ownerElement) != null
+            && ObjectFinder.Self.GetRootVariable(name, selectedInstance) == null;
+    }
+
     private static void QualifyInstanceVariables(List<string> newValueAsList, InstanceSave selectedInstance, ElementSave? ownerElement, int i, string[] split)
     {
         // Instance names such as "gum-logo-256" would parse as subtractions and have each piece qualified,
@@ -827,6 +845,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             .Where(item => item is IdentifierNameSyntax identifier &&
                 !identifier.Identifier.Text.StartsWith("@") &&
                 !EvaluatedSyntax.IsFunctionName(identifier) &&
+                !IsVariableOnlyOnOwner(identifier.Identifier.Text, selectedInstance, ownerElement) &&
                 item.Parent is not MemberAccessExpressionSyntax
                     and not AliasQualifiedNameSyntax);
 
