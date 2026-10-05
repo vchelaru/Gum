@@ -296,13 +296,26 @@ public class NineSliceRuntime : InteractiveGue
         }
         set
         {
+            global::RenderingLibrary.Graphics.ITextureCoordinate textureCoordinate = ContainedNineSlice;
+            float? widthBefore = textureCoordinate.TextureWidth;
+            float? heightBefore = textureCoordinate.TextureHeight;
 #if XNALIKE
             ContainedNineSlice.SetSingleTexture(value);
 #else
             ContainedNineSlice.Texture = value;
 #endif
+            // Same rule as SpriteRuntime.Texture: a size taken from the texture must follow it.
+            if ((IsSizedFromTexture(WidthUnits) || IsSizedFromTexture(HeightUnits)) &&
+                (widthBefore != textureCoordinate.TextureWidth || heightBefore != textureCoordinate.TextureHeight))
+            {
+                UpdateLayout();
+            }
         }
     }
+
+    static bool IsSizedFromTexture(Gum.DataTypes.DimensionUnitType units) =>
+        units == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile ||
+        units == Gum.DataTypes.DimensionUnitType.MaintainFileAspectRatio;
 
     public string SourceFileName
     {
