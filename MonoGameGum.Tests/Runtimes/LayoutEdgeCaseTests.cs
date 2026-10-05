@@ -565,7 +565,7 @@ public class LayoutEdgeCaseTests : BaseTestClass
 
     #region Hierarchy
 
-    [Fact(Skip = "Behavior change pending decision: #5764")]
+    [Fact]
     public void RemoveChild_ShouldRestackRemainingSiblings()
     {
         ContainerRuntime stack = CreateContainer(100, 400);
@@ -581,7 +581,7 @@ public class LayoutEdgeCaseTests : BaseTestClass
         last.AbsoluteTop.ShouldBe(50);
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5764")]
+    [Fact]
     public void ChildrenClear_ShouldShrinkRelativeToChildrenParent()
     {
         ContainerRuntime parent = new();
@@ -592,6 +592,153 @@ public class LayoutEdgeCaseTests : BaseTestClass
         parent.Children.Clear();
 
         parent.AbsoluteHeight.ShouldBe(0);
+    }
+
+    [Fact]
+    public void RemoveChild_ShouldDeferParentLayoutUntilResume_WhenParentIsSuspended()
+    {
+        ContainerRuntime stack = CreateStackOfThree(out ContainerRuntime middle, out ContainerRuntime last);
+        stack.SuspendLayout();
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+        stack.RemoveChild(middle);
+
+        last.AbsoluteTop.ShouldBe(100);
+        int parentAndLastCalls = GraphicalUiElement.UpdateLayoutCallCount - callsBefore;
+        // Only the removed child lays itself out; the suspended parent and its children wait.
+        parentAndLastCalls.ShouldBe(1);
+
+        stack.ResumeLayout();
+
+        last.AbsoluteTop.ShouldBe(50);
+    }
+
+    [Fact]
+    public void RemoveChild_ShouldDeferParentLayout_WhenAllLayoutIsSuspended()
+    {
+        ContainerRuntime stack = CreateStackOfThree(out ContainerRuntime middle, out ContainerRuntime last);
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+        stack.RemoveChild(middle);
+
+        GraphicalUiElement.UpdateLayoutCallCount.ShouldBe(callsBefore);
+        last.AbsoluteTop.ShouldBe(100);
+
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+        stack.UpdateLayout();
+
+        last.AbsoluteTop.ShouldBe(50);
+    }
+
+    [Fact]
+    public void RemovingManyChildren_WhileParentIsSuspended_ShouldLayOutParentOnceOnResume()
+    {
+        ContainerRuntime stack = CreateContainer(100, 1000);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        for (int i = 0; i < 10; i++)
+        {
+            stack.AddChild(CreateContainer(50, 50));
+        }
+        ContainerRuntime last = stack.Children[9] as ContainerRuntime ?? throw new InvalidOperationException();
+        stack.SuspendLayout();
+
+        for (int i = 0; i < 5; i++)
+        {
+            stack.RemoveChild(stack.Children[0]);
+        }
+        int callsBeforeResume = GraphicalUiElement.UpdateLayoutCallCount;
+        stack.ResumeLayout();
+        int resumeCalls = GraphicalUiElement.UpdateLayoutCallCount - callsBeforeResume;
+
+        last.AbsoluteTop.ShouldBe(200);
+        int callsBeforeManualLayout = GraphicalUiElement.UpdateLayoutCallCount;
+        stack.UpdateLayout();
+        int oneParentLayoutCalls = GraphicalUiElement.UpdateLayoutCallCount - callsBeforeManualLayout;
+        resumeCalls.ShouldBe(oneParentLayoutCalls);
+    }
+
+    [Fact]
+    public void ChildrenClear_ShouldLayOutParentOnce()
+    {
+        ContainerRuntime parent = new();
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            parent.AddChild(CreateContainer(50, 50));
+        }
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+        parent.Children.Clear();
+        int clearCalls = GraphicalUiElement.UpdateLayoutCallCount - callsBefore;
+
+        int callsBeforeManualLayout = GraphicalUiElement.UpdateLayoutCallCount;
+        parent.UpdateLayout();
+        int oneParentLayoutCalls = GraphicalUiElement.UpdateLayoutCallCount - callsBeforeManualLayout;
+        // Each removed child lays itself out once, then the parent lays out once.
+        clearCalls.ShouldBe(10 + oneParentLayoutCalls);
+    }
+
+    [Fact]
+    public void ChildrenClear_ShouldKeepCallersSuspension()
+    {
+        ContainerRuntime parent = new();
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.AddChild(CreateContainer(50, 50));
+        parent.AddChild(CreateContainer(50, 50));
+        parent.SuspendLayout();
+
+        parent.Children.Clear();
+
+        parent.IsLayoutSuspended.ShouldBeTrue();
+        parent.AbsoluteHeight.ShouldBe(50);
+        parent.ResumeLayout();
+        parent.AbsoluteHeight.ShouldBe(0);
+    }
+
+    [Fact]
+    public void RemoveChild_ShouldResizeRatioSiblings_InRegularParent()
+    {
+        ContainerRuntime parent = CreateContainer(300, 100);
+        ContainerRuntime absoluteChild = CreateContainer(100, 10);
+        parent.AddChild(absoluteChild);
+        ContainerRuntime ratioChild = CreateContainer(1, 10);
+        ratioChild.WidthUnits = DimensionUnitType.Ratio;
+        parent.AddChild(ratioChild);
+        ratioChild.AbsoluteWidth.ShouldBe(200);
+
+        parent.RemoveChild(absoluteChild);
+
+        ratioChild.AbsoluteWidth.ShouldBe(300);
+    }
+
+    [Fact]
+    public void RemoveChild_ShouldNotLayOutParent_WhenParentLayoutDoesNotDependOnChildren()
+    {
+        ContainerRuntime parent = CreateContainer(400, 400);
+        ContainerRuntime child = CreateContainer(50, 50);
+        parent.AddChild(child);
+        parent.AddChild(CreateContainer(50, 50));
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+        parent.RemoveChild(child);
+
+        // Only the removed child lays itself out.
+        (GraphicalUiElement.UpdateLayoutCallCount - callsBefore).ShouldBe(1);
+    }
+
+    static ContainerRuntime CreateStackOfThree(out ContainerRuntime middle, out ContainerRuntime last)
+    {
+        ContainerRuntime stack = CreateContainer(100, 400);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        stack.AddChild(CreateContainer(50, 50));
+        middle = CreateContainer(50, 50);
+        stack.AddChild(middle);
+        last = CreateContainer(50, 50);
+        stack.AddChild(last);
+        return stack;
     }
 
     #endregion

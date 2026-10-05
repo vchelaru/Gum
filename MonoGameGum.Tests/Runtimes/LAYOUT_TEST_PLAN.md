@@ -229,7 +229,7 @@ Named cases that must exist as explicit tests:
 
 - [x] no parent uses canvas size; deep nesting; zero-size parent
 - [x] add child to stack; Insert; reorder
-- [~] remove: Parent = null re-lays out siblings, `RemoveChild` and `Children.Remove` do not (H3)
+- [x] remove: every removal path re-lays out the old parent, deferred while suspended (H3)
 - [ ] `Children.Clear`, Replace, Move: old parent re-lays out
 - [x] reparent updates new and old parent
 - [ ] reparent between a stack and a grid
@@ -312,7 +312,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 |---|---|---|---|
 | H1 | `AdjustOffsetsByUnits` | PercentageOfFile X/Y always use the 64-pixel fallback. | LOG #5769 |
 | H2 | `X` and `Y` setters | Shortcut skipped the AutoGrid cell offset, parent flip/rotation, a RelativeToMaxParentOrChildren parent, and a parentless child of a stacking component. | FIX |
-| H3 | `Parent` setter | `RemoveChild`/`Children.Clear` don't lay out the old parent; `Parent = null` does. | LOG #5764 |
+| H3 | `Parent` setter | `RemoveChild`/`Children.Clear` didn't lay out the old parent; `Parent = null` did. | FIX (#5764; respects suspension, Clear lays out once) |
 | H4 | `UpdateChildren.UpdateChild` | `a && b \|\| c` precedence for MaintainFileAspectRatio. | CLEARED (no observable effect) |
 | H5 | `UpdateWidth`/`UpdateHeight` | AutoGrid cell count 0 sized the grid to 0 or negative. | FIX |
 | H6 | grid sizing and placement | Invisible children counted toward rows/columns. | FIX |

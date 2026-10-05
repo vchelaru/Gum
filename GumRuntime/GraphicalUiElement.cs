@@ -1200,7 +1200,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (_parent?.Children?.Contains(this) == true)
                     {
                         _parent.Children.Remove(this);
-                        oldParent?.UpdateLayout();
                     }
                     _parent = value;
 
@@ -1221,6 +1220,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // that gets rendered without a parent:
                 mContainedObjectAsIpso?.SetParentDirect(value);
 
+                // Runs for every removal path (Parent = null, RemoveChild, Children.Remove/Clear).
+                // A suspended parent only records the layout as dirty.
+                oldParent?.UpdateLayoutAfterChildRemoved();
                 UpdateLayout();
                 ParentChanged?.Invoke(this, new ParentChangedEventArgs()
                 {
@@ -1232,6 +1234,28 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     IRenderableIpso? IRenderableIpso.Parent { get => Parent; set => this.Parent = value as GraphicalUiElement; }
+
+    // A removed child only moves its old parent's layout when the parent stacks, places children
+    // in a grid, sizes from them, or shares space between Ratio children.
+    void UpdateLayoutAfterChildRemoved()
+    {
+        var dependsOnChildren = ChildrenLayout != ChildrenLayout.Regular || GetIfDimensionsDependOnChildren();
+        if (!dependsOnChildren)
+        {
+            for (int i = 0; i < Children.Count; i++)
+            {
+                if (Children[i].WidthUnits == DimensionUnitType.Ratio || Children[i].HeightUnits == DimensionUnitType.Ratio)
+                {
+                    dependsOnChildren = true;
+                    break;
+                }
+            }
+        }
+        if (dependsOnChildren)
+        {
+            UpdateLayout();
+        }
+    }
 
     // Made obsolete November 4, 2017
     [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, " +
@@ -6238,6 +6262,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var oldItems = e.OldItems;
             if (oldItems != null)
             {
+                // Clear() removes every child in one event; suspend so this lays out once, not per child.
+                var shouldSuspend = oldItems.Count > 1 && !mIsLayoutSuspended;
+                if (shouldSuspend)
+                {
+                    SuspendLayout();
+                }
                 for (int i = 0; i < oldItems.Count; i++)
                 {
                     var child = (GraphicalUiElement)oldItems[i]!;
@@ -6245,6 +6275,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         child.Parent = null;
                     }
+                }
+                if (shouldSuspend)
+                {
+                    ResumeLayout();
                 }
             }
         }

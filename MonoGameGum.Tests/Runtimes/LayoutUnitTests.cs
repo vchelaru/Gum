@@ -3746,10 +3746,7 @@ public class LayoutUnitTests : BaseTestClass
 
         child3.AbsoluteTop.ShouldBe(100);
 
-        // RemoveChild does not automatically re-layout remaining siblings.
-        // A manual UpdateLayout call is needed to reposition.
         parent.RemoveChild(child2);
-        parent.UpdateLayout();
         child3.AbsoluteTop.ShouldBe(50);
     }
 
