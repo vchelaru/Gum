@@ -28,7 +28,8 @@ public class VariableGridEntryTests : BaseTestClass
         StateSave stateSave,
         IStateContainer container,
         InstanceSave? instanceSave = null,
-        bool isVariable = true)
+        bool isVariable = true,
+        StateSaveCategory? stateSaveCategory = null)
     {
         return new VariableGridEntry(
             Array.Empty<Attribute>(),
@@ -38,7 +39,7 @@ public class VariableGridEntryTests : BaseTestClass
             isAssignedByReference: false,
             isVariable,
             stateSave,
-            stateSaveCategory: null,
+            stateSaveCategory: stateSaveCategory,
             variableName,
             instanceSave,
             container,
@@ -155,6 +156,80 @@ public class VariableGridEntryTests : BaseTestClass
         _mocker.GetMock<IUndoManager>().Verify(x => x.RecordUndo(), Times.Once);
         _mocker.GetMock<IWireframeObjectManager>().Verify(x => x.RefreshAll(true, false), Times.Once);
         _mocker.GetMock<IPluginManager>().Verify(x => x.VariableSet(component, null, "X", 5f, true), Times.Once);
+    }
+
+    [Fact]
+    public void ResetToDefault_ShouldSetCustomNumericVariableToZero_WhenSelectedStateIsTheDefaultState()
+    {
+        // The default state holds a custom variable's definition, so there is nothing to inherit: Make
+        // Default has to leave it a number, not blank it, or every state that copies it starts from nothing.
+        ComponentSave component = CreateComponent("MyComponent");
+        component.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "WaveValue",
+            Type = "float",
+            Value = 5f,
+            SetsValue = true,
+            IsCustomVariable = true
+        });
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(component);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
+
+        VariableGridEntry sut = CreateSut("WaveValue", component.DefaultState, component);
+
+        sut.ResetToDefault();
+
+        component.DefaultState.GetVariableSave("WaveValue")!.Value.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void GetMakeDefaultPreviewValue_ShouldBeZero_ForACustomNumericVariableInTheDefaultState()
+    {
+        // The menu label has to show the value Make Default will set.
+        ComponentSave component = CreateComponent("MyComponent");
+        component.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "WaveValue",
+            Type = "float",
+            Value = 5f,
+            SetsValue = true,
+            IsCustomVariable = true
+        });
+
+        VariableGridEntry sut = CreateSut("WaveValue", component.DefaultState, component);
+
+        sut.GetMakeDefaultPreviewValue().ShouldBe(0f);
+    }
+
+    [Fact]
+    public void ResetToDefault_ShouldSetCategoryStateToZero_WhenTheDefaultStatesCustomVariableHasNoValue()
+    {
+        // Projects saved before Make Default kept a number have a custom variable with no value in the
+        // default state. A category state must still end up holding a number.
+        ComponentSave component = CreateComponent("MyComponent");
+        component.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "WaveValue",
+            Type = "float",
+            IsCustomVariable = true
+        });
+        StateSaveCategory category = new StateSaveCategory { Name = "WavyCategory" };
+        StateSave start = new StateSave { Name = "Start", ParentContainer = component };
+        start.Variables.Add(new VariableSave { Name = "WaveValue", Type = "float", Value = 9f, SetsValue = true, IsCustomVariable = true });
+        category.States.Add(start);
+        component.Categories.Add(category);
+
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(component);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(start);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
+
+        VariableGridEntry sut = CreateSut("WaveValue", start, component, stateSaveCategory: category);
+
+        sut.ResetToDefault();
+
+        start.GetVariableSave("WaveValue")!.Value.ShouldBe(0f);
     }
 
     [Fact]

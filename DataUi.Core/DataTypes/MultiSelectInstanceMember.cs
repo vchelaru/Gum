@@ -48,7 +48,7 @@ public class MultiSelectInstanceMember : InstanceMember
                 var firstValue = InstanceMembers[0].Value;
                 foreach (var innerMember in InstanceMembers.Skip(1))
                 {
-                    if (!object.Equals(firstValue, innerMember.Value))
+                    if (!ValuesEqual(firstValue, innerMember.Value))
                     {
                         return true;
                     }
@@ -123,12 +123,51 @@ public class MultiSelectInstanceMember : InstanceMember
             var firstValue = InstanceMembers[0].Value;
             foreach(var innerMember in InstanceMembers.Skip(1))
             {
-                if(!object.Equals(firstValue, innerMember.Value))
+                if(!ValuesEqual(firstValue, innerMember.Value))
                 {
                     return null;
                 }
             }
             return firstValue;
+        }
+    }
+
+    /// <summary>
+    /// Compares by value. List-valued members (such as VariableReferences) hold a separate list object per
+    /// instance, so reference equality would call two identical lists different.
+    /// </summary>
+    private static bool ValuesEqual(object? first, object? second)
+    {
+        if (object.Equals(first, second))
+        {
+            return true;
+        }
+
+        if (first is string || second is string
+            || first is not System.Collections.IEnumerable firstItems
+            || second is not System.Collections.IEnumerable secondItems)
+        {
+            return false;
+        }
+
+        System.Collections.IEnumerator firstEnumerator = firstItems.GetEnumerator();
+        System.Collections.IEnumerator secondEnumerator = secondItems.GetEnumerator();
+        while (true)
+        {
+            bool hasFirst = firstEnumerator.MoveNext();
+            bool hasSecond = secondEnumerator.MoveNext();
+            if (hasFirst != hasSecond)
+            {
+                return false;
+            }
+            if (!hasFirst)
+            {
+                return true;
+            }
+            if (!ValuesEqual(firstEnumerator.Current, secondEnumerator.Current))
+            {
+                return false;
+            }
         }
     }
 

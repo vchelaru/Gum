@@ -1181,7 +1181,20 @@ public static class StateSaveExtensionMethods
 
 
             whatToSet.SetsValue = setsValue;
-            whatToSet.Value = GetValueConsideringInterpolation(whatToSet.Value, variableSave.Value, otherRatio);
+
+            // A variable that sets a value but has none (such as a custom float never given a value) would
+            // otherwise make the interpolation jump straight to the other value. Start from what it inherits,
+            // or zero for a number.
+            object? startingValue = whatToSet.Value;
+            if (startingValue == null && variableSave.Value != null)
+            {
+                StateSave? defaultStateOfOwner = thisState.ParentContainer?.DefaultState;
+                object? inheritedValue = defaultStateOfOwner != null && defaultStateOfOwner != thisState
+                    ? defaultStateOfOwner.GetValueRecursive(variableSave.Name)
+                    : null;
+                startingValue = inheritedValue ?? GetZeroOfNumericType(variableSave.Value);
+            }
+            whatToSet.Value = GetValueConsideringInterpolation(startingValue, variableSave.Value, otherRatio);
         }
 
         // todo:  Handle lists?
@@ -1305,6 +1318,14 @@ public static class StateSaveExtensionMethods
     /// <param name="secondValue">The second value as a numeric value.</param>
     /// <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
     /// <returns>The resulting interpolated value, matching the type of the arguments.</returns>
+    private static object? GetZeroOfNumericType(object value)
+    {
+        if (value is float) return 0f;
+        if (value is double) return 0.0;
+        if (value is int) return 0;
+        return null;
+    }
+
     public static object? GetValueConsideringInterpolation(object? firstValue, object? secondValue, float interpolationValue)
     {
         if (firstValue == null || secondValue == null)

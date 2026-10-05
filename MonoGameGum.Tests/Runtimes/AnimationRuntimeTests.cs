@@ -58,6 +58,107 @@ public class AnimationRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void GetStateToSet_InterpolatesFromZero_WhenTheFirstKeyframesNumericVariableHasNoValue()
+    {
+        // A custom float that was never given a value in the first state has a null value. It must
+        // interpolate from zero rather than jump straight to the second state's value.
+        ComponentSave element = new() { Name = "Animated component" };
+        element.States.Add(new StateSave());
+
+        StateSaveCategory category = new() { Name = "Category1" };
+        element.Categories.Add(category);
+
+        StateSave start = new() { Name = "Start" };
+        start.Variables.Add(new() { Name = "WaveValue", Type = "float", SetsValue = true, IsCustomVariable = true });
+        category.States.Add(start);
+
+        StateSave end = new() { Name = "End" };
+        end.Variables.Add(new() { Name = "WaveValue", Type = "float", Value = 100f, SetsValue = true, IsCustomVariable = true });
+        category.States.Add(end);
+
+        KeyframeRuntime keyframe1 = new() { Time = 0, StateName = "Category1/Start" };
+        keyframe1.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
+        KeyframeRuntime keyframe2 = new() { Time = 1, StateName = "Category1/End" };
+
+        AnimationRuntime animation = new();
+        animation.Keyframes.Add(keyframe1);
+        animation.Keyframes.Add(keyframe2);
+        animation.RefreshCumulativeStates(element);
+
+        StateSave interpolated = animation.GetStateToSet(0.25, element, defaultIfNull: true);
+
+        interpolated.GetValue("WaveValue").ShouldBe(25f);
+    }
+
+    [Fact]
+    public void GetStateToSet_InterpolatesFromTheInheritedValue_WhenTheFirstKeyframesVariableHasNoValue()
+    {
+        // The default state gives WaveValue 10, which the valueless first state inherits.
+        ComponentSave element = new() { Name = "Animated component" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        defaultState.Variables.Add(new() { Name = "WaveValue", Type = "float", Value = 10f, SetsValue = true, IsCustomVariable = true });
+        element.States.Add(defaultState);
+
+        StateSaveCategory category = new() { Name = "Category1" };
+        element.Categories.Add(category);
+
+        StateSave start = new() { Name = "Start", ParentContainer = element };
+        start.Variables.Add(new() { Name = "WaveValue", Type = "float", SetsValue = true, IsCustomVariable = true });
+        category.States.Add(start);
+
+        StateSave end = new() { Name = "End", ParentContainer = element };
+        end.Variables.Add(new() { Name = "WaveValue", Type = "float", Value = 110f, SetsValue = true, IsCustomVariable = true });
+        category.States.Add(end);
+
+        KeyframeRuntime keyframe1 = new() { Time = 0, StateName = "Category1/Start" };
+        keyframe1.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
+        KeyframeRuntime keyframe2 = new() { Time = 1, StateName = "Category1/End" };
+
+        AnimationRuntime animation = new();
+        animation.Keyframes.Add(keyframe1);
+        animation.Keyframes.Add(keyframe2);
+        animation.RefreshCumulativeStates(element);
+
+        StateSave interpolated = animation.GetStateToSet(0.5, element, defaultIfNull: true);
+
+        interpolated.GetValue("WaveValue").ShouldBe(60f);
+    }
+
+    [Theory]
+    [InlineData("int", 10, 5)]
+    [InlineData("double", 10.0, 5.0)]
+    public void GetStateToSet_InterpolatesFromZero_ForIntAndDoubleVariablesWithNoStartingValue(
+        string type, object endValue, object expected)
+    {
+        ComponentSave element = new() { Name = "Animated component" };
+        element.States.Add(new StateSave());
+
+        StateSaveCategory category = new() { Name = "Category1" };
+        element.Categories.Add(category);
+
+        StateSave start = new() { Name = "Start" };
+        start.Variables.Add(new() { Name = "Amount", Type = type, SetsValue = true, IsCustomVariable = true });
+        category.States.Add(start);
+
+        StateSave end = new() { Name = "End" };
+        end.Variables.Add(new() { Name = "Amount", Type = type, Value = endValue, SetsValue = true, IsCustomVariable = true });
+        category.States.Add(end);
+
+        KeyframeRuntime keyframe1 = new() { Time = 0, StateName = "Category1/Start" };
+        keyframe1.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
+        KeyframeRuntime keyframe2 = new() { Time = 1, StateName = "Category1/End" };
+
+        AnimationRuntime animation = new();
+        animation.Keyframes.Add(keyframe1);
+        animation.Keyframes.Add(keyframe2);
+        animation.RefreshCumulativeStates(element);
+
+        StateSave interpolated = animation.GetStateToSet(0.5, element, defaultIfNull: true);
+
+        interpolated.GetValue("Amount").ShouldBe(expected);
+    }
+
+    [Fact]
     public void GetStateToSet_ShouldInterpolateKeyframes()
     {
         ComponentSave element = new ();

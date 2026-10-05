@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins;
@@ -212,7 +213,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     // geometry, which only UpdateLayout syncs - so under suspension they saw stale
                     // (pre-layout) values and baked the wrong result. Now that UpdateLayout has caught
                     // up, re-resolve the references so Absolute* reads correct geometry (#4015).
-                    var stateForReferences = _selectedState.SelectedStateSave ?? elementSave.DefaultState;
+                    var stateForReferences = GetStateForReferences(elementSave);
                     if (stateForReferences != null)
                     {
                         RootGue.ApplyVariableReferences(stateForReferences);
@@ -233,6 +234,26 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         }
         ElementShowing = elementSave;
 
+    }
+
+    /// <summary>
+    /// The state variable references are evaluated against. A state other than the default (such as a
+    /// categorized state) inherits everything it doesn't set from the default state, references
+    /// included, so those are evaluated against the default state with the selected state's values on top.
+    /// </summary>
+    private StateSave? GetStateForReferences(ElementSave elementSave)
+    {
+        StateSave? selected = _selectedState.SelectedStateSave;
+        StateSave? defaultState = elementSave.DefaultState;
+
+        if (selected == null || defaultState == null || selected == defaultState)
+        {
+            return selected ?? defaultState;
+        }
+
+        StateSave selectedOverDefault = defaultState.Clone();
+        selectedOverDefault.MergeIntoThis(selected);
+        return selectedOverDefault;
     }
 
     /// <summary>

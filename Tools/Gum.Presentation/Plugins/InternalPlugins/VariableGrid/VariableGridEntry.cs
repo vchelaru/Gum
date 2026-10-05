@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.Managers;
+using Gum.PropertyGridHelpers;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.Reflection;
 using Gum.Services;
@@ -614,6 +615,11 @@ public class VariableGridEntry
             return GetCategoryResetValue(element, categoryVariable).Value;
         }
 
+        if (VariableSave is { } customVariable && IsCustomVariableDefinition(customVariable, _stateSave))
+        {
+            return TypeZeroValue.For(customVariable.Type);
+        }
+
         var effectiveVariableName = VariableSave?.Name ?? _variableName;
         var toReturn = _stateSave?.GetValueRecursive(effectiveVariableName, ignoreOwnValue: true);
 
@@ -879,6 +885,12 @@ public class VariableGridEntry
                             break;
                     }
                 }
+                else if (IsCustomVariableDefinition(variable, state))
+                {
+                    // The default state holds the definition of a custom variable, so there is no base
+                    // value to fall back to. Leave it a number rather than blank.
+                    variable.Value = TypeZeroValue.For(variable.Type);
+                }
                 else
                 {
                     variable.Value = null;
@@ -930,6 +942,9 @@ public class VariableGridEntry
         NotifyVariableLogic(Instance, VariablePropertyCommitType.Full, trySave: true);
     }
 
+    private static bool IsCustomVariableDefinition(VariableSave variable, StateSave? state) =>
+        variable.IsCustomVariable && state != null && state == state.ParentContainer?.DefaultState;
+
     private enum CategoryResetSource { DefaultState, ClearedState, Inherited, NotFound }
 
     private readonly record struct CategoryResetValue(CategoryResetSource Source, object? Value);
@@ -948,7 +963,10 @@ public class VariableGridEntry
         var variableInDefault = defaultState.GetVariableSave(variable.Name);
         if (variableInDefault != null)
         {
-            return new CategoryResetValue(CategoryResetSource.DefaultState, variableInDefault.Value);
+            // A custom variable saved with no default value still has to leave the state holding a number.
+            object? value = variableInDefault.Value
+                ?? (variableInDefault.IsCustomVariable ? TypeZeroValue.For(variableInDefault.Type) : null);
+            return new CategoryResetValue(CategoryResetSource.DefaultState, value);
         }
 
         if (variable.IsState(element))

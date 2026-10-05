@@ -299,6 +299,76 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList[0].ShouldBe("Width=Sin(myInstance.Angle) + Max(myInstance.Angle, 1)");
     }
 
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_BareNameOnlyOnOwner_StaysUnqualified()
+    {
+        // WaveValue is a custom variable on the owning component; the instance (a Circle) has no such
+        // variable, so qualifying it as CircleInstance.WaveValue would point at nothing.
+        (StateSave ownerState, InstanceSave instance) = BuildOwnerWithCircleInstance();
+        ownerState.VariableLists.Add(new VariableListSave<string>
+        {
+            Type = "string",
+            Name = "CircleInstance.VariableReferences",
+            Value = { "X=Sin(WaveValue+ 10*@Index)" }
+        });
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance, ownerState, changedMember: "VariableReferences", oldValue: null);
+
+        var varList = (List<string>)ownerState.GetVariableListSave("CircleInstance.VariableReferences")!.ValueAsIList;
+        varList[0].ShouldBe("X=Sin(WaveValue+ 10*@Index)");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_BareNameOnBothOwnerAndInstance_IsQualifiedToInstance()
+    {
+        // Width exists on the component and on the Circle: the documented mix-up guard applies.
+        (StateSave ownerState, InstanceSave instance) = BuildOwnerWithCircleInstance();
+        ownerState.VariableLists.Add(new VariableListSave<string>
+        {
+            Type = "string",
+            Name = "CircleInstance.VariableReferences",
+            Value = { "X=Width" }
+        });
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance, ownerState, changedMember: "VariableReferences", oldValue: null);
+
+        var varList = (List<string>)ownerState.GetVariableListSave("CircleInstance.VariableReferences")!.ValueAsIList;
+        varList[0].ShouldBe("X=CircleInstance.Width");
+    }
+
+    private static (StateSave ownerState, InstanceSave instance) BuildOwnerWithCircleInstance()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        StandardElementSave circle = new StandardElementSave { Name = "Circle" };
+        StateSave circleState = new StateSave { Name = "Default", ParentContainer = circle };
+        circleState.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
+        circleState.Variables.Add(new VariableSave { Name = "X", Type = "float", Value = 0f, SetsValue = true });
+        circle.States.Add(circleState);
+        project.StandardElements.Add(circle);
+
+        ComponentSave owner = new ComponentSave { Name = "Owner" };
+        StateSave ownerState = new StateSave { Name = "Default", ParentContainer = owner };
+        ownerState.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
+        ownerState.Variables.Add(new VariableSave
+        {
+            Name = "WaveValue",
+            Type = "float",
+            Value = 0f,
+            SetsValue = true,
+            IsCustomVariable = true
+        });
+        owner.States.Add(ownerState);
+        InstanceSave instance = new InstanceSave { Name = "CircleInstance", BaseType = "Circle", ParentContainer = owner };
+        owner.Instances.Add(instance);
+        project.Components.Add(owner);
+
+        return (ownerState, instance);
+    }
+
     #endregion
 
     #region DoVariableReferenceReaction

@@ -129,6 +129,13 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
             defaultValue = element.GetDefaultStateOrThrow().GetValueRecursive(memberName);
         }
 
+        // A custom variable has no default value until one is typed in, but every state in the category
+        // must hold an explicit value, or interpolating between its states has nothing to start from.
+        if (defaultValue == null && defaultVariable != null)
+        {
+            defaultValue = TypeZeroValue.For(defaultVariable.Type);
+        }
+
         foreach (var state in states)
         {
 
