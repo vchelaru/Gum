@@ -2655,7 +2655,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
                                 {
                                     var columnCount = System.Math.Max(1, this.AutoGridHorizontalCells);
-                                    var requiredRowCount = (int)Math.Ceiling((float)Children.Count / columnCount);
+                                    var requiredRowCount = (int)Math.Ceiling((float)GetVisibleChildCount() / columnCount);
                                     numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
                                 }
 
@@ -3098,7 +3098,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             if (ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
                                 var rowCount = System.Math.Max(1, this.AutoGridVerticalCells);
-                                var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / rowCount);
+                                var requiredColumnCount = (int)Math.Ceiling((float)GetVisibleChildCount() / rowCount);
                                 numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
                             }
                             // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
@@ -3610,7 +3610,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 var setCellCount = effectiveHorizontalCells * effectiveVerticalCells;
 
-                if (Parent.Children?.Count > setCellCount)
+                if (Parent.GetVisibleChildCount() > setCellCount)
                 {
                     // Matches GetCellDimensions: a horizontal grid fixes its columns and grows rows,
                     // a vertical grid fixes its rows and grows columns.
@@ -3618,14 +3618,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         if (Parent.HeightUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.Children.Count / effectiveHorizontalCells);
+                            effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.GetVisibleChildCount() / effectiveHorizontalCells);
                         }
                     }
                     else
                     {
                         if (Parent.WidthUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)Parent.Children.Count / effectiveVerticalCells);
+                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)Parent.GetVisibleChildCount() / effectiveVerticalCells);
                         }
                     }
                 }
@@ -4702,7 +4702,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (columnCount < 1) columnCount = 1;
         if (rowCount < 1) rowCount = 1;
 
-        var childCount = effectiveParent.Children?.Count ?? 0;
+        var childCount = effectiveParent.GetVisibleChildCount();
 
         if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
         {
@@ -4755,6 +4755,34 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         //    cellWidth = effectiveParent.GetMaxCellWidth(true, 0);
         //}
 
+    }
+
+    // Counts the children a grid or stack places: visible ones, from the same list GetIndexInVisibleSiblings walks.
+    private int GetVisibleChildCount()
+    {
+        int count = 0;
+        if (mContainedObjectAsIpso != null)
+        {
+            for (int i = 0; i < Children.Count; i++)
+            {
+                if (Children[i].Visible)
+                {
+                    count++;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < mWhatThisContains.Count; i++)
+            {
+                var child = mWhatThisContains[i];
+                if (child.Parent == null && child.Visible)
+                {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private int GetIndexInVisibleSiblings()
