@@ -2822,7 +2822,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             #region Ratio
             case DimensionUnitType.Ratio:
                 {
-                    if (this.Height == 0)
+                    // A negative ratio takes no space, like 0.
+                    if (this.Height <= 0)
                     {
                         pixelHeightToSet = 0;
                     }
@@ -2895,7 +2896,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var child = _parent.Children[i];
                                 if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
-                                    totalRatio += gue.Height;
+                                    totalRatio += System.Math.Max(0, gue.Height);
                                 }
                             }
                         }
@@ -3262,7 +3263,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             case DimensionUnitType.Ratio:
                 {
-                    if (this.Width == 0)
+                    // A negative ratio takes no space, like 0.
+                    if (this.Width <= 0)
                     {
                         pixelWidthToSet = 0;
                     }
@@ -3336,7 +3338,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var child = _parent.Children[i];
                                 if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
-                                    totalRatio += gue.Width;
+                                    totalRatio += System.Math.Max(0, gue.Width);
                                 }
                             }
                         }
@@ -4148,7 +4150,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 unitOffsetX += value;
             }
-            else if (mXUnits != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
+            // units, not mXUnits: a flipped parent turns PixelsFromSmall into PixelsFromLarge.
+            else if (units != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
             {
                 unitOffsetX = value;
             }
@@ -4623,8 +4626,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
 
             // EffectiveParentGue, not Parent: a parentless child of a grid component has no Parent.
-            var stackSpacing = EffectiveParentGue!.StackSpacing;
-            unitOffsetX += cellWidth * xIndex + stackSpacing * xIndex;
+            GraphicalUiElement gridParent = EffectiveParentGue!;
+            var stackSpacing = gridParent.StackSpacing;
+            if (gridParent.GetAbsoluteFlipHorizontal())
+            {
+                // Mirror the column: the child's own units and origin already mirror inside the cell.
+                unitOffsetX += gridParent.AbsoluteWidth - cellWidth * (xIndex + 1) - stackSpacing * xIndex;
+            }
+            else
+            {
+                unitOffsetX += cellWidth * xIndex + stackSpacing * xIndex;
+            }
             unitOffsetY += cellHeight * yIndex + stackSpacing * yIndex;
         }
     }
@@ -7259,7 +7271,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void ApplyState(List<DataTypes.Variables.VariableSaveValues> variableSaveValues)
     {
-        this.SuspendLayout(true);
+        // Same rule as ApplyState(StateSave): under an outer suspension, leave the flush to it.
+        bool didSuspend = false;
+        if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
+        {
+            didSuspend = true;
+            this.SuspendLayout(true);
+        }
 
         foreach (var variable in variableSaveValues)
         {
@@ -7268,7 +7286,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.SetProperty(variable.Name, variable.Value);
             }
         }
-        this.ResumeLayout(true);
+
+        if (didSuspend)
+        {
+            this.ResumeLayout(true);
+        }
     }
 
 
