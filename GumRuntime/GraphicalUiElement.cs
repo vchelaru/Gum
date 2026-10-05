@@ -4615,8 +4615,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             float cellWidth, cellHeight;
             GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
 
-            unitOffsetX += cellWidth * xIndex + Parent!.StackSpacing * (xIndex);
-            unitOffsetY += cellHeight * yIndex + Parent!.StackSpacing * (yIndex );
+            // EffectiveParentGue, not Parent: a parentless child of a grid component has no Parent.
+            var stackSpacing = EffectiveParentGue!.StackSpacing;
+            unitOffsetX += cellWidth * xIndex + stackSpacing * xIndex;
+            unitOffsetY += cellHeight * yIndex + stackSpacing * yIndex;
         }
     }
 
