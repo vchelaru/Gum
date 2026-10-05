@@ -5297,6 +5297,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void Dock(Dock dock)
     {
+        var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended || this.IsLayoutSuspended;
+
+        if (!wasSuspended)
+        {
+            this.SuspendLayout();
+        }
+
+        ApplyDock(dock);
+
+        if (!wasSuspended)
+        {
+            this.ResumeLayout();
+        }
+    }
+
+    private void ApplyDock(Dock dock)
+    {
         switch (dock)
         {
             case Wireframe.Dock.Left:
