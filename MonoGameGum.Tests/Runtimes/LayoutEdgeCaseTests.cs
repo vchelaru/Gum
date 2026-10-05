@@ -218,8 +218,9 @@ public class LayoutEdgeCaseTests : BaseTestClass
         second.AbsoluteTop.ShouldBe(50);
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5767")]
-    public void LeftToRightStack_RatioHeight_ShouldNotSubtractSiblingsBesideIt()
+    // Intended (#5767): Ratio shares with every sibling on the same axis, whatever the stack direction.
+    [Fact]
+    public void LeftToRightStack_RatioHeight_ShouldSubtractSiblingsBesideIt()
     {
         ContainerRuntime stack = CreateContainer(300, 100);
         stack.ChildrenLayout = ChildrenLayout.LeftToRightStack;
@@ -228,7 +229,21 @@ public class LayoutEdgeCaseTests : BaseTestClass
         ratioChild.HeightUnits = DimensionUnitType.Ratio;
         stack.AddChild(ratioChild);
 
-        ratioChild.AbsoluteHeight.ShouldBe(100);
+        ratioChild.AbsoluteHeight.ShouldBe(100 - 40);
+    }
+
+    // Intended (#5767): the TopToBottomStack mirror of the case above.
+    [Fact]
+    public void TopToBottomStack_RatioWidth_ShouldSubtractSiblingsBesideIt()
+    {
+        ContainerRuntime stack = CreateContainer(100, 300);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        stack.AddChild(CreateContainer(40, 100));
+        ContainerRuntime ratioChild = CreateContainer(1, 100);
+        ratioChild.WidthUnits = DimensionUnitType.Ratio;
+        stack.AddChild(ratioChild);
+
+        ratioChild.AbsoluteWidth.ShouldBe(100 - 40);
     }
 
     [Fact]

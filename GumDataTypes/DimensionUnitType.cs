@@ -55,9 +55,21 @@ public enum DimensionUnitType
     MaintainFileAspectRatio = 6,
 
     /// <summary>
-    /// The Width or Height of the parent is distributed among all siblings using Ratio after
-    /// subtracting the Width and Height values of siblings using Absolute values.
+    /// The parent's Width or Height, minus the space used by siblings that don't use Ratio, is split
+    /// among the siblings that do, in proportion to their values.
     /// </summary>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item>Every visible sibling's size on the same axis is subtracted, whatever the parent's
+    /// ChildrenLayout. A Ratio height in a LeftToRightStack still subtracts the heights of the
+    /// siblings beside it.</item>
+    /// <item>In a stack, the stack spacing between visible children is also subtracted on the
+    /// stacking axis.</item>
+    /// <item>Invisible siblings are ignored. A value of 0 or less takes no space.</item>
+    /// <item>When the siblings use more than the parent, the Ratio children get 0, not a negative size.</item>
+    /// <item>In an AutoGrid each child has its own cell, so a Ratio child fills its cell.</item>
+    /// </list>
+    /// </remarks>
     Ratio = 7,
 
     /// <summary>
