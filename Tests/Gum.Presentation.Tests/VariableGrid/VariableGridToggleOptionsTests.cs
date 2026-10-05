@@ -44,6 +44,15 @@ public class VariableGridToggleOptionsTests : BaseTestClass
         sut.GradientRadiusUnits.ShouldAllBe(option => option.GumIconName != null);
     }
 
+    [Fact]
+    public void GradientYUnits_OfferNoBaseline()
+    {
+        VariableGridToggleOptions sut = new VariableGridToggleOptions(Mock.Of<ISelectedState>());
+
+        sut.GradientYUnits.Select(option => option.Value).ShouldNotContain(PositionUnitType.PixelsFromBaseline);
+        sut.GradientYUnits.Length.ShouldBe(sut.YUnits.Length - 1);
+    }
+
     [Theory]
     [InlineData("GradientInnerRadiusUnits")]
     [InlineData("GradientOuterRadiusUnits")]

@@ -50,6 +50,7 @@ public class AvaloniaVariableGridHead : IVariableGridHead
         registry.Register(typeof(GumDisplayers.WidthUnits), typeof(WidthUnitsDisplay));
         registry.Register(typeof(GumDisplayers.HeightUnits), typeof(HeightUnitsDisplay));
         registry.Register(typeof(GumDisplayers.GradientRadiusUnits), typeof(GradientRadiusUnitsDisplay));
+        registry.Register(typeof(GumDisplayers.GradientYUnits), typeof(GradientYUnitsDisplay));
         registry.Register(typeof(GumDisplayers.XUnits), typeof(XUnitsDisplay));
         registry.Register(typeof(GumDisplayers.YUnits), typeof(YUnitsDisplay));
         registry.Register(typeof(GumDisplayers.TextVerticalAlignment), typeof(TextVerticalAlignmentDisplay));

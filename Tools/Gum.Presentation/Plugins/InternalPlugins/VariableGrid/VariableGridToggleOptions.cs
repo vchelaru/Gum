@@ -78,6 +78,7 @@ public class VariableGridToggleOptions
             new ToggleButtonOption("Absolute Multiplied by Font Scale", DimensionUnitType.AbsoluteMultipliedByFontScale) { GumIconName = "HeightUnitsAbsoluteMultipliedByFontScale" },
             new ToggleButtonOption("Relative to Max of Children or Parent", DimensionUnitType.RelativeToMaxParentOrChildren) { GumIconName = "HeightRelativeToMaxChildrenOrParent" },
         };
+        GradientYUnits = YUnits.Where(option => !Equals(option.Value, PositionUnitType.PixelsFromBaseline)).ToArray();
         GradientRadiusUnits = new[]
         {
             new ToggleButtonOption("Absolute", DimensionUnitType.Absolute) { GumIconName = "WidthUnitsAbsolute" },
@@ -125,6 +126,9 @@ public class VariableGridToggleOptions
     public ToggleButtonOption[] XUnits { get; }
     public ToggleButtonOption[] YUnits { get; }
     public ToggleButtonOption[] XOrigin { get; }
+
+    /// <summary>The Y units a gradient point honors: every Y unit except baseline.</summary>
+    public ToggleButtonOption[] GradientYUnits { get; }
 
     /// <summary>The gradient radius units the renderers honor (the radius is measured against the shape's width).</summary>
     public ToggleButtonOption[] GradientRadiusUnits { get; }

@@ -35,6 +35,9 @@ public static class GumDisplayers
     /// <summary>Toggle buttons for <c>HeightUnits</c>.</summary>
     public sealed class HeightUnits { private HeightUnits() { } }
 
+    /// <summary>Toggle buttons for the vertical gradient units, which have no baseline.</summary>
+    public sealed class GradientYUnits { private GradientYUnits() { } }
+
     /// <summary>Toggle buttons for the gradient inner and outer radius units.</summary>
     public sealed class GradientRadiusUnits { private GradientRadiusUnits() { } }
 
