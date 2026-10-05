@@ -181,8 +181,12 @@ internal sealed class CanvasHarness : IDisposable
 
     public CheckBox SnapToGridCheckBox => Toolbar.GetVisualDescendants().OfType<CheckBox>().Single();
 
-    /// <summary>The toolbar's Grid Size box (the combo boxes hold text boxes of their own).</summary>
-    public TextBox GridSizeBox => Toolbar.GetVisualDescendants().OfType<TextBox>().Single(box => box.FindAncestorOfType<ComboBox>() == null);
+    /// <summary>The toolbar's Grid Size combo box (editable, with preset sizes).</summary>
+    public ComboBox GridSizeComboBox => Toolbar.GetVisualDescendants().OfType<ComboBox>()
+        .Single(combo => combo.ItemsSource == EditorToolbar.GridSizePresets);
+
+    /// <summary>The text box inside the toolbar's Grid Size combo box, for typing a custom size.</summary>
+    public TextBox GridSizeBox => GridSizeComboBox.GetVisualDescendants().OfType<TextBox>().Single();
 
     /// <summary>The thumb of the canvas's scroll bar running along <paramref name="orientation"/>.</summary>
     public Thumb ScrollBarThumb(Orientation orientation) =>

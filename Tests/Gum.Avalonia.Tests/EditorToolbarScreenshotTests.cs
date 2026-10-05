@@ -14,4 +14,11 @@ public class EditorToolbarScreenshotTests
         using ScreenshotWindow window = PrScreenshot.Show(new EditorToolbar(), 560, 44, ThemeVariant.Dark);
         window.Save("editor-toolbar-narrow");
     });
+
+    [SkippableFact]
+    public void GridSizeToolbar() => PrScreenshot.Run(() =>
+    {
+        using ScreenshotWindow window = PrScreenshot.Show(new EditorToolbar(), 1000, 44, ThemeVariant.Dark);
+        window.Save("editor-toolbar-grid-size");
+    });
 }

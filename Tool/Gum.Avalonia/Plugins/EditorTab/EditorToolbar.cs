@@ -26,6 +26,9 @@ internal sealed class EditorToolbar : DockPanel
     private const double DefaultButtonWidth = 20;
     private const string PreviewIdleGlyph = "▶";
 
+    /// <summary>The grid sizes offered in the toolbar's Grid Size drop-down; any other size can still be typed.</summary>
+    internal static readonly IReadOnlyList<int> GridSizePresets = new[] { 8, 16, 32, 64 };
+
     private readonly List<Button> _sizedButtons;
 
     public EditorToolbar()
@@ -73,11 +76,13 @@ internal sealed class EditorToolbar : DockPanel
             [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.SnapToGrid)) { Mode = BindingMode.TwoWay },
         });
         panel.Children.Add(GlyphLabel("▦", "Grid Size", 10));
-        panel.Children.Add(new TextBox
+        panel.Children.Add(new ComboBox
         {
-            Width = 40,
+            Width = 80,
+            IsEditable = true,
             VerticalAlignment = VerticalAlignment.Center,
-            [!TextBox.TextProperty] = new Binding(nameof(EditorViewModel.GridSize)) { Mode = BindingMode.TwoWay },
+            ItemsSource = GridSizePresets,
+            [!ComboBox.TextProperty] = new Binding(nameof(EditorViewModel.GridSize)) { Mode = BindingMode.TwoWay },
         });
 
         RotateTransform previewSpinnerRotation = new RotateTransform();
