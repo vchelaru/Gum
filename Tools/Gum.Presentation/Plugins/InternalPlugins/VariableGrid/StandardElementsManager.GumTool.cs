@@ -85,6 +85,10 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
                 {
                     variable.PreferredDisplayer = typeof(GumDisplayers.HeightUnits);
                 }
+                else if (variable.Name == "GradientInnerRadiusUnits" || variable.Name == "GradientOuterRadiusUnits")
+                {
+                    variable.PreferredDisplayer = typeof(GumDisplayers.GradientRadiusUnits);
+                }
             }
             else if (variable.Type == nameof(PositionUnitType))
             {
@@ -92,9 +96,13 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
                 {
                     variable.PreferredDisplayer = typeof(GumDisplayers.XUnits);
                 }
-                else if (variable.Name == "YUnits" || variable.Name == "GradientY1Units" || variable.Name == "GradientY2Units")
+                else if (variable.Name == "YUnits")
                 {
                     variable.PreferredDisplayer = typeof(GumDisplayers.YUnits);
+                }
+                else if (variable.Name == "GradientY1Units" || variable.Name == "GradientY2Units")
+                {
+                    variable.PreferredDisplayer = typeof(GumDisplayers.GradientYUnits);
                 }
             }
             else if (variable.Type == nameof(VerticalAlignment))

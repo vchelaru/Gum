@@ -78,6 +78,13 @@ public class VariableGridToggleOptions
             new ToggleButtonOption("Absolute Multiplied by Font Scale", DimensionUnitType.AbsoluteMultipliedByFontScale) { GumIconName = "HeightUnitsAbsoluteMultipliedByFontScale" },
             new ToggleButtonOption("Relative to Max of Children or Parent", DimensionUnitType.RelativeToMaxParentOrChildren) { GumIconName = "HeightRelativeToMaxChildrenOrParent" },
         };
+        GradientYUnits = YUnits.Where(option => !Equals(option.Value, PositionUnitType.PixelsFromBaseline)).ToArray();
+        GradientRadiusUnits = new[]
+        {
+            new ToggleButtonOption("Absolute", DimensionUnitType.Absolute) { GumIconName = "WidthUnitsAbsolute" },
+            new ToggleButtonOption("Percentage of Width", DimensionUnitType.PercentageOfParent) { GumIconName = "WidthUnitsPercentageOfParent" },
+            new ToggleButtonOption("Relative to Width", DimensionUnitType.RelativeToParent) { GumIconName = "WidthUnitsRelativeToParent" },
+        };
         TextHorizontalAlignment = new[]
         {
             new ToggleButtonOption("Left", HorizontalAlignment.Left) { IconName = "TextAlignLeft", ImagePath = "Content/Icons/Alignment/LeftAlign.png" },
@@ -119,6 +126,12 @@ public class VariableGridToggleOptions
     public ToggleButtonOption[] XUnits { get; }
     public ToggleButtonOption[] YUnits { get; }
     public ToggleButtonOption[] XOrigin { get; }
+
+    /// <summary>The Y units a gradient point honors: every Y unit except baseline.</summary>
+    public ToggleButtonOption[] GradientYUnits { get; }
+
+    /// <summary>The gradient radius units the renderers honor (the radius is measured against the shape's width).</summary>
+    public ToggleButtonOption[] GradientRadiusUnits { get; }
     public ToggleButtonOption[] TextHorizontalAlignment { get; }
     public ToggleButtonOption[] TextVerticalAlignment { get; }
     public ToggleButtonOption[] ChildrenLayout { get; }
