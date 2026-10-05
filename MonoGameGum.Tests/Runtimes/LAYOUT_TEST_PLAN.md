@@ -1,414 +1,342 @@
-# Layout System Test Plan
-
-## Summary
-
-This document defines a comprehensive test plan for Gum's layout system, centered on `GraphicalUiElement`. The goal is to build a regression suite that covers all dimension unit types, position unit types, origin combinations, stacking behaviors, and layout propagation. Tests should catch regressions when layout logic is refactored or extended.
-
-All tests use xUnit `[Fact]`, Shouldly assertions, and the `Feature_ShouldExpectedBehavior_WhenCondition` naming convention. Tests are organized by `#region` and alphabetized within each region.
-
-## File Organization
-
-Create a new file: `MonoGameGum.Tests/Runtimes/LayoutUnitTests.cs`
-
-- `GraphicalUiElementTests.cs` is already large (~1800 lines) and covers animation, state application, parent/child relationships, anchor/dock helpers, and some layout tests.
-- The new `LayoutUnitTests.cs` should extend `BaseTestClass` and focus exclusively on layout computation (absolute positions and sizes resulting from unit configurations).
-- Existing layout tests in `GraphicalUiElementTests.cs` stay where they are; this plan does not propose moving them.
-
----
-
-## Test Categories
-
-### Region 1: Width Units - Absolute and Relative
-
-Tests for `DimensionUnitType.Absolute`, `PercentageOfParent`, `RelativeToParent`, and `ScreenPixel` applied to Width.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 1 | `WidthAbsolute_ShouldReturnExactPixels` | P0 | Width=150, assert AbsoluteWidth=150 |
-| 2 | `WidthAbsolute_ShouldReturnZero_WhenSetToZero` | P1 | Edge case: zero width |
-| 3 | `WidthAbsolute_ShouldAllowNegativeValues` | P2 | Verify negative width doesn't crash |
-| 4 | `WidthPercentageOfParent_ShouldReturnHalfParentWidth_WhenFiftyPercent` | P0 | Parent=400, Width=50 |
-| 5 | `WidthPercentageOfParent_ShouldReturnFullParentWidth_WhenHundredPercent` | P0 | Width=100 |
-| 6 | `WidthPercentageOfParent_ShouldReturnZero_WhenParentWidthIsZero` | P1 | Edge case |
-| 7 | `WidthRelativeToParent_ShouldMatchParent_WhenZero` | P0 | Width=0 means same as parent |
-| 8 | `WidthRelativeToParent_ShouldBeSmallerThanParent_WhenNegative` | P0 | Width=-20, parent=200 -> 180 |
-| 9 | `WidthRelativeToParent_ShouldBeLargerThanParent_WhenPositive` | P1 | Width=20, parent=200 -> 220 |
-| 10 | `WidthScreenPixel_ShouldUseCanvasWidth` | P1 | ScreenPixel uses canvas, not parent |
-
-### Region 2: Height Units - Absolute and Relative
-
-Mirror of Region 1 for Height.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 11 | `HeightAbsolute_ShouldReturnExactPixels` | P0 | |
-| 12 | `HeightAbsolute_ShouldReturnZero_WhenSetToZero` | P1 | |
-| 13 | `HeightPercentageOfParent_ShouldReturnHalfParentHeight_WhenFiftyPercent` | P0 | |
-| 14 | `HeightPercentageOfParent_ShouldReturnFullParentHeight_WhenHundredPercent` | P0 | |
-| 15 | `HeightPercentageOfParent_ShouldReturnZero_WhenParentHeightIsZero` | P1 | |
-| 16 | `HeightRelativeToParent_ShouldMatchParent_WhenZero` | P0 | |
-| 17 | `HeightRelativeToParent_ShouldBeSmallerThanParent_WhenNegative` | P0 | |
-| 18 | `HeightRelativeToParent_ShouldBeLargerThanParent_WhenPositive` | P1 | |
-| 19 | `HeightScreenPixel_ShouldUseCanvasHeight` | P1 | |
-
-### Region 3: RelativeToChildren Sizing
-
-Tests for `DimensionUnitType.RelativeToChildren` on both Width and Height.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 20 | `WidthRelativeToChildren_ShouldMatchWidestChild` | P0 | Single child at X=0 with Width=100 |
-| 21 | `WidthRelativeToChildren_ShouldIncludeChildXOffset` | P0 | Child at X=50, Width=100 -> parent=150 |
-| 22 | `WidthRelativeToChildren_ShouldAddPaddingValue` | P0 | Width=20 (padding), child width=100 -> 120 |
-| 23 | `WidthRelativeToChildren_ShouldIgnoreInvisibleChildren` | P1 | Invisible child should not contribute |
-| 24 | `WidthRelativeToChildren_ShouldReturnPaddingOnly_WhenNoChildren` | P1 | No children, Width=10 -> 10 |
-| 25 | `WidthRelativeToChildren_ShouldUpdateWhenChildResizes` | P0 | Change child width, parent should update |
-| 26 | `WidthRelativeToChildren_ShouldUpdateWhenChildMoves` | P0 | Change child X, parent should update |
-| 27 | `HeightRelativeToChildren_ShouldMatchTallestChild` | P0 | |
-| 28 | `HeightRelativeToChildren_ShouldIncludeChildYOffset` | P0 | |
-| 29 | `HeightRelativeToChildren_ShouldAddPaddingValue` | P0 | |
-| 30 | `HeightRelativeToChildren_ShouldIgnoreInvisibleChildren` | P1 | |
-| 31 | `HeightRelativeToChildren_ShouldReturnPaddingOnly_WhenNoChildren` | P1 | |
-| 32 | `HeightRelativeToChildren_ShouldUpdateWhenChildResizes` | P0 | |
-
-### Region 4: PercentageOfOtherDimension
-
-Tests for `DimensionUnitType.PercentageOfOtherDimension`.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 33 | `WidthPercentOfOtherDimension_ShouldEqualHeight_WhenHundredPercent` | P0 | Width=100, Height=200 absolute -> Width becomes 200 |
-| 34 | `WidthPercentOfOtherDimension_ShouldBeHalfHeight_WhenFiftyPercent` | P0 | Width=50 |
-| 35 | `HeightPercentOfOtherDimension_ShouldEqualWidth_WhenHundredPercent` | P0 | |
-| 36 | `HeightPercentOfOtherDimension_ShouldBeHalfWidth_WhenFiftyPercent` | P0 | |
-| 37 | `WidthPercentOfOtherDimension_ShouldUpdate_WhenHeightChanges` | P1 | Verify recalculation |
-
-### Region 5: AbsoluteMultipliedByFontScale
-
-Tests for `DimensionUnitType.AbsoluteMultipliedByFontScale`.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 38 | `WidthAbsoluteMultipliedByFontScale_ShouldScaleByGlobalFontScale` | P0 | Width=100, scale=2 -> 200 |
-| 39 | `WidthAbsoluteMultipliedByFontScale_ShouldReturnUnscaled_WhenScaleIsOne` | P1 | |
-| 40 | `HeightAbsoluteMultipliedByFontScale_ShouldScaleByGlobalFontScale` | P0 | |
-| 41 | `HeightAbsoluteMultipliedByFontScale_ShouldHandleFractionalScale` | P1 | Scale=1.5 |
-
-### Region 6: Ratio Width and Height
-
-Tests for `DimensionUnitType.Ratio`. Note: basic Ratio width test exists [EXISTS].
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 42 | `WidthUnits_Ratio_ShouldUseAvailableSpace` | **[EXISTS]** | In GraphicalUiElementTests |
-| 43 | `WidthUnits_Ratio_ShouldRespectAbsoluteMultipliedByFontScale` | **[EXISTS]** | In GraphicalUiElementTests |
-| 44 | `HeightRatio_ShouldDistributeRemainingSpace_AmongRatioSiblings` | P0 | Two children with ratio 1 and 2 |
-| 45 | `HeightRatio_ShouldSubtractAbsoluteSiblings_BeforeDistributing` | P0 | One absolute child + one ratio child |
-| 46 | `WidthRatio_ShouldDistributeEvenly_WhenMultipleSiblingsHaveEqualRatio` | P0 | Three children ratio=1 each |
-| 47 | `WidthRatio_ShouldDistributeProportionally_WhenDifferentRatios` | P0 | Children with ratio 1, 2, 3 |
-| 48 | `WidthRatio_ShouldReturnZero_WhenParentHasNoRemainingSpace` | P1 | Absolute siblings fill parent |
-| 49 | `WidthRatio_ShouldIgnoreInvisibleRatioSiblings` | P1 | Invisible ratio child excluded from distribution |
-| 50 | `HeightRatio_ShouldSubtractPercentageSiblings_BeforeDistributing` | P1 | Mix of percentage + ratio children |
-
-### Region 7: X Position Units
-
-Tests for `GeneralUnitType` applied to X positioning.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 51 | `XPixelsFromSmall_ShouldPositionFromLeftEdge` | P0 | X=30 from left |
-| 52 | `XPixelsFromSmall_ShouldOffsetByXValue` | P0 | Parent at 100, child X=50 -> AbsoluteX=150 |
-| 53 | `XPixelsFromLarge_ShouldPositionFromRightEdge` | P0 | X=0 from right edge |
-| 54 | `XPixelsFromLarge_ShouldOffsetInward_WhenPositive` | P0 | X=10 inward from right |
-| 55 | `XPixelsFromMiddle_ShouldPositionFromCenter` | P0 | X=0 at center |
-| 56 | `XPixelsFromMiddle_ShouldOffsetFromCenter_WhenNonZero` | P0 | X=50 right of center |
-| 57 | `XPercentage_ShouldPositionAsPercentOfParentWidth` | P0 | X=50 -> halfway |
-| 58 | `XPercentage_ShouldReturnZero_WhenParentWidthIsZero` | P1 | Edge case |
-| 59 | `XValues_ShouldUpdateLayoutImmediately` | **[EXISTS]** | In GraphicalUiElementTests |
-
-### Region 8: Y Position Units
-
-Tests for `GeneralUnitType` applied to Y positioning.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 60 | `YPixelsFromSmall_ShouldPositionFromTopEdge` | P0 | |
-| 61 | `YPixelsFromSmall_ShouldOffsetByYValue` | P0 | |
-| 62 | `YPixelsFromLarge_ShouldPositionFromBottomEdge` | P0 | |
-| 63 | `YPixelsFromLarge_ShouldOffsetInward_WhenPositive` | P0 | |
-| 64 | `YPixelsFromMiddle_ShouldPositionFromCenter` | P0 | |
-| 65 | `YPixelsFromMiddle_ShouldOffsetFromCenter_WhenNonZero` | P0 | |
-| 66 | `YPercentage_ShouldPositionAsPercentOfParentHeight` | P0 | |
-| 67 | `YPercentage_ShouldReturnZero_WhenParentHeightIsZero` | P1 | |
-
-### Region 9: X Origin
-
-Tests for `XOrigin` (HorizontalAlignment) effect on absolute position.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 68 | `XOriginLeft_ShouldAlignLeftEdgeToPosition` | P0 | Default behavior |
-| 69 | `XOriginCenter_ShouldAlignCenterToPosition` | P0 | Child 100 wide, XOrigin=Center, X=0 -> AbsoluteX=-50 |
-| 70 | `XOriginRight_ShouldAlignRightEdgeToPosition` | P0 | |
-| 71 | `XOriginCenter_WithPixelsFromMiddle_ShouldCenterInParent` | P0 | Common centering pattern |
-| 72 | `XOriginRight_WithPixelsFromLarge_ShouldAlignToRightEdge` | P0 | Common right-align pattern |
-
-### Region 10: Y Origin
-
-Tests for `YOrigin` (VerticalAlignment) effect on absolute position.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 73 | `YOriginTop_ShouldAlignTopEdgeToPosition` | P0 | |
-| 74 | `YOriginCenter_ShouldAlignCenterToPosition` | P0 | |
-| 75 | `YOriginBottom_ShouldAlignBottomEdgeToPosition` | P0 | |
-| 76 | `YOriginCenter_WithPixelsFromMiddle_ShouldCenterInParent` | P0 | |
-| 77 | `YOriginBottom_WithPixelsFromLarge_ShouldAlignToBottomEdge` | P0 | |
-
-### Region 11: Origin + Units Combinations
-
-Combined tests for less obvious origin + unit interactions.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 78 | `XOriginRight_WithPercentage_ShouldOffsetByChildWidth` | P1 | |
-| 79 | `YOriginBottom_WithPercentage_ShouldOffsetByChildHeight` | P1 | |
-| 80 | `XOriginCenter_WithPixelsFromSmall_ShouldShiftLeftByHalfWidth` | P1 | |
-| 81 | `YOriginCenter_WithPixelsFromSmall_ShouldShiftUpByHalfHeight` | P1 | |
-| 82 | `XOriginLeft_WithPixelsFromLarge_ShouldPositionFromRightEdge` | P1 | Origin left but measured from right |
-
-### Region 12: TopToBottomStack
-
-Tests for `ChildrenLayout.TopToBottomStack`.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 83 | `TopToBottomStack_ShouldStackChildrenVertically` | P0 | Three children, verify Y positions |
-| 84 | `TopToBottomStack_ShouldRespectStackSpacing` | P0 | StackSpacing=10 |
-| 85 | `TopToBottomStack_ShouldSkipInvisibleChildren` | P0 | Invisible child should not take space |
-| 86 | `TopToBottomStack_ShouldUpdatePositions_WhenChildHeightChanges` | P0 | |
-| 87 | `TopToBottomStack_ShouldRespectChildXUnits` | P1 | X positioning should still work independently |
-| 88 | `TopToBottomStack_ShouldIgnoreChildYUnits_ForSubsequentSiblings` | **[EXISTS]** | YUnits_ShouldBeIgnored_ForSubsequentStackedSiblings |
-| 89 | `TopToBottomStack_ShouldPositionFirstChildAtZero` | P0 | |
-| 90 | `TopToBottomStack_ShouldHandleMixedHeightUnits` | P1 | Absolute + percentage children in stack |
-| 91 | `TopToBottomStack_ShouldHandleZeroHeightChildren` | P2 | |
-
-### Region 13: LeftToRightStack
-
-Tests for `ChildrenLayout.LeftToRightStack`.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 92 | `LeftToRightStack_ShouldStackChildrenHorizontally` | P0 | |
-| 93 | `LeftToRightStack_ShouldRespectStackSpacing` | P0 | |
-| 94 | `LeftToRightStack_ShouldSkipInvisibleChildren` | P0 | |
-| 95 | `LeftToRightStack_ShouldUpdatePositions_WhenChildWidthChanges` | P0 | |
-| 96 | `LeftToRightStack_ShouldRespectChildYUnits` | P1 | |
-| 97 | `LeftToRightStack_ShouldPositionFirstChildAtZero` | P0 | |
-| 98 | `LeftToRightStack_ShouldHandleMixedWidthUnits` | P1 | |
-
-### Region 14: WrapsChildren
-
-Tests for stack wrapping behavior.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 99 | `MaxHeight_ShouldNotWrapVerticalStack_UntilExceeded` | **[EXISTS]** | |
-| 100 | `MaxHeight_ShouldWrapVerticalStack_IfExceeded` | **[EXISTS]** | |
-| 101 | `MaxWidth_ShouldWrapHorizontalStack_IfExceeded` | **[EXISTS]** | |
-| 102 | `WrapsChildren_TopToBottom_ShouldCreateNewColumn_WhenExceedingMaxHeight` | P0 | Verify X offset of wrapped column |
-| 103 | `WrapsChildren_LeftToRight_ShouldCreateNewRow_WhenExceedingMaxWidth` | P0 | Verify Y offset of wrapped row |
-| 104 | `WrapsChildren_ShouldPositionWrappedItems_AtCorrectOffsets` | P0 | Multiple wraps, verify all positions |
-| 105 | `WrapsChildren_ShouldRespectStackSpacing_AcrossWrappedLines` | P1 | Spacing between wrapped rows/columns |
-| 106 | `WrapsChildren_ShouldNotWrap_WhenMaxDimensionNotSet` | P1 | No MaxWidth/MaxHeight means no wrapping |
-| 107 | `WrapsChildren_RelativeToChildren_ShouldSizeToWrappedContent` | P1 | Parent with RelativeToChildren sizing wrapping |
-
-### Region 15: RelativeToChildren with Stacking
-
-Tests for RelativeToChildren combined with stacking layouts.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 108 | `WidthRelativeToChildren_TopToBottomStack_ShouldUseWidestChild` | P0 | |
-| 109 | `HeightRelativeToChildren_TopToBottomStack_ShouldSumChildHeights` | P0 | Sum of all child heights |
-| 110 | `HeightRelativeToChildren_TopToBottomStack_ShouldIncludeStackSpacing` | P0 | N-1 gaps |
-| 111 | `WidthRelativeToChildren_LeftToRightStack_ShouldSumChildWidths` | P0 | |
-| 112 | `WidthRelativeToChildren_LeftToRightStack_ShouldIncludeStackSpacing` | P0 | |
-| 113 | `HeightRelativeToChildren_LeftToRightStack_ShouldUseTallestChild` | P0 | |
-| 114 | `HeightRelativeToChildren_ShouldUseChildrenHeight_AutoGrid` | **[EXISTS]** | |
-| 115 | `WidthRelativeToChildren_ShouldUseChildrenWidth_AutoGrid` | **[EXISTS]** | |
-
-### Region 16: Nested Layout Propagation
-
-Tests for layout updates propagating through nested hierarchies.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 116 | `NestedPercentageOfParent_ShouldCascade_ThroughThreeLevels` | P0 | Grandparent=400, parent=50%, child=50% -> child=100 |
-| 117 | `NestedRelativeToParent_ShouldCascade` | P0 | |
-| 118 | `NestedRelativeToChildren_ShouldPropagateUpward` | P0 | Child resize -> parent resize -> grandparent resize |
-| 119 | `ParentResize_ShouldUpdatePercentageChildren` | P0 | Change parent width, verify child recalculates |
-| 120 | `ParentResize_ShouldUpdateRelativeToParentChildren` | P0 | |
-| 121 | `ChildResize_ShouldUpdateRelativeToChildrenParent` | P0 | |
-| 122 | `ChildMove_ShouldUpdateRelativeToChildrenParent` | P1 | |
-| 123 | `GrandchildResize_ShouldPropagateToGrandparent_WhenBothRelativeToChildren` | P1 | Three-level RelativeToChildren chain |
-| 124 | `NestedPercentageOfParent_ShouldHandleZeroParent` | P2 | Edge case: parent is 0 |
-
-### Region 17: Position Updates and Absolute Coordinates
-
-Tests for absolute coordinate computation with parent offsets.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 125 | `AbsoluteX_ShouldIncludeParentAbsoluteX` | P0 | Parent at X=100, child at X=50 -> AbsoluteX=150 |
-| 126 | `AbsoluteY_ShouldIncludeParentAbsoluteY` | P0 | |
-| 127 | `AbsoluteLeft_ShouldAccountForOrigin` | P0 | XOrigin=Center, Width=100 -> AbsoluteLeft = AbsoluteX - 50 |
-| 128 | `AbsoluteTop_ShouldAccountForOrigin` | P0 | |
-| 129 | `GetAbsoluteLeft_ShouldWorkWithPixelsFromLarge` | P1 | Right-aligned child |
-| 130 | `GetAbsoluteTop_ShouldWorkWithPixelsFromLarge` | P1 | Bottom-aligned child |
-| 131 | `AbsoluteCoordinates_ShouldUpdate_WhenParentMoves` | P0 | Move parent, verify child absolute positions change |
-
-### Region 18: Layout Suspension
-
-Tests for `SuspendLayout`, `ResumeLayout`, and `IsAllLayoutSuspended`.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 132 | `SuspendLayout_ShouldPreventLayoutUpdates` | P0 | Change child size during suspension, verify no update |
-| 133 | `ResumeLayout_ShouldApplyPendingLayoutChanges` | P0 | After resuming, layout should reflect changes |
-| 134 | `IsAllLayoutSuspended_ShouldPreventAllInstances` | P0 | Static flag |
-| 135 | `IsAllLayoutSuspended_ShouldResumeCorrectly_WhenSetToFalse` | P0 | |
-| 136 | `SuspendLayout_ShouldBeNestable` | P1 | Multiple suspends require multiple resumes |
-| 137 | `ResumeLayout_ShouldNotCrash_WhenCalledWithoutSuspend` | P2 | |
-| 138 | `ApplyState_ShouldSuspendLayout_ToReduceLayoutCallCount` | **[EXISTS]** | In GraphicalUiElementTests |
-
-### Region 19: Stacking with Ratio Children
-
-Tests for Ratio units inside stacked layouts.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 139 | `TopToBottomStack_HeightRatio_ShouldDistributeRemainingVerticalSpace` | P0 | |
-| 140 | `LeftToRightStack_WidthRatio_ShouldDistributeRemainingHorizontalSpace` | P0 | |
-| 141 | `TopToBottomStack_MixedAbsoluteAndRatio_ShouldCalculateCorrectly` | P0 | |
-| 142 | `LeftToRightStack_MixedAbsoluteAndRatio_ShouldCalculateCorrectly` | P0 | |
-| 143 | `TopToBottomStack_RatioChild_ShouldUpdateOnSiblingResize` | P1 | |
-
-### Region 20: PercentageOfSourceFile and MaintainFileAspectRatio
-
-These require a mock renderable with a SourceRectangle. Test patterns follow the mock setup in existing Ratio tests.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 144 | `WidthPercentageOfSourceFile_ShouldReturnSourceWidth_WhenHundredPercent` | P0 | Source 200x100, Width=100 -> 200 |
-| 145 | `WidthPercentageOfSourceFile_ShouldReturnHalfSourceWidth_WhenFiftyPercent` | P0 | Width=50 -> 100 |
-| 146 | `HeightPercentageOfSourceFile_ShouldReturnSourceHeight_WhenHundredPercent` | P0 | |
-| 147 | `HeightPercentageOfSourceFile_ShouldReturnHalfSourceHeight_WhenFiftyPercent` | P0 | |
-| 148 | `WidthMaintainFileAspectRatio_ShouldScaleProportionally_BasedOnHeight` | P0 | Source 200x100, Height set to 200 -> Width=400 |
-| 149 | `HeightMaintainFileAspectRatio_ShouldScaleProportionally_BasedOnWidth` | P0 | |
-| 150 | `MaintainFileAspectRatio_ShouldHandleSquareSource` | P1 | 100x100 source |
-
-### Region 21: Regular (non-stacked) Children Layout
-
-Tests for `ChildrenLayout.Regular` (default) ensuring children position independently.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 151 | `RegularLayout_ShouldNotStackChildren` | P0 | Two children, both at Y=0 |
-| 152 | `RegularLayout_ShouldAllowOverlappingChildren` | P0 | Two children at same position |
-| 153 | `RegularLayout_ShouldRespectIndividualXYUnits` | P0 | Each child has different units |
-
-### Region 22: StackedRowOrColumnDimensions
-
-Tests for per-row/column sizing in stacked layouts.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 154 | `StackedRowOrColumnDimensions_ShouldControlRowHeight_InWrappedTopToBottomStack` | P1 | |
-| 155 | `StackedRowOrColumnDimensions_ShouldControlColumnWidth_InWrappedLeftToRightStack` | P1 | |
-
-### Region 23: ClipsChildren
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 156 | `ClipsChildren_ShouldNotAffectLayoutCalculation` | P1 | Clipping is visual only, layout still computes normally |
-| 157 | `ClipsChildren_RelativeToChildren_ShouldStillSizeToChildren_EvenWhenClipped` | P1 | |
-
-### Region 24: Visible Affecting Layout
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 158 | `Visible_ShouldUpdateChildren_IfWidthUnitsRatio` | **[EXISTS]** | |
-| 159 | `Visible_ShouldUpdateChildren_IfLeftToRightStack` | **[EXISTS]** | |
-| 160 | `Visible_ShouldExcludeFromRelativeToChildren_WhenFalse` | P0 | |
-| 161 | `Visible_ShouldExcludeFromStackPosition_WhenFalse` | P0 | TopToBottom stack, middle child invisible |
-| 162 | `Visible_ShouldRecalculateRatioSiblings_WhenToggled` | P1 | |
-
-### Region 25: Edge Cases and Stress
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 163 | `Layout_ShouldHandleZeroSizeParent_WithPercentageChildren` | P1 | |
-| 164 | `Layout_ShouldHandleZeroSizeParent_WithRelativeToParentChildren` | P1 | |
-| 165 | `Layout_ShouldHandleDeeplyNestedHierarchy` | P2 | 10+ levels deep |
-| 166 | `Layout_ShouldHandleChildWithNoParent` | P2 | Orphan element |
-| 167 | `Layout_ShouldNotCrash_WhenNegativeWidthResultsFromRelativeToParent` | P2 | |
-| 168 | `Layout_ShouldNotCrash_WhenNegativeHeightResultsFromRelativeToParent` | P2 | |
-| 169 | `Layout_ShouldHandleRapidParentReassignment` | P2 | Move child between parents |
-| 170 | `Layout_ShouldRecalculate_WhenChildRemovedFromStack` | P0 | Remove middle child from stack |
-| 171 | `Layout_ShouldRecalculate_WhenChildAddedToStack` | P0 | Add child to existing stack |
-
-### Region 26: Multiple Dimension Units Interacting
-
-Tests where children use different unit types within the same parent.
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 172 | `MixedWidthUnits_AbsoluteAndPercentage_ShouldCoexistInParent` | P0 | |
-| 173 | `MixedWidthUnits_AbsoluteAndRatio_ShouldCalculateCorrectly` | P0 | Verify ratio gets remaining space |
-| 174 | `MixedWidthUnits_PercentageAndRelativeToParent_ShouldCoexistInParent` | P1 | |
-| 175 | `MixedHeightUnits_InTopToBottomStack_ShouldStackCorrectly` | P1 | Absolute, percentage, and ratio |
-
-### Region 27: Canvas-Relative Behavior
-
-Tests for elements without parents (positioned relative to canvas).
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 176 | `NoParent_PercentageOfParent_ShouldUseCanvasDimensions` | P1 | Width=50% of canvas |
-| 177 | `NoParent_RelativeToParent_ShouldUseCanvasDimensions` | P1 | |
-| 178 | `CanvasResize_ShouldUpdateRootLevelChildren` | P1 | Change CanvasWidth/Height, verify recalculation |
-
-### Region 28: PixelsFromBaseline (Y only)
-
-| # | Test Name | Priority | Notes |
-|---|-----------|----------|-------|
-| 179 | `YPixelsFromBaseline_ShouldPositionRelativeToTextBaseline` | P1 | Requires text element |
-
----
-
-## Priority Summary
-
-| Priority | Count | Description |
-|----------|-------|-------------|
-| P0 | ~85 | Core behavior - must pass for layout system to be reliable |
-| P1 | ~55 | Important edge cases and combinations |
-| P2 | ~10 | Nice-to-have stress tests and unusual scenarios |
-| [EXISTS] | ~15 | Already implemented in existing test files |
-| **Total** | ~165 | |
-
-## Implementation Order
-
-1. **Phase 1 (P0 core units)**: Regions 1-2, 7-8, 9-10 -- basic dimension and position units
-2. **Phase 2 (P0 stacking + relative)**: Regions 3, 12-13, 15, 17 -- stacking and RelativeToChildren
-3. **Phase 3 (P0 ratio + propagation)**: Regions 6, 16, 19, 25 (P0 items only) -- ratio distribution and nesting
-4. **Phase 4 (P0 remaining)**: Regions 4, 5, 20-21, 24 (P0 items)
-5. **Phase 5 (P1)**: All P1 tests across all regions
-6. **Phase 6 (P2)**: All P2 tests
-
-## Notes
-
-- Tests requiring a source texture (PercentageOfSourceFile, MaintainFileAspectRatio) need a mock `IRenderable` with a `SourceRectangle`. Follow the mock pattern in the existing `WidthUnits_Ratio_ShouldUseAvailableSpace` test.
-- `PixelsFromBaseline` may require a `TextRuntime` or similar element that exposes baseline information.
-- The `BaseTestClass.Dispose` method resets `IsAllLayoutSuspended`, `CanvasWidth`, `CanvasHeight`, and `GlobalFontScale`, so tests in those areas can safely modify these statics.
-- All tests should create their own parent/child hierarchies from scratch to avoid cross-test state leakage.
+# Layout Test Plan
+
+The full surface of Gum's layout engine as a tree, with existing coverage marked on each leaf. A
+sweep or a refactor (such as extracting the engine out of `GraphicalUiElement`) uses this to find
+what is unpinned. The engine is `GumRuntime/GraphicalUiElement.cs`; the flow is described in the
+`gum-layout-engine` skill. The Forms `Grid` control (row and column definitions) has its own
+layout code and tests (`Forms/GridTests.cs`) and is not covered here; "grid" below means
+`AutoGridHorizontal`/`AutoGridVertical`.
+
+**Coverage legend.** `[x]` covered, `[~]` partial (some cases, or only a neighboring case),
+`[ ]` none. Marks come from test names in `LayoutUnitTests.cs`, `GraphicalUiElementTests.cs`,
+`TextRuntimeTests.cs`, `SpriteRuntimeTests.cs` and `DockAnchorTests.cs`, plus the bodies of the
+grid tests; a mark is a starting point, not proof that every assertion is right.
+
+**H-numbers** point to suspected defects in section 9. Each was found by reading the code and has
+not been run; a sweep confirms or clears it.
+
+## Conventions
+
+- xUnit `[Fact]`/`[Theory]`, Shouldly, `Feature_ShouldExpected_WhenCondition` names, extend `BaseTestClass`.
+- Drive layout only through public properties and `UpdateLayout()`; assert only on absolute
+  position and size (`AbsoluteLeft/Top/Width/Height`). Tests written this way survive moving the
+  engine out of `GraphicalUiElement` unchanged.
+- `BaseTestClass.Dispose` resets `IsAllLayoutSuspended`, `CanvasWidth/Height` and
+  `GlobalFontScale`. Anything else static a test touches (`AreUpdatesAppliedWhenInvisible`) must
+  be restored by that test.
+- Renderable-interface cases need a fake renderable implementing only the interface under test,
+  so the test pins the engine and not one backend's Sprite or Text.
+
+## 1. Element inputs
+
+### 1.1 Width/Height units (each unit on each axis)
+- [x] Absolute: positive, zero, negative
+- [x] PercentageOfParent: 0, 50, 100, >100, negative, tiny, parent size 0
+- [x] RelativeToParent: positive, zero, negative (negative result does not crash)
+- [~] ScreenPixel: canvas only. [ ] divided by `Camera.Zoom` when managers exist; [ ] zoom 0; [ ] zoom changes or element is added to managers after layout (H24)
+- [x] AbsoluteMultipliedByFontScale: scale 1, 2, fractional. [ ] scale 0, negative; [ ] `GlobalFontScale` changed after layout (static, no trigger)
+- [x] RelativeToChildren: see 4.1
+- [x] PercentageOfOtherDimension: 50, 100, updates when source changes. See 4.2 and 5
+- [x] PercentageOfSourceFile: source rect, scaling. [ ] no texture (64 fallback); [ ] `TextureAddress` EntireTexture vs Custom vs DimensionsBased; [ ] texture swapped after layout
+- [x] MaintainFileAspectRatio: landscape, portrait, square. [ ] aspect ratio 0 (H8); [ ] no `IAspectRatio` (64 fallback); [ ] with a source rect
+- [x] Ratio: see 4.3
+- [x] RelativeToMaxParentOrChildren: parent larger, children larger, padding, no children, nested, ratchet
+
+### 1.2 X/Y units
+- [x] PixelsFromSmall, PixelsFromMiddle, PixelsFromLarge, Percentage (incl. parent size 0)
+- [~] PixelsFromBaseline: [ ] parent is Text (wrapped text height minus descender); [ ] parent is not Text (bottom edge)
+- [ ] PercentageOfFile, X and Y, with and without a texture (H1)
+- [ ] PixelsFromMiddleInverted (obsolete, still loads): position and contribution to a RelativeToChildren parent (H12)
+
+### 1.3 Origins
+- [x] XOrigin Left/Center/Right and YOrigin Top/Center/Bottom with the common units
+- [ ] YOrigin TextBaseline, on Text and on non-Text
+- [ ] full origin x unit matrix (only selected pairs are pinned today)
+
+### 1.4 Min/Max
+- [x] Max and Min clamp Absolute and PercentageOfParent; null does not clamp
+- [ ] Min > Max (Min wins today; decide and pin)
+- [ ] clamp applied to RelativeToChildren, Ratio, MaintainFileAspectRatio, RelativeToMaxParentOrChildren results
+- [ ] clamped child inside a RelativeToChildren parent and a stack (parent uses the clamped size)
+
+### 1.5 Flags
+- [x] IgnoredByParentSize: excluded from size, still stacks, still positions. [ ] in a grid (still takes a cell?)
+- [~] ClipsChildren pushed to `ISetClipsChildren` each layout (render tests only)
+- [x] Rotation does not change size, triggers full layout. [ ] rotated parent rotates child offsets; [ ] rotated child in a stack and a grid; [ ] near-90 rotations snap (`GetRightAndUpFromRotation`); [ ] `AbsoluteRight/Bottom` with rotation (Left + Width, rotation ignored)
+- [~] FlipHorizontal: no size change. [ ] flipped parent mirrors child X units and origin; [ ] flipped parent with a LeftToRightStack
+
+### 1.6 Anchor and Dock
+- [x] each value sets the right properties; Fill resizes with parent; SizeToChildren; Anchor inside a stack
+- [ ] Dock does not suspend layout while it sets 6-8 properties; Anchor does (H23)
+- [ ] `GetDock`/`GetAnchor` round-trip for every value
+- [ ] Dock.Fill and Anchor in a grid cell and in each stack
+
+### 1.7 Globals
+- [x] CanvasWidth/Height for parentless elements. [ ] canvas changed after layout (no trigger)
+- [x] GlobalFontScale
+- [ ] `AreUpdatesAppliedWhenInvisible = true`
+- [x] IsAllLayoutSuspended (see 7)
+
+## 2. Stacks (TopToBottomStack, LeftToRightStack)
+
+### 2.1 Placement
+- [x] order, spacing (positive, zero, negative), invisible children, mixed units, reorder, add/insert
+- [x] first child honors its X/Y offset; later children ignore main-axis Middle/Large units (#695)
+- [ ] later children with main-axis Percentage units (Y forced, X not, H10)
+- [ ] later children with main-axis Center or Bottom/Right origin (origin still applies after the stack position, H22)
+- [x] cross-axis units and origins honored (`ChildrenWithDifferentXOrigins/YOrigins`)
+- [ ] cross-axis PercentageOfParent size and Percentage position
+- [ ] first child invisible, then made visible
+- [ ] previous sibling rotated
+
+### 2.2 Size of a RelativeToChildren stack
+- [x] sum along the main axis with spacing, max along the cross axis, first-child offset counted, later offsets ignored
+- [x] toggling first or last child gives the same size
+- [ ] main-axis RelativeToChildren with a MaxHeight/MaxWidth and no wrap (stops counting at the max)
+- [ ] child that is itself RelativeToChildren and contains wrapping Text
+- [ ] child clamped by its own Min/Max
+
+### 2.3 UseFixedStackChildrenSize
+- [x] uses first child height for position and parent size, spacing
+- [ ] first child invisible (H7); invisible later children counted in parent size (H7)
+- [ ] LeftToRightStack (fast path is vertical only; result must match the slow path)
+- [ ] with WrapsChildren (fast path disabled; result must match)
+- [ ] first child resized after layout
+
+### 2.4 Wrapping
+- [x] new row/column at MaxWidth/MaxHeight, row max dimension, spacing across rows, child grows/shrinks/hides, many children
+- [x] no wrap without a max; single child larger than parent
+- [x] RelativeToChildren on the cross axis sizes to the wrapped rows
+- [ ] parent resized narrower then wider: children re-wrap and un-wrap, row dimensions shrink
+- [ ] removing children leaves no stale rows in `StackedRowOrColumnDimensions`
+- [ ] hiding the tallest item of a row (H11)
+- [ ] wrapped child with cross-axis offset or origin (counted via `X + Width`/`Y + Height`)
+- [ ] Ratio children in a wrapping stack
+- [ ] wrap when parent size is PercentageOfParent of a grandparent that resizes
+- [ ] ChildrenLayout switched away from a wrapped stack and back
+
+### 2.5 Ratio in stacks
+- [x] remaining space after Absolute/Percentage siblings, spacing, nested stacks
+- [ ] cross-axis Ratio (Ratio height in a LeftToRightStack, H13)
+
+## 3. AutoGrid (AutoGridHorizontal, AutoGridVertical)
+
+### 3.1 Placement
+- [x] 2x2 with fixed parent: positions and Dock.Fill sizes, with and without spacing
+- [ ] non-square grids (3x1, 1x3) and non-divisible sizes (fractional cells)
+- [ ] fewer children than cells, zero children
+- [ ] child X/Y units inside a cell: PixelsFromMiddle/Large, Percentage, origins
+- [ ] child sizes other than Fill: Absolute larger than the cell, PercentageOfParent, RelativeToParent
+- [ ] invisible children: placement skips them but grid counts them (H6)
+- [ ] child reorder, insert at index, remove
+- [ ] IgnoredByParentSize child
+
+### 3.2 Cell counts
+- [ ] AutoGridHorizontalCells or AutoGridVerticalCells 0 or negative (H5)
+- [ ] cell counts changed after children exist
+- [ ] `StackSpacing` applies to grids although its doc says it does not (H20)
+
+### 3.3 Overflow (more children than cells)
+- [x] RelativeToChildren on the growing axis: grows rows (Horizontal) or columns (Vertical) and packs them
+- [ ] fixed-size parent: cell pitch grows but children sized for the minimum count overlap (H19)
+- [ ] RelativeToChildren on the non-growing axis with overflow
+- [ ] RelativeToChildren on both axes with overflow
+- [ ] child PercentageOfParent/Fill size after overflow uses the axis that actually grew (H18)
+- [ ] overflow appears and disappears as children are added and removed
+
+### 3.4 Size of a RelativeToChildren grid
+- [x] each axis from the largest child times the cell count, extra size shared by Fill cells
+- [ ] child Y/X offsets counted in the cell size
+- [ ] mixed child sizes (the largest wins for every cell)
+- [ ] Ratio child (subtracts every grid sibling from one cell, H25)
+
+### 3.5 Grid in context
+- [ ] grid nested in a stack, stack nested in a grid cell
+- [ ] grid child changed while suspended, then resumed (H21)
+- [ ] X setter on a grid child (H2)
+
+## 4. Renderable inputs (interfaces the visual implements)
+
+### 4.1 No renderable (Screen, or element children held in the containing element's list)
+- [x] PercentageOfParent and width calculation without a renderable; reports canvas size as its own
+- [ ] stacking and grid children whose `Parent` is null but whose containing element stacks
+- [ ] Ratio plus a RelativeToChildren sibling under a renderable-less element (no ratio-first pass there, H15)
+- [ ] Y setter fast path for a parentless child of a stacking containing element (H2)
+- [ ] renderable assigned with `SetContainedObject` after children were added
+
+### 4.2 IText (native size)
+- [x] RelativeToChildren width/height from text, newlines, font scale and BBCode runs
+- [x] MaxWidth wraps a RelativeToChildren-width text
+- [~] TruncateLine with RelativeToChildren height; HeightUnits change forces SpillOver
+- [ ] text content change re-measures and propagates to a RelativeToChildren parent and a stack
+- [ ] empty and null text
+- [ ] width RelativeToChildren + height PercentageOfParent (one axis from text, one from parent)
+- [ ] TextBaseline origin and PixelsFromBaseline child on Text (descender x font scale)
+
+### 4.3 IWrappedText
+- [x] wrapping, mid-word breaks, zero-width spaces (`TextRuntimeTests`)
+- [ ] `IsHeightDependentOnLines` set from HeightUnits on every height update, including when HeightUnits changes after first layout
+
+### 4.4 ITextureCoordinate
+- [x] SourceRectangle sizes PercentageOfSourceFile
+- [ ] DimensionsBased: source rect from size / texture scale; scale 0
+- [ ] Custom and EntireTexture rects re-applied after size changes
+- [ ] TextureWidth/Height null vs set
+- [ ] `UpdateTextureValuesFrom` (animation frame) resizes a PercentageOfSourceFile element and its parent
+
+### 4.5 IAspectRatio
+- [x] MaintainFileAspectRatio uses it
+- [ ] value changes after layout (texture swap) re-layouts the element and its parent
+- [ ] 0, negative, NaN (H8)
+
+### 4.6 Size reported by the renderable changing outside Gum
+- [ ] texture assigned after layout, for PercentageOfSourceFile and MaintainFileAspectRatio
+- [ ] font loaded late (`isFontDirty` realized on `UpdateLayout`)
+- [ ] the new size reaches the parent's RelativeToChildren size and the stack positions after it
+
+## 5. Mixed-axis dependency matrix
+
+A child depends on its parent along one axis while the parent depends on the child along the
+other, optionally with the child's own axes depending on each other. Only the first row is pinned
+today (Regular layout, single pass).
+
+Axes to cross:
+- **Parent axis pair** (W, H): (Absolute, RelativeToChildren), (RelativeToChildren, Absolute),
+  (PercentageOfParent, RelativeToChildren), (RelativeToMaxParentOrChildren, RelativeToChildren),
+  (RelativeToChildren, RelativeToChildren)
+- **Child axis toward the parent**: PercentageOfParent, RelativeToParent, Ratio, RelativeToMaxParentOrChildren
+- **Child axis toward its own other axis**: PercentageOfOtherDimension, MaintainFileAspectRatio,
+  Text wrapping (width drives height), a RelativeToChildren child containing wrapping Text
+- **Parent layout**: Regular, TopToBottomStack, LeftToRightStack, each wrapped and not, AutoGridHorizontal, AutoGridVertical
+- **Operation**: build, resize the grandparent, change the child's driving value, `UpdateLayout()` twice
+
+Named cases that must exist as explicit tests:
+- [x] M1 parent (Absolute, RelativeToChildren), child (PercentageOfParent, PercentageOfOtherDimension), Regular
+- [ ] M2 mirror: parent (RelativeToChildren, Absolute), child (PercentageOfOtherDimension, PercentageOfParent)
+- [ ] M3 M1 with a wrapping Text child (height from wrapped lines at the parent-given width)
+- [ ] M4 M1 with a MaintainFileAspectRatio child
+- [ ] M5 M3 nested one level: child is RelativeToChildren height and holds the Text
+- [ ] M6 M1-M5 in a TopToBottomStack with 3 children (sum of heights)
+- [ ] M7 M1-M5 in a LeftToRightStack (child width from parent breaks; expect the documented fallback)
+- [ ] M8 M1-M5 in an AutoGrid with and without overflow
+- [ ] M9 M1-M5 after the grandparent narrows and widens (height follows, no ratchet)
+- [ ] M10 parent RelativeToMaxParentOrChildren on the child-driven axis
+- [ ] M11 both parent axes RelativeToChildren with a PercentageOfParent child on one axis (ignored on that axis, measured on the other)
+- [ ] M12 child Ratio on one axis, PercentageOfOtherDimension on the other, in a stack
+
+## 6. Hierarchy and structure
+
+- [x] no parent uses canvas size; deep nesting; zero-size parent
+- [x] add child to stack; Insert; reorder
+- [~] remove: Parent = null re-lays out siblings, `RemoveChild` and `Children.Remove` do not (H3)
+- [ ] `Children.Clear`, Replace, Move: old parent re-lays out
+- [x] reparent updates new and old parent
+- [ ] reparent between a stack and a grid
+- [ ] child added while parent suspended, then resumed
+- [ ] `Parent` set by name through `SetProperty`/`ApplyState`, ordered by instance index
+- [ ] same element tree built in different property orders gives the same result
+- [ ] `Clone()` lays out identically to the source once parented
+
+## 7. Dependency resolution
+
+### 7.1 RelativeToChildren
+- [x] tallest/widest child, padding (incl. negative), offsets, invisible children, no children
+- [x] ignores PercentageOfParent, RelativeToParent and Ratio children; returns 0 when all depend on parent
+- [x] PixelsFromMiddle and PixelsFromLarge children; negative child position
+- [ ] child with X/Y Percentage contributes 0 (decide: intended?)
+- [ ] child with a negative PixelsFromSmall offset in a stack
+
+### 7.2 Same-element circular pairs
+- [x] width and height both PercentageOfOtherDimension fall back to raw values
+- [ ] both MaintainFileAspectRatio fall back to raw values
+- [ ] PercentageOfOtherDimension on one axis + MaintainFileAspectRatio on the other (H9)
+
+### 7.3 Ratio
+- [x] even and proportional split, zero ratio, single child, all-ratio, invisible siblings, fractional
+- [x] subtracts Absolute, Percentage, RelativeToParent, FontScale and RelativeToMaxParentOrChildren siblings
+- [x] stack spacing in both stacks; spacing consumes all space gives 0
+- [ ] siblings consume more than the parent (negative result, H14)
+- [ ] negative ratio values
+- [ ] Ratio child in a RelativeToChildren parent
+- [ ] sibling that is IgnoredByParentSize is still subtracted
+
+### 7.4 Child-update ordering
+- [x] ratio-first pass when a sibling needs measuring first
+- [ ] single-axis update path for a child whose HeightUnits is MaintainFileAspectRatio (H4)
+- [ ] X PixelsFromMiddle/Large child of a RelativeToChildren-width parent treated as measurable on the X axis (H17)
+
+## 8. Triggers, propagation, suspension
+
+### 8.1 Triggers
+- [~] every layout property setter changes the result (Width, Height, units, origins, ChildrenLayout, StackSpacing pinned)
+- [ ] AutoGrid cells, Min/Max, IgnoredByParentSize, UseFixedStackChildrenSize, WrapsChildren, Rotation, FlipHorizontal, Texture* setters
+- [ ] every layout property through `SetProperty(string)` matches the direct setter (incl. names with spaces, and Min/Max via reflection)
+- [ ] X setter fast path with AutoGrid parent, flipped or rotated parent, RelativeToMaxParentOrChildren-width parent (H2)
+- [ ] `ApplyState`, `InterpolateBetween`, `RefreshStyles` end in the same layout as setting the values directly
+
+### 8.2 Propagation
+- [x] climb stops when an intermediate size does not change (layout call counts)
+- [x] grandchild resize and visibility repositions following stack items
+- [x] visibility: hide and show, RelativeToChildren, stacks, ratio
+- [ ] hide then show while suspended
+- [~] `SizeChanged`/`PositionChanged` raised when the size or position changes. [ ] not raised when unchanged; [ ] handler that changes X or Width (no reentrancy guard on PositionChanged, H16)
+
+### 8.3 Dirty state and suspension
+- [x] SuspendLayout blocks, ResumeLayout applies, recursive suspend, accumulated dirty state, X/Y tracked separately
+- [x] IsAllLayoutSuspended with ResumeLayout(true), ApplyState, Forms templates
+- [ ] non-recursive ResumeLayout on a parent whose children were dirtied separately
+- [ ] invisible element dirtied, then parent made visible (resume via the Visible setter)
+- [ ] invisible element inside a render target still lays out
+- [ ] `ClearDirtyLayoutState` drops the pending layout
+- [ ] dirty X then dirty Y resolves to both axes
+- [ ] grid child dirtied while suspended relays out the grid on resume (H21)
+
+## 9. Invariants (checked for every combination in a sweep)
+
+1. No exception.
+2. No NaN or infinity in absolute position or size.
+3. A second `UpdateLayout()` changes nothing.
+4. Setting the same properties in a different order gives the same result.
+5. Resizing the parent and resizing it back restores every descendant.
+6. Suspending, making the changes, and resuming gives the same result as making them unsuspended.
+7. Hiding and re-showing an element restores every sibling and ancestor.
+8. Building the tree in code and through `ApplyState` gives the same result.
+
+## 10. Suspected defects (read, not run)
+
+| # | Where | Suspicion |
+|---|---|---|
+| H1 | `AdjustOffsetsByUnits` | PercentageOfFile never sets `wasSet`, so X/Y always use the 64-pixel fallback even with a texture. |
+| H2 | `X` and `Y` setters | Fast path writes the renderable position directly, skipping AutoGrid cell offset, parent flip/rotation, a RelativeToMaxParentOrChildren-width parent, and a parentless child of a stacking containing element. |
+| H3 | `Parent` setter, collection handler | `RemoveChild`/`Children.Remove` leave the old parent unlaid-out; `Parent = null` lays it out. An existing test pins the manual `UpdateLayout()`. |
+| H4 | `UpdateChildren.UpdateChild` | `a && (b) \|\| (c)` precedence: the MaintainFileAspectRatio case ignores the width-depends-on-children check. |
+| H5 | `UpdateWidth`/`UpdateHeight` | RelativeToChildren AutoGrid sizing uses raw cell counts; 0 cells gives a negative size, while cell placement clamps to 1. |
+| H6 | `GetCellDimensions`, `GetParentDimensions` | Grid row/column count uses all children, cell index uses visible ones. |
+| H7 | `TryAdjustOffsetsByParentLayoutType`, `UpdateHeight` | Fixed-size fast path uses `Children[0]` even if invisible and counts invisible children. |
+| H8 | `UpdateWidth`/`UpdateHeight` | MaintainFileAspectRatio divides by `AspectRatio` with no zero check. |
+| H9 | `UpdateDimensions` | Only same-unit circular pairs fall back to raw values; a PercentageOfOtherDimension/MaintainFileAspectRatio pair is unguarded. |
+| H10 | `AdjustParentOriginOffsetsByUnits` | X Percentage check is dead code; X and Y handle Percentage in a stack differently. |
+| H11 | `RefreshParentRowColumnDimensionForThis` | Runs only for visible children, so hiding a row's tallest item may leave the row too tall. |
+| H12 | `GetRequiredParentHeight` | PixelsFromMiddleInverted inverts one edge but not the other. |
+| H13 | Ratio in `UpdateHeight`/`UpdateWidth` | Cross-axis ratio in a stack subtracts siblings that sit beside it. |
+| H14 | Ratio | Over-consumed space yields a negative size. |
+| H15 | `UpdateChildren` | Renderable-less path has no ratio-first ordering. |
+| H16 | end of `UpdateLayout` | `PositionChanged` has no reentrancy guard; `SizeChanged` does. |
+| H17 | `GetChildLayoutType(XOrY.X)` | Treats PixelsFromMiddle/Large X as measurable regardless of parent width dependency; the Y branch and two-axis overload check it. |
+| H18 | `GetParentDimensions` | On grid overflow it grows rows for AutoGridVertical and columns for AutoGridHorizontal, the opposite of `GetCellDimensions` and `UpdateWidth`/`UpdateHeight`, so children size against the wrong cell count. |
+| H19 | `GetCellDimensions` vs `GetParentDimensions` | Cell pitch always grows with overflow; the size given to children grows only when the parent is RelativeToChildren. A fixed-size grid with overflow should overlap. |
+| H20 | `StackSpacing` | Doc comment says it has no effect on AutoGrid; cell size and position both use it. |
+| H21 | `EffectiveDirtyStateParentUpdateType` | Adds stack, ratio and depends-on-children flags but not `IfParentIsAutoGrid`. |
+| H22 | `AdjustOffsetsByOrigin` in a stack | Main-axis origin (Center, Bottom/Right) still applies to later stacked children, shifting them into the previous sibling. |
+| H23 | `Dock` | Sets several properties without suspending layout (Anchor suspends), so intermediate sizes fire events and extra layouts; FillVertically also sets Text horizontal alignment. |
+| H24 | ScreenPixel units | Zoom is read at layout time; a zoom change or `AddToManagers` does not re-lay out. |
+| H25 | Ratio in a grid | Subtracts every grid sibling from a single cell's size. |
+
+## Sweep strategy
+
+1. Generate combinations per subtree, not one global cross product. Each subtree crosses its own
+   axes (section 5 lists the mixed-axis ones) with a small shared set: visibility, edge values
+   (negative, 0, huge), operation (build, resize, change, relayout).
+2. Check section 9 on every combination. Write explicit tests for the `[ ]` leaves, the named
+   M-cases and the H-items.
+3. Triage each failure into FIX, DOCUMENT or LOG.
