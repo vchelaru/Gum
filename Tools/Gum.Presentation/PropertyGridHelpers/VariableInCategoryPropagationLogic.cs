@@ -133,7 +133,7 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         // must hold an explicit value, or interpolating between its states has nothing to start from.
         if (defaultValue == null && defaultVariable != null)
         {
-            defaultValue = GetZeroForType(defaultVariable.Type);
+            defaultValue = TypeZeroValue.For(defaultVariable.Type);
         }
 
         foreach (var state in states)
@@ -182,17 +182,6 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         }
     }
 
-
-    private static object? GetZeroForType(string? type)
-    {
-        switch (type)
-        {
-            case "float": return 0f;
-            case "double": return 0.0;
-            case "int": return 0;
-            default: return null;
-        }
-    }
 
     public void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory)
     {
