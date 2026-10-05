@@ -25,7 +25,6 @@ Gum runtimes can be used to load Gum projects or create code-only UI in many pop
 * Silk.NET
 * FlatRedBall
 * SkiaSharp (WPF, .NET Maui)
-* Pygame
 * Meadow
 * [Unity](../getting-started/setup/adding-initializing-gum/unity.md) (experimental)
 
