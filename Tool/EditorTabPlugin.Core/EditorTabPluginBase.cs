@@ -584,8 +584,6 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private void HandleVariableSet(ElementSave? save1, InstanceSave? save2, string arg3, object? arg4, bool isFullCommit)
     {
         _selectionManager.Refresh();
-        _editorViewModel.RefreshGridSnapWarning();
-
     }
 
     private void HandleSetHighlightedElement(GraphicalUiElement? whatToHighlight)
@@ -939,6 +937,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
             _selectionManager.Refresh();
         }
+
+        // Late, not in HandleVariableSet: the selected gue only carries the new units once the
+        // wireframe has been updated above, and the note reads its units.
+        _editorViewModel.RefreshGridSnapWarning();
     }
 
     // When a new element is selected, its default state is selected too, so both
