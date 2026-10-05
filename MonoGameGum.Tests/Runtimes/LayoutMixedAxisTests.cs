@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using Gum.Managers;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -360,6 +361,108 @@ public class LayoutMixedAxisTests : BaseTestClass
 
         parent.AbsoluteWidth.ShouldBe(200);
         child.AbsoluteWidth.ShouldBe(100);
+    }
+
+    #endregion
+
+    #region Ratio child in a measuring stack or grid
+
+    static float[] SnapshotAll(GraphicalUiElement parent)
+    {
+        List<float> values = new()
+        {
+            parent.AbsoluteLeft, parent.AbsoluteTop, parent.AbsoluteWidth, parent.AbsoluteHeight,
+        };
+        foreach (GraphicalUiElement child in parent.Children)
+        {
+            values.Add(child.AbsoluteLeft);
+            values.Add(child.AbsoluteTop);
+            values.Add(child.AbsoluteWidth);
+            values.Add(child.AbsoluteHeight);
+        }
+        return values.ToArray();
+    }
+
+    [Fact]
+    public void LeftToRightStack_RelativeToChildrenWidth_ShouldIgnoreRatioChild_AndBeStable()
+    {
+        float padding = 50;
+        float siblingWidth = 100;
+        ContainerRuntime parent = CreateContainer(padding, DimensionUnitType.RelativeToChildren, 100, DimensionUnitType.Absolute);
+        parent.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        parent.AddChild(CreateContainer(siblingWidth, DimensionUnitType.Absolute, 50, DimensionUnitType.Absolute));
+        ContainerRuntime ratioChild = CreateContainer(1, DimensionUnitType.Ratio, 50, DimensionUnitType.Absolute);
+        parent.AddChild(ratioChild);
+
+        parent.AbsoluteWidth.ShouldBe(siblingWidth + padding);
+        ratioChild.AbsoluteWidth.ShouldBe(padding);
+        ratioChild.AbsoluteLeft.ShouldBe(siblingWidth);
+        float[] before = SnapshotAll(parent);
+        parent.UpdateLayout();
+        SnapshotAll(parent).ShouldBe(before);
+    }
+
+    [Fact]
+    public void TopToBottomStack_RelativeToChildrenHeight_ShouldIgnoreRatioChild_AndBeStable()
+    {
+        float padding = 50;
+        float siblingHeight = 100;
+        ContainerRuntime parent = CreateContainer(100, DimensionUnitType.Absolute, padding, DimensionUnitType.RelativeToChildren);
+        parent.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        parent.AddChild(CreateContainer(50, DimensionUnitType.Absolute, siblingHeight, DimensionUnitType.Absolute));
+        ContainerRuntime ratioChild = CreateContainer(50, DimensionUnitType.Absolute, 1, DimensionUnitType.Ratio);
+        parent.AddChild(ratioChild);
+
+        parent.AbsoluteHeight.ShouldBe(siblingHeight + padding);
+        ratioChild.AbsoluteHeight.ShouldBe(padding);
+        ratioChild.AbsoluteTop.ShouldBe(siblingHeight);
+        float[] before = SnapshotAll(parent);
+        parent.UpdateLayout();
+        SnapshotAll(parent).ShouldBe(before);
+    }
+
+    [Fact]
+    public void AutoGridHorizontal_RelativeToChildrenWidth_ShouldIgnoreRatioChild_AndBeStable()
+    {
+        float padding = 20;
+        float siblingWidth = 100;
+        int columns = 2;
+        ContainerRuntime grid = CreateContainer(padding, DimensionUnitType.RelativeToChildren, 100, DimensionUnitType.Absolute);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = columns;
+        grid.AutoGridVerticalCells = 1;
+        grid.AddChild(CreateContainer(siblingWidth, DimensionUnitType.Absolute, 50, DimensionUnitType.Absolute));
+        ContainerRuntime ratioChild = CreateContainer(1, DimensionUnitType.Ratio, 50, DimensionUnitType.Absolute);
+        grid.AddChild(ratioChild);
+
+        float expectedGridWidth = siblingWidth * columns + padding;
+        grid.AbsoluteWidth.ShouldBe(expectedGridWidth);
+        ratioChild.AbsoluteWidth.ShouldBe(expectedGridWidth / columns);
+        float[] before = SnapshotAll(grid);
+        grid.UpdateLayout();
+        SnapshotAll(grid).ShouldBe(before);
+    }
+
+    [Fact]
+    public void AutoGridVertical_RelativeToChildrenHeight_ShouldIgnoreRatioChild_AndBeStable()
+    {
+        float padding = 20;
+        float siblingHeight = 100;
+        int rows = 2;
+        ContainerRuntime grid = CreateContainer(100, DimensionUnitType.Absolute, padding, DimensionUnitType.RelativeToChildren);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridVertical;
+        grid.AutoGridHorizontalCells = 1;
+        grid.AutoGridVerticalCells = rows;
+        grid.AddChild(CreateContainer(50, DimensionUnitType.Absolute, siblingHeight, DimensionUnitType.Absolute));
+        ContainerRuntime ratioChild = CreateContainer(50, DimensionUnitType.Absolute, 1, DimensionUnitType.Ratio);
+        grid.AddChild(ratioChild);
+
+        float expectedGridHeight = siblingHeight * rows + padding;
+        grid.AbsoluteHeight.ShouldBe(expectedGridHeight);
+        ratioChild.AbsoluteHeight.ShouldBe(expectedGridHeight / rows);
+        float[] before = SnapshotAll(grid);
+        grid.UpdateLayout();
+        SnapshotAll(grid).ShouldBe(before);
     }
 
     #endregion
