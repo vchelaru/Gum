@@ -8,6 +8,7 @@ using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.Input;
 using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;
@@ -36,6 +37,8 @@ public class Game1 : Game
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
     private bool _isElementMissing;
+    private bool _isRetinaBackingEnabled;
+    private BackingScale _backingScale;
 
     /// <summary>The process exit code: 0, or 1 when an unattended run failed.</summary>
     public int UnattendedExitCode { get; private set; }
@@ -58,6 +61,7 @@ public class Game1 : Game
         _contentRootDirectory = contentRootDirectory;
         _unattended = unattended;
         _screenshotPath = screenshotPath;
+        _backingScale = new BackingScale(1);
 
         _graphics = new GraphicsDeviceManager(this);
         // Apos.Shapes (the shape fill/effect renderer behind RectangleRuntime/CircleRuntime/etc.)
@@ -86,6 +90,10 @@ public class Game1 : Game
         // Must come after GumService.Default.Initialize - ShapeRenderer.Initialize reads the
         // initialized GumService/GraphicsDevice.
         ShapeRenderer.Self.Initialize();
+
+        // The window is sized for the backing scale on the first Update, once it is showing; a resize
+        // here is undone when MonoGame shows it.
+        _isRetinaBackingEnabled = MacRetinaBacking.TryEnable(Window.Handle);
 
         GumService.Default.EnableHotReload(_gumxPath);
         // A reload re-applies the default state over the whole tree, undoing the selected state.
@@ -124,6 +132,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
+        UpdateBackingScale();
         GumService.Default.Update(gameTime);
         PollSelectionFile(gameTime);
         base.Update(gameTime);
@@ -284,8 +293,47 @@ public class Game1 : Game
         GraphicalUiElement.CanvasHeight = height;
     }
 
+    // Runs every frame: the window can move to a display with a different scale (a Retina laptop
+    // and an external monitor), which changes how many pixels each point covers.
+    private void UpdateBackingScale()
+    {
+        if (!_isRetinaBackingEnabled)
+        {
+            return;
+        }
+        BackingScale scale = MacRetinaBacking.GetScale(Window.Handle);
+        if (scale.Factor != _backingScale.Factor)
+        {
+            _backingScale = scale;
+            FitWindowToBackBuffer();
+        }
+    }
+
+    // On a Retina display the back buffer stays at the canvas's pixel size and the window shrinks to
+    // fit it in points, so Preview draws 1:1 with the tool's canvas (#5571). The cursor arrives in
+    // points and is scaled up to pixels.
+    private void FitWindowToBackBuffer()
+    {
+        Cursor? cursor = GumService.Default.Cursor;
+        if (cursor != null)
+        {
+            cursor.TransformMatrix = Matrix.CreateScale((float)_backingScale.Factor);
+        }
+        PresentationParameters parameters = GraphicsDevice.PresentationParameters;
+        (int width, int height) = _backingScale.ToPoints(parameters.BackBufferWidth, parameters.BackBufferHeight);
+        MacRetinaBacking.SetWindowSize(Window.Handle, width, height);
+    }
+
     private void HandleClientSizeChanged(object? sender, EventArgs e)
     {
+        // MonoGame sets the back buffer to the window's size in points; put it back in pixels.
+        if (_isRetinaBackingEnabled)
+        {
+            (int width, int height) = _backingScale.ToPixels(Window.ClientBounds.Width, Window.ClientBounds.Height);
+            GraphicsDevice.PresentationParameters.BackBufferWidth = width;
+            GraphicsDevice.PresentationParameters.BackBufferHeight = height;
+            GraphicsDevice.Viewport = new Viewport(0, 0, width, height);
+        }
         GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
         GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
     }
