@@ -2809,6 +2809,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         pixelHeightToSet = 0;
                     }
+                    else if (GetIfParentIsAutoGrid())
+                    {
+                        // Each grid child has its own cell, so there are no siblings to share it with.
+                        pixelHeightToSet = parentHeight;
+                    }
                     else
                     {
                         var heightToSplit = parentHeight;
@@ -3243,6 +3248,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (this.Width == 0)
                     {
                         pixelWidthToSet = 0;
+                    }
+                    else if (GetIfParentIsAutoGrid())
+                    {
+                        // Each grid child has its own cell, so there are no siblings to share it with.
+                        pixelWidthToSet = parentWidth;
                     }
                     else
                     {
