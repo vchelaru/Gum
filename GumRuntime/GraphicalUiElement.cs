@@ -2649,13 +2649,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                             if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
-                                var numberOfVerticalCells =
-                                    this.AutoGridVerticalCells;
+                                // Cell counts below 1 are placed as 1 (see GetCellDimensions), so size them the same way.
+                                var numberOfVerticalCells = System.Math.Max(1, this.AutoGridVerticalCells);
 
-                                if (this.AutoGridHorizontalCells > 0 &&
-                                    this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
+                                if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
                                 {
-                                    var requiredRowCount = (int)Math.Ceiling((float)Children.Count / this.AutoGridHorizontalCells);
+                                    var columnCount = System.Math.Max(1, this.AutoGridHorizontalCells);
+                                    var requiredRowCount = (int)Math.Ceiling((float)Children.Count / columnCount);
                                     numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
                                 }
 
@@ -3091,14 +3091,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                         if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                         {
-                            var numberOfHorizontalCells =
-                                this.AutoGridHorizontalCells;
+                            // Cell counts below 1 are placed as 1 (see GetCellDimensions), so size them the same way.
+                            var numberOfHorizontalCells = System.Math.Max(1, this.AutoGridHorizontalCells);
 
-                            if (this.AutoGridVerticalCells > 0 && 
-                                // If auto grid vertical, then it can expand horizontally
-                                ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                            // If auto grid vertical, then it can expand horizontally
+                            if (ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
-                                var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / this.autoGridVerticalCells);
+                                var rowCount = System.Math.Max(1, this.AutoGridVerticalCells);
+                                var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / rowCount);
                                 numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
                             }
                             // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
