@@ -3612,10 +3612,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 if (Parent.Children?.Count > setCellCount)
                 {
-                    if (Parent.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                    // Matches GetCellDimensions: a horizontal grid fixes its columns and grows rows,
+                    // a vertical grid fixes its rows and grows columns.
+                    if (Parent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
                     {
-                        // If stacking vertically, the number of rows (vertical cell count) depends on the children count
-                        // if the parent's size depends on its children
                         if (Parent.HeightUnits == DimensionUnitType.RelativeToChildren)
                         {
                             effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.Children.Count / effectiveHorizontalCells);
