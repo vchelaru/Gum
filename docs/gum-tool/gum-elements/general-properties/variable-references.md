@@ -124,7 +124,7 @@ Width = ColoredRectangleInstance.Height
 {% hint style="warning" %}
 Skipping the qualification isn't an error, it's a different reference. `X = Height` on an instance resolves `Height` against the **containing component**, not the instance. To reference the instance's own `Height`, qualify it: `X = ColoredRectangleInstance.Height`.
 
-The Variable References grid protects you from this by auto-qualifying bare names to the selected instance when you tab out, so this mix-up mostly only happens in hand-edited or generated project XML.
+The Variable References grid protects you from this by auto-qualifying bare names to the selected instance when you tab out (except names only the containing component has, see [Unqualified and Shorthand Assignments](#unqualified-and-shorthand-assignments)), so this mix-up mostly only happens in hand-edited or generated project XML.
 {% endhint %}
 
 Variables can be assigned to constant values, essentially locking the value:
@@ -345,7 +345,11 @@ Instances must qualify their own variables. See [the warning above](#unqualified
 X = SameInstance.Y
 ```
 
-Gum will automatically qualify assignments when an instance is selected. In other words, `X = Y` gets qualified to `X = SameInstance.Y` if SameInstance is the owner of the variable. This automatic qualification makes it easy for an instance to reference its own values. The following animation shows how the `Y` and `Height` values become qualified to the instance after tabbing out of the Variable Reference text box.
+Gum will automatically qualify assignments when an instance is selected. In other words, `X = Y` gets qualified to `X = SameInstance.Y` if SameInstance is the owner of the variable. This automatic qualification makes it easy for an instance to reference its own values.
+
+Gum leaves a name unqualified when only the containing component has that variable, such as a custom variable, because the name can only mean the component's variable. For example, if `WaveValue` is a custom variable on the component and `CircleInstance` has no `WaveValue`, then `X = Sin(WaveValue)` on `CircleInstance` stays as typed and reads the component's `WaveValue`. A name that both the instance and the component have, such as `Width`, is still qualified to the instance.
+
+The following animation shows how the `Y` and `Height` values become qualified to the instance after tabbing out of the Variable Reference text box.
 
 <figure><img src="../../../.gitbook/assets/01_11 35 26.gif" alt=""><figcaption><p>Tabbing automatically qualifies variables to the selected instance</p></figcaption></figure>
 
