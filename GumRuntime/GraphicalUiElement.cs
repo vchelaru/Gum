@@ -5425,7 +5425,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.HeightUnits = DimensionUnitType.RelativeToParent;
                 if (RenderableComponent is IText)
                 {
-                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
                     SetProperty("VerticalAlignment", VerticalAlignment.Center);
                 }
                 break;
