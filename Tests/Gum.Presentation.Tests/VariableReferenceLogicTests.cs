@@ -197,9 +197,9 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Theory]
-    [InlineData("X = gum-logo-reverse-256.X", "X=gum-logo-reverse-256.X")]
-    [InlineData("gum-logo-reverse-256.X", "X=gum-logo-reverse-256.X")]
-    [InlineData("X = gum-logo-reverse-256.X + Y", "X=gum-logo-reverse-256.X + gum-logo-reverse-257.Y")]
+    [InlineData("X = gum-logo-reverse-256.X", "X = gum-logo-reverse-256.X")]
+    [InlineData("gum-logo-reverse-256.X", "X = gum-logo-reverse-256.X")]
+    [InlineData("X = gum-logo-reverse-256.X + Y", "X = gum-logo-reverse-256.X + Y")]
     public void ReactIfChangedMemberIsVariableReference_InstanceReferencesOtherInstanceWithHyphenatedName_LeavesNameIntact(
         string line, string expected)
     {
@@ -273,100 +273,19 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void ReactIfChangedMemberIsVariableReference_WithInstance_QualifiesRightSideIdentifiers()
+    public void ReactIfChangedMemberIsVariableReference_WithInstance_LeavesBareRightSideNamesAsTyped()
     {
-        // When an instance is selected, bare right-side identifiers get prefixed with the instance name
+        // A bare name always means the containing component or screen. The grid does not rewrite it to the
+        // instance; "@Name" or "Instance.Name" is how a row names the instance.
         var instance = new InstanceSave { Name = "myInstance" };
-        StateSave stateSave = BuildStateWithVariableReferences("myInstance.VariableReferences", "Width=SomeVar");
-
-        _sut.ReactIfChangedMemberIsVariableReference(
-            instance, stateSave, changedMember: "VariableReferences", oldValue: null);
-
-        var varList = (List<string>)stateSave.GetVariableListSave("myInstance.VariableReferences").ValueAsIList;
-        varList[0].ShouldContain("myInstance.SomeVar");
-    }
-
-    [Fact]
-    public void ReactIfChangedMemberIsVariableReference_FunctionCallOnInstance_QualifiesArgumentsButNotFunctionName()
-    {
-        var instance = new InstanceSave { Name = "myInstance" };
-        StateSave stateSave = BuildStateWithVariableReferences("myInstance.VariableReferences", "Width=Sin(Angle) + Max(Angle, 1)");
+        StateSave stateSave = BuildStateWithVariableReferences(
+            "myInstance.VariableReferences", "Width=Sin(WaveValue) + Max(Width, 1)");
 
         _sut.ReactIfChangedMemberIsVariableReference(
             instance, stateSave, changedMember: "VariableReferences", oldValue: null);
 
         var varList = (List<string>)stateSave.GetVariableListSave("myInstance.VariableReferences")!.ValueAsIList;
-        varList[0].ShouldBe("Width=Sin(myInstance.Angle) + Max(myInstance.Angle, 1)");
-    }
-
-    [Fact]
-    public void ReactIfChangedMemberIsVariableReference_BareNameOnlyOnOwner_StaysUnqualified()
-    {
-        // WaveValue is a custom variable on the owning component; the instance (a Circle) has no such
-        // variable, so qualifying it as CircleInstance.WaveValue would point at nothing.
-        (StateSave ownerState, InstanceSave instance) = BuildOwnerWithCircleInstance();
-        ownerState.VariableLists.Add(new VariableListSave<string>
-        {
-            Type = "string",
-            Name = "CircleInstance.VariableReferences",
-            Value = { "X=Sin(WaveValue+ 10*@Index)" }
-        });
-
-        _sut.ReactIfChangedMemberIsVariableReference(
-            instance, ownerState, changedMember: "VariableReferences", oldValue: null);
-
-        var varList = (List<string>)ownerState.GetVariableListSave("CircleInstance.VariableReferences")!.ValueAsIList;
-        varList[0].ShouldBe("X=Sin(WaveValue+ 10*@Index)");
-    }
-
-    [Fact]
-    public void ReactIfChangedMemberIsVariableReference_BareNameOnBothOwnerAndInstance_IsQualifiedToInstance()
-    {
-        // Width exists on the component and on the Circle: the documented mix-up guard applies.
-        (StateSave ownerState, InstanceSave instance) = BuildOwnerWithCircleInstance();
-        ownerState.VariableLists.Add(new VariableListSave<string>
-        {
-            Type = "string",
-            Name = "CircleInstance.VariableReferences",
-            Value = { "X=Width" }
-        });
-
-        _sut.ReactIfChangedMemberIsVariableReference(
-            instance, ownerState, changedMember: "VariableReferences", oldValue: null);
-
-        var varList = (List<string>)ownerState.GetVariableListSave("CircleInstance.VariableReferences")!.ValueAsIList;
-        varList[0].ShouldBe("X=CircleInstance.Width");
-    }
-
-    private static (StateSave ownerState, InstanceSave instance) BuildOwnerWithCircleInstance()
-    {
-        GumProjectSave project = new GumProjectSave();
-        ObjectFinder.Self.GumProjectSave = project;
-
-        StandardElementSave circle = new StandardElementSave { Name = "Circle" };
-        StateSave circleState = new StateSave { Name = "Default", ParentContainer = circle };
-        circleState.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
-        circleState.Variables.Add(new VariableSave { Name = "X", Type = "float", Value = 0f, SetsValue = true });
-        circle.States.Add(circleState);
-        project.StandardElements.Add(circle);
-
-        ComponentSave owner = new ComponentSave { Name = "Owner" };
-        StateSave ownerState = new StateSave { Name = "Default", ParentContainer = owner };
-        ownerState.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
-        ownerState.Variables.Add(new VariableSave
-        {
-            Name = "WaveValue",
-            Type = "float",
-            Value = 0f,
-            SetsValue = true,
-            IsCustomVariable = true
-        });
-        owner.States.Add(ownerState);
-        InstanceSave instance = new InstanceSave { Name = "CircleInstance", BaseType = "Circle", ParentContainer = owner };
-        owner.Instances.Add(instance);
-        project.Components.Add(owner);
-
-        return (ownerState, instance);
+        varList[0].ShouldBe("Width=Sin(WaveValue) + Max(Width, 1)");
     }
 
     #endregion

@@ -812,7 +812,7 @@ public class TreeScenarioTests
         tree.PickMenu("Create Component");
 
         tree.OutputWritten.ShouldContain("Label moved into BoxComponent, so these references were dropped:");
-        tree.OutputWritten.ShouldContain("Button (Default): Caption.VariableReferences line \"X=Label.X\", kept Caption.X = 12");
+        tree.OutputWritten.ShouldContain("Button (Default): Caption.VariableReferences line \"X = Label.X\", kept Caption.X = 12");
         Component(tree, "Button").GetDefaultStateOrThrow().VariableLists.ShouldNotContain(list => list.Name == "Caption.VariableReferences");
         VariableGridHarness.StoredValue(Component(tree, "Button"), "Caption.X").ShouldBe(12f);
 
@@ -822,7 +822,7 @@ public class TreeScenarioTests
         Component(tree, "Button").Instances.Single(instance => instance.Name == "Box").BaseType.ShouldBe("Container");
         VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Parent").ShouldBe("Box");
         Component(tree, "Button").GetDefaultStateOrThrow().VariableLists.Single(list => list.Name == "Caption.VariableReferences")
-            .ValueAsIList.Cast<string>().ShouldBe(new[] { "X=Label.X" });
+            .ValueAsIList.Cast<string>().ShouldBe(new[] { "X = Label.X" });
         tree.AssertOracles();
     }
 

@@ -315,7 +315,8 @@ public static class BehaviorToolOnlyReferencesApplier
     /// <summary>
     /// Re-writes the right-hand side of an assignment so every bare identifier becomes
     /// <c>{instanceName}.{identifier}</c>, leaving qualified names and member-access
-    /// expressions alone. Mirrors <c>VariableReferenceLogic.QualifyInstanceVariables</c>.
+    /// expressions alone. Behavior references name the instance's own Forms properties, so they are
+    /// qualified here; the Variable References grid leaves bare names as typed.
     /// </summary>
     private static string QualifyBareIdentifiersWithInstance(string right, string instanceName)
     {
