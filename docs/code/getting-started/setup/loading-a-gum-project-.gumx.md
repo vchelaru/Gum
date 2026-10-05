@@ -265,3 +265,28 @@ child.X += 30;
 // like Text:
 child.SetProperty("Text", "Hello world");
 ```
+
+## ToForms
+
+A component that wraps a Forms control, such as a Button, can be created directly as the Forms control with `ToForms`. `ToForms` creates the same visual as `ToGraphicalUiElement` and returns its `FrameworkElement`, so you do not need to read `FormsControlAsObject` and cast it yourself.
+
+```csharp
+// Initialize
+// Load the gum project (see code above)
+var button = ObjectFinder.Self.GumProjectSave.Components
+    .First(item => item.Name == "ConfirmButton")
+    .ToForms<Button>();
+
+// ToForms returns null if the component has no Forms control, or if the control is not a Button
+if (button != null)
+{
+    button.Click += (_, _) => button.Text = "Clicked";
+    button.AddToRoot();
+}
+```
+
+`ToForms` returns `null` for elements that have no Forms control, such as a plain container or a screen. The non-generic `ToForms()` returns a `FrameworkElement?`, and `ToForms<T>()` returns `T?`, which is also `null` when the control is a different type. Like `ToGraphicalUiElement`, `ToForms` does not add the result to the root, so call `AddToRoot` when you want it displayed.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
