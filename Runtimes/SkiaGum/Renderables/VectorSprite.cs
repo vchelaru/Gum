@@ -206,7 +206,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
     {
         var canvas = ((SystemManagers)managers).Canvas;
         SKPicture? picture = Texture?.Picture;
-        if (AbsoluteVisible && picture != null)
+        if (Visible && picture != null)
         {
             var textureBox = picture.CullRect;
             var textureWidth = textureBox.Width;
