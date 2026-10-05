@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
+using Gum.Managers;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
@@ -60,15 +61,31 @@ public class AnimationViewModelReferencePreviewTests
         selectedState.Object.CustomCurrentStateSave!.GetValue("Rotation").ShouldBe(100f);
     }
 
-    private static ComponentSave CreateElement(string? extraReference)
+    [Fact]
+    public void SetStateAtTime_ReevaluatesReference_QualifiedWithTheOwnElementsName()
+    {
+        // The tool writes references that name the element, such as Components/Foo.Width. They must read the
+        // animated value, not the stored default's.
+        ComponentSave element = CreateElement(extraReference: null, heightReference: "Height = Components/Foo.Width * 2");
+        (AnimationViewModel animation, Mock<ISelectedState> selectedState) = CreateAnimation(element);
+
+        animation.SetStateAtTime(0.5, element, defaultIfNull: true);
+
+        selectedState.Object.CustomCurrentStateSave!.GetValue("Height").ShouldBe(300f);
+    }
+
+    private static ComponentSave CreateElement(string? extraReference, string heightReference = "Height = Width * 2")
     {
         ComponentSave element = new ComponentSave { Name = "Foo" };
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
         element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
         element.DefaultState.SetValue("Width", 100f, "float");
         element.DefaultState.SetValue("Height", 200f, "float");
         element.DefaultState.SetValue("Rotation", 0f, "float");
 
-        List<string> references = new List<string> { "Height = Width * 2" };
+        List<string> references = new List<string> { heightReference };
         if (extraReference != null)
         {
             references.Add(extraReference);

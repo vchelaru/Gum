@@ -284,7 +284,10 @@ public class EvaluatedSyntax
                 }
 
                 var element = ObjectFinder.Self.GetElementSave(elementName);
-                stateForRfv = element?.DefaultState;
+                // A reference qualified with its own element's name still reads the state being
+                // evaluated, which a preview may have changed from the stored default.
+                bool isOwnElement = element != null && element == stateForUnqualifiedRightSide.ParentContainer;
+                stateForRfv = isOwnElement ? stateForUnqualifiedRightSide : element?.DefaultState;
                 rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
             }
 

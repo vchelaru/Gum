@@ -101,6 +101,7 @@ internal static class AnimatedReferenceReevaluator
                     string left = line.Substring(0, equalsIndex).Trim();
                     string right = ElementSaveExtensions.ResolveOwnerPrefix(
                         line.Substring(equalsIndex + 1).Trim(), list.SourceObject);
+                    right = StripOwnElementQualifier(right, element);
                     remaining.Add((list.SourceObject, left, right, line));
                 }
             }
@@ -149,6 +150,18 @@ internal static class AnimatedReferenceReevaluator
         }
 
         return result;
+    }
+
+    // The tool writes same-element references qualified with the element's own name, as in
+    // "Components/Foo.WaveValue". Dropping that qualifier leaves the plain variable path the animated
+    // names are written in.
+    private static string StripOwnElementQualifier(string right, ElementSave element)
+    {
+        foreach (string folder in new[] { "Components/", "Screens/", "Standards/" })
+        {
+            right = right.Replace(folder + element.Name + ".", string.Empty);
+        }
+        return right;
     }
 
     // True when the right side mentions any of the names as a whole variable path. A name preceded by

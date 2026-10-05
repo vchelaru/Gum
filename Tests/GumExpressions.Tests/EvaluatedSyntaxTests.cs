@@ -523,6 +523,30 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
+    public void FromSyntaxNode_QualifiedReferenceToOwnElement_ResolvesAgainstTheGivenState()
+    {
+        // A preview evaluates against a state that differs from the element's stored default (an animated
+        // or selected state merged over it). A reference qualified with its own element's name, as in
+        // "Components/Button.Width", must see that state's value, not the stored default's.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        StateSave storedDefault = new StateSave { Name = "Default", ParentContainer = button };
+        storedDefault.Variables.Add(new VariableSave { Name = "Width", Value = 200f, Type = "float", SetsValue = true });
+        button.States.Add(storedDefault);
+        project.Components.Add(button);
+
+        StateSave previewState = storedDefault.Clone();
+        previewState.SetValue("Width", 300f, "float");
+
+        EvaluatedSyntax result = Evaluate("Components/Button.Width", previewState);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(300f);
+    }
+
+    [Fact]
     public void FromSyntaxNode_CrossElementReferenceWithNoVariable_ReturnsNull()
     {
         GumProjectSave project = new GumProjectSave();

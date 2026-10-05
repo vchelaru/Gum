@@ -99,4 +99,68 @@ public class WireframeObjectManagerVariableReferenceTests : BaseTestClass
         // resolved against the pre-layout stale width (0), leaving RectangleInstance1 at 0.
         rectGue1Live!.X.ShouldBe(619f);
     }
+
+    /// <summary>
+    /// A categorized state inherits everything it doesn't set, including the default state's variable
+    /// references, so selecting it previews the keyframe it stands for: the instance's X must follow the
+    /// WaveValue the state sets, even though the state sets no X.
+    /// </summary>
+    [Fact]
+    public void RefreshAll_CategorizedStateSetsAReferencedVariable_ReevaluatesDefaultStatesReferences()
+    {
+        GumExpressionService.Initialize();
+
+        ComponentSave component = new ComponentSave { Name = "Wave", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+        InstanceSave circle = new InstanceSave { Name = "Circle", BaseType = "Container", ParentContainer = component };
+        component.Instances.Add(circle);
+
+        StateSaveCategory category = new StateSaveCategory { Name = "WavyCategory" };
+        StateSave end = new StateSave { Name = "End", ParentContainer = component };
+        end.Variables.Add(new VariableSave { Name = "WaveValue", Value = 10f, Type = "float", SetsValue = true, IsCustomVariable = true });
+        category.States.Add(end);
+        component.Categories.Add(category);
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        defaultState.Variables.Add(new VariableSave { Name = "WaveValue", Type = "float", IsCustomVariable = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Circle.X", Value = 0f, Type = "float", SetsValue = true });
+        VariableListSave<string> refs = new VariableListSave<string> { Type = "string", Name = "Circle.VariableReferences" };
+        refs.Value.Add("X=Components/Wave.WaveValue * 2");
+        defaultState.VariableLists.Add(refs);
+
+        GraphicalUiElement? circleLive = null;
+        Mock<IPluginManager> pluginManager = new Mock<IPluginManager>();
+        pluginManager.Setup(x => x.CreateGraphicalUiElement(component)).Returns(() =>
+        {
+            GraphicalUiElement root = new GraphicalUiElement(new InvisibleRenderable()) { Name = "Wave" };
+            circleLive = new GraphicalUiElement(new InvisibleRenderable()) { Name = "Circle", Tag = circle, Parent = root };
+            return root;
+        });
+
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(x => x.SelectedElements).Returns(new[] { component });
+        selectedState.SetupGet(x => x.SelectedElement).Returns(component);
+        selectedState.SetupGet(x => x.SelectedStateSave).Returns(end);
+
+        WireframeObjectManager wireframeObjectManager = new WireframeObjectManager(
+            Mock.Of<IFontManager>(),
+            selectedState.Object,
+            Mock.Of<IDialogService>(),
+            Mock.Of<IGuiCommands>(),
+            new LocalizationService(),
+            pluginManager.Object,
+            Mock.Of<IProjectState>());
+
+        wireframeObjectManager.RefreshAll(forceLayout: true);
+
+        circleLive.ShouldNotBeNull();
+        circleLive!.X.ShouldBe(20f);
+    }
 }
