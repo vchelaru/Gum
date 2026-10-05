@@ -839,9 +839,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     float stackSpacing;
     /// <summary>
-    /// The number of pixels spacing between each child if this has a ChildrenLayout of 
-    /// TopToBottomStack or LeftToRightStack. This has no affect on other types of ChildrenLayout, 
-    /// including AutoGridHorizontal or AutoGridVertical.
+    /// The number of pixels between children when ChildrenLayout is TopToBottomStack or
+    /// LeftToRightStack, and between cells when it is AutoGridHorizontal or AutoGridVertical.
+    /// It has no effect on Regular.
     /// </summary>
     public float StackSpacing
     {
