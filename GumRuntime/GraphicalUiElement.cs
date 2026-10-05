@@ -2295,11 +2295,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.Children.Count > 1)
                 {
 
-                    //UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
-                    var firstChild = this.Children[0];
-                    var childLayout = firstChild.GetChildLayoutType(this);
+                    var firstChild = GetFirstVisibleChild();
 
-                    if (childLayout == ChildType.Absolute)
+                    if (firstChild == null)
+                    {
+                        // Nothing visible to measure.
+                    }
+                    else if (firstChild.GetChildLayoutType(this) == ChildType.Absolute)
                     {
                         firstChild.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         fullyUpdatedChildren.Add(firstChild);
@@ -2633,13 +2635,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             mContainedObjectAsIpso.Width = oldWidth;
                         }
 
-                        if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
+                        if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1 &&
+                            GetFirstVisibleChild() is GraphicalUiElement element)
                         {
-                            var element = Children[0];
-
                             maxHeight = element.GetRequiredParentHeight();
                             var elementHeight = element.AbsoluteHeight;
-                            maxHeight += (StackSpacing + elementHeight) * (Children.Count - 1);
+                            maxHeight += (StackSpacing + elementHeight) * (GetVisibleChildCount() - 1);
                         }
                         else
                         {
@@ -4542,7 +4543,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 var visibleIndex = this.GetIndexInVisibleSiblings();
                 if (visibleIndex > 0)
                 {
-                    var firstChildHeight = effectiveParent.Children[0].AbsoluteHeight;
+                    var firstChildHeight = effectiveParent.GetFirstVisibleChild()!.AbsoluteHeight;
                     unitOffsetY += visibleIndex * (firstChildHeight + effectiveParent.StackSpacing);
                 }
                 this.StackedRowOrColumnIndex = 0;
@@ -4755,6 +4756,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         //    cellWidth = effectiveParent.GetMaxCellWidth(true, 0);
         //}
 
+    }
+
+    private GraphicalUiElement? GetFirstVisibleChild()
+    {
+        for (int i = 0; i < Children.Count; i++)
+        {
+            if (Children[i].Visible)
+            {
+                return Children[i];
+            }
+        }
+        return null;
     }
 
     // Counts the children a grid or stack places: visible ones, from the same list GetIndexInVisibleSiblings walks.
