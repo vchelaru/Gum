@@ -7253,7 +7253,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void ApplyState(List<DataTypes.Variables.VariableSaveValues> variableSaveValues)
     {
-        this.SuspendLayout(true);
+        // Same rule as ApplyState(StateSave): under an outer suspension, leave the flush to it.
+        bool didSuspend = false;
+        if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
+        {
+            didSuspend = true;
+            this.SuspendLayout(true);
+        }
 
         foreach (var variable in variableSaveValues)
         {
@@ -7262,7 +7268,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.SetProperty(variable.Name, variable.Value);
             }
         }
-        this.ResumeLayout(true);
+
+        if (didSuspend)
+        {
+            this.ResumeLayout(true);
+        }
     }
 
 
