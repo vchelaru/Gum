@@ -4165,9 +4165,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 value = parentWidth / 2.0f;
                 wasHandledX = true;
             }
+            else if (units == GeneralUnitType.Percentage && isParentFlippedHorizontally)
+            {
+                // A flipped percentage is measured from the right edge (AdjustOffsetsByUnits negates it).
+                value = parentWidth;
+                wasHandledX = true;
+            }
             else if (units == GeneralUnitType.PixelsFromSmall)
             {
                 // no need to do anything
+            }
+
+            if (isParentFlippedHorizontally && GetIfParentStacks())
+            {
+                // A flipped stack measures from its right edge, and the stack offset (already in
+                // unitOffsetX, negative) is added to that edge rather than replaced by it.
+                if (forcePixelsFromSmall)
+                {
+                    value = parentWidth;
+                }
+                shouldAdd = true;
             }
 
             if (shouldAdd)
@@ -4275,7 +4292,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mXUnits == GeneralUnitType.Percentage)
             {
-                unitOffsetX = parentWidth * mX / 100.0f;
+                // Under a flipped parent the percentage runs leftward from the right edge.
+                unitOffsetX = (isParentFlippedHorizontally ? -1 : 1) * parentWidth * mX / 100.0f;
             }
             else if (mXUnits == GeneralUnitType.PercentageOfFile)
             {
@@ -4364,7 +4382,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             effectiveParent.WrapsChildren &&
 
             // * And the object is outside of parent's bounds
-            ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight()) ||
+            // (a flipped LeftToRightStack runs leftward, so it overflows its left edge)
+            ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack &&
+                (isParentFlippedHorizontally
+                    ? this.GetAbsoluteLeft() < effectiveParent.GetAbsoluteLeft()
+                    : this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight())) ||
             (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom()));
 
         if (shouldWrap)
@@ -4638,7 +4660,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                 }
 
-                unitOffsetX += xRelativeTo;
+                // Stack offsets are measured in unflipped space; a flipped stack runs right to left.
+                unitOffsetX += effectiveParent!.GetAbsoluteFlipHorizontal() ? -xRelativeTo : xRelativeTo;
                 unitOffsetY += yRelativeTo;
             }
         }
@@ -5177,7 +5200,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.StackedRowOrColumnIndex = ((GraphicalUiElement)whatToStackAfter).StackedRowOrColumnIndex;
                     if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                     {
-                        whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width + parentGue.StackSpacing;
+                        // Offsets are in unflipped space. Under a flipped parent the previous sibling's X is its
+                        // mirrored left edge, so its unflipped right edge is the parent width minus that X.
+                        var previousRight = parentGue.GetAbsoluteFlipHorizontal()
+                            ? parentGue.AbsoluteWidth - whatToStackAfter.X
+                            : whatToStackAfter.X + whatToStackAfter.Width;
+                        whatToStackAfterX = previousRight + parentGue.StackSpacing;
 
                         whatToStackAfterY = 0;
                         for (int i = 0; i < thisRowOrColumnIndex; i++)

@@ -202,6 +202,7 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
     [InlineData(GeneralUnitType.PixelsFromSmall, HorizontalAlignment.Left, 10f, 140f)]
     [InlineData(GeneralUnitType.PixelsFromLarge, HorizontalAlignment.Right, -10f, 10f)]
     [InlineData(GeneralUnitType.PixelsFromMiddle, HorizontalAlignment.Center, 20f, 55f)]
+    [InlineData(GeneralUnitType.Percentage, HorizontalAlignment.Left, 10f, 130f)]
     public void FlippedParent_ShouldMirrorChildXUnitsAndOrigin(GeneralUnitType xUnits, HorizontalAlignment xOrigin, float x, float expectedLeft)
     {
         ContainerRuntime parent = CreateContainer(200, 100);
@@ -232,7 +233,7 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         return stack;
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5776")]
+    [Fact]
     public void FlippedLeftToRightStack_ShouldStackFromRightEdge()
     {
         ContainerRuntime stack = CreateFlippedStack(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, HorizontalAlignment.Left, 0);
@@ -242,18 +243,126 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         stack.Children[2].AbsoluteLeft.ShouldBe(50);
     }
 
-    [Theory]
-    [InlineData(GeneralUnitType.PixelsFromSmall, HorizontalAlignment.Left, 150f, 150f, 150f)]
-    [InlineData(GeneralUnitType.PixelsFromLarge, HorizontalAlignment.Right, 0f, 50f, 100f)]
-    public void FlippedLeftToRightStack_CurrentPlacement(GeneralUnitType xUnits, HorizontalAlignment xOrigin, float first, float second, float third)
+    public static TheoryData<string> FlippedLeftToRightStackCases => new()
     {
-        ContainerRuntime stack = CreateFlippedStack(ChildrenLayout.LeftToRightStack, xUnits, xOrigin, 0);
+        "plain", "spacing", "x offset", "large units", "middle units", "percentage units", "wraps", "first hidden", "sized to children"
+    };
 
-        // Pins today's result until #5776 decides the stacking direction under flip: the first
-        // child mirrors, but later children don't stack right to left.
-        stack.Children[0].AbsoluteLeft.ShouldBe(first);
-        stack.Children[1].AbsoluteLeft.ShouldBe(second);
-        stack.Children[2].AbsoluteLeft.ShouldBe(third);
+    [Fact]
+    public void FlippedWrappingTopToBottomStack_ShouldMirrorUnflippedColumns()
+    {
+        ContainerRuntime unflipped = CreateWrappingTopToBottomStack();
+        ContainerRuntime flipped = CreateWrappingTopToBottomStack();
+
+        flipped.FlipHorizontal = true;
+
+        float parentWidth = unflipped.AbsoluteWidth;
+        for (int i = 0; i < unflipped.Children.Count; i++)
+        {
+            GraphicalUiElement expected = unflipped.Children[i];
+            GraphicalUiElement actual = flipped.Children[i];
+            actual.AbsoluteLeft.ShouldBe(parentWidth - (expected.AbsoluteLeft + expected.AbsoluteWidth), $"child {i}");
+            actual.AbsoluteTop.ShouldBe(expected.AbsoluteTop, $"child {i}");
+        }
+    }
+
+    static ContainerRuntime CreateWrappingTopToBottomStack()
+    {
+        ContainerRuntime stack = CreateContainer(300, 250);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        stack.WrapsChildren = true;
+        stack.StackSpacing = 5;
+        for (int i = 0; i < 5; i++)
+        {
+            stack.AddChild(CreateContainer(40 + i * 10, 100));
+        }
+        return stack;
+    }
+
+    // A flipped LeftToRightStack is the unflipped stack reflected across the parent's width:
+    // each child keeps its Y and its X becomes parentWidth - (unflippedX + width).
+    [Theory]
+    [MemberData(nameof(FlippedLeftToRightStackCases))]
+    public void FlippedLeftToRightStack_ShouldMirrorUnflippedStack(string scenario)
+    {
+        ContainerRuntime unflipped = CreateLeftToRightStackScenario(scenario);
+        ContainerRuntime flipped = CreateLeftToRightStackScenario(scenario);
+
+        flipped.FlipHorizontal = true;
+
+        flipped.AbsoluteWidth.ShouldBe(unflipped.AbsoluteWidth);
+        flipped.AbsoluteHeight.ShouldBe(unflipped.AbsoluteHeight);
+        float parentWidth = unflipped.AbsoluteWidth;
+        for (int i = 0; i < unflipped.Children.Count; i++)
+        {
+            GraphicalUiElement expected = unflipped.Children[i];
+            GraphicalUiElement actual = flipped.Children[i];
+            // Hidden children don't lay out, so they keep their old position.
+            if (!expected.Visible)
+            {
+                continue;
+            }
+            actual.AbsoluteLeft.ShouldBe(parentWidth - (expected.AbsoluteLeft + expected.AbsoluteWidth), $"child {i}");
+            actual.AbsoluteTop.ShouldBe(expected.AbsoluteTop, $"child {i}");
+        }
+    }
+
+    static ContainerRuntime CreateLeftToRightStackScenario(string scenario)
+    {
+        ContainerRuntime stack = CreateContainer(200, 300);
+        stack.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        int childCount = scenario == "wraps" ? 5 : 3;
+        for (int i = 0; i < childCount; i++)
+        {
+            ContainerRuntime child = CreateContainer(scenario == "wraps" ? 60 : 50, 20 + i * 5);
+            stack.AddChild(child);
+        }
+        switch (scenario)
+        {
+            case "spacing":
+                stack.StackSpacing = 10;
+                break;
+            case "x offset":
+                foreach (GraphicalUiElement child in stack.Children)
+                {
+                    child.X = 5;
+                }
+                break;
+            case "large units":
+                foreach (GraphicalUiElement child in stack.Children)
+                {
+                    child.XUnits = GeneralUnitType.PixelsFromLarge;
+                    child.XOrigin = HorizontalAlignment.Right;
+                }
+                break;
+            case "middle units":
+                foreach (GraphicalUiElement child in stack.Children)
+                {
+                    child.XUnits = GeneralUnitType.PixelsFromMiddle;
+                    child.XOrigin = HorizontalAlignment.Center;
+                }
+                break;
+            case "percentage units":
+                foreach (GraphicalUiElement child in stack.Children)
+                {
+                    child.XUnits = GeneralUnitType.Percentage;
+                    child.X = 10;
+                }
+                break;
+            case "wraps":
+                stack.WrapsChildren = true;
+                stack.StackSpacing = 5;
+                break;
+            case "first hidden":
+                stack.Children[0].Visible = false;
+                break;
+            case "sized to children":
+                stack.WidthUnits = DimensionUnitType.RelativeToChildren;
+                stack.Width = 0;
+                stack.StackSpacing = 10;
+                break;
+        }
+        return stack;
     }
 
     [Theory]

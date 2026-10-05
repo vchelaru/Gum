@@ -64,7 +64,7 @@ covered by that test now.
 - [x] IgnoredByParentSize: excluded from size, still stacks, still positions. [ ] in a grid (still takes a cell?)
 - [~] ClipsChildren pushed to `ISetClipsChildren` each layout (render tests only)
 - [x] Rotation does not change size, triggers full layout. [ ] rotated parent rotates child offsets; [ ] rotated child in a stack and a grid; [ ] near-90 rotations snap (`GetRightAndUpFromRotation`); [ ] `AbsoluteRight/Bottom` with rotation (Left + Width, rotation ignored)
-- [~] FlipHorizontal: no size change. [ ] flipped parent mirrors child X units and origin; [ ] flipped parent with a LeftToRightStack
+- [x] FlipHorizontal: no size change; flipped parent mirrors child X units, origin and Percentage; flipped LeftToRightStack, wrapping TopToBottomStack and AutoGrid mirror the unflipped layout (#5776)
 
 ### 1.6 Anchor and Dock
 - [x] each value sets the right properties; Fill resizes with parent; SizeToChildren; Anchor inside a stack
