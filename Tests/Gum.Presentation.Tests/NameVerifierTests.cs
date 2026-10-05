@@ -427,4 +427,20 @@ public class NameVerifierTests : BaseTestClass
     }
 
     #endregion
+
+    #region ToValidName
+
+    [Theory]
+    [InlineData("Screenshot 2026-09-25 at 04.52.17", "Screenshot_2026_09_25_at_04_52_17")]
+    [InlineData("hero-sprite", "hero_sprite")]
+    [InlineData("Valid_Name1", "Valid_Name1")]
+    public void ToValidName_ReplacesCharactersInstanceNamesReject(string candidate, string expected)
+    {
+        string result = NameVerifier.ToValidName(candidate);
+
+        result.ShouldBe(expected);
+        _nameVerifier.IsNameValidCommon(result, out _, out _).ShouldBeTrue();
+    }
+
+    #endregion
 }

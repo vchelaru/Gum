@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using Gum.Commands;
@@ -1269,7 +1269,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+        string nameToAdd = NameVerifier.ToValidName(FileManager.RemovePath(FileManager.RemoveExtension(fileName)));
 
         IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
         nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
