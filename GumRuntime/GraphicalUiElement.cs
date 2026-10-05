@@ -2862,6 +2862,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
                         }
 
+                        // Siblings that overflow the parent leave no space, not negative space.
+                        heightToSplit = System.Math.Max(0, heightToSplit);
+
                         float totalRatio = 0;
                         if (_parent != null)
                         {
@@ -3294,6 +3297,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                             widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
                         }
+
+                        // Siblings that overflow the parent leave no space, not negative space.
+                        widthToSplit = System.Math.Max(0, widthToSplit);
 
                         float totalRatio = 0;
                         if (_parent != null)
