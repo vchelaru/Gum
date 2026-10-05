@@ -1,5 +1,9 @@
 # Batch Key Grouped Orderer
 
+{% hint style="info" %}
+`BatchKeyGroupedOrderer` is available on MonoGame, KNI, FNA, and raylib. It is not available on SkiaSharp-based runtimes such as Silk.NET, Stride, and Unity.
+{% endhint %}
+
 ### Introduction
 
 Gum's default renderer walks the visual tree in depth-first order and emits one draw per renderable. Two kinds of alternation force extra work when adjacent renderables don't match:
