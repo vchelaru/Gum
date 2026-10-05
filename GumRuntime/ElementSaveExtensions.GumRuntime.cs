@@ -1168,7 +1168,9 @@ namespace GumRuntime
         /// followed by <c>.</c>, so the expression parses as a member access instead of a subtraction.
         /// The longest matching name wins, so <c>a-b.Width</c> reads as instance <c>a-b</c> even when an
         /// instance <c>a</c> exists.</param>
-        public static string ResolveOwnerPrefix(string expression, string? ownerInstanceName, IEnumerable<string>? instanceNames = null)
+        /// <param name="resolveOwner">When false the <c>@</c> prefix is left as written and only
+        /// <paramref name="instanceNames"/> are encoded.</param>
+        public static string ResolveOwnerPrefix(string expression, string? ownerInstanceName, IEnumerable<string>? instanceNames = null, bool resolveOwner = true)
         {
             List<string>? namesToEncode = instanceNames?
                 .Where(name => name.Length > 0 && EncodeOwnerName(name) != name)
@@ -1177,7 +1179,7 @@ namespace GumRuntime
                 .ToList();
             bool hasNamesToEncode = namesToEncode != null && namesToEncode.Count > 0;
 
-            if (expression.IndexOf('@') < 0 && !hasNamesToEncode)
+            if ((!resolveOwner || expression.IndexOf('@') < 0) && !hasNamesToEncode)
             {
                 return expression;
             }
@@ -1199,7 +1201,7 @@ namespace GumRuntime
                     builder.Append(expression, i, end - i);
                     i = end - 1;
                 }
-                else if (c == '@' && i + 1 < expression.Length && (char.IsLetter(expression[i + 1]) || expression[i + 1] == '_'))
+                else if (resolveOwner && c == '@' && i + 1 < expression.Length && (char.IsLetter(expression[i + 1]) || expression[i + 1] == '_'))
                 {
                     if (ownerInstanceName != null)
                     {
