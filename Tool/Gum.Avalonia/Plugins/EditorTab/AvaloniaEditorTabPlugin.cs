@@ -87,12 +87,13 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
         IPluginManager pluginManager,
         IFileWatchIgnoreList fileWatchIgnoreList,
         IProjectState projectState,
+        INameVerifier nameVerifier,
         ICanvasRedrawScheduler canvasRedrawScheduler)
         : base(selectedState, projectManager, guiCommands, outputManager, localizationService, reorderLogic,
             addInstanceLogic, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
             dialogService, hotkeyManager, elementCommands, fileCommands, setVariableLogic, uiSettingsService,
             wireframeCommands, messenger, themingService, dragDropManager, circularReferenceManager,
-            favoriteComponentManager, pluginManager, fileWatchIgnoreList, projectState)
+            favoriteComponentManager, pluginManager, fileWatchIgnoreList, projectState, nameVerifier)
     {
         _canvasRedrawScheduler = canvasRedrawScheduler;
         _wireframeObjectManager = wireframeObjectManager;

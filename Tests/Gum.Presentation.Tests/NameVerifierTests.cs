@@ -428,18 +428,28 @@ public class NameVerifierTests : BaseTestClass
 
     #endregion
 
-    #region ToValidName
+    #region MakeValidInstanceName
 
     [Theory]
+    [InlineData("Hero", "Hero")]
     [InlineData("Screenshot 2026-09-25 at 04.52.17", "Screenshot_2026_09_25_at_04_52_17")]
     [InlineData("hero-sprite", "hero_sprite")]
-    [InlineData("Valid_Name1", "Valid_Name1")]
-    public void ToValidName_ReplacesCharactersInstanceNamesReject(string candidate, string expected)
+    [InlineData("Width", "Width1")]
+    [InlineData("Name", "Name1")]
+    [InlineData("Existing", "Existing1")]
+    [InlineData("Combat", "Combat1")]
+    [InlineData("", "SpriteInstance")]
+    public void MakeValidInstanceName_ReturnsANameIsInstanceNameValidAccepts(string candidate, string expected)
     {
-        string result = NameVerifier.ToValidName(candidate);
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Instances.Add(new InstanceSave { Name = "Existing", BaseType = "Sprite", ParentContainer = component });
+        component.Categories.Add(new StateSaveCategory { Name = "Combat" });
+
+        string result = _nameVerifier.MakeValidInstanceName(candidate, "SpriteInstance", component);
 
         result.ShouldBe(expected);
-        _nameVerifier.IsNameValidCommon(result, out _, out _).ShouldBeTrue();
+        _nameVerifier.IsInstanceNameValid(result, null, component, out _).ShouldBeTrue();
     }
 
     #endregion

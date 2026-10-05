@@ -422,8 +422,7 @@ public class NameVerifier : INameVerifier
         return true;
     }
     /// <summary>
-    /// Replaces every character a name can't contain (including spaces) with an underscore, so a name
-    /// derived from outside data, such as a dropped file's name, can be used as an instance name.
+    /// Replaces every character a name can't contain (including spaces) with an underscore.
     /// </summary>
     public static string ToValidName(string candidate)
     {

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using Gum.Commands;
@@ -131,6 +131,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     internal SelectionManager CanvasSelectionManager => _selectionManager;
 
     private readonly IElementCommands _elementCommands;
+    private readonly INameVerifier _nameVerifier;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private readonly IFileDropTargetFilter _fileDropTargetFilter;
     private BackgroundManager _backgroundManager;
@@ -252,8 +253,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         IFavoriteComponentManager favoriteComponentManager,
         IPluginManager pluginManager,
         IFileWatchIgnoreList fileWatchIgnoreList,
-        IProjectState projectState)
+        IProjectState projectState,
+        INameVerifier nameVerifier)
     {
+        _nameVerifier = nameVerifier;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _projectManager = projectManager;
@@ -1269,10 +1272,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        string nameToAdd = NameVerifier.ToValidName(FileManager.RemovePath(FileManager.RemoveExtension(fileName)));
-
-        IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
-        nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
+        string nameToAdd = _nameVerifier.MakeValidInstanceName(
+            FileManager.RemovePath(FileManager.RemoveExtension(fileName)), baseType + "Instance", element);
 
         InstanceSave? instance =
             _elementCommands.AddInstance(element, nameToAdd, baseType);
