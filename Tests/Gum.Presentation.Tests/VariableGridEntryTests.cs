@@ -185,6 +185,25 @@ public class VariableGridEntryTests : BaseTestClass
     }
 
     [Fact]
+    public void GetMakeDefaultPreviewValue_ShouldBeZero_ForACustomNumericVariableInTheDefaultState()
+    {
+        // The menu label has to show the value Make Default will set.
+        ComponentSave component = CreateComponent("MyComponent");
+        component.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "WaveValue",
+            Type = "float",
+            Value = 5f,
+            SetsValue = true,
+            IsCustomVariable = true
+        });
+
+        VariableGridEntry sut = CreateSut("WaveValue", component.DefaultState, component);
+
+        sut.GetMakeDefaultPreviewValue().ShouldBe(0f);
+    }
+
+    [Fact]
     public void ResetToDefault_ShouldSetCategoryStateToZero_WhenTheDefaultStatesCustomVariableHasNoValue()
     {
         // Projects saved before Make Default kept a number have a custom variable with no value in the

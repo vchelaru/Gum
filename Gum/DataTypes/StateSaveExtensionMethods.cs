@@ -1188,7 +1188,11 @@ public static class StateSaveExtensionMethods
             object? startingValue = whatToSet.Value;
             if (startingValue == null && variableSave.Value != null)
             {
-                startingValue = thisState.GetValueRecursive(variableSave.Name) ?? GetZeroOfNumericType(variableSave.Value);
+                StateSave? defaultStateOfOwner = thisState.ParentContainer?.DefaultState;
+                object? inheritedValue = defaultStateOfOwner != null && defaultStateOfOwner != thisState
+                    ? defaultStateOfOwner.GetValueRecursive(variableSave.Name)
+                    : null;
+                startingValue = inheritedValue ?? GetZeroOfNumericType(variableSave.Value);
             }
             whatToSet.Value = GetValueConsideringInterpolation(startingValue, variableSave.Value, otherRatio);
         }
