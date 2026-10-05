@@ -4265,7 +4265,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // January 9, 2025 - breaking layout logic to address this:
                     // https://github.com/vchelaru/Gum/issues/473
                     //value = parentHeight - text.DescenderHeight;
-                    value = text.WrappedTextHeight - text.DescenderHeight;
+                    value = text.WrappedTextHeight - text.DescenderHeight * text.FontScale;
                 }
                 else
                 {
