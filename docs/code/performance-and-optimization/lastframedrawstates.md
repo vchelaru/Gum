@@ -1,5 +1,9 @@
 # Measuring Draw Calls
 
+{% hint style="info" %}
+`LastFrameDrawStates` is available on MonoGame, KNI, and FNA. It is not available on raylib or on SkiaSharp-based runtimes such as Silk.NET, Stride, and Unity.
+{% endhint %}
+
 ### Introduction
 
 LastFrameDrawStates is an IEnumerable for the draw states used in the previous draw call. This can be used to find performance problems and isolate what may be causing state changes.

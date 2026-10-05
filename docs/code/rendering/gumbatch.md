@@ -1,5 +1,9 @@
 # GumBatch
 
+{% hint style="info" %}
+`GumBatch` is available on MonoGame, KNI, FNA, and raylib. It is not available on SkiaSharp-based runtimes such as Silk.NET, Stride, and Unity.
+{% endhint %}
+
 ### Introduction
 
 GumBatch is an object which supports _immediate mode_ rendering, similar to MonoGame's SpriteBatch. GumBatch can support rendering text with DrawString as well as any IRenderableIpso.

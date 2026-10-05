@@ -1,5 +1,9 @@
 # Rendering Custom Graphics
 
+{% hint style="info" %}
+The sample on this page uses `SpriteBatch`, so it applies to MonoGame, KNI, and FNA.
+{% endhint %}
+
 ## Introduction
 
 Gum provides a number of primitives for rendering including Sprite, NineSlice, and Text. Some games may need to render custom graphics while integrating these with the Gum layout and ordering system. This page shows how to create your own custom renderable object which can be added to Gum.
