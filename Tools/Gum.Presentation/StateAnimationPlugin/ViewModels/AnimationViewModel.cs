@@ -30,6 +30,8 @@ public partial class AnimationViewModel : ViewModel
     private readonly ISelectedState _selectedState;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     AnimationRuntime? _cachedAnimationRuntime;
+    HashSet<string>? _animatedVariableNames;
+    bool _animatesUnknownVariables;
 
     #endregion
 
@@ -448,6 +450,25 @@ public partial class AnimationViewModel : ViewModel
 
         _cachedAnimationRuntime.RefreshCumulativeStates(element, useDefaultAsStarting);
 
+        List<StateSave> keyframeStates = new List<StateSave>();
+        _animatesUnknownVariables = false;
+        foreach (AnimatedKeyframeViewModel keyframe in this.Keyframes)
+        {
+            if (!string.IsNullOrEmpty(keyframe.StateName))
+            {
+                StateSave? keyframeState = GetStateFromCategorizedName(keyframe.StateName, element);
+                if (keyframeState != null)
+                {
+                    keyframeStates.Add(keyframeState);
+                }
+            }
+            else if (!string.IsNullOrEmpty(keyframe.AnimationName))
+            {
+                _animatesUnknownVariables = true;
+            }
+        }
+        _animatedVariableNames = AnimatedReferenceReevaluator.GetVariableNames(keyframeStates);
+
         System.Diagnostics.Debug.WriteLine("Updated cumulative states for animation " + this.Name + " at " + DateTime.Now);
     }
 
@@ -475,6 +496,12 @@ public partial class AnimationViewModel : ViewModel
 
         if(stateToSet != null)
         {
+            if (_animatedVariableNames != null)
+            {
+                AnimatedReferenceReevaluator.Apply(element, stateToSet, _animatedVariableNames,
+                    _animatesUnknownVariables, _wireframeObjectManager.RootGue);
+            }
+
             _selectedState.CustomCurrentStateSave = stateToSet;
             _selectedState.SelectedStateSave = null;
             _wireframeObjectManager.RootGue?.ApplyState(stateToSet);
