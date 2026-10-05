@@ -179,14 +179,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
         Grid.SetRow(horizontalScrollBar, 1);
         canvasGrid.Children.Add(horizontalScrollBar);
 
-        TextBlock gridSnapWarning = new TextBlock
-        {
-            Background = Brushes.Orange,
-            Foreground = Brushes.Black,
-            Padding = new Thickness(6, 3),
-            [!TextBlock.TextProperty] = new Binding(nameof(EditorViewModel.GridSnapWarningText)),
-            [!Visual.IsVisibleProperty] = new Binding(nameof(EditorViewModel.HasGridSnapWarning)),
-        };
+        TextBlock gridSnapWarning = CreateGridSnapNote();
 
         DockPanel tab = new DockPanel { DataContext = editorViewModel };
         EditorToolbar toolbar = new EditorToolbar();
@@ -198,6 +191,22 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCan
         tab.Children.Add(canvasGrid);
 
         _tabManager.AddControl(tab, "Editor", TabLocation.RightTop);
+    }
+
+    /// <summary>
+    /// The Snap to Grid note above the canvas. It is informational, so it uses a neutral theme
+    /// surface rather than a warning color. Binds to <c>HasGridSnapWarning</c>/<c>GridSnapWarningText</c>.
+    /// </summary>
+    internal static TextBlock CreateGridSnapNote()
+    {
+        return new TextBlock
+        {
+            Padding = new Thickness(6, 3),
+            [!TextBlock.TextProperty] = new Binding(nameof(EditorViewModel.GridSnapWarningText)),
+            [!Visual.IsVisibleProperty] = new Binding(nameof(EditorViewModel.HasGridSnapWarning)),
+        }
+        .WithThemeResource(TextBlock.BackgroundProperty, "Frb.Brushes.Surface.Fill")
+        .WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground");
     }
 
     void IRecipient<EditorCanvasFrameRequestMessage>.Receive(EditorCanvasFrameRequestMessage message)
