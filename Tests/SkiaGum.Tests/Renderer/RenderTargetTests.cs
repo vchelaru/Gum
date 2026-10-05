@@ -1,4 +1,5 @@
 using Gum;
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -90,6 +91,163 @@ public class RenderTargetTests
 
         SystemManagers.Default.Renderer.HasBakedRenderTargetFor(invisibleRenderTarget).ShouldBeTrue();
     }
+
+    // Pixel coverage for Sprite.RenderTargetTextureSource (#5658).
+    [Fact]
+    public void Draw_SpriteReferencingInvisibleRenderTarget_ShowsContentAtSpritePositionOnly()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime invisibleRenderTarget = CreateSolidRenderTarget(0, 0, 20, 20, SKColors.Red);
+        invisibleRenderTarget.Visible = false;
+        GumService.Default.Root.Children.Add(invisibleRenderTarget);
+
+        GumService.Default.Root.Children.Add(CreateSprite(invisibleRenderTarget, 40, 40, 20, 20));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(50, 50).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Draw_TwoSpritesReferencingOneRenderTarget_BothShowContent()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = CreateSolidRenderTarget(0, 0, 16, 16, SKColors.Red);
+        renderTarget.Visible = false;
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 20, 0, 16, 16));
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 40, 40, 16, 16));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(28, 8).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(48, 48).ShouldBe(SKColors.Red);
+    }
+
+    [Fact]
+    public void Draw_SpriteReferencingVisibleRenderTarget_ShowsBothContainerAndSprite()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = CreateSolidRenderTarget(0, 0, 20, 20, SKColors.Red);
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 40, 40, 20, 20));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(10, 10).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(50, 50).ShouldBe(SKColors.Red);
+    }
+
+    [Fact]
+    public void Draw_SpriteLargerThanRenderTarget_ScalesBakedImage()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        // 20x20 container: left half red, right half blue.
+        ContainerRuntime renderTarget = new()
+        {
+            Width = 20,
+            Height = 20,
+            IsRenderTarget = true,
+            Visible = false,
+        };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            X = 0,
+            Width = 10,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            X = 10,
+            Width = 10,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Blue,
+        });
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        // 2x scale: red should cover x 10..30, blue x 30..50.
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 10, 10, 40, 40));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(25, 30).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(35, 30).ShouldBe(SKColors.Blue);
+        bitmap.GetPixel(45, 30).ShouldBe(SKColors.Blue);
+        bitmap.GetPixel(5, 30).Alpha.ShouldBe((byte)0);
+        bitmap.GetPixel(55, 30).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Draw_ChildOfInvisibleNonRenderTargetParent_IsNotDrawn()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime invisibleParent = new() { Width = 20, Height = 20, Visible = false };
+        invisibleParent.Children.Add(new RectangleRuntime
+        {
+            Width = 20,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        GumService.Default.Root.Children.Add(invisibleParent);
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
+    }
+
+    private static ContainerRuntime CreateSolidRenderTarget(float x, float y, float width, float height, SKColor color)
+    {
+        ContainerRuntime renderTarget = new()
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+            IsRenderTarget = true,
+        };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = width,
+            Height = height,
+            IsFilled = true,
+            FillColor = color,
+        });
+        return renderTarget;
+    }
+
+    private static SpriteRuntime CreateSprite(ContainerRuntime source, float x, float y, float width, float height) =>
+        new()
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+            WidthUnits = DimensionUnitType.Absolute,
+            HeightUnits = DimensionUnitType.Absolute,
+            RenderTargetTextureSource = source,
+        };
 
     [Fact]
     public void Draw_WithNonRenderTargetContainer_CachesNothing()

@@ -897,7 +897,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         var canvas = ((SystemManagers)managers).Canvas;
 
-        if (AbsoluteVisible)
+        if (Visible)
         {
             var textBlock = GetCachedTextBlock();
             
