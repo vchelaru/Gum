@@ -67,6 +67,17 @@ To stay on a specific Gum version, end the Gum URL with `#upm/v<version>` instea
 
 Mouse and touch work right away. To move between Forms controls with the keyboard or a gamepad, call `GumService.Default.UseKeyboardDefaults()` or `GumService.Default.UseGamepadDefaults()` in your script.
 
+## Using the Code Samples in These Docs
+
+Most code samples on other pages are written for a `Game` class. In Unity, adapt them like this:
+
+* Code under a `// Initialize` comment goes in your script's `Start` method.
+* Code under a `// Update` comment goes in your script's `Update` method. Skip any `GumUI.Update` call, since `GumRenderer` already updates Gum.
+* Skip any `GumUI.Draw` call, since `GumRenderer` already draws Gum.
+* `GumUI` in the samples is `GumService.Default`.
+
+Samples that use MonoGame types such as `GameTime`, `GraphicsDevice`, or `Microsoft.Xna.Framework.Color` do not apply to Unity.
+
 ## Loading a Gum Project
 
 1. Copy your Gum project folder into `Assets/StreamingAssets`.
