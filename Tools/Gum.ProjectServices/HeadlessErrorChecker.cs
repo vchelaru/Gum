@@ -426,7 +426,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             return null;
         }
 
-        string rightSide = ElementSaveExtensions.ResolveOwnerPrefix(line.Substring(equalsIndex + 1), ownerInstanceName);
+        string rightSide = ElementSaveExtensions.ResolveOwnerPrefix(line.Substring(equalsIndex + 1), ownerInstanceName, ElementSaveExtensions.GetReferencableInstanceNames(owner));
         rightSide = NonReferenceTextRegex.Replace(rightSide, " ");
         rightSide = FunctionCalleeRegex.Replace(rightSide, " ");
 

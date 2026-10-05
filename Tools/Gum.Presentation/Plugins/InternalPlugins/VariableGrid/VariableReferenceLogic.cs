@@ -131,7 +131,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // Failures are reported against the original line (so CommentFailures can find it), but the
         // expression is validated with "@" already resolved to the owning instance.
         var assignmentSyntax = GetAssignmentSyntax(
-            ElementSaveExtensions.ResolveOwnerPrefix(line, leftSideInstance?.Name));
+            ElementSaveExtensions.ResolveOwnerPrefix(line, leftSideInstance?.Name, ElementSaveExtensions.GetReferencableInstanceNames(parentElement)));
 
         if (assignmentSyntax == null)
         {
