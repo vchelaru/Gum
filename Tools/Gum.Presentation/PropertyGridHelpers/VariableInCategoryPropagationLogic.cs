@@ -129,6 +129,13 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
             defaultValue = element.GetDefaultStateOrThrow().GetValueRecursive(memberName);
         }
 
+        // A custom variable has no default value until one is typed in, but every state in the category
+        // must hold an explicit value, or interpolating between its states has nothing to start from.
+        if (defaultValue == null && defaultVariable != null)
+        {
+            defaultValue = GetZeroForType(defaultVariable.Type);
+        }
+
         foreach (var state in states)
         {
 
@@ -175,6 +182,17 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         }
     }
 
+
+    private static object? GetZeroForType(string? type)
+    {
+        switch (type)
+        {
+            case "float": return 0f;
+            case "double": return 0.0;
+            case "int": return 0;
+            default: return null;
+        }
+    }
 
     public void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory)
     {

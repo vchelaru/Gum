@@ -98,6 +98,27 @@ public class VariableInCategoryPropagationLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void PropagateVariablesInCategory_CustomNumericVariableWithNoDefault_AssignsZeroToEveryState()
+    {
+        // A custom float starts with no value. Every state in the category must still hold an explicit
+        // value, or interpolating between two of its states has nothing to start from.
+        ComponentSave element = new ComponentSave { Name = "Wave" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = element };
+        defaultState.Variables.Add(new VariableSave { Name = "WaveValue", Type = "float", IsCustomVariable = true });
+        element.States.Add(defaultState);
+
+        StateSaveCategory category = new StateSaveCategory { Name = "WavyCategory" };
+        category.States.Add(new StateSave { Name = "Start" });
+        category.States.Add(new StateSave { Name = "End" });
+        element.Categories.Add(category);
+
+        _variableInCategoryPropagationLogic.PropagateVariablesInCategory("WaveValue", element, category);
+
+        category.States[0].GetVariableSave("WaveValue")!.Value.ShouldBe(0f);
+        category.States[1].GetVariableSave("WaveValue")!.Value.ShouldBe(0f);
+    }
+
+    [Fact]
     public void PropagateVariablesInCategory_NullElement_DoesNotThrow()
     {
         StateSaveCategory category = new() { Name = "MyCategory" };
