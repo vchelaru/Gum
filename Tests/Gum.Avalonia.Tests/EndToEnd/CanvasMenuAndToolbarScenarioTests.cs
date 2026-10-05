@@ -159,6 +159,20 @@ public class CanvasMenuAndToolbarScenarioTests
     #region Toolbar
 
     [SkippableFact]
+    public void GridSize_PickingAPresetFromTheToolbar_SavesThatGridSize()
+    {
+        OnCanvas(canvas =>
+        {
+            canvas.Frame();
+
+            canvas.GridSizeComboBox.SelectedItem = 16;
+            canvas.Frame();
+
+            SavedProject(canvas).GridSize.ShouldBe(16);
+        });
+    }
+
+    [SkippableFact]
     [Trait("Feature", "CANV-017")]
     [Trait("Feature", "CANV-018")]
     [Trait("Feature", "CANV-019")]
