@@ -2822,7 +2822,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             #region Ratio
             case DimensionUnitType.Ratio:
                 {
-                    if (this.Height == 0)
+                    // A negative ratio takes no space, like 0.
+                    if (this.Height <= 0)
                     {
                         pixelHeightToSet = 0;
                     }
@@ -2895,7 +2896,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var child = _parent.Children[i];
                                 if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
-                                    totalRatio += gue.Height;
+                                    totalRatio += System.Math.Max(0, gue.Height);
                                 }
                             }
                         }
@@ -3262,7 +3263,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             case DimensionUnitType.Ratio:
                 {
-                    if (this.Width == 0)
+                    // A negative ratio takes no space, like 0.
+                    if (this.Width <= 0)
                     {
                         pixelWidthToSet = 0;
                     }
@@ -3336,7 +3338,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var child = _parent.Children[i];
                                 if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
-                                    totalRatio += gue.Width;
+                                    totalRatio += System.Math.Max(0, gue.Width);
                                 }
                             }
                         }
