@@ -4307,6 +4307,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (asITextureCoordinate.TextureWidth != null)
                     {
                         unitOffsetX = asITextureCoordinate.TextureWidth.Value * mX / 100.0f;
+                        wasSet = true;
                     }
                 }
 
@@ -4345,6 +4346,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (asITextureCoordinate.TextureHeight != null)
                     {
                         unitOffsetY = asITextureCoordinate.TextureHeight.Value * mY / 100.0f;
+                        wasSet = true;
                     }
                 }
 

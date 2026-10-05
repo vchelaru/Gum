@@ -46,7 +46,7 @@ covered by that test now.
 ### 1.2 X/Y units
 - [x] PixelsFromSmall, PixelsFromMiddle, PixelsFromLarge, Percentage (incl. parent size 0)
 - [~] PixelsFromBaseline: [ ] parent is Text (wrapped text height minus descender); [ ] parent is not Text (bottom edge)
-- [ ] PercentageOfFile, X and Y, with and without a texture (H1)
+- [x] PercentageOfFile, X and Y (code-only; saved projects use PositionUnitType, which has no such value) (H1)
 - [ ] PixelsFromMiddleInverted (obsolete, still loads): position and contribution to a RelativeToChildren parent (H12)
 
 ### 1.3 Origins
@@ -310,7 +310,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 
 | # | Where | Finding | Result |
 |---|---|---|---|
-| H1 | `AdjustOffsetsByUnits` | PercentageOfFile X/Y always use the 64-pixel fallback. | LOG #5769 |
+| H1 | `AdjustOffsetsByUnits` | PercentageOfFile X/Y (code-only; not a saved unit) always used the 64-pixel fallback. | FIX (#5769) |
 | H2 | `X` and `Y` setters | Shortcut skipped the AutoGrid cell offset, parent flip/rotation, a RelativeToMaxParentOrChildren parent, and a parentless child of a stacking component. | FIX |
 | H3 | `Parent` setter | `RemoveChild`/`Children.Clear` didn't lay out the old parent; `Parent = null` did. | FIX (#5764; respects suspension, Clear lays out once) |
 | H4 | `UpdateChildren.UpdateChild` | `a && b \|\| c` precedence for MaintainFileAspectRatio. | CLEARED (no observable effect) |

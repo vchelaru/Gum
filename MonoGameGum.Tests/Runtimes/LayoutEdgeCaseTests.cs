@@ -413,7 +413,8 @@ public class LayoutEdgeCaseTests : BaseTestClass
 
     #region Position units
 
-    [Fact(Skip = "Behavior change pending decision: #5769")]
+    // Only code can set X/Y units to PercentageOfFile; saved projects store PositionUnitType, which has no such value.
+    [Fact]
     public void PercentageOfFile_ShouldUseTextureSize()
     {
         TexturedRenderable renderable = new() { TextureWidth = 200, TextureHeight = 100 };
