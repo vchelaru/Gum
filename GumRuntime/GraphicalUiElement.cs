@@ -4072,7 +4072,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             if (mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromMiddleInverted ||
 #pragma warning restore CS0618
-                mXUnits == GeneralUnitType.PixelsFromLarge)
+                mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.Percentage)
             {
                 if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
