@@ -2948,7 +2948,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     // A zero, negative or non-finite aspect ratio (such as from an empty texture) cannot size the
     // other axis, so MaintainFileAspectRatio falls back as if the renderable had no aspect ratio.
-    static bool IsUsableAspectRatio(float aspectRatio) => aspectRatio > 0 && float.IsFinite(aspectRatio);
+    static bool IsUsableAspectRatio(float aspectRatio) => aspectRatio > 0 && !float.IsInfinity(aspectRatio);
 
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
     {
