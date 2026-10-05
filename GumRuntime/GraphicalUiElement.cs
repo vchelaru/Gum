@@ -3789,8 +3789,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var parentWidthDependencyType = parent.WidthUnits.GetDependencyType();
         var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
 
-        var isParentWidthNoDependencyOrOnParent = parentWidthDependencyType == HierarchyDependencyType.NoDependency || parentWidthDependencyType == HierarchyDependencyType.DependsOnParent;
-        var isParentHeightNoDependencyOrOnParent = parentHeightDependencyType == HierarchyDependencyType.NoDependency || parentHeightDependencyType == HierarchyDependencyType.DependsOnParent;
+        // RelativeToMaxParentOrChildren also depends on children, so its size isn't final until they are measured.
+        var isParentWidthNoDependencyOrOnParent = (parentWidthDependencyType == HierarchyDependencyType.NoDependency || parentWidthDependencyType == HierarchyDependencyType.DependsOnParent) &&
+            parent.WidthUnits != DimensionUnitType.RelativeToMaxParentOrChildren;
+        var isParentHeightNoDependencyOrOnParent = (parentHeightDependencyType == HierarchyDependencyType.NoDependency || parentHeightDependencyType == HierarchyDependencyType.DependsOnParent) &&
+            parent.HeightUnits != DimensionUnitType.RelativeToMaxParentOrChildren;
 
         var isAbsolute = (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentWidthNoDependencyOrOnParent) &&
                         (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentHeightNoDependencyOrOnParent) &&
