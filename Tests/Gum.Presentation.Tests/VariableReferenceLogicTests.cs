@@ -196,6 +196,35 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList[0].ShouldBe("Width = Background.Width");
     }
 
+    [Theory]
+    [InlineData("X = gum-logo-reverse-256.X", "X=gum-logo-reverse-256.X")]
+    [InlineData("gum-logo-reverse-256.X", "X=gum-logo-reverse-256.X")]
+    [InlineData("X = gum-logo-reverse-256.X + Y", "X=gum-logo-reverse-256.X + gum-logo-reverse-257.Y")]
+    public void ReactIfChangedMemberIsVariableReference_InstanceReferencesOtherInstanceWithHyphenatedName_LeavesNameIntact(
+        string line, string expected)
+    {
+        ComponentSave element = new() { Name = "MyComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+        InstanceSave owner = new() { Name = "gum-logo-reverse-257", BaseType = "Container", ParentContainer = element };
+        InstanceSave other = new() { Name = "gum-logo-reverse-256", BaseType = "Container", ParentContainer = element };
+        element.Instances.Add(owner);
+        element.Instances.Add(other);
+
+        VariableListSave<string> varList = new() { Type = "string", Name = "gum-logo-reverse-257.VariableReferences" };
+        varList.Value.Add(line);
+        defaultState.VariableLists.Add(varList);
+
+        GumProjectSave project = new();
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            owner, defaultState, changedMember: "VariableReferences", oldValue: null);
+
+        varList.Value[0].ShouldBe(expected);
+    }
+
     [Fact]
     public void ReactIfChangedMemberIsVariableReference_ListChangedFromNull_RefreshesVariables()
     {
@@ -446,6 +475,51 @@ public class VariableReferenceLogicTests : BaseTestClass
             trySave: false);
 
         screen.DefaultState.GetValue("myCompA.childInstance.Width").ShouldBe(100f);
+    }
+
+    [Theory]
+    [InlineData("gum-logo-reverse-257", "gum-logo-reverse-256")]
+    [InlineData("logoB", "logoA")]
+    public void DoVariableReferenceReaction_InstanceReferencesOtherInstance_AppliesValue(string ownerName, string otherName)
+    {
+        // Full authoring flow for a pasted "X = <other>.X": qualify the line, then validate and apply.
+        ComponentSave element = new() { Name = "MyComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+        InstanceSave owner = new() { Name = ownerName, BaseType = "Container", ParentContainer = element };
+        InstanceSave other = new() { Name = otherName, BaseType = "Container", ParentContainer = element };
+        element.Instances.Add(owner);
+        element.Instances.Add(other);
+        defaultState.Variables.Add(new VariableSave { Name = otherName + ".X", Value = 42f, Type = "float", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = ownerName + ".X", Value = 0f, Type = "float", SetsValue = true });
+
+        VariableListSave<string> varList = new() { Type = "string", Name = ownerName + ".VariableReferences" };
+        varList.Value.Add($"X = {otherName}.X");
+        defaultState.VariableLists.Add(varList);
+
+        // The Container standard declares X so the left side resolves via GetRootVariable.
+        StandardElementSave containerStandard = new() { Name = "Container" };
+        StateSave containerDefault = new() { Name = "Default", ParentContainer = containerStandard };
+        containerDefault.Variables.Add(new VariableSave { Name = "X", Type = "float", Value = 0f, SetsValue = true });
+        containerStandard.States.Add(containerDefault);
+
+        GumProjectSave project = new();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            owner, defaultState, changedMember: "VariableReferences", oldValue: null);
+        _sut.DoVariableReferenceReaction(
+            parentElement: element,
+            leftSideInstance: owner,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: ownerName + ".VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldNotStartWith("//");
+        defaultState.GetValue(ownerName + ".X").ShouldBe(42f);
     }
 
     [Fact]

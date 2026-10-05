@@ -222,6 +222,46 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData("gum-logo-256", true)]
+    [InlineData("gum-logo-256", false)]
+    [InlineData("3d icon", true)]
+    [InlineData("3d icon", false)]
+    public void ApplyVariableReferences_RightSideNamesInstanceThatIsNotAnIdentifier_Resolves(string otherName, bool useExpressionService)
+    {
+        if (useExpressionService)
+        {
+            GumExpressionService.Initialize();
+        }
+        ContainerRuntime parent = new ContainerRuntime();
+        parent.X = 0;
+
+        StateSave state = BuildStateWithVariableReference(
+            $"X = {otherName}.Y",
+            null,
+            ("X", 0f, "float"),
+            ($"{otherName}.Y", 77f, "float"));
+        state.ParentContainer!.Instances.Add(new InstanceSave { Name = otherName, ParentContainer = state.ParentContainer });
+
+        parent.ApplyVariableReferences(state);
+
+        parent.X.ShouldBe(77f);
+    }
+
+    [Theory]
+    [InlineData("a-b.Width", "a_x002D_b.Width")]
+    [InlineData("x-y.Width + a.Width", "x_x002D_y.Width + a.Width")]
+    [InlineData("\"x-y.Width\"", "\"x-y.Width\"")]
+    [InlineData("Other.x-y.Width", "Other.x-y.Width")]
+    [InlineData("x-yy.Width", "x-yy.Width")]
+    public void ResolveOwnerPrefix_InstanceNamesNeedingEncoding_AreEncodedAtTokenBoundaries(string expression, string expected)
+    {
+        // "a" is also an instance; the longer "a-b" must win where both match.
+        string[] instanceNames = { "a", "a-b", "x-y" };
+
+        ElementSaveExtensions.ResolveOwnerPrefix(expression, null, instanceNames).ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData("@Index * 2", "Item1", "Item1.Index * 2")]
     [InlineData("@Child.Prop", "Item1", "Item1.Child.Prop")]
     [InlineData("@Height", null, "Height")]

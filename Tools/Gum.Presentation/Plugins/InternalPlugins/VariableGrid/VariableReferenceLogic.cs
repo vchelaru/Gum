@@ -131,7 +131,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // Failures are reported against the original line (so CommentFailures can find it), but the
         // expression is validated with "@" already resolved to the owning instance.
         var assignmentSyntax = GetAssignmentSyntax(
-            ElementSaveExtensions.ResolveOwnerPrefix(line, leftSideInstance?.Name));
+            ElementSaveExtensions.ResolveOwnerPrefix(line, leftSideInstance?.Name, ElementSaveExtensions.GetReferencableInstanceNames(parentElement)));
 
         if (assignmentSyntax == null)
         {
@@ -769,7 +769,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 if(split.Length > 1 && selectedInstance != null )
                 {
                     // need to loop through each item and adjust its text...
-                    QualifyInstanceVariables(newValueAsList, selectedInstance, i, split);
+                    QualifyInstanceVariables(newValueAsList, selectedInstance, ownerElement, i, split);
                 }
 
                 if (split.Length > 1)
@@ -813,9 +813,13 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         return didChange;
     }
 
-    private static void QualifyInstanceVariables(List<string> newValueAsList, InstanceSave selectedInstance, int i, string[] split)
+    private static void QualifyInstanceVariables(List<string> newValueAsList, InstanceSave selectedInstance, ElementSave? ownerElement, int i, string[] split)
     {
-        var asCSharp = EvaluatedSyntax.ConvertToCSharpSyntax(split[1]);
+        // Instance names such as "gum-logo-256" would parse as subtractions and have each piece qualified,
+        // so they are encoded for the parse and decoded afterwards.
+        var encoded = ElementSaveExtensions.ResolveOwnerPrefix(
+            split[1], null, ElementSaveExtensions.GetReferencableInstanceNames(ownerElement), resolveOwner: false);
+        var asCSharp = EvaluatedSyntax.ConvertToCSharpSyntax(encoded);
 
         var syntax = CSharpSyntaxTree.ParseText(asCSharp).GetCompilationUnitRoot();
 
@@ -840,7 +844,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         var newCSharp = newTree.ToString();
 
-        split[1] = EvaluatedSyntax.ConvertToSlashSyntax(newCSharp);
+        split[1] = ElementSaveExtensions.DecodeOwnerName(EvaluatedSyntax.ConvertToSlashSyntax(newCSharp));
         newValueAsList[i] = split[0] + "=" + split[1];
 
 

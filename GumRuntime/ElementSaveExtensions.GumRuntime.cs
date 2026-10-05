@@ -1149,7 +1149,7 @@ namespace GumRuntime
             }
 
 
-            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name);
+            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
             var value = GetRightSideValue(stateSave, right, leftSideType, liveRootForRightSide ?? referenceOwner);
 
 
@@ -1165,9 +1165,25 @@ namespace GumRuntime
         /// (<paramref name="ownerInstanceName"/> null) the owner is the element itself, so the <c>@</c> is
         /// dropped. String and char literals are left untouched, as is a verbatim string opener (<c>@"</c>).
         /// </summary>
-        public static string ResolveOwnerPrefix(string expression, string? ownerInstanceName)
+        /// <param name="expression">The reference expression, such as <c>@Index * 2</c>.</param>
+        /// <param name="ownerInstanceName">The instance that owns the row; null on an element-level row.</param>
+        /// <param name="instanceNames">Names of the element's instances. Any that is not a valid C#
+        /// identifier (such as <c>gum-logo-256</c>) is encoded wherever it appears at a token boundary
+        /// followed by <c>.</c>, so the expression parses as a member access instead of a subtraction.
+        /// The longest matching name wins, so <c>a-b.Width</c> reads as instance <c>a-b</c> even when an
+        /// instance <c>a</c> exists.</param>
+        /// <param name="resolveOwner">When false the <c>@</c> prefix is left as written and only
+        /// <paramref name="instanceNames"/> are encoded.</param>
+        public static string ResolveOwnerPrefix(string expression, string? ownerInstanceName, IEnumerable<string>? instanceNames = null, bool resolveOwner = true)
         {
-            if (expression.IndexOf('@') < 0)
+            List<string>? namesToEncode = instanceNames?
+                .Where(name => name.Length > 0 && EncodeOwnerName(name) != name)
+                .Distinct()
+                .OrderByDescending(name => name.Length)
+                .ToList();
+            bool hasNamesToEncode = namesToEncode != null && namesToEncode.Count > 0;
+
+            if ((!resolveOwner || expression.IndexOf('@') < 0) && !hasNamesToEncode)
             {
                 return expression;
             }
@@ -1189,12 +1205,17 @@ namespace GumRuntime
                     builder.Append(expression, i, end - i);
                     i = end - 1;
                 }
-                else if (c == '@' && i + 1 < expression.Length && (char.IsLetter(expression[i + 1]) || expression[i + 1] == '_'))
+                else if (resolveOwner && c == '@' && i + 1 < expression.Length && (char.IsLetter(expression[i + 1]) || expression[i + 1] == '_'))
                 {
                     if (ownerInstanceName != null)
                     {
                         builder.Append(EncodeOwnerName(ownerInstanceName)).Append('.');
                     }
+                }
+                else if (hasNamesToEncode && TryMatchInstanceName(expression, i, namesToEncode!, out string? matchedName))
+                {
+                    builder.Append(EncodeOwnerName(matchedName!));
+                    i += matchedName!.Length - 1;
                 }
                 else
                 {
@@ -1203,6 +1224,52 @@ namespace GumRuntime
             }
 
             return builder.ToString();
+        }
+
+        private static bool TryMatchInstanceName(string expression, int index, List<string> namesLongestFirst, out string? matchedName)
+        {
+            matchedName = null;
+
+            if (index > 0)
+            {
+                char previous = expression[index - 1];
+                if (char.IsLetterOrDigit(previous) || previous == '_' || previous == '.' || previous == ':' || previous == '/')
+                {
+                    return false;
+                }
+            }
+
+            foreach (string name in namesLongestFirst)
+            {
+                int end = index + name.Length;
+                if (end < expression.Length
+                    && expression[end] == '.'
+                    && string.CompareOrdinal(expression, index, name, 0, name.Length) == 0)
+                {
+                    matchedName = name;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// The names of every instance <paramref name="element"/> can reference: its own and those of its
+        /// base elements. Pass to <see cref="ResolveOwnerPrefix"/> so names that are not valid identifiers
+        /// still parse.
+        /// </summary>
+        public static IEnumerable<string> GetReferencableInstanceNames(ElementSave? element)
+        {
+            if (element == null)
+            {
+                return Enumerable.Empty<string>();
+            }
+
+            return ObjectFinder.Self.GetBaseElements(element)
+                .Append(element)
+                .SelectMany(item => item.Instances)
+                .Select(instance => instance.Name);
         }
 
         private static readonly System.Text.RegularExpressions.Regex EncodedOwnerCharRegex =
@@ -1300,8 +1367,8 @@ namespace GumRuntime
                 leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
             }
 
-            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name);
-            object? value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
+            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
+            object? value =GetRightSideValue(stateSave, right, leftSideType, liveRoot);
 
             object? valueBefore = null;
             string? effectiveLeft = null;
@@ -1432,8 +1499,8 @@ namespace GumRuntime
                 leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
             }
 
-            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name);
-            var values = GetAllRightSideValues(stateSave, right, leftSideType, liveRoot).ToList();
+            var right = ResolveOwnerPrefix(split[1], instanceLeft?.Name, GetReferencableInstanceNames(stateSave.ParentContainer));
+            var values =GetAllRightSideValues(stateSave, right, leftSideType, liveRoot).ToList();
 
             return (leftVariableName, values);
         }
