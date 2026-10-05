@@ -35,7 +35,6 @@ namespace Gum.Unity
         SKSurface? _cpuSurface;
         Texture2D? _cpuTexture;
         byte[]? _cpuFlipBuffer;
-        Material? _premultipliedMaterial;
 
         /// <summary>The project file loaded on <c>Awake</c>, relative to StreamingAssets. Empty for none.</summary>
         public string ProjectFile
@@ -102,12 +101,6 @@ namespace Gum.Unity
             }
 
             gum.UseClipboard(new GumUnityClipboard());
-
-            Shader? shader = Resources.Load<Shader>("GumPremultiplied");
-            if (shader != null)
-            {
-                _premultipliedMaterial = new Material(shader);
-            }
         }
 
         void Update()
@@ -168,14 +161,7 @@ namespace Gum.Unity
 
             // The texture's row 0 is its bottom row, which GUI drawing puts at the bottom of the rect.
             var rect = new Rect(0, 0, Screen.width, Screen.height);
-            if (_premultipliedMaterial != null)
-            {
-                UnityEngine.Graphics.DrawTexture(rect, texture, _premultipliedMaterial);
-            }
-            else
-            {
-                GUI.DrawTexture(rect, texture);
-            }
+            UnityEngine.Graphics.DrawTexture(rect, texture, SkiaUnityRenderTarget.PremultipliedGuiMaterial);
         }
 
         void OnDestroy()
@@ -186,10 +172,6 @@ namespace Gum.Unity
                 gum.Uninitialize();
             }
             DisposeTarget();
-            if (_premultipliedMaterial != null)
-            {
-                Destroy(_premultipliedMaterial);
-            }
         }
 
         void CreateTarget(int width, int height)
