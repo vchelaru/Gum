@@ -30,6 +30,22 @@ public class CompositeGumFileProvider : IGumFileProvider
     }
 
     /// <inheritdoc/>
+    public bool CanEnumerate
+    {
+        get
+        {
+            foreach (IGumFileProvider provider in _providers)
+            {
+                if (provider.CanEnumerate)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
     public bool Exists(string relativePath)
     {
         foreach (IGumFileProvider provider in _providers)

@@ -28,8 +28,8 @@ public static class GumAnimationLoader
     /// <param name="usedBundle">
     /// Whether the project was loaded from a bundle (<c>.gumpkg</c>). Suppresses the "no animations found"
     /// warning, since bundle mode's in-memory entry list is the manifest and an empty result is unambiguous
-    /// there; loose mode can't distinguish "genuinely no animations" from "can't enumerate on this platform"
-    /// (streaming platforms like Blazor WASM), so it warns instead.
+    /// there. In loose mode the warning fires only when nothing loaded and the provider reports
+    /// <see cref="IGumFileProvider.CanEnumerate"/> false (streaming platforms like Blazor WASM).
     /// </param>
     /// <remarks>
     /// This enumerates once instead of probing <see cref="FileManager.FileExists(string)"/> per element. In bundle
@@ -66,15 +66,21 @@ public static class GumAnimationLoader
         // Loose mode relies on directory enumeration, which streaming platforms (Blazor WASM)
         // can't do over HTTP — there the enumeration silently returns nothing. Surface that once
         // so a developer who expected animations isn't left guessing. Bundle mode never has this
-        // problem (the in-memory entry list is the manifest), so it stays quiet.
-        if (!usedBundle && loaded == 0)
+        // problem (the in-memory entry list is the manifest), and a provider that can enumerate
+        // returning nothing just means the project has no animations, so both stay quiet.
+        if (ShouldWarnEnumerationUnavailable(fileProvider, usedBundle, loaded))
         {
             Console.WriteLine(
-                "[Gum] No animation (*Animations.ganx/*Animations.ganj) files were found for this loosely-loaded project. " +
-                "Loose-mode animation loading enumerates the project directory, which is unavailable on " +
-                "browser/streaming platforms (e.g. Blazor WASM) — package the project as a .gumpkg to " +
-                "load animations on those platforms.");
+                "[Gum] No animation (*Animations.ganx/*Animations.ganj) files were loaded because the project " +
+                "directory could not be enumerated (it doesn't exist on the file system). Loose-mode animation " +
+                "loading needs directory enumeration, which is unavailable on browser/streaming platforms " +
+                "(e.g. Blazor WASM) — package the project as a .gumpkg to load animations on those platforms.");
         }
+    }
+
+    internal static bool ShouldWarnEnumerationUnavailable(IGumFileProvider fileProvider, bool usedBundle, int loaded)
+    {
+        return !usedBundle && loaded == 0 && !fileProvider.CanEnumerate;
     }
 
     /// <summary>
