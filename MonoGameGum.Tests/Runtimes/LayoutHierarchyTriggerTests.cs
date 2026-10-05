@@ -216,6 +216,82 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         child.AbsoluteLeft.ShouldBe(expectedLeft);
     }
 
+    static ContainerRuntime CreateFlippedStack(ChildrenLayout layout, GeneralUnitType xUnits, HorizontalAlignment xOrigin, float x)
+    {
+        ContainerRuntime stack = CreateContainer(200, 300);
+        stack.ChildrenLayout = layout;
+        for (int i = 0; i < 3; i++)
+        {
+            ContainerRuntime child = CreateContainer(50, 20);
+            child.XUnits = xUnits;
+            child.XOrigin = xOrigin;
+            child.X = x;
+            stack.AddChild(child);
+        }
+        stack.FlipHorizontal = true;
+        return stack;
+    }
+
+    [Fact(Skip = "Behavior change pending decision: #5776")]
+    public void FlippedLeftToRightStack_ShouldStackFromRightEdge()
+    {
+        ContainerRuntime stack = CreateFlippedStack(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, HorizontalAlignment.Left, 0);
+
+        stack.Children[0].AbsoluteLeft.ShouldBe(150);
+        stack.Children[1].AbsoluteLeft.ShouldBe(100);
+        stack.Children[2].AbsoluteLeft.ShouldBe(50);
+    }
+
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall, HorizontalAlignment.Left, 150f, 150f, 150f)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, HorizontalAlignment.Right, 0f, 50f, 100f)]
+    public void FlippedLeftToRightStack_CurrentPlacement(GeneralUnitType xUnits, HorizontalAlignment xOrigin, float first, float second, float third)
+    {
+        ContainerRuntime stack = CreateFlippedStack(ChildrenLayout.LeftToRightStack, xUnits, xOrigin, 0);
+
+        // Pins today's result until #5776 decides the stacking direction under flip: the first
+        // child mirrors, but later children don't stack right to left.
+        stack.Children[0].AbsoluteLeft.ShouldBe(first);
+        stack.Children[1].AbsoluteLeft.ShouldBe(second);
+        stack.Children[2].AbsoluteLeft.ShouldBe(third);
+    }
+
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall, 140f)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, -60f)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, 40f)]
+    public void FlippedTopToBottomStack_ShouldMirrorXAndKeepStacking(GeneralUnitType xUnits, float expectedLeft)
+    {
+        ContainerRuntime stack = CreateFlippedStack(ChildrenLayout.TopToBottomStack, xUnits, HorizontalAlignment.Left, 10);
+
+        for (int i = 0; i < 3; i++)
+        {
+            stack.Children[i].AbsoluteLeft.ShouldBe(expectedLeft);
+            stack.Children[i].AbsoluteTop.ShouldBe(i * 20);
+        }
+    }
+
+    [Fact]
+    public void FlippedAutoGrid_ShouldMirrorCells()
+    {
+        ContainerRuntime grid = CreateContainer(400, 400);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 2;
+        for (int i = 0; i < 4; i++)
+        {
+            grid.AddChild(CreateContainer(50, 50));
+        }
+
+        grid.FlipHorizontal = true;
+
+        grid.Children[0].AbsoluteLeft.ShouldBe(350);
+        grid.Children[1].AbsoluteLeft.ShouldBe(150);
+        grid.Children[2].AbsoluteLeft.ShouldBe(350);
+        grid.Children[3].AbsoluteLeft.ShouldBe(150);
+        grid.Children[2].AbsoluteTop.ShouldBe(200);
+    }
+
     #endregion
 
     #region Anchor and Dock (1.6)
