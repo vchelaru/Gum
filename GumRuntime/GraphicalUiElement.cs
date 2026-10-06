@@ -240,6 +240,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     bool mWrap;
 
     bool mWrapsChildren = false;
+    // The longest stacked line the last children-based measure found, before padding.
+    float _measuredLineWidth;
+    float _measuredLineHeight;
 
     float mTextureWidthScale = 1;
     float mTextureHeightScale = 1;
@@ -2710,6 +2713,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         else
                         {
                             float maxCellHeight = GetMaxCellHeight(considerWrappedStacked, maxHeight);
+                            _measuredLineHeight = maxCellHeight;
 
                             maxHeight = maxCellHeight;
 
@@ -2975,6 +2979,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         childrenBasedSize = GetMaxCellHeight(considerWrappedStacked, childrenBasedSize);
                     }
+                    _measuredLineHeight = childrenBasedSize;
                     // mHeight acts as padding on children, matching RelativeToChildren behavior
                     childrenBasedSize += mHeight;
 
@@ -3151,6 +3156,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         }
 
                         float maxCellWidth = GetMaxCellWidth(considerWrappedStacked, maxWidth);
+                        _measuredLineWidth = maxCellWidth;
 
                         maxWidth = maxCellWidth;
 
@@ -3416,6 +3422,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         childrenBasedSize = GetMaxCellWidth(considerWrappedStacked, childrenBasedSize);
                     }
+                    _measuredLineWidth = childrenBasedSize;
                     // mWidth acts as padding on children, matching RelativeToChildren behavior
                     childrenBasedSize += mWidth;
 
@@ -4577,12 +4584,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    // Negative padding on a size relative to children lets content overhang the edge, so a wrapping
-    // stack breaks rows against its size minus the padding, where its measure broke them (#5808).
+    // A wrapping stack sized from its children never breaks a line shorter than its measure did, so
+    // negative padding lets that line overhang the edge instead of re-wrapping it (#5808).
     private float GetNegativePaddingOverhang(XOrY axis)
     {
-        var (size, units) = axis == XOrY.X ? (mWidth, mWidthUnit) : (mHeight, mHeightUnit);
-        return units == DimensionUnitType.RelativeToChildren && size < 0 ? -size : 0;
+        var (units, measuredLine, size) = axis == XOrY.X
+            ? (mWidthUnit, _measuredLineWidth, AbsoluteWidth)
+            : (mHeightUnit, _measuredLineHeight, AbsoluteHeight);
+        bool isSizedFromChildren = units == DimensionUnitType.RelativeToChildren || units == DimensionUnitType.RelativeToMaxParentOrChildren;
+        return isSizedFromChildren ? System.Math.Max(0, measuredLine - size) : 0;
     }
 
     private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool shouldWrap, XOrY? xOrY, float parentRotation)

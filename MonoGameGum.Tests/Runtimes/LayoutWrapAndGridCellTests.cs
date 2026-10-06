@@ -410,6 +410,39 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         AssertLines(stack, parent, expectedMain, expectedCross, expectedChildMain, expectedChildCross, hiddenIndex: -1);
     }
 
+    // Relative to Max Parent or Children breaks rows where its children measure did. The size comes
+    // from the children (50), from a parent wider than children minus padding but narrower than the
+    // measured row (180), or from a parent past the max (400, clamped to 200).
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, 50f, 170f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 50f, 170f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 180f, 180f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 180f, 180f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 400f, 200f)]
+    public void WrappingStack_MaxParentOrChildrenWithNegativePadding_ShouldBreakRowsWhereMeasured(ChildrenLayout stack,
+        float parentSize, float expectedMain)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime outer = CreateContainer(stacksVertically ? 500 : parentSize, stacksVertically ? parentSize : 500);
+        ContainerRuntime parent = CreateTagList(stack, max: 200, spacing: 0);
+        if (stacksVertically)
+        {
+            parent.HeightUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        }
+        else
+        {
+            parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        }
+        SetMainSize(stack, parent, -20);
+        outer.AddChild(parent);
+        foreach (float mainSize in new float[] { 100, 90, 50 })
+        {
+            parent.AddChild(CreateStackChild(stack, main: mainSize, cross: 50));
+        }
+
+        AssertLines(stack, parent, expectedMain, expectedCross: 100, new float[] { 0, 100, 0 }, new float[] { 0, 0, 50 }, hiddenIndex: -1);
+    }
+
     // A flipped LeftToRightStack runs leftward, so negative padding lets its rows overhang the left edge.
     [Fact]
     public void WrappingStack_FlippedWithNegativePadding_ShouldOverhangLeftEdge()
