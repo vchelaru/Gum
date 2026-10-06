@@ -84,6 +84,8 @@ When a `Button`, `CheckBox`, or other `FrameworkElement` is added to `Items`, it
 
 If a ListBox Visual arrives with children already in InnerPanel and `Items.Count == 0`, `ReactToVisualChanged` in ListBox iterates `InnerPanel.Children`, adds `ListBoxItem` instances to both `Items` and `ListBoxItemsInternal`, and calls `AssignListBoxEvents`. This recovery only runs once at construction; it does not stay in sync afterward.
 
+A direct `InnerPanel.Children.Move` (hot reload does this) reaches `HandleInnerPanelChildMovedExternally`. ListBox syncs `Items`/`ListBoxItems` only for self-backed rows (`DataObject == row`); a data-backed row's move leaves both collections untouched. Code that moves the panel and syncs itself sets `IsMovingInnerPanelChildInternally` around the move so the sync doesn't run twice.
+
 ### 4. Index alignment assumption
 
 `HandleItemSelected` resolves the data object via `Items[ListBoxItemsInternal.IndexOf(listBoxItem)]`. If `Items` and `ListBoxItems` have drifted (any of the above cases), **selection silently fails or selects the wrong item** — the check `clickedIndex >= Items.Count` causes an early return.

@@ -1,8 +1,10 @@
 using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Forms.Controls;
 using Gum.Managers;
 using Gum.Wireframe;
+using GumRuntime;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -23,6 +25,7 @@ public class HotReloadStructuralDiffTests : BaseTestClass
 {
     public override void Dispose()
     {
+        ElementSaveExtensions.Reset();
         ObjectFinder.Self.GumProjectSave = null;
         base.Dispose();
     }
@@ -68,6 +71,33 @@ public class HotReloadStructuralDiffTests : BaseTestClass
         };
         screen.Instances.Add(instance);
         return instance;
+    }
+
+    private static ComponentSave AddComponent(GumProjectSave project, string name)
+    {
+        EnsureStandard(project, "Container");
+        ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        project.Components.Add(component);
+        return component;
+    }
+
+    private static void SetParent(StateSave state, string instanceName, string parentName)
+    {
+        state.Variables.Add(new VariableSave
+        {
+            Name = instanceName + ".Parent",
+            Value = parentName,
+            Type = "string",
+            SetsValue = true
+        });
+    }
+
+    private static void MoveInstanceToEnd(ScreenSave screen, string name)
+    {
+        InstanceSave instance = screen.Instances.Single(i => i.Name == name);
+        screen.Instances.Remove(instance);
+        screen.Instances.Add(instance);
     }
 
     private static GraphicalUiElement? FindChildByName(GraphicalUiElement parent, string name)
@@ -386,5 +416,81 @@ public class HotReloadStructuralDiffTests : BaseTestClass
 
         box1.X.ShouldBe(99f);
         screenGue.Children.Single().ShouldBeSameAs(box1);
+    }
+
+    [Fact]
+    public void Reorder_InstancesParentedToAnotherInstance_ReordersWithinThatParent()
+    {
+        // Box1/Box2 sit under Holder1 through a Parent variable, so they are not in the screen's
+        // Children. Holder1 is a component instance with its own instance (Inner), which belongs
+        // to the component, not the screen, and must keep its slot. Sub1/Sub2 sit one level
+        // deeper, under Box1.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave holderComponent = AddComponent(project, "HolderComponent");
+        holderComponent.Instances.Add(new InstanceSave
+        {
+            Name = "Inner",
+            BaseType = "Container",
+            ParentContainer = holderComponent
+        });
+        (ScreenSave screen, StateSave screenDefault) = BuildScreen(project);
+        AddInstance(project, screen, "Holder1", "HolderComponent");
+        AddInstance(project, screen, "Box1");
+        AddInstance(project, screen, "Box2");
+        AddInstance(project, screen, "Sub1");
+        AddInstance(project, screen, "Sub2");
+        SetParent(screenDefault, "Box1", "Holder1");
+        SetParent(screenDefault, "Box2", "Holder1");
+        SetParent(screenDefault, "Sub1", "Box1");
+        SetParent(screenDefault, "Sub2", "Box1");
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        GraphicalUiElement holderGue = FindChildByName(screenGue, "Holder1")!;
+        GraphicalUiElement box1Gue = FindChildByName(holderGue, "Box1")!;
+        holderGue.Children.Select(c => c.Name!).ShouldBe(new[] { "Inner", "Box1", "Box2" });
+        box1Gue.Children.Select(c => c.Name!).ShouldBe(new[] { "Sub1", "Sub2" });
+
+        MoveInstanceToEnd(screen, "Box1");
+        MoveInstanceToEnd(screen, "Sub1");
+
+        GumHotReloadManager.ApplyDiff(
+            new[] { screenGue }, project, SystemManagers.Default);
+
+        holderGue.Children.Select(c => c.Name!).ShouldBe(new[] { "Inner", "Box2", "Box1" });
+        box1Gue.Children.Select(c => c.Name!).ShouldBe(new[] { "Sub2", "Sub1" });
+    }
+
+    [Fact]
+    public void Reorder_ListBoxItemsInListBoxInnerPanel_KeepsItemsAndListBoxItemsInOrder()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        AddComponent(project, "TestListBox");
+        AddComponent(project, "TestListBoxItem");
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "TestListBox", () => (GraphicalUiElement)new ListBox().Visual);
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "TestListBoxItem", () => (GraphicalUiElement)new ListBoxItem().Visual);
+        (ScreenSave screen, StateSave screenDefault) = BuildScreen(project);
+        AddInstance(project, screen, "List", "TestListBox");
+        AddInstance(project, screen, "Item1", "TestListBoxItem");
+        AddInstance(project, screen, "Item2", "TestListBoxItem");
+        AddInstance(project, screen, "Item3", "TestListBoxItem");
+        SetParent(screenDefault, "Item1", "List.InnerPanelInstance");
+        SetParent(screenDefault, "Item2", "List.InnerPanelInstance");
+        SetParent(screenDefault, "Item3", "List.InnerPanelInstance");
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        ListBox listBox = (ListBox)((InteractiveGue)FindChildByName(screenGue, "List")!).FormsControlAsObject!;
+        listBox.ListBoxItems.Select(i => i.Visual.Name!).ShouldBe(new[] { "Item1", "Item2", "Item3" });
+
+        MoveInstanceToEnd(screen, "Item1");
+
+        GumHotReloadManager.ApplyDiff(
+            new[] { screenGue }, project, SystemManagers.Default);
+
+        string[] expected = new[] { "Item2", "Item3", "Item1" };
+        listBox.InnerPanel!.Children.Select(c => c.Name!).ShouldBe(expected);
+        listBox.ListBoxItems.Select(i => i.Visual.Name!).ShouldBe(expected);
+        listBox.Items!.Cast<ListBoxItem>().Select(i => i.Visual.Name!).ShouldBe(expected);
     }
 }

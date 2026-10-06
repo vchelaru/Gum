@@ -372,8 +372,10 @@ public class ItemsControl : ScrollViewer
                 }
                 break;
             case NotifyCollectionChangedAction.Move:
-                // todo - we need to raise an event here when items get moved
-                // https://github.com/vchelaru/Gum/issues/557
+                if (!IsMovingInnerPanelChildInternally)
+                {
+                    HandleInnerPanelChildMovedExternally(e.NewStartingIndex);
+                }
                 break;
             case NotifyCollectionChangedAction.Remove:
                 {
@@ -810,16 +812,24 @@ public class ItemsControl : ScrollViewer
                 // need to move the item to the new index:
                 if (InnerPanel != null)
                 {
-                    if (_decorations.Count > 0)
+                    IsMovingInnerPanelChildInternally = true;
+                    try
                     {
-                        // Indices are Items-space; move only the corresponding item visual among
-                        // the item visuals, leaving decorations to be repositioned by the reconcile
-                        // pass below so they follow their anchor item. See issue #3305.
-                        MoveItemVisual(oldIndex, newIndex);
+                        if (_decorations.Count > 0)
+                        {
+                            // Indices are Items-space; move only the corresponding item visual among
+                            // the item visuals, leaving decorations to be repositioned by the reconcile
+                            // pass below so they follow their anchor item. See issue #3305.
+                            MoveItemVisual(oldIndex, newIndex);
+                        }
+                        else if (oldIndex < InnerPanel.Children.Count)
+                        {
+                            InnerPanel.Children.Move(oldIndex, newIndex);
+                        }
                     }
-                    else if (oldIndex < InnerPanel.Children.Count)
+                    finally
                     {
-                        InnerPanel.Children.Move(oldIndex, newIndex);
+                        IsMovingInnerPanelChildInternally = false;
                     }
                 }
 
@@ -878,6 +888,19 @@ public class ItemsControl : ScrollViewer
     protected virtual void HandleCollectionReset() { }
     protected virtual void HandleCollectionReplace(int index) { }
     protected virtual void HandleCollectionItemMoved(int oldIndex, int newIndex) { }
+
+    /// <summary>
+    /// True while this control moves an InnerPanel child itself and syncs its own collections,
+    /// so <see cref="HandleInnerPanelChildMovedExternally"/> does not sync them a second time.
+    /// </summary>
+    protected bool IsMovingInnerPanelChildInternally { get; set; }
+
+    /// <summary>
+    /// Called when code outside this control (for example hot reload) moves a child within
+    /// InnerPanel.Children directly, so derived controls can bring their own collections in line.
+    /// </summary>
+    /// <param name="newPanelIndex">The InnerPanel.Children index the child now occupies.</param>
+    protected virtual void HandleInnerPanelChildMovedExternally(int newPanelIndex) { }
 
     private void ClearVisualsInternal()
     {

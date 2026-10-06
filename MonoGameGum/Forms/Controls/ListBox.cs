@@ -992,7 +992,15 @@ public class ListBox : ItemsControl, IInputReceiver
                         int rowNew = CountListBoxItemsInPanelBefore(newIndex);
 
                         // The panel move stays in panel space - both indices are panel indices.
-                        visual.Parent.Children.Move(oldIndex, newIndex);
+                        IsMovingInnerPanelChildInternally = true;
+                        try
+                        {
+                            visual.Parent.Children.Move(oldIndex, newIndex);
+                        }
+                        finally
+                        {
+                            IsMovingInnerPanelChildInternally = false;
+                        }
                         var itemToMove = ListBoxItemsInternal[rowOld];
 
                         var listBoxItemReplaced = ListBoxItemsInternal[rowNew];
@@ -1369,6 +1377,46 @@ public class ListBox : ItemsControl, IInputReceiver
         // being moved never needs its selected-ness reassigned here - it's still the same row
         // object regardless of where it now sits (issue #3509; this used to compare against the
         // SelectedIndex getter, which itself resolved the wrong occurrence when values repeated).
+    }
+
+    protected override void HandleInnerPanelChildMovedExternally(int newPanelIndex)
+    {
+        // Only a row that is its own backing object (issue #556) is synced: it exists in Items
+        // only to mirror the panel. A row backed by other data follows Items, which the caller
+        // owns, so a direct panel move leaves both collections as they were.
+        if ((InnerPanel?.Children[newPanelIndex] as InteractiveGue)?.FormsControlAsObject
+                is not ListBoxItem moved
+            || !ReferenceEquals(moved.DataObject, moved)
+            || Items == null
+            || !Items.Contains(moved))
+        {
+            return;
+        }
+
+        ListBoxItemsInternal.Remove(moved);
+        int newRow = CountListBoxItemsInPanelBefore(newPanelIndex);
+        ListBoxItemsInternal.Insert(newRow, moved);
+
+        _suppressCollectionChangedToBase = true;
+        try
+        {
+            int oldItemsIndex = Items.IndexOf(moved);
+            Items.RemoveAt(oldItemsIndex);
+            int newItemsIndex = oldItemsIndex;
+            if (newRow > 0)
+            {
+                newItemsIndex = Items.IndexOf(ListBoxItemsInternal[newRow - 1].DataObject) + 1;
+            }
+            else if (ListBoxItemsInternal.Count > 1)
+            {
+                newItemsIndex = System.Math.Max(0, Items.IndexOf(ListBoxItemsInternal[1].DataObject));
+            }
+            Items.Insert(newItemsIndex, moved);
+        }
+        finally
+        {
+            _suppressCollectionChangedToBase = false;
+        }
     }
 
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)

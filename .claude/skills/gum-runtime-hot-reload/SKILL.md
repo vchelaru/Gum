@@ -66,8 +66,8 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
      - If a matching design-time child exists, compare its visual's `ElementSave.Name` against the new `BaseType`. Mismatch → remove+recreate (retype). Match → refresh the `Tag` to point at the new `InstanceSave` instance.
      - If a same-named non-design-time child exists, leave it alone (runtime owns that slot). Do not create a duplicate.
      - Otherwise call `instance.ToGraphicalUiElement(systemManagers)` and attach via `Parent = parent` + `ElementGueContainingThis = parent`.
-   - `ReorderDesignTimeChildren` walks the design-time slots in `Children` and `Move`s items so the design-time subsequence matches `newEs.Instances` order. Non-design-time children keep their slots.
 3. `SetVariablesRecursively(newEs, newEs.DefaultState)` — re-applies the new default-state values. Qualified-name variables (`MyInstance.X`, `MyInstance.Parent`, etc.) flow into the children by `Name`, which also handles reparenting and animates new instances into position.
+   - Then `ReorderDesignTimeChildren` reorders, per container (the element, or any instance an instance is parented to), only the slots held by this element's own instances (matched by `InstanceSave` reference against `newEs.Instances`), so `newEs.Instances` order wins. It runs after variables so `Parent` has settled. A move inside an ItemsControl `InnerPanel` relies on the control syncing its collections (see `gum-forms-itemscontrol`).
 4. Recurse into runtime-added children only. Design-time children are skipped — their variables were already set via the parent's qualified-name walk.
 
 ## Non-Obvious Behaviors / Gotchas
