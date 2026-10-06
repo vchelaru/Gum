@@ -14,7 +14,7 @@ namespace Gum.Presentation.Tests;
 /// into the headless Gum.Presentation assembly (ADR-0005, #3754) as a clean leaf VM whose four
 /// injected interfaces are all already headless.
 /// </summary>
-public class AddInstanceDialogViewModelTests
+public class AddInstanceDialogViewModelTests : BaseTestClass
 {
     private readonly AddInstanceDialogViewModel _sut;
     private readonly Mock<ISelectedState> _selectedState;

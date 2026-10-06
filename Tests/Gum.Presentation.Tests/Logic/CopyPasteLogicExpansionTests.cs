@@ -16,7 +16,7 @@ namespace Gum.Presentation.Tests.Logic;
 
 // Pins #4833: pasting a parent instance whose tree node was expanded should leave the new pasted
 // instance's node expanded too, instead of defaulting to collapsed like any newly-created node.
-public class CopyPasteLogicExpansionTests
+public class CopyPasteLogicExpansionTests : BaseTestClass
 {
     private readonly AutoMocker _mocker;
     private readonly CopyPasteLogic _copyPasteLogic;
@@ -31,7 +31,6 @@ public class CopyPasteLogicExpansionTests
         _mocker = new AutoMocker();
 
         ObjectFinder.Self.GumProjectSave = new GumProjectSave();
-        StandardElementsManager.Self.Initialize();
 
         _component = new ComponentSave { Name = "MyComponent" };
         _defaultState = new StateSave { Name = "Default", ParentContainer = _component };

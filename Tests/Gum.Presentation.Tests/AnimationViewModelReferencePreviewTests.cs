@@ -14,7 +14,7 @@ namespace Gum.Presentation.Tests;
 /// Pins that scrubbing or playing an animation in the tool re-evaluates same-element variable
 /// references whose source variable the animation touched (issue #5662).
 /// </summary>
-public class AnimationViewModelReferencePreviewTests
+public class AnimationViewModelReferencePreviewTests : BaseTestClass
 {
     public AnimationViewModelReferencePreviewTests()
     {

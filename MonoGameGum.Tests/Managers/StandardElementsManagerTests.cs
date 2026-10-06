@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Managers;
-public class StandardElementsManagerTests
+public class StandardElementsManagerTests : BaseTestClass
 {
     [Fact]
     public void AddNewStandardElementTypes_ShouldNotReAddColoredRectangle()

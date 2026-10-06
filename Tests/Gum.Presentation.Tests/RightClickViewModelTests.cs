@@ -18,7 +18,7 @@ namespace Gum.Presentation.Tests;
 /// the headless Gum.Presentation assembly (ADR-0005, #3754) as a clean leaf VM whose eight
 /// injected dependencies are all already headless.
 /// </summary>
-public class RightClickViewModelTests
+public class RightClickViewModelTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IReorderLogic> _reorderLogic;

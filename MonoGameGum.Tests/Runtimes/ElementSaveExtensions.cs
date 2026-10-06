@@ -17,14 +17,12 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
-public class ElementSaveExtensionsTests : IDisposable
+public class ElementSaveExtensionsTests : BaseTestClass
 {
-    public void Dispose()
+    public override void Dispose()
     {
         ElementSaveExtensions.Reset();
-        // This class doesn't derive from BaseTestClass, so it has to clear the project it registers
-        // itself or the next test class sees it.
-        ObjectFinder.Self.GumProjectSave = null;
+        base.Dispose();
     }
 
 
