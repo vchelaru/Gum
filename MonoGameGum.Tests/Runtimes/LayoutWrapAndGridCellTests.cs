@@ -623,8 +623,9 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
     [Theory]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 0f, 15f, 75f, 125f)]
     [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 0f, 15f, 75f, 125f)]
-    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Top, 5f, 25f, 85f, 135f)]
-    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Top, 5f, 25f, 85f, 135f)]
+    // The last line grows to 30: a child 5 below the middle with its top there needs 2 * (5 + 10).
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Top, 5f, 25f, 85f, 140f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Top, 5f, 25f, 85f, 140f)]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, 0f, 30f, 110f, 130f)]
     [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, 0f, 30f, 110f, 130f)]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, 20f, 80f, 130f)]
@@ -691,6 +692,54 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
 
         parent.UpdateLayout();
         CrossPosition(stack, centered).ShouldBe(10, "second layout");
+    }
+
+    // A line sizes itself from its children the way a parent sized to its children does (Width Units
+    // docs, "Ignored Width Values"): the offset counts from the edge it is measured from, a portion
+    // outside the line is ignored, a Percentage offset counts as 0, and a size that depends on the
+    // parent is ignored. The child (cross 20) is alone in its line, and the next line starts after it.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 10f, false, 30f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 10f, false, 30f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, -5f, false, 15f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 0f, false, 20f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 5f, false, 30f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, -10f, false, 30f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, -10f, false, 30f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Top, 0f, false, 0f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromBaseline, VerticalAlignment.Bottom, -10f, false, 30f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 20f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 20f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 0f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 0f)]
+    public void WrapsChildren_LineSize_ShouldCountChildLikeParentSizedToChildren(ChildrenLayout stack, GeneralUnitType units,
+        VerticalAlignment origin, float value, bool crossSizeFromParent, float expectedLineSize)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 100, DimensionUnitType.Absolute, crossSize: 300);
+        ContainerRuntime child = CreateStackChild(stack, main: 60, cross: 20);
+        SetCrossPosition(stack, child, units, value, origin);
+        if (crossSizeFromParent)
+        {
+            if (stack == ChildrenLayout.TopToBottomStack)
+            {
+                child.WidthUnits = DimensionUnitType.PercentageOfParent;
+                child.Width = 10;
+            }
+            else
+            {
+                child.HeightUnits = DimensionUnitType.PercentageOfParent;
+                child.Height = 10;
+            }
+        }
+        parent.AddChild(child);
+        ContainerRuntime nextLine = CreateStackChild(stack, main: 60, cross: 20);
+        parent.AddChild(nextLine);
+
+        CrossPosition(stack, nextLine).ShouldBe(expectedLineSize);
+        if (crossSizeFromParent)
+        {
+            CrossSize(stack, child).ShouldBe(30, "size still measures against the whole parent");
+        }
     }
 
     // An element without a renderable (an old-style screen) lays its children out in one pass, so the

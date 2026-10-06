@@ -29,7 +29,14 @@ In a wrapping stack, each row (in a `Left to Right Stack`) or column (in a `Top 
 * `Percentage` places the child at a percentage of its row or column's size.
 * `Pixels From Top` (or `Pixels From Left`) places the child relative to the start of its row or column.
 
-A row or column is still as large as its largest child, and rows and columns stay packed at the start of the container. They do not stretch to fill extra space. Because of this, a child alone in its row is the same size as its row, so centering it or aligning it to the far edge leaves it at the start of the row.
+A row or column is as large as its largest child, and rows and columns stay packed at the start of the container. They do not stretch to fill extra space. Because of this, a child alone in its row is the same size as its row, so centering it or aligning it to the far edge leaves it at the start of the row.
+
+A row counts each child the same way a container with `Height Units` of `Relative to Children` does (see [Ignored Width Values](../general-properties/width-units.md#ignored-width-values)):
+
+* An `X` or `Y` value counts from the edge it is measured from. For example, a child placed 10 pixels up from the bottom of its row makes the row 10 pixels taller than the child.
+* A portion of a child placed outside its row does not make the row larger.
+* A `Percentage` value does not count, but the child's size does.
+* A child whose size depends on its parent, such as `Percentage of Parent`, does not count toward its row's size.
 
 Size units are unaffected. A child with `Height Units` of `Percentage of Parent` or `Relative to Parent` still sizes itself from the whole container, not its row.
 

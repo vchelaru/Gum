@@ -292,6 +292,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // child is measured, so the parent repositions this child when the line ends up a different size.
     private float _wrappedLineSizeUsedForPosition = float.NaN;
 
+    // The cross-axis start of the wrapped line this was last positioned in, unflipped.
+    private float _wrappedLineStart;
+
     // null by default, non-null if an object uses
     // stacked layout for its children.
     public List<float>? StackedRowOrColumnDimensions { get; private set; }
@@ -3496,8 +3499,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var effectiveParent = this.EffectiveParentGue;
         if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
         {
-            var asIpso = this as IPositionedSizedObject;
-            return asIpso.X + asIpso.Width;
+            // The column needs what this child contributes to it, measured from the column's start.
+            return _wrappedLineStart + GetStackedLineDimension(ChildrenLayout.TopToBottomStack);
         }
         else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack
             && mXUnits != GeneralUnitType.PixelsFromSmall)
@@ -3515,40 +3518,47 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
-            float positionValue = mX;
-
-            // This GUE hasn't been set yet so it can't give
-            // valid widths/heights
-            if (this.mContainedObjectAsIpso == null)
-            {
-                return 0;
-            }
-            float smallEdge = positionValue;
-            if (mXOrigin == HorizontalAlignment.Center)
-            {
-                smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
-            }
-            else if (mXOrigin == HorizontalAlignment.Right)
-            {
-                smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
-            }
-
-            float bigEdge = positionValue;
-            if (mXOrigin == HorizontalAlignment.Center)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
-            }
-            if (mXOrigin == HorizontalAlignment.Left)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
-            }
-
-            var units = mXUnits;
-
-            float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-            return dimensionToReturn;
+            return GetRequiredParentWidthFromEdges();
         }
+    }
+
+    // The width a parent sized to its children needs for this child, from its X units, X and origin.
+    // Portions positioned outside the parent are not counted.
+    float GetRequiredParentWidthFromEdges()
+    {
+        float positionValue = mX;
+
+        // This GUE hasn't been set yet so it can't give
+        // valid widths/heights
+        if (this.mContainedObjectAsIpso == null)
+        {
+            return 0;
+        }
+        float smallEdge = positionValue;
+        if (mXOrigin == HorizontalAlignment.Center)
+        {
+            smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
+        }
+        else if (mXOrigin == HorizontalAlignment.Right)
+        {
+            smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
+        }
+
+        float bigEdge = positionValue;
+        if (mXOrigin == HorizontalAlignment.Center)
+        {
+            bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
+        }
+        if (mXOrigin == HorizontalAlignment.Left)
+        {
+            bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
+        }
+
+        var units = mXUnits;
+
+        float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+        return dimensionToReturn;
     }
 
     float GetRequiredParentHeight()
@@ -3556,8 +3566,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var effectiveParent = this.EffectiveParentGue;
         if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
         {
-            var asIpso = this as IPositionedSizedObject;
-            return asIpso.Y + asIpso.Height;
+            // The row needs what this child contributes to it, measured from the row's start.
+            return _wrappedLineStart + GetStackedLineDimension(ChildrenLayout.LeftToRightStack);
         }
         else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack
             && mYUnits != GeneralUnitType.PixelsFromSmall)
@@ -3574,59 +3584,65 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
-            var units = mYUnits;
-            float positionValue = mY;
+            return GetRequiredParentHeightFromEdges();
+        }
+    }
+
+    // The height a parent sized to its children needs for this child, from its Y units, Y and origin.
+    // Portions positioned outside the parent are not counted.
+    float GetRequiredParentHeightFromEdges()
+    {
+        var units = mYUnits;
+        float positionValue = mY;
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
-            if (units == GeneralUnitType.PixelsFromMiddleInverted)
+        if (units == GeneralUnitType.PixelsFromMiddleInverted)
 #pragma warning restore CS0618
-            {
-                // Inverted Y positions upward, so both edges are measured from the negated value.
-                positionValue = -mY;
-            }
+        {
+            // Inverted Y positions upward, so both edges are measured from the negated value.
+            positionValue = -mY;
+        }
 
-            // This GUE hasn't been set yet so it can't give
-            // valid widths/heights
-            if (this.mContainedObjectAsIpso == null)
-            {
-                return 0;
-            }
-            float smallEdge = positionValue;
+        // This GUE hasn't been set yet so it can't give
+        // valid widths/heights
+        if (this.mContainedObjectAsIpso == null)
+        {
+            return 0;
+        }
+        float smallEdge = positionValue;
 
-            if (mYOrigin == VerticalAlignment.Center)
+        if (mYOrigin == VerticalAlignment.Center)
+        {
+            smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+        }
+        else if (mYOrigin == VerticalAlignment.TextBaseline)
+        {
+            if (mContainedObjectAsIpso is IText text)
             {
-                smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+                smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.DescenderHeight * text.FontScale;
             }
-            else if (mYOrigin == VerticalAlignment.TextBaseline)
-            {
-                if (mContainedObjectAsIpso is IText text)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.DescenderHeight * text.FontScale;
-                }
-                else
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
-                }
-            }
-            else if (mYOrigin == VerticalAlignment.Bottom)
+            else
             {
                 smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
             }
-
-            float bigEdge = positionValue;
-            if (mYOrigin == VerticalAlignment.Center)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
-            }
-            if (mYOrigin == VerticalAlignment.Top)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
-            }
-
-            float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-            return dimensionToReturn;
+        }
+        else if (mYOrigin == VerticalAlignment.Bottom)
+        {
+            smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
         }
 
+        float bigEdge = positionValue;
+        if (mYOrigin == VerticalAlignment.Center)
+        {
+            bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
+        }
+        if (mYOrigin == VerticalAlignment.Top)
+        {
+            bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
+        }
+
+        float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+        return dimensionToReturn;
     }
 
     private void GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float parentAbsoluteRotation,
@@ -4243,17 +4259,39 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     /// <summary>
     /// This child's contribution to its line's cross-axis size, as recorded in the parent's
-    /// <see cref="StackedRowOrColumnDimensions"/>: its size plus a PixelsFromSmall offset. An offset
-    /// measured within the line (middle, far edge, percentage) is not counted, since the line's size
-    /// comes from its children.
+    /// <see cref="StackedRowOrColumnDimensions"/>. The line counts its children the way a parent sized
+    /// to its children does (Width Units docs, "Ignored Width Values"): a size that depends on the
+    /// parent counts as 0, and the offset counts from the edge it is measured from, ignoring any portion
+    /// outside the line. A Percentage offset counts as 0 while the size still counts (#5802).
     /// </summary>
     private float GetStackedLineDimension(ChildrenLayout parentLayout)
     {
         if (parentLayout == ChildrenLayout.LeftToRightStack)
         {
-            return (IsPositionedFromWrappedLineSize(XOrY.Y) ? 0 : this.Y) + this.AbsoluteHeight;
+            if (IsSizeDependentOnParent(mHeightUnit))
+            {
+                return 0;
+            }
+            return mYUnits == GeneralUnitType.Percentage
+                ? ((IPositionedSizedObject)this).Height
+                : GetRequiredParentHeightFromEdges();
         }
-        return (IsPositionedFromWrappedLineSize(XOrY.X) ? 0 : this.X) + this.AbsoluteWidth;
+
+        if (IsSizeDependentOnParent(mWidthUnit))
+        {
+            return 0;
+        }
+        return mXUnits == GeneralUnitType.Percentage
+            ? ((IPositionedSizedObject)this).Width
+            : GetRequiredParentWidthFromEdges();
+    }
+
+    // Matches GetChildLayoutType(XOrY, parent): a parent sized to its children ignores such a child.
+    private static bool IsSizeDependentOnParent(DimensionUnitType units)
+    {
+        var dependency = units.GetDependencyType();
+        return (dependency == HierarchyDependencyType.DependsOnParent || dependency == HierarchyDependencyType.DependsOnSiblings) &&
+            units != DimensionUnitType.RelativeToMaxParentOrChildren;
     }
 
     /// <summary>
@@ -4679,10 +4717,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var lineAxis = GetIfParentStacks() ? GetWrappedLineAxis(EffectiveParentGue) : null;
         if (lineAxis == XOrY.Y)
         {
+            _wrappedLineStart = parentOriginOffsetY;
             positionParentHeight = GetWrappedLineSize(EffectiveParentGue!);
         }
         else if (lineAxis == XOrY.X)
         {
+            _wrappedLineStart = isParentFlippedHorizontally ? -parentOriginOffsetX : parentOriginOffsetX;
             positionParentWidth = GetWrappedLineSize(EffectiveParentGue!);
             if (isParentFlippedHorizontally)
             {

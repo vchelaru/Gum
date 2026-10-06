@@ -102,7 +102,9 @@ In a stack with `Wraps Children` checked, each row or column is now the parent o
 
 Before this version, these values positioned the child within the whole stack. For example, in a `Left to Right Stack` that is `300` tall with rows that are `40`, `80`, and `20` tall, a child with `Y Units` of `Pixels From Center` and `Y Origin` of `Center` sat at the stack's center whichever row it was in, outside its own row. It is now centered in its row. A child with `Y Units` of `Pixels From Bottom` now aligns to the bottom of its row instead of the bottom of the stack, and a `Percentage` value is now a percentage of the row's height.
 
-A row or column is still as large as its largest child, and rows and columns stay packed at the start of the stack. A child alone in its row is the same size as the row, so centering it leaves it at the top of the row.
+A row or column is as large as its largest child, and rows and columns stay packed at the start of the stack. A child alone in its row is the same size as the row, so centering it leaves it at the top of the row.
+
+Rows and columns now count their children the same way a container sized to its children does. A child's `Y` (or `X`) value counts from the edge it is measured from, a portion of a child outside its row does not count, a `Percentage` value does not count, and a child whose size depends on its parent (for example, `Height Units` of `Percentage of Parent`) no longer makes its row larger. Before this version, a row added each child's value to its size whatever its units, and counted children sized from the parent.
 
 These cases are unchanged:
 
