@@ -2392,7 +2392,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
                 if (widthDependsOnChildren || heightDependsOnChildren)
                 {
-                    UpdateDimensions(parentWidth, parentHeight, xOrY, considerWrappedStacked: true);
+                    // Both axes: wrapping couples them, so a main-axis change moves children across lines
+                    // and changes the cross-axis size even when only one axis was requested.
+                    UpdateDimensions(parentWidth, parentHeight, xOrY: null, considerWrappedStacked: true);
                 }
             }
 
