@@ -278,21 +278,49 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         (stacksVertically ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(120);
     }
 
-    // Today the max squeezes the padding (stack 200, children 100 and 90 in row 1). This encodes
-    // the option where padding counts against the max.
-    [Fact(Skip = "Behavior change pending decision: #5805")]
-    public void WrappingStack_PaddingWithMax_ShouldWrapBeforePaddingExceedsMax()
+    // Intended (#5805): max applies last, so padding shrinks before rows wrap earlier.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Stack_PaddingWithMax_ShouldShrinkPaddingBeforeWrapping(bool wraps)
     {
         ContainerRuntime parent = CreateStack(ChildrenLayout.LeftToRightStack, 20, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
-        parent.WrapsChildren = true;
+        parent.WrapsChildren = wraps;
         parent.MaxWidth = 200;
         parent.AddChild(CreateContainer(100, 50));
         parent.AddChild(CreateContainer(90, 50));
-        parent.AddChild(CreateContainer(50, 50));
+        if (wraps)
+        {
+            parent.AddChild(CreateContainer(50, 50));
+        }
 
-        parent.AbsoluteWidth.ShouldBe(120);
-        parent.Children[1].AbsoluteLeft.ShouldBe(0);
-        parent.Children[1].AbsoluteTop.ShouldBe(50);
+        parent.AbsoluteWidth.ShouldBe(200);
+        parent.Children[1].AbsoluteLeft.ShouldBe(100);
+        parent.Children[1].AbsoluteTop.ShouldBe(0);
+        if (wraps)
+        {
+            parent.Children[2].AbsoluteLeft.ShouldBe(0);
+            parent.Children[2].AbsoluteTop.ShouldBe(50);
+        }
+    }
+
+    [Theory(Skip = "Bug: #5806")]
+    [InlineData(150f, 100f, 100f, 200f, 100f)]
+    [InlineData(150f, 60f, 100f, 160f, 60f)]
+    [InlineData(100f, 120f, 60f, 180f, 120f)]
+    public void WrappingStack_SizedToChildrenWithMax_ShouldMeasureWidestRow(float first, float second, float third, float expectedWidth, float expectedThirdLeft)
+    {
+        ContainerRuntime parent = CreateStack(ChildrenLayout.LeftToRightStack, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        parent.WrapsChildren = true;
+        parent.MaxWidth = 200;
+        parent.AddChild(CreateContainer(first, 50));
+        parent.AddChild(CreateContainer(second, 50));
+        parent.AddChild(CreateContainer(third, 50));
+
+        parent.AbsoluteWidth.ShouldBe(expectedWidth);
+        parent.AbsoluteHeight.ShouldBe(100);
+        parent.Children[2].AbsoluteLeft.ShouldBe(expectedThirdLeft);
+        parent.Children[2].AbsoluteTop.ShouldBe(50);
     }
 
     // A RelativeToMaxParentOrChildren child counts toward its parent by its children-based size,

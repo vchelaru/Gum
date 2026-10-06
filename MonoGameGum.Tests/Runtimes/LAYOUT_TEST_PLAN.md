@@ -107,7 +107,8 @@ covered by that test now.
 
 ### 2.4 Wrapping
 - [x] new row/column at MaxWidth/MaxHeight, row max dimension, spacing across rows, child grows/shrinks/hides, many children
-- [ ] main-axis padding (`Width`/`Height` with RelativeToChildren) and a max: whether padding counts in the wrap check (H50)
+- [x] main-axis padding (`Width`/`Height` with RelativeToChildren) and a max: the max applies last, padding shrinks, wrapping and not (H50)
+- [ ] stack sized to its children with a max measures its widest row, not its first (H52)
 - [x] no wrap without a max; single child larger than parent
 - [x] RelativeToChildren on the cross axis sizes to the wrapped rows
 - [x] parent resized narrower then wider: children re-wrap and un-wrap, row dimensions shrink (H46)
@@ -370,7 +371,8 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H47 | `GetMaxCellHeight`/`GetMaxCellWidth` | A non-wrapping stack sized to its children with a max stopped at the last child that fit instead of clamping to the max. | FIX (#5797; breaking, non-wrapping stacks grow to the max; wrapping stacks and Regular parents unchanged) |
 | H48 | `AdjustParentOriginOffsetsByUnits` in a wrapping stack | Cross-axis Middle/Large/Baseline units and Percentage measured from the whole parent, so a centered child left its row. | FIX (#5802; breaking, the row or column is the parent for position; a row counts its children like a RelativeToChildren parent: Percentage-positioned children are ignored, parent-sized children count unless the stack's cross axis is sized to its children) |
 | H49 | `UpdateLayout` wrap pass | A stack sized to its children on both axes with a main-axis max wrapped its children against its pre-measure main size, then measured the cross axis from those lines. | FIX (#5802; wraps again when the measured main size differs) |
-| H50 | `GetMaxCellHeight`/`GetMaxCellWidth` wrap check | A wrapping stack sized to its children compares only its children against its max, so its padding shrinks instead of the line wrapping earlier. Nothing overlaps. Negative padding makes the measure and the bounds-based wrap disagree. | LOG #5805 |
+| H50 | `GetMaxCellHeight`/`GetMaxCellWidth` wrap check | A wrapping stack sized to its children compares only its children against its max, so its padding shrinks instead of the line wrapping earlier. Nothing overlaps. Negative padding makes the measure and the bounds-based wrap disagree. | DOCUMENT (#5805; max applies last, padding shrinks) |
+| H52 | `GetMaxCellHeight`/`GetMaxCellWidth` wrap check | A wrapping stack sized to its children with a max measures only its first row, so later rows wrap against that width and a wider child extends past the stack. | LOG #5806 |
 | H51 | `GetMaxCellHeight`/`GetMaxCellWidth` | A RelativeToMaxParentOrChildren child was counted by its children-based size clamped to its Max but not its Min, so it extended past its RelativeToChildren parent. | FIX (breaking, the parent counts the child at its min) |
 
 ## Sweep strategy
