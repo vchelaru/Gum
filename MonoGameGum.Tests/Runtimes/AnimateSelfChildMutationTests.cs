@@ -119,6 +119,27 @@ public class AnimateSelfChildMutationTests : BaseTestClass
         next.AnimationChainTime.ShouldBe(1);
     }
 
+    [Fact]
+    public void Update_ShouldAdvanceEachRootOnce_WhenFinishedHandlerChangesNonListRoots()
+    {
+        SpriteRuntime remover = CreateSprite(isLooping: false, 0.25f, 0.25f);
+        SpriteRuntime next = CreateObserver();
+        SpriteRuntime added = CreateObserver();
+        HashSet<GraphicalUiElement> roots = new() { remover, next };
+        remover.AnimationChainFinished += () =>
+        {
+            roots.Remove(remover);
+            roots.Add(added);
+        };
+
+        Should.NotThrow(() => global::Gum.GumService.Default.Update(
+            new GameTime(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)), roots));
+
+        roots.ShouldNotContain(remover);
+        next.AnimationChainTime.ShouldBe(1);
+        added.AnimationChainTime.ShouldBe(0);
+    }
+
     [Theory]
     [InlineData("none")]
     [InlineData("self")]
