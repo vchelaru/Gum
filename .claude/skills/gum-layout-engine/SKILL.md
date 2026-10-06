@@ -72,9 +72,16 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
 
 Right after the parent-delegate early-out, before measuring, a node loads any font deferred while
 layout was suspended (`isFontDirty`, set under `IsAllLayoutSuspended`). This is what makes a bare
-`UpdateLayout()` realize deferred fonts. The font assignment normally calls `UpdateLayout` again
-for `RelativeToChildren` text; that call is suppressed here (`SuppressLayoutFromFontChange`) because
-this pass already sizes the element. See the **gum-property-assignment** skill for the full cascade.
+`UpdateLayout()` realize deferred fonts. A font load normally lays out again when the text's measured
+size changed; that call is suppressed here (`SuppressLayoutFromFontChange`) because this pass already
+sizes the element. See the **gum-property-assignment** skill for the full cascade.
+
+### Renderable-reported size changes
+
+A setter that changes what the renderable reports (texture size, aspect ratio, text measure,
+descender) goes through `ChangeRenderableAndUpdateLayout`, which lays out only when a unit this
+element uses reads a value that changed. Font loads get the same check in `LoadFontFromProperties`.
+A new texture, source file or font setter that writes the renderable directly skips layout.
 
 ## UpdateChildren Internals
 

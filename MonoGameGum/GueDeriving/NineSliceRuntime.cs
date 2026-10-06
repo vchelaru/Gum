@@ -224,6 +224,11 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.CurrentChainName = value;
+            // Same as SpriteRuntime.CurrentChainName: copy the new frame to the texture values.
+            if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
+            {
+                UpdateTextureValuesFrom(ContainedNineSlice);
+            }
             NotifyPropertyChanged();
         }
     }
@@ -296,26 +301,13 @@ public class NineSliceRuntime : InteractiveGue
         }
         set
         {
-            global::RenderingLibrary.Graphics.ITextureCoordinate textureCoordinate = ContainedNineSlice;
-            float? widthBefore = textureCoordinate.TextureWidth;
-            float? heightBefore = textureCoordinate.TextureHeight;
 #if XNALIKE
-            ContainedNineSlice.SetSingleTexture(value);
+            ChangeRenderableAndUpdateLayout((nineSlice: ContainedNineSlice, value), static state => state.nineSlice.SetSingleTexture(state.value));
 #else
-            ContainedNineSlice.Texture = value;
+            ChangeRenderableAndUpdateLayout((nineSlice: ContainedNineSlice, value), static state => state.nineSlice.Texture = state.value);
 #endif
-            // Same rule as SpriteRuntime.Texture: a size taken from the texture must follow it.
-            if ((IsSizedFromTexture(WidthUnits) || IsSizedFromTexture(HeightUnits)) &&
-                (widthBefore != textureCoordinate.TextureWidth || heightBefore != textureCoordinate.TextureHeight))
-            {
-                UpdateLayout();
-            }
         }
     }
-
-    static bool IsSizedFromTexture(Gum.DataTypes.DimensionUnitType units) =>
-        units == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile ||
-        units == Gum.DataTypes.DimensionUnitType.MaintainFileAspectRatio;
 
     public string SourceFileName
     {

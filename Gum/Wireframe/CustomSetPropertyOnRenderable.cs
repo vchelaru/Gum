@@ -533,7 +533,8 @@ public partial class CustomSetPropertyOnRenderable
 
         if (propertyName == "SourceFile")
         {
-            AssignSourceFileOnNineSlice(value as string, graphicalUiElement, nineSlice);
+            graphicalUiElement.ChangeRenderableAndUpdateLayout((value: value as string, graphicalUiElement, nineSlice),
+                static state => AssignSourceFileOnNineSlice(state.value, state.graphicalUiElement, state.nineSlice));
             handled = true;
         }
         else if (propertyName == "Blend")
@@ -630,7 +631,8 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Texture")
         {
-            nineSlice.SetSingleTexture((Texture2D)value);
+            graphicalUiElement.ChangeRenderableAndUpdateLayout((nineSlice, texture: (Texture2D)value),
+                static state => state.nineSlice.SetSingleTexture(state.texture));
             handled = true;
         }
         else if(propertyName == nameof(NineSlice.BorderScale))
@@ -1046,7 +1048,8 @@ public partial class CustomSetPropertyOnRenderable
 
         void ReactToFontValueChange()
         {
-            UpdateToFontValues(textRenderable, graphicalUiElement);
+            // Through the element, which also lays out when the text's measured size changed.
+            graphicalUiElement.UpdateToFontValues();
 
             handled = true;
         }
@@ -1120,7 +1123,14 @@ public partial class CustomSetPropertyOnRenderable
 #if RAYLIB
             if (value is Font font)
             {
-                textRenderable.Font = font;
+                if (textRuntime != null)
+                {
+                    textRuntime.Typeface = font;
+                }
+                else
+                {
+                    textRenderable.Font = font;
+                }
                 handled = true;
             }
             else if (value is string fontString)
@@ -2655,37 +2665,10 @@ public partial class CustomSetPropertyOnRenderable
 
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
-        // Font deferred-loading system
-        //
-        // This method is the set-by-string path for font properties (Font, FontSize, IsBold, etc.)
-        // reached via SetProperty -> SetPropertyOnRenderable -> TrySetPropertyOnText.
-        // The direct-property-setter path goes through GraphicalUiElement.UpdateToFontValues() instead.
-        //
-        // Both paths now defer identically, for BOTH IsAllLayoutSuspended and the per-instance
-        // IsLayoutSuspended (#4567). Previously this static method only deferred for the global flag,
-        // so a state applied via ApplyState -- which suspends per-instance, not globally -- realized
-        // each font-affecting property (Font, FontSize, IsBold, ...) immediately as it was set, one at
-        // a time, using whatever the OTHER properties currently held. Since ApplyState applies a
-        // state's variables alphabetically, "Font" is realized before "FontSize"/"IsBold" are even
-        // applied, producing spurious font-cache lookups for combinations that were never the state's
-        // actual final values (and could poison the LoaderManager cache with a fallback font under that
-        // combination's filename, silently serving it to a later, unrelated request for the exact same
-        // combo). Deferring here instead means ApplyState's single SuspendLayout/ResumeLayout pair
-        // around its whole variable loop now also covers font realization: only the FINAL, fully
-        // applied combination is ever looked up, via the existing resume-time flush below.
-        //
-        // The cascading-UpdateLayout concern this early-return used to be withheld over (the resume-time
-        // flush's own layout, running after mIsLayoutSuspended is already cleared, re-entering already
-        // laid-out parents) is the same one the direct-setter path already solves via
-        // SuppressLayoutFromFontChange during ResumeLayoutUpdateIfDirtyRecursive -- see the "Layout
-        // Suspension / Font Batching" tests in FontServiceTests.cs. That machinery is shared, not
-        // path-specific, so extending the defer to this path inherits the same protection.
-        //
-        // GraphicalUiElement.ApplyState's own suspend/resume was made reentrancy-safe alongside this
-        // change: a state's Variables can include a category-state assignment (e.g.
-        // "ButtonCategoryState" = "Highlighted"), which triggers a NESTED ApplyState call on the same
-        // instance mid-loop. ApplyState now skips re-suspending when the instance is already suspended,
-        // so the nested call's own resume doesn't prematurely flush before the outer call finishes.
+        // The XNA-like and raylib font loader, wired to GraphicalUiElement.UpdateFontFromProperties.
+        // Both the direct setters and the string path reach it through
+        // GraphicalUiElement.UpdateToFontValues, which defers while layout is suspended (#4567) and
+        // lays out afterward. The check below keeps a direct call deferring the same way.
         if (GraphicalUiElement.IsAllLayoutSuspended || graphicalUiElement.IsLayoutSuspended)
         {
             graphicalUiElement.IsFontDirty = true;
@@ -2819,24 +2802,11 @@ public partial class CustomSetPropertyOnRenderable
 
         var fontToSet = font ?? Text.DefaultBitmapFont;
 
+        // No layout here: GraphicalUiElement.UpdateToFontValues, the only caller, lays out when
+        // the measured size changed.
         if (asText.BitmapFont != fontToSet)
         {
             asText.BitmapFont = fontToSet;
-
-            // we want to update if the text's size is based on its "children" (the letters it contains)
-            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                // If height is relative to children, it could be in a stack
-                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-            {
-                // When this font load is the #2999 deferred-font flush performed from inside
-                // UpdateLayout, the enclosing layout pass already sizes this element, so this
-                // extra UpdateLayout would be redundant and re-entrant (no-arg UpdateLayout also
-                // requests a parent update). Skip it in that case.
-                if (!GraphicalUiElement.SuppressLayoutFromFontChange)
-                {
-                    graphicalUiElement.UpdateLayout();
-                }
-            }
         }
 #else
         var textRuntime = graphicalUiElement as TextRuntime;

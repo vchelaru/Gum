@@ -51,7 +51,7 @@ public class SvgRuntime : InteractiveGue
     public SKSvg? Texture
     {
         get => ContainedSprite.Texture;
-        set => ContainedSprite.Texture = value;
+        set => ChangeRenderableAndUpdateLayout((sprite: ContainedSprite, value), static state => state.sprite.Texture = state.value);
     }
 
     public int Alpha

@@ -174,6 +174,7 @@ covered by that test now.
 - [ ] empty and null text
 - [ ] width RelativeToChildren + height PercentageOfParent (one axis from text, one from parent)
 - [ ] TextBaseline origin and PixelsFromBaseline child on Text (descender x font scale)
+- [x] font, Typeface, BoldWeight and MaxNumberOfLines changes re-measure a RelativeToChildren text on every backend, on resume too; a descender change moves a TextBaseline element and PixelsFromBaseline children (H28-H30, `LayoutRenderableSetterTests`)
 
 ### 4.3 IWrappedText
 - [x] wrapping, mid-word breaks, zero-width spaces (`TextRuntimeTests`)
@@ -188,11 +189,13 @@ covered by that test now.
 
 ### 4.5 IAspectRatio
 - [x] MaintainFileAspectRatio uses it
-- [ ] value changes after layout (texture swap) re-layouts the element and its parent
+- [~] value changes after layout (texture swap) re-layouts the element (Sprite, NineSlice, Skia and Apos Svg; H32). [ ] its parent
 - [ ] 0, negative, NaN (H8)
 
 ### 4.6 Size reported by the renderable changing outside Gum
-- [ ] texture assigned after layout, for PercentageOfSourceFile and MaintainFileAspectRatio
+- [x] texture assigned after layout, for PercentageOfSourceFile and MaintainFileAspectRatio, by property, by name and by source file, and while suspended (H31-H33)
+- [x] texture size change moves a PercentageOfFile X/Y element (H35)
+- [x] animation chain change in code resizes a texture-sized Sprite and NineSlice (H34); [ ] frame index or time change (H36)
 - [ ] font loaded late (`isFontDirty` realized on `UpdateLayout`)
 - [ ] the new size reaches the parent's RelativeToChildren size and the stack positions after it
 
@@ -339,6 +342,16 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H25 | Ratio in a grid | Subtracted every grid sibling from one cell. | FIX |
 | H26 | `X`/`Y` setter shortcut | Moved the element without raising `PositionChanged`. | FIX |
 | H27 | fixed-size stack fast path | Later children ignored the first child's Y offset, so they disagreed with the slow path and overflowed the parent's measured height. | FIX |
+| H28 | font loading | Raylib and Skia font loaders never laid out, so a font set in code kept a RelativeToChildren text at its old size; no backend relaid out a TextBaseline element when the descender changed. | FIX (`GraphicalUiElement.UpdateToFontValues` lays out once when the measured size or descender changed) |
+| H29 | `TextRuntime.Typeface` (raylib, Skia), Skia `BoldWeight` | No layout after the change. | FIX |
+| H30 | `TextRuntime.MaxNumberOfLines` | No layout after the change. | FIX |
+| H31 | NineSlice `SourceFile` and `Texture` by name | Bypassed the runtime's texture setter, so no layout. | FIX (shared `ChangeRenderableAndUpdateLayout`) |
+| H32 | `SvgRuntime` source (Skia and Apos) | No layout, so the MaintainFileAspectRatio default kept its old height. | FIX |
+| H33 | Skia `SpriteRuntime.Image` | Image size not reported to layout, and no layout. | FIX |
+| H34 | Sprite and NineSlice `CurrentChainName` in code | Frame reached the renderable but not the texture values layout reads. | FIX |
+| H35 | texture setters | A PercentageOfFile X/Y element didn't move when the texture size changed. | FIX |
+| H36 | `AnimationChainFrameIndex`, `AnimationChainTime` | The frame is never applied, so neither texture nor size follows. | LOG #5790 |
+| H37 | `MaxLettersToShow`, text alignment, `TextOverflowVerticalMode`, NineSlice border settings, Lottie | Don't change the reported size. | CLEARED |
 
 ## Sweep strategy
 

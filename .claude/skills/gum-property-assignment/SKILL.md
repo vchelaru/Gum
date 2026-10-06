@@ -95,19 +95,13 @@ suspended. It is consumed (font loaded, flag cleared) by `UpdateFontRecursive()`
 
 ### Where deferral happens
 
-| Path | Defers for `IsAllLayoutSuspended`? | Defers for `IsLayoutSuspended`? |
-|------|------------------------------------|---------------------------------|
-| `GUE.UpdateToFontValues()` (direct setters) | Yes | Yes |
-| `CustomSetPropertyOnRenderable.UpdateToFontValues` (string path) | Yes | **No** |
-
-The string path deliberately does **not** defer for instance-level `IsLayoutSuspended`. Doing so
-would cause cascading parent layout calls when `UpdateFontRecursive` later assigns the `BitmapFont`
-to a `Text` with `RelativeToChildren` dimensions inside `ResumeLayoutUpdateIfDirtyRecursive`. See
-the long comment at the top of that static method for the full explanation.
+Both paths defer for `IsAllLayoutSuspended` and instance-level `IsLayoutSuspended` (#4567): the
+direct setters through `GUE.UpdateToFontValues()`, and the string path because it now calls that
+same method.
 
 ### Where fonts actually load
 
-Two code paths consume `isFontDirty`:
+Three code paths consume `isFontDirty`:
 
 1. **`WireframeObjectManager`** (Gum tool screen load): after `IsAllLayoutSuspended = false`,
    calls `RootGue.UpdateFontRecursive()` then `RootGue.UpdateLayout()`. At this point all
@@ -122,18 +116,14 @@ Two code paths consume `isFontDirty`:
 3. **`UpdateLayout` itself** (#2999): each node realizes its own deferred font at the top of its
    layout body, *before* it measures itself. So a bare `UpdateLayout()` after lifting
    `IsAllLayoutSuspended` loads deferred fonts too — callers don't have to also call
-   `UpdateFontRecursive`. The font assignment's own follow-up `UpdateLayout` (the
-   `RelativeToChildren` branch in the string-path `UpdateToFontValues`) is suppressed during this
-   flush via `GraphicalUiElement.SuppressLayoutFromFontChange`, since the in-progress pass already
-   sizes the element; `isFontDirty` is cleared *before* the load so the suppressed re-layout can't
+   `UpdateFontRecursive`. The load's own follow-up `UpdateLayout` is suppressed during this flush
+   via `GraphicalUiElement.SuppressLayoutFromFontChange`, since the in-progress pass already sizes
+   the element; `isFontDirty` is cleared *before* the load so the suppressed re-layout can't
    re-trigger it.
 
-### Known gap
-
-When fonts are set via the string path (`SetProperty`) during an `ApplyState` that uses
-instance-level `SuspendLayout` (not `IsAllLayoutSuspended`), fonts still load immediately —
-one disk read per property assignment. This is the `MonoGame ApplyState` path; fixing it
-requires solving the cascading layout problem described in `CustomSetPropertyOnRenderable`.
+Backend font loaders (the `UpdateFontFromProperties` delegate) never lay out. The element does it in
+`GraphicalUiElement.LoadFontFromProperties`, once, when the text's measured size or descender
+changed. The string path reaches it through `graphicalUiElement.UpdateToFontValues()`.
 
 ### Why deferral is font-specific: 1:1 file references load immediately
 

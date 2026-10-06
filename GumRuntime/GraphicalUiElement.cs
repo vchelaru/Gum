@@ -5343,8 +5343,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 if (!IsAllLayoutSuspended)
                 {
-                    this.UpdateToFontValues();
+                    // Cleared first so the layout the load may run doesn't load the font again.
                     isFontDirty = false;
+                    this.UpdateToFontValues();
                 }
             }
             if (currentDirtyState != null)
@@ -7883,8 +7884,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // be loaded when ResumeLayoutUpdateIfDirtyRecursive clears the flag for this node.
             if (!this.IsLayoutSuspended)
             {
-                UpdateFontFromProperties?.Invoke(asIText, this);
+                // Cleared first so the layout the load may run doesn't load the font again.
                 isFontDirty = false;
+                LoadFontFromProperties(asIText);
             }
         }
 
@@ -7904,13 +7906,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    // Called by font-related property setters (Font, FontSize, IsBold, IsItalic, etc.).
-    // When layout is suspended we defer the disk read by setting isFontDirty; the actual
-    // load happens later via UpdateFontRecursive().
-    // NOTE: properties set via the string-based SetProperty path go through the static
-    // CustomSetPropertyOnRenderable.UpdateToFontValues instead. That method only defers for
-    // IsAllLayoutSuspended (not IsLayoutSuspended) to avoid cascading parent layout calls
-    // inside ResumeLayoutUpdateIfDirtyRecursive. See comments there for details.
+    // Called by font-related property setters (Font, FontSize, IsBold, IsItalic, etc.) and by
+    // the string-based SetProperty path. When layout is suspended we defer the disk read by
+    // setting isFontDirty; the actual load happens later via UpdateFontRecursive() or UpdateLayout.
     public void UpdateToFontValues()
     {
         if (IsAllLayoutSuspended || IsLayoutSuspended)
@@ -7923,9 +7921,141 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         if(this.mContainedObjectAsIpso is IText asText)
         {
-            UpdateFontFromProperties?.Invoke(asText, this);
+            LoadFontFromProperties(asText);
         }
     }
+
+    // Every backend's font loader runs through here, so none of them lays out after a font change:
+    // this does it once, when the text's measured size or descender changed. Skipped during the
+    // deferred-font flush inside UpdateLayout, which already sizes this element.
+    void LoadFontFromProperties(IText text)
+    {
+        RenderableMeasurement before = MeasureRenderable();
+        UpdateFontFromProperties?.Invoke(text, this);
+        if (!SuppressLayoutFromFontChange)
+        {
+            UpdateLayoutIfRenderableMeasurementChanged(before);
+        }
+    }
+
+    #endregion
+
+    #region Renderable Measurement
+
+    // The values the layout engine reads from the contained renderable.
+    struct RenderableMeasurement
+    {
+        public float TextWidth;
+        public float TextHeight;
+        public float Descender;
+        public float? TextureWidth;
+        public float? TextureHeight;
+        public float AspectRatio;
+    }
+
+    RenderableMeasurement MeasureRenderable()
+    {
+        RenderableMeasurement measurement = default;
+        if (mContainedObjectAsIpso is IText text)
+        {
+            measurement.TextWidth = text.WrappedTextWidth;
+            measurement.TextHeight = text.WrappedTextHeight;
+            measurement.Descender = text.DescenderHeight;
+        }
+        if (mContainedObjectAsIpso is ITextureCoordinate textureCoordinate)
+        {
+            measurement.TextureWidth = textureCoordinate.TextureWidth;
+            measurement.TextureHeight = textureCoordinate.TextureHeight;
+        }
+        if (mContainedObjectAsIpso is IAspectRatio aspectRatio)
+        {
+            measurement.AspectRatio = aspectRatio.AspectRatio;
+        }
+        return measurement;
+    }
+
+    /// <summary>
+    /// Runs <paramref name="change"/>, which changes what the contained renderable reports as its
+    /// size (its texture, source file or font), then calls <see cref="UpdateLayout()"/> if this
+    /// element's units read a value that changed. Runtimes call this from such setters; it respects
+    /// layout suspension like any other layout call.
+    /// </summary>
+    /// <param name="state">Passed to <paramref name="change"/>, so a static lambda can be used.</param>
+    /// <param name="change">Applies the change to the renderable.</param>
+    protected internal void ChangeRenderableAndUpdateLayout<TState>(TState state, Action<TState> change)
+    {
+        RenderableMeasurement before = MeasureRenderable();
+        change(state);
+        UpdateLayoutIfRenderableMeasurementChanged(before);
+    }
+
+    void UpdateLayoutIfRenderableMeasurementChanged(in RenderableMeasurement before)
+    {
+        if (DoesLayoutReadChangedMeasurement(before))
+        {
+            UpdateLayout();
+        }
+    }
+
+    bool DoesLayoutReadChangedMeasurement(in RenderableMeasurement before)
+    {
+        if (mContainedObjectAsIpso is IText text)
+        {
+            bool isSizedFromText = mWidthUnit == DimensionUnitType.RelativeToChildren ||
+                mHeightUnit == DimensionUnitType.RelativeToChildren;
+            if (isSizedFromText &&
+                (text.WrappedTextWidth != before.TextWidth || text.WrappedTextHeight != before.TextHeight))
+            {
+                return true;
+            }
+            if (text.DescenderHeight != before.Descender && IsPlacedFromTextBaseline())
+            {
+                return true;
+            }
+        }
+
+        if (mContainedObjectAsIpso is ITextureCoordinate textureCoordinate &&
+            (textureCoordinate.TextureWidth != before.TextureWidth ||
+             textureCoordinate.TextureHeight != before.TextureHeight) &&
+            IsSizedOrPlacedFromTexture())
+        {
+            return true;
+        }
+
+        if (mContainedObjectAsIpso is IAspectRatio aspectRatio &&
+            !aspectRatio.AspectRatio.Equals(before.AspectRatio) &&
+            (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio || mHeightUnit == DimensionUnitType.MaintainFileAspectRatio))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    // This element's own baseline origin, or a child placed on its baseline, reads the descender.
+    bool IsPlacedFromTextBaseline()
+    {
+        if (mYOrigin == VerticalAlignment.TextBaseline)
+        {
+            return true;
+        }
+        IList<GraphicalUiElement> children = Children ?? (IList<GraphicalUiElement>)mWhatThisContains;
+        for (int i = 0; i < children.Count; i++)
+        {
+            if (children[i].YUnits == GeneralUnitType.PixelsFromBaseline)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool IsSizedOrPlacedFromTexture() =>
+        IsSizedFromTexture(mWidthUnit) || IsSizedFromTexture(mHeightUnit) ||
+        mXUnits == GeneralUnitType.PercentageOfFile || mYUnits == GeneralUnitType.PercentageOfFile;
+
+    static bool IsSizedFromTexture(DimensionUnitType units) =>
+        units == DimensionUnitType.PercentageOfSourceFile || units == DimensionUnitType.MaintainFileAspectRatio;
 
     #endregion
 

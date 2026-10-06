@@ -76,7 +76,7 @@ public class SvgRuntime : InteractiveGue
     public ShapeSvg? Document
     {
         get => ContainedSvg.Document;
-        set => ContainedSvg.Document = value;
+        set => ChangeRenderableAndUpdateLayout((svg: ContainedSvg, value), static state => state.svg.Document = state.value);
     }
 
     /// <summary>
