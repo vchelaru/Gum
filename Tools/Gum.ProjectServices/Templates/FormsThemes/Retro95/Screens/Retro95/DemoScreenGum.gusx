@@ -640,6 +640,9 @@
     <Variable Type="string" Name="ShowDialogButton.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Show Dialog Box</Value>
     </Variable>
+    <Variable Type="float" Name="ShowDialogButton.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">128</Value>
+    </Variable>
     <Variable Type="float" Name="ShowDialogButton.X" SetsValue="true">
       <Value xsi:type="xsd:float">722</Value>
     </Variable>
