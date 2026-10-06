@@ -741,6 +741,147 @@ public class LayoutMixedAxisTests : BaseTestClass
         }
     }
 
+    public static IEnumerable<object[]> GridMatrixCases()
+    {
+        ChildrenLayout[] grids = { ChildrenLayout.AutoGridHorizontal, ChildrenLayout.AutoGridVertical };
+        Operation[] operations = { Operation.Build, Operation.ResizeGrandparentAndBack, Operation.SecondUpdateLayout };
+        foreach (ChildrenLayout grid in grids)
+        {
+            foreach (ParentAxes parentAxes in Enum.GetValues<ParentAxes>())
+            {
+                foreach (SelfDependency selfDependency in Enum.GetValues<SelfDependency>())
+                {
+                    bool isTextBased = selfDependency == SelfDependency.WrappingText ||
+                        selfDependency == SelfDependency.RelativeToChildrenHoldingWrappingText;
+                    if (isTextBased && parentAxes == ParentAxes.RelativeToChildrenWidth_AbsoluteHeight)
+                    {
+                        continue;
+                    }
+
+                    foreach (bool overflows in new[] { false, true })
+                    {
+                        foreach (Operation operation in operations)
+                        {
+                            yield return new object[] { grid, parentAxes, selfDependency, overflows, operation };
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // M8: the M1-M5 children in a 2x2 AutoGrid, filling part of it or overflowing it. Each child
+    // takes its cell as its parent. A parent measured from children on the driven axis ignores
+    // them there, as in a stack. Extra children add rows (AutoGridHorizontal) or columns
+    // (AutoGridVertical); they shrink the cells only on an axis sized RelativeToChildren, and
+    // otherwise overflow the grid's bounds (#5787).
+    [Theory]
+    [MemberData(nameof(GridMatrixCases))]
+    public void GridMatrix_ShouldMatchModel(ChildrenLayout grid, ParentAxes parentAxes, SelfDependency selfDependency,
+        bool overflows, Operation operation)
+    {
+        float grandparentWidth = 400;
+        float grandparentHeight = 300;
+        float parentFixedSize = 300;
+        float drivenPercentage = 50;
+        float percentageOfOther = 50;
+        float aspectRatio = 2;
+        int columnCells = 2;
+        int rowCells = 2;
+        int childCount = overflows ? 6 : 3;
+        bool isWidthDriven = parentAxes != ParentAxes.RelativeToChildrenWidth_AbsoluteHeight;
+
+        ContainerRuntime grandparent = CreateContainer(grandparentWidth, DimensionUnitType.Absolute, grandparentHeight, DimensionUnitType.Absolute);
+        ContainerRuntime parent = CreateParent(parentAxes, parentFixedSize);
+        parent.ChildrenLayout = grid;
+        parent.AutoGridHorizontalCells = columnCells;
+        parent.AutoGridVerticalCells = rowCells;
+        grandparent.AddChild(parent);
+        List<GraphicalUiElement> children = new();
+        List<GraphicalUiElement> inners = new();
+        for (int i = 0; i < childCount; i++)
+        {
+            GraphicalUiElement child = CreateChild(isWidthDriven, DimensionUnitType.PercentageOfParent, drivenPercentage,
+                selfDependency, percentageOfOther, aspectRatio, out GraphicalUiElement? inner);
+            parent.AddChild(child);
+            children.Add(child);
+            if (inner != null)
+            {
+                inners.Add(inner);
+            }
+        }
+
+        bool widthIsRelativeToChildren = parentAxes == ParentAxes.RelativeToChildrenWidth_AbsoluteHeight ||
+            parentAxes == ParentAxes.RelativeToChildrenWidth_RelativeToChildrenHeight;
+        bool heightIsRelativeToChildren = parentAxes != ParentAxes.RelativeToChildrenWidth_AbsoluteHeight;
+        int columns = columnCells;
+        int rows = rowCells;
+        if (grid == ChildrenLayout.AutoGridHorizontal && heightIsRelativeToChildren)
+        {
+            rows = Math.Max(rowCells, (int)Math.Ceiling(childCount / (float)columnCells));
+        }
+        else if (grid == ChildrenLayout.AutoGridVertical && widthIsRelativeToChildren)
+        {
+            columns = Math.Max(columnCells, (int)Math.Ceiling(childCount / (float)rowCells));
+        }
+        int drivenCells = isWidthDriven ? columns : rows;
+        int measuredCells = isWidthDriven ? rows : columns;
+
+        float parentDriven = parentAxes switch
+        {
+            ParentAxes.PercentageOfParentWidth_RelativeToChildrenHeight => grandparentWidth * 50 / 100,
+            ParentAxes.RelativeToMaxParentOrChildrenWidth_RelativeToChildrenHeight => grandparentWidth,
+            _ => parentFixedSize,
+        };
+        float childDriven = parentDriven / drivenCells * drivenPercentage / 100;
+        float childMeasured = selfDependency switch
+        {
+            SelfDependency.PercentageOfOtherDimension => childDriven * percentageOfOther / 100,
+            SelfDependency.MaintainFileAspectRatio => isWidthDriven ? childDriven / aspectRatio : childDriven * aspectRatio,
+            _ => MeasureWrappedHeight(childDriven),
+        };
+        float parentMeasured = childMeasured * measuredCells;
+        float parentWidth = isWidthDriven ? parentDriven : parentMeasured;
+        float parentHeight = isWidthDriven ? parentMeasured : parentDriven;
+        float cellWidth = parentWidth / columns;
+        float cellHeight = parentHeight / rows;
+        float childWidth = isWidthDriven ? childDriven : childMeasured;
+        float childHeight = isWidthDriven ? childMeasured : childDriven;
+
+        List<GraphicalUiElement> all = new() { grandparent, parent };
+        all.AddRange(children);
+        all.AddRange(inners);
+        float[] before = SnapshotElements(all);
+        if (operation == Operation.ResizeGrandparentAndBack)
+        {
+            grandparent.Width = grandparentWidth / 2;
+            grandparent.Height = grandparentHeight / 2;
+            grandparent.Width = grandparentWidth;
+            grandparent.Height = grandparentHeight;
+            SnapshotElements(all).ShouldBe(before);
+        }
+        else if (operation == Operation.SecondUpdateLayout)
+        {
+            foreach (GraphicalUiElement element in all)
+            {
+                element.UpdateLayout();
+                SnapshotElements(all).ShouldBe(before, $"after {element.GetType().Name}.UpdateLayout()");
+            }
+        }
+
+        parent.AbsoluteWidth.ShouldBe(parentWidth, tolerance: 0.001f);
+        parent.AbsoluteHeight.ShouldBe(parentHeight, tolerance: 0.001f);
+        for (int i = 0; i < childCount; i++)
+        {
+            int column = grid == ChildrenLayout.AutoGridHorizontal ? i % columns : i / rows;
+            int row = grid == ChildrenLayout.AutoGridHorizontal ? i / columns : i % rows;
+            children[i].AbsoluteLeft.ShouldBe(cellWidth * column, tolerance: 0.001f, $"child {i} left");
+            children[i].AbsoluteTop.ShouldBe(cellHeight * row, tolerance: 0.001f, $"child {i} top");
+            children[i].AbsoluteWidth.ShouldBe(childWidth, tolerance: 0.001f, $"child {i} width");
+            children[i].AbsoluteHeight.ShouldBe(childHeight, tolerance: 0.001f, $"child {i} height");
+        }
+    }
+
     static float[] SnapshotElements(List<GraphicalUiElement> elements)
     {
         List<float> values = new();
