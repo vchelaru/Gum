@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime.
+`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime.
 
 ## Breaking Changes and Migrations
 
@@ -61,7 +61,7 @@ Before this version, such a stack stopped growing at the last child that fit und
 
 These cases are unchanged:
 
-* A stack with `Wraps Children` checked still stops at the last child that fits, because the next child moves to a new row or column.
+* A stack with `Wraps Children` checked still moves the next child to a new row or column. Its size is its widest row or column, as described in the next section.
 * A container with a `Children Layout` of `Regular` already grew to its max.
 * A stack whose children fit under its max still sizes to its children.
 
@@ -93,9 +93,29 @@ stackPanel.MaxHeight = 100;
 
 For more information see the [Children Layout](../gum-elements/container/children-layout.md#stacking-and-container-height-units-and-width-units) page.
 
+### Wrapping Stacks Sized to Their Children Measure Their Widest Row
+
+A stack with `Wraps Children` checked that sizes itself to its children and has a max on its stacking axis is now as large as its widest row or column. This applies to a `Left to Right Stack` with `Width Units` of `Relative to Children` (or `Relative to Max of Children or Parent`) and a `Max Width`, and to a `Top to Bottom Stack` with the matching `Height Units` and a `Max Height`. Rows break where the next child would pass the max, and padding and the max apply after the widest row is measured.
+
+Before this version, such a stack measured only its first row. The rows after it then wrapped against that narrower size, so they used more rows than needed, and a child wider than the first row extended past the stack. For example, a `Left to Right Stack` with a `Max Width` of `200` holding children `100`, `120`, and `60` wide measured `100` wide and placed each child on its own row, with the `120` wide child extending `20` past the stack. It now measures `180` wide, with the `120` and `60` wide children sharing the second row.
+
+A stack whose first child is wider than the max is now as wide as its max. Before this version, such a stack measured `0` wide when it had no `Width` padding.
+
+These cases are unchanged:
+
+* A stack whose first row is its widest row.
+* A stack whose children fit in one row.
+* Stacks with a size that does not depend on their children.
+
+This affects you only if a wrapping stack sized to its children with a max has a later row wider than its first. Such a stack is now wider and may have fewer rows.
+
+To migrate, open your screens and components in the Gum tool and check any wrapping stacks that use a max. If you want the old size, lower the max to the width of the first row.
+
+For more information see the [Wraps Children](../gum-elements/container/wraps-children.md#relative-to-children-and-max-width-and-max-height) page.
+
 ### Wrapping Stacks Position Children Within Their Row or Column
 
-In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis for positioning:
+A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis for positioning:
 
 * In a `Left to Right Stack`, a child's `Y Units` and `Y Origin` position it within its row.
 * In a `Top to Bottom Stack`, a child's `X Units` and `X Origin` position it within its column.

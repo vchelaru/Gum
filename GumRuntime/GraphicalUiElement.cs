@@ -3012,6 +3012,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
     {
         float maxCellHeight = maxHeight;
+        float lineHeight = maxHeight;
         bool hasCountedVisibleChild = false;
         for (int i = 0; i < Children!.Count; i++)
         {
@@ -3038,21 +3039,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                 {
                     // Stack spacing is only added between visible children, so skip it
-                    // for the first visible child regardless of its index in Children.
-                    var maxHeightWithElement = maxCellHeight + elementHeight;
+                    // for the first visible child in its line regardless of its index in Children.
+                    var lineWithElement = lineHeight + elementHeight;
                     if (hasCountedVisibleChild)
                     {
-                        maxHeightWithElement += StackSpacing;
+                        lineWithElement += StackSpacing;
                     }
 
-                    // A wrapping stack moves the child that crosses the max to the next line, so the
-                    // size stops at the last child that fits. A non-wrapping stack keeps that child in
-                    // this line and the caller clamps the full size to the max.
-                    if (WrapsChildren && maxHeightWithElement > this.MaxHeight)
+                    // A wrapping stack moves a child that crosses the max to a new line, so the size is
+                    // its longest line (#5806). Lines break against the max, not the current size, so the
+                    // measured size does not change where they break. A non-wrapping stack keeps the
+                    // child in this line and the caller clamps the full size to the max.
+                    if (WrapsChildren && hasCountedVisibleChild && lineWithElement > this.MaxHeight)
                     {
-                        break;
+                        lineWithElement = elementHeight;
                     }
-                    maxCellHeight = maxHeightWithElement;
+                    lineHeight = lineWithElement;
+                    maxCellHeight = System.Math.Max(maxCellHeight, lineHeight);
                 }
                 else
                 {
@@ -3434,6 +3437,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth)
     {
         float maxCellWidth = maxWidth;
+        float lineWidth = maxWidth;
         bool hasCountedVisibleChild = false;
         for (int i = 0; i < this.Children!.Count; i++)
         {
@@ -3461,21 +3465,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
                     // Stack spacing is only added between visible children, so skip it
-                    // for the first visible child regardless of its index in Children.
-                    var maxWidthWithElement = maxCellWidth + elementWidth;
+                    // for the first visible child in its line regardless of its index in Children.
+                    var lineWithElement = lineWidth + elementWidth;
                     if (hasCountedVisibleChild)
                     {
-                        maxWidthWithElement += StackSpacing;
+                        lineWithElement += StackSpacing;
                     }
 
-                    // A wrapping stack moves the child that crosses the max to the next line, so the
-                    // size stops at the last child that fits. A non-wrapping stack keeps that child in
-                    // this line and the caller clamps the full size to the max.
-                    if (WrapsChildren && maxWidthWithElement > this.MaxWidth)
+                    // A wrapping stack moves a child that crosses the max to a new line, so the size is
+                    // its longest line (#5806). Lines break against the max, not the current size, so the
+                    // measured size does not change where they break. A non-wrapping stack keeps the
+                    // child in this line and the caller clamps the full size to the max.
+                    if (WrapsChildren && hasCountedVisibleChild && lineWithElement > this.MaxWidth)
                     {
-                        break;
+                        lineWithElement = elementWidth;
                     }
-                    maxCellWidth = maxWidthWithElement;
+                    lineWidth = lineWithElement;
+                    maxCellWidth = System.Math.Max(maxCellWidth, lineWidth);
                 }
                 else
                 {

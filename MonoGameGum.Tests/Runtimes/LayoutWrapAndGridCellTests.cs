@@ -218,8 +218,8 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         CrossPosition(stack, parent.Children[2]).ShouldBe(0);
     }
 
-    // With WrapsChildren the child that crosses the max moves to the next line, so the size stops
-    // at the last child that fits.
+    // With WrapsChildren the child that crosses the max moves to the next line, so the size is the
+    // longest line rather than the max.
     [Theory]
     [InlineData(ChildrenLayout.TopToBottomStack)]
     [InlineData(ChildrenLayout.LeftToRightStack)]
@@ -304,23 +304,100 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         }
     }
 
-    [Theory(Skip = "Bug: #5806")]
-    [InlineData(150f, 100f, 100f, 200f, 100f)]
-    [InlineData(150f, 60f, 100f, 160f, 60f)]
-    [InlineData(100f, 120f, 60f, 180f, 120f)]
-    public void WrappingStack_SizedToChildrenWithMax_ShouldMeasureWidestRow(float first, float second, float third, float expectedWidth, float expectedThirdLeft)
+    public static IEnumerable<object[]> WidestLineCases()
     {
-        ContainerRuntime parent = CreateStack(ChildrenLayout.LeftToRightStack, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
-        parent.WrapsChildren = true;
-        parent.MaxWidth = 200;
-        parent.AddChild(CreateContainer(first, 50));
-        parent.AddChild(CreateContainer(second, 50));
-        parent.AddChild(CreateContainer(third, 50));
+        // mainSizes, hiddenIndex (-1 for none), spacing, main padding, expected main size, expected cross size,
+        // expected main and cross position of each child (a hidden child's entries are not checked)
+        object[][] cases =
+        {
+            // the widest line comes after the first
+            new object[] { new float[] { 150, 100, 100 }, -1, 0f, 0f, 200f, 100f, new float[] { 0, 0, 100 }, new float[] { 0, 50, 50 } },
+            new object[] { new float[] { 150, 60, 100 }, -1, 0f, 0f, 160f, 100f, new float[] { 0, 0, 60 }, new float[] { 0, 50, 50 } },
+            new object[] { new float[] { 100, 120, 60 }, -1, 0f, 0f, 180f, 100f, new float[] { 0, 0, 120 }, new float[] { 0, 50, 50 } },
+            // widest line first
+            new object[] { new float[] { 190, 50, 50, 50 }, -1, 0f, 0f, 190f, 100f, new float[] { 0, 0, 50, 100 }, new float[] { 0, 50, 50, 50 } },
+            // widest line in the middle
+            new object[] { new float[] { 100, 150, 30, 100 }, -1, 0f, 0f, 180f, 150f, new float[] { 0, 0, 150, 0 }, new float[] { 0, 50, 50, 100 } },
+            // widest line last, exactly at the max
+            new object[] { new float[] { 100, 60, 150, 50 }, -1, 0f, 0f, 200f, 100f, new float[] { 0, 100, 0, 150 }, new float[] { 0, 0, 50, 50 } },
+            // all lines equal
+            new object[] { new float[] { 80, 80, 80, 80 }, -1, 0f, 0f, 160f, 100f, new float[] { 0, 80, 0, 80 }, new float[] { 0, 0, 50, 50 } },
+            // one line, no wrap
+            new object[] { new float[] { 50, 60, 70 }, -1, 0f, 0f, 180f, 50f, new float[] { 0, 50, 110 }, new float[] { 0, 0, 0 } },
+            // a single child wider than the max: the size clamps to the max
+            new object[] { new float[] { 250 }, -1, 0f, 0f, 200f, 50f, new float[] { 0 }, new float[] { 0 } },
+            // a child wider than the max gets its own line
+            new object[] { new float[] { 50, 250, 50 }, -1, 0f, 0f, 200f, 150f, new float[] { 0, 0, 0 }, new float[] { 0, 50, 100 } },
+            // spacing within and between lines, padding that the max clamps away, and a hidden child
+            new object[] { new float[] { 100, 500, 60, 150, 40 }, 1, 10f, 10f, 200f, 110f, new float[] { 0, 0, 110, 0, 160 }, new float[] { 0, 0, 0, 60, 60 } },
+        };
+        foreach (ChildrenLayout stack in new[] { ChildrenLayout.LeftToRightStack, ChildrenLayout.TopToBottomStack })
+        {
+            foreach (object[] lineCase in cases)
+            {
+                yield return new object[] { stack }.Concat(lineCase).ToArray();
+            }
+        }
+    }
 
-        parent.AbsoluteWidth.ShouldBe(expectedWidth);
-        parent.AbsoluteHeight.ShouldBe(100);
-        parent.Children[2].AbsoluteLeft.ShouldBe(expectedThirdLeft);
-        parent.Children[2].AbsoluteTop.ShouldBe(50);
+    // Intended (#5806): a wrapping stack sized to its children with a max is as large as its widest
+    // line, with lines broken against the max.
+    [Theory]
+    [MemberData(nameof(WidestLineCases))]
+    public void WrappingStack_SizedToChildrenWithMax_ShouldMeasureWidestLine(ChildrenLayout stack, float[] mainSizes, int hiddenIndex,
+        float spacing, float padding, float expectedMain, float expectedCross, float[] expectedChildMain, float[] expectedChildCross)
+    {
+        ContainerRuntime parent = CreateTagList(stack, max: 200, spacing);
+        SetMainSize(stack, parent, padding);
+        for (int i = 0; i < mainSizes.Length; i++)
+        {
+            ContainerRuntime child = CreateStackChild(stack, main: mainSizes[i], cross: 50);
+            child.Visible = i != hiddenIndex;
+            parent.AddChild(child);
+        }
+
+        AssertLines(stack, parent, expectedMain, expectedCross, expectedChildMain, expectedChildCross, hiddenIndex);
+    }
+
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrappingStack_SizedToChildrenWithMax_ChildAddedOrRemoved_ShouldMeasureNewWidestLine(ChildrenLayout stack)
+    {
+        ContainerRuntime parent = CreateTagList(stack, max: 200, spacing: 0);
+        parent.AddChild(CreateStackChild(stack, main: 100, cross: 50));
+        parent.AddChild(CreateStackChild(stack, main: 60, cross: 50));
+        ContainerRuntime removed = CreateStackChild(stack, main: 150, cross: 50);
+        parent.AddChild(removed);
+        AssertLines(stack, parent, expectedMain: 160, expectedCross: 100, new float[] { 0, 100, 0 }, new float[] { 0, 0, 50 }, hiddenIndex: -1);
+
+        parent.AddChild(CreateStackChild(stack, main: 40, cross: 50));
+        AssertLines(stack, parent, expectedMain: 190, expectedCross: 100, new float[] { 0, 100, 0, 150 }, new float[] { 0, 0, 50, 50 }, hiddenIndex: -1);
+
+        parent.RemoveChild(removed);
+        AssertLines(stack, parent, expectedMain: 200, expectedCross: 50, new float[] { 0, 100, 160 }, new float[] { 0, 0, 0 }, hiddenIndex: -1);
+    }
+
+    // Asserts the stack's size and each child's position, then again after repeated layouts so the
+    // stack can't settle between two sizes.
+    static void AssertLines(ChildrenLayout stack, ContainerRuntime parent, float expectedMain, float expectedCross,
+        float[] expectedChildMain, float[] expectedChildCross, int hiddenIndex)
+    {
+        for (int pass = 0; pass < 3; pass++)
+        {
+            MainSize(stack, parent).ShouldBe(expectedMain, $"pass {pass}: stack main size");
+            CrossSize(stack, parent).ShouldBe(expectedCross, $"pass {pass}: stack cross size");
+            for (int i = 0; i < expectedChildMain.Length; i++)
+            {
+                if (i == hiddenIndex)
+                {
+                    continue;
+                }
+                MainPosition(stack, parent.Children[i]).ShouldBe(expectedChildMain[i], $"pass {pass}: child {i} main");
+                CrossPosition(stack, parent.Children[i]).ShouldBe(expectedChildCross[i], $"pass {pass}: child {i} cross");
+            }
+            parent.UpdateLayout();
+        }
     }
 
     // A RelativeToMaxParentOrChildren child counts toward its parent by its children-based size,
@@ -662,8 +739,9 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
             new object[] { new float[] { 60, 60 }, new float[] { 20, 30 }, -1, 0f, 120f, 30f, 60f, 0f },
             // exactly at the max: still one line
             new object[] { new float[] { 100, 100 }, new float[] { 20, 30 }, -1, 0f, 200f, 30f, 100f, 0f },
-            // just over the max: two lines, the cross size is the two lines with no empty space
-            new object[] { new float[] { 100, 101 }, new float[] { 20, 30 }, -1, 0f, 100f, 50f, 0f, 20f },
+            // just over the max: two lines, the main size is the wider line (#5806) and the cross size
+            // is the two lines with no empty space
+            new object[] { new float[] { 100, 101 }, new float[] { 20, 30 }, -1, 0f, 101f, 50f, 0f, 20f },
             // spacing that exactly fits
             new object[] { new float[] { 95, 95 }, new float[] { 20, 30 }, -1, 10f, 200f, 30f, 105f, 0f },
             // spacing that pushes past the max, and spacing between the lines
