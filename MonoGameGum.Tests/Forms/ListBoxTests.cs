@@ -399,8 +399,10 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
-    public void InnerPanel_MoveDataBackedItemVisual_ShouldLeaveItemsAndListBoxItemsAligned()
+    public void InnerPanel_MoveDataBackedItemVisual_ShouldNotReorderCallerOwnedItems()
     {
+        // Deliberate: a direct InnerPanel move bypasses the ListBox, so it must not write back to
+        // a collection the caller owns (for example a bound view model collection).
         ListBox listBox = new();
         listBox.Items!.Add("a");
         listBox.Items.Add("b");

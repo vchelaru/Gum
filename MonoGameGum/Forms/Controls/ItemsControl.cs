@@ -67,6 +67,11 @@ public class ItemsControl : ScrollViewer
     /// If items are not added directly to the InnerPanel, then the Items list and the internal InnerPanel
     /// Children will remain in sync since the ItemsControl automatically creates FrameworkElement instances
     /// in response to the Items.
+    ///
+    /// Items is the assigned collection itself, not a copy, so changes made through Items also change
+    /// the view model's collection whatever the binding mode. Moving a child directly within the
+    /// InnerPanel's Children never reorders an item that is backed by other data (such as a view model);
+    /// the caller owns that collection, and code that bypasses the ItemsControl does not write back to it.
     /// </remarks>
     public IList? Items
     {
