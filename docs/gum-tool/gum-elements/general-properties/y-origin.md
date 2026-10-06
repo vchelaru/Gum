@@ -37,3 +37,11 @@ Baseline is often used to align fonts of different sizes. The following image sh
 By contrast, the following image shows the same Text instances using bottom alignment.
 
 <figure><img src="../../../.gitbook/assets/image (31).png" alt=""><figcaption></figcaption></figure>
+
+## Y Origin in a Top to Bottom Stack
+
+A child in a [Top to Bottom Stack](../container/children-layout.md#top-to-bottom-stack) which is not the first child ignores its `Y Origin`, and the stack positions it as if its `Y Origin` were `Top`. This keeps it from overlapping its previous sibling. The first child in the stack uses its `Y Origin` normally, and `Y Origin` works normally for every child in a `Left to Right Stack`.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, `Y Origin` applied to every child in a `Top to Bottom Stack`, so a `Center`, `Bottom`, or `Baseline` origin moved a child back over its previous sibling. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}

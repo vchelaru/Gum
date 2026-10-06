@@ -205,17 +205,76 @@ public class LayoutEdgeCaseTests : BaseTestClass
         second.AbsoluteLeft.ShouldBe(50);
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5766")]
-    public void TopToBottomStack_LaterChildWithCenterOrigin_ShouldNotOverlapPreviousSibling()
+    [Fact]
+    public void TopToBottomStack_FirstChildWithCenterOrigin_ShouldKeepOrigin()
+    {
+        ContainerRuntime stack = CreateContainer(100, 400);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        ContainerRuntime first = CreateContainer(50, 50);
+        first.YUnits = GeneralUnitType.PixelsFromMiddle;
+        first.YOrigin = VerticalAlignment.Center;
+        stack.AddChild(first);
+
+        first.AbsoluteTop.ShouldBe(200 - 25);
+    }
+
+    [Fact]
+    public void LeftToRightStack_LaterChildWithRightOrigin_ShouldNotOverlapPreviousSibling()
+    {
+        ContainerRuntime stack = CreateContainer(400, 100);
+        stack.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        stack.AddChild(CreateContainer(50, 50));
+        ContainerRuntime second = CreateContainer(50, 50);
+        second.XOrigin = HorizontalAlignment.Right;
+        second.X = 10;
+        stack.AddChild(second);
+
+        second.AbsoluteLeft.ShouldBe(50 + 10);
+    }
+
+    [Theory]
+    [InlineData(VerticalAlignment.Center)]
+    [InlineData(VerticalAlignment.Bottom)]
+    [InlineData(VerticalAlignment.TextBaseline)]
+    public void TopToBottomStack_LaterChildWithNonTopOrigin_ShouldNotOverlapPreviousSibling(VerticalAlignment yOrigin)
     {
         ContainerRuntime stack = CreateContainer(100, 400);
         stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         stack.AddChild(CreateContainer(50, 50));
         ContainerRuntime second = CreateContainer(50, 50);
-        second.YOrigin = VerticalAlignment.Center;
+        second.YOrigin = yOrigin;
         stack.AddChild(second);
 
         second.AbsoluteTop.ShouldBe(50);
+    }
+
+    // The migration path for layouts that relied on the old origin overlap (#5766).
+    [Fact]
+    public void TopToBottomStack_LaterChildWithNegativeY_ShouldOverlapPreviousSibling()
+    {
+        ContainerRuntime stack = CreateContainer(100, 400);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        stack.AddChild(CreateContainer(50, 50));
+        ContainerRuntime second = CreateContainer(50, 50);
+        second.Y = -25;
+        stack.AddChild(second);
+
+        second.AbsoluteTop.ShouldBe(25);
+    }
+
+    [Fact]
+    public void TopToBottomStack_LaterChildWithCenterOrigin_ShouldKeepCrossAxisOrigin()
+    {
+        ContainerRuntime stack = CreateContainer(100, 400);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        stack.AddChild(CreateContainer(50, 50));
+        ContainerRuntime second = CreateContainer(50, 50);
+        second.XUnits = GeneralUnitType.PixelsFromMiddle;
+        second.XOrigin = HorizontalAlignment.Center;
+        second.YOrigin = VerticalAlignment.Center;
+        stack.AddChild(second);
+
+        second.AbsoluteLeft.ShouldBe(50 - 25);
     }
 
     // Intended (#5767): Ratio shares with every sibling on the same axis, whatever the stack direction.

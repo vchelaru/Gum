@@ -243,6 +243,15 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         stack.Children[2].AbsoluteLeft.ShouldBe(50);
     }
 
+    [Fact]
+    public void FlippedLeftToRightStack_LaterChildWithRightOrigin_ShouldNotOverlapPreviousSibling()
+    {
+        ContainerRuntime stack = CreateFlippedStack(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, HorizontalAlignment.Right, 0);
+
+        stack.Children[1].AbsoluteRight.ShouldBe(stack.Children[0].AbsoluteLeft);
+        stack.Children[2].AbsoluteRight.ShouldBe(stack.Children[1].AbsoluteLeft);
+    }
+
     public static TheoryData<string> FlippedLeftToRightStackCases => new()
     {
         "plain", "spacing", "x offset", "large units", "middle units", "percentage units", "wraps", "first hidden", "sized to children"

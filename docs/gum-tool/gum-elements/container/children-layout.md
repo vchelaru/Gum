@@ -73,6 +73,13 @@ If instances are stacked in a container, the stacking controls the instance valu
 
 The position value which is not controlled by the stack can be changed freely without any impact on the stacking.
 
+The first child in a stack uses its units and origin on the stacking axis like any other child. Every child after the first ignores them, so the stack always places it right after its previous sibling:
+
+* In a `Top to Bottom Stack`, later children measure `Y` from the bottom of the previous sibling whatever their `Y Units`, and treat `Y Origin` as `Top`.
+* In a `Left to Right Stack`, later children measure `X` from the right side of the previous sibling whatever their `X Units`, and treat `X Origin` as `Left`.
+
+The child's `X` or `Y` value still applies, and adds space between the child and its previous sibling. For more information see the [Stacking and Children Origin](#stacking-and-children-origin) section below.
+
 For example, if a container stacks its children using a `Top to Bottom Stack`, the children in the stack are free to change their X values. The following animation shows how children can be left, center, or right anchored (which changes their `X Units` and `X Origin`) without affecting the other children in the stack.
 
 <figure><img src="../../../.gitbook/assets/01_10 09 47.gif" alt=""><figcaption><p>Changing horizontal layout values does not affect siblings in a Top to Bottom Stack</p></figcaption></figure>
@@ -83,25 +90,21 @@ For example, if a container stacks its children using a `Top to Bottom Stack`, t
 
 ### Stacking and Children Origin
 
-The position of a child in a stack is determined by the size of the previous item in the stack and the origin of the child. In most cases children which are stacked should use a Left [X Origin](../general-properties/x-origin.md) if the parent uses a `Left To Right Stack` and should use a Top [Y Origin](../general-properties/y-origin.md) if the parent uses a `Top To Bottom Stack`.
+The position of a child in a stack is determined by the size of the previous item in the stack. Consider a container with a blue rectangle which stacks horizontally. The blue occupies some space according to its absolute width. The next instance after the blue rectangle is placed relative to the right side of the blue rectangle.
 
-Consider a container with a blue rectangle which stacks horizontally. The blue occupies some space according to its absolute width. The next instance after the blue rectangle is placed relative to the right-side of the blue rectangle.
+<figure><img src="../../../.gitbook/assets/05_19 39 30.png" alt=""><figcaption><p>The next item's position is based on the right side of the blue rectangle</p></figcaption></figure>
 
-<figure><img src="../../../.gitbook/assets/05_19 39 30.png" alt=""><figcaption><p>The next item's position is based on the right-side of the blue rectangle</p></figcaption></figure>
+For example, if a red rectangle (partially transparent to make it easier to see when overlapping) is added to the container, the stack creates a layout similar to the following image:
 
-For example, if a red rectangle (partially transparent to make it easier to see when overlapping) is added to the container, the stack may create a layout similar to the following image:
+![Red rectangle is positioned relative to the right side of the blue rectangle.](<../../../.gitbook/assets/03_05 28 05.png>)
 
-![Red rectangle is positioned relative to the right-side of the blue rectangle.](<../../../.gitbook/assets/03_05 28 05.png>)
+The red rectangle stays in this position even if its [X Origin](../general-properties/x-origin.md) is `Center` or `Right`. A child after the first ignores its origin on the stacking axis, so it never overlaps its previous sibling. Its origin on the other axis works normally, so a child in a `Top to Bottom Stack` can still center itself horizontally.
 
-Keep in mind that the stack simply states the position of the next item. Each item can freely adjust its `X Origin` (or `Y Origin` in a `Top to Bottom Stack`). If the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to `Center`, the red rectangle overlaps the blue rectangle.
+The first child in a stack uses its origin on both axes.
 
-![Stack determines a child's position, the child can change its origin](<../../../.gitbook/assets/03_05 29 08.png>)
-
-If the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to `Right`, then its right side aligns with the right side of the blue rectangle, resulting in the red overlapping the blue completely. In this case the red rectangle's stacking is essentially cancelled out by the [X Origin](../general-properties/x-origin.md).
-
-![Red rectangle overlapping blue rectangle](<../../../.gitbook/assets/03_05 30 44.png>)
-
-This overlapping may not be desirable, so keep this in mind when changing a stacked child's origin.
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, a later child's `X Origin` (in a `Left to Right Stack`) or `Y Origin` (in a `Top to Bottom Stack`) moved it back over its previous sibling. A `Center` origin overlapped the previous sibling by half the child's size, and a `Right` or `Bottom` origin overlapped it completely. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
 
 ### Wraps Children
 

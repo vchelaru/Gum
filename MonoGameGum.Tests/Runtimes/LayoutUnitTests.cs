@@ -5340,10 +5340,10 @@ public class LayoutUnitTests : BaseTestClass
         child2.Anchor(Gum.Wireframe.Anchor.Center);
         parent.AddChild(child2);
 
-        // In a top-to-bottom stack, the stacking positions child2's origin at Y=100.
-        // But Anchor(Center) sets YOrigin=Center, so AbsoluteTop = 100 - (height/2) = 50.
-        // This shows that origin offsets still apply even inside stacked layouts.
-        child2.AbsoluteTop.ShouldBe(50);
+        // A later stacked child ignores its main-axis units and origin (#5766), so Anchor(Center)
+        // only centers it on the cross axis.
+        child2.AbsoluteTop.ShouldBe(100);
+        child2.AbsoluteLeft.ShouldBe(150);
     }
 
     [Fact]
