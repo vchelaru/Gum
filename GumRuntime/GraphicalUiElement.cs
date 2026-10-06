@@ -8312,9 +8312,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    // Animates each element once. An animation event handler may add or remove elements in the
-    // list, so after each call the loop resumes after the element just animated wherever it now is.
-    static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference)
+    /// <summary>
+    /// Calls <see cref="AnimateSelf(double)"/> on each element in <paramref name="elements"/>, in order.
+    /// Animation event handlers (such as AnimationChainFinished) may add or remove elements in the
+    /// list while it runs: every element still in the list that was not yet animated advances exactly
+    /// once, and no element advances twice. This is the loop Gum uses for an element's children and
+    /// for the roots passed to GumService.Update.
+    /// </summary>
+    /// <param name="elements">The elements to animate.</param>
+    /// <param name="secondDifference">The number of seconds to advance animations.</param>
+    public static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference)
     {
         for (int i = 0; i < elements.Count; i++)
         {
@@ -8325,15 +8332,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    /// <summary>
-    /// Returns the index of <paramref name="element"/> in <paramref name="elements"/> after it was
-    /// processed at <paramref name="index"/>, so a loop continuing from the returned index visits
-    /// each remaining element once even if the list changed meanwhile. If the element was removed,
-    /// returns the index just before <paramref name="next"/> (the element that followed it).
-    /// Used by Gum's animation loops; not intended for game code.
-    /// </summary>
-    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public static int GetIndexToResumeAfter<T>(IList<T> elements, T element, T? next, int index) where T : class
+    // Returns where element now sits in elements after it was processed at index, so a loop
+    // continuing from there visits each remaining element once even if the list changed meanwhile.
+    // If element was removed, returns the index just before next (the element that followed it).
+    static int GetIndexToResumeAfter(IList<GraphicalUiElement> elements, GraphicalUiElement element, GraphicalUiElement? next, int index)
     {
         if (index < elements.Count && ReferenceEquals(elements[index], element))
         {
@@ -8357,7 +8359,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return System.Math.Min(index, elements.Count) - 1;
     }
 
-    static int IndexOfReference<T>(IList<T> elements, T element) where T : class
+    static int IndexOfReference(IList<GraphicalUiElement> elements, GraphicalUiElement element)
     {
         for (int i = 0; i < elements.Count; i++)
         {

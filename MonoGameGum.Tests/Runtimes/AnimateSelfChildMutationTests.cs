@@ -120,32 +120,50 @@ public class AnimateSelfChildMutationTests : BaseTestClass
     }
 
     [Theory]
-    [InlineData("unchanged", 1)]
-    [InlineData("earlierRemoved", 0)]
-    [InlineData("insertedBefore", 2)]
-    [InlineData("selfRemoved", 0)]
-    [InlineData("selfAndNextRemoved", 0)]
-    [InlineData("lastRemoved", 1)]
-    public void GetIndexToResumeAfter_ShouldPointAtTheElementBeforeTheNextUnvisitedOne(string change, int expected)
+    [InlineData("none")]
+    [InlineData("self")]
+    [InlineData("earlier")]
+    [InlineData("selfAndNext")]
+    [InlineData("insertBefore")]
+    public void AnimateEach_ShouldAdvanceEveryRemainingElementOnce_WhenAHandlerChangesTheList(string change)
     {
-        object a = new();
-        object b = new();
-        object c = new();
-        List<object> elements = new() { a, b, c };
-        object element = change == "lastRemoved" ? c : b;
-        object? next = change == "lastRemoved" ? null : c;
-        int index = change == "lastRemoved" ? 2 : 1;
-        switch (change)
+        SpriteRuntime first = CreateObserver();
+        SpriteRuntime actor = CreateSprite(isLooping: false, 0.25f, 0.25f);
+        SpriteRuntime second = CreateObserver();
+        SpriteRuntime third = CreateObserver();
+        List<GraphicalUiElement> elements = new() { first, actor, second, third };
+        actor.AnimationChainFinished += () =>
         {
-            case "earlierRemoved": elements.Remove(a); break;
-            case "insertedBefore": elements.Insert(0, new object()); break;
-            case "selfRemoved": elements.Remove(b); break;
-            case "selfAndNextRemoved": elements.Remove(b); elements.Remove(c); break;
-            case "lastRemoved": elements.Remove(c); break;
+            switch (change)
+            {
+                case "self": elements.Remove(actor); break;
+                case "earlier": elements.Remove(first); break;
+                case "selfAndNext": elements.Remove(actor); elements.Remove(second); break;
+                case "insertBefore": elements.Insert(0, CreateObserver()); break;
+            }
+        };
+
+        GraphicalUiElement.AnimateEach(elements, 1);
+
+        first.AnimationChainTime.ShouldBe(1);
+        if (change != "selfAndNext")
+        {
+            second.AnimationChainTime.ShouldBe(1);
         }
+        third.AnimationChainTime.ShouldBe(1);
+    }
 
-        int result = GraphicalUiElement.GetIndexToResumeAfter(elements, element, next, index);
+    [Fact]
+    public void AnimateEach_ShouldNotThrow_WhenTheLastElementRemovesItself()
+    {
+        SpriteRuntime first = CreateObserver();
+        SpriteRuntime actor = CreateSprite(isLooping: false, 0.25f);
+        List<GraphicalUiElement> elements = new() { first, actor };
+        actor.AnimationChainFinished += () => elements.Remove(actor);
 
-        result.ShouldBe(expected);
+        Should.NotThrow(() => GraphicalUiElement.AnimateEach(elements, 1));
+
+        elements.ShouldBe(new GraphicalUiElement[] { first });
+        first.AnimationChainTime.ShouldBe(1);
     }
 }

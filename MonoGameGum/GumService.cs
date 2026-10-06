@@ -719,14 +719,8 @@ public partial class GumService : IGumService
         // the List enumerator each frame that foreach over the IEnumerable parameter would (#1934).
         if (roots is IList<GraphicalUiElement> list)
         {
-            for (int i = 0; i < list.Count; i++)
-            {
-                GraphicalUiElement root = list[i];
-                GraphicalUiElement? next = i + 1 < list.Count ? list[i + 1] : null;
-                root.AnimateSelf(difference);
-                // An animation event handler may have added or removed roots.
-                i = GraphicalUiElement.GetIndexToResumeAfter(list, root, next, i);
-            }
+            // Safe for animation event handlers that add or remove roots.
+            GraphicalUiElement.AnimateEach(list, difference);
         }
         else
         {

@@ -190,8 +190,37 @@ public sealed class Renderer : IRenderer
             IRenderableIpso element = elements[i];
             IRenderableIpso? next = i + 1 < elements.Count ? elements[i + 1] : null;
             TickRecursively(element, dt);
-            i = GraphicalUiElement.GetIndexToResumeAfter(elements, element, next, i);
+            i = GetIndexToResumeAfter(elements, element, next, i);
         }
+    }
+
+    // Sokol walks renderables, not GraphicalUiElements, so it can't use
+    // GraphicalUiElement.AnimateEach; this mirrors its private resume logic.
+    // Returns where element now sits after it was ticked at index, or, if it
+    // was removed, the index just before next (the element that followed it).
+    private static int GetIndexToResumeAfter(IList<IRenderableIpso> elements, IRenderableIpso element, IRenderableIpso? next, int index)
+    {
+        if (index < elements.Count && ReferenceEquals(elements[index], element))
+            return index;
+        int found = IndexOfReference(elements, element);
+        if (found >= 0)
+            return found;
+        if (next == null)
+            return elements.Count - 1;
+        found = IndexOfReference(elements, next);
+        if (found >= 0)
+            return found - 1;
+        return Math.Min(index, elements.Count) - 1;
+    }
+
+    private static int IndexOfReference(IList<IRenderableIpso> elements, IRenderableIpso element)
+    {
+        for (int i = 0; i < elements.Count; i++)
+        {
+            if (ReferenceEquals(elements[i], element))
+                return i;
+        }
+        return -1;
     }
 
     public void Draw(ISystemManagers? managers)
