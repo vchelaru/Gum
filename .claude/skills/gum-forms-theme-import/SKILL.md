@@ -70,7 +70,7 @@ testing after the fact. Sequence a new theme port like this:
 |------|------|
 | `Tools/Gum.Presentation/GumForms/Services/FormsFileService.cs` | `GetAvailableThemes`, `GetThemeDirectory`, `GetSourceDestinations` — computes what gets copied where |
 | `Tools/Gum.Presentation/GumForms/ViewModels/AddFormsViewModel.cs` | Add Forms dialog: theme selection, save/import |
-| `Tools/Gum.Presentation/GumForms/Services/ThemeRequirements.cs` | Parses optional `theme.txt` (font generator, Skia shapes) — project-level prerequisites, not content |
+| `Tools/Gum.Presentation/GumForms/Services/ThemeRequirements.cs` | Project-level prerequisites, not content: optional `theme.txt` (font generator, Skia shapes) plus the theme `.gumx`'s `FontRanges`, which import merges into the user's project so glyphs like the check mark (U+2713) get generated |
 | `Gum/GumFormsPlugin/GumFormsPlugin.csproj` | Postbuild `<Exec>` stages each theme into the built `Content/FormsThemes/<Name>/` — **one hand-written `xcopy` + `stage-forms-behaviors` block per theme, not a loop over the folder.** A new theme is invisible to `FormsFileService.GetAvailableThemes()` in a built tool until its own block is added here, mirroring the existing per-theme blocks exactly. |
 
 ## A theme's qualified names must be self-prefixed — there's no folder-nesting shortcut
