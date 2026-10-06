@@ -1341,6 +1341,34 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         grid.AbsoluteHeight.ShouldBe(200);
     }
 
+    // Pins current behavior (#5809): a rotated child pivots about its origin inside its own cell
+    // and never moves the other cells. A center origin moves its top-left corner (200,0 -> 190,50).
+    [Theory]
+    [InlineData(HorizontalAlignment.Left, VerticalAlignment.Top, 200f, 0f)]
+    [InlineData(HorizontalAlignment.Center, VerticalAlignment.Center, 190f, 50f)]
+    public void AutoGrid_RotatedChild_ShouldPivotInItsCell_AndNotMoveSiblings(HorizontalAlignment xOrigin,
+        VerticalAlignment yOrigin, float expectedRotatedLeft, float expectedRotatedTop)
+    {
+        ContainerRuntime grid = CreateContainer(400, 400);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 2;
+        grid.AddChild(CreateContainer(100, 20));
+        ContainerRuntime rotated = CreateContainer(100, 20);
+        rotated.XOrigin = xOrigin;
+        rotated.YOrigin = yOrigin;
+        grid.AddChild(rotated);
+        ContainerRuntime next = CreateContainer(100, 20);
+        grid.AddChild(next);
+
+        rotated.Rotation = 90;
+
+        rotated.AbsoluteLeft.ShouldBe(expectedRotatedLeft, tolerance: 0.001f);
+        rotated.AbsoluteTop.ShouldBe(expectedRotatedTop, tolerance: 0.001f);
+        next.AbsoluteLeft.ShouldBe(0);
+        next.AbsoluteTop.ShouldBe(200);
+    }
+
     [Fact]
     public void AutoGrid_RelativeToParentChild_ShouldSizeFromItsCell()
     {

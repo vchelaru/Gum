@@ -232,3 +232,11 @@ protected override void Update(GameTime gameTime)
 ```
 
 <figure><img src="../../.gitbook/assets/17_19 25 24.gif" alt=""><figcaption><p>Children Buttons stacked with Ratio size</p></figcaption></figure>
+
+## Rotated Children
+
+Stacks and grids space a child with a `Rotation` as if it were not rotated. With the default top-left `XOrigin` and `YOrigin`, a rotated child can overlap its neighbors or leave gaps. With another origin, such as `Center`, the rotation also shifts where the next sibling starts in a stack. Auto grid cells do not move.
+
+{% hint style="warning" %}
+Stacking with rotation may become more sophisticated in a future version of Gum, so this behavior may change.
+{% endhint %}

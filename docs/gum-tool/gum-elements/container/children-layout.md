@@ -112,6 +112,16 @@ The first child in a stack uses its origin on both axes.
 **Breaking change in November 2026:** Before this version, a later child's `X Origin` (in a `Left to Right Stack`) or `Y Origin` (in a `Top to Bottom Stack`) moved it back over its previous sibling. A `Center` origin overlapped the previous sibling by half the child's size, and a `Right` or `Bottom` origin overlapped it completely. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
 {% endhint %}
 
+### Stacking and Rotation
+
+A stack places the next child after a rotated child as if the rotated child were not rotated. With the default `Top` and `Left` origin, a rotated child turns about its top-left corner, so it can overlap its neighbors or leave gaps.
+
+With another origin, such as `Center`, the rotation also shifts where the next child starts. A rotated child in an `Auto Grid Horizontal` or `Auto Grid Vertical` container turns within its own cell and never moves the other cells.
+
+{% hint style="warning" %}
+Stacking with rotation may become more sophisticated in a future version of Gum, so this behavior may change.
+{% endhint %}
+
 ### Wraps Children
 
 The [Wraps Children](wraps-children.md) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](wraps-children.md) page. In a wrapping stack, each row or column is the parent of its children on the other axis for positioning, so a centered child centers in its row. For more information see [Positioning Children Within a Row or Column](wraps-children.md#positioning-children-within-a-row-or-column).
