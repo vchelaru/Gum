@@ -462,6 +462,9 @@
     <Variable Type="string" Name="FullScreenCheckbox.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Run Fullscreen</Value>
     </Variable>
+    <Variable Type="float" Name="FullScreenCheckbox.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">200</Value>
+    </Variable>
     <Variable Type="float" Name="FullScreenCheckbox.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
