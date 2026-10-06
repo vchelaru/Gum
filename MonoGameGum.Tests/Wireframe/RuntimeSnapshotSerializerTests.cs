@@ -616,7 +616,7 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
         InteractiveGue column = new() { Name = "LeftColumn" };
         column.FormsControlAsObject = new object();
         column.Width = 33;
-        column.WidthUnits = Gum.DataTypes.DimensionUnitType.Percentage;
+        column.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
         formsScreen.AddChild(column);
         root.AddChild(formsScreen);
 
@@ -628,7 +628,7 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
         StateSave defaultState = screen.States.First(s => s.Name == "Default");
         defaultState.Variables.First(v => v.Name == "LeftColumn.Width").Value.ShouldBe(33f);
         defaultState.Variables.First(v => v.Name == "LeftColumn.WidthUnits").Value
-            .ShouldBe(Gum.DataTypes.DimensionUnitType.Percentage);
+            .ShouldBe(Gum.DataTypes.DimensionUnitType.PercentageOfParent);
     }
 
     [Fact]

@@ -153,7 +153,7 @@ public  class ComboBoxTests : BaseTestClass
         {
             if (fullInstantiation)
             {
-                var background = new ColoredRectangleRuntime();
+                var background = new RectangleRuntime();
                 background.Name = "Background";
 
                 var TextInstance = new TextRuntime();
