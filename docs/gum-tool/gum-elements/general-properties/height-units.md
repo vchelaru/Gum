@@ -216,6 +216,12 @@ For example, consider a horizontal row of text frames (colored rectangles each c
 
 Without this unit, you would need to either set a fixed height on all frames (which cannot adapt to content) or use `Relative to Children` on each frame (which makes each frame a different height based on its own content).
 
+A parent with `Height Units` of `Relative to Children` measures such a child by its children, limited by the child's `Min Height` and `Max Height`. For example, a child with a `Min Height` of `80` whose children are `30` tall makes its parent `80` tall.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, the parent ignored the child's `Min Height`, so the child extended past its parent. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
+
 ## Percentage of Width
 
 `Percentage of Width` adjusts the object's effective height so it remains proportional to the `Width` value multiplied by the `Height` value (as a percentage). For example, if a `Height` value of 200 is entered, then the effective height is 200% (2x) of the `Width`.

@@ -278,6 +278,117 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         (stacksVertically ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(120);
     }
 
+    // Intended (#5805): max applies last, so padding shrinks before rows wrap earlier.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Stack_PaddingWithMax_ShouldShrinkPaddingBeforeWrapping(bool wraps)
+    {
+        ContainerRuntime parent = CreateStack(ChildrenLayout.LeftToRightStack, 20, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        parent.WrapsChildren = wraps;
+        parent.MaxWidth = 200;
+        parent.AddChild(CreateContainer(100, 50));
+        parent.AddChild(CreateContainer(90, 50));
+        if (wraps)
+        {
+            parent.AddChild(CreateContainer(50, 50));
+        }
+
+        parent.AbsoluteWidth.ShouldBe(200);
+        parent.Children[1].AbsoluteLeft.ShouldBe(100);
+        parent.Children[1].AbsoluteTop.ShouldBe(0);
+        if (wraps)
+        {
+            parent.Children[2].AbsoluteLeft.ShouldBe(0);
+            parent.Children[2].AbsoluteTop.ShouldBe(50);
+        }
+    }
+
+    [Theory(Skip = "Bug: #5806")]
+    [InlineData(150f, 100f, 100f, 200f, 100f)]
+    [InlineData(150f, 60f, 100f, 160f, 60f)]
+    [InlineData(100f, 120f, 60f, 180f, 120f)]
+    public void WrappingStack_SizedToChildrenWithMax_ShouldMeasureWidestRow(float first, float second, float third, float expectedWidth, float expectedThirdLeft)
+    {
+        ContainerRuntime parent = CreateStack(ChildrenLayout.LeftToRightStack, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        parent.WrapsChildren = true;
+        parent.MaxWidth = 200;
+        parent.AddChild(CreateContainer(first, 50));
+        parent.AddChild(CreateContainer(second, 50));
+        parent.AddChild(CreateContainer(third, 50));
+
+        parent.AbsoluteWidth.ShouldBe(expectedWidth);
+        parent.AbsoluteHeight.ShouldBe(100);
+        parent.Children[2].AbsoluteLeft.ShouldBe(expectedThirdLeft);
+        parent.Children[2].AbsoluteTop.ShouldBe(50);
+    }
+
+    // A RelativeToMaxParentOrChildren child counts toward its parent by its children-based size,
+    // which must be clamped by the child's own min the same way the child's size is.
+    [Theory]
+    [InlineData(ChildrenLayout.Regular, 30, 80)]
+    [InlineData(ChildrenLayout.Regular, 80, 80)]
+    [InlineData(ChildrenLayout.Regular, 120, 120)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 30, 80)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 30, 80)]
+    public void RelativeToChildrenParent_ContainingMaxParentOrChildrenChildWithMin_ShouldMeasureChildAtLeastMin(ChildrenLayout outerLayout, float contentSize, float expectedSize)
+    {
+        foreach (bool vertical in new[] { true, false })
+        {
+            ContainerRuntime outer = CreateStack(outerLayout, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+            ContainerRuntime inner = vertical
+                ? CreateStack(ChildrenLayout.Regular, 100, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToMaxParentOrChildren)
+                : CreateStack(ChildrenLayout.Regular, 0, DimensionUnitType.RelativeToMaxParentOrChildren, 100, DimensionUnitType.Absolute);
+            if (vertical)
+            {
+                inner.MinHeight = 80;
+            }
+            else
+            {
+                inner.MinWidth = 80;
+            }
+            outer.AddChild(inner);
+            inner.AddChild(vertical ? CreateContainer(50, contentSize) : CreateContainer(contentSize, 50));
+
+            (vertical ? inner.AbsoluteHeight : inner.AbsoluteWidth).ShouldBe(expectedSize);
+            (vertical ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(expectedSize);
+
+            outer.UpdateLayout();
+            (vertical ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(expectedSize, "repeated layout");
+        }
+    }
+
+    [Fact]
+    public void RelativeToChildrenParent_ContainingMaxParentOrChildrenChildWithMin_ShouldFollowContentAddRemoveAndHide()
+    {
+        ContainerRuntime outer = CreateStack(ChildrenLayout.Regular, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        ContainerRuntime inner = CreateStack(ChildrenLayout.Regular, 100, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToMaxParentOrChildren);
+        inner.MinHeight = 80;
+        inner.MaxHeight = 150;
+        outer.AddChild(inner);
+        ContainerRuntime small = CreateContainer(50, 30);
+        inner.AddChild(small);
+        outer.AbsoluteHeight.ShouldBe(80);
+
+        ContainerRuntime tall = CreateContainer(50, 120);
+        inner.AddChild(tall);
+        outer.AbsoluteHeight.ShouldBe(120);
+
+        tall.Height = 200;
+        outer.AbsoluteHeight.ShouldBe(150, "clamped to the child's max");
+
+        tall.Visible = false;
+        outer.AbsoluteHeight.ShouldBe(80, "hidden content doesn't count");
+
+        tall.Visible = true;
+        inner.RemoveChild(tall);
+        outer.AbsoluteHeight.ShouldBe(80);
+
+        inner.RemoveChild(small);
+        outer.AbsoluteHeight.ShouldBe(80, "an empty child still has its min");
+        inner.AbsoluteHeight.ShouldBe(80);
+    }
+
     [Theory]
     [InlineData(ChildrenLayout.TopToBottomStack)]
     [InlineData(ChildrenLayout.LeftToRightStack)]

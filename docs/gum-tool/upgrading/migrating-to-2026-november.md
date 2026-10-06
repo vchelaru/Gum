@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. All three changes affect layouts in the Gum tool and the runtime.
+`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime.
 
 ## Breaking Changes and Migrations
 
@@ -117,3 +117,20 @@ This affects you only if a child of a wrapping stack uses units other than the d
 To migrate, open your screens and components in the Gum tool and check any wrapping stacks whose children use these units. If you want a child placed relative to the whole stack, move it out of the stack into a container that does not stack.
 
 For more information see the [Wraps Children](../gum-elements/container/wraps-children.md#positioning-children-within-a-row-or-column) page.
+
+### Containers Count a Child's Min When It Uses Relative to Max of Children or Parent
+
+A container with `Height Units` of `Relative to Children` now counts a child that uses `Relative to Max of Children or Parent` at no less than the child's `Min Height`. The same applies to `Width Units` and `Min Width`.
+
+Before this version, the container measured such a child by its children only. For example, a child with a `Min Height` of `80` whose children are `30` tall was `80` tall, but its container measured `30`, so the child extended past the container. The container now measures `80`.
+
+These cases are unchanged:
+
+* A child whose children are already larger than its `Min Height`.
+* Children using other `Height Units`. Their min was already counted.
+
+This affects you only if a container sized to its children holds a `Relative to Max of Children or Parent` child with a `Min Height` or `Min Width` larger than its content. Such a container is now larger.
+
+To migrate, open your screens and components in the Gum tool and check these containers. If you want the old size, lower or clear the child's `Min Height` or `Min Width`.
+
+For more information see the [Height Units](../gum-elements/general-properties/height-units.md#relative-to-max-of-children-or-parent) page.

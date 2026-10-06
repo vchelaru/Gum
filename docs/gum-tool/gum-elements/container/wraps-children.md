@@ -74,6 +74,8 @@ Note that Relative to Children can be used on the non-stacking axis. For example
 
 If a container has a non-null Max Width, then it will expand according to its children until it reaches its max width. Once it reaches a max width, it wraps its children.
 
+The max width applies after the container's `Width` padding is added, so the padding can shrink when the children fill a row. Rows do not wrap earlier to keep the padding.
+
 The following animation shows a container which has:
 
 * Width Units of Relative to Children
