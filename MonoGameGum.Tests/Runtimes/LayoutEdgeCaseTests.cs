@@ -79,8 +79,36 @@ public class LayoutEdgeCaseTests : BaseTestClass
         grid.Children[5].AbsoluteHeight.ShouldBe(100);
     }
 
-    [Fact(Skip = "Behavior change pending decision: #5765")]
-    public void AutoGrid_FixedSizeParent_ShouldNotOverlapRows_WhenChildrenExceedCells()
+    [Fact]
+    public void AutoGridHorizontal_FixedSizeParent_ShouldPlaceExtraRowBelowBounds()
+    {
+        ContainerRuntime grid = CreateContainer(299, 183);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = 1;
+        grid.AutoGridVerticalCells = 1;
+        grid.AddChild(CreateContainer(50, 50));
+        grid.AddChild(CreateContainer(50, 50));
+
+        grid.Children[0].AbsoluteTop.ShouldBe(0);
+        grid.Children[1].AbsoluteTop.ShouldBe(183);
+    }
+
+    [Fact]
+    public void AutoGridVertical_FixedSizeParent_ShouldPlaceExtraColumnRightOfBounds()
+    {
+        ContainerRuntime grid = CreateContainer(299, 183);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridVertical;
+        grid.AutoGridHorizontalCells = 1;
+        grid.AutoGridVerticalCells = 1;
+        grid.AddChild(CreateContainer(50, 50));
+        grid.AddChild(CreateContainer(50, 50));
+
+        grid.Children[0].AbsoluteLeft.ShouldBe(0);
+        grid.Children[1].AbsoluteLeft.ShouldBe(299);
+    }
+
+    [Fact]
+    public void AutoGrid_FixedSizeParent_ShouldOverflowBounds_WhenChildrenExceedCells()
     {
         ContainerRuntime grid = CreateContainer(200, 200);
         grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
@@ -93,7 +121,10 @@ public class LayoutEdgeCaseTests : BaseTestClass
             grid.AddChild(fillChild);
         }
 
-        grid.Children[2].AbsoluteTop.ShouldBe(grid.Children[0].AbsoluteBottom);
+        // Cells keep the size set by the cell counts; extra rows spill below the grid.
+        grid.AbsoluteHeight.ShouldBe(200);
+        grid.Children[5].AbsoluteHeight.ShouldBe(100);
+        grid.Children[4].AbsoluteTop.ShouldBe(200);
     }
 
     [Fact]

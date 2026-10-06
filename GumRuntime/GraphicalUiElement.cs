@@ -788,6 +788,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     int autoGridHorizontalCells = 4;
+    /// <summary>
+    /// The number of columns in an auto-grid. For <see cref="ChildrenLayout.AutoGridHorizontal"/> this is a fixed
+    /// column count. For <see cref="ChildrenLayout.AutoGridVertical"/> it is a minimum: extra children add columns,
+    /// which shrink the cells only when <see cref="WidthUnits"/> is <see cref="DimensionUnitType.RelativeToChildren"/>.
+    /// Otherwise cells keep their size and extra columns overflow past the right edge.
+    /// </summary>
     public int AutoGridHorizontalCells
     {
         get => autoGridHorizontalCells;
@@ -801,6 +807,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     int autoGridVerticalCells = 4;
+    /// <summary>
+    /// The number of rows in an auto-grid. For <see cref="ChildrenLayout.AutoGridVertical"/> this is a fixed
+    /// row count. For <see cref="ChildrenLayout.AutoGridHorizontal"/> it is a minimum: extra children add rows,
+    /// which shrink the cells only when <see cref="HeightUnits"/> is <see cref="DimensionUnitType.RelativeToChildren"/>.
+    /// Otherwise cells keep their size and extra rows overflow below the bottom edge.
+    /// </summary>
     public int AutoGridVerticalCells
     {
         get => autoGridVerticalCells;
@@ -4825,26 +4837,28 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             xIndex = indexInSiblingList % columnCount;
             yIndex = indexInSiblingList / columnCount;
 
-            // The number of columns is fixed by AutoGridHorizontalCells, but AutoGridVerticalCells
-            // is only a *minimum* row count - the grid grows more rows as children are added. The
-            // cell height must be divided by that grown row count, not by the raw (minimum)
-            // AutoGridVerticalCells; otherwise, once rows spill past the minimum, each cell ends up
-            // taller than one row and the rows spread apart with every added item. This mirrors the
-            // row count used when sizing the parent (see UpdateHeight).
-            var requiredRowCount = (int)Math.Ceiling((float)childCount / columnCount);
-            rowCount = System.Math.Max(rowCount, requiredRowCount);
+            // Columns are fixed by AutoGridHorizontalCells. Extra rows only shrink the cells when the
+            // parent's height grows with its children; then the parent is already tall enough for every
+            // row, so dividing by the grown row count keeps each cell one row tall. A fixed-height parent
+            // keeps its cell size and extra rows overflow below its bounds. Matches GetParentDimensions.
+            if (effectiveParent.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                var requiredRowCount = (int)Math.Ceiling((float)childCount / columnCount);
+                rowCount = System.Math.Max(rowCount, requiredRowCount);
+            }
         }
         else // vertical
         {
             yIndex = indexInSiblingList % rowCount;
             xIndex = indexInSiblingList / rowCount;
 
-            // Symmetric to the horizontal case: rows are fixed by AutoGridVerticalCells, while
-            // AutoGridHorizontalCells is only a minimum column count that grows with the child
-            // count. Cell width is divided by that grown column count. This mirrors the column
-            // count used when sizing the parent (see UpdateWidth).
-            var requiredColumnCount = (int)Math.Ceiling((float)childCount / rowCount);
-            columnCount = System.Math.Max(columnCount, requiredColumnCount);
+            // Symmetric to the horizontal case: extra columns only shrink the cells when the parent's
+            // width grows with its children; a fixed-width parent overflows to the right.
+            if (effectiveParent.WidthUnits == DimensionUnitType.RelativeToChildren)
+            {
+                var requiredColumnCount = (int)Math.Ceiling((float)childCount / rowCount);
+                columnCount = System.Math.Max(columnCount, requiredColumnCount);
+            }
         }
         var parentWidth = effectiveParent.AbsoluteWidth - (columnCount - 1) * effectiveParent.StackSpacing;
         var parentHeight = effectiveParent.AbsoluteHeight - (rowCount - 1) * effectiveParent.StackSpacing;
