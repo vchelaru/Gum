@@ -3500,7 +3500,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
         {
             // The column needs what this child contributes to it, measured from the column's start.
-            return _wrappedLineStart + GetStackedLineDimension(ChildrenLayout.TopToBottomStack);
+            return _wrappedLineStart + GetStackedLineDimension(effectiveParent);
         }
         else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack
             && mXUnits != GeneralUnitType.PixelsFromSmall)
@@ -3567,7 +3567,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
         {
             // The row needs what this child contributes to it, measured from the row's start.
-            return _wrappedLineStart + GetStackedLineDimension(ChildrenLayout.LeftToRightStack);
+            return _wrappedLineStart + GetStackedLineDimension(effectiveParent);
         }
         else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack
             && mYUnits != GeneralUnitType.PixelsFromSmall)
@@ -4260,27 +4260,32 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <summary>
     /// This child's contribution to its line's cross-axis size, as recorded in the parent's
     /// <see cref="StackedRowOrColumnDimensions"/>. The line counts its children the way a parent sized
-    /// to its children does (Width Units docs, "Ignored Width Values"): a size that depends on the
-    /// parent counts as 0, the offset counts from the edge it is measured from, ignoring any portion
-    /// outside the line, and a Percentage-positioned child counts as 0 (#5802).
+    /// to its children does (Width Units docs, "Ignored Width Values"): the offset counts from the edge
+    /// it is measured from, ignoring any portion outside the line, and a Percentage-positioned child
+    /// counts as 0. A size that depends on the parent counts only when the parent's cross axis is not
+    /// sized to its children, since otherwise the two depend on each other (#5802).
     /// </summary>
-    private float GetStackedLineDimension(ChildrenLayout parentLayout)
+    private float GetStackedLineDimension(GraphicalUiElement parent)
     {
-        if (parentLayout == ChildrenLayout.LeftToRightStack)
+        if (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack)
         {
-            if (IsSizeDependentOnParent(mHeightUnit))
+            if (IsSizeDependentOnParent(mHeightUnit) && DependsOnChildren(parent.HeightUnits))
             {
                 return 0;
             }
             return GetRequiredParentHeightFromEdges();
         }
 
-        if (IsSizeDependentOnParent(mWidthUnit))
+        if (IsSizeDependentOnParent(mWidthUnit) && DependsOnChildren(parent.WidthUnits))
         {
             return 0;
         }
         return GetRequiredParentWidthFromEdges();
     }
+
+    private static bool DependsOnChildren(DimensionUnitType units) =>
+        units.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
+        units == DimensionUnitType.RelativeToMaxParentOrChildren;
 
     // Matches GetChildLayoutType(XOrY, parent): a parent sized to its children ignores such a child.
     private static bool IsSizeDependentOnParent(DimensionUnitType units)
@@ -4296,7 +4301,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     private float GetWrappedLineSize(GraphicalUiElement parent)
     {
-        var ownDimension = GetStackedLineDimension(parent.ChildrenLayout);
+        var ownDimension = GetStackedLineDimension(parent);
         var dimensions = parent.StackedRowOrColumnDimensions;
         var index = StackedRowOrColumnIndex;
         if (dimensions != null && index >= 0 && index < dimensions.Count)
@@ -4954,7 +4959,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 parentGue.StackedRowOrColumnDimensions.Add(0);
             }
 
-            float myDimension = GetStackedLineDimension(parentGue.ChildrenLayout);
+            float myDimension = GetStackedLineDimension(parentGue);
 
             float currentMax = parentGue.StackedRowOrColumnDimensions[indexToUpdate];
 
@@ -4981,7 +4986,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         {
                             parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
                                 System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                child.GetStackedLineDimension(parentGue.ChildrenLayout));
+                                child.GetStackedLineDimension(parentGue));
 
                             if (this == child)
                             {

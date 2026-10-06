@@ -696,8 +696,8 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
 
     // A line sizes itself from its children the way a parent sized to its children does (Width Units
     // docs, "Ignored Width Values"): the offset counts from the edge it is measured from, a portion
-    // outside the line is ignored, and a Percentage-positioned child or a size that depends on the
-    // parent is ignored. The child (cross 20) is alone in its line, and the next line starts after it.
+    // outside the line is ignored, and a Percentage-positioned child is ignored. A size that depends on
+    // the parent counts here because the stack's cross axis is fixed. The child (cross 20) is alone in its line, and the next line starts after it.
     [Theory]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 10f, false, 30f)]
     [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 10f, false, 30f)]
@@ -710,8 +710,8 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromBaseline, VerticalAlignment.Bottom, -10f, false, 30f)]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 0f)]
     [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 0f)]
-    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 0f)]
-    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 0f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 30f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 30f)]
     public void WrapsChildren_LineSize_ShouldCountChildLikeParentSizedToChildren(ChildrenLayout stack, GeneralUnitType units,
         VerticalAlignment origin, float value, bool crossSizeFromParent, float expectedLineSize)
     {
@@ -740,6 +740,63 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         {
             CrossSize(stack, child).ShouldBe(30, "size still measures against the whole parent");
         }
+    }
+
+    // A child sized from the parent on the cross axis counts toward its line when the stack's cross
+    // axis is fixed, since the parent's size is already known.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrapsChildren_FixedCrossAxis_ShouldSizeLinesFromParentSizedChildren(ChildrenLayout stack)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 300, DimensionUnitType.Absolute, crossSize: 300);
+        List<ContainerRuntime> tiles = new();
+        for (int i = 0; i < 6; i++)
+        {
+            ContainerRuntime tile = CreateStackChild(stack, main: 100, cross: 30);
+            if (stacksVertically)
+            {
+                tile.WidthUnits = DimensionUnitType.PercentageOfParent;
+            }
+            else
+            {
+                tile.HeightUnits = DimensionUnitType.PercentageOfParent;
+            }
+            parent.AddChild(tile);
+            tiles.Add(tile);
+        }
+
+        CrossSize(stack, tiles[0]).ShouldBe(90);
+        CrossPosition(stack, tiles[2]).ShouldBe(0);
+        CrossPosition(stack, tiles[3]).ShouldBe(90);
+        MainPosition(stack, tiles[3]).ShouldBe(0);
+    }
+
+    // A stack sized to its children on the cross axis ignores a child sized from it there, since the
+    // two would depend on each other.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrapsChildren_RelativeToChildrenCrossAxis_ShouldIgnoreParentSizedChildInLineSize(ChildrenLayout stack)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 100, DimensionUnitType.RelativeToChildren, crossSize: 0);
+        ContainerRuntime parentSized = CreateStackChild(stack, main: 60, cross: 100);
+        if (stacksVertically)
+        {
+            parentSized.WidthUnits = DimensionUnitType.PercentageOfParent;
+        }
+        else
+        {
+            parentSized.HeightUnits = DimensionUnitType.PercentageOfParent;
+        }
+        parent.AddChild(parentSized);
+        ContainerRuntime nextLine = CreateStackChild(stack, main: 60, cross: 20);
+        parent.AddChild(nextLine);
+
+        CrossPosition(stack, nextLine).ShouldBe(0);
+        CrossSize(stack, parent).ShouldBe(20);
     }
 
     // An element without a renderable (an old-style screen) lays its children out in one pass, so the

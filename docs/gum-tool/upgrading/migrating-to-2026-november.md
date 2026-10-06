@@ -104,7 +104,7 @@ Before this version, these values positioned the child within the whole stack. F
 
 A row or column is as large as its largest child, and rows and columns stay packed at the start of the stack. A child alone in its row is the same size as the row, so centering it leaves it at the top of the row.
 
-Rows and columns now count their children the same way a container sized to its children does. A child's `Y` (or `X`) value counts from the edge it is measured from, a portion of a child outside its row does not count, and a child positioned with `Percentage` or a child whose size depends on its parent (for example, `Height Units` of `Percentage of Parent`) no longer makes its row larger. Before this version, a row added each child's value to its size whatever its units, and counted children sized from the parent.
+Rows and columns now count their children the same way a container sized to its children does. A child's `Y` (or `X`) value counts from the edge it is measured from, a portion of a child outside its row does not count, and a child positioned with `Percentage` does not count. A child whose size depends on its parent (for example, `Height Units` of `Percentage of Parent`) still counts, unless the stack itself is sized to its children on that axis. Before this version, a row added each child's value to its size whatever its units.
 
 These cases are unchanged:
 

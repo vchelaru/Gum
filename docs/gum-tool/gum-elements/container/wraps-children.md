@@ -36,7 +36,7 @@ A row counts each child the same way a container with `Height Units` of `Relativ
 * An `X` or `Y` value counts from the edge it is measured from. For example, a child placed 10 pixels up from the bottom of its row makes the row 10 pixels taller than the child.
 * A portion of a child placed outside its row does not make the row larger.
 * A child positioned with `Percentage` does not count toward its row's size.
-* A child whose size depends on its parent, such as `Percentage of Parent`, does not count toward its row's size.
+* A child whose size depends on its parent, such as `Percentage of Parent`, counts toward its row's size when the container's own size on that axis does not depend on its children. For example, in a `Left to Right Stack` that is `300` tall, tiles with `Height Units` of `Percentage of Parent` and `Height` of `30` make each row `90` tall. If the container's `Height Units` is `Relative to Children`, such a child does not count, because the container and the child would each depend on the other.
 
 Size units are unaffected. A child with `Height Units` of `Percentage of Parent` or `Relative to Parent` still sizes itself from the whole container, not its row.
 
