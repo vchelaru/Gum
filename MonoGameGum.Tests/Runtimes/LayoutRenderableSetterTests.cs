@@ -256,7 +256,7 @@ public class LayoutRenderableSetterTests : BaseTestClass
         nineSlice.AbsoluteHeight.ShouldBe(20);
     }
 
-    [Fact(Skip = "Setting the frame index doesn't apply the frame: #5790")]
+    [Fact]
     public void SpriteAnimationChainFrameIndex_ShouldResizeToThatFrame()
     {
         SpriteRuntime sprite = new();
@@ -267,6 +267,96 @@ public class LayoutRenderableSetterTests : BaseTestClass
         sprite.AnimationChainFrameIndex = 1;
 
         sprite.AbsoluteWidth.ShouldBe(80);
+        sprite.AbsoluteHeight.ShouldBe(20);
+    }
+
+    [Fact]
+    public void SpriteAnimationChainTime_ShouldResizeToFrameAtThatTime()
+    {
+        SpriteRuntime sprite = new();
+        AnimationChainList chains = CreateChains(MakeTexture(100, 100));
+        chains[0].Add(chains[1][0]);
+        sprite.AnimationChains = chains;
+
+        sprite.AnimationChainTime = 1.5;
+
+        sprite.AnimationChainFrameIndex.ShouldBe(1);
+        sprite.AbsoluteWidth.ShouldBe(80);
+    }
+
+    [Fact]
+    public void SpriteAnimationChainFrameIndex_ShouldResizeOnResume_WhenSetWhileSuspended()
+    {
+        SpriteRuntime sprite = new();
+        AnimationChainList chains = CreateChains(MakeTexture(100, 100));
+        chains[0].Add(chains[1][0]);
+        sprite.AnimationChains = chains;
+        sprite.AbsoluteWidth.ShouldBe(40);
+
+        sprite.SuspendLayout();
+        sprite.AnimationChainFrameIndex = 1;
+        sprite.AbsoluteWidth.ShouldBe(40);
+        sprite.ResumeLayout();
+
+        sprite.AbsoluteWidth.ShouldBe(80);
+    }
+
+    [Fact]
+    public void SpriteAnimationChainFrameIndex_ShouldResizeRelativeToChildrenParent()
+    {
+        ContainerRuntime parent = new();
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.Width = 0;
+        parent.Height = 0;
+        SpriteRuntime sprite = new();
+        AnimationChainList chains = CreateChains(MakeTexture(100, 100));
+        chains[0].Add(chains[1][0]);
+        sprite.AnimationChains = chains;
+        parent.AddChild(sprite);
+        parent.AbsoluteWidth.ShouldBe(40);
+
+        sprite.AnimationChainFrameIndex = 1;
+
+        parent.AbsoluteWidth.ShouldBe(80);
+        parent.AbsoluteHeight.ShouldBe(20);
+    }
+
+    [Fact]
+    public void SpriteAnimationChainFrameIndex_ShouldLeaveTextureAddress_WhenNoChainsAreSet()
+    {
+        SpriteRuntime sprite = new();
+        sprite.TextureAddress = TextureAddress.EntireTexture;
+
+        sprite.AnimationChainFrameIndex = 1;
+        sprite.AnimationChainTime = 1.5;
+
+        sprite.TextureAddress.ShouldBe(TextureAddress.EntireTexture);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void NineSliceAnimationChainFrameIndexOrTime_ShouldResizeToThatFrame(bool setTime)
+    {
+        NineSliceRuntime nineSlice = new();
+        nineSlice.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+        nineSlice.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
+        AnimationChainList chains = CreateChains(MakeTexture(100, 100));
+        chains[0].Add(chains[1][0]);
+        nineSlice.AnimationChains = chains;
+
+        if (setTime)
+        {
+            nineSlice.AnimationChainTime = 1.5;
+        }
+        else
+        {
+            nineSlice.AnimationChainFrameIndex = 1;
+        }
+
+        nineSlice.AbsoluteWidth.ShouldBe(80);
+        nineSlice.AbsoluteHeight.ShouldBe(20);
     }
 
     // Two chains on one texture: "Square" shows a 40x40 region, "Wide" an 80x20 region.
