@@ -35,24 +35,14 @@ public class ShuffledTestCollectionOrderer : ITestCollectionOrderer
     {
         IEnumerable<ITestCollection> defaultOrder = _defaultOrderer.OrderTestCollections(testCollections);
 
-        string? seedText = Environment.GetEnvironmentVariable(SeedVariable);
-        if (string.IsNullOrEmpty(seedText))
+        if (!TryReadSeed(out int seed))
         {
             return defaultOrder;
-        }
-        if (!int.TryParse(seedText, out int seed))
-        {
-            throw new InvalidOperationException($"{SeedVariable} must be an integer, but was \"{seedText}\".");
         }
 
         // Shuffling the default (sorted) order keeps a seed reproducible on any machine.
         List<ITestCollection> shuffled = defaultOrder.ToList();
-        Random random = new Random(seed);
-        for (int i = shuffled.Count - 1; i > 0; i--)
-        {
-            int j = random.Next(i + 1);
-            (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]);
-        }
+        Shuffle(shuffled, seed);
 
         string? orderFile = Environment.GetEnvironmentVariable(OrderFileVariable);
         if (!string.IsNullOrEmpty(orderFile))
@@ -61,5 +51,32 @@ public class ShuffledTestCollectionOrderer : ITestCollectionOrderer
         }
 
         return shuffled;
+    }
+
+    /// <summary>Reads <see cref="SeedVariable"/>; false when it is unset, throws when it isn't an integer.</summary>
+    internal static bool TryReadSeed(out int seed)
+    {
+        seed = 0;
+        string? seedText = Environment.GetEnvironmentVariable(SeedVariable);
+        if (string.IsNullOrEmpty(seedText))
+        {
+            return false;
+        }
+        if (!int.TryParse(seedText, out seed))
+        {
+            throw new InvalidOperationException($"{SeedVariable} must be an integer, but was \"{seedText}\".");
+        }
+        return true;
+    }
+
+    /// <summary>Fisher-Yates shuffle of <paramref name="items"/> in place, driven by <paramref name="seed"/>.</summary>
+    internal static void Shuffle<T>(List<T> items, int seed)
+    {
+        Random random = new Random(seed);
+        for (int i = items.Count - 1; i > 0; i--)
+        {
+            int j = random.Next(i + 1);
+            (items[i], items[j]) = (items[j], items[i]);
+        }
     }
 }
