@@ -11,6 +11,8 @@ name: Shuffled Test Order Weekly
 #
 # Not a required check. A failure only fails the run; nothing files an issue.
 on:
+  push:
+    branches: [5820-weekly-shuffled-test-order-ci]
   schedule:
     - cron: '41 4 * * 0'
   workflow_dispatch:
