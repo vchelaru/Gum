@@ -4261,8 +4261,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// This child's contribution to its line's cross-axis size, as recorded in the parent's
     /// <see cref="StackedRowOrColumnDimensions"/>. The line counts its children the way a parent sized
     /// to its children does (Width Units docs, "Ignored Width Values"): a size that depends on the
-    /// parent counts as 0, and the offset counts from the edge it is measured from, ignoring any portion
-    /// outside the line. A Percentage offset counts as 0 while the size still counts (#5802).
+    /// parent counts as 0, the offset counts from the edge it is measured from, ignoring any portion
+    /// outside the line, and a Percentage-positioned child counts as 0 (#5802).
     /// </summary>
     private float GetStackedLineDimension(ChildrenLayout parentLayout)
     {
@@ -4272,18 +4272,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 return 0;
             }
-            return mYUnits == GeneralUnitType.Percentage
-                ? ((IPositionedSizedObject)this).Height
-                : GetRequiredParentHeightFromEdges();
+            return GetRequiredParentHeightFromEdges();
         }
 
         if (IsSizeDependentOnParent(mWidthUnit))
         {
             return 0;
         }
-        return mXUnits == GeneralUnitType.Percentage
-            ? ((IPositionedSizedObject)this).Width
-            : GetRequiredParentWidthFromEdges();
+        return GetRequiredParentWidthFromEdges();
     }
 
     // Matches GetChildLayoutType(XOrY, parent): a parent sized to its children ignores such a child.

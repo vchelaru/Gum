@@ -367,7 +367,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H45 | `InterpolateBetween` | Suspended and resumed on its own, so it laid out early and cleared the caller's suspension. | FIX (#5775) |
 | H46 | `UpdateLayout` wrap pass | A one-axis layout (the Width or Height setter) on a wrapping stack re-measured only that axis after re-wrapping, so a RelativeToChildren cross axis read 0 until the next layout. | FIX |
 | H47 | `GetMaxCellHeight`/`GetMaxCellWidth` | A non-wrapping stack sized to its children with a max stopped at the last child that fit instead of clamping to the max. | FIX (#5797; breaking, non-wrapping stacks grow to the max; wrapping stacks and Regular parents unchanged) |
-| H48 | `AdjustParentOriginOffsetsByUnits` in a wrapping stack | Cross-axis Middle/Large/Baseline units and Percentage measured from the whole parent, so a centered child left its row. | FIX (#5802; breaking, the row or column is the parent for position; a row counts its children like a RelativeToChildren parent, except a Percentage offset counts as 0 with the size counted) |
+| H48 | `AdjustParentOriginOffsetsByUnits` in a wrapping stack | Cross-axis Middle/Large/Baseline units and Percentage measured from the whole parent, so a centered child left its row. | FIX (#5802; breaking, the row or column is the parent for position; a row counts its children like a RelativeToChildren parent, so Percentage-positioned and parent-sized children are ignored) |
 | H49 | `UpdateLayout` wrap pass | A stack sized to its children on both axes with a main-axis max wrapped its children against its pre-measure main size, then measured the cross axis from those lines. | FIX (#5802; wraps again when the measured main size differs) |
 
 ## Sweep strategy

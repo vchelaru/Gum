@@ -35,7 +35,7 @@ A row counts each child the same way a container with `Height Units` of `Relativ
 
 * An `X` or `Y` value counts from the edge it is measured from. For example, a child placed 10 pixels up from the bottom of its row makes the row 10 pixels taller than the child.
 * A portion of a child placed outside its row does not make the row larger.
-* A `Percentage` value does not count, but the child's size does.
+* A child positioned with `Percentage` does not count toward its row's size.
 * A child whose size depends on its parent, such as `Percentage of Parent`, does not count toward its row's size.
 
 Size units are unaffected. A child with `Height Units` of `Percentage of Parent` or `Relative to Parent` still sizes itself from the whole container, not its row.

@@ -696,7 +696,7 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
 
     // A line sizes itself from its children the way a parent sized to its children does (Width Units
     // docs, "Ignored Width Values"): the offset counts from the edge it is measured from, a portion
-    // outside the line is ignored, a Percentage offset counts as 0, and a size that depends on the
+    // outside the line is ignored, and a Percentage-positioned child or a size that depends on the
     // parent is ignored. The child (cross 20) is alone in its line, and the next line starts after it.
     [Theory]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 10f, false, 30f)]
@@ -708,8 +708,8 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
     [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, -10f, false, 30f)]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Top, 0f, false, 0f)]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromBaseline, VerticalAlignment.Bottom, -10f, false, 30f)]
-    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 20f)]
-    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 20f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 0f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, false, 0f)]
     [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 0f)]
     [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, true, 0f)]
     public void WrapsChildren_LineSize_ShouldCountChildLikeParentSizedToChildren(ChildrenLayout stack, GeneralUnitType units,
