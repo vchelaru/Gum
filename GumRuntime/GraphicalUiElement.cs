@@ -4562,18 +4562,27 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // * And the parent wraps
             effectiveParent.WrapsChildren &&
 
-            // * And the object is outside of parent's bounds
+            // * And the object is outside of parent's bounds plus any overhang its negative padding allows
             // (a flipped LeftToRightStack runs leftward, so it overflows its left edge)
             ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack &&
                 (isParentFlippedHorizontally
-                    ? this.GetAbsoluteLeft() < effectiveParent.GetAbsoluteLeft()
-                    : this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight())) ||
-            (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom()));
+                    ? this.GetAbsoluteLeft() < effectiveParent.GetAbsoluteLeft() - effectiveParent.GetNegativePaddingOverhang(XOrY.X)
+                    : this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight() + effectiveParent.GetNegativePaddingOverhang(XOrY.X))) ||
+            (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack &&
+                this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom() + effectiveParent.GetNegativePaddingOverhang(XOrY.Y)));
 
         if (shouldWrap)
         {
             UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, shouldWrap, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
         }
+    }
+
+    // Negative padding on a size relative to children lets content overhang the edge, so a wrapping
+    // stack breaks rows against its size minus the padding, where its measure broke them (#5808).
+    private float GetNegativePaddingOverhang(XOrY axis)
+    {
+        var (size, units) = axis == XOrY.X ? (mWidth, mWidthUnit) : (mHeight, mHeightUnit);
+        return units == DimensionUnitType.RelativeToChildren && size < 0 ? -size : 0;
     }
 
     private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool shouldWrap, XOrY? xOrY, float parentRotation)
