@@ -240,6 +240,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     bool mWrap;
 
     bool mWrapsChildren = false;
+    // The longest stacked line the last children-based measure found, before padding.
+    float _measuredLineWidth;
+    float _measuredLineHeight;
 
     float mTextureWidthScale = 1;
     float mTextureHeightScale = 1;
@@ -2710,6 +2713,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         else
                         {
                             float maxCellHeight = GetMaxCellHeight(considerWrappedStacked, maxHeight);
+                            _measuredLineHeight = maxCellHeight;
 
                             maxHeight = maxCellHeight;
 
@@ -2975,6 +2979,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         childrenBasedSize = GetMaxCellHeight(considerWrappedStacked, childrenBasedSize);
                     }
+                    _measuredLineHeight = childrenBasedSize;
                     // mHeight acts as padding on children, matching RelativeToChildren behavior
                     childrenBasedSize += mHeight;
 
@@ -3151,6 +3156,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         }
 
                         float maxCellWidth = GetMaxCellWidth(considerWrappedStacked, maxWidth);
+                        _measuredLineWidth = maxCellWidth;
 
                         maxWidth = maxCellWidth;
 
@@ -3416,6 +3422,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         childrenBasedSize = GetMaxCellWidth(considerWrappedStacked, childrenBasedSize);
                     }
+                    _measuredLineWidth = childrenBasedSize;
                     // mWidth acts as padding on children, matching RelativeToChildren behavior
                     childrenBasedSize += mWidth;
 
@@ -4562,18 +4569,30 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // * And the parent wraps
             effectiveParent.WrapsChildren &&
 
-            // * And the object is outside of parent's bounds
+            // * And the object is outside of parent's bounds plus any overhang its negative padding allows
             // (a flipped LeftToRightStack runs leftward, so it overflows its left edge)
             ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack &&
                 (isParentFlippedHorizontally
-                    ? this.GetAbsoluteLeft() < effectiveParent.GetAbsoluteLeft()
-                    : this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight())) ||
-            (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom()));
+                    ? this.GetAbsoluteLeft() < effectiveParent.GetAbsoluteLeft() - effectiveParent.GetNegativePaddingOverhang(XOrY.X)
+                    : this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight() + effectiveParent.GetNegativePaddingOverhang(XOrY.X))) ||
+            (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack &&
+                this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom() + effectiveParent.GetNegativePaddingOverhang(XOrY.Y)));
 
         if (shouldWrap)
         {
             UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, shouldWrap, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
         }
+    }
+
+    // A wrapping stack sized from its children never breaks a line shorter than its measure did, so
+    // negative padding lets that line overhang the edge instead of re-wrapping it (#5808).
+    private float GetNegativePaddingOverhang(XOrY axis)
+    {
+        var (units, measuredLine, size) = axis == XOrY.X
+            ? (mWidthUnit, _measuredLineWidth, AbsoluteWidth)
+            : (mHeightUnit, _measuredLineHeight, AbsoluteHeight);
+        bool isSizedFromChildren = units == DimensionUnitType.RelativeToChildren || units == DimensionUnitType.RelativeToMaxParentOrChildren;
+        return isSizedFromChildren ? System.Math.Max(0, measuredLine - size) : 0;
     }
 
     private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool shouldWrap, XOrY? xOrY, float parentRotation)

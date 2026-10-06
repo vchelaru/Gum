@@ -378,6 +378,90 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         AssertLines(stack, parent, expectedMain: 200, expectedCross: 50, new float[] { 0, 100, 160 }, new float[] { 0, 0, 0 }, hiddenIndex: -1);
     }
 
+    // Intended (#5808): negative padding lets content overhang the stack, so rows break against
+    // the size minus the padding, where the measure broke them, not against the shrunken size.
+    [Theory]
+    // 100+90 fits the max, so the stack is 190-20 and the 90 overhangs it by 20
+    [InlineData(ChildrenLayout.LeftToRightStack, 200f, new float[] { 100, 90, 50 }, 170f, 100f, new float[] { 0, 100, 0 }, new float[] { 0, 0, 50 })]
+    [InlineData(ChildrenLayout.TopToBottomStack, 200f, new float[] { 100, 90, 50 }, 170f, 100f, new float[] { 0, 100, 0 }, new float[] { 0, 0, 50 })]
+    // a row exactly at the max fits; the next child is just over and wraps
+    [InlineData(ChildrenLayout.LeftToRightStack, 200f, new float[] { 100, 100, 1 }, 180f, 100f, new float[] { 0, 100, 0 }, new float[] { 0, 0, 50 })]
+    // no max: nothing wraps
+    [InlineData(ChildrenLayout.LeftToRightStack, null, new float[] { 100, 90, 50 }, 220f, 50f, new float[] { 0, 100, 190 }, new float[] { 0, 0, 0 })]
+    [InlineData(ChildrenLayout.TopToBottomStack, null, new float[] { 100, 90, 50 }, 220f, 50f, new float[] { 0, 100, 190 }, new float[] { 0, 0, 0 })]
+    public void WrappingStack_SizedToChildrenWithNegativePadding_ShouldBreakRowsWhereMeasured(ChildrenLayout stack, float? max,
+        float[] mainSizes, float expectedMain, float expectedCross, float[] expectedChildMain, float[] expectedChildCross)
+    {
+        ContainerRuntime parent = CreateTagList(stack, max: 0, spacing: 0);
+        if (stack == ChildrenLayout.TopToBottomStack)
+        {
+            parent.MaxHeight = max;
+        }
+        else
+        {
+            parent.MaxWidth = max;
+        }
+        SetMainSize(stack, parent, -20);
+        foreach (float mainSize in mainSizes)
+        {
+            parent.AddChild(CreateStackChild(stack, main: mainSize, cross: 50));
+        }
+
+        AssertLines(stack, parent, expectedMain, expectedCross, expectedChildMain, expectedChildCross, hiddenIndex: -1);
+    }
+
+    // Relative to Max Parent or Children breaks rows where its children measure did. The size comes
+    // from the children (50), from a parent wider than children minus padding but narrower than the
+    // measured row (180), or from a parent past the max (400, clamped to 200).
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, 50f, 170f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 50f, 170f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 180f, 180f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 180f, 180f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 400f, 200f)]
+    public void WrappingStack_MaxParentOrChildrenWithNegativePadding_ShouldBreakRowsWhereMeasured(ChildrenLayout stack,
+        float parentSize, float expectedMain)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime outer = CreateContainer(stacksVertically ? 500 : parentSize, stacksVertically ? parentSize : 500);
+        ContainerRuntime parent = CreateTagList(stack, max: 200, spacing: 0);
+        if (stacksVertically)
+        {
+            parent.HeightUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        }
+        else
+        {
+            parent.WidthUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
+        }
+        SetMainSize(stack, parent, -20);
+        outer.AddChild(parent);
+        foreach (float mainSize in new float[] { 100, 90, 50 })
+        {
+            parent.AddChild(CreateStackChild(stack, main: mainSize, cross: 50));
+        }
+
+        AssertLines(stack, parent, expectedMain, expectedCross: 100, new float[] { 0, 100, 0 }, new float[] { 0, 0, 50 }, hiddenIndex: -1);
+    }
+
+    // A flipped LeftToRightStack runs leftward, so negative padding lets its rows overhang the left edge.
+    [Fact]
+    public void WrappingStack_FlippedWithNegativePadding_ShouldOverhangLeftEdge()
+    {
+        ContainerRuntime parent = CreateTagList(ChildrenLayout.LeftToRightStack, max: 200, spacing: 0);
+        parent.Width = -20;
+        parent.FlipHorizontal = true;
+        parent.AddChild(CreateContainer(100, 50));
+        parent.AddChild(CreateContainer(90, 50));
+        parent.AddChild(CreateContainer(50, 50));
+
+        parent.AbsoluteWidth.ShouldBe(170);
+        parent.Children[0].AbsoluteLeft.ShouldBe(70);
+        parent.Children[1].AbsoluteLeft.ShouldBe(-20);
+        parent.Children[1].AbsoluteTop.ShouldBe(0);
+        parent.Children[2].AbsoluteLeft.ShouldBe(120);
+        parent.Children[2].AbsoluteTop.ShouldBe(50);
+    }
+
     // Asserts the stack's size and each child's position, then again after repeated layouts so the
     // stack can't settle between two sizes.
     static void AssertLines(ChildrenLayout stack, ContainerRuntime parent, float expectedMain, float expectedCross,
