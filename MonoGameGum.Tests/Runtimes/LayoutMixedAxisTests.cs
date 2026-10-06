@@ -128,25 +128,38 @@ public class LayoutMixedAxisTests : BaseTestClass
         Tree tree = new();
         tree.Grandparent = CreateContainer(grandparentWidth, DimensionUnitType.Absolute, grandparentHeight, DimensionUnitType.Absolute);
 
-        tree.Parent = parentAxes switch
-        {
-            ParentAxes.AbsoluteWidth_RelativeToChildrenHeight =>
-                CreateContainer(parentFixedSize, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren),
-            ParentAxes.RelativeToChildrenWidth_AbsoluteHeight =>
-                CreateContainer(0, DimensionUnitType.RelativeToChildren, parentFixedSize, DimensionUnitType.Absolute),
-            ParentAxes.PercentageOfParentWidth_RelativeToChildrenHeight =>
-                CreateContainer(50, DimensionUnitType.PercentageOfParent, 0, DimensionUnitType.RelativeToChildren),
-            ParentAxes.RelativeToMaxParentOrChildrenWidth_RelativeToChildrenHeight =>
-                CreateContainer(0, DimensionUnitType.RelativeToMaxParentOrChildren, 0, DimensionUnitType.RelativeToChildren),
-            // Width value is padding, so the parent has a width even though the child is ignored on that axis.
-            ParentAxes.RelativeToChildrenWidth_RelativeToChildrenHeight =>
-                CreateContainer(parentFixedSize, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren),
-            _ => throw new ArgumentOutOfRangeException(nameof(parentAxes)),
-        };
+        tree.Parent = CreateParent(parentAxes, parentFixedSize);
         tree.Grandparent.AddChild(tree.Parent);
 
         bool isWidthDriven = parentAxes != ParentAxes.RelativeToChildrenWidth_AbsoluteHeight;
+        GraphicalUiElement child = CreateChild(isWidthDriven, childDrivenUnit, childDrivenValue, selfDependency,
+            percentageOfOther, aspectRatio, out tree.Inner);
 
+        tree.Child = child;
+        tree.Parent.AddChild(child);
+        return tree;
+    }
+
+    static ContainerRuntime CreateParent(ParentAxes parentAxes, float parentFixedSize) => parentAxes switch
+    {
+        ParentAxes.AbsoluteWidth_RelativeToChildrenHeight =>
+            CreateContainer(parentFixedSize, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren),
+        ParentAxes.RelativeToChildrenWidth_AbsoluteHeight =>
+            CreateContainer(0, DimensionUnitType.RelativeToChildren, parentFixedSize, DimensionUnitType.Absolute),
+        ParentAxes.PercentageOfParentWidth_RelativeToChildrenHeight =>
+            CreateContainer(50, DimensionUnitType.PercentageOfParent, 0, DimensionUnitType.RelativeToChildren),
+        ParentAxes.RelativeToMaxParentOrChildrenWidth_RelativeToChildrenHeight =>
+            CreateContainer(0, DimensionUnitType.RelativeToMaxParentOrChildren, 0, DimensionUnitType.RelativeToChildren),
+        // Width value is padding, so the parent has a width even though the child is ignored on that axis.
+        ParentAxes.RelativeToChildrenWidth_RelativeToChildrenHeight =>
+            CreateContainer(parentFixedSize, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren),
+        _ => throw new ArgumentOutOfRangeException(nameof(parentAxes)),
+    };
+
+    static GraphicalUiElement CreateChild(bool isWidthDriven, DimensionUnitType drivenUnit, float drivenValue,
+        SelfDependency selfDependency, float percentageOfOther, float aspectRatio, out GraphicalUiElement? inner)
+    {
+        inner = null;
         GraphicalUiElement child;
         switch (selfDependency)
         {
@@ -161,8 +174,8 @@ public class LayoutMixedAxisTests : BaseTestClass
                 break;
             case SelfDependency.RelativeToChildrenHoldingWrappingText:
                 child = new ContainerRuntime();
-                tree.Inner = CreateWrappingText(0, DimensionUnitType.RelativeToParent);
-                child.AddChild(tree.Inner);
+                inner = CreateWrappingText(0, DimensionUnitType.RelativeToParent);
+                child.AddChild(inner);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(selfDependency));
@@ -183,22 +196,19 @@ public class LayoutMixedAxisTests : BaseTestClass
 
         if (isWidthDriven)
         {
-            child.Width = childDrivenValue;
-            child.WidthUnits = childDrivenUnit;
+            child.Width = drivenValue;
+            child.WidthUnits = drivenUnit;
             child.Height = selfValue;
             child.HeightUnits = selfUnit;
         }
         else
         {
-            child.Height = childDrivenValue;
-            child.HeightUnits = childDrivenUnit;
+            child.Height = drivenValue;
+            child.HeightUnits = drivenUnit;
             child.Width = selfValue;
             child.WidthUnits = selfUnit;
         }
-
-        tree.Child = child;
-        tree.Parent.AddChild(child);
-        return tree;
+        return child;
     }
 
     static void SetDrivenValue(Tree tree, ParentAxes parentAxes, float value)
@@ -602,6 +612,199 @@ public class LayoutMixedAxisTests : BaseTestClass
         {
             tree.Inner.AbsoluteWidth.ShouldBe(childDriven, tolerance: 0.001f);
             tree.Inner.AbsoluteHeight.ShouldBe(childMeasured, tolerance: 0.001f);
+        }
+    }
+
+    #endregion
+
+    #region Stacks (M6, M7, M12)
+
+    public static IEnumerable<object[]> StackMatrixCases()
+    {
+        ChildrenLayout[] stacks = { ChildrenLayout.TopToBottomStack, ChildrenLayout.LeftToRightStack };
+        Operation[] operations = { Operation.Build, Operation.ResizeGrandparentAndBack, Operation.SecondUpdateLayout };
+        foreach (ChildrenLayout stack in stacks)
+        {
+            foreach (ParentAxes parentAxes in Enum.GetValues<ParentAxes>())
+            {
+                foreach (SelfDependency selfDependency in Enum.GetValues<SelfDependency>())
+                {
+                    bool isTextBased = selfDependency == SelfDependency.WrappingText ||
+                        selfDependency == SelfDependency.RelativeToChildrenHoldingWrappingText;
+                    if (isTextBased && parentAxes == ParentAxes.RelativeToChildrenWidth_AbsoluteHeight)
+                    {
+                        continue;
+                    }
+
+                    foreach (Operation operation in operations)
+                    {
+                        yield return new object[] { stack, parentAxes, selfDependency, operation };
+                    }
+                }
+            }
+        }
+    }
+
+    // M6 (TopToBottomStack) and M7 (LeftToRightStack): the M1-M5 children, three in a stack. A
+    // parent measured from children on the axis the children take from it ignores them there
+    // (documented on Width Units, "Ignored Width Values"), so it keeps its own size and they still stack.
+    [Theory]
+    [MemberData(nameof(StackMatrixCases))]
+    public void StackMatrix_ShouldMatchModel(ChildrenLayout stack, ParentAxes parentAxes, SelfDependency selfDependency, Operation operation)
+    {
+        float grandparentWidth = 400;
+        float grandparentHeight = 300;
+        float parentFixedSize = 300;
+        float drivenPercentage = 50;
+        float percentageOfOther = 50;
+        float aspectRatio = 2;
+        int childCount = 3;
+        bool isWidthDriven = parentAxes != ParentAxes.RelativeToChildrenWidth_AbsoluteHeight;
+
+        ContainerRuntime grandparent = CreateContainer(grandparentWidth, DimensionUnitType.Absolute, grandparentHeight, DimensionUnitType.Absolute);
+        ContainerRuntime parent = CreateParent(parentAxes, parentFixedSize);
+        parent.ChildrenLayout = stack;
+        grandparent.AddChild(parent);
+        List<GraphicalUiElement> children = new();
+        List<GraphicalUiElement> inners = new();
+        for (int i = 0; i < childCount; i++)
+        {
+            GraphicalUiElement child = CreateChild(isWidthDriven, DimensionUnitType.PercentageOfParent, drivenPercentage,
+                selfDependency, percentageOfOther, aspectRatio, out GraphicalUiElement? inner);
+            parent.AddChild(child);
+            children.Add(child);
+            if (inner != null)
+            {
+                inners.Add(inner);
+            }
+        }
+
+        float parentDriven = parentAxes switch
+        {
+            ParentAxes.PercentageOfParentWidth_RelativeToChildrenHeight => grandparentWidth * 50 / 100,
+            ParentAxes.RelativeToMaxParentOrChildrenWidth_RelativeToChildrenHeight => grandparentWidth,
+            _ => parentFixedSize,
+        };
+        float childDriven = parentDriven * drivenPercentage / 100;
+        float childMeasured = selfDependency switch
+        {
+            SelfDependency.PercentageOfOtherDimension => childDriven * percentageOfOther / 100,
+            SelfDependency.MaintainFileAspectRatio => isWidthDriven ? childDriven / aspectRatio : childDriven * aspectRatio,
+            _ => MeasureWrappedHeight(childDriven),
+        };
+        float childWidth = isWidthDriven ? childDriven : childMeasured;
+        float childHeight = isWidthDriven ? childMeasured : childDriven;
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        // The measured axis sums the children when it is the stacking axis, else takes the largest.
+        bool measuredAxisIsStackAxis = isWidthDriven == stacksVertically;
+        float parentMeasured = measuredAxisIsStackAxis ? childMeasured * childCount : childMeasured;
+
+        List<GraphicalUiElement> all = new() { grandparent, parent };
+        all.AddRange(children);
+        all.AddRange(inners);
+        float[] before = SnapshotElements(all);
+        if (operation == Operation.ResizeGrandparentAndBack)
+        {
+            grandparent.Width = grandparentWidth / 2;
+            grandparent.Height = grandparentHeight / 2;
+            grandparent.Width = grandparentWidth;
+            grandparent.Height = grandparentHeight;
+            SnapshotElements(all).ShouldBe(before);
+        }
+        else if (operation == Operation.SecondUpdateLayout)
+        {
+            foreach (GraphicalUiElement element in all)
+            {
+                element.UpdateLayout();
+                SnapshotElements(all).ShouldBe(before, $"after {element.GetType().Name}.UpdateLayout()");
+            }
+        }
+
+        for (int i = 0; i < childCount; i++)
+        {
+            float expectedLeft = stacksVertically ? 0 : childWidth * i;
+            float expectedTop = stacksVertically ? childHeight * i : 0;
+            children[i].AbsoluteLeft.ShouldBe(expectedLeft, tolerance: 0.001f, $"child {i} left");
+            children[i].AbsoluteTop.ShouldBe(expectedTop, tolerance: 0.001f, $"child {i} top");
+            children[i].AbsoluteWidth.ShouldBe(childWidth, tolerance: 0.001f, $"child {i} width");
+            children[i].AbsoluteHeight.ShouldBe(childHeight, tolerance: 0.001f, $"child {i} height");
+        }
+        if (isWidthDriven)
+        {
+            parent.AbsoluteWidth.ShouldBe(parentDriven, tolerance: 0.001f);
+            parent.AbsoluteHeight.ShouldBe(parentMeasured, tolerance: 0.001f);
+        }
+        else
+        {
+            parent.AbsoluteWidth.ShouldBe(parentMeasured, tolerance: 0.001f);
+            parent.AbsoluteHeight.ShouldBe(parentDriven, tolerance: 0.001f);
+        }
+    }
+
+    static float[] SnapshotElements(List<GraphicalUiElement> elements)
+    {
+        List<float> values = new();
+        foreach (GraphicalUiElement element in elements)
+        {
+            values.Add(element.AbsoluteLeft);
+            values.Add(element.AbsoluteTop);
+            values.Add(element.AbsoluteWidth);
+            values.Add(element.AbsoluteHeight);
+        }
+        return values.ToArray();
+    }
+
+    // M12: the Ratio axis shares the stack with an Absolute sibling, and PercentageOfOtherDimension
+    // follows it on the cross axis, which a RelativeToChildren parent then measures.
+    [Theory]
+    [InlineData(ChildrenLayout.TopToBottomStack, DimensionUnitType.Absolute)]
+    [InlineData(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToChildren)]
+    [InlineData(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute)]
+    [InlineData(ChildrenLayout.LeftToRightStack, DimensionUnitType.RelativeToChildren)]
+    public void M12_RatioOnStackAxis_PercentageOfOtherDimensionOnCrossAxis_ShouldFollowRatioSize(ChildrenLayout stack, DimensionUnitType parentCrossUnits)
+    {
+        float parentSize = 300;
+        float siblingMainSize = 100;
+        float siblingCrossSize = 50;
+        float percentageOfOther = 50;
+        float expectedRatioMain = parentSize - siblingMainSize;
+        float expectedRatioCross = expectedRatioMain * percentageOfOther / 100;
+        float expectedParentCross = parentCrossUnits == DimensionUnitType.Absolute
+            ? parentSize
+            : Math.Max(siblingCrossSize, expectedRatioCross);
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        float parentCrossValue = parentCrossUnits == DimensionUnitType.Absolute ? parentSize : 0;
+
+        ContainerRuntime parent = stacksVertically
+            ? CreateContainer(parentCrossValue, parentCrossUnits, parentSize, DimensionUnitType.Absolute)
+            : CreateContainer(parentSize, DimensionUnitType.Absolute, parentCrossValue, parentCrossUnits);
+        parent.ChildrenLayout = stack;
+        ContainerRuntime sibling = stacksVertically
+            ? CreateContainer(siblingCrossSize, DimensionUnitType.Absolute, siblingMainSize, DimensionUnitType.Absolute)
+            : CreateContainer(siblingMainSize, DimensionUnitType.Absolute, siblingCrossSize, DimensionUnitType.Absolute);
+        parent.AddChild(sibling);
+        ContainerRuntime ratioChild = stacksVertically
+            ? CreateContainer(percentageOfOther, DimensionUnitType.PercentageOfOtherDimension, 1, DimensionUnitType.Ratio)
+            : CreateContainer(1, DimensionUnitType.Ratio, percentageOfOther, DimensionUnitType.PercentageOfOtherDimension);
+        parent.AddChild(ratioChild);
+
+        float[] before = SnapshotAll(parent);
+        parent.UpdateLayout();
+        SnapshotAll(parent).ShouldBe(before);
+
+        if (stacksVertically)
+        {
+            ratioChild.AbsoluteTop.ShouldBe(siblingMainSize);
+            ratioChild.AbsoluteHeight.ShouldBe(expectedRatioMain);
+            ratioChild.AbsoluteWidth.ShouldBe(expectedRatioCross);
+            parent.AbsoluteWidth.ShouldBe(expectedParentCross);
+        }
+        else
+        {
+            ratioChild.AbsoluteLeft.ShouldBe(siblingMainSize);
+            ratioChild.AbsoluteWidth.ShouldBe(expectedRatioMain);
+            ratioChild.AbsoluteHeight.ShouldBe(expectedRatioCross);
+            parent.AbsoluteHeight.ShouldBe(expectedParentCross);
         }
     }
 

@@ -101,7 +101,8 @@ covered by that test now.
 - [x] uses first child height for position and parent size, spacing
 - [ ] first child invisible (H7); invisible later children counted in parent size (H7)
 - [ ] LeftToRightStack (fast path is vertical only; result must match the slow path)
-- [ ] with WrapsChildren (fast path disabled; result must match)
+- [x] with WrapsChildren (fast path disabled; result must match)
+- [x] first child Y offset shifts later children (H27); a later child's offset moves only that child
 - [ ] first child resized after layout
 
 ### 2.4 Wrapping
@@ -217,13 +218,13 @@ Named cases that must exist as explicit tests:
 - [ ] M3 M1 with a wrapping Text child (height from wrapped lines at the parent-given width)
 - [ ] M4 M1 with a MaintainFileAspectRatio child
 - [ ] M5 M3 nested one level: child is RelativeToChildren height and holds the Text
-- [ ] M6 M1-M5 in a TopToBottomStack with 3 children (sum of heights)
-- [ ] M7 M1-M5 in a LeftToRightStack (child width from parent breaks; expect the documented fallback)
+- [x] M6 M1-M5 in a TopToBottomStack with 3 children (sum of heights)
+- [x] M7 M1-M5 in a LeftToRightStack (a RelativeToChildren width ignores the PercentageOfParent children, documented fallback)
 - [ ] M8 M1-M5 in an AutoGrid with and without overflow
 - [ ] M9 M1-M5 after the grandparent narrows and widens (height follows, no ratchet)
 - [ ] M10 parent RelativeToMaxParentOrChildren on the child-driven axis
 - [ ] M11 both parent axes RelativeToChildren with a PercentageOfParent child on one axis (ignored on that axis, measured on the other)
-- [ ] M12 child Ratio on one axis, PercentageOfOtherDimension on the other, in a stack
+- [x] M12 child Ratio on one axis, PercentageOfOtherDimension on the other, in a stack
 
 ## 6. Hierarchy and structure
 
@@ -245,7 +246,7 @@ Named cases that must exist as explicit tests:
 - [x] ignores PercentageOfParent, RelativeToParent and Ratio children; returns 0 when all depend on parent
 - [x] PixelsFromMiddle and PixelsFromLarge children; negative child position
 - [ ] child with X/Y Percentage contributes 0 (decide: intended?)
-- [ ] child with a negative PixelsFromSmall offset in a stack
+- [x] child with a negative PixelsFromSmall offset in a stack
 
 ### 7.2 Same-element circular pairs
 - [x] width and height both PercentageOfOtherDimension fall back to raw values
@@ -270,7 +271,8 @@ Named cases that must exist as explicit tests:
 
 ### 8.1 Triggers
 - [~] every layout property setter changes the result (Width, Height, units, origins, ChildrenLayout, StackSpacing pinned)
-- [ ] AutoGrid cells, Min/Max, IgnoredByParentSize, UseFixedStackChildrenSize, WrapsChildren, Rotation, FlipHorizontal, Texture* setters
+- [x] UseFixedStackChildrenSize, WrapsChildren setters, incl. suspension
+- [ ] AutoGrid cells, Min/Max, IgnoredByParentSize, Rotation, FlipHorizontal, Texture* setters
 - [ ] every layout property through `SetProperty(string)` matches the direct setter (incl. names with spaces, and Min/Max via reflection)
 - [ ] X setter fast path with AutoGrid parent, flipped or rotated parent, RelativeToMaxParentOrChildren-width parent (H2)
 - [ ] `ApplyState`, `InterpolateBetween`, `RefreshStyles` end in the same layout as setting the values directly
@@ -336,6 +338,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H24 | ScreenPixel | Zoom change does not re-lay out. | DOCUMENT (pinned; call `UpdateLayout()` after changing zoom) |
 | H25 | Ratio in a grid | Subtracted every grid sibling from one cell. | FIX |
 | H26 | `X`/`Y` setter shortcut | Moved the element without raising `PositionChanged`. | FIX |
+| H27 | fixed-size stack fast path | Later children ignored the first child's Y offset, so they disagreed with the slow path and overflowed the parent's measured height. | FIX |
 
 ## Sweep strategy
 
