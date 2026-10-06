@@ -22,6 +22,7 @@ State lives entirely on `AnimationChainLogic`:
 - `_currentChainIndex` defaults to 0 so assigning `AnimationChains` + `Animate = true` works without setting `CurrentChainName`. `CurrentChainName` setter sets `_currentChainIndex = -1` and resolves the desired name lazily once chains are populated (`RefreshCurrentChainToDesiredName`), then seeds `_isLooping` from the newly-resolved chain's `AnimationChain.Loop` (itself threaded from `AnimationChainSave.Loop`, default `true`) — still freely overridable per-instance afterward via `IsAnimationChainLooping`. The implicit index-0-without-`CurrentChainName` path does **not** reseed; `_isLooping` stays at its own `true` default there.
 - `AnimateSelf(secondDifference)` advances `_timeIntoAnimation`, loops or clamps based on `IsAnimationChainLooping`, fires `AnimationChainCycled`, picks a new frame via `UpdateFrameBasedOffOfTimeIntoAnimation`, and — only if the frame index changed — calls `UpdateToCurrentAnimationFrame()`.
 - `UpdateToCurrentAnimationFrame()` invokes the `ApplyFrame` delegate the host wired up. **It does not directly mutate the renderable.**
+- With a chain set, an out-of-range frame index or negative time is clamped to the chain (`SeekToFrame`), on set and again in `UpdateToCurrentAnimationFrame` after a chain switch; with no chain they are stored raw.
 
 `AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). The whole subsystem is platform-agnostic — there is no MonoGame coupling in `AnimationChainLogic`.
 
