@@ -161,7 +161,7 @@ covered by that test now.
 ### 4.1 No renderable (Screen, or element children held in the containing element's list)
 - [x] PercentageOfParent and width calculation without a renderable; reports canvas size as its own
 - [ ] stacking and grid children whose `Parent` is null but whose containing element stacks
-- [ ] Ratio plus a RelativeToChildren sibling under a renderable-less element (no ratio-first pass there, H15)
+- [x] Ratio among parentless children of a renderable-less element: shares space with siblings, ratio-first pass, stack spacing, re-splits when a sibling changes (H15)
 - [ ] Y setter fast path for a parentless child of a stacking containing element (H2)
 - [ ] renderable assigned with `SetContainedObject` after children were added
 
@@ -324,7 +324,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H12 | `GetRequiredParentHeight` | PixelsFromMiddleInverted inverted one edge only. | FIX |
 | H13 | Ratio | Cross-axis Ratio in a stack subtracts siblings beside it. | LOG #5767 |
 | H14 | Ratio | Siblings larger than the parent gave a negative size. | FIX |
-| H15 | Ratio under a renderable-less parent | Parentless Ratio children ignore siblings. | LOG #5768 |
+| H15 | Ratio under a renderable-less parent | Parentless Ratio children ignored siblings and never re-split; a renderable-less stack didn't restack on a child change. | FIX (#5768) |
 | H16 | `PositionChanged` | Handler that sets X re-enters. | CLEARED |
 | H17 | `GetChildLayoutType(XOrY.X)` | Middle/Large X counted for content sizing. | CLEARED (intended, pinned by existing PixelsFromMiddle tests) |
 | H18 | `GetParentDimensions` | Grid overflow grew the wrong axis for child sizing. | FIX |
