@@ -8302,13 +8302,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 #endif
 
-        if (Children != null)
+        if (mContainedObjectAsIpso != null)
         {
             AnimateEach(Children, secondDifference);
         }
         else
         {
-            AnimateEach(mWhatThisContains, secondDifference);
+            // With no renderable (such as an old-style screen), Children is the empty fallback, so the
+            // held instances are reached through mWhatThisContains. Only the parentless ones: the rest
+            // are reached through their parent's Children.
+            AnimateEach(mWhatThisContains, secondDifference, parentlessOnly: true);
         }
     }
 
@@ -8321,11 +8324,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <param name="elements">The elements to animate.</param>
     /// <param name="secondDifference">The number of seconds to advance animations.</param>
-    public static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference)
+    public static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference) =>
+        AnimateEach(elements, secondDifference, parentlessOnly: false);
+
+    static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference, bool parentlessOnly)
     {
         for (int i = 0; i < elements.Count; i++)
         {
             GraphicalUiElement element = elements[i];
+            if (parentlessOnly && element.Parent != null)
+            {
+                continue;
+            }
             GraphicalUiElement? next = i + 1 < elements.Count ? elements[i + 1] : null;
             element.AnimateSelf(secondDifference);
             i = GetIndexToResumeAfter(elements, element, next, i);
