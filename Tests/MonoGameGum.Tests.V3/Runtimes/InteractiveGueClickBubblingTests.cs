@@ -41,14 +41,14 @@ public class InteractiveGueClickBubblingTests : BaseTestClass
         cursor.Setup(x => x.PrimaryPush).Returns(true);
         cursor.Setup(x => x.PrimaryDown).Returns(true);
         cursor.Setup(x => x.PrimaryClick).Returns(false);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         // Frame 2: move off the child, then release.
         PositionCursorAt(cursor, 500, 500);
         cursor.Setup(x => x.PrimaryPush).Returns(false);
         cursor.Setup(x => x.PrimaryDown).Returns(false);
         cursor.Setup(x => x.PrimaryClick).Returns(true);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         // A click requires push and release on the same element (push origin).
         childClicked.ShouldBeFalse();
@@ -70,14 +70,14 @@ public class InteractiveGueClickBubblingTests : BaseTestClass
         cursor.Setup(x => x.PrimaryPush).Returns(true);
         cursor.Setup(x => x.PrimaryDown).Returns(true);
         cursor.Setup(x => x.PrimaryClick).Returns(false);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         // Frame 2: move off, then release. No click resolved, so nothing bubbles.
         PositionCursorAt(cursor, 500, 500);
         cursor.Setup(x => x.PrimaryPush).Returns(false);
         cursor.Setup(x => x.PrimaryDown).Returns(false);
         cursor.Setup(x => x.PrimaryClick).Returns(true);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         childBubbled.ShouldBeFalse();
         parentBubbled.ShouldBeFalse();
@@ -150,8 +150,8 @@ public class InteractiveGueClickBubblingTests : BaseTestClass
         child.Height = 100;
 
         parent.Children.Add(child);
-        GumService.Default.Root.Children.Add(parent);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.Children.Add(parent);
+        Gum.GumService.Default.Root.UpdateLayout();
 
         return (parent, child);
     }
@@ -181,6 +181,6 @@ public class InteractiveGueClickBubblingTests : BaseTestClass
         cursor.Setup(x => x.PrimaryPush).Returns(true);
         cursor.Setup(x => x.PrimaryDown).Returns(true);
         cursor.Setup(x => x.PrimaryClick).Returns(true);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
     }
 }

@@ -73,7 +73,7 @@ public class TestAssemblyInitializeBase : XunitTestFramework
         Renderer.Self.Camera.ClientWidth = 800;
         Renderer.Self.Camera.ClientHeight = 600;
 
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.UpdateLayout();
 
         StandardElementsManager.Self.Initialize();
     }
@@ -82,11 +82,11 @@ public class TestAssemblyInitializeBase : XunitTestFramework
     private void InitializeGumService()
     {
 
-        GumService.Default.Root.Dock(Dock.Fill);
-        GumService.Default.Root.Name = "Main Root";
-        GumService.Default.Root.HasEvents = false;
+        Gum.GumService.Default.Root.Dock(Dock.Fill);
+        Gum.GumService.Default.Root.Name = "Main Root";
+        Gum.GumService.Default.Root.HasEvents = false;
 
-        GumService.Default.Root.AddToManagers(SystemManagers.Default);
+        Gum.GumService.Default.Root.AddToManagers(SystemManagers.Default);
     }
 
     private static void CreateStubbedFonts()

@@ -40,7 +40,7 @@ public class RefreshLocalizationTests : BaseTestClass
         text.Text.ShouldBe("Hello");
 
         _localizationService.CurrentLanguage = 1;
-        GumService.Default.RefreshLocalization();
+        Gum.GumService.Default.RefreshLocalization();
 
         text.Text.ShouldBe("Hola");
     }
@@ -54,7 +54,7 @@ public class RefreshLocalizationTests : BaseTestClass
         button.Text.ShouldBe("Hello");
 
         _localizationService.CurrentLanguage = 2;
-        GumService.Default.RefreshLocalization();
+        Gum.GumService.Default.RefreshLocalization();
 
         button.Text.ShouldBe("Bonjour");
     }
@@ -68,7 +68,7 @@ public class RefreshLocalizationTests : BaseTestClass
         text.Text.ShouldBe("Greeting");
 
         _localizationService.CurrentLanguage = 1;
-        GumService.Default.RefreshLocalization();
+        Gum.GumService.Default.RefreshLocalization();
 
         text.Text.ShouldBe("Greeting");
     }
@@ -83,7 +83,7 @@ public class RefreshLocalizationTests : BaseTestClass
         textBox.Text.ShouldBe("Hi");
 
         _localizationService.CurrentLanguage = 1;
-        GumService.Default.RefreshLocalization();
+        Gum.GumService.Default.RefreshLocalization();
 
         textBox.Text.ShouldBe("Hi");
     }
@@ -97,7 +97,7 @@ public class RefreshLocalizationTests : BaseTestClass
         text.Text.ShouldBe("plain English");
 
         _localizationService.CurrentLanguage = 1;
-        GumService.Default.RefreshLocalization();
+        Gum.GumService.Default.RefreshLocalization();
 
         // Spanish entry contains BBCode markup, which should be parsed on refresh.
         // We verify by checking that StoredMarkupText was populated.
@@ -128,7 +128,7 @@ public class RefreshLocalizationTests : BaseTestClass
 
         CustomSetPropertyOnRenderable.LocalizationService = null;
 
-        Should.NotThrow(() => GumService.Default.RefreshLocalization());
+        Should.NotThrow(() => Gum.GumService.Default.RefreshLocalization());
     }
 
     [Fact]
@@ -136,13 +136,13 @@ public class RefreshLocalizationTests : BaseTestClass
     {
         TextRuntime popupText = new();
         TextRuntime modalText = new();
-        GumService.Default.PopupRoot.Children.Add(popupText);
-        GumService.Default.ModalRoot.Children.Add(modalText);
+        Gum.GumService.Default.PopupRoot.Children.Add(popupText);
+        Gum.GumService.Default.ModalRoot.Children.Add(modalText);
         popupText.Text = "Greeting";
         modalText.Text = "Farewell";
 
         _localizationService.CurrentLanguage = 1;
-        GumService.Default.RefreshLocalization();
+        Gum.GumService.Default.RefreshLocalization();
 
         popupText.Text.ShouldBe("Hola");
         modalText.Text.ShouldBe("Adios");

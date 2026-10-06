@@ -282,7 +282,7 @@ public class ControllerSpatialNavigationTests : BaseTestClass
         gamepad.SetButtonState(GamepadButton.DPadDown, true);
         gamepad.Activity(1);
 
-        topLeft.InvokeHandleGamepadSpatialNavigation(gamepad, GumService.Default.Root);
+        topLeft.InvokeHandleGamepadSpatialNavigation(gamepad, Gum.GumService.Default.Root);
 
         farRightMid.IsFocused.ShouldBeFalse();
         (bottomLeft.IsFocused || middle.IsFocused).ShouldBeTrue();

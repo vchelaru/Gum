@@ -32,8 +32,8 @@ public class HitTestTransformTests : BaseTestClass
         ContainerRuntime gameContainer = new() { X = 0, Y = 0, Width = 200, Height = 200 };
         ContainerRuntime button = new() { X = 0, Y = 0, Width = 100, Height = 100 };
         gameContainer.Children.Add(button);
-        GumService.Default.Root.Children.Add(gameContainer);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.Children.Add(gameContainer);
+        Gum.GumService.Default.Root.UpdateLayout();
 
         Mock<ICursor> cursor = new();
         cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
@@ -56,8 +56,8 @@ public class HitTestTransformTests : BaseTestClass
         ContainerRuntime gameContainer = new() { X = 30, Y = 40, Width = 200, Height = 200 };
         ContainerRuntime button = new() { X = 10, Y = 20, Width = 100, Height = 100 };
         gameContainer.Children.Add(button);
-        GumService.Default.Root.Children.Add(gameContainer);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.Children.Add(gameContainer);
+        Gum.GumService.Default.Root.UpdateLayout();
 
         float baselineLeft = button.AbsoluteLeft;
         float baselineTop = button.AbsoluteTop;
@@ -65,7 +65,7 @@ public class HitTestTransformTests : BaseTestClass
         // A hit-test transform must never feed layout/rendering, so absolute positions
         // stay put — this is the "changes hit-testing, not render output" half of #4096.
         gameContainer.HitTestTransformMatrix = Matrix3x2.CreateScale(0.5f);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.UpdateLayout();
 
         button.AbsoluteLeft.ShouldBe(baselineLeft);
         button.AbsoluteTop.ShouldBe(baselineTop);

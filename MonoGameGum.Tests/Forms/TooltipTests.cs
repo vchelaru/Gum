@@ -271,7 +271,7 @@ public class TooltipTests : BaseTestClass
         GameTime gameTime = new GameTime(
             totalGameTime: TimeSpan.FromSeconds(totalSeconds),
             elapsedGameTime: TimeSpan.FromMilliseconds(16));
-        GumService.Default.Update(gameTime);
+        Gum.GumService.Default.Update(gameTime);
     }
 
     [Fact]

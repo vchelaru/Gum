@@ -501,9 +501,9 @@ public class AnimationRuntimeTests : BaseTestClass
         };
         runtime.PlayAnimation("Animation1");
 
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(0)));
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)));
 
         runtime.X.ShouldBe(100);

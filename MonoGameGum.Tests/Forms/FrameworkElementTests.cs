@@ -55,8 +55,8 @@ public class FrameworkElementTests : BaseTestClass
         Button child = new();
         child.AddToRoot();
 
-        child.Visual.Parent.ShouldBe(GumService.Default.Root);
-        GumService.Default.Root.Children.ShouldContain(child.Visual);
+        child.Visual.Parent.ShouldBe(Gum.GumService.Default.Root);
+        Gum.GumService.Default.Root.Children.ShouldContain(child.Visual);
     }
 
     #endregion
@@ -805,7 +805,7 @@ public class FrameworkElementTests : BaseTestClass
         child.AddToRoot();
         child.RemoveFromRoot();
         child.Visual.Parent.ShouldBeNull();
-        GumService.Default.Root.Children.ShouldNotContain(child.Visual);
+        Gum.GumService.Default.Root.Children.ShouldNotContain(child.Visual);
     }
 
     #region RepositionToKeepInScreen

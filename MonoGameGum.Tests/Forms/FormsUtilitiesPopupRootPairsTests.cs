@@ -29,7 +29,7 @@ public class FormsUtilitiesPopupRootPairsTests : BaseTestClass
         customModalRoot.X = 999;
         customModalRoot.Width = 1;
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         customModalRoot.X.ShouldBe(0);
         customModalRoot.Width.ShouldBe(GraphicalUiElement.CanvasWidth);
@@ -59,7 +59,7 @@ public class FormsUtilitiesPopupRootPairsTests : BaseTestClass
         Button normalRootChild = new();
         normalRootChild.AddToRoot();
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         // The global ModalRoot has children but none visible, so it isn't a candidate winner —
         // exclusivity falls through to the additional modal root instead of to the normal root.
@@ -82,7 +82,7 @@ public class FormsUtilitiesPopupRootPairsTests : BaseTestClass
         Button globalModalChild = new();
         FrameworkElement.ModalRoot.Children.Add(globalModalChild.Visual);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         // The global ModalRoot is checked first, so it keeps input exclusivity over an additional
         // modal root even when both have children in the same frame.
@@ -107,7 +107,7 @@ public class FormsUtilitiesPopupRootPairsTests : BaseTestClass
         customPopupRoot.Width = 1;
         customPopupRoot.Height = 1;
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         customPopupRoot.X.ShouldBe(0);
         customPopupRoot.Y.ShouldBe(0);
