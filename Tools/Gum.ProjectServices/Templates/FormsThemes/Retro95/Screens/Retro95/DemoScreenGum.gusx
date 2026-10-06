@@ -519,6 +519,9 @@
     <Variable Type="DimensionUnitType" Name="MenuTitle1.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="MultiLineTextBox.AcceptsReturn" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="float" Name="MultiLineTextBox.Height" SetsValue="true">
       <Value xsi:type="xsd:float">174</Value>
     </Variable>
@@ -533,6 +536,9 @@
     </Variable>
     <Variable Type="string" Name="MultiLineTextBox.TextBoxCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Enabled</Value>
+    </Variable>
+    <Variable Type="TextWrapping" Name="MultiLineTextBox.TextWrapping" SetsValue="true">
+      <Value xsi:type="xsd:string">Wrap</Value>
     </Variable>
     <Variable Type="float" Name="MultiLineTextBox.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
