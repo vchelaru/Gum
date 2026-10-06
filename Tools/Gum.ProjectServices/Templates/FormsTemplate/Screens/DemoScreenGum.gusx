@@ -226,7 +226,10 @@
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="float" Name="DemoDialog.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">320</Value>
+      <Value xsi:type="xsd:float">16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DemoDialog.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="float" Name="DemoDialog.Width" SetsValue="true">
       <Value xsi:type="xsd:float">349</Value>
@@ -613,10 +616,10 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="float" Name="MarginContainer.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">-16</Value>
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="MarginContainer.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="string" Name="MarginContainer.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoDialog</Value>
