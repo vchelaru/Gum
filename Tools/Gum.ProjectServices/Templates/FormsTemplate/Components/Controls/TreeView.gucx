@@ -230,6 +230,7 @@
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>
+    <string>TreeViewCategoryState</string>
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
     <string>ClipsChildren</string>

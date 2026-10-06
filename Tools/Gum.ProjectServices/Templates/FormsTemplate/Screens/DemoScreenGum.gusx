@@ -888,6 +888,9 @@
     <Variable Type="DimensionUnitType" Name="RadioButtonInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="RadioButtonInstance1.IsChecked" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="string" Name="RadioButtonInstance1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuItems</Value>
     </Variable>

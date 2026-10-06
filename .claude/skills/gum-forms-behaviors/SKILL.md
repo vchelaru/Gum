@@ -73,6 +73,8 @@ Tool-time apply (`BehaviorToolOnlyReferencesApplier`, in the variable-grid plugi
 
 **The runtime apply path never traverses this list** — that's what the `ToolOnly` name encodes structurally. At runtime, the Forms control's own setter (e.g. `FrameworkElement.IsEnabled` → `UpdateState()`) owns the visual; applying the reference again would double-write.
 
+Every reference's left-hand variable must be in `VariablesHiddenFromInstances` on each template component using the behavior. Otherwise an instance can set the visual state directly: the tool shows it, while the runtime still follows the Forms property. `TemplateDerivedVariablesHiddenTests` enforces this for the Standard template and every theme.
+
 ### Three-tier default resolution
 
 Both apply paths plus the variable-grid *display* getter consult the same priority order:
