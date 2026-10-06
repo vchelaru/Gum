@@ -739,7 +739,7 @@
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="float" Name="WindowStandardInstance.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">163</Value>
+      <Value xsi:type="xsd:float">136</Value>
     </Variable>
     <Variable Type="float" Name="WindowStandardInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">313</Value>
