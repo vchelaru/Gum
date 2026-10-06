@@ -351,7 +351,9 @@ public class SpriteRuntimeTests
 
         var chains = new AnimationChainList();
         var walkChain = new AnimationChain { Name = "Walk" };
-        walkChain.Add(new AnimationFrame());
+        walkChain.Add(new AnimationFrame { FrameLength = 1 });
+        walkChain.Add(new AnimationFrame { FrameLength = 1 });
+        walkChain.Add(new AnimationFrame { FrameLength = 1 });
         chains.Add(walkChain);
         sut.AnimationChains = chains;
         sprite.AnimationLogic.AnimationChains.ShouldBe(chains);
