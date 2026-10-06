@@ -10,7 +10,7 @@ using Shouldly;
 
 namespace Gum.Presentation.Tests;
 
-public class ExclusionsLogicTests
+public class ExclusionsLogicTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IGuiCommands> _guiCommands = new();

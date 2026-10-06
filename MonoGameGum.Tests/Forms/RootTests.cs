@@ -72,7 +72,7 @@ public class RootTests : BaseTestClass
     [Fact]
     public void RemovingChildren_ShouldNotThrowException()
     {
-        var root = GumService.Default.Root;
+        var root = Gum.GumService.Default.Root;
 
         root.Children.Clear();
 

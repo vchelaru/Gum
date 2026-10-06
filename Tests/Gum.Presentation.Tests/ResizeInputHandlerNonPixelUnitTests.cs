@@ -30,7 +30,7 @@ namespace Gum.Presentation.Tests;
 /// rendered size was nowhere near zero. Reported as: shrinking a Ratio-Width rectangle below a raw
 /// Width of ~1 made it "increase" and the object jump left, out of its container.
 /// </summary>
-public class ResizeInputHandlerNonPixelUnitTests
+public class ResizeInputHandlerNonPixelUnitTests : BaseTestClass
 {
     private class FakeCursorState : IGumCursorState
     {

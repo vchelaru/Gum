@@ -20,7 +20,7 @@ public class GumServicePartialSeamTests : BaseTestClass
         // IGumService.GameTime lives in the XNALIKE partial and returns null while the XNA GameTime
         // property is still null (i.e. before any Update). A relocation bug in the seam would flip
         // this to 0 or throw.
-        IGumService service = new GumService();
+        IGumService service = new Gum.GumService();
 
         service.GameTime.ShouldBeNull();
     }
@@ -30,7 +30,7 @@ public class GumServicePartialSeamTests : BaseTestClass
     {
         // The constructor calls the AssignNativeTextInput() partial seam; on MonoGame/KNI it is
         // implemented (not elided), so a fresh service exposes the native modal text-input dialog.
-        GumService service = new GumService();
+        Gum.GumService service = new Gum.GumService();
 
         service.NativeTextInput.ShouldNotBeNull();
     }

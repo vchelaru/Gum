@@ -15,19 +15,19 @@ public class GumServiceInterfaceTests
     [Fact]
     public void GumService_ImplementsIGumService()
     {
-        GumService.Default.ShouldBeAssignableTo<IGumService>();
+        Gum.GumService.Default.ShouldBeAssignableTo<IGumService>();
     }
 
     [Fact]
     public void IGumService_CanvasWidth_ForwardsToService()
     {
-        IGumService service = GumService.Default;
+        IGumService service = Gum.GumService.Default;
         float original = service.CanvasWidth;
 
         try
         {
             service.CanvasWidth = 1234f;
-            GumService.Default.CanvasWidth.ShouldBe(1234f);
+            Gum.GumService.Default.CanvasWidth.ShouldBe(1234f);
         }
         finally
         {
@@ -38,13 +38,13 @@ public class GumServiceInterfaceTests
     [Fact]
     public void IGumService_CanvasHeight_ForwardsToService()
     {
-        IGumService service = GumService.Default;
+        IGumService service = Gum.GumService.Default;
         float original = service.CanvasHeight;
 
         try
         {
             service.CanvasHeight = 567f;
-            GumService.Default.CanvasHeight.ShouldBe(567f);
+            Gum.GumService.Default.CanvasHeight.ShouldBe(567f);
         }
         finally
         {
@@ -55,7 +55,7 @@ public class GumServiceInterfaceTests
     [Fact]
     public void IGumService_Initialize_OnXnaLikeRuntime_Throws()
     {
-        IGumService service = GumService.Default;
+        IGumService service = Gum.GumService.Default;
 
         Should.Throw<NotSupportedException>(() => service.Initialize());
     }
@@ -63,7 +63,7 @@ public class GumServiceInterfaceTests
     [Fact]
     public void IGumService_InitializeWithProjectPath_OnXnaLikeRuntime_Throws()
     {
-        IGumService service = GumService.Default;
+        IGumService service = Gum.GumService.Default;
 
         Should.Throw<NotSupportedException>(() => service.Initialize("some.gumx"));
     }
@@ -74,7 +74,7 @@ public class GumServiceInterfaceTests
         // The MonoGame GumService overrides the IGumService.CreateCursor default (which returns
         // null on render-only hosts). FormsUtilities.InitializeDefaults creates the cursor through
         // this service path, so this pins that the XNALIKE override is wired and non-null.
-        IGumService service = GumService.Default;
+        IGumService service = Gum.GumService.Default;
 
         ICursor? cursor = service.CreateCursor();
 
@@ -84,11 +84,11 @@ public class GumServiceInterfaceTests
     [Fact]
     public void IGumService_Cursor_ReturnsServiceCursor()
     {
-        IGumService service = GumService.Default;
+        IGumService service = Gum.GumService.Default;
 
         ICursor cursor = service.Cursor;
 
-        cursor.ShouldBeSameAs(GumService.Default.Cursor);
+        cursor.ShouldBeSameAs(Gum.GumService.Default.Cursor);
     }
 
     [Fact]
@@ -97,8 +97,8 @@ public class GumServiceInterfaceTests
         IGumService? original = IGumService.Default;
         try
         {
-            IGumService.Default = GumService.Default;
-            IGumService.Default.ShouldBeSameAs(GumService.Default);
+            IGumService.Default = Gum.GumService.Default;
+            IGumService.Default.ShouldBeSameAs(Gum.GumService.Default);
 
             IGumService.Default = null;
             IGumService.Default.ShouldBeNull();

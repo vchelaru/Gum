@@ -62,7 +62,7 @@ public  class ComboBoxTests : BaseTestClass
         cursor.Setup(x => x.VisualOver).Returns(comboBox.Visual);
         Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         comboBox.IsDropDownOpen.ShouldBe(true);
 
@@ -70,7 +70,7 @@ public  class ComboBoxTests : BaseTestClass
         cursor.Setup(x => x.X).Returns((int)(GraphicalUiElement.CanvasWidth-1));
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(GraphicalUiElement.CanvasWidth - 1));
         cursor.Setup(x => x.VisualOver).Returns((InteractiveGue?)null);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         comboBox.IsDropDownOpen.ShouldBe(false);
 
@@ -153,7 +153,7 @@ public  class ComboBoxTests : BaseTestClass
         {
             if (fullInstantiation)
             {
-                var background = new ColoredRectangleRuntime();
+                var background = new RectangleRuntime();
                 background.Name = "Background";
 
                 var TextInstance = new TextRuntime();

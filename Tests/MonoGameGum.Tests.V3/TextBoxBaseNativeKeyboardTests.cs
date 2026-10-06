@@ -105,7 +105,7 @@ public class TextBoxBaseNativeKeyboardTests
     [Fact]
     public void IsFocused_SetFalseAfterInlineKeyboardShown_HidesInlineKeyboard()
     {
-        GumService.Default.InitializeForTesting();
+        Gum.GumService.Default.InitializeForTesting();
         StubKeyboard stubKeyboard = new StubKeyboard { SupportsInlineKeyboard = true };
         IInputReceiverKeyboard? priorKeyboard = FrameworkElement.MainKeyboard;
         FrameworkElement.MainKeyboard = stubKeyboard;
@@ -135,7 +135,7 @@ public class TextBoxBaseNativeKeyboardTests
         {
             FrameworkElement.MainKeyboard = priorKeyboard;
             InteractiveGue.CurrentInputReceiver = null;
-            GumService.Default.Root.Children.Clear();
+            Gum.GumService.Default.Root.Children.Clear();
         }
     }
 

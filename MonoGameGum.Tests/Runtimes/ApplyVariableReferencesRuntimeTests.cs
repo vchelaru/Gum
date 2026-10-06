@@ -307,7 +307,7 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
     {
         // "Color = Source.Color" must expand to Red/Green/Blue at apply time even though
         // it stays a single collapsed line in VariableReferences.
-        ColoredRectangleRuntime parent = new ColoredRectangleRuntime();
+        SpriteRuntime parent = new SpriteRuntime();
         parent.Red = 0;
         parent.Green = 0;
         parent.Blue = 0;

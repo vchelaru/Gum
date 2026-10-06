@@ -7,6 +7,8 @@ namespace MonoGameGum.Shapes.Tests;
 // Per-corner radii were Skia-only until Apos.Shapes 0.6.9 exposed CornerRadii. These tests guard
 // the Apos-side parity wiring: the runtime exposes the four nullable Custom* properties and
 // forwards each to the underlying RoundedRectangle renderable.
+// These tests cover the obsolete RoundedRectangleRuntime itself.
+#pragma warning disable CS0618
 public class RoundedRectangleRuntimeTests
 {
     [Fact]
@@ -65,3 +67,4 @@ public class RoundedRectangleRuntimeTests
         renderable.CustomRadiusBottomLeft.ShouldBeNull();
     }
 }
+#pragma warning restore CS0618

@@ -93,6 +93,6 @@ public class ElementSaveToFormsTests : BaseTestClass
         forms!.Visual.Parent.ShouldBeNull();
         forms.Visual.Visible.ShouldBeTrue();
         forms.IsVisible.ShouldBeTrue();
-        GumService.Default.Root.Children.ShouldNotContain(forms.Visual);
+        Gum.GumService.Default.Root.Children.ShouldNotContain(forms.Visual);
     }
 }

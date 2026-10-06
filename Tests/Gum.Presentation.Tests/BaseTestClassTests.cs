@@ -12,7 +12,7 @@ namespace Gum.Presentation.Tests;
 /// <see cref="BaseTestClass"/>) must not leak that state into whichever test runs next. Same for a
 /// test that changes the app-data override.
 /// </summary>
-public class BaseTestClassTests
+public class BaseTestClassTests : BaseTestClass
 {
     [Fact]
     public void Constructor_ResetsGumProjectSave_EvenWhenAPriorTestLeftItSet()

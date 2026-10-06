@@ -30,7 +30,7 @@ public class BaseTestClass : IDisposable
         // never clears it changes how the next test resolves fonts and elements (see Dispose).
         ObjectFinder.Self.GumProjectSave = null;
 
-        GumService.Default.InitializeForTesting();
+        Gum.GumService.Default.InitializeForTesting();
         CreateMockCursor();
     }
 
@@ -106,9 +106,9 @@ public class BaseTestClass : IDisposable
         // torn-down Menu whose Visual no longer resolves EffectiveManagers correctly.
         InteractiveGue.ClearNextPushActions();
 
-        GumService.Default.Root.Children!.Clear();
-        GumService.Default.ModalRoot.Children!.Clear();
-        GumService.Default.PopupRoot.Children!.Clear();
+        Gum.GumService.Default.Root.Children!.Clear();
+        Gum.GumService.Default.ModalRoot.Children!.Clear();
+        Gum.GumService.Default.PopupRoot.Children!.Clear();
         FrameworkElement.AdditionalPopupRootPairs.Clear();
 
         CustomSetPropertyOnRenderable.LocalizationService = null;

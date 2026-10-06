@@ -3,10 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
-// Alias to the non-obsolete base type so the test doesn't reference the
-// [Obsolete] MonoGameGum.GumService shim (which unqualified GumService would
-// resolve to via the parent namespace) and trip CS0618.
-using GumService = Gum.GumService;
 
 namespace MonoGameGum.Tests;
 
@@ -32,7 +28,7 @@ public class TextureFilterTests : BaseTestClass
         Renderer.TextureFilter = TextureFilter.Point;
         GumProjectSave project = new GumProjectSave { TextureFilter = "Linear" };
 
-        GumService.ApplyProjectTextureFilter(project);
+        Gum.GumService.ApplyProjectTextureFilter(project);
 
         Renderer.TextureFilter.ShouldBe(TextureFilter.Linear);
     }
@@ -43,7 +39,7 @@ public class TextureFilterTests : BaseTestClass
         Renderer.TextureFilter = TextureFilter.Linear;
         GumProjectSave project = new GumProjectSave { TextureFilter = null };
 
-        GumService.ApplyProjectTextureFilter(project);
+        Gum.GumService.ApplyProjectTextureFilter(project);
 
         Renderer.TextureFilter.ShouldBe(TextureFilter.Point);
     }
@@ -54,7 +50,7 @@ public class TextureFilterTests : BaseTestClass
         Renderer.TextureFilter = TextureFilter.Linear;
         GumProjectSave project = new GumProjectSave { TextureFilter = "Point" };
 
-        GumService.ApplyProjectTextureFilter(project);
+        Gum.GumService.ApplyProjectTextureFilter(project);
 
         Renderer.TextureFilter.ShouldBe(TextureFilter.Point);
     }
@@ -65,7 +61,7 @@ public class TextureFilterTests : BaseTestClass
         Renderer.TextureFilter = TextureFilter.Linear;
         GumProjectSave project = new GumProjectSave { TextureFilter = "SomethingElse" };
 
-        GumService.ApplyProjectTextureFilter(project);
+        Gum.GumService.ApplyProjectTextureFilter(project);
 
         Renderer.TextureFilter.ShouldBe(TextureFilter.Point);
     }

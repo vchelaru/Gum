@@ -23,7 +23,7 @@ namespace Gum.Presentation.Tests;
 /// #5484: a Shift (axis-locked) drag moves along the dominant axis only, leaving the other axis at
 /// its grab position in both the state and the visual, with or without Snap to Grid.
 /// </summary>
-public class MoveInputHandlerAxisLockGridSnapTests
+public class MoveInputHandlerAxisLockGridSnapTests : BaseTestClass
 {
     private class FakeCursorState : IGumCursorState
     {

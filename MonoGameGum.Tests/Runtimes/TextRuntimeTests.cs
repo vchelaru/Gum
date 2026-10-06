@@ -545,7 +545,7 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
             plainContainer.Children.Add(plainText);
             plainContainer.AddToRoot();
             float plainContainerWidth = plainContainer.AbsoluteWidth;
-            float baseBAdvance = plainText.BitmapFont.Characters['B'].XAdvance;
+            float baseBAdvance = plainText.Typeface!.Characters['B'].XAdvance;
 
             ContainerRuntime swappedContainer = new();
             swappedContainer.WidthUnits = DimensionUnitType.RelativeToChildren;

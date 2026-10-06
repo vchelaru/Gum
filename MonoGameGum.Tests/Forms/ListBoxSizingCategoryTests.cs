@@ -41,10 +41,10 @@ public class ListBoxSizingCategoryTests : BaseTestClass
         comboBox.IsDropDownOpen = true;
 
         GraphicalUiElement listBoxVisual = comboBox.ListBox.Visual;
-        float itemsHeight = listBoxVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.GetAbsoluteHeight();
+        float itemsHeight = listBoxVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.AbsoluteHeight;
         itemsHeight.ShouldBeGreaterThan(0);
         GraphicalUiElement fixedVisual = CreateListBox(project, "Fixed", itemCount: 0, out _);
-        (listBoxVisual.GetAbsoluteHeight() - itemsHeight).ShouldBe(FixedInset(fixedVisual));
+        (listBoxVisual.AbsoluteHeight - itemsHeight).ShouldBe(FixedInset(fixedVisual));
     }
 
     [Theory]
@@ -57,7 +57,7 @@ public class ListBoxSizingCategoryTests : BaseTestClass
         comboBox.AddToRoot();
         comboBox.Items.Add("a");
         comboBox.IsDropDownOpen = true;
-        float oneItemHeight = comboBox.ListBox.Visual.GetAbsoluteHeight();
+        float oneItemHeight = comboBox.ListBox.Visual.AbsoluteHeight;
         comboBox.IsDropDownOpen = false;
 
         for (int i = 0; i < 100; i++)
@@ -67,8 +67,8 @@ public class ListBoxSizingCategoryTests : BaseTestClass
         comboBox.IsDropDownOpen = true;
 
         GraphicalUiElement fixedVisual = CreateListBox(project, "Fixed", itemCount: 0, out _);
-        comboBox.ListBox.Visual.GetAbsoluteHeight().ShouldBe(fixedVisual.GetAbsoluteHeight());
-        comboBox.ListBox.Visual.GetAbsoluteHeight().ShouldBeGreaterThan(oneItemHeight);
+        comboBox.ListBox.Visual.AbsoluteHeight.ShouldBe(fixedVisual.AbsoluteHeight);
+        comboBox.ListBox.Visual.AbsoluteHeight.ShouldBeGreaterThan(oneItemHeight);
     }
 
     [Theory]
@@ -79,9 +79,9 @@ public class ListBoxSizingCategoryTests : BaseTestClass
         GraphicalUiElement fixedVisual = CreateListBox(project, "Fixed", itemCount: 100, out _);
         GraphicalUiElement fitVisual = CreateListBox(project, "FitChildren", itemCount: 100, out _);
 
-        fitVisual.GetAbsoluteHeight().ShouldBe(fixedVisual.GetAbsoluteHeight());
-        float clipHeight = fitVisual.GetGraphicalUiElementByName("ClipContainerInstance")!.GetAbsoluteHeight();
-        fitVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.GetAbsoluteHeight().ShouldBeGreaterThan(clipHeight);
+        fitVisual.AbsoluteHeight.ShouldBe(fixedVisual.AbsoluteHeight);
+        float clipHeight = fitVisual.GetGraphicalUiElementByName("ClipContainerInstance")!.AbsoluteHeight;
+        fitVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.AbsoluteHeight.ShouldBeGreaterThan(clipHeight);
     }
 
     [Theory]
@@ -92,15 +92,15 @@ public class ListBoxSizingCategoryTests : BaseTestClass
         GraphicalUiElement fixedVisual = CreateListBox(project, "Fixed", itemCount: 3, out _);
         GraphicalUiElement fitVisual = CreateListBox(project, "FitChildren", itemCount: 3, out _);
 
-        float itemsHeight = fitVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.GetAbsoluteHeight();
+        float itemsHeight = fitVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.AbsoluteHeight;
         itemsHeight.ShouldBeGreaterThan(0);
-        fitVisual.GetGraphicalUiElementByName("ClipContainerInstance")!.GetAbsoluteHeight().ShouldBe(itemsHeight);
+        fitVisual.GetGraphicalUiElementByName("ClipContainerInstance")!.AbsoluteHeight.ShouldBe(itemsHeight);
         // Same inset around the items as the Fixed layout keeps around its clip container.
-        (fitVisual.GetAbsoluteHeight() - itemsHeight).ShouldBe(FixedInset(fixedVisual));
+        (fitVisual.AbsoluteHeight - itemsHeight).ShouldBe(FixedInset(fixedVisual));
     }
 
     private static float FixedInset(GraphicalUiElement fixedVisual) =>
-        fixedVisual.GetAbsoluteHeight() - fixedVisual.GetGraphicalUiElementByName("ClipContainerInstance")!.GetAbsoluteHeight();
+        fixedVisual.AbsoluteHeight - fixedVisual.GetGraphicalUiElementByName("ClipContainerInstance")!.AbsoluteHeight;
 
     private static GraphicalUiElement CreateListBox(GumProjectSave project, string sizingState, int itemCount, out ListBox listBox)
     {

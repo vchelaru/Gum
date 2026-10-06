@@ -172,7 +172,10 @@ public class ArcRuntimeTests
     [Fact]
     public void StrokeWidth_ShouldPropagateToRenderable_WhenRenderablePreRenderCalled()
     {
+        // ColoredCircleRuntime is the remaining AposShapeRuntime with a stroke, so it carries this hook test.
+#pragma warning disable CS0618
         ColoredCircleRuntime sut = new ColoredCircleRuntime();
+#pragma warning restore CS0618
         sut.SetProperty("StrokeWidth", 8.0f);
         sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
@@ -198,7 +201,10 @@ public class ArcRuntimeTests
     [Fact]
     public void StrokeDashAndGap_ShouldPropagateToRenderable_WhenRenderablePreRenderCalled()
     {
+        // ColoredCircleRuntime is the remaining AposShapeRuntime with a stroke, so it carries this hook test.
+#pragma warning disable CS0618
         ColoredCircleRuntime sut = new ColoredCircleRuntime();
+#pragma warning restore CS0618
         sut.SetProperty("StrokeDashLength", 6.0f);
         sut.SetProperty("StrokeGapLength", 4.0f);
         sut.StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;

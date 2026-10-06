@@ -40,8 +40,8 @@ public class GraphicalUiElementTests : BaseTestClass
         GraphicalUiElement child = new();
         child.AddToRoot();
 
-        child.Parent.ShouldBe(GumService.Default.Root);
-        GumService.Default.Root.Children.ShouldContain(child);
+        child.Parent.ShouldBe(Gum.GumService.Default.Root);
+        Gum.GumService.Default.Root.Children.ShouldContain(child);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class GraphicalUiElementTests : BaseTestClass
         child.RemoveFromRoot();
 
         child.Parent.ShouldBeNull();
-        GumService.Default.Root.Children.ShouldNotContain(child);
+        Gum.GumService.Default.Root.Children.ShouldNotContain(child);
     }
 
     #endregion
@@ -2454,7 +2454,7 @@ public class GraphicalUiElementTests : BaseTestClass
         child.AddToRoot();
         child.RemoveFromRoot();
         child.Parent.ShouldBeNull();
-        GumService.Default.Root.Children.ShouldNotContain(child);
+        Gum.GumService.Default.Root.Children.ShouldNotContain(child);
     }
 
     #endregion
