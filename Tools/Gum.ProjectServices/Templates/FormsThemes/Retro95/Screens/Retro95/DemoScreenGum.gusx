@@ -268,10 +268,10 @@
       <Value xsi:type="xsd:float">9</Value>
     </Variable>
     <Variable Type="float" Name="DialogBoxInstance.X" SetsValue="true">
-      <Value xsi:type="xsd:float">722</Value>
+      <Value xsi:type="xsd:float">425</Value>
     </Variable>
     <Variable Type="float" Name="DialogBoxInstance.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">376</Value>
+      <Value xsi:type="xsd:float">327</Value>
     </Variable>
     <Variable Type="string" Name="DifficultyLabel.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuItems</Value>
@@ -760,7 +760,7 @@
       <Value xsi:type="xsd:float">15</Value>
     </Variable>
     <Variable Type="float" Name="WindowStandardInstance.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">575</Value>
+      <Value xsi:type="xsd:float">537</Value>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
