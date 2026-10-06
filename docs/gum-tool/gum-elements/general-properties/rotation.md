@@ -27,3 +27,11 @@ The [X Origin](x-origin.md) and [Y Origin](y-origin.md) properties define the po
 {% hint style="info" %}
 Rotation does not rotate the clip region of a container that clips its children, so rotating a container with [Clips Children](clips-children.md) set to `true` will look broken. To rotate a container *and* keep its contents clipped, see [Rotating and Scaling Clipped Contents](../../tutorials-and-examples/examples/rotating-and-scaling-clipped-contents.md).
 {% endhint %}
+
+## Rotation in Stacks and Grids
+
+Stacks and grids space a rotated child as if it were not rotated. With the default top-left origin, a rotated child can overlap its neighbors or leave gaps. With another origin, such as `Center`, the rotation also shifts where the next sibling starts in a stack. Auto Grid cells do not move. For more information see [Stacking and Rotation](../container/children-layout.md#stacking-and-rotation).
+
+{% hint style="warning" %}
+Stacking with rotation may become more sophisticated in a future version of Gum, so this behavior may change.
+{% endhint %}

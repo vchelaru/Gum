@@ -198,6 +198,57 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         element.AbsoluteBottom.ShouldBe(element.AbsoluteTop + 20);
     }
 
+    static (ContainerRuntime rotated, ContainerRuntime next) CreateStackWithRotatedMiddleChild(ChildrenLayout stack)
+    {
+        ContainerRuntime parent = CreateContainer(400, 400);
+        parent.ChildrenLayout = stack;
+        parent.AddChild(CreateContainer(100, 20));
+        ContainerRuntime rotated = CreateContainer(100, 20);
+        parent.AddChild(rotated);
+        ContainerRuntime next = CreateContainer(100, 20);
+        parent.AddChild(next);
+        return (rotated, next);
+    }
+
+    // Pins current behavior (#5809): with the default top-left origin, a stack spaces a rotated
+    // child by its unrotated box. A rotation-aware stack would move the next sibling.
+    [Theory]
+    [InlineData(ChildrenLayout.TopToBottomStack, 0f, 20f, 0f, 40f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 100f, 0f, 200f, 0f)]
+    public void RotatedChildInStack_TopLeftOrigin_ShouldStackNextSiblingByUnrotatedBox(ChildrenLayout stack,
+        float expectedRotatedLeft, float expectedRotatedTop, float expectedNextLeft, float expectedNextTop)
+    {
+        (ContainerRuntime rotated, ContainerRuntime next) = CreateStackWithRotatedMiddleChild(stack);
+
+        rotated.Rotation = 90;
+
+        rotated.AbsoluteLeft.ShouldBe(expectedRotatedLeft, tolerance: 0.001f);
+        rotated.AbsoluteTop.ShouldBe(expectedRotatedTop, tolerance: 0.001f);
+        next.AbsoluteLeft.ShouldBe(expectedNextLeft, tolerance: 0.001f);
+        next.AbsoluteTop.ShouldBe(expectedNextTop, tolerance: 0.001f);
+    }
+
+    // Pins current behavior (#5809): a later stack child keeps its cross-axis origin, and rotation
+    // turns that origin offset onto the main axis. The next sibling stacks after the rotated corner
+    // plus the unrotated size, so it moves (40 -> 90 top-to-bottom, 200 -> 190 left-to-right).
+    [Theory]
+    [InlineData(ChildrenLayout.TopToBottomStack, 0f, 70f, 0f, 90f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 90f, 0f, 190f, 0f)]
+    public void RotatedChildInStack_CenterOrigin_ShouldShiftNextSiblingByRotatedOriginOffset(ChildrenLayout stack,
+        float expectedRotatedLeft, float expectedRotatedTop, float expectedNextLeft, float expectedNextTop)
+    {
+        (ContainerRuntime rotated, ContainerRuntime next) = CreateStackWithRotatedMiddleChild(stack);
+        rotated.XOrigin = HorizontalAlignment.Center;
+        rotated.YOrigin = VerticalAlignment.Center;
+
+        rotated.Rotation = 90;
+
+        rotated.AbsoluteLeft.ShouldBe(expectedRotatedLeft, tolerance: 0.001f);
+        rotated.AbsoluteTop.ShouldBe(expectedRotatedTop, tolerance: 0.001f);
+        next.AbsoluteLeft.ShouldBe(expectedNextLeft, tolerance: 0.001f);
+        next.AbsoluteTop.ShouldBe(expectedNextTop, tolerance: 0.001f);
+    }
+
     [Theory]
     [InlineData(GeneralUnitType.PixelsFromSmall, HorizontalAlignment.Left, 10f, 140f)]
     [InlineData(GeneralUnitType.PixelsFromLarge, HorizontalAlignment.Right, -10f, 10f)]

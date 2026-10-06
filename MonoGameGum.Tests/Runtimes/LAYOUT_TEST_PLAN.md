@@ -63,7 +63,7 @@ covered by that test now.
 ### 1.5 Flags
 - [x] IgnoredByParentSize: excluded from size, still stacks, still positions, still takes a grid cell
 - [~] ClipsChildren pushed to `ISetClipsChildren` each layout (render tests only)
-- [x] Rotation does not change size, triggers full layout; rotated parent rotates child offsets; near-90 rotations snap (`GetRightAndUpFromRotation`); `AbsoluteRight/Bottom` with rotation (Left + Width, rotation ignored). [ ] rotated child in a stack and a grid
+- [x] Rotation does not change size, triggers full layout; rotated parent rotates child offsets; near-90 rotations snap (`GetRightAndUpFromRotation`); `AbsoluteRight/Bottom` with rotation (Left + Width, rotation ignored); rotated child in a stack and an AutoGrid, top-left and center origin (current behavior pinned, #5809)
 - [x] FlipHorizontal: no size change; flipped parent mirrors child X units, origin and Percentage; flipped LeftToRightStack, wrapping TopToBottomStack and AutoGrid mirror the unflipped layout (#5776, H42, H43)
 
 ### 1.6 Anchor and Dock
@@ -88,7 +88,7 @@ covered by that test now.
 - [x] cross-axis units and origins honored (`ChildrenWithDifferentXOrigins/YOrigins`)
 - [x] cross-axis PercentageOfParent size and Percentage position
 - [x] first child invisible, then made visible
-- [ ] previous sibling rotated
+- [x] previous sibling rotated: top-left origin stacks by the unrotated box; a center origin's rotated offset shifts the next sibling (current behavior pinned, #5809)
 
 ### 2.2 Size of a RelativeToChildren stack
 - [x] sum along the main axis with spacing, max along the cross axis, first-child offset counted, later children's units ignored
