@@ -384,12 +384,14 @@ public class GumHotReloadManager : IGumHotReloadManager
         // Two lookup tables: one for design-time children (Tag is InstanceSave) so we can do
         // typed operations like retype/remove, and one keyed by Name across ALL children so
         // we don't duplicate a runtime-claimed child (e.g. one whose Tag was nulled by user
-        // code — the documented limitation in issue #2848).
+        // code — the documented limitation in issue #2848). ContainedElements is included
+        // because an instance with a Parent variable (e.g. a ListBoxItem inside a ComboBox)
+        // belongs to this element without being one of its direct Children.
         Dictionary<string, GraphicalUiElement> designTimeByName =
             new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, GraphicalUiElement> anyByName =
             new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
-        foreach (GraphicalUiElement child in parent.Children.ToList())
+        foreach (GraphicalUiElement child in parent.ContainedElements.Concat(parent.Children).ToList())
         {
             if (child.Tag is InstanceSave existingInstance && existingInstance.Name != null)
             {
@@ -471,6 +473,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     private static void DetachAndRemove(GraphicalUiElement child)
     {
         child.Parent = null;
+        child.ElementGueContainingThis = null;
         child.RemoveFromManagers();
     }
 
