@@ -224,11 +224,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.CurrentChainName = value;
-            // Same as SpriteRuntime.CurrentChainName: copy the new frame to the texture values.
-            if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedNineSlice);
-            }
+            UpdateTextureValuesFromCurrentFrame();
             NotifyPropertyChanged();
         }
     }
@@ -242,11 +238,46 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.AnimationChains = value;
-            if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedNineSlice);
-            }
+            UpdateTextureValuesFromCurrentFrame();
             NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// The index of the current frame in the active animation chain.
+    /// </summary>
+    public int AnimationChainFrameIndex
+    {
+        get => ContainedNineSlice.AnimationLogic.CurrentFrameIndex;
+        set
+        {
+            ContainedNineSlice.AnimationLogic.CurrentFrameIndex = value;
+            UpdateTextureValuesFromCurrentFrame();
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// The current playback time (in seconds) within the active animation chain.
+    /// </summary>
+    public double AnimationChainTime
+    {
+        get => ContainedNineSlice.AnimationLogic.TimeIntoAnimation;
+        set
+        {
+            ContainedNineSlice.AnimationLogic.TimeIntoAnimation = value;
+            UpdateTextureValuesFromCurrentFrame();
+            NotifyPropertyChanged();
+        }
+    }
+
+    // Same as SpriteRuntime: copy the current frame's source rectangle to the texture values
+    // layout reads, as AnimateSelf does.
+    void UpdateTextureValuesFromCurrentFrame()
+    {
+        if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
+        {
+            UpdateTextureValuesFrom(ContainedNineSlice);
         }
     }
 

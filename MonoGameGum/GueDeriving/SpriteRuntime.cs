@@ -251,12 +251,7 @@ public class SpriteRuntime : GraphicalUiElement
         set
         {
             ContainedSprite.AnimationLogic.CurrentChainName = value;
-            // The new chain's frame changed the renderable's source rectangle; copy it to the
-            // texture values layout reads, as AnimateSelf does.
-            if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedSprite);
-            }
+            UpdateTextureValuesFromCurrentFrame();
         }
     }
 
@@ -269,10 +264,7 @@ public class SpriteRuntime : GraphicalUiElement
         set
         {
             ContainedSprite.AnimationLogic.AnimationChains = value;
-            if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedSprite);
-            }
+            UpdateTextureValuesFromCurrentFrame();
         }
     }
 
@@ -282,7 +274,11 @@ public class SpriteRuntime : GraphicalUiElement
     public int AnimationChainFrameIndex
     {
         get => ContainedSprite.AnimationLogic.CurrentFrameIndex;
-        set => ContainedSprite.AnimationLogic.CurrentFrameIndex = value;
+        set
+        {
+            ContainedSprite.AnimationLogic.CurrentFrameIndex = value;
+            UpdateTextureValuesFromCurrentFrame();
+        }
     }
 
     /// <summary>
@@ -291,7 +287,21 @@ public class SpriteRuntime : GraphicalUiElement
     public double AnimationChainTime
     {
         get => ContainedSprite.AnimationLogic.TimeIntoAnimation;
-        set => ContainedSprite.AnimationLogic.TimeIntoAnimation = value;
+        set
+        {
+            ContainedSprite.AnimationLogic.TimeIntoAnimation = value;
+            UpdateTextureValuesFromCurrentFrame();
+        }
+    }
+
+    // The current frame's source rectangle changed on the renderable; copy it to the texture
+    // values layout reads, as AnimateSelf does.
+    void UpdateTextureValuesFromCurrentFrame()
+    {
+        if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
+        {
+            UpdateTextureValuesFrom(ContainedSprite);
+        }
     }
 
     /// <summary>

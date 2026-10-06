@@ -58,6 +58,10 @@ public class AnimationChainLogic
         }
     }
 
+    /// <summary>
+    /// Index of the current frame in the current chain. Setting it moves
+    /// <see cref="TimeIntoAnimation"/> to the start of that frame and applies the frame.
+    /// </summary>
     public int CurrentFrameIndex
     {
         get => _currentFrameIndex;
@@ -74,11 +78,39 @@ public class AnimationChainLogic
                 }
                 _timeIntoAnimation = time;
             }
+            UpdateToCurrentAnimationFrame();
         }
     }
 
     public float AnimationSpeed { get => _animationSpeed; set => _animationSpeed = value; }
-    public double TimeIntoAnimation { get => _timeIntoAnimation; set => _timeIntoAnimation = value; }
+
+    /// <summary>
+    /// Seconds into the current chain. Setting it selects and applies the frame at that time,
+    /// wrapping past the end when looping and holding the last frame when not.
+    /// </summary>
+    public double TimeIntoAnimation
+    {
+        get => _timeIntoAnimation;
+        set
+        {
+            _timeIntoAnimation = value;
+            AnimationChain? chain = CurrentChain;
+            if (chain == null || chain.Count == 0 || value < 0)
+            {
+                return;
+            }
+            if (!_isLooping && value >= chain.TotalLength)
+            {
+                _currentFrameIndex = chain.Count - 1;
+            }
+            else
+            {
+                UpdateFrameBasedOffOfTimeIntoAnimation();
+            }
+            UpdateToCurrentAnimationFrame();
+        }
+    }
+
     public bool Animate { get => _animate; set => _animate = value; }
     public bool IsAnimationChainLooping { get => _isLooping; set => _isLooping = value; }
 

@@ -53,4 +53,105 @@ public class AnimationChainLogicTests
 
         sut.IsAnimationChainLooping.ShouldBeTrue();
     }
+
+    // One chain whose frames have the given lengths; frames are distinguishable by reference.
+    private static AnimationChainList MakeChainWithFrameLengths(params float[] frameLengths)
+    {
+        AnimationChain chain = new() { Name = "Chain" };
+        foreach (float frameLength in frameLengths)
+        {
+            chain.Add(new AnimationFrame { FrameLength = frameLength });
+        }
+        AnimationChainList list = new();
+        list.Add(chain);
+        return list;
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public void CurrentFrameIndex_Set_ShouldApplyThatFrame(int frameIndex)
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(0.5f, 1.0f, 0.75f);
+        AnimationFrame? applied = null;
+        AnimationChainLogic sut = new() { AnimationChains = chains, ApplyFrame = frame => applied = frame };
+
+        sut.CurrentFrameIndex = frameIndex;
+
+        applied.ShouldBeSameAs(chains[0][frameIndex]);
+    }
+
+    [Fact(Skip = "Out-of-range frame index behavior needs a decision: #5813")]
+    public void CurrentFrameIndex_Set_ShouldShowLastFrame_WhenPastTheEnd()
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
+        AnimationFrame? applied = null;
+        AnimationChainLogic sut = new() { AnimationChains = chains, ApplyFrame = frame => applied = frame };
+
+        sut.CurrentFrameIndex = 5;
+
+        sut.CurrentFrameIndex.ShouldBe(2);
+        applied.ShouldBeSameAs(chains[0][2]);
+    }
+
+    [Fact]
+    public void CurrentFrameIndex_Set_ShouldNotApply_WhenNoChainsAreSet()
+    {
+        bool wasApplied = false;
+        AnimationChainLogic sut = new() { ApplyFrame = _ => wasApplied = true };
+
+        sut.CurrentFrameIndex = 1;
+
+        wasApplied.ShouldBeFalse();
+        sut.CurrentFrameIndex.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(1.2, true, 1)] // mid-frame
+    [InlineData(3.0, true, 1)] // past the 2.25s end, looping wraps to 0.75s
+    [InlineData(3.0, false, 2)] // past the end, not looping holds the last frame
+    public void TimeIntoAnimation_Set_ShouldApplyFrameAtThatTime(double time, bool isLooping, int expectedFrameIndex)
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(0.5f, 1.0f, 0.75f);
+        AnimationFrame? applied = null;
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = chains,
+            IsAnimationChainLooping = isLooping,
+            ApplyFrame = frame => applied = frame
+        };
+
+        sut.TimeIntoAnimation = time;
+
+        sut.CurrentFrameIndex.ShouldBe(expectedFrameIndex);
+        applied.ShouldBeSameAs(chains[0][expectedFrameIndex]);
+        sut.TimeIntoAnimation.ShouldBe(time);
+    }
+
+    [Fact]
+    public void TimeIntoAnimation_Set_ShouldNotThrowOrApply_WhenNegative()
+    {
+        bool wasApplied = false;
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = MakeChainWithFrameLengths(0.5f, 1.0f),
+            ApplyFrame = _ => wasApplied = true
+        };
+
+        sut.TimeIntoAnimation = -1;
+
+        wasApplied.ShouldBeFalse();
+        sut.TimeIntoAnimation.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void TimeIntoAnimation_Set_ShouldNotApply_WhenNoChainsAreSet()
+    {
+        bool wasApplied = false;
+        AnimationChainLogic sut = new() { ApplyFrame = _ => wasApplied = true };
+
+        sut.TimeIntoAnimation = 1.5;
+
+        wasApplied.ShouldBeFalse();
+    }
 }

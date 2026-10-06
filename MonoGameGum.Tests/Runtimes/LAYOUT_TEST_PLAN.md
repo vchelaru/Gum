@@ -200,7 +200,7 @@ covered by that test now.
 ### 4.6 Size reported by the renderable changing outside Gum
 - [x] texture assigned after layout, for PercentageOfSourceFile and MaintainFileAspectRatio, by property, by name and by source file, and while suspended (H31-H33, H41)
 - [x] texture size change moves a PercentageOfFile X/Y element (H35)
-- [x] animation chain change in code resizes a texture-sized Sprite and NineSlice (H34); [ ] frame index or time change (H36)
+- [x] animation chain, frame index or time change in code resizes a texture-sized Sprite and NineSlice, and its RelativeToChildren parent, also on resume (H34, H36); [ ] out-of-range frame index (#5813)
 - [~] font loaded late: realized on resume. [ ] realized by a bare `UpdateLayout()` after `IsAllLayoutSuspended`
 - [x] the new size reaches the parent's RelativeToChildren size and the stack positions after it
 
@@ -357,7 +357,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H33 | Skia `SpriteRuntime.Image` | Image size not reported to layout, and no layout. | FIX |
 | H34 | Sprite and NineSlice `CurrentChainName` in code | Frame reached the renderable but not the texture values layout reads. | FIX |
 | H35 | texture setters | A PercentageOfFile X/Y element didn't move when the texture size changed. | FIX |
-| H36 | `AnimationChainFrameIndex`, `AnimationChainTime` | The frame is never applied, so neither texture nor size follows. | LOG #5790 |
+| H36 | `AnimationChainFrameIndex`, `AnimationChainTime` | The frame is never applied, so neither texture nor size follows. | FIX (#5790; out-of-range index LOG #5813) |
 | H37 | `MaxLettersToShow`, text alignment, `TextOverflowVerticalMode`, NineSlice border settings, Lottie | Don't change the reported size. | CLEARED |
 | H38 | RelativeToChildren | A Ratio child counted toward a RelativeToChildren parent, so a padded parent grew on every layout. | FIX (#5773) |
 | H39 | RelativeToMaxParentOrChildren | Children sized from that axis were laid out against the stale size in the measuring pass and then skipped. | FIX (#5773) |
