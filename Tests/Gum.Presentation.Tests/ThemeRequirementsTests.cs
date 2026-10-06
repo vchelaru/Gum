@@ -136,6 +136,25 @@ public class ThemeRequirementsTests
     }
 
     [Fact]
+    public void LoadFromThemeDirectory_HasNoFontRanges_WhenTheThemeProjectIsNotValidXml()
+    {
+        string themeDirectory = Path.Combine(Path.GetTempPath(), "GumThemeRanges_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(themeDirectory);
+        try
+        {
+            File.WriteAllText(Path.Combine(themeDirectory, "GumProject.gumx"), "<GumProjectSave><FontRanges>32-126");
+
+            ThemeRequirements requirements = ThemeRequirements.LoadFromThemeDirectory(themeDirectory);
+
+            requirements.FontRanges.ShouldBeNull();
+        }
+        finally
+        {
+            Directory.Delete(themeDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Diff_MergesThemeFontRangesIntoTheProjects_WhenTheProjectLacksSomeCharacters()
     {
         var project = new GumProjectSave { FontRanges = "32-126,1024-1100" };

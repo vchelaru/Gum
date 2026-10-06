@@ -69,12 +69,21 @@ public sealed class ThemeRequirements
     }
 
     // Read straight from the theme's .gumx rather than loading the whole project: only this one
-    // value is needed, and it is a plain top-level element.
+    // value is needed, and it is a plain top-level element. The Add Forms dialog reads this to
+    // describe a theme, so a theme project that can't be read means no requirement, not a crash.
     private static string? ReadThemeProjectFontRanges(string themeDirectory)
     {
         string projectPath = Path.Combine(themeDirectory, ThemeProjectFileName);
         if (!File.Exists(projectPath)) return null;
-        string? ranges = XDocument.Load(projectPath).Root?.Element("FontRanges")?.Value;
+        string? ranges;
+        try
+        {
+            ranges = XDocument.Load(projectPath).Root?.Element("FontRanges")?.Value;
+        }
+        catch (System.Xml.XmlException)
+        {
+            return null;
+        }
         return string.IsNullOrWhiteSpace(ranges) ? null : ranges.Trim();
     }
 
