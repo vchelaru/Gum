@@ -60,8 +60,8 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
 
 1. Re-point `element.ElementSave` to the new project's element.
 2. **Structural diff against the new `Instances` list** (`DiffDesignTimeChildren`):
-   - Partition the visual's children into **design-time** (those with `Tag is InstanceSave`) and **everything else** (runtime-added or Tag-cleared).
-   - For each existing design-time child not present in the new `Instances`: `Parent = null` + `RemoveFromManagers()`.
+   - Partition the visual's `ContainedElements` plus `Children` into **design-time** (those with `Tag is InstanceSave`) and **everything else** (runtime-added or Tag-cleared). Matching must use `ContainedElements`: an instance with a `Parent` variable (a ListBoxItem inside a ComboBox) is not in `Children`, and missing it duplicates the instance on every reload.
+   - For each existing design-time child not present in the new `Instances`: `Parent = null`, `ElementGueContainingThis = null`, `RemoveFromManagers()`.
    - For each new `InstanceSave`:
      - If a matching design-time child exists, compare its visual's `ElementSave.Name` against the new `BaseType`. Mismatch → remove+recreate (retype). Match → refresh the `Tag` to point at the new `InstanceSave` instance.
      - If a same-named non-design-time child exists, leave it alone (runtime owns that slot). Do not create a duplicate.

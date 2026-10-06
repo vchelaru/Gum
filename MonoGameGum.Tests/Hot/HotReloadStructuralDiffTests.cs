@@ -3,7 +3,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
-using GumRuntime;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -188,7 +187,7 @@ public class HotReloadStructuralDiffTests : BaseTestClass
         AddInstance(project, screen, "Box2");
         AddInstance(project, screen, "Box3");
         GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
-        screenGue.Children.Select(c => c.Name).ToList()
+        screenGue.Children.Select(c => c.Name!).ToList()
             .ShouldBe(new List<string> { "Box1", "Box2", "Box3" });
 
         // Simulate reorder in the Gum tool: Box3 → first, others shift down.
@@ -199,7 +198,7 @@ public class HotReloadStructuralDiffTests : BaseTestClass
         GumHotReloadManager.ApplyDiff(
             new[] { screenGue }, project, SystemManagers.Default);
 
-        screenGue.Children.Select(c => c.Name).ToList()
+        screenGue.Children.Select(c => c.Name!).ToList()
             .ShouldBe(new List<string> { "Box3", "Box1", "Box2" });
     }
 
@@ -264,6 +263,74 @@ public class HotReloadStructuralDiffTests : BaseTestClass
 
         box1Gue.Parent.ShouldBe(holderGue);
         holderGue.Children.ShouldContain(box1Gue);
+    }
+
+    [Fact]
+    public void Add_SiblingUnderNestedParent_DoesNotDuplicateExistingNestedInstance()
+    {
+        // Box1 lives under Holder1 (not directly under the screen), so it is not in the
+        // screen's Children. The diff must still recognize it as already present.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        (ScreenSave screen, StateSave screenDefault) = BuildScreen(project);
+        AddInstance(project, screen, "Holder1");
+        AddInstance(project, screen, "Box1");
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "Box1.Parent",
+            Value = "Holder1",
+            Type = "string",
+            SetsValue = true
+        });
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        GraphicalUiElement holderGue = FindChildByName(screenGue, "Holder1")!;
+        GraphicalUiElement box1Gue = FindChildByName(holderGue, "Box1")!;
+
+        AddInstance(project, screen, "Box2");
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "Box2.Parent",
+            Value = "Holder1",
+            Type = "string",
+            SetsValue = true
+        });
+
+        GumHotReloadManager.ApplyDiff(
+            new[] { screenGue }, project, SystemManagers.Default);
+
+        holderGue.Children.Select(c => c.Name!).ShouldBe(new[] { "Box1", "Box2" });
+        holderGue.Children[0].ShouldBeSameAs(box1Gue);
+        screenGue.Children.Select(c => c.Name!).ShouldBe(new[] { "Holder1" });
+        screenGue.ContainedElements.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Remove_NestedInstance_DropsFromVisualTree()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        (ScreenSave screen, StateSave screenDefault) = BuildScreen(project);
+        AddInstance(project, screen, "Holder1");
+        InstanceSave box1 = AddInstance(project, screen, "Box1");
+        VariableSave box1Parent = new VariableSave
+        {
+            Name = "Box1.Parent",
+            Value = "Holder1",
+            Type = "string",
+            SetsValue = true
+        };
+        screenDefault.Variables.Add(box1Parent);
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        GraphicalUiElement holderGue = FindChildByName(screenGue, "Holder1")!;
+
+        screen.Instances.Remove(box1);
+        screenDefault.Variables.Remove(box1Parent);
+
+        GumHotReloadManager.ApplyDiff(
+            new[] { screenGue }, project, SystemManagers.Default);
+
+        holderGue.Children.Count.ShouldBe(0);
+        screenGue.ContainedElements.Select(c => c.Name!).ShouldBe(new[] { "Holder1" });
     }
 
     [Fact]
