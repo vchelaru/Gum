@@ -61,7 +61,7 @@ covered by that test now.
 - [~] clamped child inside a RelativeToChildren parent (parent uses the clamped size). [ ] inside a stack
 
 ### 1.5 Flags
-- [x] IgnoredByParentSize: excluded from size, still stacks, still positions. [ ] in a grid (still takes a cell?)
+- [x] IgnoredByParentSize: excluded from size, still stacks, still positions, still takes a grid cell
 - [~] ClipsChildren pushed to `ISetClipsChildren` each layout (render tests only)
 - [x] Rotation does not change size, triggers full layout; rotated parent rotates child offsets; near-90 rotations snap (`GetRightAndUpFromRotation`); `AbsoluteRight/Bottom` with rotation (Left + Width, rotation ignored). [ ] rotated child in a stack and a grid
 - [x] FlipHorizontal: no size change; flipped parent mirrors child X units, origin and Percentage; flipped LeftToRightStack, wrapping TopToBottomStack and AutoGrid mirror the unflipped layout (#5776, H42, H43)
@@ -83,39 +83,40 @@ covered by that test now.
 ### 2.1 Placement
 - [x] order, spacing (positive, zero, negative), invisible children, mixed units, reorder, add/insert
 - [x] first child honors its X/Y offset; later children ignore main-axis Middle/Large units (#695)
-- [ ] later children with main-axis Percentage units (Y forced, X not, H10)
+- [x] later children with main-axis Percentage units (H10)
 - [x] later children with main-axis Center or Bottom/Right origin (ignored after the first child, H22)
 - [x] cross-axis units and origins honored (`ChildrenWithDifferentXOrigins/YOrigins`)
-- [ ] cross-axis PercentageOfParent size and Percentage position
-- [ ] first child invisible, then made visible
+- [x] cross-axis PercentageOfParent size and Percentage position
+- [x] first child invisible, then made visible
 - [ ] previous sibling rotated
 
 ### 2.2 Size of a RelativeToChildren stack
-- [x] sum along the main axis with spacing, max along the cross axis, first-child offset counted, later offsets ignored
+- [x] sum along the main axis with spacing, max along the cross axis, first-child offset counted, later children's units ignored
 - [x] toggling first or last child gives the same size
-- [ ] main-axis RelativeToChildren with a MaxHeight/MaxWidth and no wrap (stops counting at the max)
-- [ ] child that is itself RelativeToChildren and contains wrapping Text
-- [ ] child clamped by its own Min/Max
+- [x] main-axis RelativeToChildren with a MaxHeight/MaxWidth and no wrap (stops at the last child that fits, like a wrapping stack)
+- [x] child that is itself RelativeToChildren and contains wrapping Text (`StackMatrix_ShouldMatchModel`)
+- [x] child clamped by its own Min/Max
 
 ### 2.3 UseFixedStackChildrenSize
 - [x] uses first child height for position and parent size, spacing
-- [ ] first child invisible (H7); invisible later children counted in parent size (H7)
-- [ ] LeftToRightStack (fast path is vertical only; result must match the slow path)
+- [x] first child invisible (H7); invisible later children counted in parent size (H7)
+- [x] LeftToRightStack (fast path is vertical only; result matches the slow path)
 - [x] with WrapsChildren (fast path disabled; result must match)
 - [x] first child Y offset shifts later children (H27); a later child's offset moves only that child
-- [ ] first child resized after layout
+- [x] first child resized after layout
 
 ### 2.4 Wrapping
 - [x] new row/column at MaxWidth/MaxHeight, row max dimension, spacing across rows, child grows/shrinks/hides, many children
 - [x] no wrap without a max; single child larger than parent
 - [x] RelativeToChildren on the cross axis sizes to the wrapped rows
-- [ ] parent resized narrower then wider: children re-wrap and un-wrap, row dimensions shrink
-- [ ] removing children leaves no stale rows in `StackedRowOrColumnDimensions`
-- [ ] hiding the tallest item of a row (H11)
-- [ ] wrapped child with cross-axis offset or origin (counted via `X + Width`/`Y + Height`)
-- [ ] Ratio children in a wrapping stack
-- [ ] wrap when parent size is PercentageOfParent of a grandparent that resizes
-- [ ] ChildrenLayout switched away from a wrapped stack and back
+- [x] parent resized narrower then wider: children re-wrap and un-wrap, row dimensions shrink (H46)
+- [x] removing children leaves no stale rows in `StackedRowOrColumnDimensions`; hiding every child of a row closes it
+- [x] hiding the tallest item of a row (H11)
+- [~] wrapped child with cross-axis offset (counted via `X + Width`/`Y + Height`, positive and negative). [ ] cross-axis origin or Middle/Large units in a wrapped row
+- [x] Ratio children in a wrapping stack (subtract every sibling, not just the row; documented on Ratio)
+- [x] wrap when parent size is PercentageOfParent of a grandparent that resizes
+- [x] ChildrenLayout switched away from a wrapped stack and back
+- [x] wrapping crossed with the mixed-axis children (`StackMatrix_ShouldMatchModel`)
 
 ### 2.5 Ratio in stacks
 - [x] remaining space after Absolute/Percentage siblings, spacing, nested stacks
@@ -125,13 +126,13 @@ covered by that test now.
 
 ### 3.1 Placement
 - [x] 2x2 with fixed parent: positions and Dock.Fill sizes, with and without spacing
-- [ ] non-square grids (3x1, 1x3) and non-divisible sizes (fractional cells)
+- [x] non-square grids (3x2, 1x4, 4x1) and non-divisible sizes (fractional cells)
 - [x] fewer children than cells, zero children
-- [ ] child X/Y units inside a cell: PixelsFromMiddle/Large, Percentage, origins
-- [~] child sizes other than Fill: PercentageOfParent (M8). [ ] Absolute larger than the cell, RelativeToParent
-- [ ] invisible children: placement skips them but grid counts them (H6)
-- [ ] child reorder, insert at index, remove
-- [ ] IgnoredByParentSize child
+- [x] child X/Y units inside a cell: PixelsFromSmall/Middle/Large, Percentage, Left/Center/Right and Top/Center/Bottom origins
+- [x] child sizes other than Fill: PercentageOfParent (M8), Absolute larger than the cell (overflows, not clamped), RelativeToParent
+- [x] invisible children: placement skips them (H6)
+- [x] child reorder, insert at index, remove
+- [x] IgnoredByParentSize child (takes a cell, does not size the grid)
 
 ### 3.2 Cell counts
 - [ ] AutoGridHorizontalCells or AutoGridVerticalCells 0 or negative (H5)
@@ -204,8 +205,8 @@ covered by that test now.
 A child depends on its parent along one axis while the parent depends on the child along the
 other, optionally with the child's own axes depending on each other. `LayoutMixedAxisTests` crosses
 these axes in three matrices: Regular layout (`Matrix_ShouldMatchModel`, 288 rows, every
-operation), stacks (`StackMatrix_ShouldMatchModel`) and AutoGrids (`GridMatrix_ShouldMatchModel`).
-Wrapping stacks are not crossed yet.
+operation), stacks wrapped and not (`StackMatrix_ShouldMatchModel`) and AutoGrids
+(`GridMatrix_ShouldMatchModel`).
 
 Axes to cross:
 - **Parent axis pair** (W, H): (Absolute, RelativeToChildren), (RelativeToChildren, Absolute),
@@ -362,6 +363,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H43 | flipped AutoGrid | Children mirrored inside their cells but the columns kept their order. | FIX (#5775) |
 | H44 | Ratio | A negative ratio gave a negative size and inflated its siblings' share. | FIX (#5775; treated as 0) |
 | H45 | `InterpolateBetween` | Suspended and resumed on its own, so it laid out early and cleared the caller's suspension. | FIX (#5775) |
+| H46 | `UpdateLayout` wrap pass | A one-axis layout (the Width or Height setter) on a wrapping stack re-measured only that axis after re-wrapping, so a RelativeToChildren cross axis read 0 until the next layout. | FIX |
 
 ## Sweep strategy
 

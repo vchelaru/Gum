@@ -636,9 +636,12 @@ public class LayoutMixedAxisTests : BaseTestClass
                         continue;
                     }
 
-                    foreach (Operation operation in operations)
+                    foreach (bool wraps in new[] { false, true })
                     {
-                        yield return new object[] { stack, parentAxes, selfDependency, operation };
+                        foreach (Operation operation in operations)
+                        {
+                            yield return new object[] { stack, parentAxes, selfDependency, wraps, operation };
+                        }
                     }
                 }
             }
@@ -648,9 +651,13 @@ public class LayoutMixedAxisTests : BaseTestClass
     // M6 (TopToBottomStack) and M7 (LeftToRightStack): the M1-M5 children, three in a stack. A
     // parent measured from children on the axis the children take from it ignores them there
     // (documented on Width Units, "Ignored Width Values"), so it keeps its own size and they still stack.
+    // Each child takes half the driven axis. When that is the stacking axis and the stack wraps, two
+    // children fill a line and the third starts a new one; a stack measured from its children on the
+    // stacking axis never wraps (Wraps Children docs).
     [Theory]
     [MemberData(nameof(StackMatrixCases))]
-    public void StackMatrix_ShouldMatchModel(ChildrenLayout stack, ParentAxes parentAxes, SelfDependency selfDependency, Operation operation)
+    public void StackMatrix_ShouldMatchModel(ChildrenLayout stack, ParentAxes parentAxes, SelfDependency selfDependency,
+        bool wraps, Operation operation)
     {
         float grandparentWidth = 400;
         float grandparentHeight = 300;
@@ -664,6 +671,7 @@ public class LayoutMixedAxisTests : BaseTestClass
         ContainerRuntime grandparent = CreateContainer(grandparentWidth, DimensionUnitType.Absolute, grandparentHeight, DimensionUnitType.Absolute);
         ContainerRuntime parent = CreateParent(parentAxes, parentFixedSize);
         parent.ChildrenLayout = stack;
+        parent.WrapsChildren = wraps;
         grandparent.AddChild(parent);
         List<GraphicalUiElement> children = new();
         List<GraphicalUiElement> inners = new();
@@ -697,7 +705,9 @@ public class LayoutMixedAxisTests : BaseTestClass
         bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
         // The measured axis sums the children when it is the stacking axis, else takes the largest.
         bool measuredAxisIsStackAxis = isWidthDriven == stacksVertically;
-        float parentMeasured = measuredAxisIsStackAxis ? childMeasured * childCount : childMeasured;
+        int childrenPerLine = wraps && !measuredAxisIsStackAxis ? 2 : childCount;
+        int lineCount = (childCount + childrenPerLine - 1) / childrenPerLine;
+        float parentMeasured = measuredAxisIsStackAxis ? childMeasured * childCount : childMeasured * lineCount;
 
         List<GraphicalUiElement> all = new() { grandparent, parent };
         all.AddRange(children);
@@ -722,8 +732,10 @@ public class LayoutMixedAxisTests : BaseTestClass
 
         for (int i = 0; i < childCount; i++)
         {
-            float expectedLeft = stacksVertically ? 0 : childWidth * i;
-            float expectedTop = stacksVertically ? childHeight * i : 0;
+            int line = i / childrenPerLine;
+            int indexInLine = i % childrenPerLine;
+            float expectedLeft = stacksVertically ? childWidth * line : childWidth * indexInLine;
+            float expectedTop = stacksVertically ? childHeight * indexInLine : childHeight * line;
             children[i].AbsoluteLeft.ShouldBe(expectedLeft, tolerance: 0.001f, $"child {i} left");
             children[i].AbsoluteTop.ShouldBe(expectedTop, tolerance: 0.001f, $"child {i} top");
             children[i].AbsoluteWidth.ShouldBe(childWidth, tolerance: 0.001f, $"child {i} width");
