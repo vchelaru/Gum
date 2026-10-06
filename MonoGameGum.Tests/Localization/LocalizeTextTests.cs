@@ -108,7 +108,7 @@ public class LocalizeTextTests : BaseTestClass
         text.Text = "Greeting";
 
         _localizationService.CurrentLanguage = 1;
-        GumService.Default.RefreshLocalization();
+        Gum.GumService.Default.RefreshLocalization();
 
         text.Text.ShouldBe("Greeting");
     }

@@ -25,7 +25,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         try
         {
             // Exercise the public entry point: build a live tree under a GumService's Root, then export.
-            GumService service = new();
+            Gum.GumService service = new();
             ContainerRuntime panel = new() { Name = "Panel" };
             TextRuntime label = new() { Name = "Label" };
             label.Text = "Hi"; // differs from the standard Text default -> survives the shake
@@ -176,7 +176,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         string tempDirectory = NewTempDirectory();
         try
         {
-            GumService service = new();
+            Gum.GumService service = new();
 #pragma warning disable CS0618 // ColoredRectangle is obsolete but old live trees still contain it.
             service.Root.AddChild(new ColoredRectangleRuntime { Name = "Rect" });
 #pragma warning restore CS0618
@@ -204,7 +204,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         string tempDirectory = NewTempDirectory();
         try
         {
-            GumService service = new();
+            Gum.GumService service = new();
             service.Root.AddChild(new ContainerRuntime { Name = "Panel" });
 
             string gumxPath = Path.Combine(tempDirectory, "Live." + GumProjectSave.ProjectExtension);
@@ -232,7 +232,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
             GraphicalUiElement.CanvasWidth = 1920;
             GraphicalUiElement.CanvasHeight = 1080;
 
-            GumService service = new();
+            Gum.GumService service = new();
             service.Root.AddChild(new ContainerRuntime { Name = "Panel" });
 
             string gumxPath = Path.Combine(tempDirectory, "Live." + GumProjectSave.ProjectExtension);
@@ -267,7 +267,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
             // Relative SourceFile paths resolve under here (as the content loader resolved them at load).
             FileManager.RelativeDirectory = contentDirectory;
 
-            GumService service = new();
+            Gum.GumService service = new();
             SpriteRuntime sprite = new() { Name = "Sprite" };
             Microsoft.Xna.Framework.Graphics.Texture2D texture = MakeHeadlessTexture();
             texture.Name = relativePath;
@@ -313,7 +313,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
             File.WriteAllBytes(sourceFile, new byte[] { 1, 2, 3 });
             FileManager.RelativeDirectory = contentDirectory;
 
-            GumService service = new();
+            Gum.GumService service = new();
             SpriteRuntime sprite = new() { Name = "Sprite" };
             Microsoft.Xna.Framework.Graphics.Texture2D texture = MakeHeadlessTexture();
             texture.Name = relativePath;
@@ -346,7 +346,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         string tempDirectory = NewTempDirectory();
         try
         {
-            GumService service = new();
+            Gum.GumService service = new();
 
             Button okButton = new() { Name = "OkButton" };
             okButton.Text = "OK";

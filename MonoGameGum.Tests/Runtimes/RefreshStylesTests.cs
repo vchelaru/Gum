@@ -411,7 +411,7 @@ public class RefreshStylesTests : BaseTestClass
         radio2.IsChecked.ShouldBe(true);
 
         // Act — refresh from the root
-        GumService.Default.RefreshStyles();
+        Gum.GumService.Default.RefreshStyles();
 
         // Assert — checked state should be preserved
         radio1.IsChecked.ShouldBe(false);
@@ -527,7 +527,7 @@ public class RefreshStylesTests : BaseTestClass
         innerCheck1.Visible.ShouldBe(false, "radio1 inner check should be hidden when unchecked");
 
         // Act
-        GumService.Default.RefreshStyles();
+        Gum.GumService.Default.RefreshStyles();
 
         // Assert — visual check state should be preserved
         radio2.IsChecked.ShouldBe(true);

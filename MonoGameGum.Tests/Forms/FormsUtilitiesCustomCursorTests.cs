@@ -32,7 +32,7 @@ public class FormsUtilitiesCustomCursorTests : BaseTestClass
         button.Visual.WidthUnits = DimensionUnitType.Absolute;
         button.Visual.HeightUnits = DimensionUnitType.Absolute;
 
-        GumService.Default.Update(new GameTime());
+        Gum.GumService.Default.Update(new GameTime());
 
         // Simulates a game setting the cursor directly (e.g. Mouse.SetCursor), independent of
         // any FrameworkElement.CustomCursor.
@@ -41,7 +41,7 @@ public class FormsUtilitiesCustomCursorTests : BaseTestClass
         cursor.Setup(c => c.X).Returns(10);
         cursor.Setup(c => c.Y).Returns(10);
 
-        GumService.Default.Update(new GameTime());
+        Gum.GumService.Default.Update(new GameTime());
 
         cursor.Object.CustomCursor.ShouldBe(Cursors.SizeWE);
     }
@@ -64,13 +64,13 @@ public class FormsUtilitiesCustomCursorTests : BaseTestClass
 
         cursor.Setup(c => c.X).Returns(10);
         cursor.Setup(c => c.Y).Returns(10);
-        GumService.Default.Update(new GameTime());
+        Gum.GumService.Default.Update(new GameTime());
 
         cursor.Object.CustomCursor.ShouldBe(Cursors.SizeWE);
 
         cursor.Setup(c => c.X).Returns(500);
         cursor.Setup(c => c.Y).Returns(500);
-        GumService.Default.Update(new GameTime());
+        Gum.GumService.Default.Update(new GameTime());
 
         cursor.Object.CustomCursor.ShouldBe(Cursors.Arrow);
     }

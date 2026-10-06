@@ -253,7 +253,7 @@ public class ScrollViewerTests : BaseTestClass
         ScrollViewer scrollViewer = new();
         scrollViewer.Visual.Width = 200;
         scrollViewer.Visual.Height = 200;
-        GumService.Default.Root.Children.Add(scrollViewer.Visual);
+        Gum.GumService.Default.Root.Children.Add(scrollViewer.Visual);
 
         ContainerRuntime tallContent = new();
         tallContent.Width = 0;
@@ -262,7 +262,7 @@ public class ScrollViewerTests : BaseTestClass
         tallContent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
         scrollViewer.AddChild(tallContent);
 
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.UpdateLayout();
 
         return scrollViewer;
     }

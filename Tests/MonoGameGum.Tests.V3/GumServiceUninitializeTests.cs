@@ -27,18 +27,18 @@ public class GumServiceUninitializeTests
     public void ModalRoot_AfterChildrenClear_HasNoChildren()
     {
         ContainerRuntime child = new ContainerRuntime();
-        GumService.Default.ModalRoot.Children.Add(child);
-        GumService.Default.ModalRoot.Children.ShouldContain(child);
+        Gum.GumService.Default.ModalRoot.Children.Add(child);
+        Gum.GumService.Default.ModalRoot.Children.ShouldContain(child);
 
         try
         {
-            GumService.Default.ModalRoot.Children.Clear();
+            Gum.GumService.Default.ModalRoot.Children.Clear();
 
-            GumService.Default.ModalRoot.Children.Count.ShouldBe(0);
+            Gum.GumService.Default.ModalRoot.Children.Count.ShouldBe(0);
         }
         finally
         {
-            GumService.Default.ModalRoot.Children.Clear();
+            Gum.GumService.Default.ModalRoot.Children.Clear();
         }
     }
 
@@ -46,18 +46,18 @@ public class GumServiceUninitializeTests
     public void PopupRoot_AfterChildrenClear_HasNoChildren()
     {
         ContainerRuntime child = new ContainerRuntime();
-        GumService.Default.PopupRoot.Children.Add(child);
-        GumService.Default.PopupRoot.Children.ShouldContain(child);
+        Gum.GumService.Default.PopupRoot.Children.Add(child);
+        Gum.GumService.Default.PopupRoot.Children.ShouldContain(child);
 
         try
         {
-            GumService.Default.PopupRoot.Children.Clear();
+            Gum.GumService.Default.PopupRoot.Children.Clear();
 
-            GumService.Default.PopupRoot.Children.Count.ShouldBe(0);
+            Gum.GumService.Default.PopupRoot.Children.Count.ShouldBe(0);
         }
         finally
         {
-            GumService.Default.PopupRoot.Children.Clear();
+            Gum.GumService.Default.PopupRoot.Children.Clear();
         }
     }
 
@@ -65,18 +65,18 @@ public class GumServiceUninitializeTests
     public void Root_AfterChildrenClear_HasNoChildren()
     {
         ContainerRuntime child = new ContainerRuntime();
-        GumService.Default.Root.Children.Add(child);
-        GumService.Default.Root.Children.ShouldContain(child);
+        Gum.GumService.Default.Root.Children.Add(child);
+        Gum.GumService.Default.Root.Children.ShouldContain(child);
 
         try
         {
-            GumService.Default.Root.Children.Clear();
+            Gum.GumService.Default.Root.Children.Clear();
 
-            GumService.Default.Root.Children.Count.ShouldBe(0);
+            Gum.GumService.Default.Root.Children.Count.ShouldBe(0);
         }
         finally
         {
-            GumService.Default.Root.Children.Clear();
+            Gum.GumService.Default.Root.Children.Clear();
         }
     }
 

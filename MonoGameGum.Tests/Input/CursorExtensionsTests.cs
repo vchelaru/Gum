@@ -79,7 +79,7 @@ public class CursorExtensionsTests : BaseTestClass
         cursor.Setup(x => x.Y).Returns(50);
 
         // Call Update with element as a root to populate LastEventRoots
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(),
             new GraphicalUiElement[] { element });
 
@@ -105,7 +105,7 @@ public class CursorExtensionsTests : BaseTestClass
 
         // Call Update with a different element so this one is NOT in LastEventRoots
         InteractiveGue otherElement = new InteractiveGue(new InvisibleRenderable());
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(),
             new GraphicalUiElement[] { otherElement });
 
@@ -127,7 +127,7 @@ public class CursorExtensionsTests : BaseTestClass
         cursor.Setup(x => x.X).Returns(500);
         cursor.Setup(x => x.Y).Returns(500);
 
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(),
             new GraphicalUiElement[] { element });
 
@@ -150,7 +150,7 @@ public class CursorExtensionsTests : BaseTestClass
         cursor.Setup(x => x.X).Returns(500);
         cursor.Setup(x => x.Y).Returns(500);
 
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(),
             new GraphicalUiElement[] { element });
 
@@ -178,7 +178,7 @@ public class CursorExtensionsTests : BaseTestClass
         cursor.Setup(x => x.X).Returns(50);
         cursor.Setup(x => x.Y).Returns(50);
 
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(),
             new GraphicalUiElement[] { root });
 
@@ -230,7 +230,7 @@ public class CursorExtensionsTests : BaseTestClass
         cursor.Setup(x => x.X).Returns(50);
         cursor.Setup(x => x.Y).Returns(50);
 
-        GumService.Default.Update(
+        Gum.GumService.Default.Update(
             new Microsoft.Xna.Framework.GameTime(),
             new GraphicalUiElement[] { element });
 
@@ -288,7 +288,7 @@ public class CursorExtensionsTests : BaseTestClass
     public void GetEventFailureReason_ByType_ShouldReturnSingleDiagnostic_WhenExactlyOneMatch()
     {
         Button button = new Button();
-        GumService.Default.Root.AddChild(button.Visual);
+        Gum.GumService.Default.Root.AddChild(button.Visual);
 
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);
@@ -307,8 +307,8 @@ public class CursorExtensionsTests : BaseTestClass
     {
         Button first = new Button { Name = "First" };
         Button second = new Button { Name = "Second" };
-        GumService.Default.Root.AddChild(first.Visual);
-        GumService.Default.Root.AddChild(second.Visual);
+        Gum.GumService.Default.Root.AddChild(first.Visual);
+        Gum.GumService.Default.Root.AddChild(second.Visual);
 
         Mock<ICursor> cursor = new();
 
@@ -324,7 +324,7 @@ public class CursorExtensionsTests : BaseTestClass
     public void GetEventFailureReason_ByName_ShouldFindElement()
     {
         Button button = new Button { Name = "ConfirmButton" };
-        GumService.Default.Root.AddChild(button.Visual);
+        Gum.GumService.Default.Root.AddChild(button.Visual);
 
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);
@@ -344,9 +344,9 @@ public class CursorExtensionsTests : BaseTestClass
         Button matchingButton = new Button { Name = "Save" };
         Button otherButton = new Button { Name = "Cancel" };
         CheckBox sameNameDifferentType = new CheckBox { Name = "Save" };
-        GumService.Default.Root.AddChild(matchingButton.Visual);
-        GumService.Default.Root.AddChild(otherButton.Visual);
-        GumService.Default.Root.AddChild(sameNameDifferentType.Visual);
+        Gum.GumService.Default.Root.AddChild(matchingButton.Visual);
+        Gum.GumService.Default.Root.AddChild(otherButton.Visual);
+        Gum.GumService.Default.Root.AddChild(sameNameDifferentType.Visual);
 
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);
@@ -366,7 +366,7 @@ public class CursorExtensionsTests : BaseTestClass
         Panel panel = new Panel();
         Button nested = new Button { Name = "Nested" };
         panel.AddChild(nested);
-        GumService.Default.Root.AddChild(panel.Visual);
+        Gum.GumService.Default.Root.AddChild(panel.Visual);
 
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(-500);

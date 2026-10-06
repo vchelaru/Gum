@@ -21,7 +21,7 @@ public class GumServiceRuntimeTypeReflectionScanTests : BaseTestClass
         // AmbiguousRuntimeTypesFixture (below) is compiled into this test assembly, which is
         // already loaded into AppDomain.CurrentDomain.GetAssemblies() by the time this runs - the
         // scan's extension-package pass reaches it like any other loaded assembly.
-        GumService gumService = new GumService();
+        Gum.GumService gumService = new Gum.GumService();
 
         Should.NotThrow(() => gumService.RegisterRuntimeTypesThroughReflection());
     }
@@ -37,7 +37,7 @@ public class GumServiceRuntimeTypeReflectionScanTests : BaseTestClass
     [InlineData("MonoGame.Framework", false)]
     public void IsFrameworkAssembly_ClassifiesAssemblyByNamePrefix(string assemblyName, bool expected)
     {
-        GumService gumService = new GumService();
+        Gum.GumService gumService = new Gum.GumService();
 
         bool actual = gumService.IsFrameworkAssembly(new AssemblyName(assemblyName));
 
