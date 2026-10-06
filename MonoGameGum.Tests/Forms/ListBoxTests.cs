@@ -356,6 +356,62 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void InnerPanel_MoveListBoxItemVisual_ShouldReorderItemsAndListBoxItems()
+    {
+        ListBox listBox = new();
+        ListBoxItem item0 = new();
+        ListBoxItem item1 = new();
+        ListBoxItem item2 = new();
+        listBox.InnerPanel.Children.Add(item0.Visual);
+        listBox.InnerPanel.Children.Add(item1.Visual);
+        listBox.InnerPanel.Children.Add(item2.Visual);
+
+        listBox.InnerPanel.Children.Move(0, 2);
+
+        ListBoxItem[] expected = new[] { item1, item2, item0 };
+        listBox.ListBoxItems.ShouldBe(expected);
+        listBox.Items!.Cast<ListBoxItem>().ShouldBe(expected);
+
+        listBox.InnerPanel.Children.Move(2, 0);
+
+        expected = new[] { item0, item1, item2 };
+        listBox.ListBoxItems.ShouldBe(expected);
+        listBox.Items!.Cast<ListBoxItem>().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Items_MoveSelfBackedListBoxItem_ShouldMoveEachCollectionOnce()
+    {
+        ListBox listBox = new();
+        ListBoxItem item0 = new();
+        ListBoxItem item1 = new();
+        ListBoxItem item2 = new();
+        listBox.InnerPanel.Children.Add(item0.Visual);
+        listBox.InnerPanel.Children.Add(item1.Visual);
+        listBox.InnerPanel.Children.Add(item2.Visual);
+
+        ((ObservableCollection<object>)listBox.Items!).Move(0, 2);
+
+        ListBoxItem[] expected = new[] { item1, item2, item0 };
+        listBox.ListBoxItems.ShouldBe(expected);
+        listBox.Items.Cast<ListBoxItem>().ShouldBe(expected);
+        listBox.InnerPanel.Children.ShouldBe(expected.Select(i => i.Visual));
+    }
+
+    [Fact]
+    public void InnerPanel_MoveDataBackedItemVisual_ShouldLeaveItemsAndListBoxItemsAligned()
+    {
+        ListBox listBox = new();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+
+        listBox.InnerPanel.Children.Move(0, 1);
+
+        listBox.Items.Cast<string>().ShouldBe(new[] { "a", "b" });
+        listBox.ListBoxItems.Select(i => i.DataObject).ShouldBe(new object[] { "a", "b" });
+    }
+
+    [Fact]
     public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
     {
         bool didSet = false;
