@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime.
+`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime. It also adds an `AnimationChainFinished` event to sprites and nine slices playing an animation chain, which replaces `AnimationChainCycled` as the way to detect the end of a chain that does not loop.
 
 ## Breaking Changes and Migrations
 
@@ -154,3 +154,33 @@ This affects you only if a container sized to its children holds a `Relative to 
 To migrate, open your screens and components in the Gum tool and check these containers. If you want the old size, lower or clear the child's `Min Height` or `Min Width`.
 
 For more information see the [Height Units](../gum-elements/general-properties/height-units.md#relative-to-max-of-children-or-parent) page.
+
+### AnimationChainFinished Replaces AnimationChainCycled at the End of a Non-Looping Chain
+
+`AnimationChainCycled` is now raised only when a looping animation chain wraps around. A chain that does not loop raises the new `AnimationChainFinished` event once when it reaches its end and `Animate` becomes `false`. `SpriteRuntime`, `Sprite`, `NineSlice`, and `AnimationChainLogic` all have the new event.
+
+Before this version, a chain that did not loop raised `AnimationChainCycled` when it reached its end, even though it never started over. It also returned to its first frame instead of holding its last.
+
+A chain that does not loop now also finishes when it plays backward. With a negative `AnimationChainSpeed`, it stops on its first frame, sets `Animate` to `false`, and raises `AnimationChainFinished`. Before this version, it held the first frame, kept `Animate` set to `true`, and raised no event.
+
+This affects you only if your code subscribes to `AnimationChainCycled` on a sprite or nine slice whose chain does not loop, for example to hide a sprite after its death animation plays. That handler no longer runs.
+
+To migrate, subscribe to `AnimationChainFinished` instead.
+
+❌ Old:
+
+```csharp
+// Initialize
+sprite.IsAnimationChainLooping = false;
+sprite.AnimationChainCycled += () => sprite.Visible = false;
+```
+
+✅ New:
+
+```csharp
+// Initialize
+sprite.IsAnimationChainLooping = false;
+sprite.AnimationChainFinished += () => sprite.Visible = false;
+```
+
+For more information see the [Animation Chains](../../code/files-and-fonts/animation-chains.md#looping-and-end-of-chain-events) page.

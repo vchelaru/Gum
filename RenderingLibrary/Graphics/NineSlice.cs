@@ -482,6 +482,15 @@ public class NineSlice : SpriteBatchRenderableBase,
         remove => AnimationLogic.AnimationChainCycled -= value;
     }
 
+    /// <summary>
+    /// Raised once when a non-looping animation chain reaches its end and Animate becomes false.
+    /// </summary>
+    public event Action AnimationChainFinished
+    {
+        add => AnimationLogic.AnimationChainFinished += value;
+        remove => AnimationLogic.AnimationChainFinished -= value;
+    }
+
     float _borderScale = 1;
     public float BorderScale 
     {

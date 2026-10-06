@@ -134,7 +134,20 @@ public class AnimationChainLogic
     public bool Animate { get => _animate; set => _animate = value; }
     public bool IsAnimationChainLooping { get => _isLooping; set => _isLooping = value; }
 
+    /// <summary>
+    /// Raised when a looping chain wraps around, from its end back to its start or, when
+    /// <see cref="AnimationSpeed"/> is negative, from its start back to its end. A non-looping
+    /// chain never raises this event; see <see cref="AnimationChainFinished"/>.
+    /// </summary>
     public event Action? AnimationChainCycled;
+
+    /// <summary>
+    /// Raised once when a non-looping chain reaches its end and <see cref="Animate"/> becomes
+    /// false. Playing forward, the chain stops on its last frame. Playing backward (negative
+    /// <see cref="AnimationSpeed"/>), it stops on its first frame. A looping chain never raises
+    /// this event; see <see cref="AnimationChainCycled"/>.
+    /// </summary>
+    public event Action? AnimationChainFinished;
 
     /// <summary>
     /// Invoked whenever the current frame changes. Subscribers should copy Texture,
@@ -145,14 +158,16 @@ public class AnimationChainLogic
     /// <summary>
     /// Returns a copy for a cloned renderable. The copy starts at this playback position (chain,
     /// frame, time, speed, looping, animate) and shares the chain list, but advances on its own.
-    /// Its frames go to <paramref name="applyFrame"/>, and <see cref="AnimationChainCycled"/>
-    /// subscribers on this instance are not carried over, since they belong to the source.
+    /// Its frames go to <paramref name="applyFrame"/>. <see cref="AnimationChainCycled"/> and
+    /// <see cref="AnimationChainFinished"/> subscribers on this instance are not carried over,
+    /// since they belong to the source.
     /// </summary>
     public AnimationChainLogic Clone(Action<AnimationFrame>? applyFrame)
     {
         AnimationChainLogic clone = (AnimationChainLogic)MemberwiseClone();
         clone.ApplyFrame = applyFrame;
         clone.AnimationChainCycled = null;
+        clone.AnimationChainFinished = null;
         return clone;
     }
 
@@ -165,29 +180,29 @@ public class AnimationChainLogic
         }
 
         int frameBefore = _currentFrameIndex;
-        _timeIntoAnimation += secondDifference * _animationSpeed;
+        double advance = secondDifference * _animationSpeed;
+        _timeIntoAnimation += advance;
+        bool justFinished = false;
 
         if (_isLooping)
         {
             _timeIntoAnimation = MathFunctions.Loop(_timeIntoAnimation, animationChain.TotalLength, out _justCycled);
         }
-        else if (_timeIntoAnimation < 0)
-        {
-            // Played backward (negative speed) past the start, or a negative time stored before
-            // a chain was set: hold the first frame.
-            _timeIntoAnimation = 0;
-            _justCycled = false;
-        }
-        else if (_timeIntoAnimation >= animationChain.TotalLength)
-        {
-            _timeIntoAnimation = animationChain.TotalLength;
-            _currentFrameIndex = animationChain.Count - 1;
-            _animate = false;
-            _justCycled = true;
-        }
         else
         {
             _justCycled = false;
+            if (_timeIntoAnimation < 0)
+            {
+                // Clamped to the first frame. A negative time stored before a chain was set is
+                // also clamped here, but only playing backward finishes the chain.
+                _timeIntoAnimation = 0;
+                justFinished = advance < 0;
+            }
+            else if (_timeIntoAnimation >= animationChain.TotalLength)
+            {
+                _timeIntoAnimation = animationChain.TotalLength;
+                justFinished = true;
+            }
         }
 
         if (_justCycled)
@@ -195,13 +210,29 @@ public class AnimationChainLogic
             AnimationChainCycled?.Invoke();
         }
 
-        UpdateFrameBasedOffOfTimeIntoAnimation();
-
-        if (_currentFrameIndex != frameBefore)
+        if (justFinished)
         {
-            return UpdateToCurrentAnimationFrame();
+            _animate = false;
         }
-        return false;
+
+        if (justFinished && _timeIntoAnimation > 0)
+        {
+            // The end time is past the last frame, so the frame lookup would wrap to frame 0.
+            _currentFrameIndex = animationChain.Count - 1;
+        }
+        else
+        {
+            UpdateFrameBasedOffOfTimeIntoAnimation();
+        }
+
+        bool didApplyFrame = _currentFrameIndex != frameBefore && UpdateToCurrentAnimationFrame();
+
+        if (justFinished)
+        {
+            AnimationChainFinished?.Invoke();
+        }
+
+        return didApplyFrame;
     }
 
     /// <summary>

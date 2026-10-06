@@ -325,12 +325,22 @@ public class SpriteRuntime : GraphicalUiElement
     }
 
     /// <summary>
-    /// Triggered when the current animation chain completes a full cycle.
+    /// Raised when a looping animation chain wraps around. A non-looping chain raises
+    /// <see cref="AnimationChainFinished"/> instead.
     /// </summary>
     public event Action AnimationChainCycled
     {
         add => ContainedSprite.AnimationLogic.AnimationChainCycled += value;
         remove => ContainedSprite.AnimationLogic.AnimationChainCycled -= value;
+    }
+
+    /// <summary>
+    /// Raised once when a non-looping animation chain reaches its end and Animate becomes false.
+    /// </summary>
+    public event Action AnimationChainFinished
+    {
+        add => ContainedSprite.AnimationLogic.AnimationChainFinished += value;
+        remove => ContainedSprite.AnimationLogic.AnimationChainFinished -= value;
     }
 
     #endregion

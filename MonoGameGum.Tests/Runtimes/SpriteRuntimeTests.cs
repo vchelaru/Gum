@@ -240,16 +240,38 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void AnimateSelf_ShouldFireAnimationChainCycled_WhenNotLooping()
+    public void AnimateSelf_ShouldFireAnimationChainFinishedAndNotCycled_WhenNotLooping()
     {
-        var sut = CreateAnimatedSprite(1.0f);
+        Sprite sut = CreateAnimatedSprite(1.0f);
         sut.IsAnimationChainLooping = false;
-        var cycleCount = 0;
+        int cycleCount = 0;
+        int finishedCount = 0;
         sut.AnimationChainCycled += () => cycleCount++;
+        sut.AnimationChainFinished += () => finishedCount++;
 
         sut.AnimateSelf(1.5);
 
-        cycleCount.ShouldBe(1);
+        cycleCount.ShouldBe(0);
+        finishedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SpriteRuntime_AnimationChainFinished_ShouldForwardToContainedSprite()
+    {
+        SpriteRuntime sut = new();
+        AnimationChain chain = new() { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f });
+        AnimationChainList chains = new();
+        chains.Add(chain);
+        sut.AnimationChains = chains;
+        sut.IsAnimationChainLooping = false;
+        sut.Animate = true;
+        int finishedCount = 0;
+        sut.AnimationChainFinished += () => finishedCount++;
+
+        ((Sprite)sut.RenderableComponent).AnimateSelf(1.5);
+
+        finishedCount.ShouldBe(1);
     }
 
     [Fact]
