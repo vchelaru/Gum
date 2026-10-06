@@ -114,7 +114,7 @@ covered by that test now.
 - [x] hiding the tallest item of a row (H11)
 - [x] wrapped child with cross-axis offset (counted via `X + Width`/`Y + Height`, positive and negative)
 - [x] cross-axis origin, Middle/Large/Baseline units or Percentage in a wrapped row: the row is the parent for position, not size; lone child, row's largest child added later, resized or hidden, flipped parent, RelativeToChildren cross axis, renderable-less parent; line size counts each child like a RelativeToChildren parent (H48)
-- [x] stack sized to its children on both axes with a main-axis max wraps again at its measured main size (H49)
+- [x] stack sized to its children on both axes with a main-axis max wraps again at its measured main size: below, at and just over the max, spacing, hidden child, child added and removed, repeated layout stable (H49)
 - [x] Ratio children in a wrapping stack (subtract every sibling, not just the row; documented on Ratio)
 - [x] wrap when parent size is PercentageOfParent of a grandparent that resizes
 - [x] ChildrenLayout switched away from a wrapped stack and back

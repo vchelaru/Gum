@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
@@ -499,6 +501,120 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
 
         CrossPosition(stack, second).ShouldBe(0);
         CrossSize(stack, parent).ShouldBe(100);
+    }
+
+    // A "tag list": a wrapping stack sized to its children on both axes with a max on the main axis.
+    // Its main size is measured from the children it wraps, so the children wrap again at that size
+    // before the cross axis is measured.
+    static ContainerRuntime CreateTagList(ChildrenLayout stack, float max, float spacing)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 0, DimensionUnitType.RelativeToChildren, crossSize: 0);
+        parent.StackSpacing = spacing;
+        if (stack == ChildrenLayout.TopToBottomStack)
+        {
+            parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+            parent.MaxHeight = max;
+        }
+        else
+        {
+            parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+            parent.MaxWidth = max;
+        }
+        return parent;
+    }
+
+    static float MainSize(ChildrenLayout stack, GraphicalUiElement element) =>
+        stack == ChildrenLayout.TopToBottomStack ? element.AbsoluteHeight : element.AbsoluteWidth;
+
+    // Asserts the stack's size and its last child's position, then again after repeated layouts so
+    // the stack can't settle between two sizes.
+    static void AssertTagList(ChildrenLayout stack, ContainerRuntime parent, float expectedMain, float expectedCross,
+        float expectedLastMain, float expectedLastCross)
+    {
+        GraphicalUiElement last = parent.Children[parent.Children.Count - 1];
+        for (int pass = 0; pass < 3; pass++)
+        {
+            MainSize(stack, parent).ShouldBe(expectedMain, $"pass {pass}: stack main size");
+            CrossSize(stack, parent).ShouldBe(expectedCross, $"pass {pass}: stack cross size");
+            MainPosition(stack, last).ShouldBe(expectedLastMain, $"pass {pass}: last child main");
+            CrossPosition(stack, last).ShouldBe(expectedLastCross, $"pass {pass}: last child cross");
+            parent.UpdateLayout();
+        }
+    }
+
+    public static IEnumerable<object[]> TagListCases()
+    {
+        // mainSizes, crossSizes, hiddenIndex (-1 for none), spacing, expected main, cross, last main, last cross
+        object[][] cases =
+        {
+            // below the max: one line sized to its content
+            new object[] { new float[] { 60, 60 }, new float[] { 20, 30 }, -1, 0f, 120f, 30f, 60f, 0f },
+            // exactly at the max: still one line
+            new object[] { new float[] { 100, 100 }, new float[] { 20, 30 }, -1, 0f, 200f, 30f, 100f, 0f },
+            // just over the max: two lines, the cross size is the two lines with no empty space
+            new object[] { new float[] { 100, 101 }, new float[] { 20, 30 }, -1, 0f, 100f, 50f, 0f, 20f },
+            // spacing that exactly fits
+            new object[] { new float[] { 95, 95 }, new float[] { 20, 30 }, -1, 10f, 200f, 30f, 105f, 0f },
+            // spacing that pushes past the max, and spacing between the lines
+            new object[] { new float[] { 96, 95 }, new float[] { 20, 30 }, -1, 10f, 96f, 60f, 0f, 30f },
+            // an invisible child that would otherwise force a second line
+            new object[] { new float[] { 100, 50, 100 }, new float[] { 20, 40, 30 }, 1, 0f, 200f, 30f, 100f, 0f },
+        };
+        foreach (ChildrenLayout stack in new[] { ChildrenLayout.LeftToRightStack, ChildrenLayout.TopToBottomStack })
+        {
+            foreach (object[] tagCase in cases)
+            {
+                yield return new object[] { stack }.Concat(tagCase).ToArray();
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(TagListCases))]
+    public void WrapsChildren_TagList_ShouldWrapAtMeasuredMainSize(ChildrenLayout stack, float[] mainSizes, float[] crossSizes,
+        int hiddenIndex, float spacing, float expectedMain, float expectedCross, float expectedLastMain, float expectedLastCross)
+    {
+        ContainerRuntime parent = CreateTagList(stack, max: 200, spacing);
+        for (int i = 0; i < mainSizes.Length; i++)
+        {
+            ContainerRuntime child = CreateStackChild(stack, main: mainSizes[i], cross: crossSizes[i]);
+            child.Visible = i != hiddenIndex;
+            parent.AddChild(child);
+        }
+
+        AssertTagList(stack, parent, expectedMain, expectedCross, expectedLastMain, expectedLastCross);
+    }
+
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrapsChildren_TagListChildRemoved_ShouldDropALineAndShrink(ChildrenLayout stack)
+    {
+        ContainerRuntime parent = CreateTagList(stack, max: 200, spacing: 0);
+        parent.AddChild(CreateStackChild(stack, main: 100, cross: 20));
+        ContainerRuntime removed = CreateStackChild(stack, main: 60, cross: 20);
+        parent.AddChild(removed);
+        parent.AddChild(CreateStackChild(stack, main: 60, cross: 30));
+        AssertTagList(stack, parent, expectedMain: 160, expectedCross: 50, expectedLastMain: 0, expectedLastCross: 20);
+
+        parent.RemoveChild(removed);
+
+        AssertTagList(stack, parent, expectedMain: 160, expectedCross: 30, expectedLastMain: 100, expectedLastCross: 0);
+    }
+
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrapsChildren_TagListChildAddedPastMax_ShouldAddALine(ChildrenLayout stack)
+    {
+        ContainerRuntime parent = CreateTagList(stack, max: 200, spacing: 0);
+        parent.AddChild(CreateStackChild(stack, main: 100, cross: 20));
+        parent.AddChild(CreateStackChild(stack, main: 60, cross: 20));
+        AssertTagList(stack, parent, expectedMain: 160, expectedCross: 20, expectedLastMain: 100, expectedLastCross: 0);
+
+        parent.AddChild(CreateStackChild(stack, main: 60, cross: 30));
+
+        AssertTagList(stack, parent, expectedMain: 160, expectedCross: 50, expectedLastMain: 0, expectedLastCross: 20);
     }
 
     // A child's cross-axis offset is part of its line's size, so it pushes the next line out.
