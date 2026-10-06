@@ -76,6 +76,12 @@ If a container has a non-null Max Width, then it will expand according to its ch
 
 The max width applies after the container's `Width` padding is added, so the padding can shrink when the children fill a row. Rows do not wrap earlier to keep the padding.
 
+The container is as wide as its widest row. Each row breaks where the next child would pass the max width, so a later row can be wider than the first. For example, with a `Max Width` of `200`, children `100`, `120`, and `60` wide make two rows, the first holding the `100` wide child and the second holding the other two, and the container is `180` wide.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, the container measured only its first row, so later rows wrapped against that narrower width and a wider child could extend past the container. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
+
 The following animation shows a container which has:
 
 * Width Units of Relative to Children
