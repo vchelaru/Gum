@@ -132,14 +132,14 @@ A chain loops by default. `IsAnimationChainLooping` controls whether it starts o
 
 `AnimationChainCycled` is raised each time a looping chain wraps around. `AnimationChainFinished` is raised once when a chain that does not loop reaches its end. At that point `Animate` becomes `false` and the chain holds its last frame. A chain playing backward (negative `AnimationChainSpeed`) finishes at its first frame instead.
 
-The following code hides a sprite after its animation plays once:
+The following code removes a sprite after its animation plays once:
 
 ```csharp
 // Initialize
 sprite.CurrentChainName = "Explode";
 sprite.IsAnimationChainLooping = false;
 sprite.Animate = true;
-sprite.AnimationChainFinished += () => sprite.Visible = false;
+sprite.AnimationChainFinished += () => sprite.RemoveFromRoot();
 ```
 
 ## Per-Frame Position Offsets (Sprite Only)

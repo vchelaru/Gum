@@ -8304,22 +8304,71 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         if (Children != null)
         {
-            for (int i = 0; i < this.Children.Count; i++)
-            {
-                var child = this.Children[i];
-                child.AnimateSelf(secondDifference);
-
-            }
+            AnimateEach(Children, secondDifference);
         }
         else
         {
-            for (int i = 0; i < this.mWhatThisContains.Count; i++)
-            {
-                var child = mWhatThisContains[i];
-                child.AnimateSelf(secondDifference);
+            AnimateEach(mWhatThisContains, secondDifference);
+        }
+    }
 
+    /// <summary>
+    /// Calls <see cref="AnimateSelf(double)"/> on each element in <paramref name="elements"/>, in order.
+    /// Animation event handlers (such as AnimationChainFinished) may add or remove elements in the
+    /// list while it runs: every element still in the list that was not yet animated advances exactly
+    /// once, and no element advances twice. This is the loop Gum uses for an element's children and
+    /// for the roots passed to GumService.Update.
+    /// </summary>
+    /// <param name="elements">The elements to animate.</param>
+    /// <param name="secondDifference">The number of seconds to advance animations.</param>
+    public static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference)
+    {
+        for (int i = 0; i < elements.Count; i++)
+        {
+            GraphicalUiElement element = elements[i];
+            GraphicalUiElement? next = i + 1 < elements.Count ? elements[i + 1] : null;
+            element.AnimateSelf(secondDifference);
+            i = GetIndexToResumeAfter(elements, element, next, i);
+        }
+    }
+
+    // Returns where element now sits in elements after it was processed at index, so a loop
+    // continuing from there visits each remaining element once even if the list changed meanwhile.
+    // If element was removed, returns the index just before next (the element that followed it).
+    static int GetIndexToResumeAfter(IList<GraphicalUiElement> elements, GraphicalUiElement element, GraphicalUiElement? next, int index)
+    {
+        if (index < elements.Count && ReferenceEquals(elements[index], element))
+        {
+            return index;
+        }
+        int found = IndexOfReference(elements, element);
+        if (found >= 0)
+        {
+            return found;
+        }
+        if (next == null)
+        {
+            // The removed element was last when it was processed.
+            return elements.Count - 1;
+        }
+        found = IndexOfReference(elements, next);
+        if (found >= 0)
+        {
+            return found - 1;
+        }
+        return System.Math.Min(index, elements.Count) - 1;
+    }
+
+    static int IndexOfReference(IList<GraphicalUiElement> elements, GraphicalUiElement element)
+    {
+        for (int i = 0; i < elements.Count; i++)
+        {
+            if (ReferenceEquals(elements[i], element))
+            {
+                return i;
             }
         }
+        return -1;
     }
 
     public void UpdateTextureValuesFrom(ITextureCoordinate asSprite)

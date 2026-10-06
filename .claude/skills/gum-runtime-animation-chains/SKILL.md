@@ -25,7 +25,7 @@ State lives entirely on `AnimationChainLogic`:
 - `UpdateToCurrentAnimationFrame()` invokes the `ApplyFrame` delegate the host wired up. **It does not directly mutate the renderable.**
 - With a chain set, an out-of-range frame index or negative time is clamped to the chain (`SeekToFrame`), on set and again in `UpdateToCurrentAnimationFrame` after a chain switch; with no chain they are stored raw.
 
-`AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). The whole subsystem is platform-agnostic — there is no MonoGame coupling in `AnimationChainLogic`.
+`AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). Event handlers may add or remove elements mid-walk, so a list of elements is animated through `GraphicalUiElement.AnimateEach` (children and `GumService.AnimateRoots`), which resumes after the element it just animated wherever it now is; Sokol's `Renderer.TickEach` walks renderables and keeps its own copy. Never `foreach` or snapshot the list (throws or allocates per frame).
 
 ## Frame application is split across two times
 

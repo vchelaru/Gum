@@ -163,7 +163,7 @@ Before this version, a chain that did not loop raised `AnimationChainCycled` whe
 
 A chain that does not loop now also finishes when it plays backward. With a negative `AnimationChainSpeed`, it stops on its first frame, sets `Animate` to `false`, and raises `AnimationChainFinished`. Before this version, it held the first frame, kept `Animate` set to `true`, and raised no event.
 
-This affects you only if your code subscribes to `AnimationChainCycled` on a sprite or nine slice whose chain does not loop, for example to hide a sprite after its death animation plays. That handler no longer runs.
+This affects you only if your code subscribes to `AnimationChainCycled` on a sprite or nine slice whose chain does not loop, for example to remove a sprite after its death animation plays. That handler no longer runs.
 
 To migrate, subscribe to `AnimationChainFinished` instead.
 
@@ -172,7 +172,7 @@ To migrate, subscribe to `AnimationChainFinished` instead.
 ```csharp
 // Initialize
 sprite.IsAnimationChainLooping = false;
-sprite.AnimationChainCycled += () => sprite.Visible = false;
+sprite.AnimationChainCycled += () => sprite.RemoveFromRoot();
 ```
 
 ✅ New:
@@ -180,7 +180,7 @@ sprite.AnimationChainCycled += () => sprite.Visible = false;
 ```csharp
 // Initialize
 sprite.IsAnimationChainLooping = false;
-sprite.AnimationChainFinished += () => sprite.Visible = false;
+sprite.AnimationChainFinished += () => sprite.RemoveFromRoot();
 ```
 
 For more information see the [Animation Chains](../../code/files-and-fonts/animation-chains.md#looping-and-end-of-chain-events) page.
