@@ -48,6 +48,12 @@ For example, the following shows a container with its `Height Units` set to `Rel
 
 <figure><img src="../../../.gitbook/assets/03_19 05 40.gif" alt=""><figcaption><p>Top To Bottom Stack can be used with Height Units of Relative To Children to grow the container as children are added</p></figcaption></figure>
 
+If the container also has a `Max Height` (or a `Max Width` in a `Left to Right Stack`), it grows until it reaches that value. A child that crosses the max stays in the stack and extends past the container's edge. If `Wraps Children` is checked, that child moves to a new column (or row) instead, so the container stops at the last child that fits. For more information see the [Wraps Children](wraps-children.md) page.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, a stack without `Wraps Children` stopped growing at the last child that fit under its max, the same as a wrapping stack, so it could end up smaller than its max. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
+
 Invisible children are ignored in the stack, so toggling the Visible property removes a child from the stack.
 
 <figure><img src="../../../.gitbook/assets/01_04 31 05.gif" alt=""><figcaption><p>Visible set to false removes an item from stacking</p></figcaption></figure>

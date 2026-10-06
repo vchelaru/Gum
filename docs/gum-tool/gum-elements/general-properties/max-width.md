@@ -21,3 +21,9 @@ Notice that the `Width` variable can still be set to a value larger than `Max Wi
 ## Max Width and Relative to Children
 
 Note that Max Width can prevent a container from growing according to its children. For more information, see the [Relative to Children Width Units page](width-units.md#relative-to-children).
+
+A container with a `Left to Right Stack` grows to its `Max Width` when its children need more space. The child that crosses the max extends past the container's right edge. If the container also has `Wraps Children` checked, it stops at the right edge of the last child that fits, since the next child moves to a new row. For more information see the [Children Layout](../container/children-layout.md#stacking-and-container-height-units-and-width-units) page.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, a stack without `Wraps Children` stopped growing at the last child that fit under its max, the same as a wrapping stack, so it could end up smaller than its max. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}

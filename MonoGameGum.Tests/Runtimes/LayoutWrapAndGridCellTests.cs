@@ -182,17 +182,52 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         (stacksVertically ? parent.AbsoluteHeight : parent.AbsoluteWidth).ShouldBe(150);
     }
 
-    // Intended: the size stops at the last child that fits under the max, the same size a wrapping
-    // stack gets; without WrapsChildren the children keep stacking past it.
+    // Without WrapsChildren the child that crosses the max stays in this line, so the stack grows
+    // to the max to hold as much of it as it can. Children keep stacking past it.
+    [Theory]
+    [InlineData(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToChildren, 120, 120)]
+    [InlineData(ChildrenLayout.LeftToRightStack, DimensionUnitType.RelativeToChildren, 120, 120)]
+    [InlineData(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToChildren, 150, 150)]
+    [InlineData(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToMaxParentOrChildren, 120, 120)]
+    [InlineData(ChildrenLayout.LeftToRightStack, DimensionUnitType.RelativeToMaxParentOrChildren, 120, 120)]
+    public void Stack_SizedToChildrenMainAxisWithMax_ShouldClampToMax_AndNotWrap(ChildrenLayout stack, DimensionUnitType mainUnits, float max, float expectedSize)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime holder = CreateContainer(50, 50);
+        ContainerRuntime parent = stacksVertically
+            ? CreateStack(stack, 100, DimensionUnitType.Absolute, 0, mainUnits)
+            : CreateStack(stack, 0, mainUnits, 100, DimensionUnitType.Absolute);
+        if (stacksVertically)
+        {
+            parent.MaxHeight = max;
+        }
+        else
+        {
+            parent.MaxWidth = max;
+        }
+        holder.AddChild(parent);
+        for (int i = 0; i < 3; i++)
+        {
+            parent.AddChild(CreateContainer(50, 50));
+        }
+
+        (stacksVertically ? parent.AbsoluteHeight : parent.AbsoluteWidth).ShouldBe(expectedSize);
+        MainPosition(stack, parent.Children[2]).ShouldBe(100);
+        CrossPosition(stack, parent.Children[2]).ShouldBe(0);
+    }
+
+    // With WrapsChildren the child that crosses the max moves to the next line, so the size stops
+    // at the last child that fits.
     [Theory]
     [InlineData(ChildrenLayout.TopToBottomStack)]
     [InlineData(ChildrenLayout.LeftToRightStack)]
-    public void Stack_RelativeToChildrenMainAxisWithMax_ShouldStopAtLastChildThatFits_AndNotWrap(ChildrenLayout stack)
+    public void WrappingStack_RelativeToChildrenMainAxisWithMax_ShouldStopAtLastChildThatFits(ChildrenLayout stack)
     {
         bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
         ContainerRuntime parent = stacksVertically
             ? CreateStack(stack, 100, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren)
             : CreateStack(stack, 0, DimensionUnitType.RelativeToChildren, 100, DimensionUnitType.Absolute);
+        parent.WrapsChildren = true;
         if (stacksVertically)
         {
             parent.MaxHeight = 120;
@@ -207,8 +242,38 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         }
 
         (stacksVertically ? parent.AbsoluteHeight : parent.AbsoluteWidth).ShouldBe(100);
-        MainPosition(stack, parent.Children[2]).ShouldBe(100);
-        CrossPosition(stack, parent.Children[2]).ShouldBe(0);
+        MainPosition(stack, parent.Children[2]).ShouldBe(0);
+        CrossPosition(stack, parent.Children[2]).ShouldBe(50);
+    }
+
+    // A RelativeToMaxParentOrChildren child counts toward its parent by its children-based size,
+    // which must be clamped by the child's own max the same way the child's size is.
+    [Theory]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    public void RelativeToChildrenParent_ContainingMaxParentOrChildrenStackWithMax_ShouldMeasureClampedStack(ChildrenLayout stack)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime outer = CreateStack(ChildrenLayout.Regular, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        ContainerRuntime inner = stacksVertically
+            ? CreateStack(stack, 100, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToMaxParentOrChildren)
+            : CreateStack(stack, 0, DimensionUnitType.RelativeToMaxParentOrChildren, 100, DimensionUnitType.Absolute);
+        if (stacksVertically)
+        {
+            inner.MaxHeight = 120;
+        }
+        else
+        {
+            inner.MaxWidth = 120;
+        }
+        outer.AddChild(inner);
+        for (int i = 0; i < 3; i++)
+        {
+            inner.AddChild(CreateContainer(50, 50));
+        }
+
+        (stacksVertically ? inner.AbsoluteHeight : inner.AbsoluteWidth).ShouldBe(120);
+        (stacksVertically ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(120);
     }
 
     [Theory]
