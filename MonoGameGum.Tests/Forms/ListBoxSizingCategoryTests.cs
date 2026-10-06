@@ -20,6 +20,10 @@ public class ListBoxSizingCategoryTests : BaseTestClass
     public static IEnumerable<object[]> ThemeGumxPaths()
     {
         yield return new object[] { "FormsTemplate" };
+        foreach (string theme in new[] { "Bubblegum", "DarkPro", "ForestGlade", "Hazard", "Meadow", "Neon", "Retro95" })
+        {
+            yield return new object[] { theme };
+        }
     }
 
     [Theory]

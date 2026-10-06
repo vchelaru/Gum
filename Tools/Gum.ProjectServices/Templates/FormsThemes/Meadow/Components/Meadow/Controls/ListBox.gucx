@@ -291,6 +291,7 @@
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="ListBoxCategory" Name="ListBoxCategoryState" SetsValue="false" />
+    <Variable Type="SizingCategory" Name="SizingCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="string" Name="VerticalScrollBarInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ClipAndScrollContainer</Value>
@@ -656,6 +657,66 @@
           <string>StrokeColor = Components/Meadow/Styles.Disabled.FillColor</string>
         </Value>
       </VariableList>
+    </State>
+  </Category>
+  <Category>
+    <Name>SizingCategory</Name>
+    <State>
+      <Name>Fixed</Name>
+      <Variable Type="float" Name="ClipAndScrollContainer.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="ClipAndScrollContainer.HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">2</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">-4</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="ClipContainerInstance.HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">2</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerParent.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="ClipContainerParent.HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">2</Value>
+      </Variable>
+      <Variable Type="float" Name="Height" SetsValue="true">
+        <Value xsi:type="xsd:float">256</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>FitChildren</Name>
+      <Variable Type="float" Name="ClipAndScrollContainer.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="ClipAndScrollContainer.HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerInstance.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="ClipContainerInstance.HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
+      </Variable>
+      <Variable Type="float?" Name="ClipContainerInstance.MaxHeight" SetsValue="true">
+        <Value xsi:type="xsd:float">252</Value>
+      </Variable>
+      <Variable Type="float" Name="ClipContainerParent.Height" SetsValue="true">
+        <Value xsi:type="xsd:float">2</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="ClipContainerParent.HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
+      </Variable>
+      <Variable Type="float" Name="Height" SetsValue="true">
+        <Value xsi:type="xsd:float">0</Value>
+      </Variable>
+      <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
+      </Variable>
     </State>
   </Category>
   <Instance Name="Background" BaseType="Rectangle" />
