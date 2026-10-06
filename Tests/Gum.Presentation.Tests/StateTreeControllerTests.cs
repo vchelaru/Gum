@@ -17,7 +17,7 @@ namespace Gum.Presentation.Tests;
 /// taking its dependencies as constructor parameters - none of the logic touched a WPF type, so the
 /// extraction is a pure relocation (same shape as <c>AnimationTabController</c>, issue #3866).
 /// </summary>
-public class StateTreeControllerTests
+public class StateTreeControllerTests : BaseTestClass
 {
     private static (StateTreeController Controller, Mock<IStateTreeViewRightClickService> RightClickService,
         Mock<ISelectedState> SelectedState, Mock<IVariableInCategoryPropagationLogic> PropagationLogic)

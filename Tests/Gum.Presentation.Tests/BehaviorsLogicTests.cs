@@ -20,7 +20,7 @@ namespace Gum.Presentation.Tests;
 /// assembly (ADR-0005 Phase 3, #3928) so this business logic is unit testable. The tab dependency
 /// is narrowed to <see cref="ITabVisibility"/> since the concrete PluginTab is WPF-typed.
 /// </summary>
-public class BehaviorsLogicTests
+public class BehaviorsLogicTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState = new();
     private readonly Mock<IElementCommands> _elementCommands = new();
