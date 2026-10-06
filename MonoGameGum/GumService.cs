@@ -721,7 +721,11 @@ public partial class GumService : IGumService
         {
             for (int i = 0; i < list.Count; i++)
             {
-                list[i].AnimateSelf(difference);
+                GraphicalUiElement root = list[i];
+                GraphicalUiElement? next = i + 1 < list.Count ? list[i + 1] : null;
+                root.AnimateSelf(difference);
+                // An animation event handler may have added or removed roots.
+                i = GraphicalUiElement.GetIndexToResumeAfter(list, root, next, i);
             }
         }
         else

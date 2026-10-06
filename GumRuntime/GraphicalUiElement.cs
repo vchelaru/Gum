@@ -8304,22 +8304,69 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         if (Children != null)
         {
-            for (int i = 0; i < this.Children.Count; i++)
-            {
-                var child = this.Children[i];
-                child.AnimateSelf(secondDifference);
-
-            }
+            AnimateEach(Children, secondDifference);
         }
         else
         {
-            for (int i = 0; i < this.mWhatThisContains.Count; i++)
-            {
-                var child = mWhatThisContains[i];
-                child.AnimateSelf(secondDifference);
+            AnimateEach(mWhatThisContains, secondDifference);
+        }
+    }
 
+    // Animates each element once. An animation event handler may add or remove elements in the
+    // list, so after each call the loop resumes after the element just animated wherever it now is.
+    static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference)
+    {
+        for (int i = 0; i < elements.Count; i++)
+        {
+            GraphicalUiElement element = elements[i];
+            GraphicalUiElement? next = i + 1 < elements.Count ? elements[i + 1] : null;
+            element.AnimateSelf(secondDifference);
+            i = GetIndexToResumeAfter(elements, element, next, i);
+        }
+    }
+
+    /// <summary>
+    /// Returns the index of <paramref name="element"/> in <paramref name="elements"/> after it was
+    /// processed at <paramref name="index"/>, so a loop continuing from the returned index visits
+    /// each remaining element once even if the list changed meanwhile. If the element was removed,
+    /// returns the index just before <paramref name="next"/> (the element that followed it).
+    /// Used by Gum's animation loops; not intended for game code.
+    /// </summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public static int GetIndexToResumeAfter<T>(IList<T> elements, T element, T? next, int index) where T : class
+    {
+        if (index < elements.Count && ReferenceEquals(elements[index], element))
+        {
+            return index;
+        }
+        int found = IndexOfReference(elements, element);
+        if (found >= 0)
+        {
+            return found;
+        }
+        if (next == null)
+        {
+            // The removed element was last when it was processed.
+            return elements.Count - 1;
+        }
+        found = IndexOfReference(elements, next);
+        if (found >= 0)
+        {
+            return found - 1;
+        }
+        return System.Math.Min(index, elements.Count) - 1;
+    }
+
+    static int IndexOfReference<T>(IList<T> elements, T element) where T : class
+    {
+        for (int i = 0; i < elements.Count; i++)
+        {
+            if (ReferenceEquals(elements[i], element))
+            {
+                return i;
             }
         }
+        return -1;
     }
 
     public void UpdateTextureValuesFrom(ITextureCoordinate asSprite)

@@ -157,9 +157,7 @@ public sealed class Renderer : IRenderer
     {
         for (int i = 0; i < _layers.Count; i++)
         {
-            var layer = _layers[i];
-            foreach (var renderable in layer.Renderables)
-                TickRecursively(renderable, secondsSinceLastFrame);
+            TickEach(_layers[i].Renderables, secondsSinceLastFrame);
         }
     }
 
@@ -180,8 +178,20 @@ public sealed class Renderer : IRenderer
             animatable.AnimateSelf(dt);
 
         if (element.Children is null) return;
-        foreach (var child in element.Children)
-            TickRecursively(child, dt);
+        TickEach(element.Children, dt);
+    }
+
+    // An animation event handler may add or remove elements, so the loop resumes after the
+    // element just ticked wherever it now is instead of enumerating (which would throw).
+    private static void TickEach(IList<IRenderableIpso> elements, double dt)
+    {
+        for (int i = 0; i < elements.Count; i++)
+        {
+            IRenderableIpso element = elements[i];
+            IRenderableIpso? next = i + 1 < elements.Count ? elements[i + 1] : null;
+            TickRecursively(element, dt);
+            i = GraphicalUiElement.GetIndexToResumeAfter(elements, element, next, i);
+        }
     }
 
     public void Draw(ISystemManagers? managers)
