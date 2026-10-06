@@ -38,7 +38,7 @@ if (options.ExitAfterSeconds is double exitAfterSeconds)
 }
 
 using Game1 game = new Game1(options.ProjectPath!, options.ElementName!, options.SelectionFilePath, options.ContentRootDirectory,
-    unattended, options.ScreenshotPath);
+    unattended, options.ScreenshotPath, options.FocusName, options.TypedText);
 game.Run();
 deadline?.Dispose();
 return game.UnattendedExitCode;

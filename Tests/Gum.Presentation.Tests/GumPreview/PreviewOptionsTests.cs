@@ -58,6 +58,29 @@ public class PreviewOptionsTests
     }
 
     [Fact]
+    public void Parse_FocusAndType_AreRead()
+    {
+        string[] args = { "--project", "a.gumj", "--element", "Main", "--focus", "NameBox", "--type", "Hello there" };
+
+        PreviewOptions options = PreviewOptions.Parse(args);
+
+        options.Error.ShouldBeNull();
+        options.FocusName.ShouldBe("NameBox");
+        options.TypedText.ShouldBe("Hello there");
+    }
+
+    [Fact]
+    public void Parse_TypeWithoutFocus_IsAnError()
+    {
+        string[] args = { "--project", "a.gumj", "--element", "Main", "--type", "Hello" };
+
+        PreviewOptions options = PreviewOptions.Parse(args);
+
+        options.Error.ShouldNotBeNull();
+        options.Error.ShouldContain("--focus");
+    }
+
+    [Fact]
     public void Parse_ScreenshotWithoutExitAfter_IsAnError()
     {
         string[] args = { "--project", "a.gumj", "--element", "Main", "--screenshot", "shot.png" };

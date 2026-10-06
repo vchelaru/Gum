@@ -208,7 +208,10 @@
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="float" Name="DemoDialog.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">320</Value>
+      <Value xsi:type="xsd:float">16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DemoDialog.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="float" Name="DemoDialog.Width" SetsValue="true">
       <Value xsi:type="xsd:float">349</Value>
@@ -265,10 +268,10 @@
       <Value xsi:type="xsd:float">9</Value>
     </Variable>
     <Variable Type="float" Name="DialogBoxInstance.X" SetsValue="true">
-      <Value xsi:type="xsd:float">722</Value>
+      <Value xsi:type="xsd:float">425</Value>
     </Variable>
     <Variable Type="float" Name="DialogBoxInstance.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">376</Value>
+      <Value xsi:type="xsd:float">327</Value>
     </Variable>
     <Variable Type="string" Name="DifficultyLabel.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuItems</Value>
@@ -279,6 +282,84 @@
     <Variable Type="float" Name="DifficultyLabel.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
+    <Variable Type="string" Name="DividerInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DividerInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="DividerInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance2.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance3.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance3.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance3.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance4.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle1</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance4.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance4.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DividerInstance4.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance4.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="DividerInstance4.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance4.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
     <Variable Type="string" Name="FullScreenCheckbox.CheckBoxCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">EnabledOff</Value>
     </Variable>
@@ -287,6 +368,9 @@
     </Variable>
     <Variable Type="string" Name="FullScreenCheckbox.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Run Fullscreen</Value>
+    </Variable>
+    <Variable Type="float" Name="FullScreenCheckbox.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">200</Value>
     </Variable>
     <Variable Type="float" Name="FullScreenCheckbox.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -337,10 +421,10 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="float" Name="MarginContainer.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">-16</Value>
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="MarginContainer.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="string" Name="MarginContainer.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoDialog</Value>
@@ -435,6 +519,9 @@
     <Variable Type="DimensionUnitType" Name="MenuTitle1.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="MultiLineTextBox.AcceptsReturn" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
     <Variable Type="float" Name="MultiLineTextBox.Height" SetsValue="true">
       <Value xsi:type="xsd:float">174</Value>
     </Variable>
@@ -449,6 +536,9 @@
     </Variable>
     <Variable Type="string" Name="MultiLineTextBox.TextBoxCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Enabled</Value>
+    </Variable>
+    <Variable Type="TextWrapping" Name="MultiLineTextBox.TextWrapping" SetsValue="true">
+      <Value xsi:type="xsd:string">Wrap</Value>
     </Variable>
     <Variable Type="float" Name="MultiLineTextBox.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -549,56 +639,6 @@
     <Variable Type="string" Name="ResolutionLabel.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Resolution</Value>
     </Variable>
-    <Variable Type="string" Name="ShowDialogButton.ButtonCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Enabled</Value>
-    </Variable>
-    <Variable Type="string" Name="ShowDialogButton.Parent" SetsValue="true" />
-    <Variable Type="string" Name="ShowDialogButton.Text" SetsValue="true">
-      <Value xsi:type="xsd:string">Show Dialog Box</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowDialogButton.X" SetsValue="true">
-      <Value xsi:type="xsd:float">722</Value>
-    </Variable>
-    <Variable Type="HorizontalAlignment" Name="ShowDialogButton.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowDialogButton.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowDialogButton.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">348</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="ShowDialogButton.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowDialogButton.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="string" Name="ShowToastButton.ButtonCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Enabled</Value>
-    </Variable>
-    <Variable Type="string" Name="ShowToastButton.Parent" SetsValue="true" />
-    <Variable Type="string" Name="ShowToastButton.Text" SetsValue="true">
-      <Value xsi:type="xsd:string">Show Toast</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowToastButton.X" SetsValue="true">
-      <Value xsi:type="xsd:float">788</Value>
-    </Variable>
-    <Variable Type="HorizontalAlignment" Name="ShowToastButton.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowToastButton.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowToastButton.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">16</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="ShowToastButton.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowToastButton.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
     <Variable Type="string" Name="SoundLabel.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuItems</Value>
     </Variable>
@@ -656,6 +696,12 @@
     <Variable Type="int" Name="TitleText.Green" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
+    <Variable Type="float" Name="TitleText.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TitleText.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
@@ -669,7 +715,10 @@
       <Value xsi:type="xsd:string">Settings</Value>
     </Variable>
     <Variable Type="float" Name="TitleText.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">172</Value>
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">128</Value>
@@ -682,6 +731,12 @@
     </Variable>
     <Variable Type="int" Name="TitleText1.Green" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TitleText1.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -696,7 +751,10 @@
       <Value xsi:type="xsd:string">New Profile</Value>
     </Variable>
     <Variable Type="float" Name="TitleText1.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">183</Value>
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="float" Name="WindowStandardInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">163</Value>
@@ -708,7 +766,7 @@
       <Value xsi:type="xsd:float">15</Value>
     </Variable>
     <Variable Type="float" Name="WindowStandardInstance.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">575</Value>
+      <Value xsi:type="xsd:float">537</Value>
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
@@ -766,20 +824,23 @@
   <Instance Name="MenuItems" BaseType="Container" />
   <Instance Name="TitleText" BaseType="Text" />
   <Instance Name="TitleText1" BaseType="Text" />
+  <Instance Name="DividerInstance" BaseType="Retro95/Elements/Divider" />
+  <Instance Name="DividerInstance4" BaseType="Retro95/Elements/Divider" />
   <Instance Name="ResolutionLabel" BaseType="Retro95/Controls/Label" />
   <Instance Name="ResolutionBox" BaseType="Retro95/Controls/ListBox" />
   <Instance Name="DetectResolutionsButton" BaseType="Retro95/Controls/Button" />
-  <Instance Name="ShowDialogButton" BaseType="Retro95/Controls/Button" />
-  <Instance Name="ShowToastButton" BaseType="Retro95/Controls/Button" />
   <Instance Name="FullScreenCheckbox" BaseType="Retro95/Controls/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Retro95/Elements/Divider" />
   <Instance Name="MusicLabel" BaseType="Retro95/Controls/Label" />
   <Instance Name="MusicSlider" BaseType="Retro95/Controls/Slider" />
   <Instance Name="SoundLabel" BaseType="Retro95/Controls/Label" />
   <Instance Name="SoundSlider" BaseType="Retro95/Controls/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Retro95/Elements/Divider" />
   <Instance Name="ControlLabel" BaseType="Retro95/Controls/Label" />
   <Instance Name="RadioButtonInstance" BaseType="Retro95/Controls/RadioButton" />
   <Instance Name="RadioButtonInstance1" BaseType="Retro95/Controls/RadioButton" />
   <Instance Name="RadioButtonInstance2" BaseType="Retro95/Controls/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Retro95/Elements/Divider" />
   <Instance Name="DifficultyLabel" BaseType="Retro95/Controls/Label" />
   <Instance Name="Background1" BaseType="Rectangle" />
   <Instance Name="ComboBoxInstance" BaseType="Retro95/Controls/ComboBox" />

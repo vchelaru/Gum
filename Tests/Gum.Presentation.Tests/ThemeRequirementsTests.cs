@@ -104,6 +104,84 @@ public class ThemeRequirementsTests
     }
 
     [Fact]
+    public void NeonTheme_RequiresTheCheckMarkCharacter()
+    {
+        // Neon ships no cached check-mark font, so the importing project must generate it with U+2713.
+        string themeDirectory = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Neon");
+
+        ThemeRequirements requirements = ThemeRequirements.LoadFromThemeDirectory(themeDirectory);
+
+        global::RenderingLibrary.Graphics.Fonts.BmfcSave.ParseCharRanges(requirements.FontRanges!).ShouldContain(0x2713);
+    }
+
+    [Fact]
+    public void LoadFromThemeDirectory_ReadsTheThemeProjectsFontRanges()
+    {
+        string themeDirectory = Path.Combine(Path.GetTempPath(), "GumThemeRanges_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(themeDirectory);
+        try
+        {
+            File.WriteAllText(Path.Combine(themeDirectory, "GumProject.gumx"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <FontRanges>32-126,10003-10007</FontRanges>\n</GumProjectSave>");
+
+            ThemeRequirements requirements = ThemeRequirements.LoadFromThemeDirectory(themeDirectory);
+
+            requirements.FontRanges.ShouldBe("32-126,10003-10007");
+        }
+        finally
+        {
+            Directory.Delete(themeDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void LoadFromThemeDirectory_HasNoFontRanges_WhenTheThemeProjectIsNotValidXml()
+    {
+        string themeDirectory = Path.Combine(Path.GetTempPath(), "GumThemeRanges_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(themeDirectory);
+        try
+        {
+            File.WriteAllText(Path.Combine(themeDirectory, "GumProject.gumx"), "<GumProjectSave><FontRanges>32-126");
+
+            ThemeRequirements requirements = ThemeRequirements.LoadFromThemeDirectory(themeDirectory);
+
+            requirements.FontRanges.ShouldBeNull();
+        }
+        finally
+        {
+            Directory.Delete(themeDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Diff_MergesThemeFontRangesIntoTheProjects_WhenTheProjectLacksSomeCharacters()
+    {
+        var project = new GumProjectSave { FontRanges = "32-126,1024-1100" };
+        var requirements = new ThemeRequirements { FontRanges = "32-126,9632-9727,10003-10007" };
+
+        var diff = requirements.Diff(project);
+
+        diff.HasChanges.ShouldBeTrue();
+        diff.FontRangesChange.ShouldBe("32-126,1024-1100,9632-9727,10003-10007");
+        diff.DescribeChanges().ShouldContain(line => line.Contains("font"));
+        diff.Apply(project, new Mock<ISkiaShapeStandardsLogic>().Object);
+        project.FontRanges.ShouldBe("32-126,1024-1100,9632-9727,10003-10007");
+    }
+
+    [Fact]
+    public void Diff_NoFontRangesChange_WhenTheProjectAlreadyCoversTheThemesCharacters()
+    {
+        var project = new GumProjectSave { FontRanges = "32-500,9000-11000" };
+        var requirements = new ThemeRequirements { FontRanges = "32-126,10003-10007" };
+
+        var diff = requirements.Diff(project);
+
+        diff.FontRangesChange.ShouldBeNull();
+        diff.HasChanges.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Parse_HandlesCommentsAndBlankLinesAndUnknownKeys()
     {
         var requirements = ThemeRequirements.Parse(

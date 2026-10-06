@@ -36,6 +36,8 @@
 	<ItemGroup>
 		<!-- Seed-driven test class order for the weekly shuffled-order workflow (#5820). -->
 		<Compile Include="..\Tests\TestOrdering\ShuffledTestCollectionOrderer.cs" Link="TestOrdering\ShuffledTestCollectionOrderer.cs" />
+		<!-- GumPreview is an executable, so its Forms interaction logic is linked rather than referenced. -->
+		<Compile Include="..\Tool\GumPreview\PreviewInteraction.cs" Link="GumPreview\PreviewInteraction.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

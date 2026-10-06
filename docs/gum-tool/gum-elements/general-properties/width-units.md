@@ -111,6 +111,12 @@ A parent ignores its child if the child uses an `X Units` of `Percentage of Pare
 
 <figure><img src="../../../.gitbook/assets/05_07 45 21.gif" alt=""><figcaption><p><code>X Units</code> of <code>Percentage of Parent Width</code> result in the child ignored</p></figcaption></figure>
 
+### Centered Children
+
+A child with an `X Units` of `Pixels from Center` grows its parent equally to the left and right of the parent's center, so the child stays centered. The parent's width is twice the distance from its center to the child's farthest edge.
+
+For example, a child with an `Absolute` `Width` of 100, an `X Origin` of `Center`, and an `X` of 0 makes the parent 100 pixels wide. Changing the child's `X` to 20 makes the parent 140 pixels wide, because the child's right edge is now 70 pixels from the center.
+
 ### Relative to Children and Auto Grid Horizontal
 
 If a parent sets its `Width Units` to `Relative to Children`, then it resizes itself to contain its children. Normally the width of the entire parent is determined by the child which needs the most space horizontally. If the parent uses an `Auto Grid Horizontal` layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space horizontally determines the width of all cells.
