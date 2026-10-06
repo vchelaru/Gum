@@ -118,7 +118,7 @@ covered by that test now.
 
 ### 2.5 Ratio in stacks
 - [x] remaining space after Absolute/Percentage siblings, spacing, nested stacks
-- [ ] cross-axis Ratio (Ratio height in a LeftToRightStack, H13)
+- [x] cross-axis Ratio subtracts siblings beside it on the same axis; intended and documented on DimensionUnitType.Ratio (H13)
 
 ## 3. AutoGrid (AutoGridHorizontal, AutoGridVertical)
 
@@ -322,7 +322,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H10 | `AdjustParentOriginOffsetsByUnits` | Later LeftToRightStack child with Percentage X lost its stack position. | FIX |
 | H11 | `RefreshParentRowColumnDimensionForThis` | Hiding a row's tallest item. | CLEARED |
 | H12 | `GetRequiredParentHeight` | PixelsFromMiddleInverted inverted one edge only. | FIX |
-| H13 | Ratio | Cross-axis Ratio in a stack subtracts siblings beside it. | LOG #5767 |
+| H13 | Ratio | Cross-axis Ratio in a stack subtracts siblings beside it. | DOCUMENT (#5767; intended, XML doc on Ratio) |
 | H14 | Ratio | Siblings larger than the parent gave a negative size. | FIX |
 | H15 | Ratio under a renderable-less parent | Parentless Ratio children ignored siblings and never re-split; a renderable-less stack didn't restack on a child change. | FIX (#5768) |
 | H16 | `PositionChanged` | Handler that sets X re-enters. | CLEARED |
