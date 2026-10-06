@@ -52,6 +52,8 @@ Red-first still applies: after adding a branch, **remove or invert it and confir
 
 Apply this to the **whole diff**, not just the branch you set out to add — a refactor that changes *how* an existing path works (swapping an index lookup for a reference lookup, rerouting a removal) is a changed branch too, and "the full suite is green" only proves the paths the suite already exercised. Before committing, **name any branch your diff touched that no test would catch regressing**; scoping coverage to the bugs that had a crash-repro is exactly how an untested rework slips through.
 
+A fix bundled into another PR gets the same edge-case coverage as the headline change: boundaries (below, at and just over a limit), add and remove, hidden children, and repeated layout staying stable. One repro test is not coverage for a second bug.
+
 ## Writing the tests
 
 - **Quality over coverage.** The fewest tests that meaningfully cover the change — 1 ideally, 2–3 only when the feature has genuinely distinct cases. Don't ship near-duplicate tests; combine them or keep the representative one.

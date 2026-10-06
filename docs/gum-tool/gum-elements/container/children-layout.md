@@ -114,7 +114,7 @@ The first child in a stack uses its origin on both axes.
 
 ### Wraps Children
 
-The [Wraps Children](wraps-children.md) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](wraps-children.md) page.
+The [Wraps Children](wraps-children.md) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](wraps-children.md) page. In a wrapping stack, each row or column is the parent of its children on the other axis for positioning, so a centered child centers in its row. For more information see [Positioning Children Within a Row or Column](wraps-children.md#positioning-children-within-a-row-or-column).
 
 ### Reordering Children
 

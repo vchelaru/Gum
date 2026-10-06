@@ -1068,7 +1068,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.UpdateLayout();
         parent.UpdateLayout();
 
-        // The child hangs below the parent's bottom edge, so it adds nothing to the parent's height.
+        // #5802: the child's row (100 tall, sized by the sibling) is its parent for position, so its top
+        // is the row's bottom. It hangs below the row, and a row ignores the portion of a child outside
+        // it, as a parent sized to its children does, so it adds nothing to the parent's height.
         parent.AbsoluteHeight.ShouldBe(100);
         child.AbsoluteTop.ShouldBe(100);
     }

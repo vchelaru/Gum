@@ -20,6 +20,32 @@ Similarly, column width in a Top to bottom Stack is determined by the largest ch
 
 <figure><img src="../../../.gitbook/assets/04_20 09 32.gif" alt=""><figcaption><p>Width of each item in the column determines column width</p></figcaption></figure>
 
+## Positioning Children Within a Row or Column
+
+In a wrapping stack, each row (in a `Left to Right Stack`) or column (in a `Top to Bottom Stack`) acts as the parent of its children on the other axis. A child's `Y Units` and `Y Origin` in a `Left to Right Stack`, or its `X Units` and `X Origin` in a `Top to Bottom Stack`, position it within its row or column instead of within the whole container:
+
+* `Pixels From Center` with a `Center` origin centers the child in its row or column.
+* `Pixels From Bottom` (or `Pixels From Right`) with a `Bottom` (or `Right`) origin aligns the child to the far edge of its row or column. `Pixels From Baseline` uses the bottom of the row.
+* `Percentage` places the child at a percentage of its row or column's size.
+* `Pixels From Top` (or `Pixels From Left`) places the child relative to the start of its row or column.
+
+A row or column is as large as its largest child, and rows and columns stay packed at the start of the container. They do not stretch to fill extra space. Because of this, a child alone in its row is the same size as its row, so centering it or aligning it to the far edge leaves it at the start of the row.
+
+A row counts each child the same way a container with `Height Units` of `Relative to Children` does (see [Ignored Width Values](../general-properties/width-units.md#ignored-width-values)):
+
+* An `X` or `Y` value counts from the edge it is measured from. For example, a child placed 10 pixels up from the bottom of its row makes the row 10 pixels taller than the child.
+* A portion of a child placed outside its row does not make the row larger.
+* A child positioned with `Percentage` does not count toward its row's size.
+* A child whose size depends on its parent, such as `Percentage of Parent`, counts toward its row's size when the container's own size on that axis does not depend on its children. For example, in a `Left to Right Stack` that is `300` tall, tiles with `Height Units` of `Percentage of Parent` and `Height` of `30` make each row `90` tall. If the container's `Height Units` is `Relative to Children`, such a child does not count, because the container and the child would each depend on the other.
+
+Size units are unaffected. A child with `Height Units` of `Percentage of Parent` or `Relative to Parent` still sizes itself from the whole container, not its row.
+
+Stacks that do not wrap position children on the other axis within the whole container.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, a child in a wrapping stack was positioned within the whole container on the other axis, so a centered child was centered in the container rather than in its row or column. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
+
 ## Wraps Children and Width Units
 
 Wrapping of children can only be performed if the parent's size does not depend on its children (see more info below). If the parent's size does depend on its children, then the parent will expand to fit is children so wrapping will not occur.
