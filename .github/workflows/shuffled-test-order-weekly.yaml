@@ -1,9 +1,10 @@
 name: Shuffled Test Order Weekly
 
-# Runs Gum.Presentation.Tests and MonoGameGum.Tests several times with test classes in a random
-# order, to catch a class that leaks static state (ObjectFinder.Self, StandardElementsManager.Self,
-# ...) into a later one (#5820). ShuffledTestCollectionOrderer (Tests/TestOrdering) shuffles by
-# GUM_TEST_SHUFFLE_SEED; without it the suites keep xUnit's default order, so PR CI is unaffected.
+# Runs Gum.Presentation.Tests and MonoGameGum.Tests several times with test classes, and the methods
+# within each class, in a random order, to catch a test that leaks static state (ObjectFinder.Self,
+# StandardElementsManager.Self, ...) into a later one (#5820, #5840). ShuffledTestCollectionOrderer
+# and ShuffledTestCaseOrderer (Tests/TestOrdering) shuffle by GUM_TEST_SHUFFLE_SEED; without it the
+# suites keep xUnit's default order, so PR CI is unaffected.
 #
 # Each run prints its seed. To replay a failure locally on the same commit:
 #   GUM_TEST_SHUFFLE_SEED=<seed> GUM_ALLOW_FULL_TESTS=1 dotnet test <project>

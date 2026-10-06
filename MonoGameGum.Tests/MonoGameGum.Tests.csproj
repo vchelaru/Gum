@@ -34,8 +34,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Seed-driven test class order for the weekly shuffled-order workflow (#5820). -->
+		<!-- Seed-driven test class and method order for the weekly shuffled-order workflow (#5820, #5840). -->
 		<Compile Include="..\Tests\TestOrdering\ShuffledTestCollectionOrderer.cs" Link="TestOrdering\ShuffledTestCollectionOrderer.cs" />
+		<Compile Include="..\Tests\TestOrdering\ShuffledTestCaseOrderer.cs" Link="TestOrdering\ShuffledTestCaseOrderer.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
