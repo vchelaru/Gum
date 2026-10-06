@@ -615,56 +615,6 @@
     <Variable Type="string" Name="ResolutionLabel.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Resolution</Value>
     </Variable>
-    <Variable Type="string" Name="ShowDialogButton.ButtonCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Enabled</Value>
-    </Variable>
-    <Variable Type="string" Name="ShowDialogButton.Parent" SetsValue="true" />
-    <Variable Type="string" Name="ShowDialogButton.Text" SetsValue="true">
-      <Value xsi:type="xsd:string">Show Dialog Box</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowDialogButton.X" SetsValue="true">
-      <Value xsi:type="xsd:float">722</Value>
-    </Variable>
-    <Variable Type="HorizontalAlignment" Name="ShowDialogButton.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowDialogButton.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowDialogButton.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">348</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="ShowDialogButton.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowDialogButton.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="string" Name="ShowToastButton.ButtonCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Enabled</Value>
-    </Variable>
-    <Variable Type="string" Name="ShowToastButton.Parent" SetsValue="true" />
-    <Variable Type="string" Name="ShowToastButton.Text" SetsValue="true">
-      <Value xsi:type="xsd:string">Show Toast</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowToastButton.X" SetsValue="true">
-      <Value xsi:type="xsd:float">788</Value>
-    </Variable>
-    <Variable Type="HorizontalAlignment" Name="ShowToastButton.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowToastButton.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="float" Name="ShowToastButton.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">16</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="ShowToastButton.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ShowToastButton.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
     <Variable Type="string" Name="SoundLabel.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuItems</Value>
     </Variable>
@@ -833,8 +783,6 @@
   <Instance Name="ResolutionLabel" BaseType="Meadow/Controls/Label" />
   <Instance Name="ResolutionBox" BaseType="Meadow/Controls/ListBox" />
   <Instance Name="DetectResolutionsButton" BaseType="Meadow/Controls/Button" />
-  <Instance Name="ShowDialogButton" BaseType="Meadow/Controls/Button" />
-  <Instance Name="ShowToastButton" BaseType="Meadow/Controls/Button" />
   <Instance Name="FullScreenCheckbox" BaseType="Meadow/Controls/CheckBox" />
   <Instance Name="DividerInstance1" BaseType="Meadow/Elements/Divider" />
   <Instance Name="MusicLabel" BaseType="Meadow/Controls/Label" />
