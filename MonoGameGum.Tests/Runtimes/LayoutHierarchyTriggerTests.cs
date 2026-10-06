@@ -506,6 +506,84 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
     }
 
     [Fact]
+    public void ChildrenReplace_ShouldRestackAndResizeParent()
+    {
+        ContainerRuntime stack = CreateContainer(100, 0);
+        stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        ContainerRuntime first = CreateContainer(50, 10);
+        stack.AddChild(first);
+        ContainerRuntime last = CreateContainer(50, 20);
+        stack.AddChild(last);
+        ContainerRuntime replacement = CreateContainer(50, 40);
+
+        stack.Children[0] = replacement;
+
+        first.Parent.ShouldBeNull();
+        replacement.AbsoluteTop.ShouldBe(0);
+        last.AbsoluteTop.ShouldBe(40);
+        stack.AbsoluteHeight.ShouldBe(60);
+    }
+
+    // stack (TopToBottomStack, RelativeToChildren height) holds 40-tall children; grid is a 200x200
+    // 2x2 AutoGridHorizontal holding 50x50 children. The moved child is 50x40.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Reparent_BetweenStackAndGrid_ShouldRelayoutOldAndNewParent(bool fromStackToGrid)
+    {
+        ContainerRuntime root = CreateContainer(400, 400);
+        ContainerRuntime stack = CreateContainer(100, 0);
+        stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        root.AddChild(stack);
+        ContainerRuntime grid = CreateContainer(200, 200);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 2;
+        grid.X = 200;
+        root.AddChild(grid);
+        ContainerRuntime moved = CreateContainer(50, 40);
+        ContainerRuntime stackFirst = CreateContainer(50, 40);
+        ContainerRuntime stackLast = CreateContainer(50, 40);
+        stack.AddChild(stackFirst);
+        if (fromStackToGrid)
+        {
+            stack.AddChild(moved);
+        }
+        stack.AddChild(stackLast);
+        ContainerRuntime gridFirst = CreateContainer(50, 50);
+        ContainerRuntime gridLast = CreateContainer(50, 50);
+        if (!fromStackToGrid)
+        {
+            grid.AddChild(moved);
+        }
+        grid.AddChild(gridFirst);
+        grid.AddChild(gridLast);
+
+        if (fromStackToGrid)
+        {
+            moved.Parent = grid;
+
+            stackLast.AbsoluteTop.ShouldBe(40);
+            stack.AbsoluteHeight.ShouldBe(80);
+            // Third cell: first column, second row.
+            moved.AbsoluteLeft.ShouldBe(200);
+            moved.AbsoluteTop.ShouldBe(100);
+        }
+        else
+        {
+            moved.Parent = stack;
+
+            gridFirst.AbsoluteLeft.ShouldBe(200);
+            gridLast.AbsoluteLeft.ShouldBe(300);
+            gridLast.AbsoluteTop.ShouldBe(0);
+            moved.AbsoluteTop.ShouldBe(80);
+            stack.AbsoluteHeight.ShouldBe(120);
+        }
+    }
+
+    [Fact]
     public void AddingChild_WhileParentSuspended_ShouldMatchUnsuspended_OnResume()
     {
         ContainerRuntime unsuspendedParent = CreateSizeToChildren();
@@ -968,6 +1046,170 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         last.AbsoluteTop.ShouldBe(expectedLastTop);
     }
 
+    public enum LayoutSuspension
+    {
+        None,
+        Grid,
+        Outer,
+        All,
+    }
+
+    // Each row: grid kind, property, then the outer size and the Fill child's position once the
+    // property has applied. Every row runs with each kind of suspension.
+    static readonly object[][] GridSetterRows =
+    {
+        // Four columns: 4x2 cells, the Fill child (fifth) starts the second row.
+        new object[] { ChildrenLayout.AutoGridHorizontal, nameof(GraphicalUiElement.AutoGridHorizontalCells), 200f, 100f, 0f, 50f },
+        // Four rows of two columns.
+        new object[] { ChildrenLayout.AutoGridHorizontal, nameof(GraphicalUiElement.AutoGridVerticalCells), 100f, 200f, 0f, 100f },
+        // Three rows of two columns with 10 between cells.
+        new object[] { ChildrenLayout.AutoGridHorizontal, nameof(GraphicalUiElement.StackSpacing), 110f, 170f, 0f, 120f },
+        // Two rows; five children need three columns, so four columns stay.
+        new object[] { ChildrenLayout.AutoGridVertical, nameof(GraphicalUiElement.AutoGridHorizontalCells), 200f, 100f, 100f, 0f },
+        // Four rows; the Fill child starts the second column.
+        new object[] { ChildrenLayout.AutoGridVertical, nameof(GraphicalUiElement.AutoGridVerticalCells), 100f, 200f, 50f, 0f },
+        // Three columns of two rows with 10 between cells.
+        new object[] { ChildrenLayout.AutoGridVertical, nameof(GraphicalUiElement.StackSpacing), 170f, 110f, 120f, 0f },
+    };
+
+    public static IEnumerable<object[]> GridSetterCases()
+    {
+        foreach (object[] row in GridSetterRows)
+        {
+            foreach (LayoutSuspension suspension in System.Enum.GetValues<LayoutSuspension>())
+            {
+                yield return new object[] { row[0], row[1], suspension, row[2], row[3], row[4], row[5] };
+            }
+        }
+    }
+
+    // outer (RelativeToChildren) > 2x2 grid (RelativeToChildren both axes) > four 50x50 children
+    // and a Fill child. The grid starts 100x150 (AutoGridHorizontal) or 150x100 (AutoGridVertical).
+    [Theory]
+    [MemberData(nameof(GridSetterCases))]
+    public void GridSetter_ShouldRelayoutGridAndParent_AndWaitForResume_WhenSuspended(ChildrenLayout layout, string propertyName,
+        LayoutSuspension suspension, float expectedOuterWidth, float expectedOuterHeight, float expectedFillLeft, float expectedFillTop)
+    {
+        ContainerRuntime outer = CreateSizeToChildren();
+        ContainerRuntime grid = CreateSizeToChildren();
+        grid.ChildrenLayout = layout;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 2;
+        outer.AddChild(grid);
+        for (int i = 0; i < 4; i++)
+        {
+            grid.AddChild(CreateContainer(50, 50));
+        }
+        ContainerRuntime fill = new();
+        fill.Dock(Dock.Fill);
+        grid.AddChild(fill);
+        Bounds[] before = new[] { GetBounds(outer), GetBounds(grid), GetBounds(fill) };
+
+        switch (suspension)
+        {
+            case LayoutSuspension.Grid: grid.SuspendLayout(); break;
+            case LayoutSuspension.Outer: outer.SuspendLayout(recursive: true); break;
+            case LayoutSuspension.All: GraphicalUiElement.IsAllLayoutSuspended = true; break;
+        }
+        switch (propertyName)
+        {
+            case nameof(GraphicalUiElement.AutoGridHorizontalCells): grid.AutoGridHorizontalCells = 4; break;
+            case nameof(GraphicalUiElement.AutoGridVerticalCells): grid.AutoGridVerticalCells = 4; break;
+            default: grid.StackSpacing = 10; break;
+        }
+        if (suspension != LayoutSuspension.None)
+        {
+            new[] { GetBounds(outer), GetBounds(grid), GetBounds(fill) }.ShouldBe(before);
+        }
+        switch (suspension)
+        {
+            case LayoutSuspension.Grid: grid.ResumeLayout(); break;
+            case LayoutSuspension.Outer: outer.ResumeLayout(recursive: true); break;
+            case LayoutSuspension.All:
+                GraphicalUiElement.IsAllLayoutSuspended = false;
+                outer.UpdateLayout();
+                break;
+        }
+
+        outer.AbsoluteWidth.ShouldBe(expectedOuterWidth);
+        outer.AbsoluteHeight.ShouldBe(expectedOuterHeight);
+        fill.AbsoluteLeft.ShouldBe(expectedFillLeft);
+        fill.AbsoluteTop.ShouldBe(expectedFillTop);
+        fill.AbsoluteWidth.ShouldBe(50);
+        fill.AbsoluteHeight.ShouldBe(50);
+    }
+
+    public enum StateRoute
+    {
+        Direct,
+        ApplyState,
+        RefreshStyles,
+    }
+
+    static StateSave CreateGridState(int columns, int rows, float spacing)
+    {
+        StateSave state = new() { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "ChildrenLayout", Value = ChildrenLayout.AutoGridHorizontal, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "AutoGridHorizontalCells", Value = columns, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "AutoGridVerticalCells", Value = rows, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "StackSpacing", Value = spacing, SetsValue = true });
+        return state;
+    }
+
+    // outer (RelativeToChildren) > grid (200 wide, RelativeToChildren height) > three 50x50 children.
+    // The grid starts Regular; its grid variables arrive directly, through ApplyState or through RefreshStyles.
+    [Theory]
+    [InlineData(StateRoute.Direct)]
+    [InlineData(StateRoute.ApplyState)]
+    [InlineData(StateRoute.RefreshStyles)]
+    public void GridVariables_ShouldLayOutTheSame_WhicheverRouteSetsThem(StateRoute route)
+    {
+        int columns = 2;
+        int rows = 1;
+        float spacing = 10;
+        // Three children in two columns need two rows: 50 + 10 + 50.
+        float expectedGridHeight = 110;
+        float expectedSecondLeft = 105;
+        float expectedThirdTop = 60;
+        ContainerRuntime outer = CreateSizeToChildren();
+        ContainerRuntime grid = CreateContainer(200, 0);
+        grid.HeightUnits = DimensionUnitType.RelativeToChildren;
+        outer.AddChild(grid);
+        List<ContainerRuntime> children = new();
+        for (int i = 0; i < 3; i++)
+        {
+            ContainerRuntime child = CreateContainer(50, 50);
+            grid.AddChild(child);
+            children.Add(child);
+        }
+        StateSave state = CreateGridState(columns, rows, spacing);
+
+        switch (route)
+        {
+            case StateRoute.Direct:
+                grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+                grid.AutoGridHorizontalCells = columns;
+                grid.AutoGridVerticalCells = rows;
+                grid.StackSpacing = spacing;
+                break;
+            case StateRoute.ApplyState:
+                grid.ApplyState(state);
+                break;
+            case StateRoute.RefreshStyles:
+                ScreenSave element = new() { Name = "GridScreen" };
+                state.ParentContainer = element;
+                element.States.Add(state);
+                grid.ElementSave = element;
+                grid.RefreshStyles();
+                break;
+        }
+
+        grid.AbsoluteHeight.ShouldBe(expectedGridHeight);
+        outer.AbsoluteHeight.ShouldBe(expectedGridHeight);
+        children[1].AbsoluteLeft.ShouldBe(expectedSecondLeft);
+        children[2].AbsoluteTop.ShouldBe(expectedThirdTop);
+    }
+
     #endregion
 
     #region Propagation (8.2)
@@ -1112,6 +1354,61 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         element.ResumeLayout();
 
         element.AbsoluteWidth.ShouldBe(100);
+    }
+
+    public enum GridSuspension
+    {
+        Child,
+        Grid,
+        All,
+    }
+
+    // A 2x2 AutoGridHorizontal, 200 wide and RelativeToChildren tall, holding four 50x50 children.
+    // The first child grows to 80 tall while something is suspended.
+    [Theory]
+    [InlineData(GridSuspension.Child)]
+    [InlineData(GridSuspension.Grid)]
+    [InlineData(GridSuspension.All)]
+    public void GridChildResized_WhileSuspended_ShouldResizeGridOnResume(GridSuspension suspension)
+    {
+        float unchangedGridHeight = 100;
+        float expectedGridHeight = 160;
+        float expectedThirdTop = 80;
+        ContainerRuntime grid = CreateContainer(200, 0);
+        grid.HeightUnits = DimensionUnitType.RelativeToChildren;
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 2;
+        List<ContainerRuntime> children = new();
+        for (int i = 0; i < 4; i++)
+        {
+            ContainerRuntime child = CreateContainer(50, 50);
+            grid.AddChild(child);
+            children.Add(child);
+        }
+        grid.AbsoluteHeight.ShouldBe(unchangedGridHeight);
+
+        switch (suspension)
+        {
+            case GridSuspension.Child: children[0].SuspendLayout(); break;
+            case GridSuspension.Grid: grid.SuspendLayout(recursive: true); break;
+            default: GraphicalUiElement.IsAllLayoutSuspended = true; break;
+        }
+        children[0].Height = 80;
+        grid.AbsoluteHeight.ShouldBe(unchangedGridHeight);
+        switch (suspension)
+        {
+            case GridSuspension.Child: children[0].ResumeLayout(); break;
+            case GridSuspension.Grid: grid.ResumeLayout(recursive: true); break;
+            default:
+                GraphicalUiElement.IsAllLayoutSuspended = false;
+                grid.UpdateLayout();
+                break;
+        }
+
+        grid.AbsoluteHeight.ShouldBe(expectedGridHeight);
+        children[2].AbsoluteTop.ShouldBe(expectedThirdTop);
+        children[3].AbsoluteTop.ShouldBe(expectedThirdTop);
     }
 
     [Fact]
