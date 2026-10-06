@@ -366,6 +366,7 @@
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>
+    <string>ScrollBarVisibilityState</string>
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
     <string>ExposeChildrenEvents</string>

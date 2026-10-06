@@ -83,6 +83,7 @@
   <ComponentReference Name="ForestGlade/Controls/Toast" />
   <ComponentReference Name="ForestGlade/Controls/UserControl" />
   <ComponentReference Name="ForestGlade/Controls/Window" />
+  <ComponentReference Name="ForestGlade/Elements/Divider" />
   <ComponentReference Name="ForestGlade/Elements/TextInputChrome" />
   <ComponentReference Name="ForestGlade/Styles" />
   <StandardElementReference Name="Circle" />

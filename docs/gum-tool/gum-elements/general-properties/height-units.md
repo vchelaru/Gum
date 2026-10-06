@@ -147,6 +147,12 @@ A parent ignores its child if the child uses a `Y Units` of `Percentage of Paren
 
 <figure><img src="../../../.gitbook/assets/05_06 52 34.gif" alt=""><figcaption><p><code>Y Units</code> of <code>Percentage of Parent Height</code> results in the child ignored</p></figcaption></figure>
 
+### Centered Children
+
+A child with a `Y Units` of `Pixels from Center` grows its parent equally above and below the parent's center, so the child stays centered. The parent's height is twice the distance from its center to the child's farthest edge.
+
+For example, a child with an `Absolute` `Height` of 100, a `Y Origin` of `Center`, and a `Y` of 0 makes the parent 100 pixels tall. Changing the child's `Y` to 20 makes the parent 140 pixels tall, because the child's bottom edge is now 70 pixels from the center.
+
 ### Relative to Children and Auto Grid Vertical
 
 If a parent sets its `Height Units` to `Relative to Children`, then it resizes itself to contain its children. Normally, the height of the entire parent is determined by the child which needs the most space vertically. If the parent uses an `Auto Grid Vertical` layout, then the children control the size of the _cells_ as well as the entire parent. Since all cells must be the same size, the child which needs the most amount of space vertically determines the height of all cells.

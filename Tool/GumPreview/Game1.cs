@@ -32,6 +32,8 @@ public class Game1 : Game
     private readonly string? _contentRootDirectory;
     private readonly UnattendedPreviewRun? _unattended;
     private readonly string? _screenshotPath;
+    private readonly string? _focusName;
+    private readonly string? _typedText;
 
     private PreviewSelectionMessage _selection;
     private DateTime _lastSelectionFileWriteTimeUtc;
@@ -52,9 +54,13 @@ public class Game1 : Game
     /// </param>
     /// <param name="unattended">Set for an <c>--exit-after</c> run: the first drawn frame ends it.</param>
     /// <param name="screenshotPath">With <paramref name="unattended"/>, where that frame is saved as a PNG.</param>
+    /// <param name="focusName">A Forms control in the shown element to focus once it loads.</param>
+    /// <param name="typedText">With <paramref name="focusName"/>, text typed into that text box.</param>
     public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null,
-        UnattendedPreviewRun? unattended = null, string? screenshotPath = null)
+        UnattendedPreviewRun? unattended = null, string? screenshotPath = null, string? focusName = null, string? typedText = null)
     {
+        _focusName = focusName;
+        _typedText = typedText;
         _gumxPath = gumxPath;
         _selection = new PreviewSelectionMessage(elementName);
         _selectionFilePath = selectionFilePath;
@@ -114,6 +120,7 @@ public class Game1 : Game
         }
         ApplySiblingOrdering();
         ShowElement();
+        string? interactionError = ApplyInteraction();
 
         if (_unattended != null)
         {
@@ -121,10 +128,18 @@ public class Game1 : Game
             {
                 FailUnattended(_unattended.TryFail("the element to show was not found."));
             }
+            else if (interactionError != null)
+            {
+                FailUnattended(_unattended.TryFail(interactionError));
+            }
             else
             {
                 _unattended.MarkLoaded();
             }
+        }
+        else if (interactionError != null)
+        {
+            Console.Error.WriteLine($"GumPreview: {interactionError}");
         }
 
         base.Initialize();
@@ -148,6 +163,23 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.CornflowerBlue);
         GumService.Default.Draw();
         base.Draw(gameTime);
+    }
+
+    // Runs once at startup for --focus/--type; a later selection change shows a fresh element.
+    private string? ApplyInteraction()
+    {
+        if (_focusName == null || _isElementMissing)
+        {
+            return null;
+        }
+        foreach (GraphicalUiElement root in GumService.Default.Root.Children)
+        {
+            if (root.ElementSave != null && root.ElementSave.Name == _selection.ElementName)
+            {
+                return PreviewInteraction.Apply(root, _focusName, _typedText);
+            }
+        }
+        return null;
     }
 
     private void FinishUnattended()

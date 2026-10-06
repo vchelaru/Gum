@@ -578,6 +578,7 @@
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>
+    <string>MenuItemCategoryState</string>
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
     <string>ClipsChildren</string>
