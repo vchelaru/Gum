@@ -473,6 +473,34 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         CrossSize(stack, parent).ShouldBe(20 + 5 + 80 + 5 + 30);
     }
 
+    // A stack sized to its children on both axes, with a max on the main axis, measures its main
+    // size from the children it wraps. Its children wrap against the size it had before that
+    // measure, so it wraps again at the measured size before measuring the cross axis.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrapsChildren_SizedToChildrenWithMainMax_ShouldMeasureCrossAxisFromFinalLines(ChildrenLayout stack)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 0, DimensionUnitType.RelativeToChildren, crossSize: 0);
+        if (stacksVertically)
+        {
+            parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+            parent.MaxHeight = 200;
+        }
+        else
+        {
+            parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+            parent.MaxWidth = 200;
+        }
+        parent.AddChild(CreateStackChild(stack, main: 80, cross: 100));
+        ContainerRuntime second = CreateStackChild(stack, main: 80, cross: 20);
+        parent.AddChild(second);
+
+        CrossPosition(stack, second).ShouldBe(0);
+        CrossSize(stack, parent).ShouldBe(100);
+    }
+
     // A child's cross-axis offset is part of its line's size, so it pushes the next line out.
     [Theory]
     [InlineData(ChildrenLayout.LeftToRightStack, 10f)]
@@ -551,6 +579,233 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         parent.ChildrenLayout = stack;
 
         AssertPlacement(stack, parent, wrappedMain, wrappedCross, "wrapped again");
+    }
+
+    #endregion
+
+    #region Wrapped row as the cross-axis parent (#5802)
+
+    static void SetCrossPosition(ChildrenLayout stack, GraphicalUiElement element, GeneralUnitType units, float value, VerticalAlignment origin)
+    {
+        if (stack == ChildrenLayout.TopToBottomStack)
+        {
+            element.XUnits = units;
+            element.X = value;
+            element.XOrigin = origin switch
+            {
+                VerticalAlignment.Center => HorizontalAlignment.Center,
+                VerticalAlignment.Bottom => HorizontalAlignment.Right,
+                _ => HorizontalAlignment.Left,
+            };
+        }
+        else
+        {
+            element.YUnits = units;
+            element.Y = value;
+            element.YOrigin = origin;
+        }
+    }
+
+    static void SetCrossSize(ChildrenLayout stack, GraphicalUiElement element, float value)
+    {
+        if (stack == ChildrenLayout.TopToBottomStack)
+        {
+            element.Width = value;
+        }
+        else
+        {
+            element.Height = value;
+        }
+    }
+
+    // Each line holds a sized child (main 50) and then a positioned child (main 50, cross 10), so the
+    // line is as large as the sized child. Lines are 40, 80 and 20, starting at 0, 40 and 120.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 0f, 15f, 75f, 125f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 0f, 15f, 75f, 125f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Top, 5f, 25f, 85f, 135f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Top, 5f, 25f, 85f, 135f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, 0f, 30f, 110f, 130f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, 0f, 30f, 110f, 130f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, 20f, 80f, 130f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 50f, 20f, 80f, 130f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromBaseline, VerticalAlignment.TextBaseline, 0f, 30f, 110f, 130f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromBaseline, VerticalAlignment.Top, 0f, 40f, 120f, 140f)]
+    // Unchanged: PixelsFromSmall measures from the line's start, and an origin alone does not use the line's size.
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, 0f, 40f, 120f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 0f, 0f, 40f, 120f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Center, 0f, -5f, 35f, 115f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Bottom, 0f, -10f, 30f, 110f)]
+    public void WrapsChildren_CrossAxisPosition_ShouldBeRelativeToItsLine(ChildrenLayout stack, GeneralUnitType units,
+        VerticalAlignment origin, float value, float expectedLine0, float expectedLine1, float expectedLine2)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 100, DimensionUnitType.Absolute, crossSize: 300);
+        float[] lineSizes = { 40, 80, 20 };
+        List<GraphicalUiElement> positioned = new();
+        foreach (float lineSize in lineSizes)
+        {
+            parent.AddChild(CreateStackChild(stack, main: 50, cross: lineSize));
+            ContainerRuntime child = CreateStackChild(stack, main: 50, cross: 10);
+            SetCrossPosition(stack, child, units, value, origin);
+            parent.AddChild(child);
+            positioned.Add(child);
+        }
+
+        CrossPosition(stack, positioned[0]).ShouldBe(expectedLine0);
+        CrossPosition(stack, positioned[1]).ShouldBe(expectedLine1);
+        CrossPosition(stack, positioned[2]).ShouldBe(expectedLine2);
+        MainPosition(stack, positioned[1]).ShouldBe(50, "main axis is unchanged");
+        CrossPosition(stack, parent.Children[2]).ShouldBe(40, "the line still starts after the previous line");
+        CrossSize(stack, positioned[0]).ShouldBe(10, "size is unchanged");
+    }
+
+    // The line's size is known only once its last child is measured, so a child placed before the
+    // line's largest child moves when that child is added, resized or hidden.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrapsChildren_LineLargestChildChanges_ShouldRepositionEarlierCenteredChild(ChildrenLayout stack)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 100, DimensionUnitType.Absolute, crossSize: 300);
+        ContainerRuntime centered = CreateStackChild(stack, main: 50, cross: 10);
+        SetCrossPosition(stack, centered, GeneralUnitType.PixelsFromMiddle, 0, VerticalAlignment.Center);
+        parent.AddChild(centered);
+        ContainerRuntime largest = CreateStackChild(stack, main: 50, cross: 80);
+        parent.AddChild(largest);
+        ContainerRuntime nextLine = CreateStackChild(stack, main: 50, cross: 20);
+        parent.AddChild(nextLine);
+
+        CrossPosition(stack, centered).ShouldBe(35, "added after");
+        CrossPosition(stack, nextLine).ShouldBe(80);
+
+        SetCrossSize(stack, largest, 30);
+        CrossPosition(stack, centered).ShouldBe(10, "shrunk");
+        CrossPosition(stack, nextLine).ShouldBe(30);
+
+        // Hiding the largest child pulls the next child up into the line, which is now 20.
+        largest.Visible = false;
+        CrossPosition(stack, centered).ShouldBe(5, "hidden");
+
+        largest.Visible = true;
+        CrossPosition(stack, centered).ShouldBe(10, "shown");
+
+        parent.UpdateLayout();
+        CrossPosition(stack, centered).ShouldBe(10, "second layout");
+    }
+
+    // An element without a renderable (an old-style screen) lays its children out in one pass, so the
+    // line's size is final only after the child placed before its largest member.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void WrapsChildren_RenderablelessParent_ShouldRepositionChildPlacedBeforeLineLargest(ChildrenLayout stack)
+    {
+        GraphicalUiElement container = new GraphicalUiElement(null);
+        container.ChildrenLayout = stack;
+        container.WrapsChildren = true;
+        ContainerRuntime centered = CreateStackChild(stack, main: 50, cross: 10);
+        SetCrossPosition(stack, centered, GeneralUnitType.PixelsFromMiddle, 0, VerticalAlignment.Center);
+        centered.ElementGueContainingThis = container;
+        ContainerRuntime largest = CreateStackChild(stack, main: 50, cross: 80);
+        largest.ElementGueContainingThis = container;
+
+        container.UpdateLayout();
+
+        CrossPosition(stack, centered).ShouldBe(35);
+    }
+
+    // Intended: a line is as large as its largest child, so a child alone in its line is the line,
+    // and centering or aligning to the far edge leaves it at the line's start.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom)]
+    public void WrapsChildren_LoneAlignedChild_ShouldSitAtItsLineStart(ChildrenLayout stack, GeneralUnitType units, VerticalAlignment origin)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 100, DimensionUnitType.Absolute, crossSize: 300);
+        ContainerRuntime child = CreateStackChild(stack, main: 50, cross: 20);
+        SetCrossPosition(stack, child, units, 0, origin);
+        parent.AddChild(child);
+
+        CrossPosition(stack, child).ShouldBe(0);
+    }
+
+    // A flipped parent mirrors X. A TopToBottomStack's columns run right to left, and each child
+    // mirrors inside its column; a LeftToRightStack's rows are on Y and are not mirrored.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 0f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 0f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, -3f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, -3f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 25f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.Percentage, VerticalAlignment.Top, 25f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromSmall, VerticalAlignment.Top, 4f)]
+    public void WrapsChildren_FlippedParent_ShouldMirrorLinePositions(ChildrenLayout stack, GeneralUnitType units,
+        VerticalAlignment origin, float value)
+    {
+        float crossSize = 300;
+        float[] lineSizes = { 40, 80, 20 };
+        ContainerRuntime BuildStack(bool flip, List<GraphicalUiElement> positioned)
+        {
+            ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 100, DimensionUnitType.Absolute, crossSize: crossSize);
+            parent.FlipHorizontal = flip;
+            foreach (float lineSize in lineSizes)
+            {
+                parent.AddChild(CreateStackChild(stack, main: 50, cross: lineSize));
+                ContainerRuntime child = CreateStackChild(stack, main: 50, cross: 10);
+                SetCrossPosition(stack, child, units, value, origin);
+                parent.AddChild(child);
+                positioned.Add(child);
+            }
+            return parent;
+        }
+        List<GraphicalUiElement> unflipped = new();
+        BuildStack(flip: false, unflipped);
+        List<GraphicalUiElement> flipped = new();
+        BuildStack(flip: true, flipped);
+
+        for (int i = 0; i < lineSizes.Length; i++)
+        {
+            if (stack == ChildrenLayout.TopToBottomStack)
+            {
+                flipped[i].AbsoluteLeft.ShouldBe(crossSize - unflipped[i].AbsoluteLeft - unflipped[i].AbsoluteWidth, $"line {i}");
+                flipped[i].AbsoluteTop.ShouldBe(unflipped[i].AbsoluteTop, $"line {i}");
+            }
+            else
+            {
+                flipped[i].AbsoluteTop.ShouldBe(unflipped[i].AbsoluteTop, $"line {i}");
+                flipped[i].AbsoluteLeft.ShouldBe(100 - unflipped[i].AbsoluteLeft - unflipped[i].AbsoluteWidth, $"line {i}");
+            }
+        }
+    }
+
+    // A parent sized to its children on the cross axis adds up its lines; a line-aligned child is
+    // inside its line, so it counts toward the parent like any other child.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 15f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromMiddle, VerticalAlignment.Center, 15f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, 30f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, GeneralUnitType.PixelsFromLarge, VerticalAlignment.Bottom, 30f)]
+    public void WrapsChildren_RelativeToChildrenCrossAxis_ShouldCountLineAlignedChildren(ChildrenLayout stack, GeneralUnitType units,
+        VerticalAlignment origin, float expectedInFirstLine)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, mainSize: 100, DimensionUnitType.RelativeToChildren, crossSize: 0);
+        parent.AddChild(CreateStackChild(stack, main: 50, cross: 40));
+        ContainerRuntime inFirstLine = CreateStackChild(stack, main: 50, cross: 10);
+        SetCrossPosition(stack, inFirstLine, units, 0, origin);
+        parent.AddChild(inFirstLine);
+        ContainerRuntime aloneInSecondLine = CreateStackChild(stack, main: 50, cross: 50);
+        SetCrossPosition(stack, aloneInSecondLine, units, 0, origin);
+        parent.AddChild(aloneInSecondLine);
+
+        CrossPosition(stack, inFirstLine).ShouldBe(expectedInFirstLine);
+        CrossPosition(stack, aloneInSecondLine).ShouldBe(40);
+        CrossSize(stack, parent).ShouldBe(90);
+
+        parent.UpdateLayout();
+        CrossPosition(stack, inFirstLine).ShouldBe(expectedInFirstLine, "second layout");
+        CrossSize(stack, parent).ShouldBe(90, "second layout");
     }
 
     #endregion

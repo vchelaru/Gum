@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. Both changes affect layouts in the Gum tool and the runtime.
+`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. All three changes affect layouts in the Gum tool and the runtime.
 
 ## Breaking Changes and Migrations
 
@@ -92,3 +92,26 @@ stackPanel.MaxHeight = 100;
 ```
 
 For more information see the [Children Layout](../gum-elements/container/children-layout.md#stacking-and-container-height-units-and-width-units) page.
+
+### Wrapping Stacks Position Children Within Their Row or Column
+
+In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis for positioning:
+
+* In a `Left to Right Stack`, a child's `Y Units` and `Y Origin` position it within its row.
+* In a `Top to Bottom Stack`, a child's `X Units` and `X Origin` position it within its column.
+
+Before this version, these values positioned the child within the whole stack. For example, in a `Left to Right Stack` that is `300` tall with rows that are `40`, `80`, and `20` tall, a child with `Y Units` of `Pixels From Center` and `Y Origin` of `Center` sat at the stack's center whichever row it was in, outside its own row. It is now centered in its row. A child with `Y Units` of `Pixels From Bottom` now aligns to the bottom of its row instead of the bottom of the stack, and a `Percentage` value is now a percentage of the row's height.
+
+A row or column is still as large as its largest child, and rows and columns stay packed at the start of the stack. A child alone in its row is the same size as the row, so centering it leaves it at the top of the row.
+
+These cases are unchanged:
+
+* Children using `Pixels From Top` in a `Left to Right Stack` (or `Pixels From Left` in a `Top to Bottom Stack`), which is the default.
+* Size units. A child with `Height Units` of `Percentage of Parent` still sizes itself from the whole stack.
+* Stacks without `Wraps Children` checked.
+
+This affects you only if a child of a wrapping stack uses units other than the default on the axis that does not stack, or a `Percentage` value there. Such a child now sits inside its row or column.
+
+To migrate, open your screens and components in the Gum tool and check any wrapping stacks whose children use these units. If you want a child placed relative to the whole stack, move it out of the stack into a container that does not stack.
+
+For more information see the [Wraps Children](../gum-elements/container/wraps-children.md#positioning-children-within-a-row-or-column) page.

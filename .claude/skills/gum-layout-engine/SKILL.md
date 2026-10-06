@@ -141,6 +141,13 @@ This is the common case during sequential layout (e.g., populating a ListBox).
 max-holder and shrunk. Must rescan all siblings in the same row/column to find
 the true max.
 
+The rescan stops at this child, so it is only right during the sequential pass;
+calling it on one child afterwards drops later siblings from the max. In a
+wrapping stack the row is the cross-axis parent for position, so a row-aligned
+child placed before the row's largest member is fixed up by
+`RepositionChildrenAlignedInWrappedLines` (position only, no row refresh) at the
+end of `UpdateChildren`.
+
 ## Dirty State and Suspension
 
 ### MakeDirty

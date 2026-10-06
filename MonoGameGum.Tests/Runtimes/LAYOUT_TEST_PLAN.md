@@ -112,7 +112,9 @@ covered by that test now.
 - [x] parent resized narrower then wider: children re-wrap and un-wrap, row dimensions shrink (H46)
 - [x] removing children leaves no stale rows in `StackedRowOrColumnDimensions`; hiding every child of a row closes it
 - [x] hiding the tallest item of a row (H11)
-- [~] wrapped child with cross-axis offset (counted via `X + Width`/`Y + Height`, positive and negative). [ ] cross-axis origin or Middle/Large units in a wrapped row
+- [x] wrapped child with cross-axis offset (counted via `X + Width`/`Y + Height`, positive and negative)
+- [x] cross-axis origin, Middle/Large/Baseline units or Percentage in a wrapped row: the row is the parent for position, not size; lone child, row's largest child added later, resized or hidden, flipped parent, RelativeToChildren cross axis, renderable-less parent (H48)
+- [x] stack sized to its children on both axes with a main-axis max wraps again at its measured main size (H49)
 - [x] Ratio children in a wrapping stack (subtract every sibling, not just the row; documented on Ratio)
 - [x] wrap when parent size is PercentageOfParent of a grandparent that resizes
 - [x] ChildrenLayout switched away from a wrapped stack and back
@@ -365,6 +367,8 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H45 | `InterpolateBetween` | Suspended and resumed on its own, so it laid out early and cleared the caller's suspension. | FIX (#5775) |
 | H46 | `UpdateLayout` wrap pass | A one-axis layout (the Width or Height setter) on a wrapping stack re-measured only that axis after re-wrapping, so a RelativeToChildren cross axis read 0 until the next layout. | FIX |
 | H47 | `GetMaxCellHeight`/`GetMaxCellWidth` | A non-wrapping stack sized to its children with a max stopped at the last child that fit instead of clamping to the max. | FIX (#5797; breaking, non-wrapping stacks grow to the max; wrapping stacks and Regular parents unchanged) |
+| H48 | `AdjustParentOriginOffsetsByUnits` in a wrapping stack | Cross-axis Middle/Large/Baseline units and Percentage measured from the whole parent, so a centered child left its row. | FIX (#5802; breaking, the row or column is the parent for position; a row-aligned child adds only its size to its row and counts toward a RelativeToChildren parent) |
+| H49 | `UpdateLayout` wrap pass | A stack sized to its children on both axes with a main-axis max wrapped its children against its pre-measure main size, then measured the cross axis from those lines. | FIX (#5802; wraps again when the measured main size differs) |
 
 ## Sweep strategy
 

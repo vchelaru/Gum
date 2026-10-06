@@ -287,6 +287,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // unset; GetWhatToStackAfter will fall back to IndexOf in that case.
     private int _cachedSiblingIndex = -1;
 
+    // The size of the wrapped line this was last positioned in, when its cross-axis position is
+    // measured from that line (#5802); NaN otherwise. A line's size is final only after its last
+    // child is measured, so the parent repositions this child when the line ends up a different size.
+    private float _wrappedLineSizeUsedForPosition = float.NaN;
+
     // null by default, non-null if an object uses
     // stacked layout for its children.
     public List<float>? StackedRowOrColumnDimensions { get; private set; }
@@ -2259,25 +2264,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         //    }
         //}
 
-        float parentWidth;
-        float parentHeight;
-
-        GetParentDimensions(out parentWidth, out parentHeight);
-
-        float absoluteParentRotation = 0;
-        bool isParentFlippedHorizontally = false;
-        if (this.Parent != null)
-        {
-            absoluteParentRotation = this.Parent.GetAbsoluteRotation();
-            isParentFlippedHorizontally = Parent.GetAbsoluteFlipHorizontal();
-        }
-        else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
-        {
-            parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
-            parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
-
-            absoluteParentRotation = this.ElementGueContainingThis.GetAbsoluteRotation();
-        }
+        GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float absoluteParentRotation,
+            out bool isParentFlippedHorizontally);
 
         if (mContainedObjectAsIpso != null)
         {
@@ -2388,6 +2376,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             if (this.WrapsChildren && (this.ChildrenLayout == ChildrenLayout.LeftToRightStack || this.ChildrenLayout == ChildrenLayout.TopToBottomStack))
             {
+                var mainSizeUsedForWrapping = this.ChildrenLayout == ChildrenLayout.LeftToRightStack
+                    ? mContainedObjectAsIpso.Width
+                    : mContainedObjectAsIpso.Height;
                 // Now we can update all children that are wrapped:
                 UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
                 if (widthDependsOnChildren || heightDependsOnChildren)
@@ -2395,6 +2386,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // Both axes: wrapping couples them, so a main-axis change moves children across lines
                     // and changes the cross-axis size even when only one axis was requested.
                     UpdateDimensions(parentWidth, parentHeight, xOrY: null, considerWrappedStacked: true);
+
+                    var mainSize = this.ChildrenLayout == ChildrenLayout.LeftToRightStack
+                        ? mContainedObjectAsIpso.Width
+                        : mContainedObjectAsIpso.Height;
+                    if (mainSize != mainSizeUsedForWrapping)
+                    {
+                        // The children wrapped against a main-axis size measured before they were (a
+                        // stack sized to its children with a max), so wrap and measure again at the
+                        // measured size.
+                        UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
+                        UpdateDimensions(parentWidth, parentHeight, xOrY: null, considerWrappedStacked: true);
+                    }
                 }
             }
 
@@ -3626,6 +3629,27 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     }
 
+    private void GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float parentAbsoluteRotation,
+        out bool isParentFlippedHorizontally)
+    {
+        GetParentDimensions(out parentWidth, out parentHeight);
+
+        parentAbsoluteRotation = 0;
+        isParentFlippedHorizontally = false;
+        if (this.Parent != null)
+        {
+            parentAbsoluteRotation = this.Parent.GetAbsoluteRotation();
+            isParentFlippedHorizontally = Parent.GetAbsoluteFlipHorizontal();
+        }
+        else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
+        {
+            parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
+            parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
+
+            parentAbsoluteRotation = this.ElementGueContainingThis.GetAbsoluteRotation();
+        }
+    }
+
     private void GetParentDimensions(out float parentWidth, out float parentHeight)
     {
         parentWidth = CanvasWidth;
@@ -3822,19 +3846,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var isParentHeightNoDependencyOrOnParent = (parentHeightDependencyType == HierarchyDependencyType.NoDependency || parentHeightDependencyType == HierarchyDependencyType.DependsOnParent) &&
             parent.HeightUnits != DimensionUnitType.RelativeToMaxParentOrChildren;
 
+        // In a wrapping stack the line, not the parent, is the parent for cross-axis position (#5802),
+        // so a position measured from it does not wait on a parent sized by its children.
+        var wrappedLineAxis = GetWrappedLineAxis(parent);
+        var isXPositionedFromLine = wrappedLineAxis == XOrY.X && IsPositionedFromWrappedLineSize(XOrY.X);
+        var isYPositionedFromLine = wrappedLineAxis == XOrY.Y && IsPositionedFromWrappedLineSize(XOrY.Y);
+
         var isAbsolute = (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentWidthNoDependencyOrOnParent) &&
                         (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentHeightNoDependencyOrOnParent) &&
                         (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
                         (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
 
-            (mXUnits == GeneralUnitType.PixelsFromSmall ||
+            (mXUnits == GeneralUnitType.PixelsFromSmall || isXPositionedFromLine ||
              (mXUnits == GeneralUnitType.PixelsFromMiddle && isParentWidthNoDependencyOrOnParent) ||
              (mXUnits == GeneralUnitType.PixelsFromLarge && isParentWidthNoDependencyOrOnParent) ||
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
              (mXUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentWidthNoDependencyOrOnParent)) &&
 #pragma warning restore CS0618
 
-            (mYUnits == GeneralUnitType.PixelsFromSmall ||
+            (mYUnits == GeneralUnitType.PixelsFromSmall || isYPositionedFromLine ||
              (mYUnits == GeneralUnitType.PixelsFromMiddle && isParentHeightNoDependencyOrOnParent) ||
              (mYUnits == GeneralUnitType.PixelsFromLarge && isParentHeightNoDependencyOrOnParent) ||
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
@@ -3868,8 +3898,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     widthUnitDependencyType != HierarchyDependencyType.DependsOnSiblings) ||
                 this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ||
                 mWidthUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
+            var isPositionedFromLine = GetWrappedLineAxis(parent) == XOrY.X && IsPositionedFromWrappedLineSize(XOrY.X);
             isAbsolute = isNotParentDependent &&
-                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                (isPositionedFromLine || mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
                     mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
 #pragma warning restore CS0618
@@ -3885,12 +3916,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // A wrapping stack measures its RelativeToChildren height from each child's laid-out Y.
             // A Y measured from the parent's height (PixelsFromLarge, etc.) isn't refreshed before that
             // measure, so counting it lets a stale parent height sustain or ratchet itself.
+            // In a wrapping LeftToRightStack the Y is measured from the child's row instead (#5802).
             var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
             var canPositionFromParentHeightCount = !doesParentWrapStack ||
                 parentHeightDependencyType == HierarchyDependencyType.NoDependency ||
                 parentHeightDependencyType == HierarchyDependencyType.DependsOnParent;
+            var isPositionedFromLine = GetWrappedLineAxis(parent) == XOrY.Y && IsPositionedFromWrappedLineSize(XOrY.Y);
             isAbsolute = isNotParentDependent &&
-                (mYUnits == GeneralUnitType.PixelsFromSmall ||
+                (mYUnits == GeneralUnitType.PixelsFromSmall || isPositionedFromLine ||
                     ((mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
                     mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
@@ -3996,6 +4029,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                 }
             }
+
+            RepositionChildrenAlignedInWrappedLines(mWhatThisContains, parentlessOnly: true);
         }
         else
         {
@@ -4078,6 +4113,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
             }
 
+            RepositionChildrenAlignedInWrappedLines(this.Children, parentlessOnly: false);
+
 
             void UpdateChild(GraphicalUiElement child, bool flagAsUpdated)
             {
@@ -4130,10 +4167,117 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// Repositions the children of this wrapping stack whose cross-axis position is measured from their
+    /// line and whose line is now a different size than when they were positioned. A line's size is final
+    /// only after its last child is measured, so a child earlier in the line can be placed against a
+    /// partial or stale size (#5802). Children aligned to the line's start never need this.
+    /// </summary>
+    private void RepositionChildrenAlignedInWrappedLines(IList<GraphicalUiElement> children, bool parentlessOnly)
+    {
+        if (!WrapsChildren || (ChildrenLayout != ChildrenLayout.LeftToRightStack && ChildrenLayout != ChildrenLayout.TopToBottomStack))
+        {
+            return;
+        }
+
+        for (int i = 0; i < children.Count; i++)
+        {
+            var child = children[i];
+            if (float.IsNaN(child._wrappedLineSizeUsedForPosition) || child.mContainedObjectAsIpso == null || !child.Visible ||
+                (parentlessOnly && child.Parent != null && child.Parent != this))
+            {
+                continue;
+            }
+
+            if (child.GetWrappedLineSize(this) != child._wrappedLineSizeUsedForPosition)
+            {
+                child._cachedSiblingIndex = i;
+                child.UpdatePositionOnly();
+            }
+        }
+    }
+
+    private void UpdatePositionOnly()
+    {
+        GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float parentAbsoluteRotation,
+            out bool isParentFlippedHorizontally);
+
+        float xBefore = mContainedObjectAsIpso!.X;
+        float yBefore = mContainedObjectAsIpso.Y;
+
+        UpdatePosition(parentWidth, parentHeight, xOrY: null, parentAbsoluteRotation, isParentFlippedHorizontally);
+
+        if (xBefore != mContainedObjectAsIpso.X || yBefore != mContainedObjectAsIpso.Y)
+        {
+            PositionChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// The axis on which this child's wrapped line, not the whole parent, is its parent for position:
+    /// Y in a wrapping LeftToRightStack, X in a wrapping TopToBottomStack, otherwise null (#5802).
+    /// </summary>
+    private static XOrY? GetWrappedLineAxis(GraphicalUiElement? parent)
+    {
+        if (parent == null || !parent.WrapsChildren)
+        {
+            return null;
+        }
+        return parent.ChildrenLayout switch
+        {
+            ChildrenLayout.LeftToRightStack => XOrY.Y,
+            ChildrenLayout.TopToBottomStack => XOrY.X,
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// Whether this child's cross-axis position reads its line's size: units measured from the line's
+    /// middle, far edge, baseline or as a percentage of it. An origin alone does not.
+    /// </summary>
+    private bool IsPositionedFromWrappedLineSize(XOrY lineAxis)
+    {
+        var units = lineAxis == XOrY.X ? mXUnits : mYUnits;
+        return units != GeneralUnitType.PixelsFromSmall && units != GeneralUnitType.PercentageOfFile;
+    }
+
+    /// <summary>
+    /// This child's contribution to its line's cross-axis size, as recorded in the parent's
+    /// <see cref="StackedRowOrColumnDimensions"/>: its size plus a PixelsFromSmall offset. An offset
+    /// measured within the line (middle, far edge, percentage) is not counted, since the line's size
+    /// comes from its children.
+    /// </summary>
+    private float GetStackedLineDimension(ChildrenLayout parentLayout)
+    {
+        if (parentLayout == ChildrenLayout.LeftToRightStack)
+        {
+            return (IsPositionedFromWrappedLineSize(XOrY.Y) ? 0 : this.Y) + this.AbsoluteHeight;
+        }
+        return (IsPositionedFromWrappedLineSize(XOrY.X) ? 0 : this.X) + this.AbsoluteWidth;
+    }
+
+    /// <summary>
+    /// The cross-axis size of the line this child is in so far: the largest child recorded for the line,
+    /// including this one.
+    /// </summary>
+    private float GetWrappedLineSize(GraphicalUiElement parent)
+    {
+        var ownDimension = GetStackedLineDimension(parent.ChildrenLayout);
+        var dimensions = parent.StackedRowOrColumnDimensions;
+        var index = StackedRowOrColumnIndex;
+        if (dimensions != null && index >= 0 && index < dimensions.Count)
+        {
+            return System.Math.Max(dimensions[index], ownDimension);
+        }
+        return ownDimension;
+    }
+
     #region Position/Offsets
 
+    // wrappedLineAxis: the axis on which a wrapping stack's line is the parent. On that axis the
+    // dimension passed in is the line's, and the value adds to the line's start.
     private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
-        ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
+        XOrY? wrappedLineAxis, ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
     {
 
         var shouldAdd = Parent is GraphicalUiElement parentGue &&
@@ -4200,7 +4344,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 shouldAdd = true;
             }
 
-            if (shouldAdd)
+            if (shouldAdd || wrappedLineAxis == XOrY.X)
             {
                 unitOffsetX += value;
             }
@@ -4253,7 +4397,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
             {
-                if (Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
+                if (wrappedLineAxis != XOrY.Y && Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
                 {
                     // January 9, 2025 - breaking layout logic to address this:
                     // https://github.com/vchelaru/Gum/issues/473
@@ -4262,13 +4406,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 else
                 {
-                    // use the bottom as baseline:
+                    // use the bottom (of a wrapped row, the row's bottom) as baseline:
                     value = parentHeight;
                 }
                 wasHandledY = true;
             }
 
-            if (shouldAdd)
+            if (shouldAdd || wrappedLineAxis == XOrY.Y)
             {
                 unitOffsetY += value;
             }
@@ -4416,14 +4560,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         GetParentOffsets(canWrap, shouldWrap, parentWidth, parentHeight, isParentFlippedHorizontally,
             out parentOriginOffsetX, out parentOriginOffsetY,
-            out wasHandledX, out wasHandledY);
+            out wasHandledX, out wasHandledY, out float positionParentWidth, out float positionParentHeight);
 
+        var lineAxis = GetIfParentStacks() ? GetWrappedLineAxis(EffectiveParentGue) : null;
+        _wrappedLineSizeUsedForPosition = lineAxis != null && IsPositionedFromWrappedLineSize(lineAxis.Value)
+            ? (lineAxis == XOrY.X ? positionParentWidth : positionParentHeight)
+            : float.NaN;
 
         float unitOffsetX = 0;
         float unitOffsetY = 0;
 
 
-        AdjustOffsetsByUnits(parentWidth, parentHeight, isParentFlippedHorizontally, xOrY, ref unitOffsetX, ref unitOffsetY);
+        AdjustOffsetsByUnits(positionParentWidth, positionParentHeight, isParentFlippedHorizontally, xOrY, ref unitOffsetX, ref unitOffsetY);
 #if FULL_DIAGNOSTICS
         if (float.IsNaN(unitOffsetX))
         {
@@ -4504,14 +4652,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
         GetParentOffsets(canWrap, false, parentWidth, parentHeight, isParentFlippedHorizontally, out parentOriginOffsetX, out parentOriginOffsetY,
-            out throwaway1, out throwaway2);
+            out throwaway1, out throwaway2, out _, out _);
 
         StackedRowOrColumnIndex = oldIndex;
 
     }
 
+    // positionParentWidth/Height are what this element's X/Y units measure against: the parent's size,
+    // or on the cross axis of a wrapping stack, its line's size (#5802).
     private void GetParentOffsets(bool canWrap, bool shouldWrap, float parentWidth, float parentHeight, bool isParentFlippedHorizontally, out float parentOriginOffsetX, out float parentOriginOffsetY,
-        out bool wasHandledX, out bool wasHandledY)
+        out bool wasHandledX, out bool wasHandledY, out float positionParentWidth, out float positionParentHeight)
     {
         parentOriginOffsetX = 0;
         parentOriginOffsetY = 0;
@@ -4521,8 +4671,29 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         wasHandledX = false;
         wasHandledY = false;
 
-        AdjustParentOriginOffsetsByUnits(parentWidth, parentHeight, isParentFlippedHorizontally, ref parentOriginOffsetX, ref parentOriginOffsetY,
-            ref wasHandledX, ref wasHandledY);
+        positionParentWidth = parentWidth;
+        positionParentHeight = parentHeight;
+
+        // In a wrapping stack the child's line is its parent on the cross axis. The stack offset above
+        // already moved it to the line's start; the units then measure within the line.
+        var lineAxis = GetIfParentStacks() ? GetWrappedLineAxis(EffectiveParentGue) : null;
+        if (lineAxis == XOrY.Y)
+        {
+            positionParentHeight = GetWrappedLineSize(EffectiveParentGue!);
+        }
+        else if (lineAxis == XOrY.X)
+        {
+            positionParentWidth = GetWrappedLineSize(EffectiveParentGue!);
+            if (isParentFlippedHorizontally)
+            {
+                // A flipped parent measures X from its right edge, so mirror the column: its right
+                // edge is the parent's right edge minus the stack offset.
+                parentOriginOffsetX += parentWidth - positionParentWidth;
+            }
+        }
+
+        AdjustParentOriginOffsetsByUnits(positionParentWidth, positionParentHeight, isParentFlippedHorizontally, lineAxis,
+            ref parentOriginOffsetX, ref parentOriginOffsetY, ref wasHandledX, ref wasHandledY);
 
     }
 
@@ -4747,15 +4918,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 parentGue.StackedRowOrColumnDimensions.Add(0);
             }
 
-            float myDimension;
-            if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
-            {
-                myDimension = this.Y + this.AbsoluteHeight;
-            }
-            else
-            {
-                myDimension = this.X + this.AbsoluteWidth;
-            }
+            float myDimension = GetStackedLineDimension(parentGue.ChildrenLayout);
 
             float currentMax = parentGue.StackedRowOrColumnDimensions[indexToUpdate];
 
@@ -4780,18 +4943,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         if (child.StackedRowOrColumnIndex == indexToUpdate)
                         {
-                            if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
-                            {
-                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                    child.Y + child.AbsoluteHeight);
-                            }
-                            else
-                            {
-                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                    child.X + child.AbsoluteWidth);
-                            }
+                            parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                                System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                                child.GetStackedLineDimension(parentGue.ChildrenLayout));
 
                             if (this == child)
                             {
