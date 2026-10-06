@@ -1883,7 +1883,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("B", separator);
 
         listBox.Items!.Count.ShouldBe(3);
@@ -1911,7 +1911,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         listBox.Items = items;
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.AddDecoration(separator); // "add now" -> after the current last item ("B")
 
         items.Add("C");
@@ -1942,7 +1942,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         separator.Height = 30;
         listBox.InsertDecorationAfter("A", separator);
 
@@ -1979,7 +1979,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("A", separator);
 
         listBox.SelectedIndex = 0;
@@ -2008,7 +2008,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("B", separator);
 
         listBox.InnerPanel.Children.Count.ShouldBe(4);
@@ -2032,7 +2032,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         listBox.Items = items;
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("A", separator); // panel: A, sep, B, C
 
         items.Move(0, 2); // A -> end. Items: B, C, A
@@ -2082,7 +2082,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationBefore("B", separator);
 
         ObservableCollection<GraphicalUiElement> panel = listBox.InnerPanel.Children;
@@ -2104,7 +2104,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         listBox.Items!.Add("A");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
 
         Should.Throw<ArgumentException>(() => listBox.InsertDecorationAfter("not-in-list", separator));
     }
@@ -2124,7 +2124,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("A", separator);
 
         listBox.SelectedIndex = 2;
@@ -2347,7 +2347,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add(shared);
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("B", separator);
 
         listBox.SelectedIndex = 2;

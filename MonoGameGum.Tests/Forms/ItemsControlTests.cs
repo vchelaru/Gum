@@ -48,16 +48,16 @@ public class ItemsControlTests : BaseTestClass
         ItemsControl itemsControl = new ();
         itemsControl.VisualTemplate = new Gum.Forms.VisualTemplate(() =>
         {
-            ColoredRectangleRuntime toReturn = new ();
-            toReturn.Color = Microsoft.Xna.Framework.Color.Orange;
+            RectangleRuntime toReturn = new ();
+            toReturn.FillColor = Microsoft.Xna.Framework.Color.Orange;
             return toReturn;
         });
 
         itemsControl.Items!.Add(1);
         itemsControl.InnerPanel.Children!.Count.ShouldBe(1);
         IRenderableIpso child = itemsControl.InnerPanel.Children[0]!;
-        ColoredRectangleRuntime? coloredRectangle = child as ColoredRectangleRuntime;
-        coloredRectangle.ShouldNotBeNull();
+        RectangleRuntime? rectangle = child as RectangleRuntime;
+        rectangle.ShouldNotBeNull();
     }
 
 

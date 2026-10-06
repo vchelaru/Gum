@@ -26,6 +26,9 @@ public class AposShapeRuntimeReregistrationTests
         ComponentSave elementSave = new ComponentSave { Name = "Arc" };
         var gue = ElementSaveExtensions.CreateGueForElement(elementSave);
 
+        // Covers the obsolete shim type on purpose: registration instantiates the shim (#3380).
+#pragma warning disable CS0618
         gue.ShouldBeOfType<global::MonoGameGum.GueDeriving.ArcRuntime>();
+#pragma warning restore CS0618
     }
 }

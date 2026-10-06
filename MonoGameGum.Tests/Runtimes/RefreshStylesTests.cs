@@ -16,7 +16,7 @@ public class RefreshStylesTests : BaseTestClass
     public void RefreshStyles_ShouldReapplyDefaultStateValues()
     {
         // Arrange
-        ColoredRectangleRuntime rectangle = new();
+        RectangleRuntime rectangle = new();
         float originalWidth = 100;
         float updatedWidth = 200;
 
@@ -52,7 +52,7 @@ public class RefreshStylesTests : BaseTestClass
     {
         // Arrange
         ContainerRuntime parent = new();
-        ColoredRectangleRuntime child = new();
+        RectangleRuntime child = new();
         child.Parent = parent;
 
         float originalWidth = 50;
@@ -97,7 +97,7 @@ public class RefreshStylesTests : BaseTestClass
     {
         // Arrange
         ContainerRuntime parent = new();
-        ColoredRectangleRuntime child = new();
+        RectangleRuntime child = new();
         child.Name = "ChildRect";
         child.Parent = parent;
 
