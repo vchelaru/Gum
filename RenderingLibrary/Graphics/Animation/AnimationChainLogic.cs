@@ -110,6 +110,7 @@ public class AnimationChainLogic
             UpdateToCurrentAnimationFrame();
         }
     }
+
     public bool Animate { get => _animate; set => _animate = value; }
     public bool IsAnimationChainLooping { get => _isLooping; set => _isLooping = value; }
 
