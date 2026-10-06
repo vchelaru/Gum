@@ -272,6 +272,15 @@ public class Sprite : SpriteBatchRenderableBase,
         remove => AnimationLogic.AnimationChainCycled -= value;
     }
 
+    /// <summary>
+    /// Raised once when a non-looping animation chain reaches its end and Animate becomes false.
+    /// </summary>
+    public event Action AnimationChainFinished
+    {
+        add => AnimationLogic.AnimationChainFinished += value;
+        remove => AnimationLogic.AnimationChainFinished -= value;
+    }
+
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {

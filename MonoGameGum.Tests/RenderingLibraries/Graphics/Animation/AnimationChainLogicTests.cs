@@ -278,4 +278,105 @@ public class AnimationChainLogicTests
 
         wasApplied.ShouldBeFalse();
     }
+
+    [Theory]
+    [InlineData(1f, 2)] // forward past the end holds the last frame
+    [InlineData(-1f, 0)] // backward past the start holds the first frame
+    public void AnimateSelf_ShouldRaiseFinishedOnceAndNotCycled_WhenNonLoopingChainReachesItsEnd(float speed, int expectedFrameIndex)
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = chains,
+            IsAnimationChainLooping = false,
+            AnimationSpeed = speed,
+            Animate = true
+        };
+        sut.CurrentFrameIndex = 1;
+        int cycledCount = 0;
+        int finishedCount = 0;
+        bool animateWhenFinished = true;
+        sut.AnimationChainCycled += () => cycledCount++;
+        sut.AnimationChainFinished += () =>
+        {
+            finishedCount++;
+            animateWhenFinished = sut.Animate;
+        };
+
+        sut.AnimateSelf(0.5);
+        finishedCount.ShouldBe(0);
+        sut.AnimateSelf(2);
+        sut.AnimateSelf(2);
+
+        finishedCount.ShouldBe(1);
+        animateWhenFinished.ShouldBeFalse();
+        cycledCount.ShouldBe(0);
+        sut.Animate.ShouldBeFalse();
+        sut.CurrentFrameIndex.ShouldBe(expectedFrameIndex);
+    }
+
+    [Theory]
+    [InlineData(1f)]
+    [InlineData(-1f)]
+    public void AnimateSelf_ShouldRaiseCycledAndNotFinished_WhenLoopingChainWraps(float speed)
+    {
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = MakeChainWithFrameLengths(1, 1, 1),
+            IsAnimationChainLooping = true,
+            AnimationSpeed = speed,
+            Animate = true
+        };
+        sut.CurrentFrameIndex = 1;
+        int cycledCount = 0;
+        int finishedCount = 0;
+        sut.AnimationChainCycled += () => cycledCount++;
+        sut.AnimationChainFinished += () => finishedCount++;
+
+        sut.AnimateSelf(2);
+
+        cycledCount.ShouldBe(1);
+        finishedCount.ShouldBe(0);
+        sut.Animate.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldNotRaiseFinished_WhenTimeStoredNegativeBeforeChainAndPlayingForward()
+    {
+        AnimationChainLogic sut = new() { IsAnimationChainLooping = false, Animate = true };
+        sut.TimeIntoAnimation = -5;
+        sut.AnimationChains = MakeChainWithFrameLengths(1, 1, 1);
+        int finishedCount = 0;
+        sut.AnimationChainFinished += () => finishedCount++;
+
+        sut.AnimateSelf(0.5);
+
+        finishedCount.ShouldBe(0);
+        sut.Animate.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Clone_ShouldNotCarryOverEventSubscribers()
+    {
+        AnimationChainLogic original = new()
+        {
+            AnimationChains = MakeChainWithFrameLengths(1),
+            IsAnimationChainLooping = false,
+            Animate = true
+        };
+        int originalCycled = 0;
+        int originalFinished = 0;
+        original.AnimationChainCycled += () => originalCycled++;
+        original.AnimationChainFinished += () => originalFinished++;
+
+        AnimationChainLogic clone = original.Clone(applyFrame: null);
+        clone.AnimateSelf(1.5);
+        clone.IsAnimationChainLooping = true;
+        clone.Animate = true;
+        clone.AnimateSelf(1.5);
+
+        clone.Animate.ShouldBeTrue();
+        originalFinished.ShouldBe(0);
+        originalCycled.ShouldBe(0);
+    }
 }
