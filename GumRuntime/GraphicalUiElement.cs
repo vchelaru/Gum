@@ -2986,16 +2986,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
 
-        if (pixelHeightToSet > _maxHeight)
-        {
-            pixelHeightToSet = _maxHeight.Value;
-        }
-        if (pixelHeightToSet < _minHeight)
-        {
-            pixelHeightToSet = _minHeight.Value;
-        }
+        pixelHeightToSet = ClampToMinMax(pixelHeightToSet, _minHeight, _maxHeight);
 
         RequiredContainedObject.Height = pixelHeightToSet;
+    }
+
+    // Min wins over max when they conflict.
+    static float ClampToMinMax(float value, float? min, float? max)
+    {
+        if (value > max)
+        {
+            value = max.Value;
+        }
+        if (value < min)
+        {
+            value = min.Value;
+        }
+        return value;
     }
 
     // A zero, negative or non-finite aspect ratio (such as from an empty texture) cannot size the
@@ -3024,11 +3031,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (element.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren &&
                     element.mContainedObjectAsIpso != null)
                 {
-                    elementHeight = element.GetMaxCellHeight(considerWrappedStacked, 0) + element.mHeight;
-                    if (elementHeight > element.MaxHeight)
-                    {
-                        elementHeight = element.MaxHeight.Value;
-                    }
+                    elementHeight = ClampToMinMax(element.GetMaxCellHeight(considerWrappedStacked, 0) + element.mHeight,
+                        element.MinHeight, element.MaxHeight);
                 }
 
                 if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
@@ -3420,14 +3424,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
 
-        if (pixelWidthToSet > _maxWidth)
-        {
-            pixelWidthToSet = _maxWidth.Value;
-        }
-        if (pixelWidthToSet < _minWidth)
-        {
-            pixelWidthToSet = _minWidth.Value;
-        }
+        pixelWidthToSet = ClampToMinMax(pixelWidthToSet, _minWidth, _maxWidth);
 
         RequiredContainedObject.Width = pixelWidthToSet;
 
@@ -3457,11 +3454,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (element.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren &&
                     element.mContainedObjectAsIpso != null)
                 {
-                    elementWidth = element.GetMaxCellWidth(considerWrappedStacked, 0) + element.mWidth;
-                    if (elementWidth > element.MaxWidth)
-                    {
-                        elementWidth = element.MaxWidth.Value;
-                    }
+                    elementWidth = ClampToMinMax(element.GetMaxCellWidth(considerWrappedStacked, 0) + element.mWidth,
+                        element.MinWidth, element.MaxWidth);
                 }
 
                 if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)

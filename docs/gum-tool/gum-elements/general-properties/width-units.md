@@ -163,6 +163,12 @@ For example, consider a vertical menu where each menu item contains a Text insta
 
 Without this unit, you would need to either set a fixed width on all menu items (which cannot adapt to content) or use `Relative to Children` on each item (which makes each item a different width based on its own text).
 
+A parent with `Width Units` of `Relative to Children` measures such a child by its children, limited by the child's `Min Width` and `Max Width`. For example, a child with a `Min Width` of `80` whose children are `30` wide makes its parent `80` wide.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, the parent ignored the child's `Min Width`, so the child extended past its parent. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
+
 ## Percentage of Height
 
 `Percentage of Height` adjusts the object's effective width so it remains proportional to the effective height value multiplied by the `Width` value (as a percentage). For example, if a `Width` value of `200` is entered, then the effective width is 200% (2x) of the height.

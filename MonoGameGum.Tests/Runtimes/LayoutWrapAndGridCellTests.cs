@@ -278,6 +278,89 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         (stacksVertically ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(120);
     }
 
+    // Today the max squeezes the padding (stack 200, children 100 and 90 in row 1). This encodes
+    // the option where padding counts against the max.
+    [Fact(Skip = "Behavior change pending decision: #5805")]
+    public void WrappingStack_PaddingWithMax_ShouldWrapBeforePaddingExceedsMax()
+    {
+        ContainerRuntime parent = CreateStack(ChildrenLayout.LeftToRightStack, 20, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        parent.WrapsChildren = true;
+        parent.MaxWidth = 200;
+        parent.AddChild(CreateContainer(100, 50));
+        parent.AddChild(CreateContainer(90, 50));
+        parent.AddChild(CreateContainer(50, 50));
+
+        parent.AbsoluteWidth.ShouldBe(120);
+        parent.Children[1].AbsoluteLeft.ShouldBe(0);
+        parent.Children[1].AbsoluteTop.ShouldBe(50);
+    }
+
+    // A RelativeToMaxParentOrChildren child counts toward its parent by its children-based size,
+    // which must be clamped by the child's own min the same way the child's size is.
+    [Theory]
+    [InlineData(ChildrenLayout.Regular, 30, 80)]
+    [InlineData(ChildrenLayout.Regular, 80, 80)]
+    [InlineData(ChildrenLayout.Regular, 120, 120)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 30, 80)]
+    [InlineData(ChildrenLayout.LeftToRightStack, 30, 80)]
+    public void RelativeToChildrenParent_ContainingMaxParentOrChildrenChildWithMin_ShouldMeasureChildAtLeastMin(ChildrenLayout outerLayout, float contentSize, float expectedSize)
+    {
+        foreach (bool vertical in new[] { true, false })
+        {
+            ContainerRuntime outer = CreateStack(outerLayout, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+            ContainerRuntime inner = vertical
+                ? CreateStack(ChildrenLayout.Regular, 100, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToMaxParentOrChildren)
+                : CreateStack(ChildrenLayout.Regular, 0, DimensionUnitType.RelativeToMaxParentOrChildren, 100, DimensionUnitType.Absolute);
+            if (vertical)
+            {
+                inner.MinHeight = 80;
+            }
+            else
+            {
+                inner.MinWidth = 80;
+            }
+            outer.AddChild(inner);
+            inner.AddChild(vertical ? CreateContainer(50, contentSize) : CreateContainer(contentSize, 50));
+
+            (vertical ? inner.AbsoluteHeight : inner.AbsoluteWidth).ShouldBe(expectedSize);
+            (vertical ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(expectedSize);
+
+            outer.UpdateLayout();
+            (vertical ? outer.AbsoluteHeight : outer.AbsoluteWidth).ShouldBe(expectedSize, "repeated layout");
+        }
+    }
+
+    [Fact]
+    public void RelativeToChildrenParent_ContainingMaxParentOrChildrenChildWithMin_ShouldFollowContentAddRemoveAndHide()
+    {
+        ContainerRuntime outer = CreateStack(ChildrenLayout.Regular, 0, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren);
+        ContainerRuntime inner = CreateStack(ChildrenLayout.Regular, 100, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToMaxParentOrChildren);
+        inner.MinHeight = 80;
+        inner.MaxHeight = 150;
+        outer.AddChild(inner);
+        ContainerRuntime small = CreateContainer(50, 30);
+        inner.AddChild(small);
+        outer.AbsoluteHeight.ShouldBe(80);
+
+        ContainerRuntime tall = CreateContainer(50, 120);
+        inner.AddChild(tall);
+        outer.AbsoluteHeight.ShouldBe(120);
+
+        tall.Height = 200;
+        outer.AbsoluteHeight.ShouldBe(150, "clamped to the child's max");
+
+        tall.Visible = false;
+        outer.AbsoluteHeight.ShouldBe(80, "hidden content doesn't count");
+
+        tall.Visible = true;
+        inner.RemoveChild(tall);
+        outer.AbsoluteHeight.ShouldBe(80);
+
+        inner.RemoveChild(small);
+        outer.AbsoluteHeight.ShouldBe(80, "an empty child still has its min");
+        inner.AbsoluteHeight.ShouldBe(80);
+    }
+
     [Theory]
     [InlineData(ChildrenLayout.TopToBottomStack)]
     [InlineData(ChildrenLayout.LeftToRightStack)]
