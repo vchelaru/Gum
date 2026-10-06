@@ -157,6 +157,7 @@
   * [Upgrading File (GUMJ/GUMX) Version](gum-tool/upgrading/upgrading-file-gumx-version.md)
   * [Syntax Versions](gum-tool/upgrading/syntax-versions.md)
     * [Syntax Version 1](gum-tool/upgrading/syntax-version-1.md)
+  * [Migrating to 2026 November](gum-tool/upgrading/migrating-to-2026-november.md)
   * [Migrating to 2026 October](gum-tool/upgrading/migrating-to-2026-october.md)
   * [Migrating to 2026 September](gum-tool/upgrading/migrating-to-2026-september.md)
   * [Migrating to 2026 August](gum-tool/upgrading/migrating-to-2026-august.md)

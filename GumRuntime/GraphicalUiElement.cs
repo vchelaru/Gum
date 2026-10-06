@@ -4157,28 +4157,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #pragma warning restore CS0618
                 mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.Percentage)
             {
-                if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                if (IsLaterChildInStack(ChildrenLayout.LeftToRightStack))
                 {
-                    System.Collections.IList? siblings = null;
+                    forcePixelsFromSmall = true;
 
-                    if (this.Parent == null)
+                    if (mXUnits == GeneralUnitType.Percentage)
                     {
-                        siblings = this.ElementGueContainingThis!.mWhatThisContains;
-                    }
-                    else if (this.Parent is GraphicalUiElement)
-                    {
-                        siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
-                    }
-                    var thisIndex = siblings?.IndexOf(this);
-                    if (thisIndex > 0)
-                    {
-                        forcePixelsFromSmall = true;
-
-
-                        if (mXUnits == GeneralUnitType.Percentage)
-                        {
-                            shouldAdd = true;
-                        }
+                        shouldAdd = true;
                     }
                 }
             }
@@ -4245,30 +4230,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromBaseline ||
                 mYUnits == GeneralUnitType.Percentage)
             {
-                var effectiveParentGue = this.EffectiveParentGue;
-                if (effectiveParentGue?.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                if (IsLaterChildInStack(ChildrenLayout.TopToBottomStack))
                 {
-                    // With no Parent, the effective parent is the element containing this.
-                    System.Collections.IList? siblings = null;
+                    forcePixelsFromSmall = true;
 
-                    if (this.Parent == null)
+                    if (mYUnits == GeneralUnitType.Percentage)
                     {
-                        siblings = effectiveParentGue.mWhatThisContains;
-                    }
-                    else if (this.Parent is GraphicalUiElement)
-                    {
-                        siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
-                    }
-                    // A non-GraphicalUiElement Parent has no sibling list to stack in.
-                    var thisIndex = siblings?.IndexOf(this) ?? -1;
-                    if (thisIndex > 0)
-                    {
-                        forcePixelsFromSmall = true;
-
-                        if (mYUnits == GeneralUnitType.Percentage)
-                        {
-                            shouldAdd = true;
-                        }
+                        shouldAdd = true;
                     }
                 }
             }
@@ -4564,6 +4532,27 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     }
 
+    /// <summary>
+    /// Whether this is a child after the first in a parent stacking along the given axis. The stack sets
+    /// such a child's leading edge, so its main-axis units and origin are ignored (#695, #5766).
+    /// </summary>
+    private bool IsLaterChildInStack(ChildrenLayout stackLayout)
+    {
+        var effectiveParentGue = this.EffectiveParentGue;
+        if (effectiveParentGue?.ChildrenLayout != stackLayout)
+        {
+            return false;
+        }
+
+        // With no Parent, the effective parent is the element containing this.
+        // A non-GraphicalUiElement Parent has no sibling list to stack in.
+        System.Collections.IList? siblings = this.Parent == null
+            ? effectiveParentGue.mWhatThisContains
+            : (this.Parent as GraphicalUiElement)?.Children as System.Collections.IList;
+
+        return (siblings?.IndexOf(this) ?? -1) > 0;
+    }
+
     private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
     {
 #if FULL_DIAGNOSTICS
@@ -4575,7 +4564,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         float offsetX = 0;
         float offsetY = 0;
 
-        HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
+        // Default origins skip the sibling lookup, which is linear in the sibling count.
+        var xOrigin = mXOrigin != HorizontalAlignment.Left && IsLaterChildInStack(ChildrenLayout.LeftToRightStack)
+            ? HorizontalAlignment.Left : mXOrigin;
+        var yOrigin = mYOrigin != VerticalAlignment.Top && IsLaterChildInStack(ChildrenLayout.TopToBottomStack)
+            ? VerticalAlignment.Top : mYOrigin;
+
+        HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? xOrigin.Flip() : xOrigin;
 
         if (!float.IsNaN(RequiredContainedObject.Width))
         {
@@ -4591,11 +4586,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // no need to handle left
 
 
-        if (mYOrigin == VerticalAlignment.Center)
+        if (yOrigin == VerticalAlignment.Center)
         {
             offsetY -= RequiredContainedObject.Height / 2.0f;
         }
-        else if (mYOrigin == VerticalAlignment.TextBaseline)
+        else if (yOrigin == VerticalAlignment.TextBaseline)
         {
             if (mContainedObjectAsIpso is IText text)
             {
@@ -4606,7 +4601,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 offsetY -= RequiredContainedObject.Height;
             }
         }
-        else if (mYOrigin == VerticalAlignment.Bottom)
+        else if (yOrigin == VerticalAlignment.Bottom)
         {
             offsetY -= RequiredContainedObject.Height;
         }

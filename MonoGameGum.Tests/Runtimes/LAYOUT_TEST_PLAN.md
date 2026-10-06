@@ -84,7 +84,7 @@ covered by that test now.
 - [x] order, spacing (positive, zero, negative), invisible children, mixed units, reorder, add/insert
 - [x] first child honors its X/Y offset; later children ignore main-axis Middle/Large units (#695)
 - [ ] later children with main-axis Percentage units (Y forced, X not, H10)
-- [ ] later children with main-axis Center or Bottom/Right origin (origin still applies after the stack position, H22)
+- [x] later children with main-axis Center or Bottom/Right origin (ignored after the first child, H22)
 - [x] cross-axis units and origins honored (`ChildrenWithDifferentXOrigins/YOrigins`)
 - [ ] cross-axis PercentageOfParent size and Percentage position
 - [ ] first child invisible, then made visible
@@ -331,7 +331,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H19 | grid overflow, fixed-size parent | Packed cells but children sized for the minimum count overlap. | LOG #5765 |
 | H20 | `StackSpacing` | Doc said it doesn't affect AutoGrid; it does. | DOCUMENT (doc comment fixed) |
 | H21 | `EffectiveDirtyStateParentUpdateType` | Grid child dirtied while suspended. | CLEARED |
-| H22 | stacks | Main-axis origin pulls later children into the previous sibling. | LOG #5766 |
+| H22 | stacks | Main-axis origin pulled later children into the previous sibling. | FIX (#5766; breaking, later children ignore main-axis origin) |
 | H23 | `Dock` | No layout suspension (SizeChanged per property); FillVertically recentered Text horizontally. | FIX (two commits) |
 | H24 | ScreenPixel | Zoom change does not re-lay out. | DOCUMENT (pinned; call `UpdateLayout()` after changing zoom) |
 | H25 | Ratio in a grid | Subtracted every grid sibling from one cell. | FIX |
