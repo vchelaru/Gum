@@ -93,7 +93,7 @@ covered by that test now.
 ### 2.2 Size of a RelativeToChildren stack
 - [x] sum along the main axis with spacing, max along the cross axis, first-child offset counted, later children's units ignored
 - [x] toggling first or last child gives the same size
-- [x] main-axis RelativeToChildren with a MaxHeight/MaxWidth and no wrap (stops at the last child that fits, like a wrapping stack)
+- [x] main-axis RelativeToChildren or RelativeToMaxParentOrChildren with a MaxHeight/MaxWidth: no wrap clamps to the max (exactly the max and under it unchanged), wrap stops at the last child that fits; a RelativeToMaxParentOrChildren child counts by its clamped size (H47)
 - [x] child that is itself RelativeToChildren and contains wrapping Text (`StackMatrix_ShouldMatchModel`)
 - [x] child clamped by its own Min/Max
 
@@ -364,6 +364,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H44 | Ratio | A negative ratio gave a negative size and inflated its siblings' share. | FIX (#5775; treated as 0) |
 | H45 | `InterpolateBetween` | Suspended and resumed on its own, so it laid out early and cleared the caller's suspension. | FIX (#5775) |
 | H46 | `UpdateLayout` wrap pass | A one-axis layout (the Width or Height setter) on a wrapping stack re-measured only that axis after re-wrapping, so a RelativeToChildren cross axis read 0 until the next layout. | FIX |
+| H47 | `GetMaxCellHeight`/`GetMaxCellWidth` | A non-wrapping stack sized to its children with a max stopped at the last child that fit instead of clamping to the max. | FIX (#5797; breaking, non-wrapping stacks grow to the max; wrapping stacks and Regular parents unchanged) |
 
 ## Sweep strategy
 

@@ -21,3 +21,9 @@ Notice that the `Height` variable can still be set to a value larger than the `M
 ## Max Height and Relative to Children
 
 Note that Max Height can prevent a container from growing according to its children. For more information, see the [Relative to Children Height Units page](height-units.md#relative-to-children).
+
+A container with a `Top to Bottom Stack` grows to its `Max Height` when its children need more space. The child that crosses the max extends past the container's bottom edge. If the container also has `Wraps Children` checked, it stops at the bottom edge of the last child that fits, since the next child moves to a new column. For more information see the [Children Layout](../container/children-layout.md#stacking-and-container-height-units-and-width-units) page.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, a stack without `Wraps Children` stopped growing at the last child that fit under its max, the same as a wrapping stack, so it could end up smaller than its max. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
