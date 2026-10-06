@@ -205,7 +205,15 @@ public class TextRuntime : InteractiveGue
     public int? MaxNumberOfLines
     {
         get => ContainedText.MaxNumberOfLines;
-        set => ContainedText.MaxNumberOfLines = value;
+        set
+        {
+            if (value != MaxNumberOfLines)
+            {
+                ContainedText.MaxNumberOfLines = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
     }
 
 #if RAYLIB
@@ -217,7 +225,12 @@ public class TextRuntime : InteractiveGue
     public Font Typeface
     {
         get => ContainedText.Font;
-        set => ContainedText.Font = value;
+        set
+        {
+            ContainedText.Font = value;
+            NotifyPropertyChanged();
+            UpdateLayout();
+        }
     }
 
     [Obsolete("Use Typeface instead.")]
@@ -231,7 +244,15 @@ public class TextRuntime : InteractiveGue
     public SKTypeface? Typeface
     {
         get => ContainedText.Typeface;
-        set => ContainedText.Typeface = value;
+        set
+        {
+            if (value != Typeface)
+            {
+                ContainedText.Typeface = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
     }
 #else
     /// <summary>
@@ -392,7 +413,7 @@ public class TextRuntime : InteractiveGue
         set
         {
             _boldWeight = value;
-            ContainedText.BoldWeight = value;
+            ChangeRenderableAndUpdateLayout((text: ContainedText, value), static state => state.text.BoldWeight = state.value);
         }
     }
 

@@ -248,7 +248,16 @@ public class SpriteRuntime : GraphicalUiElement
     public string? CurrentChainName
     {
         get => ContainedSprite.AnimationLogic.CurrentChainName;
-        set => ContainedSprite.AnimationLogic.CurrentChainName = value;
+        set
+        {
+            ContainedSprite.AnimationLogic.CurrentChainName = value;
+            // The new chain's frame changed the renderable's source rectangle; copy it to the
+            // texture values layout reads, as AnimateSelf does.
+            if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
+            {
+                UpdateTextureValuesFrom(ContainedSprite);
+            }
+        }
     }
 
     /// <summary>
@@ -344,10 +353,6 @@ public class SpriteRuntime : GraphicalUiElement
     }
 #endif
 
-    static bool IsSizedFromTexture(Gum.DataTypes.DimensionUnitType units) =>
-        units == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile ||
-        units == Gum.DataTypes.DimensionUnitType.MaintainFileAspectRatio;
-
     /// <summary>
     /// The underlying texture used by the sprite.
     /// </summary>
@@ -356,42 +361,7 @@ public class SpriteRuntime : GraphicalUiElement
         get => ContainedSprite.Texture;
         set
         {
-            var isSizedFromTexture = IsSizedFromTexture(WidthUnits) || IsSizedFromTexture(HeightUnits);
-
-            int widthBefore = -1, heightBefore = -1;
-
-            if (isSizedFromTexture && ContainedSprite.Texture != null)
-            {
-#if RAYLIB
-                widthBefore = ContainedSprite.Texture.Value.Width;
-                heightBefore = ContainedSprite.Texture.Value.Height;
-#else
-                widthBefore = ContainedSprite.Texture.Width;
-                heightBefore = ContainedSprite.Texture.Height;
-#endif
-            }
-
-            ContainedSprite.Texture = value;
-
-            if (isSizedFromTexture)
-            {
-                int widthAfter = -1, heightAfter = -1;
-                if (value != null)
-                {
-#if RAYLIB
-                    widthAfter = value.Value.Width;
-                    heightAfter = value.Value.Height;
-#else
-                    widthAfter = value.Width;
-                    heightAfter = value.Height;
-#endif
-                }
-
-                if (widthBefore != widthAfter || heightBefore != heightAfter)
-                {
-                    UpdateLayout();
-                }
-            }
+            ChangeRenderableAndUpdateLayout((sprite: ContainedSprite, value), static state => state.sprite.Texture = state.value);
 
 #if RAYLIB || SKIA
             NotifyPropertyChanged();
@@ -406,7 +376,7 @@ public class SpriteRuntime : GraphicalUiElement
     public SkiaSharp.SKImage? Image
     {
         get => ContainedSprite.Image;
-        set => ContainedSprite.Image = value;
+        set => ChangeRenderableAndUpdateLayout((sprite: ContainedSprite, value), static state => state.sprite.Image = state.value);
     }
 #endif
 

@@ -124,6 +124,26 @@ public class SvgRuntimeTests
     }
 
     [Fact]
+    public void SourceFile_ShouldResizeMaintainFileAspectRatioHeight_AfterLayout()
+    {
+        string path = WriteTempSvg(TwoByOneSvg);
+        try
+        {
+            SvgRuntime runtime = new SvgRuntime();
+            runtime.AbsoluteHeight.ShouldBe(100);
+
+            runtime.SourceFile = path;
+
+            runtime.AbsoluteHeight.ShouldBe(50, tolerance: 0.01f);
+        }
+        finally
+        {
+            LoaderManager.Self.DisposeAndClear();
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void CreateGueForElement_ForSvgBaseType_ProducesSvgRuntime()
     {
         AposShapeRuntime.RegisterRuntimeTypes();
