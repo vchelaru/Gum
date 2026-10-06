@@ -84,6 +84,7 @@
   <ComponentReference Name="Neon/Controls/Toast" />
   <ComponentReference Name="Neon/Controls/UserControl" />
   <ComponentReference Name="Neon/Controls/Window" />
+  <ComponentReference Name="Neon/Elements/Divider" />
   <ComponentReference Name="Neon/Styles" />
   <StandardElementReference Name="Circle" />
   <StandardElementReference Name="Component" />
