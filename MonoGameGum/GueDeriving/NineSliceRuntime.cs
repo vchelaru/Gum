@@ -244,7 +244,8 @@ public class NineSliceRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// The index of the current frame in the active animation chain.
+    /// The index of the current frame in the active animation chain. Clamped to the chain's
+    /// frames when a chain is set: past the end selects the last frame, negative the first.
     /// </summary>
     public int AnimationChainFrameIndex
     {
@@ -258,7 +259,8 @@ public class NineSliceRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// The current playback time (in seconds) within the active animation chain.
+    /// The current playback time (in seconds) within the active animation chain. A negative
+    /// value is clamped to 0 when a chain is set.
     /// </summary>
     public double AnimationChainTime
     {

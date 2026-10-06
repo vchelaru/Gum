@@ -81,17 +81,80 @@ public class AnimationChainLogicTests
         applied.ShouldBeSameAs(chains[0][frameIndex]);
     }
 
-    [Fact(Skip = "Out-of-range frame index behavior needs a decision: #5813")]
-    public void CurrentFrameIndex_Set_ShouldShowLastFrame_WhenPastTheEnd()
+    [Theory]
+    [InlineData(5, 2, 2.0)] // past the end shows and reports the last frame
+    [InlineData(3, 2, 2.0)]
+    [InlineData(-1, 0, 0.0)] // negative shows and reports the first frame
+    public void CurrentFrameIndex_Set_ShouldClampToChain_WhenOutOfRange(int frameIndex, int expectedFrameIndex, double expectedTime)
     {
         AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
         AnimationFrame? applied = null;
         AnimationChainLogic sut = new() { AnimationChains = chains, ApplyFrame = frame => applied = frame };
+        sut.CurrentFrameIndex = 1;
 
-        sut.CurrentFrameIndex = 5;
+        sut.CurrentFrameIndex = frameIndex;
 
-        sut.CurrentFrameIndex.ShouldBe(2);
-        applied.ShouldBeSameAs(chains[0][2]);
+        sut.CurrentFrameIndex.ShouldBe(expectedFrameIndex);
+        sut.TimeIntoAnimation.ShouldBe(expectedTime);
+        applied.ShouldBeSameAs(chains[0][expectedFrameIndex]);
+    }
+
+    [Fact]
+    public void CurrentChainName_Set_ShouldClampFrameIndex_WhenNewChainIsShorter()
+    {
+        AnimationChain longChain = new() { Name = "Long" };
+        longChain.Add(new AnimationFrame { FrameLength = 1 });
+        longChain.Add(new AnimationFrame { FrameLength = 1 });
+        longChain.Add(new AnimationFrame { FrameLength = 1 });
+        AnimationChain shortChain = new() { Name = "Short" };
+        shortChain.Add(new AnimationFrame { FrameLength = 1 });
+        shortChain.Add(new AnimationFrame { FrameLength = 1 });
+        AnimationFrame? applied = null;
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = new AnimationChainList { longChain, shortChain },
+            ApplyFrame = frame => applied = frame
+        };
+        sut.CurrentChainName = "Long";
+        sut.CurrentFrameIndex = 2;
+
+        sut.CurrentChainName = "Short";
+
+        sut.CurrentFrameIndex.ShouldBe(1);
+        sut.TimeIntoAnimation.ShouldBe(1);
+        applied.ShouldBeSameAs(shortChain[1]);
+    }
+
+    [Fact]
+    public void UpdateToCurrentAnimationFrame_ShouldClampFrameIndex_WhenAnimationChainsSwappedToShorterChain()
+    {
+        AnimationChainList shorter = MakeChainWithFrameLengths(1, 1);
+        AnimationFrame? applied = null;
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = MakeChainWithFrameLengths(1, 1, 1, 1),
+            ApplyFrame = frame => applied = frame
+        };
+        sut.CurrentFrameIndex = 3;
+
+        sut.AnimationChains = shorter;
+        sut.UpdateToCurrentAnimationFrame();
+
+        sut.CurrentFrameIndex.ShouldBe(1);
+        sut.TimeIntoAnimation.ShouldBe(1);
+        applied.ShouldBeSameAs(shorter[0][1]);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldNotThrow_WhenAnimationChainsSwappedToFewerChains()
+    {
+        AnimationChainList twoChains = MakeChains(("A", true), ("B", true));
+        AnimationChainLogic sut = new() { AnimationChains = twoChains, Animate = true };
+        sut.CurrentChainName = "B";
+
+        sut.AnimationChains = MakeChains(("A", true));
+
+        Should.NotThrow(() => sut.AnimateSelf(0.1)).ShouldBeFalse();
     }
 
     [Fact]
@@ -128,20 +191,81 @@ public class AnimationChainLogicTests
         sut.TimeIntoAnimation.ShouldBe(time);
     }
 
-    [Fact]
-    public void TimeIntoAnimation_Set_ShouldNotThrowOrApply_WhenNegative()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TimeIntoAnimation_Set_ShouldClampToZero_WhenNegative(bool isLooping)
     {
-        bool wasApplied = false;
+        AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
+        AnimationFrame? applied = null;
         AnimationChainLogic sut = new()
         {
-            AnimationChains = MakeChainWithFrameLengths(0.5f, 1.0f),
-            ApplyFrame = _ => wasApplied = true
+            AnimationChains = chains,
+            IsAnimationChainLooping = isLooping,
+            ApplyFrame = frame => applied = frame
         };
+        sut.CurrentFrameIndex = 1;
 
         sut.TimeIntoAnimation = -1;
 
-        wasApplied.ShouldBeFalse();
+        sut.TimeIntoAnimation.ShouldBe(0);
+        sut.CurrentFrameIndex.ShouldBe(0);
+        applied.ShouldBeSameAs(chains[0][0]);
+        sut.Animate = true;
+        Should.NotThrow(() => sut.AnimateSelf(0.5));
+        sut.TimeIntoAnimation.ShouldBe(0.5);
+    }
+
+    [Fact]
+    public void TimeIntoAnimation_Set_ShouldStoreRawNegative_WhenNoChainsAreSet()
+    {
+        AnimationChainLogic sut = new();
+
+        sut.TimeIntoAnimation = -1;
         sut.TimeIntoAnimation.ShouldBe(-1);
+
+        sut.AnimationChains = MakeChainWithFrameLengths(1, 1, 1);
+        sut.UpdateToCurrentAnimationFrame();
+        sut.TimeIntoAnimation.ShouldBe(0);
+        sut.CurrentFrameIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldClampTimeToZero_WhenNegativeSpeedPassesStartOfNonLoopingChain()
+    {
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = MakeChainWithFrameLengths(1, 1, 1),
+            IsAnimationChainLooping = false,
+            AnimationSpeed = -1,
+            Animate = true
+        };
+        sut.CurrentFrameIndex = 1;
+
+        Should.NotThrow(() => sut.AnimateSelf(1.5));
+
+        sut.TimeIntoAnimation.ShouldBe(0);
+        sut.CurrentFrameIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldWrapFromTheEnd_WhenNegativeSpeedPassesMoreThanOneLoopOfLoopingChain()
+    {
+        AnimationChainList chains = MakeChainWithFrameLengths(1, 1, 1);
+        AnimationFrame? applied = null;
+        AnimationChainLogic sut = new()
+        {
+            AnimationChains = chains,
+            AnimationSpeed = -1,
+            Animate = true,
+            ApplyFrame = frame => applied = frame
+        };
+
+        Should.NotThrow(() => sut.AnimateSelf(4.5));
+
+        sut.TimeIntoAnimation.ShouldBe(1.5);
+        sut.CurrentFrameIndex.ShouldBe(1);
+        applied.ShouldBeSameAs(chains[0][1]);
     }
 
     [Fact]
