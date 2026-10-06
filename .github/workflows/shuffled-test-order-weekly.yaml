@@ -56,7 +56,7 @@ jobs:
           for run in $(seq 1 "$RUNS"); do
             seed=$(( (RANDOM << 15) | RANDOM ))
             echo "::group::$name run $run, GUM_TEST_SHUFFLE_SEED=$seed"
-            if GUM_TEST_SHUFFLE_SEED=$seed GUM_TEST_SHUFFLE_ORDER_FILE="TestResults/$name-seed-$seed-order.txt" \
+            if GUM_TEST_SHUFFLE_SEED=$seed GUM_TEST_SHUFFLE_ORDER_FILE="$GITHUB_WORKSPACE/TestResults/$name-seed-$seed-order.txt" \
               dotnet test "$PROJECT" --configuration Release --no-build \
                 --logger "trx;LogFileName=$name-seed-$seed.trx" --results-directory TestResults; then
               result=passed
