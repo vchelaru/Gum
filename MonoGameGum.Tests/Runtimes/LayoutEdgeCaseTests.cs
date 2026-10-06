@@ -388,6 +388,190 @@ public class LayoutEdgeCaseTests : BaseTestClass
         nextRow.AbsoluteTop.ShouldBe(0);
     }
 
+    static ContainerRuntime CreateWrappingStack(ChildrenLayout stack, DimensionUnitType crossUnits, float mainSize,
+        float crossSize, float spacing, float[] childMainSizes, float childCrossSize, bool useFixedSize)
+    {
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+        ContainerRuntime parent = new();
+        parent.ChildrenLayout = stack;
+        parent.WrapsChildren = true;
+        parent.UseFixedStackChildrenSize = useFixedSize;
+        parent.StackSpacing = spacing;
+        parent.WidthUnits = stacksVertically ? crossUnits : DimensionUnitType.Absolute;
+        parent.HeightUnits = stacksVertically ? DimensionUnitType.Absolute : crossUnits;
+        parent.Width = stacksVertically ? crossSize : mainSize;
+        parent.Height = stacksVertically ? mainSize : crossSize;
+        foreach (float childMainSize in childMainSizes)
+        {
+            parent.AddChild(stacksVertically
+                ? CreateContainer(childCrossSize, childMainSize)
+                : CreateContainer(childMainSize, childCrossSize));
+        }
+        return parent;
+    }
+
+    // The fixed-size fast path does not apply to a wrapping stack; it lays out like a non-fixed one.
+    [Theory]
+    [InlineData(ChildrenLayout.TopToBottomStack, DimensionUnitType.Absolute)]
+    [InlineData(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToChildren)]
+    [InlineData(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute)]
+    [InlineData(ChildrenLayout.LeftToRightStack, DimensionUnitType.RelativeToChildren)]
+    public void UseFixedStackChildrenSize_WithWrapsChildren_ShouldMatchNonFixedLayout(ChildrenLayout stack, DimensionUnitType crossUnits)
+    {
+        float mainSize = 100;
+        float crossSize = crossUnits == DimensionUnitType.Absolute ? 200 : 0;
+        float spacing = 5;
+        float childCrossSize = 40;
+        float[] childMainSizes = { 40, 30, 40, 20, 40 };
+        float[] expectedMainPositions = { 0, 45, 0, 45, 0 };
+        int[] expectedLines = { 0, 0, 1, 1, 2 };
+        float expectedParentCross = crossUnits == DimensionUnitType.Absolute ? 200 : 3 * childCrossSize + 2 * spacing;
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime fixedStack = CreateWrappingStack(stack, crossUnits, mainSize, crossSize, spacing, childMainSizes, childCrossSize, useFixedSize: true);
+        ContainerRuntime nonFixedStack = CreateWrappingStack(stack, crossUnits, mainSize, crossSize, spacing, childMainSizes, childCrossSize, useFixedSize: false);
+
+        for (int i = 0; i < childMainSizes.Length; i++)
+        {
+            GraphicalUiElement child = fixedStack.Children[i];
+            GraphicalUiElement reference = nonFixedStack.Children[i];
+            float expectedCross = expectedLines[i] * (childCrossSize + spacing);
+            (stacksVertically ? child.AbsoluteTop : child.AbsoluteLeft).ShouldBe(expectedMainPositions[i], $"child {i} main");
+            (stacksVertically ? child.AbsoluteLeft : child.AbsoluteTop).ShouldBe(expectedCross, $"child {i} cross");
+            child.AbsoluteLeft.ShouldBe(reference.AbsoluteLeft, $"child {i} left vs non-fixed");
+            child.AbsoluteTop.ShouldBe(reference.AbsoluteTop, $"child {i} top vs non-fixed");
+        }
+        (stacksVertically ? fixedStack.AbsoluteWidth : fixedStack.AbsoluteHeight).ShouldBe(expectedParentCross);
+        (stacksVertically ? nonFixedStack.AbsoluteWidth : nonFixedStack.AbsoluteHeight).ShouldBe(expectedParentCross);
+    }
+
+    static ContainerRuntime CreateFixedSizeStack(bool useFixedSize, int offsetChildIndex, float offset)
+    {
+        ContainerRuntime stack = new();
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        stack.UseFixedStackChildrenSize = useFixedSize;
+        stack.StackSpacing = 5;
+        stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.Height = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            ContainerRuntime child = CreateContainer(50, 50);
+            if (i == offsetChildIndex)
+            {
+                child.Y = offset;
+            }
+            stack.AddChild(child);
+        }
+        return stack;
+    }
+
+    [Theory]
+    [InlineData(-20f)]
+    [InlineData(15f)]
+    public void UseFixedStackChildrenSize_FirstChildYOffset_ShouldShiftLaterChildren_LikeNonFixedStack(float offset)
+    {
+        float[] expectedTops = { offset, offset + 55, offset + 110 };
+        // The parent measures to the last child's bottom; a part above its top edge is not counted.
+        float expectedHeight = offset + 160;
+
+        ContainerRuntime fixedStack = CreateFixedSizeStack(useFixedSize: true, offsetChildIndex: 0, offset);
+        ContainerRuntime nonFixedStack = CreateFixedSizeStack(useFixedSize: false, offsetChildIndex: 0, offset);
+
+        for (int i = 0; i < 3; i++)
+        {
+            fixedStack.Children[i].AbsoluteTop.ShouldBe(expectedTops[i], $"fixed child {i}");
+            nonFixedStack.Children[i].AbsoluteTop.ShouldBe(expectedTops[i], $"non-fixed child {i}");
+        }
+        fixedStack.AbsoluteHeight.ShouldBe(expectedHeight);
+        nonFixedStack.AbsoluteHeight.ShouldBe(expectedHeight);
+    }
+
+    // Intended: the fast path places each later child by index, so a later child's own Y offset
+    // moves only that child, and the parent's height still reaches the last child's bottom.
+    [Fact]
+    public void UseFixedStackChildrenSize_LaterChildYOffset_ShouldMoveOnlyThatChild()
+    {
+        float offset = -20;
+
+        ContainerRuntime stack = CreateFixedSizeStack(useFixedSize: true, offsetChildIndex: 1, offset);
+
+        stack.Children[1].AbsoluteTop.ShouldBe(55 + offset);
+        stack.Children[2].AbsoluteTop.ShouldBe(110);
+        stack.AbsoluteHeight.ShouldBe(160);
+    }
+
+    public enum NegativeOffsetCase
+    {
+        FirstChildMainAxis,
+        LaterChildMainAxis,
+        CrossAxis,
+    }
+
+    // A negative PixelsFromSmall offset moves the child; the part outside the parent's leading edge
+    // does not count toward a RelativeToChildren size (Width Units docs, "Ignored Width Values" 3).
+    [Theory]
+    [InlineData(ChildrenLayout.TopToBottomStack, NegativeOffsetCase.FirstChildMainAxis)]
+    [InlineData(ChildrenLayout.TopToBottomStack, NegativeOffsetCase.LaterChildMainAxis)]
+    [InlineData(ChildrenLayout.TopToBottomStack, NegativeOffsetCase.CrossAxis)]
+    [InlineData(ChildrenLayout.LeftToRightStack, NegativeOffsetCase.FirstChildMainAxis)]
+    [InlineData(ChildrenLayout.LeftToRightStack, NegativeOffsetCase.LaterChildMainAxis)]
+    [InlineData(ChildrenLayout.LeftToRightStack, NegativeOffsetCase.CrossAxis)]
+    public void Stack_ChildWithNegativePixelsFromSmallOffset_ShouldMoveChild_AndClipItFromRelativeToChildrenSize(ChildrenLayout stack, NegativeOffsetCase offsetCase)
+    {
+        float childSize = 50;
+        float offset = -20;
+        float wideCrossSize = 80;
+        int offsetChildIndex = offsetCase == NegativeOffsetCase.LaterChildMainAxis ? 1 : 0;
+        float[] expectedMain = offsetCase switch
+        {
+            NegativeOffsetCase.FirstChildMainAxis => new float[] { -20, 30, 80 },
+            NegativeOffsetCase.LaterChildMainAxis => new float[] { 0, 30, 80 },
+            _ => new float[] { 0, 50, 100 },
+        };
+        float[] expectedCross = offsetCase == NegativeOffsetCase.CrossAxis
+            ? new float[] { -20, 0, 0 }
+            : new float[] { 0, 0, 0 };
+        float expectedParentMain = offsetCase == NegativeOffsetCase.CrossAxis ? 150 : 130;
+        // The cross-axis case widens the offset child so its visible part (80 - 20) is the largest.
+        float expectedParentCross = offsetCase == NegativeOffsetCase.CrossAxis ? wideCrossSize + offset : childSize;
+        bool stacksVertically = stack == ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime parent = new();
+        parent.ChildrenLayout = stack;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.Width = 0;
+        parent.Height = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            float crossSize = offsetCase == NegativeOffsetCase.CrossAxis && i == 0 ? wideCrossSize : childSize;
+            ContainerRuntime child = stacksVertically ? CreateContainer(crossSize, childSize) : CreateContainer(childSize, crossSize);
+            if (i == offsetChildIndex)
+            {
+                bool offsetsMainAxis = offsetCase != NegativeOffsetCase.CrossAxis;
+                if (offsetsMainAxis == stacksVertically)
+                {
+                    child.Y = offset;
+                }
+                else
+                {
+                    child.X = offset;
+                }
+            }
+            parent.AddChild(child);
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            GraphicalUiElement child = parent.Children[i];
+            (stacksVertically ? child.AbsoluteTop : child.AbsoluteLeft).ShouldBe(expectedMain[i], $"child {i} main");
+            (stacksVertically ? child.AbsoluteLeft : child.AbsoluteTop).ShouldBe(expectedCross[i], $"child {i} cross");
+        }
+        (stacksVertically ? parent.AbsoluteHeight : parent.AbsoluteWidth).ShouldBe(expectedParentMain);
+        (stacksVertically ? parent.AbsoluteWidth : parent.AbsoluteHeight).ShouldBe(expectedParentCross);
+        AssertRelayoutChangesNothing(parent);
+    }
+
     #endregion
 
     #region Ratio

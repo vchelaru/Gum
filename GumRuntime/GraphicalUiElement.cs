@@ -874,7 +874,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     bool useFixedStackChildrenSize;
     /// <summary>
     /// Whether to use the same spacing for all children. If true then the size of the first element is used as the height for all other children. This option
-    /// is primraily used for performance reasons as it can make layouts for large collections of stacked children faster.
+    /// is primarily used for performance reasons as it can make layouts for large collections of stacked children faster.
+    /// In a TopToBottomStack that does not wrap, each later child is placed by its index after the first child, so a later
+    /// child's own Y offset moves only that child rather than the children after it.
     /// </summary>
     public bool UseFixedStackChildrenSize
     {
@@ -4658,8 +4660,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 var visibleIndex = this.GetIndexInVisibleSiblings();
                 if (visibleIndex > 0)
                 {
-                    var firstChildHeight = effectiveParent.GetFirstVisibleChild()!.AbsoluteHeight;
-                    unitOffsetY += visibleIndex * (firstChildHeight + effectiveParent.StackSpacing);
+                    var firstChild = effectiveParent.GetFirstVisibleChild()!;
+                    // Stack after the first child's laid-out top, which includes its own Y offset.
+                    var firstChildTop = ((IPositionedSizedObject)firstChild).Y;
+                    unitOffsetY += firstChildTop + visibleIndex * (firstChild.AbsoluteHeight + effectiveParent.StackSpacing);
                 }
                 this.StackedRowOrColumnIndex = 0;
             }

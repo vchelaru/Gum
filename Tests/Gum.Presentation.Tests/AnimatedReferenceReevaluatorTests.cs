@@ -11,7 +11,7 @@ namespace Gum.Presentation.Tests;
 /// Pins which reference rows <see cref="AnimatedReferenceReevaluator"/> keeps for a preview tick: the rows
 /// that read an animated variable, so the tick's cost follows what the animation touches.
 /// </summary>
-public class AnimatedReferenceReevaluatorTests
+public class AnimatedReferenceReevaluatorTests : BaseTestClass
 {
     public AnimatedReferenceReevaluatorTests()
     {

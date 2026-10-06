@@ -927,6 +927,47 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         GetBounds(child).ShouldBe(GetBounds(CreateDirectlySetChild(CreateContainer(400, 100), width: 50, x: 20)));
     }
 
+    // Children 50, 20, 50 tall in a 100x100 TopToBottomStack.
+    [Theory]
+    [InlineData(nameof(GraphicalUiElement.UseFixedStackChildrenSize), false, 0f, 100f)]
+    [InlineData(nameof(GraphicalUiElement.UseFixedStackChildrenSize), true, 0f, 100f)]
+    [InlineData(nameof(GraphicalUiElement.WrapsChildren), false, 40f, 0f)]
+    [InlineData(nameof(GraphicalUiElement.WrapsChildren), true, 40f, 0f)]
+    public void StackFlagSetter_ShouldRelayout_AndWaitForResume_WhenSuspended(string propertyName, bool isSuspended,
+        float expectedLastLeft, float expectedLastTop)
+    {
+        float unchangedLastTop = 70;
+        ContainerRuntime stack = CreateContainer(100, 100);
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        stack.AddChild(CreateContainer(40, 50));
+        stack.AddChild(CreateContainer(40, 20));
+        ContainerRuntime last = CreateContainer(40, 50);
+        stack.AddChild(last);
+        last.AbsoluteTop.ShouldBe(unchangedLastTop);
+
+        if (isSuspended)
+        {
+            stack.SuspendLayout();
+        }
+        if (propertyName == nameof(GraphicalUiElement.UseFixedStackChildrenSize))
+        {
+            stack.UseFixedStackChildrenSize = true;
+        }
+        else
+        {
+            stack.WrapsChildren = true;
+        }
+
+        if (isSuspended)
+        {
+            last.AbsoluteLeft.ShouldBe(0);
+            last.AbsoluteTop.ShouldBe(unchangedLastTop);
+            stack.ResumeLayout();
+        }
+        last.AbsoluteLeft.ShouldBe(expectedLastLeft);
+        last.AbsoluteTop.ShouldBe(expectedLastTop);
+    }
+
     #endregion
 
     #region Propagation (8.2)
