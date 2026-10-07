@@ -744,7 +744,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
         pickButton.Click += (_, _) => PickFile();
         _revealButton = new Button { Content = "↗", MinWidth = 24, Margin = new Thickness(1, 0, 0, 0) };
         ToolTip.SetTip(_revealButton, "View file in the file manager");
-        _revealButton.Click += (_, _) => _filePickingLogic.ShowInExplorer(_textBox.Text ?? string.Empty);
+        _revealButton.Click += (_, _) => Reveal();
         _hint = CreateHintTextBlock();
 
         _grid = new Grid
@@ -781,8 +781,21 @@ public class FileSelectionDisplay : DataUiDisplayBase
         set => _filePickingLogic.IsFolderDialog = value;
     }
 
+    /// <summary>
+    /// The folder a relative path is revealed from, read on each reveal. Unset or null falls back to
+    /// the process-wide <see cref="FilePickingLogic.FolderRelativeTo"/>.
+    /// </summary>
+    public Func<string?>? RevealRelativeTo
+    {
+        get => _filePickingLogic.RelativeToProvider;
+        set => _filePickingLogic.RelativeToProvider = value;
+    }
+
     /// <summary>The path field, for tests.</summary>
     internal TextBox TextBox => _textBox;
+
+    /// <summary>Shows the current path in the file manager, as the reveal button does.</summary>
+    internal void Reveal() => _filePickingLogic.ShowInExplorer(_textBox.Text ?? string.Empty);
 
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()

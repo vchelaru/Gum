@@ -93,6 +93,7 @@ The ignore list (`FileWatchIgnoreList`) is time-based only.
 | `ganx` | Print warning — Gum does not support runtime reload of animation collections |
 | `behx` | Reload behavior definition |
 | `csv`, `resx` | Reload localization file (RESX also matches satellites via `IsLocalizationFileThatShouldTriggerReload`) |
+| `ProjectCodeSettings.codsj` | Handled by the code output plugin's `ReactToFileChanged` (`CodeOutputPluginBase.HandleFileChanged`): reload only, never regenerate or migrate; an unreadable file keeps the current settings |
 
 ## Debug UI Panel
 

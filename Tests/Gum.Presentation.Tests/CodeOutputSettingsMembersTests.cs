@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -68,6 +69,36 @@ public class CodeOutputSettingsMembersTests
         _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.Maui };
 
         _sut.BuildCategories()[0].Members.Select(member => member.Name).ShouldContain("Adjust Pixel Values for Density");
+    }
+
+    [Theory]
+    [InlineData("Code Project Root")]
+    [InlineData("Generated Code Folder")]
+    public void FolderRows_UseTheFolderPicker(string memberName)
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings();
+
+        InstanceMember member = Member(memberName);
+
+        member.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.FileSelection));
+        member.PropertiesToSetOnDisplayer["IsFolderDialog"].ShouldBe(true);
+    }
+
+    [Fact]
+    public void GeneratedCodeFolder_RevealsRelativeToTheCurrentCodeProjectRoot()
+    {
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumProject") + Path.DirectorySeparatorChar;
+        _projectState.Setup(p => p.ProjectDirectory).Returns(projectDirectory);
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "../Code/" };
+
+        Func<string?> relativeTo = (Func<string?>)Member("Generated Code Folder").PropertiesToSetOnDisplayer["RevealRelativeTo"];
+        string? before = relativeTo();
+        // Read when the button is clicked, so a later Code Project Root edit is picked up.
+        _sut.ProjectSettings.CodeProjectRoot = "../Other/";
+        string? after = relativeTo();
+
+        before.ShouldBe(projectDirectory + "../Code/");
+        after.ShouldBe(projectDirectory + "../Other/");
     }
 
     [Fact]

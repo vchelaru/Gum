@@ -47,7 +47,7 @@ public class CodeOutputProjectSettingsManager
         }
     }
 
-    internal FilePath? GetProjectCodeSettingsFilePath()
+    public FilePath? GetProjectCodeSettingsFilePath()
     {
         var projectDirectory = _projectDirectoryProvider.ProjectDirectory;
         if (projectDirectory == null)
@@ -64,6 +64,26 @@ public class CodeOutputProjectSettingsManager
     /// </summary>
     public CodeOutputProjectSettings CreateOrLoadSettingsForProject()
     {
+        CodeOutputProjectSettings? toReturn = TryLoadSettingsForProject();
+
+        if (toReturn == null)
+        {
+            toReturn = new CodeOutputProjectSettings();
+
+            toReturn.SetDefaults();
+
+            MigrateIfNeeded(toReturn);
+        }
+
+        return toReturn;
+    }
+
+    /// <summary>
+    /// Loads the project code settings from disk, or returns null when the file is missing or can't
+    /// be read (the error is logged).
+    /// </summary>
+    public CodeOutputProjectSettings? TryLoadSettingsForProject()
+    {
         CodeOutputProjectSettings? toReturn = null;
         var fileName = GetProjectCodeSettingsFilePath();
         try
@@ -72,7 +92,7 @@ public class CodeOutputProjectSettingsManager
             {
                 var contents = System.IO.File.ReadAllText(fileName.FullPath);
 
-                toReturn = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(contents)!;
+                toReturn = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(contents);
             }
         }
         catch (Exception e)
@@ -80,14 +100,10 @@ public class CodeOutputProjectSettingsManager
             _logger.PrintError($"Error loading project code settings from {fileName}: {e.Message}");
         }
 
-        if (toReturn == null)
+        if (toReturn != null)
         {
-            toReturn = new CodeOutputProjectSettings();
-
-            toReturn.SetDefaults();
+            MigrateIfNeeded(toReturn);
         }
-
-        MigrateIfNeeded(toReturn);
 
         return toReturn;
     }
