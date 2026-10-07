@@ -326,10 +326,6 @@ public partial class GraphicalUiElement
         {
             throw new ArgumentException(nameof(parentHeight));
         }
-        if (float.IsPositiveInfinity(parentHeight) || float.IsNegativeInfinity(parentHeight))
-        {
-            throw new ArgumentException(nameof(parentHeight));
-        }
 
 #endif
 
@@ -504,12 +500,6 @@ public partial class GraphicalUiElement
 
     private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
     {
-#if FULL_DIAGNOSTICS
-        if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
-        {
-            throw new Exception("Rotation cannot be negative/positive infinity");
-        }
-#endif
         float offsetX = 0;
         float offsetY = 0;
 
@@ -637,8 +627,6 @@ public partial class GraphicalUiElement
                                 yRelativeTo = whatToStackAfterY;
                             }
                             break;
-                        default:
-                            throw new NotImplementedException();
                     }
                 }
 
@@ -691,15 +679,12 @@ public partial class GraphicalUiElement
             // invert it to match how rotation works with the CreateRotationZ method:
             quarterRotationsAsInt = 4 - quarterRotationsAsInt;
 
+            // A full turn (4) keeps the defaults.
             right = Vector3Extensions.Right;
             up = Vector3Extensions.Up;
 
             switch (quarterRotationsAsInt)
             {
-                case 0:
-                    right = Vector3Extensions.Right;
-                    up = Vector3Extensions.Up;
-                    break;
                 case 1:
                     right = Vector3Extensions.Up;
                     up = Vector3Extensions.Left;

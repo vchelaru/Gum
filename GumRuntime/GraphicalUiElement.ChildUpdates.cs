@@ -201,8 +201,7 @@ public partial class GraphicalUiElement
                 {
                     var child = mWhatThisContains[i];
                     if ((child.Parent == null || child.Parent == this) &&
-                        (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits)) &&
-                        CanDoFullUpdate(child.GetChildLayoutType(this), child))
+                        (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits)))
                     {
                         child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                     }
@@ -220,24 +219,9 @@ public partial class GraphicalUiElement
                 // parents...
                 if (child.Parent == null || child.Parent == this)
                 {
-                    if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
-                    {
-                        child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
-                        newlyUpdated?.Add(child);
-                    }
-                    else
-                    {
-                        // only update absolute layout, and the child has some relative values, but let's see if 
-                        // we can do only one axis:
-                        if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
-                        {
-                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
-                        }
-                        else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
-                        {
-                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
-                        }
-                    }
+                    // Without a renderable, children are only updated with ChildType.All, which always allows a full update.
+                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                    newlyUpdated?.Add(child);
                 }
             }
 

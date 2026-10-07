@@ -204,36 +204,6 @@ public partial class GraphicalUiElement
 
                         }
                     }
-                    else
-                    {
-                        bool hasCountedVisibleChild = false;
-                        for (int i = 0; i < mWhatThisContains.Count; i++)
-                        {
-                            var element = mWhatThisContains[i];
-                            var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                            var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
-
-                            if (considerChild && element.Visible)
-                            {
-                                var elementHeight = element.GetRequiredParentHeight();
-                                if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
-                                {
-                                    // Stack spacing is only added between visible children, so skip it
-                                    // for the first visible child regardless of its index in mWhatThisContains.
-                                    if (hasCountedVisibleChild)
-                                    {
-                                        maxHeight += StackSpacing;
-                                    }
-                                    maxHeight += elementHeight;
-                                }
-                                else
-                                {
-                                    maxHeight = System.Math.Max(maxHeight, elementHeight);
-                                }
-                                hasCountedVisibleChild = true;
-                            }
-                        }
-                    }
 
                     pixelHeightToSet = maxHeight + mHeight;
                 }
@@ -576,8 +546,6 @@ public partial class GraphicalUiElement
                 {
                     float maxWidth = 0;
 
-                    List<GraphicalUiElement> childrenToUse = mWhatThisContains;
-
                     if (this.mContainedObjectAsIpso != null)
                     {
                         if (mContainedObjectAsIpso is IText asText)
@@ -643,37 +611,6 @@ public partial class GraphicalUiElement
                             // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
                             // at least that same size, so we multiply the size by the number of cells wide
                             maxWidth = maxCellWidth * numberOfHorizontalCells + (numberOfHorizontalCells-1) * StackSpacing;
-                        }
-                    }
-                    else
-                    {
-                        bool hasCountedVisibleChild = false;
-                        for (int i = 0; i < mWhatThisContains.Count; i++)
-                        {
-                            var element = mWhatThisContains[i];
-                            var childLayout = element.GetChildLayoutType(XOrY.X, this);
-                            var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
-
-                            if (considerChild && element.Visible)
-                            {
-                                var elementWidth = element.GetRequiredParentWidth();
-
-                                if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
-                                {
-                                    // Stack spacing is only added between visible children, so skip it
-                                    // for the first visible child regardless of its index in mWhatThisContains.
-                                    if (hasCountedVisibleChild)
-                                    {
-                                        maxWidth += StackSpacing;
-                                    }
-                                    maxWidth += elementWidth;
-                                }
-                                else
-                                {
-                                    maxWidth = System.Math.Max(maxWidth, elementWidth);
-                                }
-                                hasCountedVisibleChild = true;
-                            }
                         }
                     }
 

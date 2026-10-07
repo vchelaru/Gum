@@ -52,12 +52,8 @@ public partial class GraphicalUiElement
             return;
         }
 
-        var parentGue = EffectiveParentGue;
-
-        if (parentGue == null)
-        {
-            return;
-        }
+        // Only called for a child of a stacking parent, so there is always an effective parent.
+        GraphicalUiElement parentGue = EffectiveParentGue!;
 
         if (this.Visible)
         {
@@ -395,35 +391,24 @@ public partial class GraphicalUiElement
         whatToStackAfterX = 0;
         whatToStackAfterY = 0;
 
-        var parentGue = this.EffectiveParentGue;
-
-        ////////////////////////////////Early Out//////////////////////////////////
-        if (parentGue == null)
-        {
-            return null;
-        }
+        // Only called for a child of a stacking parent, so there is always an effective parent.
+        GraphicalUiElement parentGue = this.EffectiveParentGue!;
 
         int thisIndex = 0;
 
         // We used to have a static list we were populating, but that allocates memory so we
         // now use the actual list.
-        System.Collections.IList? siblings = null;
+        System.Collections.IList siblings;
 
         if (this.Parent == null)
         {
             // With no Parent, parentGue (the effective parent) is the element containing this.
             siblings = parentGue.mWhatThisContains;
         }
-        else if (this.Parent is GraphicalUiElement)
+        else
         {
-            siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
+            siblings = this.Parent.Children;
         }
-
-        if (siblings == null)
-        {
-            return null;
-        }
-        /////////////////////////////End Early Out/////////////////////////////////
 
         if (_cachedSiblingIndex >= 0 && _cachedSiblingIndex < siblings.Count && siblings[_cachedSiblingIndex] == this)
         {
