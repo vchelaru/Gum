@@ -819,16 +819,11 @@ public class LayoutEdgeCaseTests : BaseTestClass
 
     #region Setters
 
-    class ClippingRenderable : InvisibleRenderable, IRenderableIpso, ISetClipsChildren
-    {
-        public bool ClipsChildren { get; set; }
-    }
-
     // The element's ClipsChildren lives on the renderable, which keeps it across layouts.
     [Fact]
     public void ClipsChildren_ShouldReachRenderableAndSurviveLayout()
     {
-        ClippingRenderable renderable = new();
+        InvisibleRenderable renderable = new();
         GraphicalUiElement element = new(renderable);
 
         element.ClipsChildren = true;
@@ -845,7 +840,7 @@ public class LayoutEdgeCaseTests : BaseTestClass
     [InlineData("Clips Children")]
     public void ClipsChildren_ShouldBeSettable_ThroughSetProperty(string propertyName)
     {
-        ClippingRenderable renderable = new();
+        InvisibleRenderable renderable = new();
         GraphicalUiElement element = new(renderable);
 
         element.SetProperty(propertyName, true);
