@@ -400,17 +400,16 @@ Executed is not asserted: a covered line only shows a test reached it. The layou
 lines below. Everything else in the class that is uncovered (bindings, events, animation, state, property
 reflection) is outside the layout contract.
 
-Unreachable through any working path (candidates to delete, #5868):
-- `UpdateHeight` and `UpdateWidth`, RelativeToChildren on an element with no renderable: the loop over contained
-  children. A renderable-less element reports the canvas size and never runs it; calling the public method
-  directly throws `InvalidOperationException` right after the loop.
-- `UpdateChildren` on an element with no renderable, the partial-axis update when a child cannot be fully
-  updated: that element only ever updates its children with `ChildType.All`.
-- `TryAdjustOffsetsByParentLayoutType`: the `default` that throws for a layout that is not a stack.
-- `GetWhatToStackAfter`: the early outs for no parent and no sibling list, only called for stacking parents.
-- `GetRequiredParentWidthFromEdges` and `GetRequiredParentHeightFromEdges`: the no-renderable early return.
-- The `FULL_DIAGNOSTICS` checks for NaN and infinity inside `UpdatePosition` and `GetParentDimensions`: no
-  setter can hand them such a value.
+Unreachable code is deleted once every caller is read and no test reaches it (#5868). Two candidates turned out
+to be reachable and stay, each with a test in `LayoutCoverageGapTests`:
+- `GetRequiredParentWidthFromEdges` and `GetRequiredParentHeightFromEdges`, the no-positioned-object early return:
+  an element whose renderable is visible but not an `IRenderableIpso`. A renderable-less element is never visible,
+  so the parents' child loops skip it before they get here.
+- The `FULL_DIAGNOSTICS` checks inside `UpdatePosition` and `GetParentDimensions`: `CanvasWidth` and `CanvasHeight`
+  are static and accept NaN and infinity, which then reach layout as the parent size.
+
+Still uncovered and outside #5868: the `parentGue == null` return in `RefreshParentRowColumnDimensionForThis`, the
+rotation-infinity check in `AdjustOffsetsByOrigin`, and `case 0` in `GetRightAndUpFromRotation`.
 
 `X`, `Y`, `Width` and `Height` throw on NaN and infinity only when GumCommon is built with `FULL_DIAGNOSTICS`,
 which every configuration defines except `Release_No_Diagnostics`; a test run in that configuration fails the

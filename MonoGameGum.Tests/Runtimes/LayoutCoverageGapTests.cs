@@ -603,5 +603,144 @@ public class LayoutCoverageGapTests : BaseTestClass
         parent.AbsoluteHeight.ShouldBe(20);
     }
 
+    // A renderable that is visible but is not an IRenderableIpso leaves the element without a
+    // positioned object, so it has no edges to report to a parent sized to its children.
+    class VisibleOnlyRenderable : IRenderable, IVisible
+    {
+        public Gum.BlendState? BlendState => null;
+        public bool Wrap => false;
+        public void Render(ISystemManagers managers) { }
+        public void PreRender() { }
+        public string BatchKey => string.Empty;
+        public object? BatchSortKey => null;
+        public void StartBatch(ISystemManagers systemManagers) { }
+        public void EndBatch(ISystemManagers systemManagers) { }
+        public bool Visible { get; set; } = true;
+        public IVisible? Parent => null;
+        public bool AbsoluteVisible => Visible;
+    }
+
+    [Fact]
+    public void RelativeToChildrenParent_ShouldIgnoreVisibleChildWithoutPositionedObject()
+    {
+        ContainerRuntime parent = new();
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.Width = 0;
+        parent.Height = 0;
+        parent.AddChild(CreateContainer(30, 20));
+        GraphicalUiElement visibleOnly = new(new VisibleOnlyRenderable());
+
+        parent.Children.Add(visibleOnly);
+        parent.UpdateLayout();
+
+        parent.AbsoluteWidth.ShouldBe(30);
+        parent.AbsoluteHeight.ShouldBe(20);
+    }
+
+    #endregion
+
+    #region Public UpdateWidth and UpdateHeight
+
+    // The public methods write the measured size to the renderable, so with none they throw.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void UpdateWidthAndHeight_ShouldThrow_WhenRelativeToChildrenElementHasNoRenderable(bool isWidth)
+    {
+        GraphicalUiElement element = new(null);
+        element.WidthUnits = DimensionUnitType.RelativeToChildren;
+        element.HeightUnits = DimensionUnitType.RelativeToChildren;
+        ContainerRuntime child = CreateContainer(30, 20);
+        child.ElementGueContainingThis = element;
+
+        Should.Throw<InvalidOperationException>(() =>
+        {
+            if (isWidth)
+            {
+                element.UpdateWidth(100, considerWrappedStacked: true);
+            }
+            else
+            {
+                element.UpdateHeight(100, considerWrappedStacked: true);
+            }
+        });
+    }
+
+    #endregion
+
+    #region Invalid canvas size (diagnostics build)
+
+    // The canvas size is a static property that accepts any value, so non-finite values reach layout.
+    // These checks exist only when GumCommon is built with FULL_DIAGNOSTICS.
+    [Fact]
+    public void UpdateLayout_ShouldThrow_WhenCanvasHeightIsPositiveInfinity()
+    {
+        ContainerRuntime element = CreateContainer(100, 100);
+        GraphicalUiElement.CanvasHeight = float.PositiveInfinity;
+
+        Should.Throw<Exception>(() => element.UpdateLayout());
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldThrow_WhenCanvasHeightIsNegativeInfinity()
+    {
+        ContainerRuntime element = CreateContainer(100, 100);
+        GraphicalUiElement.CanvasHeight = float.NegativeInfinity;
+
+        Should.Throw<ArgumentException>(() => element.UpdateLayout());
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldThrow_WhenPercentageXIsMeasuredAgainstNaNCanvasWidth()
+    {
+        ContainerRuntime element = CreateContainer(100, 100);
+        element.XUnits = GeneralUnitType.Percentage;
+        GraphicalUiElement.CanvasWidth = float.NaN;
+
+        Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
+        exception.Message.ShouldContain("AdjustOffsetsByUnits");
+        exception.Message.ShouldContain("unitOffsetX");
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldThrow_WhenPercentageYIsMeasuredAgainstNaNCanvasHeight()
+    {
+        ContainerRuntime element = CreateContainer(100, 100);
+        element.YUnits = GeneralUnitType.Percentage;
+        GraphicalUiElement.CanvasHeight = float.NaN;
+
+        Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
+        exception.Message.ShouldContain("AdjustOffsetsByUnits");
+        exception.Message.ShouldContain("unitOffsetY");
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldThrow_WhenCenteredYOriginIsMeasuredAgainstNaNHeight()
+    {
+        ContainerRuntime element = CreateContainer(100, 100);
+        element.HeightUnits = DimensionUnitType.PercentageOfParent;
+        element.YOrigin = VerticalAlignment.Center;
+        GraphicalUiElement.CanvasHeight = float.NaN;
+
+        Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
+        exception.Message.ShouldContain("AdjustOffsetsByOrigin");
+        exception.Message.ShouldContain("unitOffsetY");
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldThrow_WhenRotatedCenteredYOriginIsMeasuredAgainstNaNHeight()
+    {
+        ContainerRuntime element = CreateContainer(100, 100);
+        element.HeightUnits = DimensionUnitType.PercentageOfParent;
+        element.YOrigin = VerticalAlignment.Center;
+        element.Rotation = 45;
+        GraphicalUiElement.CanvasHeight = float.NaN;
+
+        Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
+        exception.Message.ShouldContain("AdjustOffsetsByOrigin");
+        exception.Message.ShouldContain("unitOffsetX");
+    }
+
     #endregion
 }

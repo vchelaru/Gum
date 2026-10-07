@@ -220,23 +220,11 @@ public partial class GraphicalUiElement
                 // parents...
                 if (child.Parent == null || child.Parent == this)
                 {
+                    // Without a renderable, children are only updated with ChildType.All, which always allows a full update.
                     if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                     {
                         child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         newlyUpdated?.Add(child);
-                    }
-                    else
-                    {
-                        // only update absolute layout, and the child has some relative values, but let's see if 
-                        // we can do only one axis:
-                        if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
-                        {
-                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
-                        }
-                        else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
-                        {
-                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
-                        }
                     }
                 }
             }

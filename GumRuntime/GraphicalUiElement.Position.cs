@@ -326,10 +326,6 @@ public partial class GraphicalUiElement
         {
             throw new ArgumentException(nameof(parentHeight));
         }
-        if (float.IsPositiveInfinity(parentHeight) || float.IsNegativeInfinity(parentHeight))
-        {
-            throw new ArgumentException(nameof(parentHeight));
-        }
 
 #endif
 
@@ -637,8 +633,6 @@ public partial class GraphicalUiElement
                                 yRelativeTo = whatToStackAfterY;
                             }
                             break;
-                        default:
-                            throw new NotImplementedException();
                     }
                 }
 
