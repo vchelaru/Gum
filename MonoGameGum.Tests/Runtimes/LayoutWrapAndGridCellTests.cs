@@ -1820,6 +1820,26 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
         MainPosition(stack, next).ShouldBe(expectedNextMainPosition, "next sibling main position");
     }
 
+    // A Fill child is as large as the whole wrapping stack, so it cannot share a line and starts a new one.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, 0f, 50f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 50f, 0f)]
+    public void WrappingStack_DockFillChild_ShouldStartANewLine(ChildrenLayout stack, float expectedLeft, float expectedTop)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, 200, DimensionUnitType.Absolute, 200);
+        parent.AddChild(CreateStackChild(stack, 100, 50));
+        parent.AddChild(CreateStackChild(stack, 100, 50));
+        ContainerRuntime fill = new();
+        parent.AddChild(fill);
+
+        fill.Dock(Dock.Fill);
+
+        fill.AbsoluteLeft.ShouldBe(expectedLeft);
+        fill.AbsoluteTop.ShouldBe(expectedTop);
+        fill.AbsoluteWidth.ShouldBe(200);
+        fill.AbsoluteHeight.ShouldBe(200);
+    }
+
     // Anchor sets only units and origins. After the first child the main axis keeps stacking and the
     // cross axis honors the anchor.
     [Theory]
