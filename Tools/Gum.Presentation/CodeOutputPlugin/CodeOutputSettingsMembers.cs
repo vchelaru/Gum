@@ -208,15 +208,10 @@ public class CodeOutputSettingsMembers
             if (ProjectSettings != null)
             {
                 string valueToSet = ((string?)args.Value ?? string.Empty).Trim();
-                string? projectDirectory = _projectState.ProjectDirectory;
-                if (valueToSet.Length > 0 && !FileManager.IsRelative(valueToSet) && projectDirectory != null)
+                string? codeProjectRoot = GetAbsoluteCodeProjectRoot();
+                if (valueToSet.Length > 0 && !FileManager.IsRelative(valueToSet) && codeProjectRoot != null)
                 {
                     // Kept relative, like Code Project Root, so the .codsj works on every machine.
-                    string codeProjectRoot = ProjectSettings.CodeProjectRoot;
-                    if (FileManager.IsRelative(codeProjectRoot))
-                    {
-                        codeProjectRoot = projectDirectory + codeProjectRoot;
-                    }
                     valueToSet = FileManager.MakeRelative(valueToSet, codeProjectRoot, preserveCase: true);
                 }
                 ProjectSettings.GeneratedCodeFolder = valueToSet;
@@ -227,8 +222,24 @@ public class CodeOutputSettingsMembers
         member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolder;
         member.CustomGetTypeEvent += (owner) => typeof(string);
         UseFolderPicker(member);
+        // The value is relative to the Code Project Root, not the project folder the picker
+        // resolves against by default. Read on each reveal so a root edit is picked up.
+        member.PropertiesToSetOnDisplayer["RevealRelativeTo"] = (Func<string?>)GetAbsoluteCodeProjectRoot;
 
         return member;
+    }
+
+    // Null when no project or settings are loaded.
+    private string? GetAbsoluteCodeProjectRoot()
+    {
+        string? projectDirectory = _projectState.ProjectDirectory;
+        if (ProjectSettings == null || projectDirectory == null)
+        {
+            return null;
+        }
+
+        string codeProjectRoot = ProjectSettings.CodeProjectRoot;
+        return FileManager.IsRelative(codeProjectRoot) ? projectDirectory + codeProjectRoot : codeProjectRoot;
     }
 
     // A text field plus a folder-browse button. The picked folder is absolute; the member's setter

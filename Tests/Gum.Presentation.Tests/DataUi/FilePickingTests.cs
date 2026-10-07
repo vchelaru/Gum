@@ -115,6 +115,26 @@ public class FilePickingTests : IDisposable
     }
 
     [Fact]
+    public void ShowInExplorer_ResolvesAgainstTheInstanceBaseFolder_WhenOneIsGiven()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N")) + "/";
+        Directory.CreateDirectory(folder + "Code/Generated");
+        Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
+        FilePickingLogic.FilePicker = picker.Object;
+        FilePickingLogic.FolderRelativeTo = folder + "Elsewhere/";
+        string? codeRoot = folder + "Code/";
+        FilePickingLogic logic = new FilePickingLogic { RelativeToProvider = () => codeRoot };
+
+        logic.ShowInExplorer("Generated");
+        codeRoot = null;
+        logic.ShowInExplorer("Code/Generated");
+
+        // The provider is read on every reveal, and a null result falls back to FolderRelativeTo,
+        // which doesn't hold the folder here.
+        picker.Verify(p => p.RevealFile(It.Is<string>(path => path.EndsWith("/Code/Generated"))), Times.Once);
+    }
+
+    [Fact]
     public void ShowInExplorer_DoesNotResolveAnAbsolutePath_AgainstFolderRelativeTo()
     {
         string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N"));

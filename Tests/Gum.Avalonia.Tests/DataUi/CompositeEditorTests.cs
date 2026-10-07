@@ -44,8 +44,11 @@ public class CompositeEditorTests : IDisposable
 
         public string? PickFolder() => NextFile;
 
+        public string? LastRevealed { get; private set; }
+
         public void RevealFile(string filePath)
         {
+            LastRevealed = filePath;
         }
     }
 
@@ -235,6 +238,23 @@ public class CompositeEditorTests : IDisposable
         fixture.File.ShouldBe("/fonts/a.ttf");
         picker.LastFilter.ShouldBe("TrueType Font|*.ttf");
         display.TextBox.Text.ShouldBe("/fonts/a.ttf");
+    }
+
+    [AvaloniaFact]
+    public void FileSelectionDisplay_RevealsRelativeToItsOwnBaseFolder()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumCompositeEditorTests", Guid.NewGuid().ToString("N")) + "/";
+        Directory.CreateDirectory(folder + "Code/Generated");
+        FakePicker picker = new FakePicker();
+        FilePickingLogic.FilePicker = picker;
+        EditorFixture fixture = new EditorFixture { File = "Generated" };
+        FileSelectionDisplay display = new FileSelectionDisplay { RevealRelativeTo = () => folder + "Code/" };
+        display.InstanceMember = fixture.Member(nameof(EditorFixture.File));
+        display.Refresh();
+
+        display.Reveal();
+
+        picker.LastRevealed.ShouldNotBeNull().ShouldEndWith("/Code/Generated");
     }
 
     [AvaloniaFact]

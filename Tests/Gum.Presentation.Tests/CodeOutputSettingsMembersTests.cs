@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -81,6 +82,23 @@ public class CodeOutputSettingsMembersTests
 
         member.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.FileSelection));
         member.PropertiesToSetOnDisplayer["IsFolderDialog"].ShouldBe(true);
+    }
+
+    [Fact]
+    public void GeneratedCodeFolder_RevealsRelativeToTheCurrentCodeProjectRoot()
+    {
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumProject") + Path.DirectorySeparatorChar;
+        _projectState.Setup(p => p.ProjectDirectory).Returns(projectDirectory);
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "../Code/" };
+
+        Func<string?> relativeTo = (Func<string?>)Member("Generated Code Folder").PropertiesToSetOnDisplayer["RevealRelativeTo"];
+        string? before = relativeTo();
+        // Read when the button is clicked, so a later Code Project Root edit is picked up.
+        _sut.ProjectSettings.CodeProjectRoot = "../Other/";
+        string? after = relativeTo();
+
+        before.ShouldBe(projectDirectory + "../Code/");
+        after.ShouldBe(projectDirectory + "../Other/");
     }
 
     [Fact]
