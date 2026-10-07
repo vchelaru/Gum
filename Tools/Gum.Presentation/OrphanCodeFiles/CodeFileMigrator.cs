@@ -38,14 +38,19 @@ public class CodeFileMigrator
         _dialogService = dialogService;
     }
 
-    /// <summary>Plans <paramref name="scan"/>'s orphans, shows the plan, and applies it if the user confirms.</summary>
-    public void Migrate(GumProjectSave project, FilePath projectFile, CodeOutputProjectSettings projectSettings, OrphanCodeFileScanResult scan)
+    /// <summary>
+    /// Plans <paramref name="scan"/>'s orphans, shows the plan, and applies it if the user confirms.
+    /// <paramref name="changeDescription"/> is set when a Code tab settings edit raised this; the
+    /// prompt then names the edit, and shows nothing at all when no file needs to move.
+    /// </summary>
+    public void Migrate(GumProjectSave project, FilePath projectFile, CodeOutputProjectSettings projectSettings,
+        OrphanCodeFileScanResult scan, string? changeDescription = null)
     {
         CodeFileMigrationPlan plan = _planner.CreatePlan(project, projectSettings, scan.Orphans);
         List<CodeFileMigrationStep> changing = plan.Steps.Where(step => !IsSkip(step.Action)).ToList();
 
         // With no code root the scan finds no code files, so the plan is empty and no path is formatted.
-        string message = _formatter.Format(plan, scan.CodeRoot ?? string.Empty);
+        string message = _formatter.Format(plan, scan.CodeRoot ?? string.Empty, changeDescription);
         if (scan.IsTruncated)
         {
             message += "\n" + OrphanCodeFileScanService.GetTruncatedMessage(scan.CodeRoot);
@@ -54,7 +59,11 @@ public class CodeFileMigrator
         ///////////////////Early Out///////////////////
         if (changing.Count == 0)
         {
-            _dialogService.ShowMessage(message, MigrateTitle);
+            // A settings edit raises this on every change, so one that moved nothing says nothing.
+            if (changeDescription == null)
+            {
+                _dialogService.ShowMessage(message, MigrateTitle);
+            }
             return;
         }
 

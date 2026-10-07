@@ -395,6 +395,27 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         orphans.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Scan_WithPreviousSettings_AlsoFindsFilesUnderTheOldCodeRoot()
+    {
+        // The Code Project Root moved, so the old files sit outside the folder the scan walks.
+        GumProjectSave project = Project;
+        project.Components.Add(CreateComponent("Card"));
+        CodeOutputProjectSettings previous = CreateProjectSettings();
+        previous.CodeProjectRoot = "OldCode/";
+        CodeOutputProjectSettings current = CreateProjectSettings();
+        current.CodeProjectRoot = "NewCode/";
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "NewCode"));
+        WriteGeneratedFile("OldCode/Components/Card.Generated.cs", "Card");
+        WriteFile("OldCode/Components/Card.cs", "partial class Card { }");
+
+        IReadOnlyList<OrphanCodeFile> withPrevious = CreateService().Scan(project, current, previous).Orphans;
+        IReadOnlyList<OrphanCodeFile> withoutPrevious = CreateService().Scan(project, current).Orphans;
+
+        withPrevious.Select(orphan => orphan.FilePath.FileNameNoPath).ShouldBe(new[] { "Card.Generated.cs", "Card.cs" });
+        withoutPrevious.ShouldBeEmpty();
+    }
+
     #region Helpers
 
     private OrphanCodeFileScanService CreateService()

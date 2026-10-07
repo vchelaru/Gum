@@ -146,8 +146,12 @@ public class ContentMenuScenarioTests
         string oldGenerated = code.CodeFile("Components/CardRuntime.Generated.cs");
         string oldCustom = code.CodeFile("Components/CardRuntime.cs");
         File.WriteAllText(oldCustom, File.ReadAllText(oldCustom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()"));
-        // Gum Forms names the class Card, so the Runtime files are left at old paths.
+        // Gum Forms names the class Card, so the Runtime files are left at old paths. Declining the
+        // migration the Code tab offers leaves them for the Content menu command.
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
+        int prompted = code.Project.Dialogs.Messages.Count;
         code.PickComboItem("Output Library", "Gum Forms (recommended)");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count > prompted, AsyncWork, "the Code tab's migration prompt");
         code.ClickGenerate();
         string newCustom = code.CodeFile("Components/Card.cs");
         File.Exists(newCustom).ShouldBeTrue();

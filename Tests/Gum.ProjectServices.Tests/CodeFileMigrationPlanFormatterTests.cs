@@ -53,6 +53,21 @@ public class CodeFileMigrationPlanFormatterTests
     }
 
     [Fact]
+    public void Format_NamesTheSettingsChange_WhenOneIsGiven()
+    {
+        CodeFileMigrationPlan plan = new CodeFileMigrationPlan(new[] { Step(CodeFileMigrationAction.RemoveGenerated, "Code/CardRuntime.Generated.cs") });
+
+        string text = new CodeFileMigrationPlanFormatter().Format(plan, BaseDirectory,
+            changeDescription: "Output Library from MonoGame (deprecated) to Gum Forms (recommended)");
+
+        text.ShouldStartWith(
+            "You changed Output Library from MonoGame (deprecated) to Gum Forms (recommended). This will migrate your " +
+            "generated and custom code files to where the new settings put them, so the old ones aren't left over.\n" +
+            "\n" +
+            "1 file(s) would change and 0 would be left alone. Nothing has been changed yet.\n");
+    }
+
+    [Fact]
     public void Format_SaysSo_WhenThereIsNothingToMigrate()
     {
         string text = new CodeFileMigrationPlanFormatter().Format(new CodeFileMigrationPlan(new CodeFileMigrationStep[0]), BaseDirectory);

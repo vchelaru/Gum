@@ -23,8 +23,10 @@ public class CodeFileMigrationPlanFormatter
 
     /// <summary>
     /// Formats <paramref name="plan"/>, grouped by action, with paths relative to <paramref name="baseDirectory"/>.
+    /// <paramref name="changeDescription"/>, when the settings edit that left the files is known (the
+    /// Code tab), is named in the opening line; otherwise the cause is named generally.
     /// </summary>
-    public string Format(CodeFileMigrationPlan plan, string baseDirectory)
+    public string Format(CodeFileMigrationPlan plan, string baseDirectory, string? changeDescription = null)
     {
         ///////////////////Early Out///////////////////
         if (plan.Steps.Count == 0)
@@ -39,9 +41,17 @@ public class CodeFileMigrationPlanFormatter
         StringBuilder text = new StringBuilder();
         // The old settings are unknown after a pull or upgrade, so the cause is named generally and
         // the list below carries each file's from -> to.
-        text.Append("This will migrate your generated and custom code files to where your current code settings put them. " +
-            "This is needed because your code generation settings changed (in the Code tab, through a pull, or with a " +
-            "Gum upgrade) but the files were never migrated, so the old ones are left over.\n\n");
+        if (changeDescription != null)
+        {
+            text.Append($"You changed {changeDescription}. This will migrate your generated and custom code files to " +
+                "where the new settings put them, so the old ones aren't left over.\n\n");
+        }
+        else
+        {
+            text.Append("This will migrate your generated and custom code files to where your current code settings put them. " +
+                "This is needed because your code generation settings changed (in the Code tab, through a pull, or with a " +
+                "Gum upgrade) but the files were never migrated, so the old ones are left over.\n\n");
+        }
         text.Append($"{changed} file(s) would change and {leftAlone} would be left alone. Nothing has been changed yet.\n");
 
         foreach ((CodeFileMigrationAction action, string heading) in Sections)

@@ -343,7 +343,10 @@ whose element still exists (files left at old paths by a code settings change) i
 leave-alone steps, matching elements only through the `//Code for` header. `CodeFileMigrationApplier`
 backs every touched file up through `CodeFileBackupService` (outside the repo, newest 10 per project)
 before changing anything, and restores the backup itself if a step fails. **Restore Last Code File
-Migration** undoes the newest one but never overwrites a file edited since.
+Migration** undoes the newest one but never overwrites a file edited since. A Code tab edit to the
+output library, code project root or generated code folder offers the same migration
+(`CodeFileLocationWatcher` sends `CodeFileLocationsChangedMessage`, and the scan also walks the old
+root), and an orphan row whose element still exists offers Migrate instead of Delete File.
 
 ### Command line
 

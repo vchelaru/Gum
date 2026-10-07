@@ -17,6 +17,12 @@ public class OrphanCodeFileScanPlan
     /// </summary>
     public string? CodeRoot { get; }
 
+    /// <summary>
+    /// Other folders to walk for generated files: a previous code root a settings edit moved away
+    /// from. Never one inside <see cref="CodeRoot"/>, which is walked already.
+    /// </summary>
+    public IReadOnlyList<string> AdditionalCodeRoots { get; init; } = new List<string>();
+
     /// <summary>Generated file paths that belong to an element in the project.</summary>
     public IReadOnlySet<FilePath> ExpectedGenerated { get; }
 

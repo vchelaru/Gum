@@ -18,6 +18,14 @@ public interface IOrphanCodeFileScanService
     OrphanCodeFileScanPlan CreatePlan(GumProjectSave project, CodeOutputProjectSettings projectSettings);
 
     /// <summary>
+    /// As <see cref="CreatePlan(GumProjectSave, CodeOutputProjectSettings)"/>, and also walks the
+    /// code root <paramref name="previousSettings"/> resolved to, so files left there by a code
+    /// settings edit that moved the root are found too.
+    /// </summary>
+    OrphanCodeFileScanPlan CreatePlan(GumProjectSave project, CodeOutputProjectSettings projectSettings,
+        CodeOutputProjectSettings? previousSettings);
+
+    /// <summary>
     /// Walks the disk for files the plan does not account for. Read-only, never touches the project,
     /// and safe to run on a worker thread. The walk of the code output folder is bounded, see
     /// <see cref="OrphanCodeFileScanResult.IsTruncated"/>.

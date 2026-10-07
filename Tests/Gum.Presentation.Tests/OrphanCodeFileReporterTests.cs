@@ -254,6 +254,44 @@ public class OrphanCodeFileReporterTests : BaseTestClass
         _sut.Orphans.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task RefreshAsync_WithPreviousSettings_PlansAScanOfTheOldCodeRootToo()
+    {
+        GumProjectSave project = new GumProjectSave();
+        CodeOutputProjectSettings current = new CodeOutputProjectSettings { CodeProjectRoot = "New/" };
+        CodeOutputProjectSettings previous = new CodeOutputProjectSettings { CodeProjectRoot = "Old/" };
+        _scanService.Setup(x => x.CreatePlan(project, current, previous)).Returns(CreateEmptyPlan);
+        ArrangeScan();
+
+        await _sut.RefreshAsync(project, current, previousSettings: previous);
+
+        _scanService.Verify(x => x.CreatePlan(project, current, previous), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateErrors_OffersMigrate_ForAFileWhoseElementStillExists_AndDeleteForTheRest()
+    {
+        // A file left at an old path by a settings change belongs to a live element; deleting it one
+        // row at a time is how custom code gets lost, so its row migrates the whole project instead.
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(new ComponentSave { Name = "Controls/Button" });
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+        ArrangeScan(
+            new OrphanCodeFile(new FilePath("/game/Components/Controls/ButtonRuntime.cs"), OrphanCodeFileKind.CustomCode, "Controls/Button"),
+            new OrphanCodeFile(new FilePath("/game/Components/Gone.cs"), OrphanCodeFileKind.CustomCode, "Gone"));
+        await RefreshAndApplyAsync();
+        int migrations = 0;
+        _sut.MigrateAction = () => migrations++;
+
+        List<ErrorViewModel> errors = _sut.CreateErrors().ToList();
+        errors[0].ActionCommand!.Execute(null);
+
+        errors.Select(error => error.ActionName).ShouldBe(new[] { "Migrate Code Files", "Delete File" });
+        errors[0].Message.ShouldStartWith("Custom code file left at an old path by a code settings change:");
+        migrations.ShouldBe(1);
+        _fileCommands.Verify(x => x.MoveToRecycleBin(It.IsAny<FilePath>()), Times.Never);
+    }
+
     private async Task RefreshAndApplyAsync()
     {
         await _sut.RefreshAsync(new GumProjectSave(), new CodeOutputProjectSettings());
