@@ -200,6 +200,7 @@
 - CANV-040 Zoom to fit selected element. tested: CanvasZoomToFitTests
 - CANV-041 Canvas redraws on change. tested: CanvasRedrawTests
 - CANV-042 Custom renderables (Skia shapes, Lottie). tested: WireframeObjectManagerCustomRenderableTests
+- CANV-043 Switching elements restores the zoom and scroll left on each. tested: ElementCameraMemoryTests
 
 ## Variables grid (VAR)
 

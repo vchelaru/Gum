@@ -122,6 +122,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
 
     readonly ScrollbarService _scrollbarService;
+    private readonly IElementCameraMemory _elementCameraMemory;
     private readonly IOutputManager _outputManager;
     private readonly LocalizationService _localizationService;
     private readonly ScreenshotService _screenshotService;
@@ -281,6 +282,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _editorRenderableFactory = new EditorRenderableFactory(projectState);
 
         _scrollbarService = new ScrollbarService(_selectedState, _wireframeObjectManager, _projectManager);
+        _elementCameraMemory = new ElementCameraMemory();
         _editingManager = new EditingManager(
             _wireframeObjectManager,
             reorderLogic,
@@ -430,6 +432,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         this.ElementSelected += HandleElementSelected;
         this.ElementSelected += _scrollbarService.HandleElementSelected;
+        // After the scroll bars resize to the element, so the restored camera's bars land in range.
+        this.ElementSelected += RestoreElementCamera;
         this.ElementSelected += element => _previewLauncher.PushSelection(element);
         // Picking a state in the tool re-shows the previewed element in that state (issue #4856).
         this.ReactToStateSaveSelected += _ => _previewLauncher.PushSelection(_selectedState.SelectedElement);
@@ -653,6 +657,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleProjectLoad(GumProjectSave save)
     {
+        _elementCameraMemory.Clear();
         _editorViewModel.HandleProjectLoad(save);
 
         _canvas.UpdateCanvasBoundsToProject();
@@ -749,7 +754,34 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleElementDeleted(ElementSave save)
     {
+        _elementCameraMemory.Forget(save);
         _wireframeObjectManager.RefreshAll(true);
+    }
+
+    // Returns to where the user left the element's camera, if they moved it there (#5854).
+    private void RestoreElementCamera(ElementSave? element)
+    {
+        if (!_isXnaInitialized)
+        {
+            return;
+        }
+
+        Camera camera = _canvas.SystemManagers.Renderer.Camera;
+        CameraView current = new CameraView(camera.X, camera.Y, _editorViewModel.PercentZoomLevel.Value);
+        if (_elementCameraMemory.Show(element, current) is not { } remembered)
+        {
+            return;
+        }
+
+        MoveCamera(camera, remembered.ZoomPercent, remembered.X, remembered.Y);
+    }
+
+    private void MoveCamera(Camera camera, int zoomPercent, float x, float y)
+    {
+        _editorViewModel.PercentZoom = zoomPercent;
+        camera.X = x;
+        camera.Y = y;
+        _pluginManager.CameraChanged();
     }
 
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
@@ -1672,10 +1704,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         Camera camera = _canvas.SystemManagers.Renderer.Camera;
         ZoomToFitResult fit = CanvasZoomToFit.Calculate(bounds, camera.ClientWidth, camera.ClientHeight,
             _editorViewModel.ZoomLevels.Select(level => level.Value).ToArray());
-        _editorViewModel.PercentZoom = fit.ZoomPercent;
-        camera.X = fit.CameraX;
-        camera.Y = fit.CameraY;
-        _pluginManager.CameraChanged();
+        MoveCamera(camera, fit.ZoomPercent, fit.CameraX, fit.CameraY);
         return new CanvasZoomToFitReport(element.Name, bounds, fit.ZoomPercent, camera.X, camera.Y, camera.ClientWidth, camera.ClientHeight);
     }
 }

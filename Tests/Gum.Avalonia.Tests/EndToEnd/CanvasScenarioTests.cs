@@ -459,6 +459,54 @@ public class CanvasScenarioTests
         });
     }
 
+    [SkippableFact]
+    [Trait("Feature", "CANV-043")]
+    public void SwitchingElements_RestoresTheCameraTheUserLeftEachMovedElementAt()
+    {
+        OnCanvas(canvas =>
+        {
+            ScreenSave dialogue = canvas.Project.AddScreen("DialogueScreen");
+            ComponentSave button = canvas.Project.AddComponent("ButtonStandard");
+            ComponentSave icon = canvas.Project.AddComponent("Icon");
+            canvas.Tree.Click(canvas.Tree.NodeFor(dialogue));
+
+            // Zoom in and pan on the screen.
+            canvas.Wheel(canvas.WindowPointOf(300, 300), 1, RawInputModifiers.Control);
+            Point panFrom = new Point(500, 400);
+            canvas.Drag(panFrom, panFrom + new Point(-60, -40), button: MouseButton.Middle);
+            (float X, float Y, int Zoom) onScreen = (canvas.Camera.X, canvas.Camera.Y, canvas.Editor.PercentZoomLevel.Value);
+            onScreen.Zoom.ShouldBeGreaterThan(100);
+
+            // The button is shown where the camera is, then scrolled with the scroll bar.
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            (canvas.Camera.X, canvas.Camera.Y).ShouldBe((onScreen.X, onScreen.Y), "an element never moved keeps the camera as it is");
+            Thumb thumb = canvas.ScrollBarThumb(Orientation.Vertical);
+            Point thumbCenter = canvas.Input.CenterOf(thumb);
+            canvas.Input.Drag(thumbCenter, thumbCenter + new Point(0, 30));
+            canvas.Frame();
+            float onButtonY = canvas.Camera.Y;
+            onButtonY.ShouldBeGreaterThan(onScreen.Y);
+
+            // Clicking through the icon without moving the camera records nothing for it.
+            canvas.Tree.Click(canvas.Tree.NodeFor(icon));
+
+            canvas.Tree.Click(canvas.Tree.NodeFor(dialogue));
+            canvas.Frame();
+            canvas.Camera.X.ShouldBe(onScreen.X);
+            canvas.Camera.Y.ShouldBe(onScreen.Y);
+            canvas.Editor.PercentZoomLevel.Value.ShouldBe(onScreen.Zoom);
+            canvas.Camera.Zoom.ShouldBe(onScreen.Zoom / 100f);
+
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            canvas.Camera.Y.ShouldBe(onButtonY);
+
+            canvas.Tree.Click(canvas.Tree.NodeFor(icon));
+            canvas.Camera.Y.ShouldBe(onButtonY, "the icon was never moved, so it keeps the camera as it is");
+
+            canvas.AssertOracles();
+        });
+    }
+
     // #5540: a Space released after focus left the canvas never reached it, so the next left drag
     // panned the camera instead of moving the selection.
     [SkippableFact]
