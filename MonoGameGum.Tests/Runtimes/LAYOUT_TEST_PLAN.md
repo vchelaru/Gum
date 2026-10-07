@@ -34,25 +34,25 @@ covered by that test now.
 - [x] Absolute: positive, zero, negative
 - [x] PercentageOfParent: 0, 50, 100, >100, negative, tiny, parent size 0
 - [x] RelativeToParent: positive, zero, negative (negative result does not crash)
-- [x] ScreenPixel: canvas; divided by `Camera.Zoom` when managers exist; a zoom change applies on the next layout (H24). [ ] zoom 0; [ ] element added to managers after layout
-- [x] AbsoluteMultipliedByFontScale: scale 1, 2, fractional. [ ] scale 0, negative; [ ] `GlobalFontScale` changed after layout (static, no trigger)
+- [x] ScreenPixel: canvas; divided by `Camera.Zoom` when managers exist; a zoom change applies on the next layout (H24). zoom 0 is not a valid camera state and is not pinned; managers attached after layout apply on the next layout
+- [x] AbsoluteMultipliedByFontScale: scale 1, 2, fractional. scale 0 and negative; `GlobalFontScale` changed after layout applies on the next layout (static, no trigger)
 - [x] RelativeToChildren: see 4.1
 - [x] PercentageOfOtherDimension: 50, 100, updates when source changes. See 4.2 and 5
-- [x] PercentageOfSourceFile: source rect, scaling. [ ] no texture (64 fallback); [ ] `TextureAddress` EntireTexture vs Custom vs DimensionsBased; [ ] texture swapped after layout
-- [x] MaintainFileAspectRatio: landscape, portrait, square. [ ] aspect ratio 0 (H8); [ ] no `IAspectRatio` (64 fallback); [ ] with a source rect
+- [x] PercentageOfSourceFile: source rect, scaling. no texture (64 fallback); `TextureAddress` EntireTexture, Custom and DimensionsBased; texture swapped after layout
+- [x] MaintainFileAspectRatio: landscape, portrait, square. aspect ratio 0 (H8); no `IAspectRatio` (64 fallback); with a custom source rect
 - [x] Ratio: see 4.3
 - [x] RelativeToMaxParentOrChildren: parent larger, children larger, padding, no children, nested, ratchet, children sized from it (H39); counted by a RelativeToChildren parent at its own Min and Max: below, at and over the min, add/remove, hidden content, repeated layout (H51)
 
 ### 1.2 X/Y units
 - [x] PixelsFromSmall, PixelsFromMiddle, PixelsFromLarge, Percentage (incl. parent size 0)
-- [~] PixelsFromBaseline: [ ] parent is Text (wrapped text height minus descender); [ ] parent is not Text (bottom edge)
+- [x] PixelsFromBaseline: parent is Text (wrapped text height minus descender); parent is not Text (bottom edge)
 - [x] PercentageOfFile, X and Y (code-only; saved projects use PositionUnitType, which has no such value) (H1)
-- [ ] PixelsFromMiddleInverted (obsolete, still loads): position and contribution to a RelativeToChildren parent (H12)
+- [x] PixelsFromMiddleInverted (obsolete, still loads): position and contribution to a RelativeToChildren parent (H12)
 
 ### 1.3 Origins
 - [x] XOrigin Left/Center/Right and YOrigin Top/Center/Bottom with the common units
-- [ ] YOrigin TextBaseline, on Text and on non-Text
-- [ ] full origin x unit matrix (only selected pairs are pinned today)
+- [x] YOrigin TextBaseline, on Text and on non-Text
+- [x] full origin x unit matrix (Left/Center/Right against PixelsFromSmall/Middle/Large and Percentage, both axes)
 
 ### 1.4 Min/Max
 - [x] Max and Min clamp Absolute and PercentageOfParent; null does not clamp
