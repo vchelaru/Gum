@@ -383,3 +383,35 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 2. Check section 9 on every combination. Write explicit tests for the `[ ]` leaves, the named
    M-cases and the H-items.
 3. Triage each failure into FIX, DOCUMENT or LOG.
+
+## Coverage
+
+The leaf checklist above lists cases; coverage measures which lines of the layout code the layout tests
+execute. Run the layout test classes with the collector already referenced by `MonoGameGum.Tests`, limited
+to `GraphicalUiElement`, and read the Cobertura XML (ReportGenerator renders it as HTML):
+
+```
+dotnet test MonoGameGum.Tests/MonoGameGum.Tests.csproj --settings cov.runsettings --collect:"XPlat Code Coverage" --filter "FullyQualifiedName~Layout|FullyQualifiedName~DockAnchorTests|FullyQualifiedName~GraphicalUiElementTests"
+```
+
+with `cov.runsettings` setting the Cobertura format and `<Include>[GumCommon]Gum.Wireframe.GraphicalUiElement*</Include>`.
+
+Executed is not asserted: a covered line only shows a test reached it. The layout methods are covered except the
+lines below. Everything else in the class that is uncovered (bindings, events, animation, state, property
+reflection) is outside the layout contract.
+
+Unreachable through any working path (candidates to delete, #5868):
+- `UpdateHeight` and `UpdateWidth`, RelativeToChildren on an element with no renderable: the loop over contained
+  children. A renderable-less element reports the canvas size and never runs it; calling the public method
+  directly throws `InvalidOperationException` right after the loop.
+- `UpdateChildren` on an element with no renderable, the partial-axis update when a child cannot be fully
+  updated: that element only ever updates its children with `ChildType.All`.
+- `TryAdjustOffsetsByParentLayoutType`: the `default` that throws for a layout that is not a stack.
+- `GetWhatToStackAfter`: the early outs for no parent and no sibling list, only called for stacking parents.
+- `GetRequiredParentWidthFromEdges` and `GetRequiredParentHeightFromEdges`: the no-renderable early return.
+- The `FULL_DIAGNOSTICS` checks for NaN and infinity inside `UpdatePosition` and `GetParentDimensions`: no
+  setter can hand them such a value.
+
+`X`, `Y`, `Width` and `Height` throw on NaN and infinity only when GumCommon is built with `FULL_DIAGNOSTICS`,
+which every configuration defines except `Release_No_Diagnostics`; a test run in that configuration fails the
+invalid-value tests.
