@@ -8,7 +8,7 @@ trigger_phrase: layout|WidthUnits|HeightUnits|DimensionUnitType|XUnits|YUnits|Ch
 
 Gum's layout is driven by **unit enums** that tell the engine how to interpret
 numeric Width/Height/X/Y values, plus a **children layout** mode on containers.
-All layout lives in `GraphicalUiElement` (`GumRuntime/GraphicalUiElement.cs`).
+All layout lives in `GraphicalUiElement` (the `GumRuntime/GraphicalUiElement.*.cs` partials; file map in gum-layout-engine).
 
 ## Key Concepts
 

@@ -10,7 +10,21 @@ For user-facing layout concepts (units, stacking, wrapping, Anchor/Dock), see
 the **gum-layout** skill. This skill is for people debugging, optimizing, or
 extending the engine itself.
 
-All layout logic lives in `GumRuntime/GraphicalUiElement.cs`.
+All layout logic lives in `GraphicalUiElement`, a partial class split across `GumRuntime/GraphicalUiElement.*.cs`:
+
+| File | Holds |
+|---|---|
+| `.LayoutProperties.cs` | X/Y/Width/Height, units, origins, Min/Max, `ChildrenLayout`, stacking and grid settings |
+| `.UpdateLayout.cs` | `UpdateLayout` and its parent climb |
+| `.Dimensions.cs` | `UpdateDimensions`, `UpdateHeight`, `UpdateWidth`, `GetMaxCell*` |
+| `.RequiredSize.cs` | `GetRequiredParent*`, `GetParentDimensions`, texture-based dimensions |
+| `.ChildUpdates.cs` | `GetChildLayoutType`, `UpdateChildren`, wrapped-line helpers |
+| `.Position.cs` | `UpdatePosition` and the offset helpers |
+| `.Stacking.cs` | row and column dimensions, grid cells, sibling helpers, `GetWhatToStackAfter` |
+| `.Suspension.cs` | `MakeDirty`, `SuspendLayout`, `ResumeLayout` |
+| `.DockAndAnchor.cs` | `Dock` and `Anchor` |
+
+The other `.cs` partials hold properties, state application, rendering hookup and animation.
 
 ## UpdateLayout Call Chain
 
