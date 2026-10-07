@@ -201,8 +201,7 @@ public partial class GraphicalUiElement
                 {
                     var child = mWhatThisContains[i];
                     if ((child.Parent == null || child.Parent == this) &&
-                        (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits)) &&
-                        CanDoFullUpdate(child.GetChildLayoutType(this), child))
+                        (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits)))
                     {
                         child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                     }
@@ -221,11 +220,8 @@ public partial class GraphicalUiElement
                 if (child.Parent == null || child.Parent == this)
                 {
                     // Without a renderable, children are only updated with ChildType.All, which always allows a full update.
-                    if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
-                    {
-                        child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
-                        newlyUpdated?.Add(child);
-                    }
+                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                    newlyUpdated?.Add(child);
                 }
             }
 

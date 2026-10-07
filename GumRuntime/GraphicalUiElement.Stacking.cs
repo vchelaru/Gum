@@ -52,12 +52,8 @@ public partial class GraphicalUiElement
             return;
         }
 
-        var parentGue = EffectiveParentGue;
-
-        if (parentGue == null)
-        {
-            return;
-        }
+        // Only called for a child of a stacking parent, so there is always an effective parent.
+        GraphicalUiElement parentGue = EffectiveParentGue!;
 
         if (this.Visible)
         {

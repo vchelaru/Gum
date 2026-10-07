@@ -408,9 +408,6 @@ to be reachable and stay, each with a test in `LayoutCoverageGapTests`:
 - The `FULL_DIAGNOSTICS` checks inside `UpdatePosition` and `GetParentDimensions`: `CanvasWidth` and `CanvasHeight`
   are static and accept NaN and infinity, which then reach layout as the parent size.
 
-Still uncovered and outside #5868: the `parentGue == null` return in `RefreshParentRowColumnDimensionForThis`, the
-rotation-infinity check in `AdjustOffsetsByOrigin`, and `case 0` in `GetRightAndUpFromRotation`.
-
 `X`, `Y`, `Width` and `Height` throw on NaN and infinity only when GumCommon is built with `FULL_DIAGNOSTICS`,
 which every configuration defines except `Release_No_Diagnostics`; a test run in that configuration fails the
 invalid-value tests.
