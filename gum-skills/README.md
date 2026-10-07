@@ -26,6 +26,8 @@ assume — then add the topical skills that match your work:
 | `gum-file-format` | Reading and safely hand-editing `.gumx`/`.gusx`/`.gucx`/`.gutx` XML. |
 | `gum-forms-controls` | Buttons, text boxes, lists, panels, and the state/category styling system. |
 | `gum-layout` | Positioning and sizing — units, anchor/dock, stacking. |
+| `gum-styling` | Changing control colors, fonts, and states, globally or per control. |
+| `gum-theming` | Applying and recoloring a pre-built Theme (DarkPro, Bubblegum, …). |
 
 A good default set is `gum-overview` + `gumcli` + whichever of `gum-layout`,
 `gum-forms-controls`, and `gum-file-format` your task touches.
