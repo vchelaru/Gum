@@ -43,9 +43,9 @@ public class FilePickingLogic
     }
 
     /// <summary>
-    /// Opens the OS file manager and selects the given file. If <see cref="FolderRelativeTo"/> is
-    /// set, the path is resolved against it first. No-op if the path is empty or the resolved file
-    /// does not exist.
+    /// Opens the OS file manager and selects the given file or folder. If <see cref="FolderRelativeTo"/>
+    /// is set, a relative path is resolved against it first. No-op if the path is empty or nothing exists
+    /// at the resolved path.
     /// </summary>
     public void ShowInExplorer(string fileToOpen)
     {
@@ -54,7 +54,7 @@ public class FilePickingLogic
             return;
         }
 
-        if (!string.IsNullOrEmpty(FolderRelativeTo))
+        if (!string.IsNullOrEmpty(FolderRelativeTo) && !Path.IsPathRooted(fileToOpen))
         {
             fileToOpen = RemoveDotDotSlash(FolderRelativeTo + fileToOpen);
         }
@@ -62,6 +62,11 @@ public class FilePickingLogic
         if (File.Exists(fileToOpen))
         {
             FilePicker?.RevealFile(fileToOpen);
+        }
+        else if (Directory.Exists(fileToOpen))
+        {
+            // A trailing separator makes the file manager open the folder instead of selecting it.
+            FilePicker?.RevealFile(fileToOpen.TrimEnd('/', '\\'));
         }
     }
 

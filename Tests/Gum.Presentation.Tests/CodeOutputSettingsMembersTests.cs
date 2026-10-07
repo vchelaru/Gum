@@ -70,6 +70,19 @@ public class CodeOutputSettingsMembersTests
         _sut.BuildCategories()[0].Members.Select(member => member.Name).ShouldContain("Adjust Pixel Values for Density");
     }
 
+    [Theory]
+    [InlineData("Code Project Root")]
+    [InlineData("Generated Code Folder")]
+    public void FolderRows_UseTheFolderPicker(string memberName)
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings();
+
+        InstanceMember member = Member(memberName);
+
+        member.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.FileSelection));
+        member.PropertiesToSetOnDisplayer["IsFolderDialog"].ShouldBe(true);
+    }
+
     [Fact]
     public void CodeProjectRoot_GetsANativeTrailingSeparator_AndReportsTheChange()
     {

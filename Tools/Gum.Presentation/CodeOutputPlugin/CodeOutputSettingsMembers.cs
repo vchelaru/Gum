@@ -191,7 +191,7 @@ public class CodeOutputSettingsMembers
             }
         };
         member.CustomGetTypeEvent += (owner) => typeof(string);
-        // Not a file selection editor: that only picks files, and this is a folder.
+        UseFolderPicker(member);
 
         _viewModel.NeedsSetup = _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
 
@@ -226,8 +226,17 @@ public class CodeOutputSettingsMembers
 
         member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolder;
         member.CustomGetTypeEvent += (owner) => typeof(string);
+        UseFolderPicker(member);
 
         return member;
+    }
+
+    // A text field plus a folder-browse button. The picked folder is absolute; the member's setter
+    // makes it relative.
+    private static void UseFolderPicker(InstanceMember member)
+    {
+        member.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
+        member.PropertiesToSetOnDisplayer["IsFolderDialog"] = true;
     }
 
     private InstanceMember CreateOutputLibrarySelectionMember()

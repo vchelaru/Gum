@@ -98,6 +98,40 @@ public class FilePickingTests : IDisposable
     }
 
     [Fact]
+    public void ShowInExplorer_RevealsAnExistingFolder_WithoutItsTrailingSeparator()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N")) + "/";
+        Directory.CreateDirectory(folder + "Code");
+        Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
+        FilePickingLogic.FilePicker = picker.Object;
+        FilePickingLogic.FolderRelativeTo = folder;
+        FilePickingLogic logic = new FilePickingLogic { IsFolderDialog = true };
+
+        // Folder settings such as Code Project Root are stored with a trailing separator, which
+        // would make the file manager open the folder instead of selecting it.
+        logic.ShowInExplorer("Code/");
+
+        picker.Verify(p => p.RevealFile(It.Is<string>(path => path.EndsWith("/Code"))), Times.Once);
+    }
+
+    [Fact]
+    public void ShowInExplorer_DoesNotResolveAnAbsolutePath_AgainstFolderRelativeTo()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        string absoluteFile = Path.Combine(folder, "real.png");
+        File.WriteAllText(absoluteFile, "");
+        Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
+        FilePickingLogic.FilePicker = picker.Object;
+        FilePickingLogic.FolderRelativeTo = Path.Combine(folder, "Other") + "/";
+        FilePickingLogic logic = new FilePickingLogic();
+
+        logic.ShowInExplorer(absoluteFile);
+
+        picker.Verify(p => p.RevealFile(It.Is<string>(path => path.EndsWith("real.png"))), Times.Once);
+    }
+
+    [Fact]
     public void ShowOpenDialog_UsesTheSharedPickerAndFilter()
     {
         Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
