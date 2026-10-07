@@ -1950,9 +1950,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     partial void OnConstructor();
 
-    // Instances held through ElementGueContainingThis (an element that had no renderable, such as an
-    // old-style screen) are not reparented when a renderable is assigned here: they keep a null
-    // Parent, stay out of Children, and keep laying out against the canvas. This is intended (#5772).
+    // Instances held through ElementGueContainingThis while this element had no renderable are not
+    // reparented when a renderable is assigned here: they keep a null Parent, stay out of Children,
+    // and keep laying out against the canvas. This is intended (#5772). Only code-only construction
+    // reaches this; project load, generated code and FRB all assign the renderable before instances.
     public void SetContainedObject(IRenderable? containedObject)
     {
         if (containedObject == this)
@@ -8327,7 +8328,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
-            // With no renderable (such as an old-style screen), Children is the empty fallback, so the
+            // With no renderable (a code-only element built without one), Children is the empty fallback, so the
             // held instances are reached through mWhatThisContains. Only the parentless ones: the rest
             // are reached through their parent's Children.
             AnimateEach(mWhatThisContains, secondDifference, parentlessOnly: true);
