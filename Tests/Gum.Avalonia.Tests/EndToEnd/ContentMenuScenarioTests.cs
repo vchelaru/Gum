@@ -135,6 +135,54 @@ public class ContentMenuScenarioTests
     }
 
     [AvaloniaFact]
+    public void MigrateCodeFiles_AfterAnOutputLibrarySwitch_MovesCustomCode_AndRestoreLastPutsItBack()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration(library: "MonoGame (deprecated)");
+        code.ClickGenerate();
+        string oldGenerated = code.CodeFile("Components/CardRuntime.Generated.cs");
+        string oldCustom = code.CodeFile("Components/CardRuntime.cs");
+        File.WriteAllText(oldCustom, File.ReadAllText(oldCustom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()"));
+        // Gum Forms names the class Card, so the Runtime files are left at old paths.
+        code.PickComboItem("Output Library", "Gum Forms (recommended)");
+        code.ClickGenerate();
+        string newCustom = code.CodeFile("Components/Card.cs");
+        File.Exists(newCustom).ShouldBeTrue();
+
+        string? planText = null;
+        code.Project.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            planText = window.Text();
+            if (PrScreenshot.OutputDirectory != null)
+            {
+                PrScreenshot.SaveWindow(window.Window, "migrate-code-files");
+            }
+            window.ClickButton("Migrate");
+        });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.Tree.PickMainMenu("Content", "Migrate Code Files…");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, AsyncWork, "the migration's plan and result");
+
+        planText.ShouldNotBeNull().ShouldContain("Components/CardRuntime.cs -> Components/Card.cs");
+        File.Exists(oldGenerated).ShouldBeFalse();
+        File.Exists(oldCustom).ShouldBeFalse();
+        File.ReadAllText(newCustom).ShouldContain("int userField;");
+        File.ReadAllText(newCustom).ShouldContain("partial class Card");
+
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.PickMainMenu("Content", "Restore Last Code File Migration…");
+
+        File.ReadAllText(oldCustom).ShouldContain("int userField;");
+        File.Exists(oldGenerated).ShouldBeTrue();
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "CONT-009")]
     [Trait("Feature", "DLG-024")]
     public void ConvertToJson_WithRecycling_OpensTheJsonProject_AndRemovesTheXmlFiles()

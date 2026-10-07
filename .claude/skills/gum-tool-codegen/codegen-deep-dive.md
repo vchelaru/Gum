@@ -338,9 +338,12 @@ How it decides something is an orphan, and the limits that follow:
   `gumcli`). Hitting it almost always means `CodeProjectRoot` resolves to the wrong folder, such as a
   project copied shallow under `%TEMP%` whose `..\..\` lands in `%LOCALAPPDATA%`.
 
-**Content > Preview Code File Migration** reuses the scan's result: `CodeFileMigrationPlanner` sorts
-orphans whose element still exists (files left at old paths by a code settings change) into remove,
-move and leave-alone steps, matching elements only through the `//Code for` header. It is read-only.
+**Content > Migrate Code Files** reuses the scan's result: `CodeFileMigrationPlanner` sorts orphans
+whose element still exists (files left at old paths by a code settings change) into remove, move and
+leave-alone steps, matching elements only through the `//Code for` header. `CodeFileMigrationApplier`
+backs every touched file up through `CodeFileBackupService` (outside the repo, newest 10 per project)
+before changing anything, and restores the backup itself if a step fails. **Restore Last Code File
+Migration** undoes the newest one but never overwrites a file edited since.
 
 ### Command line
 
