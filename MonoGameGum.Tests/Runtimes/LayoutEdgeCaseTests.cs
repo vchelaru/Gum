@@ -1002,6 +1002,35 @@ public class LayoutEdgeCaseTests : BaseTestClass
 
     #region Setters
 
+    // The element's ClipsChildren lives on the renderable, which keeps it across layouts.
+    [Fact]
+    public void ClipsChildren_ShouldReachRenderableAndSurviveLayout()
+    {
+        InvisibleRenderable renderable = new();
+        GraphicalUiElement element = new(renderable);
+
+        element.ClipsChildren = true;
+        renderable.ClipsChildren.ShouldBeTrue();
+
+        element.UpdateLayout();
+
+        renderable.ClipsChildren.ShouldBeTrue();
+        element.ClipsChildren.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("ClipsChildren")]
+    [InlineData("Clips Children")]
+    public void ClipsChildren_ShouldBeSettable_ThroughSetProperty(string propertyName)
+    {
+        InvisibleRenderable renderable = new();
+        GraphicalUiElement element = new(renderable);
+
+        element.SetProperty(propertyName, true);
+
+        renderable.ClipsChildren.ShouldBeTrue();
+    }
+
     [Fact]
     public void SettingX_ShouldMatchFullLayout_WhenParentIsFlipped()
     {
