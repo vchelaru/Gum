@@ -23,8 +23,10 @@ namespace Gum.Plugins.InternalPlugins.OrphanCodeFiles;
 /// Surfaces code files left behind on disk when an element was deleted, renamed, or moved without
 /// the code files being reconciled (issue #4422). Scans on project load and from the
 /// <b>Content</b> ▸ <b>Scan for Orphaned Code Files</b> menu item, and reports through the Errors
-/// tab with a per-file Delete action. All logic lives in <see cref="OrphanCodeFileReporter"/> and
-/// <see cref="OrphanCodeFileScanService"/> — this plugin is menu/event plumbing only.
+/// tab with a per-file Delete action. <b>Content</b> ▸ <b>Preview Code File Migration</b> shows what
+/// moving files left at old paths by a code settings change would do (#5846). All logic lives in
+/// <see cref="OrphanCodeFileReporter"/>, <see cref="OrphanCodeFileScanService"/> and
+/// <see cref="CodeFileMigrationPreviewer"/> — this plugin is menu/event plumbing only.
 /// </summary>
 [Export(typeof(PluginBase))]
 internal class MainOrphanCodeFilePlugin : PluginBase
@@ -32,6 +34,7 @@ internal class MainOrphanCodeFilePlugin : PluginBase
     public override string FriendlyName => "Orphan Code File Plugin";
 
     private readonly OrphanCodeFileReporter _reporter;
+    private readonly CodeFileMigrationPreviewer _previewer;
     private readonly CodeOutputProjectSettingsManager _projectSettingsManager;
     private readonly IProjectState _projectState;
     private readonly IMessenger _messenger;
@@ -66,6 +69,11 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         IOrphanCodeFileScanService scanService = new OrphanCodeFileScanService(
             codeGenerator, fileLocationsService, elementSettingsManager, projectDirectoryProvider);
 
+        _previewer = new CodeFileMigrationPreviewer(
+            new CodeFileMigrationPlanner(codeGenerator, fileLocationsService, elementSettingsManager, new CustomCodeStubDetector()),
+            new CodeFileMigrationPlanFormatter(),
+            dialogService);
+
         _reporter = new OrphanCodeFileReporter(scanService, fileCommands, dialogService, dispatcher, outputManager);
         _reporter.OrphansChanged += () =>
             _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
@@ -74,6 +82,7 @@ internal class MainOrphanCodeFilePlugin : PluginBase
     public override void StartUp()
     {
         AddMenuEntry(HandleScanRequested, "Content", "Scan for Orphaned Code Files…");
+        AddMenuEntry(HandlePreviewMigrationRequested, "Content", "Preview Code File Migration…");
 
         this.ProjectLoad += HandleProjectLoad;
         this.GetAllErrors += HandleGetAllErrors;
@@ -100,6 +109,19 @@ internal class MainOrphanCodeFilePlugin : PluginBase
     private void HandleScanRequested()
     {
         _ = Refresh(_projectState.GumProjectSave, ShowScanSummary);
+    }
+
+    // Rescans first so the preview reflects the disk now, then plans from that result (#5846).
+    private void HandlePreviewMigrationRequested()
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project == null)
+        {
+            return;
+        }
+
+        CodeOutputProjectSettings settings = _projectSettingsManager.CreateOrLoadSettingsForProject();
+        _ = _reporter.RefreshAsync(project, settings, result => _previewer.ShowPreview(project, settings, result));
     }
 
     private void ShowScanSummary(OrphanCodeFileScanResult result)
