@@ -73,7 +73,18 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     internal SyntaxVersionDetectionService(ICodeGenLogger logger, string? nuGetCacheRoot)
     {
         _logger = logger;
-        _nuGetCacheRoot = nuGetCacheRoot ?? Path.Combine(
+        _nuGetCacheRoot = nuGetCacheRoot
+            ?? GetDefaultNuGetCacheRoot(Environment.GetEnvironmentVariable("NUGET_PACKAGES"));
+    }
+
+    internal static string GetDefaultNuGetCacheRoot(string? nuGetPackagesEnvironmentValue)
+    {
+        if (!string.IsNullOrEmpty(nuGetPackagesEnvironmentValue))
+        {
+            return nuGetPackagesEnvironmentValue;
+        }
+
+        return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             ".nuget", "packages");
     }
@@ -263,7 +274,7 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
                 continue;
             }
 
-            string? dllPath = FindDllInNuGetCache(packageName, packageVersion);
+            string? dllPath = FindDllInNuGetCache(packageName, ResolveFloatingVersion(packageName, packageVersion));
             if (dllPath == null)
             {
                 _logger.PrintOutput($"Could not locate {packageName} {packageVersion} in NuGet cache.");
@@ -337,6 +348,45 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         }
 
         return null;
+    }
+
+    // A floating version ("*" or "2026.*") names no folder in the NuGet cache, so it maps to the
+    // highest restored stable version it matches. Anything else is returned unchanged.
+    private string ResolveFloatingVersion(string packageName, string version)
+    {
+        int starIndex = version.IndexOf('*');
+        if (starIndex < 0)
+        {
+            return version;
+        }
+
+        string packageRoot = Path.Combine(_nuGetCacheRoot, packageName.ToLowerInvariant());
+        if (!Directory.Exists(packageRoot))
+        {
+            return version;
+        }
+
+        string prefix = version.Substring(0, starIndex);
+
+        Version? highest = null;
+        string? highestName = null;
+        foreach (string directory in Directory.EnumerateDirectories(packageRoot))
+        {
+            string name = Path.GetFileName(directory);
+            if (!name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                || !Version.TryParse(name, out Version? parsed))
+            {
+                continue;
+            }
+
+            if (highest == null || parsed > highest)
+            {
+                highest = parsed;
+                highestName = name;
+            }
+        }
+
+        return highestName ?? version;
     }
 
     internal string? FindDllInNuGetCache(string packageName, string version)

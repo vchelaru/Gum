@@ -639,6 +639,58 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void Detect_NuGetPackage_FloatingVersion_UsesHighestRestoredVersion()
+    {
+        // The docs' csproj snippets use Version="*", and no folder in the NuGet cache is named "*".
+        // The older cached version holds a placeholder that cannot be read, so only the newer one
+        // can produce a syntax version.
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string newerDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.10.1.1", "lib", "net8.0");
+        string olderDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.9.2.1", "lib", "net8.0");
+        string prereleaseDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2027.1.1.1-beta", "lib", "net8.0");
+        Directory.CreateDirectory(newerDir);
+        Directory.CreateDirectory(olderDir);
+        Directory.CreateDirectory(prereleaseDir);
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"), Path.Combine(newerDir, "GumCommon.dll"));
+        File.WriteAllText(Path.Combine(olderDir, "Placeholder.dll"), "not an assembly");
+        File.WriteAllText(Path.Combine(prereleaseDir, "Placeholder.dll"), "not an assembly");
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.MonoGame"" Version=""*"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = sut.Detect(settings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
+        result.Version.ShouldBe(5);
+    }
+
+    [Theory]
+    [InlineData("D:\\custom-packages", "D:\\custom-packages")]
+    [InlineData("", null)]
+    [InlineData(null, null)]
+    public void GetDefaultNuGetCacheRoot_HonorsNuGetPackagesEnvironmentVariable(string? environmentValue, string? expected)
+    {
+        string result = SyntaxVersionDetectionService.GetDefaultNuGetCacheRoot(environmentValue);
+
+        result.ShouldBe(expected ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"));
+    }
+
+    [Fact]
     public void FindDllInNuGetCache_PackageNotInCache_ReturnsNull()
     {
         string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
