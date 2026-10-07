@@ -22,7 +22,8 @@ public class CodeOutputSettingsMembers
     private const string FullyInCode = "Fully in Code (no loaded Gum Project)";
     private const string ReferenceGum = "Reference loaded Gum Project";
 
-    private static readonly Dictionary<OutputLibrary, string> LibraryNames = new Dictionary<OutputLibrary, string>
+    // Also read by CodeFileLocationChange, so the migration prompt names a library as this row does.
+    internal static readonly Dictionary<OutputLibrary, string> LibraryNames = new Dictionary<OutputLibrary, string>
     {
         { OutputLibrary.MonoGameForms, "Gum Forms (recommended)" },
         { OutputLibrary.Skia, "SkiaSharp (deprecated)" },

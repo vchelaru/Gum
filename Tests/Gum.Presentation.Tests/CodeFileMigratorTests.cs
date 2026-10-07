@@ -61,6 +61,27 @@ public class CodeFileMigratorTests : IDisposable
     }
 
     [Fact]
+    public void Migrate_AfterASettingsChange_NamesIt_AndStaysQuietWhenNothingMoved()
+    {
+        string change = "Output Library from MonoGame (deprecated) to Gum Forms (recommended)";
+        OrphanCodeFileScanResult scan = GivenScanPlannedAs(new CodeFileMigrationStep(
+            "Controls/Button", CodeFileMigrationAction.RemoveGenerated, new FilePath(_codeRoot + "ButtonRuntime.Generated.cs")));
+        OrphanCodeFileScanResult nothing = new OrphanCodeFileScanResult(Array.Empty<OrphanCodeFile>(), isTruncated: false, _codeRoot);
+        _planner.Setup(p => p.CreatePlan(_project, _settings, nothing.Orphans)).Returns(new CodeFileMigrationPlan(Array.Empty<CodeFileMigrationStep>()));
+        _dialogService.Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle>()))
+            .Returns(MessageDialogResult.Negative);
+
+        CodeFileMigrator migrator = CreateMigrator();
+        migrator.Migrate(_project, _projectFile, _settings, scan, change);
+        migrator.Migrate(_project, _projectFile, _settings, nothing, change);
+
+        // Every Code tab edit can raise this, so an edit that moved nothing shows nothing.
+        _dialogService.Verify(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle>()), Times.Once);
+        _dialogService.Verify(d => d.ShowMessage(It.Is<string>(text => text.StartsWith("You changed " + change + ".")),
+            "Migrate Code Files", It.IsAny<MessageDialogStyle>()));
+    }
+
+    [Fact]
     public void Migrate_ChangesNothing_WhenCancelled()
     {
         OrphanCodeFileScanResult scan = GivenScanPlannedAs(new CodeFileMigrationStep(

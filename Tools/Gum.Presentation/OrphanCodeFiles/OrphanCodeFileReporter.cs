@@ -53,6 +53,12 @@ public class OrphanCodeFileReporter
     }
 
     /// <summary>
+    /// Runs the project-wide code file migration. When set, an orphan whose element still exists
+    /// (left at an old path by a code settings change) offers this instead of Delete File (#5846).
+    /// </summary>
+    public Action? MigrateAction { get; set; }
+
+    /// <summary>
     /// The orphans found by the most recent <see cref="RefreshAsync"/>, minus any already resolved.
     /// </summary>
     public IReadOnlyList<OrphanCodeFile> Orphans => _orphans;
@@ -73,7 +79,7 @@ public class OrphanCodeFileReporter
     /// deleted until <see cref="Resolve"/> is called.
     /// </summary>
     public async Task RefreshAsync(GumProjectSave? project, CodeOutputProjectSettings projectSettings,
-        Action<OrphanCodeFileScanResult>? onApplied = null)
+        Action<OrphanCodeFileScanResult>? onApplied = null, CodeOutputProjectSettings? previousSettings = null)
     {
         _currentScan?.Cancel();
         CancellationTokenSource scan = new CancellationTokenSource();
@@ -94,7 +100,10 @@ public class OrphanCodeFileReporter
             return;
         }
 
-        OrphanCodeFileScanPlan plan = _scanService.CreatePlan(project, projectSettings);
+        // Previous settings also walk the code root a settings edit moved away from.
+        OrphanCodeFileScanPlan plan = previousSettings == null
+            ? _scanService.CreatePlan(project, projectSettings)
+            : _scanService.CreatePlan(project, projectSettings, previousSettings);
 
         OrphanCodeFileScanResult result;
         try
@@ -142,14 +151,21 @@ public class OrphanCodeFileReporter
     /// Builds one Errors tab entry per orphan, each carrying an action that resolves it.
     /// </summary>
     public IEnumerable<ErrorViewModel> CreateErrors() =>
-        _orphans.ToList().Select(orphan => new ErrorViewModel
+        _orphans.ToList().Select(orphan =>
         {
-            Code = ErrorCode,
-            ElementName = orphan.ElementName ?? string.Empty,
-            Message = $"Orphaned {GetKindDescription(orphan.Kind)}, no matching element in the project: " +
-                $"{orphan.FilePath.FullPath}",
-            ActionName = "Delete File",
-            ActionCommand = new RelayCommand(() => Resolve(orphan))
+            Action? migrate = MigrateAction;
+            bool isMigratable = migrate != null && orphan.ElementName != null
+                && ObjectFinder.Self.GetElementSave(orphan.ElementName) != null;
+            return new ErrorViewModel
+            {
+                Code = ErrorCode,
+                ElementName = orphan.ElementName ?? string.Empty,
+                Message = isMigratable
+                    ? $"{Capitalized(GetKindDescription(orphan.Kind))} left at an old path by a code settings change: {orphan.FilePath.FullPath}"
+                    : $"Orphaned {GetKindDescription(orphan.Kind)}, no matching element in the project: {orphan.FilePath.FullPath}",
+                ActionName = isMigratable ? "Migrate Code Files" : "Delete File",
+                ActionCommand = isMigratable ? new RelayCommand(migrate!) : new RelayCommand(() => Resolve(orphan))
+            };
         });
 
     /// <summary>
@@ -184,6 +200,8 @@ public class OrphanCodeFileReporter
         _orphans.Remove(orphan);
         OrphansChanged?.Invoke();
     }
+
+    private static string Capitalized(string text) => char.ToUpperInvariant(text[0]) + text.Substring(1);
 
     private static string GetKindDescription(OrphanCodeFileKind kind) => kind switch
     {

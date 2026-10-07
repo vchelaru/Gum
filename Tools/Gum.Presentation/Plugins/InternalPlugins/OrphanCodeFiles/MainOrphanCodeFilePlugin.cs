@@ -92,6 +92,11 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         _reporter = new OrphanCodeFileReporter(scanService, fileCommands, dialogService, dispatcher, outputManager);
         _reporter.OrphansChanged += () =>
             _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
+        // A row whose element still exists migrates the whole project instead of deleting one file.
+        _reporter.MigrateAction = HandleMigrateRequested;
+
+        _messenger.Register<CodeFileLocationsChangedMessage>(this,
+            (_, message) => HandleCodeFileLocationsChanged(message));
     }
 
     public override void StartUp()
@@ -143,6 +148,23 @@ internal class MainOrphanCodeFilePlugin : PluginBase
             _migrator.Migrate(project, project.FullFileName, settings, result);
             _ = Refresh(project, onApplied: null);
         });
+    }
+
+    // A Code tab edit moved where code files belong: scan the old code root too, and offer the
+    // migration, naming the edit. Says nothing when no file is left at an old path.
+    private void HandleCodeFileLocationsChanged(CodeFileLocationsChangedMessage message)
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project?.FullFileName == null)
+        {
+            return;
+        }
+
+        _ = _reporter.RefreshAsync(project, message.Current, result =>
+        {
+            _migrator.Migrate(project, project.FullFileName, message.Current, result, message.Description);
+            _ = Refresh(project, onApplied: null);
+        }, message.Previous);
     }
 
     private void HandleRestoreRequested()

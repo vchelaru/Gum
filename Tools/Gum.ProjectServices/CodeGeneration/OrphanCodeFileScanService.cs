@@ -67,11 +67,17 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
     /// Runs <see cref="CreatePlan"/> and <see cref="Execute"/> back to back on the calling thread,
     /// for headless callers such as <c>gumcli codegen --prune</c>.
     /// </summary>
-    public OrphanCodeFileScanResult Scan(GumProjectSave project, CodeOutputProjectSettings projectSettings) =>
-        Execute(CreatePlan(project, projectSettings), CancellationToken.None);
+    public OrphanCodeFileScanResult Scan(GumProjectSave project, CodeOutputProjectSettings projectSettings,
+        CodeOutputProjectSettings? previousSettings = null) =>
+        Execute(CreatePlan(project, projectSettings, previousSettings), CancellationToken.None);
 
     /// <inheritdoc/>
-    public OrphanCodeFileScanPlan CreatePlan(GumProjectSave project, CodeOutputProjectSettings projectSettings)
+    public OrphanCodeFileScanPlan CreatePlan(GumProjectSave project, CodeOutputProjectSettings projectSettings) =>
+        CreatePlan(project, projectSettings, previousSettings: null);
+
+    /// <inheritdoc/>
+    public OrphanCodeFileScanPlan CreatePlan(GumProjectSave project, CodeOutputProjectSettings projectSettings,
+        CodeOutputProjectSettings? previousSettings)
     {
         HashSet<FilePath> expectedGenerated = new HashSet<FilePath>();
         HashSet<FilePath> expectedCustom = new HashSet<FilePath>();
@@ -85,8 +91,18 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
         HashSet<FilePath> expectedElementSettings = new HashSet<FilePath>();
         AddExpectedElementSettings(project, elementSettingsDirectories, expectedElementSettings);
 
+        List<string> additionalCodeRoots = new List<string>();
+        string? previousCodeRoot = previousSettings == null ? null : ResolveCodeRoot(previousSettings);
+        if (previousCodeRoot != null && (codeRoot == null || !IsSameOrUnder(previousCodeRoot, codeRoot)))
+        {
+            additionalCodeRoots.Add(previousCodeRoot);
+        }
+
         return new OrphanCodeFileScanPlan(
-            codeRoot, expectedGenerated, expectedCustom, elementSettingsDirectories, expectedElementSettings);
+            codeRoot, expectedGenerated, expectedCustom, elementSettingsDirectories, expectedElementSettings)
+        {
+            AdditionalCodeRoots = additionalCodeRoots,
+        };
     }
 
     /// <inheritdoc/>
@@ -97,7 +113,11 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
 
         if (plan.CodeRoot != null)
         {
-            isTruncated = AddCodeFileOrphans(plan, orphans, cancellationToken);
+            isTruncated = AddCodeFileOrphans(plan, plan.CodeRoot, orphans, cancellationToken);
+        }
+        foreach (string additionalRoot in plan.AdditionalCodeRoots)
+        {
+            isTruncated |= AddCodeFileOrphans(plan, additionalRoot, orphans, cancellationToken);
         }
         AddElementSettingsOrphans(plan, orphans, cancellationToken);
 
@@ -170,11 +190,11 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
     /// Adds generated files under the code root that the plan does not account for, plus their
     /// custom siblings. Returns whether the walk stopped at <see cref="MaxCodeRootDirectories"/>.
     /// </summary>
-    private static bool AddCodeFileOrphans(OrphanCodeFileScanPlan plan, List<OrphanCodeFile> orphans,
+    private static bool AddCodeFileOrphans(OrphanCodeFileScanPlan plan, string root, List<OrphanCodeFile> orphans,
         CancellationToken cancellationToken)
     {
         GeneratedFileWalk walk = WalkGeneratedFiles(
-            plan.CodeRoot!,
+            root,
             directory => Directory.EnumerateFiles(directory, "*" + GeneratedFileSuffix),
             Directory.EnumerateDirectories,
             MaxCodeRootDirectories,

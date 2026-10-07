@@ -49,7 +49,12 @@ public class CodeGenScenarioTests
         code.Project.Dialogs.Messages.Last().ShouldContain("Card.Generated.cs");
 
         code.PickComboItem("Object Instantiation Type", "Fully in Code (no loaded Gum Project)");
+        // The Gum Forms files are left at paths SkiaSharp names differently, so the tool offers to
+        // migrate them; this scenario is about generation, so it declines.
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
+        int shown = code.Project.Dialogs.Messages.Count;
         code.PickComboItem("Output Library", "SkiaSharp (deprecated)");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count > shown, TimeSpan.FromSeconds(60), "the migration prompt");
         code.Preview.ShouldContain("partial class CardRuntime : SkiaGum.GueDeriving.ContainerRuntime");
         code.ClickGenerate();
 
@@ -455,5 +460,74 @@ public class CodeGenScenarioTests
         File.Exists(Path.Combine(code.Project.ProjectFolder, "Components", "Card.codsj")).ShouldBeFalse();
 
         code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void SwitchingOutputLibrary_OffersToMigrate_NamingTheChange_AndMigrateMovesTheCustomCode()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        (string oldGenerated, string oldCustom) = GenerateUnderMonoGameWithUserCode(code);
+
+        string? prompt = null;
+        code.Project.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            prompt = window.Text();
+            if (PrScreenshot.OutputDirectory != null)
+            {
+                PrScreenshot.SaveWindow(window.Window, "migrate-after-library-switch");
+            }
+            window.ClickButton("Migrate");
+        });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.PickComboItem("Output Library", "Gum Forms (recommended)");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the migration prompt and its result");
+
+        prompt.ShouldNotBeNull().ShouldContain("You changed Output Library from MonoGame (deprecated) to Gum Forms (recommended).");
+        File.Exists(oldGenerated).ShouldBeFalse();
+        File.Exists(oldCustom).ShouldBeFalse();
+        File.ReadAllText(code.CodeFile("Components/Card.cs")).ShouldContain("int userField;");
+        File.Exists(code.CodeFile("Components/Card.Generated.cs")).ShouldBeTrue("migrating regenerates the element at its new path");
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void DecliningTheMigration_LeavesErrorRows_WhoseMigrateActionStillMovesTheCode()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        (string oldGenerated, string oldCustom) = GenerateUnderMonoGameWithUserCode(code);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.PickComboItem("Output Library", "Gum Forms (recommended)");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count > shown, TimeSpan.FromSeconds(60), "the migration prompt");
+        File.Exists(oldCustom).ShouldBeTrue("Cancel changes nothing");
+
+        Gum.Plugins.Errors.AllErrorsViewModel errors = (Gum.Plugins.Errors.AllErrorsViewModel)((global::Avalonia.Controls.Control)code.TabManager.AllTabs
+            .Single(tab => tab.Title == "Errors").Content).DataContext!;
+        code.Tree.WaitUntil(() => errors.Errors.Any(error => error.ActionName == "Migrate Code Files"), TimeSpan.FromSeconds(60), "the orphan rows");
+        Gum.Managers.ErrorViewModel row = errors.Errors.First(error => error.ActionName == "Migrate Code Files");
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        shown = code.Project.Dialogs.Messages.Count;
+        row.ActionCommand!.Execute(null);
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the migration and its result");
+
+        File.Exists(oldGenerated).ShouldBeFalse();
+        File.ReadAllText(code.CodeFile("Components/Card.cs")).ShouldContain("int userField;");
+        code.AssertOracles();
+    }
+
+    // Generates Card under MonoGame (CardRuntime) and adds a field to its custom file.
+    private static (string OldGenerated, string OldCustom) GenerateUnderMonoGameWithUserCode(CodeTabHarness code)
+    {
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration(library: "MonoGame (deprecated)");
+        code.ClickGenerate();
+        string oldGenerated = code.CodeFile("Components/CardRuntime.Generated.cs");
+        string oldCustom = code.CodeFile("Components/CardRuntime.cs");
+        File.WriteAllText(oldCustom, File.ReadAllText(oldCustom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()"));
+        return (oldGenerated, oldCustom);
     }
 }

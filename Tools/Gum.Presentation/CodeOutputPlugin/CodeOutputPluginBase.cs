@@ -53,6 +53,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     private readonly ISelectedState _selectedState;
     private RenameService _renameService;
     private readonly IMessenger _messenger;
+    private readonly CodeFileLocationWatcher _locationWatcher;
     private readonly LocalizationService _localizationService;
     private readonly INameVerifier _nameVerifier;
     private readonly CodeGenerator _codeGenerator;
@@ -135,6 +136,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         _messenger = messenger;
         _codeOutputFileCommands = fileCommands;
+        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange());
 
         var codeGenLogger = new ToolCodeGenLogger(outputManager);
         _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
@@ -264,6 +266,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         // Services resolve ProjectDirectory lazily via IProjectDirectoryProvider,
         // so no reconstruction is needed here — just reload project-scoped settings.
         codeOutputProjectSettings = _codeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+        _locationWatcher.Reset(codeOutputProjectSettings);
         _settingsMembers.HandleProjectLoaded();
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);
@@ -299,6 +302,8 @@ public abstract class CodeOutputPluginBase : PluginBase
         /////////////////End Early Out/////////////////
 
         codeOutputProjectSettings = reloaded;
+        // The files on disk came with these settings, so a later edit compares against them.
+        _locationWatcher.Reset(codeOutputProjectSettings);
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         RefreshCodeDisplay();
     }
@@ -477,7 +482,12 @@ public abstract class CodeOutputPluginBase : PluginBase
         }
     }
 
-    private void HandleCodeOutputPropertyChanged() => _controller?.HandleCodeOutputPropertyChanged(codeOutputProjectSettings);
+    private void HandleCodeOutputPropertyChanged()
+    {
+        _controller?.HandleCodeOutputPropertyChanged(codeOutputProjectSettings);
+        // After the write, so the migration that may follow plans against the saved settings.
+        _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
+    }
 
     private void HandleGenerateCodeButtonClicked()
     {
