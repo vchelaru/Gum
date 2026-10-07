@@ -164,6 +164,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         DeleteOptionsConfirmed += HandleDeleteOptionsConfirmed;
         // The project's code settings do not depend on the tab, so they load from here on.
         ProjectLoad += HandleProjectLoaded;
+        ReactToFileChanged += HandleFileChanged;
 
         viewModel = new ViewModels.CodeWindowViewModel(
             projectState,
@@ -266,6 +267,40 @@ public abstract class CodeOutputPluginBase : PluginBase
         _settingsMembers.HandleProjectLoaded();
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);
+    }
+
+    /// <summary>
+    /// Re-reads ProjectCodeSettings.codsj after it changes on disk (a pull, a branch switch, a hand
+    /// edit). This only reloads: the change arrives with whatever regeneration it needed already
+    /// done, so nothing is regenerated, migrated or written here. An unreadable file (half-written,
+    /// merge conflict) keeps the current settings rather than falling back to defaults that the next
+    /// settings edit would write over it.
+    /// </summary>
+    private void HandleFileChanged(FilePath file)
+    {
+        ///////////////////Early Out///////////////////
+        if (file != _codeOutputProjectSettingsManager.GetProjectCodeSettingsFilePath())
+        {
+            return;
+        }
+
+        CodeOutputProjectSettings? reloaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject();
+        if (reloaded == null)
+        {
+            return;
+        }
+
+        // Gum's own settings writes come back through the watcher too; skipping an unchanged file
+        // keeps them from rebuilding the settings grid under the user.
+        if (JsonConvert.SerializeObject(reloaded) == JsonConvert.SerializeObject(codeOutputProjectSettings))
+        {
+            return;
+        }
+        /////////////////End Early Out/////////////////
+
+        codeOutputProjectSettings = reloaded;
+        viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
+        RefreshCodeDisplay();
     }
 
     private void HandleStateSelected(StateSave? state)
