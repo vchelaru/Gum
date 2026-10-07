@@ -7,7 +7,7 @@ namespace CodeOutputPlugin;
 /// Decides whether a code settings edit moves where code files belong, and describes the change
 /// for the migration prompt. Only the output library (it renames classes, and so files), the code
 /// project root and the generated code folder move files; namespace and inheritance settings change
-/// what is inside the files, not where they are.
+/// what is inside the files, not where they are (<see cref="CustomCodeHeaderChange"/> covers those).
 /// </summary>
 public class CodeFileLocationChange
 {

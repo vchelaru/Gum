@@ -136,7 +136,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         _messenger = messenger;
         _codeOutputFileCommands = fileCommands;
-        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange());
+        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
 
         var codeGenLogger = new ToolCodeGenLogger(outputManager);
         _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
@@ -475,6 +475,7 @@ public abstract class CodeOutputPluginBase : PluginBase
             case nameof(viewModel.InheritanceLocation):
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+                _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
                 break;
             default:
                 RefreshCodeDisplay();
