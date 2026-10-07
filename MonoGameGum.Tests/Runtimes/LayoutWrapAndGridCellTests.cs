@@ -1778,4 +1778,175 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
     }
 
     #endregion
+
+    #region Dock and Anchor in stacks and grid cells (1.6)
+
+    // The docked child is the second child of a 200x200 stack, preset to 30 wide and 40 tall, after a
+    // 50x50 first child; a 20x20 third child follows it. Main-axis position units are ignored after the
+    // first child (#695), so a Dock stacks like any other later child and only its size and cross-axis
+    // position change. Fill and the Fill* docks size from the whole parent, not the space left over.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, Dock.Left, 50f, 0f, 30f, 200f, 80f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Dock.Right, 50f, 0f, 30f, 200f, 80f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Dock.Top, 50f, 0f, 200f, 40f, 250f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Dock.Bottom, 50f, 160f, 200f, 40f, 250f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Dock.Fill, 50f, 0f, 200f, 200f, 250f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Dock.FillHorizontally, 50f, 0f, 200f, 40f, 250f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Dock.FillVertically, 50f, 0f, 30f, 200f, 80f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Dock.Left, 0f, 50f, 30f, 200f, 250f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Dock.Right, 170f, 50f, 30f, 200f, 250f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Dock.Top, 0f, 50f, 200f, 40f, 90f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Dock.Bottom, 0f, 50f, 200f, 40f, 90f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Dock.Fill, 0f, 50f, 200f, 200f, 250f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Dock.FillHorizontally, 0f, 50f, 200f, 40f, 90f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Dock.FillVertically, 0f, 50f, 30f, 200f, 250f)]
+    public void Stack_DockedLaterChild_ShouldStackAndSizeFromWholeParent(ChildrenLayout stack, Dock dock,
+        float expectedLeft, float expectedTop, float expectedWidth, float expectedHeight, float expectedNextMainPosition)
+    {
+        ContainerRuntime parent = CreateContainer(200, 200);
+        parent.ChildrenLayout = stack;
+        parent.AddChild(CreateContainer(50, 50));
+        ContainerRuntime docked = CreateContainer(30, 40);
+        parent.AddChild(docked);
+        ContainerRuntime next = CreateContainer(20, 20);
+        parent.AddChild(next);
+
+        docked.Dock(dock);
+
+        docked.AbsoluteLeft.ShouldBe(expectedLeft, "left");
+        docked.AbsoluteTop.ShouldBe(expectedTop, "top");
+        docked.AbsoluteWidth.ShouldBe(expectedWidth, "width");
+        docked.AbsoluteHeight.ShouldBe(expectedHeight, "height");
+        MainPosition(stack, next).ShouldBe(expectedNextMainPosition, "next sibling main position");
+    }
+
+    // A Fill child is as large as the whole wrapping stack, so it cannot share a line and starts a new one.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, 0f, 50f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, 50f, 0f)]
+    public void WrappingStack_DockFillChild_ShouldStartANewLine(ChildrenLayout stack, float expectedLeft, float expectedTop)
+    {
+        ContainerRuntime parent = CreateWrappingStack(stack, 200, DimensionUnitType.Absolute, 200);
+        parent.AddChild(CreateStackChild(stack, 100, 50));
+        parent.AddChild(CreateStackChild(stack, 100, 50));
+        ContainerRuntime fill = new();
+        parent.AddChild(fill);
+
+        fill.Dock(Dock.Fill);
+
+        fill.AbsoluteLeft.ShouldBe(expectedLeft);
+        fill.AbsoluteTop.ShouldBe(expectedTop);
+        fill.AbsoluteWidth.ShouldBe(200);
+        fill.AbsoluteHeight.ShouldBe(200);
+    }
+
+    // Anchor sets only units and origins. After the first child the main axis keeps stacking and the
+    // cross axis honors the anchor.
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack, Anchor.TopLeft, 50f, 0f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Anchor.Center, 50f, 90f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Anchor.BottomRight, 50f, 180f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Anchor.Right, 50f, 90f)]
+    [InlineData(ChildrenLayout.LeftToRightStack, Anchor.Bottom, 50f, 180f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Anchor.TopLeft, 0f, 50f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Anchor.Center, 90f, 50f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Anchor.BottomRight, 180f, 50f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Anchor.Right, 180f, 50f)]
+    [InlineData(ChildrenLayout.TopToBottomStack, Anchor.Bottom, 90f, 50f)]
+    public void Stack_AnchoredLaterChild_ShouldHonorOnlyTheCrossAxis(ChildrenLayout stack, Anchor anchor,
+        float expectedLeft, float expectedTop)
+    {
+        ContainerRuntime parent = CreateContainer(200, 200);
+        parent.ChildrenLayout = stack;
+        parent.AddChild(CreateContainer(50, 50));
+        ContainerRuntime anchored = CreateContainer(20, 20);
+        parent.AddChild(anchored);
+
+        anchored.Anchor(anchor);
+
+        anchored.AbsoluteLeft.ShouldBe(expectedLeft);
+        anchored.AbsoluteTop.ShouldBe(expectedTop);
+    }
+
+    [Theory]
+    [InlineData(ChildrenLayout.LeftToRightStack)]
+    [InlineData(ChildrenLayout.TopToBottomStack)]
+    public void Stack_AnchoredFirstChild_ShouldHonorBothAxes(ChildrenLayout stack)
+    {
+        ContainerRuntime parent = CreateContainer(200, 200);
+        parent.ChildrenLayout = stack;
+        ContainerRuntime anchored = CreateContainer(20, 20);
+        parent.AddChild(anchored);
+        parent.AddChild(CreateContainer(50, 50));
+
+        anchored.Anchor(Anchor.BottomRight);
+
+        anchored.AbsoluteLeft.ShouldBe(180);
+        anchored.AbsoluteTop.ShouldBe(180);
+    }
+
+    // The cell under test is the bottom-right one of a 2x2 grid, so it starts at (200, 200).
+    [Theory]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.TopLeft, 200f, 200f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.Top, 290f, 200f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.TopRight, 380f, 200f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.Left, 200f, 290f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.Center, 290f, 290f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.Right, 380f, 290f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.BottomLeft, 200f, 380f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.Bottom, 290f, 380f)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, Anchor.BottomRight, 380f, 380f)]
+    [InlineData(ChildrenLayout.AutoGridVertical, Anchor.TopLeft, 200f, 200f)]
+    [InlineData(ChildrenLayout.AutoGridVertical, Anchor.Center, 290f, 290f)]
+    [InlineData(ChildrenLayout.AutoGridVertical, Anchor.BottomRight, 380f, 380f)]
+    public void AutoGrid_AnchoredChild_ShouldBeRelativeToItsCell(ChildrenLayout layout, Anchor anchor,
+        float expectedLeft, float expectedTop)
+    {
+        ContainerRuntime grid = CreateContainer(400, 400);
+        grid.ChildrenLayout = layout;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 2;
+        for (int i = 0; i < 3; i++)
+        {
+            grid.AddChild(CreateContainer(20, 20));
+        }
+        ContainerRuntime anchored = CreateContainer(20, 20);
+        grid.AddChild(anchored);
+
+        anchored.Anchor(anchor);
+
+        anchored.AbsoluteLeft.ShouldBe(expectedLeft);
+        anchored.AbsoluteTop.ShouldBe(expectedTop);
+    }
+
+    // Child sizes that depend on the child's own content or its other dimension resolve inside the cell.
+    [Fact]
+    public void AutoGrid_ChildSizedByOtherDimensionOrOwnChildren_ShouldResolveInsideItsCell()
+    {
+        ContainerRuntime grid = CreateContainer(400, 200);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 1;
+        ContainerRuntime square = new();
+        square.WidthUnits = DimensionUnitType.PercentageOfParent;
+        square.Width = 50;
+        square.HeightUnits = DimensionUnitType.PercentageOfOtherDimension;
+        square.Height = 100;
+        grid.AddChild(square);
+        ContainerRuntime wrapper = new();
+        wrapper.WidthUnits = DimensionUnitType.RelativeToChildren;
+        wrapper.Width = 0;
+        wrapper.HeightUnits = DimensionUnitType.RelativeToChildren;
+        wrapper.Height = 0;
+        wrapper.AddChild(CreateContainer(30, 60));
+        grid.AddChild(wrapper);
+
+        square.AbsoluteWidth.ShouldBe(100);
+        square.AbsoluteHeight.ShouldBe(100);
+        wrapper.AbsoluteLeft.ShouldBe(200);
+        wrapper.AbsoluteWidth.ShouldBe(30);
+        wrapper.AbsoluteHeight.ShouldBe(60);
+    }
+
+    #endregion
 }

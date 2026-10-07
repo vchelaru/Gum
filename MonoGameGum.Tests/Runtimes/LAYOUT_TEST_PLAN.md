@@ -58,7 +58,7 @@ covered by that test now.
 - [x] Max and Min clamp Absolute and PercentageOfParent; null does not clamp
 - [x] Min > Max: Min wins
 - [x] clamp applied to RelativeToChildren, Ratio, MaintainFileAspectRatio, RelativeToMaxParentOrChildren results
-- [~] clamped child inside a RelativeToChildren parent (parent uses the clamped size). [ ] inside a stack
+- [x] clamped child inside a RelativeToChildren parent (parent uses the clamped size) and inside a stack
 
 ### 1.5 Flags
 - [x] IgnoredByParentSize: excluded from size, still stacks, still positions, still takes a grid cell
@@ -70,7 +70,7 @@ covered by that test now.
 - [x] each value sets the right properties; Fill resizes with parent; SizeToChildren; Anchor inside a stack
 - [x] Dock raises SizeChanged once (H23)
 - [x] `GetDock`/`GetAnchor` round-trip for every value; single-axis values read back as the matching edge
-- [~] Dock.Fill in a grid cell; Anchor in a stack. [ ] Anchor in a grid cell; Dock.Fill in each stack
+- [x] Dock.Fill in a grid cell; Anchor in a stack, first and later child; every Dock in a TopToBottomStack and LeftToRightStack (sizes from the whole parent, main-axis units ignored after the first child); Anchor in a grid cell, all nine positions
 
 ### 1.7 Globals
 - [x] CanvasWidth/Height for parentless elements; canvas changed after layout applies on the next `UpdateLayout()` (no trigger)
