@@ -37,7 +37,12 @@ public class CodeFileMigrationPlanFormatter
         int changed = plan.Steps.Count - leftAlone;
 
         StringBuilder text = new StringBuilder();
-        text.Append($"Migrating would change {changed} file(s) and leave {leftAlone} alone. Nothing has been changed yet.\n");
+        // The old settings are unknown after a pull or upgrade, so the cause is named generally and
+        // the list below carries each file's from -> to.
+        text.Append("This will migrate your generated and custom code files to where your current code settings put them. " +
+            "This is needed because your code generation settings changed (in the Code tab, through a pull, or with a " +
+            "Gum upgrade) but the files were never migrated, so the old ones are left over.\n\n");
+        text.Append($"{changed} file(s) would change and {leftAlone} would be left alone. Nothing has been changed yet.\n");
 
         foreach ((CodeFileMigrationAction action, string heading) in Sections)
         {

@@ -35,7 +35,11 @@ public class CodeFileMigrationPreviewerTests
             .ShowPreview(project, settings, scan);
 
         string expected =
-            "Migrating would change 1 file(s) and leave 0 alone. Nothing has been changed yet.\n" +
+            "This will migrate your generated and custom code files to where your current code settings put them. " +
+            "This is needed because your code generation settings changed (in the Code tab, through a pull, or with a " +
+            "Gum upgrade) but the files were never migrated, so the old ones are left over.\n" +
+            "\n" +
+            "1 file(s) would change and 0 would be left alone. Nothing has been changed yet.\n" +
             "\n" +
             "Remove (generated code, rebuilt from the element):\n" +
             "  A.Generated.cs\n" +

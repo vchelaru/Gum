@@ -29,7 +29,11 @@ public class CodeFileMigrationPlanFormatterTests
         string text = new CodeFileMigrationPlanFormatter().Format(plan, BaseDirectory);
 
         text.ShouldBe(
-            "Migrating would change 4 file(s) and leave 2 alone. Nothing has been changed yet.\n" +
+            "This will migrate your generated and custom code files to where your current code settings put them. " +
+            "This is needed because your code generation settings changed (in the Code tab, through a pull, or with a " +
+            "Gum upgrade) but the files were never migrated, so the old ones are left over.\n" +
+            "\n" +
+            "4 file(s) would change and 2 would be left alone. Nothing has been changed yet.\n" +
             "\n" +
             "Remove (generated code, rebuilt from the element):\n" +
             "  Code/ButtonCloseRuntime.Generated.cs\n" +
