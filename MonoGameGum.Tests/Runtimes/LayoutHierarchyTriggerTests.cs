@@ -975,6 +975,114 @@ public class LayoutHierarchyTriggerTests : BaseTestClass
         Snapshot(spaced).ShouldBe(Snapshot(unspaced));
     }
 
+    // root (RelativeToChildren) > target (70 wide, height from children, preset layout) > four 30x30 children
+    static (ContainerRuntime root, ContainerRuntime target) CreateChildrenLayoutTree(ChildrenLayout layout)
+    {
+        ContainerRuntime root = CreateSizeToChildren();
+        ContainerRuntime target = new();
+        target.ChildrenLayout = layout;
+        target.WidthUnits = DimensionUnitType.Absolute;
+        target.Width = layout == ChildrenLayout.AutoGridHorizontal ? 90 : 70;
+        target.HeightUnits = layout == ChildrenLayout.AutoGridHorizontal ? DimensionUnitType.Absolute : DimensionUnitType.RelativeToChildren;
+        target.Height = layout == ChildrenLayout.AutoGridHorizontal ? 60 : 0;
+        if (layout == ChildrenLayout.AutoGridHorizontal)
+        {
+            target.AutoGridHorizontalCells = 3;
+            target.AutoGridVerticalCells = 1;
+        }
+        root.AddChild(target);
+        for (int i = 0; i < 4; i++)
+        {
+            target.AddChild(CreateContainer(30, 30));
+        }
+        return (root, target);
+    }
+
+    static void SetDirectlyRemaining(GraphicalUiElement element, string propertyName, object value)
+    {
+        switch (propertyName)
+        {
+            case nameof(GraphicalUiElement.Width): element.Width = (float)value; break;
+            case nameof(GraphicalUiElement.Height): element.Height = (float)value; break;
+            case nameof(GraphicalUiElement.X): element.X = (float)value; break;
+            case nameof(GraphicalUiElement.Y): element.Y = (float)value; break;
+            case nameof(GraphicalUiElement.WidthUnits): element.WidthUnits = (DimensionUnitType)value; break;
+            case nameof(GraphicalUiElement.HeightUnits): element.HeightUnits = (DimensionUnitType)value; break;
+            case nameof(GraphicalUiElement.XUnits): element.XUnits = (GeneralUnitType)value; break;
+            case nameof(GraphicalUiElement.YUnits): element.YUnits = (GeneralUnitType)value; break;
+            case nameof(GraphicalUiElement.XOrigin): element.XOrigin = (HorizontalAlignment)value; break;
+            case nameof(GraphicalUiElement.YOrigin): element.YOrigin = (VerticalAlignment)value; break;
+            case nameof(GraphicalUiElement.Visible): element.Visible = (bool)value; break;
+            case nameof(GraphicalUiElement.ChildrenLayout): element.ChildrenLayout = (ChildrenLayout)value; break;
+            case nameof(GraphicalUiElement.StackSpacing): element.StackSpacing = (float)value; break;
+            case nameof(GraphicalUiElement.WrapsChildren): element.WrapsChildren = (bool)value; break;
+            case nameof(GraphicalUiElement.AutoGridHorizontalCells): element.AutoGridHorizontalCells = (int)value; break;
+            case nameof(GraphicalUiElement.AutoGridVerticalCells): element.AutoGridVerticalCells = (int)value; break;
+            default: throw new System.ArgumentException(propertyName);
+        }
+    }
+
+    static (ContainerRuntime root, ContainerRuntime target) CreateTreeFor(string propertyName)
+    {
+        switch (propertyName)
+        {
+            case nameof(GraphicalUiElement.ChildrenLayout):
+                return CreateChildrenLayoutTree(ChildrenLayout.Regular);
+            case nameof(GraphicalUiElement.StackSpacing):
+            case nameof(GraphicalUiElement.WrapsChildren):
+                return CreateChildrenLayoutTree(ChildrenLayout.LeftToRightStack);
+            case nameof(GraphicalUiElement.AutoGridHorizontalCells):
+            case nameof(GraphicalUiElement.AutoGridVerticalCells):
+                return CreateChildrenLayoutTree(ChildrenLayout.AutoGridHorizontal);
+            default:
+                (ContainerRuntime root, ContainerRuntime target, ContainerRuntime leaf) tree = CreateTriggerTree();
+                return (tree.root, tree.target);
+        }
+    }
+
+    static Bounds[] SnapshotWithChildren((ContainerRuntime root, ContainerRuntime target) tree)
+    {
+        List<Bounds> bounds = new() { GetBounds(tree.root), GetBounds(tree.target) };
+        foreach (GraphicalUiElement child in tree.target.Children)
+        {
+            bounds.Add(GetBounds(child));
+        }
+        return bounds.ToArray();
+    }
+
+    // The remaining layout properties reached through SetProperty(string) end in the same layout as
+    // the direct setter, and the setter changes the result. Min/Max, flags and Texture* are above.
+    [Theory]
+    [InlineData(nameof(GraphicalUiElement.Width), 150f)]
+    [InlineData(nameof(GraphicalUiElement.Height), 150f)]
+    [InlineData(nameof(GraphicalUiElement.X), 50f)]
+    [InlineData(nameof(GraphicalUiElement.Y), 50f)]
+    [InlineData(nameof(GraphicalUiElement.WidthUnits), DimensionUnitType.PercentageOfParent)]
+    [InlineData(nameof(GraphicalUiElement.HeightUnits), DimensionUnitType.PercentageOfParent)]
+    [InlineData(nameof(GraphicalUiElement.XUnits), GeneralUnitType.PixelsFromMiddle)]
+    [InlineData(nameof(GraphicalUiElement.YUnits), GeneralUnitType.PixelsFromLarge)]
+    [InlineData(nameof(GraphicalUiElement.XOrigin), HorizontalAlignment.Right)]
+    [InlineData(nameof(GraphicalUiElement.YOrigin), VerticalAlignment.Bottom)]
+    [InlineData(nameof(GraphicalUiElement.Visible), false)]
+    [InlineData(nameof(GraphicalUiElement.ChildrenLayout), ChildrenLayout.LeftToRightStack)]
+    [InlineData(nameof(GraphicalUiElement.StackSpacing), 10f)]
+    [InlineData(nameof(GraphicalUiElement.WrapsChildren), true)]
+    [InlineData(nameof(GraphicalUiElement.AutoGridHorizontalCells), 2)]
+    [InlineData(nameof(GraphicalUiElement.AutoGridVerticalCells), 2)]
+    public void SetProperty_ShouldMatchDirectSetter_ForRemainingLayoutProperties(string propertyName, object value)
+    {
+        (ContainerRuntime root, ContainerRuntime target) direct = CreateTreeFor(propertyName);
+        Bounds[] before = SnapshotWithChildren(direct);
+        SetDirectlyRemaining(direct.target, propertyName, value);
+        Bounds[] afterDirect = SnapshotWithChildren(direct);
+
+        (ContainerRuntime root, ContainerRuntime target) throughString = CreateTreeFor(propertyName);
+        throughString.target.SetProperty(propertyName, value);
+
+        afterDirect.ShouldNotBe(before);
+        SnapshotWithChildren(throughString).ShouldBe(afterDirect);
+    }
+
     [Fact]
     public void SettingX_ShouldMatchFullLayout_WhenParentIsRotated()
     {

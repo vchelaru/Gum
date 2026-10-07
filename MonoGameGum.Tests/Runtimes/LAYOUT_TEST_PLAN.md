@@ -62,7 +62,7 @@ covered by that test now.
 
 ### 1.5 Flags
 - [x] IgnoredByParentSize: excluded from size, still stacks, still positions, still takes a grid cell
-- [~] ClipsChildren pushed to `ISetClipsChildren` each layout (render tests only)
+- [x] ClipsChildren pushed to `ISetClipsChildren`, kept across layouts, settable by `SetProperty`
 - [x] Rotation does not change size, triggers full layout; rotated parent rotates child offsets; near-90 rotations snap (`GetRightAndUpFromRotation`); `AbsoluteRight/Bottom` with rotation (Left + Width, rotation ignored); rotated child in a stack and an AutoGrid, top-left and center origin (current behavior pinned, #5809)
 - [x] FlipHorizontal: no size change; flipped parent mirrors child X units, origin and Percentage; flipped LeftToRightStack, wrapping TopToBottomStack and AutoGrid mirror the unflipped layout (#5776, H42, H43)
 
@@ -174,7 +174,7 @@ covered by that test now.
 ### 4.2 IText (native size)
 - [x] RelativeToChildren width/height from text, newlines, font scale and BBCode runs
 - [x] MaxWidth wraps a RelativeToChildren-width text
-- [~] TruncateLine with RelativeToChildren height; HeightUnits change forces SpillOver
+- [x] TruncateLine with RelativeToChildren height (`TextRuntimeTests`, #3372); HeightUnits change reapplies `IsHeightDependentOnLines` (below)
 - [x] text content change re-measures and propagates to a RelativeToChildren parent and a stack
 - [x] empty and null text
 - [x] width RelativeToChildren + height PercentageOfParent (one axis from text, one from parent), and the mirror
@@ -201,7 +201,7 @@ covered by that test now.
 - [x] texture assigned after layout, for PercentageOfSourceFile and MaintainFileAspectRatio, by property, by name and by source file, and while suspended (H31-H33, H41)
 - [x] texture size change moves a PercentageOfFile X/Y element (H35)
 - [x] animation chain, frame index or time change in code resizes a texture-sized Sprite and NineSlice, and its RelativeToChildren parent, also on resume (H34, H36); out-of-range frame index clamps (#5813)
-- [~] font loaded late: realized on resume. [ ] realized by a bare `UpdateLayout()` after `IsAllLayoutSuspended`
+- [x] font loaded late: realized on resume and by a bare `UpdateLayout()` after `IsAllLayoutSuspended` (`FontServiceTests`, #2999)
 - [x] the new size reaches the parent's RelativeToChildren size and the stack positions after it
 
 ## 5. Mixed-axis dependency matrix
@@ -274,16 +274,16 @@ Named cases that must exist as explicit tests:
 
 ### 7.4 Child-update ordering
 - [x] ratio-first pass when a sibling needs measuring first
-- [ ] single-axis update path for a child whose HeightUnits is MaintainFileAspectRatio (H4)
+- [x] single-axis update path for a child whose HeightUnits is MaintainFileAspectRatio (H4 cleared: no observable effect)
 - [x] X PixelsFromMiddle/Large child of a RelativeToChildren-width parent treated as measurable on the X axis (H17)
 
 ## 8. Triggers, propagation, suspension
 
 ### 8.1 Triggers
-- [~] every layout property setter changes the result (Width, Height, units, origins, ChildrenLayout, StackSpacing pinned)
+- [x] every layout property setter changes the result
 - [x] UseFixedStackChildrenSize, WrapsChildren setters, incl. suspension
 - [x] AutoGrid cells and StackSpacing on a grid (incl. suspension), Min/Max, IgnoredByParentSize, Rotation, FlipHorizontal, Texture* setters
-- [~] `SetProperty(string)` matches the direct setter for Min/Max, IgnoredByParentSize, Rotation, FlipHorizontal and Texture*; names with spaces match. [ ] every other layout property
+- [x] `SetProperty(string)` matches the direct setter for every layout property; names with spaces match
 - [x] X setter fast path with AutoGrid parent, flipped or rotated parent, RelativeToMaxParentOrChildren-width parent (H2)
 - [x] `ApplyState`, `InterpolateBetween`, `RefreshStyles` end in the same layout as setting the values directly; `InterpolateBetween` keeps an outer suspension (H45)
 
