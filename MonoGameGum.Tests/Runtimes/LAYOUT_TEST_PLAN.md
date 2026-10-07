@@ -2,7 +2,7 @@
 
 The full surface of Gum's layout engine as a tree, with existing coverage marked on each leaf. A
 sweep or a refactor (such as extracting the engine out of `GraphicalUiElement`) uses this to find
-what is unpinned. The engine is `GumRuntime/GraphicalUiElement.cs`; the flow is described in the
+what is unpinned. The engine is the `GumRuntime/GraphicalUiElement.*.cs` partials; the flow is described in the
 `gum-layout-engine` skill. The Forms `Grid` control (row and column definitions) has its own
 layout code and tests (`Forms/GridTests.cs`) and is not covered here; "grid" below means
 `AutoGridHorizontal`/`AutoGridVertical`.

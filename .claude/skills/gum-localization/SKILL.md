@@ -157,7 +157,7 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 - `WpfDataUi/Controls/FilePickingLogic.cs` — shared file-dialog/relative-path plumbing (pattern like `TextBoxDisplayLogic`)
 - `GumCommon/Localization/ProjectLocalizationLoader.cs` — load policy for `.gumx` `LocalizationFiles`, called by the tool's `FileCommands`, gumcli's `HeadlessLocalizationLoader`, `MonoGameGum/GumService.cs` and `Runtimes/SkiaGum/GumServiceSkiaBase.cs`
 - `MonoGameGum/GumService.cs` — `RefreshLocalization()` walks the three roots; constructor wires the `RefreshLocalizationOnElementAction` delegate and subscribes to `LocalizationServiceChanged`
-- `GumRuntime/GraphicalUiElement.cs` — `RefreshLocalization()` recursion + `RefreshLocalizationOnElementAction` static delegate hook
+- `GumRuntime/GraphicalUiElement.Lifecycle.cs` — `RefreshLocalization()` recursion + `RefreshLocalizationOnElementAction` static delegate hook
 - `MonoGameGum.Tests/Localization/RefreshLocalizationTests.cs` — runtime language-switch tests (Forms controls, BBCode-from-translation, TextNoTranslate survival, popup/modal roots)
 - `MonoGameGum/GueDeriving/TextRuntime.cs` — `Text` property and `SetTextNoTranslate` method
 - `MonoGameGum/Forms/Controls/` — Forms control localization pattern

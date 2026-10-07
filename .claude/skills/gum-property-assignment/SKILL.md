@@ -144,7 +144,8 @@ normalized path so a file referenced by multiple elements loads once.
 
 | File | Role |
 |------|------|
-| `GumRuntime/GraphicalUiElement.cs` | `SetProperty`, `ApplyState`, `UpdateToFontValues` (instance), `UpdateFontRecursive`, `isFontDirty` |
+| `GumRuntime/GraphicalUiElement.SetValuesAndStates.cs` | `SetProperty`, `ApplyState` |
+| `GumRuntime/GraphicalUiElement.Text.cs` | `UpdateToFontValues` (instance), `UpdateFontRecursive` (`isFontDirty` is declared in `GraphicalUiElement.cs`) |
 | `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | String-path dispatch + static `UpdateToFontValues(IText, GUE)` |
 | `GumRuntime/ElementSaveExtensions.cs` | `SetVariablesRecursively` — iterates state variables and calls `ApplyState` |
 | `Gum/Wireframe/WireframeObjectManager.cs` | Sets `IsAllLayoutSuspended` around screen load, calls `UpdateFontRecursive` after |

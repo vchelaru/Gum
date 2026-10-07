@@ -194,7 +194,24 @@
 			<Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
 		</Compile>
 		<Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Animation.cs" Link="GraphicalUiElement.Animation.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElement.Binding.cs" Link="GraphicalUiElement.Binding.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.ChildUpdates.cs" Link="GraphicalUiElement.ChildUpdates.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Dimensions.cs" Link="GraphicalUiElement.Dimensions.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.DockAndAnchor.cs" Link="GraphicalUiElement.DockAndAnchor.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Hierarchy.cs" Link="GraphicalUiElement.Hierarchy.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.LayoutProperties.cs" Link="GraphicalUiElement.LayoutProperties.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Lifecycle.cs" Link="GraphicalUiElement.Lifecycle.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Managers.cs" Link="GraphicalUiElement.Managers.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Position.cs" Link="GraphicalUiElement.Position.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Properties.cs" Link="GraphicalUiElement.Properties.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.RenderableMeasurement.cs" Link="GraphicalUiElement.RenderableMeasurement.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.RequiredSize.cs" Link="GraphicalUiElement.RequiredSize.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.SetValuesAndStates.cs" Link="GraphicalUiElement.SetValuesAndStates.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Stacking.cs" Link="GraphicalUiElement.Stacking.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Suspension.cs" Link="GraphicalUiElement.Suspension.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.Text.cs" Link="GraphicalUiElement.Text.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.UpdateLayout.cs" Link="GraphicalUiElement.UpdateLayout.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElementPropertyReadExtensions.cs" Link="GraphicalUiElementPropertyReadExtensions.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElementTreeExtensions.cs" Link="GraphicalUiElementTreeExtensions.cs" />
 		<Compile Include="..\GumRuntime\IUpdateEveryFrame.cs" Link="IUpdateEveryFrame.cs" />
