@@ -27,6 +27,7 @@ namespace Gum.Plugins.InternalPlugins.OrphanCodeFiles;
 /// <b>Content</b> ▸ <b>Scan for Orphaned Code Files</b> menu item, and reports through the Errors
 /// tab with a per-file Delete action. <b>Content</b> ▸ <b>Migrate Code Files</b> moves files left at
 /// old paths by a code settings change, and <b>Restore Last Code File Migration</b> undoes it (#5846).
+/// A namespace or inheritance settings change offers to rewrite custom code headers in place (#5855).
 /// All logic lives in <see cref="OrphanCodeFileReporter"/>, <see cref="OrphanCodeFileScanService"/>
 /// and <see cref="CodeFileMigrator"/> — this plugin is menu/event plumbing only.
 /// </summary>
@@ -37,6 +38,7 @@ internal class MainOrphanCodeFilePlugin : PluginBase
 
     private readonly OrphanCodeFileReporter _reporter;
     private readonly CodeFileMigrator _migrator;
+    private readonly ICustomCodeHeaderUpdater _headerUpdater;
     private readonly CodeOutputProjectSettingsManager _projectSettingsManager;
     private readonly IProjectState _projectState;
     private readonly IMessenger _messenger;
@@ -89,6 +91,10 @@ internal class MainOrphanCodeFilePlugin : PluginBase
             new ElementCodeRegenerator(codeGenerationService, elementSettingsManager),
             dialogService);
 
+        _headerUpdater = new CustomCodeHeaderUpdater(codeGenerator, fileLocationsService, elementSettingsManager,
+            new CustomCodeHeaderRewriter(codeGenerator, customCodeGenerator), backupService,
+            new ElementCodeRegenerator(codeGenerationService, elementSettingsManager), dialogService);
+
         _reporter = new OrphanCodeFileReporter(scanService, fileCommands, dialogService, dispatcher, outputManager);
         _reporter.OrphansChanged += () =>
             _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
@@ -97,6 +103,8 @@ internal class MainOrphanCodeFilePlugin : PluginBase
 
         _messenger.Register<CodeFileLocationsChangedMessage>(this,
             (_, message) => HandleCodeFileLocationsChanged(message));
+        _messenger.Register<CustomCodeHeadersChangedMessage>(this,
+            (_, message) => HandleCustomCodeHeadersChanged(message));
     }
 
     public override void StartUp()
@@ -165,6 +173,18 @@ internal class MainOrphanCodeFilePlugin : PluginBase
             _migrator.Migrate(project, project.FullFileName, message.Current, result, message.Description);
             _ = Refresh(project, onApplied: null);
         }, message.Previous);
+    }
+
+    // A Code tab edit changed what custom code files must declare: offer to rewrite the stale ones.
+    private void HandleCustomCodeHeadersChanged(CustomCodeHeadersChangedMessage message)
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project?.FullFileName == null)
+        {
+            return;
+        }
+
+        _headerUpdater.Update(project, project.FullFileName, message.Current, message.Description);
     }
 
     private void HandleRestoreRequested()

@@ -7,19 +7,22 @@ namespace CodeOutputPlugin;
 
 /// <summary>
 /// Sends <see cref="CodeFileLocationsChangedMessage"/> when a Code tab edit changes a setting that
-/// moves where code files belong. The tab edits one settings object in place, so this keeps its own
-/// copy of the settings as of the last check to compare against.
+/// moves where code files belong, and <see cref="CustomCodeHeadersChangedMessage"/> when one changes
+/// what custom code files must declare. The tab edits one settings object in place, so this keeps
+/// its own copy of the settings as of the last check to compare against.
 /// </summary>
 public class CodeFileLocationWatcher
 {
     private readonly IMessenger _messenger;
     private readonly CodeFileLocationChange _locationChange;
+    private readonly CustomCodeHeaderChange _headerChange;
     private CodeOutputProjectSettings _lastChecked = new CodeOutputProjectSettings();
 
-    public CodeFileLocationWatcher(IMessenger messenger, CodeFileLocationChange locationChange)
+    public CodeFileLocationWatcher(IMessenger messenger, CodeFileLocationChange locationChange, CustomCodeHeaderChange headerChange)
     {
         _messenger = messenger;
         _locationChange = locationChange;
+        _headerChange = headerChange;
     }
 
     /// <summary>
@@ -38,6 +41,12 @@ public class CodeFileLocationWatcher
         if (description != null)
         {
             _messenger.Send(new CodeFileLocationsChangedMessage(previous, settings, description));
+        }
+
+        string? headerDescription = _headerChange.Describe(previous, settings);
+        if (headerDescription != null)
+        {
+            _messenger.Send(new CustomCodeHeadersChangedMessage(settings, headerDescription));
         }
     }
 

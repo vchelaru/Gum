@@ -128,6 +128,9 @@ public class CodeGenScenarioTests
         screenCode.ShouldContain("partial class TitleScreen : MyScreenBase");
 
         code.Select(toggle);
+        // The custom files now declare a stale namespace, so the tool offers to update them; this
+        // scenario is about what Generate writes, so it declines.
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
         code.ClickCheckBox("Append Folder to Namespace");
         File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj")).ShouldContain("\"AppendFolderToNamespace\": false");
         code.ClickButton("Selected");
@@ -514,6 +517,47 @@ public class CodeGenScenarioTests
 
         File.Exists(oldGenerated).ShouldBeFalse();
         File.ReadAllText(code.CodeFile("Components/Card.cs")).ShouldContain("int userField;");
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void ChangingRootNamespace_OffersToUpdateCustomCode_AndRestoreLastPutsItBack()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.TypeAndEnter("Root Namespace", "OldGame");
+        code.ClickGenerate();
+        string custom = code.CodeFile("Components/Card.cs");
+        string oldCustom = File.ReadAllText(custom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()");
+        File.WriteAllText(custom, oldCustom);
+
+        string? prompt = null;
+        code.Project.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            prompt = window.Text();
+            window.ClickButton("Update");
+        });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.TypeAndEnter("Root Namespace", "NewGame");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the update prompt and its result");
+
+        prompt.ShouldNotBeNull().ShouldContain("You changed Root Namespace from OldGame to NewGame.");
+        prompt.ShouldContain("Components/Card.cs");
+        string updated = File.ReadAllText(custom);
+        updated.ShouldContain("namespace NewGame.Components");
+        updated.ShouldContain("int userField;");
+        File.ReadAllText(code.CodeFile("Components/Card.Generated.cs")).ShouldContain("namespace NewGame.Components",
+            customMessage: "updating regenerates the element, so both halves stay one class");
+
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.PickMainMenu("Content", "Restore Last Code File Migration…");
+
+        File.ReadAllText(custom).ShouldBe(oldCustom);
         code.AssertOracles();
     }
 

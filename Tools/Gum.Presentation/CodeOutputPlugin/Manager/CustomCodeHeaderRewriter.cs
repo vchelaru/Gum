@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.ProjectServices.CodeGeneration;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace CodeOutputPlugin.Manager;
@@ -7,7 +8,8 @@ namespace CodeOutputPlugin.Manager;
 /// <summary>
 /// Rewrites the namespace and partial class declarations in an element's custom code file so they
 /// match the element's current identity (name, containing folder, base type) and code settings.
-/// Used when an element is renamed or moved, and when a code file migration moves its custom code.
+/// Used when an element is renamed or moved, when a code file migration moves its custom code, and
+/// when a namespace or inheritance settings change leaves its header stale.
 /// </summary>
 public class CustomCodeHeaderRewriter
 {
@@ -75,12 +77,12 @@ public class CustomCodeHeaderRewriter
         }
 
         var oldClassHeader = contents.Substring(startOfLine, endOfLine - startOfLine);
-        string suffix = string.Empty;
+        List<string> oldBases = new List<string>();
 
         if (oldClassHeader.Contains(":"))
         {
             var colonIndex = oldClassHeader.IndexOf(":");
-            suffix = " " + oldClassHeader.Substring(colonIndex).Trim();
+            oldBases = SplitBaseList(oldClassHeader.Substring(colonIndex + 1));
         }
 
         contents = contents.Remove(startOfLine, endOfLine - startOfLine);
@@ -90,8 +92,49 @@ public class CustomCodeHeaderRewriter
         // so re-appending the old one would emit "X : New : Old".
         if (!newHeader.Contains(":"))
         {
-            newHeader += suffix;
+            // The generated half declares the base class, so the custom half keeps only its own
+            // additions (interfaces), or C# sees the base class declared twice.
+            string? generatedBase = _customCodeGenerator.GetBaseClass(element, codeOutputProjectSettings);
+            if (!string.IsNullOrEmpty(generatedBase))
+            {
+                oldBases.RemoveAll(oldBase => WithoutGlobal(oldBase) == WithoutGlobal(generatedBase));
+            }
+            if (oldBases.Count > 0)
+            {
+                newHeader += " : " + string.Join(", ", oldBases);
+            }
         }
         contents = contents.Insert(startOfLine, newHeader);
     }
+
+    // Splits at top-level commas only, so a generic base such as IFoo<A, B> stays one entry.
+    private static List<string> SplitBaseList(string baseList)
+    {
+        List<string> bases = new List<string>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < baseList.Length; i++)
+        {
+            char c = baseList[i];
+            if (c == '<')
+            {
+                depth++;
+            }
+            else if (c == '>')
+            {
+                depth--;
+            }
+            else if (c == ',' && depth == 0)
+            {
+                bases.Add(baseList.Substring(start, i - start).Trim());
+                start = i + 1;
+            }
+        }
+        bases.Add(baseList.Substring(start).Trim());
+        bases.RemoveAll(string.IsNullOrEmpty);
+        return bases;
+    }
+
+    private static string WithoutGlobal(string typeName) =>
+        typeName.StartsWith("global::") ? typeName.Substring("global::".Length) : typeName;
 }
