@@ -139,28 +139,28 @@ covered by that test now.
 - [x] IgnoredByParentSize child (takes a cell, does not size the grid)
 
 ### 3.2 Cell counts
-- [ ] AutoGridHorizontalCells or AutoGridVerticalCells 0 or negative (H5)
+- [x] AutoGridHorizontalCells or AutoGridVerticalCells 0 or negative: placed and sized as 1 (H5)
 - [x] cell counts and StackSpacing changed after children exist, with and without suspension
-- [ ] `StackSpacing` applies to grids although its doc says it does not (H20)
+- [x] `StackSpacing` separates grid cells and counts toward a RelativeToChildren grid's size (H20)
 
 ### 3.3 Overflow (more children than cells)
 - [x] RelativeToChildren on the growing axis: grows rows (Horizontal) or columns (Vertical) and packs them
 - [x] fixed-size parent: cells keep their size and extra rows or columns overflow the bounds (H19)
 - [x] RelativeToChildren on the non-growing axis with overflow (M8)
 - [x] RelativeToChildren on both axes with overflow (M8)
-- [ ] child PercentageOfParent/Fill size after overflow uses the axis that actually grew (H18)
-- [ ] overflow appears and disappears as children are added and removed
+- [x] child PercentageOfParent/Fill size after overflow uses the axis that actually grew (H18)
+- [x] overflow appears and disappears as children are added and removed
 
 ### 3.4 Size of a RelativeToChildren grid
 - [x] each axis from the largest child times the cell count, extra size shared by Fill cells
-- [ ] child Y/X offsets counted in the cell size
-- [ ] mixed child sizes (the largest wins for every cell)
-- [ ] Ratio child (subtracts every grid sibling from one cell, H25)
+- [x] child Y/X offsets counted in the cell size
+- [x] mixed child sizes (the largest wins for every cell)
+- [x] Ratio child (fills its own cell and does not size the grid, H25)
 
 ### 3.5 Grid in context
-- [ ] grid nested in a stack, stack nested in a grid cell
+- [x] grid nested in a stack, stack nested in a grid cell
 - [x] grid child changed while suspended, then resumed (H21)
-- [ ] X setter on a grid child (H2)
+- [x] X setter on a grid child (H2)
 
 ## 4. Renderable inputs (interfaces the visual implements)
 
@@ -200,7 +200,7 @@ covered by that test now.
 ### 4.6 Size reported by the renderable changing outside Gum
 - [x] texture assigned after layout, for PercentageOfSourceFile and MaintainFileAspectRatio, by property, by name and by source file, and while suspended (H31-H33, H41)
 - [x] texture size change moves a PercentageOfFile X/Y element (H35)
-- [x] animation chain, frame index or time change in code resizes a texture-sized Sprite and NineSlice, and its RelativeToChildren parent, also on resume (H34, H36); [ ] out-of-range frame index (#5813)
+- [x] animation chain, frame index or time change in code resizes a texture-sized Sprite and NineSlice, and its RelativeToChildren parent, also on resume (H34, H36); out-of-range frame index clamps (#5813)
 - [~] font loaded late: realized on resume. [ ] realized by a bare `UpdateLayout()` after `IsAllLayoutSuspended`
 - [x] the new size reaches the parent's RelativeToChildren size and the stack positions after it
 

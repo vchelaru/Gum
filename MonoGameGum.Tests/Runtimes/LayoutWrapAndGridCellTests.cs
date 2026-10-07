@@ -1535,4 +1535,247 @@ public class LayoutWrapAndGridCellTests : BaseTestClass
     }
 
     #endregion
+
+    #region AutoGrid counts, sizing and context (3.2-3.5)
+
+    static ContainerRuntime CreateGrid(ChildrenLayout layout, int columns, int rows)
+    {
+        ContainerRuntime grid = new();
+        grid.ChildrenLayout = layout;
+        grid.AutoGridHorizontalCells = columns;
+        grid.AutoGridVerticalCells = rows;
+        return grid;
+    }
+
+    static void SizeGridToChildren(ContainerRuntime grid)
+    {
+        grid.WidthUnits = DimensionUnitType.RelativeToChildren;
+        grid.Width = 0;
+        grid.HeightUnits = DimensionUnitType.RelativeToChildren;
+        grid.Height = 0;
+    }
+
+    // A cell count below 1 is placed and sized as 1 (H5).
+    [Theory]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, 0)]
+    [InlineData(ChildrenLayout.AutoGridHorizontal, -2)]
+    [InlineData(ChildrenLayout.AutoGridVertical, 0)]
+    [InlineData(ChildrenLayout.AutoGridVertical, -2)]
+    public void AutoGrid_CellCountBelowOne_ShouldPlaceAsOneCell(ChildrenLayout layout, int cells)
+    {
+        ContainerRuntime grid = CreateGrid(layout, cells, cells);
+        grid.WidthUnits = DimensionUnitType.Absolute;
+        grid.HeightUnits = DimensionUnitType.Absolute;
+        grid.Width = 200;
+        grid.Height = 200;
+        for (int i = 0; i < 2; i++)
+        {
+            ContainerRuntime child = new();
+            child.Dock(Dock.Fill);
+            grid.AddChild(child);
+        }
+        bool isHorizontal = layout == ChildrenLayout.AutoGridHorizontal;
+
+        grid.Children[0].AbsoluteWidth.ShouldBe(200);
+        grid.Children[0].AbsoluteHeight.ShouldBe(200);
+        grid.Children[1].AbsoluteLeft.ShouldBe(isHorizontal ? 0 : 200);
+        grid.Children[1].AbsoluteTop.ShouldBe(isHorizontal ? 200 : 0);
+    }
+
+    // StackSpacing separates grid cells and counts toward a RelativeToChildren grid's size (H20).
+    [Theory]
+    [InlineData(ChildrenLayout.AutoGridHorizontal)]
+    [InlineData(ChildrenLayout.AutoGridVertical)]
+    public void AutoGrid_StackSpacing_ShouldSeparateCellsAndSizeRelativeToChildrenGrid(ChildrenLayout layout)
+    {
+        ContainerRuntime grid = CreateGrid(layout, 2, 2);
+        SizeGridToChildren(grid);
+        grid.StackSpacing = 10;
+        for (int i = 0; i < 4; i++)
+        {
+            grid.AddChild(CreateContainer(100, 100));
+        }
+        bool isHorizontal = layout == ChildrenLayout.AutoGridHorizontal;
+
+        grid.AbsoluteWidth.ShouldBe(210);
+        grid.AbsoluteHeight.ShouldBe(210);
+        grid.Children[1].AbsoluteLeft.ShouldBe(isHorizontal ? 110 : 0);
+        grid.Children[1].AbsoluteTop.ShouldBe(isHorizontal ? 0 : 110);
+        grid.Children[3].AbsoluteLeft.ShouldBe(110);
+        grid.Children[3].AbsoluteTop.ShouldBe(110);
+    }
+
+    // Overflow past the cell counts grows the free axis of a RelativeToChildren grid, and shrinks
+    // back as children are removed. A horizontal grid grows rows; a vertical grid grows columns.
+    [Theory]
+    [InlineData(ChildrenLayout.AutoGridHorizontal)]
+    [InlineData(ChildrenLayout.AutoGridVertical)]
+    public void AutoGrid_OverflowAddedAndRemoved_ShouldGrowAndShrinkTheFreeAxis(ChildrenLayout layout)
+    {
+        bool isHorizontal = layout == ChildrenLayout.AutoGridHorizontal;
+        ContainerRuntime grid = CreateGrid(layout, isHorizontal ? 2 : 1, isHorizontal ? 1 : 2);
+        ContainerRuntime sizingChild = CreateContainer(100, 100);
+        grid.AddChild(sizingChild);
+        if (isHorizontal)
+        {
+            grid.WidthUnits = DimensionUnitType.Absolute;
+            grid.Width = 200;
+            grid.HeightUnits = DimensionUnitType.RelativeToChildren;
+            grid.Height = 0;
+        }
+        else
+        {
+            grid.WidthUnits = DimensionUnitType.RelativeToChildren;
+            grid.Width = 0;
+            grid.HeightUnits = DimensionUnitType.Absolute;
+            grid.Height = 200;
+        }
+        float FreeSize() => isHorizontal ? grid.AbsoluteHeight : grid.AbsoluteWidth;
+        float FreePosition(GraphicalUiElement child) => isHorizontal ? child.AbsoluteTop : child.AbsoluteLeft;
+        float FreeChildSize(GraphicalUiElement child) => isHorizontal ? child.AbsoluteHeight : child.AbsoluteWidth;
+
+        for (int i = 0; i < 4; i++)
+        {
+            ContainerRuntime fill = new();
+            fill.Dock(Dock.Fill);
+            grid.AddChild(fill);
+        }
+
+        FreeSize().ShouldBe(300, "five children");
+        FreePosition(grid.Children[4]).ShouldBe(200, "five children: last child");
+        FreeChildSize(grid.Children[4]).ShouldBe(100, "five children: last child size");
+
+        grid.Children.RemoveAt(4);
+        grid.Children.RemoveAt(3);
+
+        FreeSize().ShouldBe(200, "three children");
+        FreePosition(grid.Children[2]).ShouldBe(100, "three children: last child");
+        FreeChildSize(grid.Children[2]).ShouldBe(100, "three children: last child size");
+
+        grid.Children.RemoveAt(2);
+        grid.Children.RemoveAt(1);
+
+        FreeSize().ShouldBe(100, "one child");
+    }
+
+    // The largest child sets the cell size for every cell, whichever cell it sits in.
+    [Theory]
+    [InlineData(ChildrenLayout.AutoGridHorizontal)]
+    [InlineData(ChildrenLayout.AutoGridVertical)]
+    public void AutoGrid_RelativeToChildrenWithMixedChildSizes_ShouldUseLargestChildForEveryCell(ChildrenLayout layout)
+    {
+        ContainerRuntime grid = CreateGrid(layout, 2, 2);
+        SizeGridToChildren(grid);
+        grid.AddChild(CreateContainer(50, 30));
+        grid.AddChild(CreateContainer(100, 40));
+        grid.AddChild(CreateContainer(20, 80));
+        grid.AddChild(CreateContainer(10, 10));
+
+        grid.AbsoluteWidth.ShouldBe(200);
+        grid.AbsoluteHeight.ShouldBe(160);
+    }
+
+    // A child's X and Y offsets count toward the size of the cells that hold it.
+    [Theory]
+    [InlineData(ChildrenLayout.AutoGridHorizontal)]
+    [InlineData(ChildrenLayout.AutoGridVertical)]
+    public void AutoGrid_RelativeToChildrenWithOffsetChild_ShouldCountOffsetInCellSize(ChildrenLayout layout)
+    {
+        ContainerRuntime grid = CreateGrid(layout, 2, 2);
+        SizeGridToChildren(grid);
+        grid.AddChild(CreateContainer(100, 100));
+        ContainerRuntime offset = CreateContainer(100, 100);
+        offset.X = 20;
+        offset.Y = 30;
+        grid.AddChild(offset);
+        grid.AddChild(CreateContainer(100, 100));
+        grid.AddChild(CreateContainer(100, 100));
+
+        grid.AbsoluteWidth.ShouldBe(240);
+        grid.AbsoluteHeight.ShouldBe(260);
+    }
+
+    // A Ratio child does not size a RelativeToChildren grid; it fills its own cell (H25).
+    [Fact]
+    public void AutoGrid_RelativeToChildrenWithRatioChild_ShouldSizeFromOtherChildrenAndFillItsCell()
+    {
+        ContainerRuntime grid = CreateGrid(ChildrenLayout.AutoGridHorizontal, 2, 2);
+        grid.WidthUnits = DimensionUnitType.Absolute;
+        grid.Width = 400;
+        grid.HeightUnits = DimensionUnitType.RelativeToChildren;
+        grid.Height = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            grid.AddChild(CreateContainer(100, 100));
+        }
+        ContainerRuntime ratioChild = CreateContainer(1, 100);
+        ratioChild.WidthUnits = DimensionUnitType.Ratio;
+        grid.AddChild(ratioChild);
+
+        grid.AbsoluteHeight.ShouldBe(200);
+        ratioChild.AbsoluteWidth.ShouldBe(200);
+    }
+
+    [Theory]
+    [InlineData(ChildrenLayout.AutoGridHorizontal)]
+    [InlineData(ChildrenLayout.AutoGridVertical)]
+    public void AutoGrid_NestedInStack_ShouldPushLaterSiblingsAndFollowGridResize(ChildrenLayout layout)
+    {
+        ContainerRuntime stack = new();
+        stack.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        stack.WidthUnits = DimensionUnitType.RelativeToChildren;
+        stack.Width = 0;
+        stack.HeightUnits = DimensionUnitType.Absolute;
+        stack.Height = 300;
+        ContainerRuntime grid = CreateGrid(layout, 2, 2);
+        SizeGridToChildren(grid);
+        for (int i = 0; i < 4; i++)
+        {
+            grid.AddChild(CreateContainer(50, 50));
+        }
+        stack.AddChild(grid);
+        ContainerRuntime after = CreateContainer(30, 30);
+        stack.AddChild(after);
+
+        after.AbsoluteLeft.ShouldBe(100, "before resize");
+
+        grid.Children[0].Width = 80;
+        grid.Children[0].Height = 80;
+
+        grid.AbsoluteWidth.ShouldBe(160);
+        grid.AbsoluteHeight.ShouldBe(160);
+        after.AbsoluteLeft.ShouldBe(160, "after resize");
+        stack.AbsoluteWidth.ShouldBe(190);
+    }
+
+    [Fact]
+    public void AutoGrid_StackInCell_ShouldKeepCellPositionsWhenStackedChildResizes()
+    {
+        ContainerRuntime grid = CreateContainer(400, 100);
+        grid.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+        grid.AutoGridHorizontalCells = 2;
+        grid.AutoGridVerticalCells = 1;
+        ContainerRuntime stack = new();
+        stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        SizeGridToChildren(stack);
+        ContainerRuntime first = CreateContainer(30, 30);
+        stack.AddChild(first);
+        stack.AddChild(CreateContainer(30, 30));
+        grid.AddChild(stack);
+        ContainerRuntime second = CreateContainer(20, 20);
+        grid.AddChild(second);
+
+        stack.AbsoluteHeight.ShouldBe(60);
+        second.AbsoluteLeft.ShouldBe(200);
+
+        first.Width = 50;
+        first.Height = 50;
+
+        stack.AbsoluteWidth.ShouldBe(50);
+        stack.AbsoluteHeight.ShouldBe(80);
+        stack.Children[1].AbsoluteTop.ShouldBe(50);
+        second.AbsoluteLeft.ShouldBe(200);
+    }
+
+    #endregion
 }
