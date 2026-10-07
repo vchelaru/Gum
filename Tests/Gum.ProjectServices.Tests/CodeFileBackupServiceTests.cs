@@ -62,6 +62,29 @@ public class CodeFileBackupServiceTests : IDisposable
     }
 
     [Fact]
+    public void Restore_RemovesFilesTheMigrationCreated_UnlessEditedSince()
+    {
+        // A move: the old file is backed up, the new copy is recorded as created.
+        FilePath oldPath = WriteFile("Game/ButtonRuntime.cs", "partial class ButtonRuntime { int x; }");
+        CodeFileBackupService service = CreateService();
+        CodeFileBackup backup = service.Create(_projectFile, new[] { oldPath });
+        FilePath moved = WriteFile("Game/Button.cs", "partial class Button { int x; }");
+        File.Delete(oldPath.FullPath);
+        service.AddCreatedFile(backup, moved);
+        FilePath edited = WriteFile("Game/Icon.cs", "written by the migration");
+        service.AddCreatedFile(backup, edited);
+        File.WriteAllText(edited.FullPath, "edited after the migration");
+
+        // Read back from disk, as Restore Last does after Gum restarts.
+        CodeFileRestoreResult result = service.Restore(service.List(_projectFile).Single());
+
+        File.Exists(moved.FullPath).ShouldBeFalse();
+        File.ReadAllText(oldPath.FullPath).ShouldBe("partial class ButtonRuntime { int x; }");
+        File.ReadAllText(edited.FullPath).ShouldBe("edited after the migration");
+        result.SkippedBecauseChanged.ShouldBe(new[] { edited });
+    }
+
+    [Fact]
     public void Create_KeepsOnlyTheTenNewestBackups_PerProject()
     {
         FilePath file = WriteFile("Game/A.cs", "a");

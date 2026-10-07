@@ -13,17 +13,30 @@ namespace Gum.ProjectServices.CodeGeneration;
 /// <summary>A backup made before a code file migration: its folder and what it holds.</summary>
 public class CodeFileBackup
 {
+    private readonly List<CodeFileCreatedEntry> _createdFiles;
+
     /// <summary>The backup's own folder under the backup root.</summary>
     public string Folder { get; }
+
+    /// <summary>The project the backup was made for.</summary>
+    public FilePath ProjectFile { get; }
 
     /// <summary>The files backed up, by original path.</summary>
     public IReadOnlyList<CodeFileBackupEntry> Entries { get; }
 
-    public CodeFileBackup(string folder, IReadOnlyList<CodeFileBackupEntry> entries)
+    /// <summary>Files the migration wrote after the backup, which Restore removes.</summary>
+    public IReadOnlyList<CodeFileCreatedEntry> CreatedFiles => _createdFiles;
+
+    public CodeFileBackup(string folder, FilePath projectFile, IReadOnlyList<CodeFileBackupEntry> entries,
+        IEnumerable<CodeFileCreatedEntry> createdFiles)
     {
         Folder = folder;
+        ProjectFile = projectFile;
         Entries = entries;
+        _createdFiles = createdFiles.ToList();
     }
+
+    internal void AddCreatedFile(CodeFileCreatedEntry entry) => _createdFiles.Add(entry);
 }
 
 /// <summary>One backed-up file.</summary>
@@ -46,10 +59,26 @@ public class CodeFileBackupEntry
     }
 }
 
+/// <summary>A file the migration wrote, with the content it wrote.</summary>
+public class CodeFileCreatedEntry
+{
+    /// <summary>Where the migration wrote it.</summary>
+    public FilePath Path { get; }
+
+    /// <summary>SHA-256 of the content the migration wrote; anything else means the user edited it since.</summary>
+    public string Sha256 { get; }
+
+    public CodeFileCreatedEntry(FilePath path, string sha256)
+    {
+        Path = path;
+        Sha256 = sha256;
+    }
+}
+
 /// <summary>What a <see cref="CodeFileBackupService.Restore"/> did.</summary>
 public class CodeFileRestoreResult
 {
-    /// <summary>Files now holding their backed-up content, including ones that already did.</summary>
+    /// <summary>Files now back to their pre-migration state: restored, already restored, or a created file removed.</summary>
     public IReadOnlyList<FilePath> Restored { get; }
 
     /// <summary>Files that hold something else now. Left as they are.</summary>
@@ -66,6 +95,8 @@ public class CodeFileRestoreResult
 /// Backs up the code files a migration is about to touch, outside the repo, and restores them.
 /// Each backup is a folder under <c>&lt;backup root&gt;/&lt;project key&gt;/</c> holding the copies
 /// and a <c>manifest.json</c>; only the newest <see cref="MaxBackupsPerProject"/> per project are kept.
+/// The manifest is rewritten after every <see cref="AddCreatedFile"/>, so a migration that stops
+/// partway (an error, a crash) still leaves a backup that Restore can fully undo.
 /// </summary>
 public class CodeFileBackupService
 {
@@ -103,24 +134,25 @@ public class CodeFileBackupService
             entries.Add(new CodeFileBackupEntry(files[i], backupFileName, HashFile(files[i].FullPath)));
         }
 
-        Manifest manifest = new Manifest
-        {
-            ProjectFile = projectFile.FullPath,
-            Entries = entries.Select(entry => new ManifestEntry
-            {
-                OriginalPath = entry.OriginalPath.FullPath,
-                BackupFileName = entry.BackupFileName,
-                Sha256 = entry.Sha256,
-            }).ToList(),
-        };
-        File.WriteAllText(Path.Combine(folder, ManifestFileName), JsonConvert.SerializeObject(manifest, Formatting.Indented));
+        CodeFileBackup backup = new CodeFileBackup(folder, projectFile, entries, Array.Empty<CodeFileCreatedEntry>());
+        WriteManifest(backup);
 
         foreach (CodeFileBackup old in List(projectFile).Skip(MaxBackupsPerProject))
         {
             Directory.Delete(old.Folder, recursive: true);
         }
 
-        return new CodeFileBackup(folder, entries);
+        return backup;
+    }
+
+    /// <summary>
+    /// Records that the migration wrote <paramref name="file"/>, with its current content, so
+    /// Restore removes it unless it was edited afterwards. Call it right after each write.
+    /// </summary>
+    public void AddCreatedFile(CodeFileBackup backup, FilePath file)
+    {
+        backup.AddCreatedFile(new CodeFileCreatedEntry(file, HashFile(file.FullPath)));
+        WriteManifest(backup);
     }
 
     /// <summary><paramref name="projectFile"/>'s backups, newest first. A backup whose manifest can't be read is left out.</summary>
@@ -145,13 +177,35 @@ public class CodeFileBackupService
     }
 
     /// <summary>
-    /// Copies each backed-up file back to its original path. A file that exists there with
-    /// different content was changed after the backup, so it is left as it is and reported.
+    /// Undoes the migration: removes each file it created, then copies each backed-up file back to
+    /// its original path. A file whose content changed after the migration (a created file edited
+    /// since, or something new at an original path) is left as it is and reported. Created files go
+    /// first because a move can replace a backed-up stub at the same path.
     /// </summary>
     public CodeFileRestoreResult Restore(CodeFileBackup backup)
     {
         List<FilePath> restored = new List<FilePath>();
         List<FilePath> skipped = new List<FilePath>();
+
+        foreach (CodeFileCreatedEntry created in backup.CreatedFiles)
+        {
+            string path = created.Path.FullPath;
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            if (HashFile(path) == created.Sha256)
+            {
+                // Exactly what the migration wrote; the backed-up original holds the user's code.
+                File.Delete(path);
+                restored.Add(created.Path);
+            }
+            else
+            {
+                skipped.Add(created.Path);
+            }
+        }
 
         foreach (CodeFileBackupEntry entry in backup.Entries)
         {
@@ -162,7 +216,7 @@ public class CodeFileBackupService
                 {
                     restored.Add(entry.OriginalPath);
                 }
-                else
+                else if (!skipped.Contains(entry.OriginalPath))
                 {
                     skipped.Add(entry.OriginalPath);
                 }
@@ -197,6 +251,26 @@ public class CodeFileBackupService
         return folder;
     }
 
+    private static void WriteManifest(CodeFileBackup backup)
+    {
+        Manifest manifest = new Manifest
+        {
+            ProjectFile = backup.ProjectFile.FullPath,
+            Entries = backup.Entries.Select(entry => new ManifestEntry
+            {
+                OriginalPath = entry.OriginalPath.FullPath,
+                BackupFileName = entry.BackupFileName,
+                Sha256 = entry.Sha256,
+            }).ToList(),
+            CreatedFiles = backup.CreatedFiles.Select(created => new ManifestCreatedFile
+            {
+                Path = created.Path.FullPath,
+                Sha256 = created.Sha256,
+            }).ToList(),
+        };
+        File.WriteAllText(Path.Combine(backup.Folder, ManifestFileName), JsonConvert.SerializeObject(manifest, Formatting.Indented));
+    }
+
     private static CodeFileBackup? TryReadBackup(string folder)
     {
         try
@@ -210,7 +284,9 @@ public class CodeFileBackupService
             List<CodeFileBackupEntry> entries = manifest.Entries
                 .Select(entry => new CodeFileBackupEntry(new FilePath(entry.OriginalPath), entry.BackupFileName, entry.Sha256))
                 .ToList();
-            return new CodeFileBackup(folder, entries);
+            IEnumerable<CodeFileCreatedEntry> createdFiles = (manifest.CreatedFiles ?? new List<ManifestCreatedFile>())
+                .Select(created => new CodeFileCreatedEntry(new FilePath(created.Path), created.Sha256));
+            return new CodeFileBackup(folder, new FilePath(manifest.ProjectFile), entries, createdFiles);
         }
         catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException || exception is JsonException)
         {
@@ -224,12 +300,19 @@ public class CodeFileBackupService
     {
         public string ProjectFile { get; set; } = string.Empty;
         public List<ManifestEntry> Entries { get; set; } = new List<ManifestEntry>();
+        public List<ManifestCreatedFile>? CreatedFiles { get; set; } = new List<ManifestCreatedFile>();
     }
 
     private sealed class ManifestEntry
     {
         public string OriginalPath { get; set; } = string.Empty;
         public string BackupFileName { get; set; } = string.Empty;
+        public string Sha256 { get; set; } = string.Empty;
+    }
+
+    private sealed class ManifestCreatedFile
+    {
+        public string Path { get; set; } = string.Empty;
         public string Sha256 { get; set; } = string.Empty;
     }
 }
