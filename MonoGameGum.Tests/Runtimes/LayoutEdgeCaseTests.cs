@@ -779,6 +779,111 @@ public class LayoutEdgeCaseTests : BaseTestClass
         element.AbsoluteWidth.ShouldBe(50);
     }
 
+    [Fact]
+    public void ScreenPixel_ShouldStayUnscaled_UntilManagersAreAttachedAndLayoutRuns()
+    {
+        Camera camera = new();
+        camera.Zoom = 2;
+        Mock<IRenderer> renderer = new();
+        renderer.Setup(item => item.Camera).Returns(camera);
+        Mock<ISystemManagers> managers = new();
+        managers.Setup(item => item.Renderer).Returns(renderer.Object);
+        ContainerRuntime element = new();
+        element.WidthUnits = DimensionUnitType.ScreenPixel;
+        element.Width = 100;
+        element.AbsoluteWidth.ShouldBe(100);
+
+        element.AttachManagersOnly(managers.Object);
+        element.UpdateLayout();
+
+        element.AbsoluteWidth.ShouldBe(50);
+    }
+
+    [Theory]
+    [InlineData(0f, 0f)]
+    [InlineData(-1f, -100f)]
+    public void AbsoluteMultipliedByFontScale_ShouldMultiplyByUnusualScales(float scale, float expectedWidth)
+    {
+        GraphicalUiElement.GlobalFontScale = scale;
+        ContainerRuntime element = new();
+        element.WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
+        element.Width = 100;
+
+        element.AbsoluteWidth.ShouldBe(expectedWidth);
+    }
+
+    // GlobalFontScale is static and is not a layout trigger: an element keeps its size until its next layout.
+    [Fact]
+    public void AbsoluteMultipliedByFontScale_ShouldKeepSize_UntilNextLayoutAfterGlobalScaleChanges()
+    {
+        GraphicalUiElement.GlobalFontScale = 1;
+        ContainerRuntime element = new();
+        element.WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
+        element.Width = 100;
+
+        GraphicalUiElement.GlobalFontScale = 2;
+        element.AbsoluteWidth.ShouldBe(100);
+
+        element.UpdateLayout();
+
+        element.AbsoluteWidth.ShouldBe(200);
+    }
+
+    // DimensionsBased derives the source rectangle from the size, so the texture size is used and
+    // the renderable's own rectangle is ignored.
+    [Fact]
+    public void PercentageOfSourceFile_ShouldUseTextureSize_WhenTextureAddressIsDimensionsBased()
+    {
+        TexturedRenderable renderable = new()
+        {
+            TextureWidth = 200,
+            TextureHeight = 100,
+            SourceRectangle = new System.Drawing.Rectangle(0, 0, 50, 20),
+        };
+        GraphicalUiElement element = new(renderable);
+        element.TextureAddress = TextureAddress.DimensionsBased;
+        element.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+        element.Width = 50;
+        element.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
+        element.Height = 50;
+
+        element.AbsoluteWidth.ShouldBe(100);
+        element.AbsoluteHeight.ShouldBe(50);
+    }
+
+    // With a custom source rectangle, MaintainFileAspectRatio scales the rectangle's height by how far the
+    // width was scaled from the rectangle's width, instead of using the whole texture's aspect ratio.
+    [Fact]
+    public void MaintainFileAspectRatio_ShouldScaleSourceRectangle_WhenRectangleIsSet()
+    {
+        TexturedRenderable renderable = new() { AspectRatio = 1 };
+        GraphicalUiElement element = new(renderable);
+        element.TextureAddress = TextureAddress.Custom;
+        element.TextureLeft = 0;
+        element.TextureTop = 0;
+        element.TextureWidth = 50;
+        element.TextureHeight = 25;
+        element.WidthUnits = DimensionUnitType.Absolute;
+        element.Width = 100;
+        element.HeightUnits = DimensionUnitType.MaintainFileAspectRatio;
+        element.Height = 100;
+
+        element.AbsoluteHeight.ShouldBe(50);
+    }
+
+    // A container's renderable has no IAspectRatio at all, so the axis falls back to the 64 pixel default.
+    [Fact]
+    public void MaintainFileAspectRatio_ShouldFallBackToDefaultSize_WhenRenderableHasNoAspectRatio()
+    {
+        ContainerRuntime element = new();
+        element.WidthUnits = DimensionUnitType.Absolute;
+        element.Width = 100;
+        element.HeightUnits = DimensionUnitType.MaintainFileAspectRatio;
+        element.Height = 100;
+
+        element.AbsoluteHeight.ShouldBe(64);
+    }
+
     #endregion
 
     #region Position units
@@ -813,6 +918,84 @@ public class LayoutEdgeCaseTests : BaseTestClass
         parent.AddChild(child);
 
         parent.AbsoluteHeight.ShouldBe(20);
+    }
+
+    // Outside a Text parent, the baseline is the parent's bottom edge.
+    [Fact]
+    public void PixelsFromBaseline_ShouldMeasureFromParentBottom_WhenParentIsNotText()
+    {
+        ContainerRuntime parent = CreateContainer(100, 80);
+        ContainerRuntime child = CreateContainer(10, 10);
+        child.YUnits = GeneralUnitType.PixelsFromBaseline;
+        child.Y = -10;
+        parent.AddChild(child);
+
+        child.AbsoluteTop.ShouldBe(70);
+    }
+
+    [Fact]
+    public void TextBaselineOrigin_ShouldPlaceBottomEdgeAtY_WhenElementIsNotText()
+    {
+        ContainerRuntime parent = CreateContainer(100, 80);
+        ContainerRuntime child = CreateContainer(10, 30);
+        child.YOrigin = VerticalAlignment.TextBaseline;
+        child.Y = 50;
+        parent.AddChild(child);
+
+        child.AbsoluteTop.ShouldBe(20);
+    }
+
+    // The obsolete PixelsFromMiddleInverted measures upward from the parent's middle.
+    [Fact]
+    public void PixelsFromMiddleInverted_ShouldPositionUpwardFromParentMiddle()
+    {
+        ContainerRuntime parent = CreateContainer(100, 100);
+        ContainerRuntime child = CreateContainer(10, 10);
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
+        child.YUnits = GeneralUnitType.PixelsFromMiddleInverted;
+#pragma warning restore CS0618
+        child.Y = 10;
+        parent.AddChild(child);
+
+        child.AbsoluteTop.ShouldBe(40);
+    }
+
+    // Every position unit against every origin: the unit picks the reference point in the parent,
+    // the origin picks which point of the child sits on it. Parent 200x200, child 20x20.
+    [Theory]
+    [InlineData(GeneralUnitType.PixelsFromSmall, 10f, HorizontalAlignment.Left, 10f)]
+    [InlineData(GeneralUnitType.PixelsFromSmall, 10f, HorizontalAlignment.Center, 0f)]
+    [InlineData(GeneralUnitType.PixelsFromSmall, 10f, HorizontalAlignment.Right, -10f)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, 10f, HorizontalAlignment.Left, 110f)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, 10f, HorizontalAlignment.Center, 100f)]
+    [InlineData(GeneralUnitType.PixelsFromMiddle, 10f, HorizontalAlignment.Right, 90f)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, 10f, HorizontalAlignment.Left, 210f)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, 10f, HorizontalAlignment.Center, 200f)]
+    [InlineData(GeneralUnitType.PixelsFromLarge, 10f, HorizontalAlignment.Right, 190f)]
+    [InlineData(GeneralUnitType.Percentage, 25f, HorizontalAlignment.Left, 50f)]
+    [InlineData(GeneralUnitType.Percentage, 25f, HorizontalAlignment.Center, 40f)]
+    [InlineData(GeneralUnitType.Percentage, 25f, HorizontalAlignment.Right, 30f)]
+    public void PositionUnitAndOrigin_ShouldCombine_OnBothAxes(GeneralUnitType units, float value,
+        HorizontalAlignment xOrigin, float expectedSmallEdge)
+    {
+        VerticalAlignment yOrigin = xOrigin switch
+        {
+            HorizontalAlignment.Left => VerticalAlignment.Top,
+            HorizontalAlignment.Center => VerticalAlignment.Center,
+            _ => VerticalAlignment.Bottom,
+        };
+        ContainerRuntime parent = CreateContainer(200, 200);
+        ContainerRuntime child = CreateContainer(20, 20);
+        child.XUnits = units;
+        child.X = value;
+        child.XOrigin = xOrigin;
+        child.YUnits = units;
+        child.Y = value;
+        child.YOrigin = yOrigin;
+        parent.AddChild(child);
+
+        child.AbsoluteLeft.ShouldBe(expectedSmallEdge, "left");
+        child.AbsoluteTop.ShouldBe(expectedSmallEdge, "top");
     }
 
     #endregion
