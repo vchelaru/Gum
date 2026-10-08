@@ -129,7 +129,22 @@ internal sealed class EditorToolbar : DockPanel
         PreviewButton.Click += (_, _) => ShowPreviewLaunchSpinner(previewIcon, previewSpinner, previewSpinnerRotation);
         SetDock(PreviewButton, global::Avalonia.Controls.Dock.Right);
 
+        PinPreviewButton = new ToggleButton
+        {
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Pin, 14),
+            Margin = new Thickness(0, 0, 4, 0),
+            Padding = new Thickness(6, 0),
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            [!IsVisibleProperty] = new Binding(nameof(EditorViewModel.IsPreviewRunning)),
+            [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.IsPreviewPinned)) { Mode = BindingMode.TwoWay },
+            [ToolTip.TipProperty] = "Pin the preview to its current element so it stops following the selection",
+        };
+        SetDock(PinPreviewButton, global::Avalonia.Controls.Dock.Right);
+
         Children.Add(PreviewButton);
+        Children.Add(PinPreviewButton);
+        WatchForPreviewClosing();
         // The controls scroll horizontally in the space beside the Preview button rather than
         // drawing over it when the window is narrow (#5695).
         Children.Add(new ScrollViewer
@@ -140,8 +155,20 @@ internal sealed class EditorToolbar : DockPanel
         });
     }
 
+    // The tool isn't told when the preview window closes, so look while the toolbar is showing.
+    private void WatchForPreviewClosing()
+    {
+        DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        timer.Tick += (_, _) => (DataContext as EditorViewModel)?.RefreshPreviewRunning();
+        AttachedToVisualTree += (_, _) => timer.Start();
+        DetachedFromVisualTree += (_, _) => timer.Stop();
+    }
+
     /// <summary>The "Preview in runtime" button at the right end.</summary>
     internal Button PreviewButton { get; }
+
+    /// <summary>The toggle beside <see cref="PreviewButton"/> that pins the preview to its element.</summary>
+    internal ToggleButton PinPreviewButton { get; }
 
     /// <summary>The zoom and font scale +/- buttons, whose width follows the UI base font size.</summary>
     internal IReadOnlyList<Button> SizedButtons => _sizedButtons;

@@ -167,6 +167,8 @@ internal sealed class CanvasHarness : IDisposable
     /// <summary>The toolbar's "Preview in runtime" button.</summary>
     public Button PreviewButton => Toolbar.PreviewButton;
 
+    public ToggleButton PinPreviewButton => Toolbar.PinPreviewButton;
+
     private EditorToolbar Toolbar => Plugin.Toolbar ?? throw new InvalidOperationException("The editor tab has no toolbar.");
 
     /// <summary>The toolbar's font scale "-" button.</summary>

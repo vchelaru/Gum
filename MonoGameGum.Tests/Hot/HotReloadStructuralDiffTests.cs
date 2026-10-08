@@ -39,7 +39,7 @@ public class HotReloadStructuralDiffTests : BaseTestClass
     /// </summary>
     private static void EnsureStandard(GumProjectSave project, string name)
     {
-        if (project.StandardElements.Any(s => s.Name == name))
+        if (project.StandardElements.Any(s => s.Name == name) || project.Components.Any(c => c.Name == name))
         {
             return;
         }
@@ -137,6 +137,93 @@ public class HotReloadStructuralDiffTests : BaseTestClass
         newChild!.Tag.ShouldBeOfType<InstanceSave>();
         ((InstanceSave)newChild.Tag!).Name.ShouldBe("Box2");
         newChild.X.ShouldBe(25f, "qualified-name variables on the parent should have flowed through to the new child");
+    }
+
+    private static void SetFloat(StateSave state, string name, float value)
+    {
+        VariableSave? existing = state.Variables.FirstOrDefault(v => v.Name == name);
+        if (existing != null)
+        {
+            existing.Value = value;
+            return;
+        }
+        state.Variables.Add(new VariableSave { Name = name, Value = value, Type = "float", SetsValue = true });
+    }
+
+    private static InstanceSave AddInstanceToComponent(
+        GumProjectSave project, ComponentSave container, string name, string baseType)
+    {
+        InstanceSave instance = new InstanceSave { Name = name, BaseType = baseType, ParentContainer = container };
+        container.Instances.Add(instance);
+        return instance;
+    }
+
+    [Fact]
+    public void ComponentDefaultStateEdit_ReachesExistingInstancesOfThatComponent()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        (ScreenSave screen, _) = BuildScreen(project);
+        ComponentSave button = AddComponent(project, "ButtonComponent");
+        SetFloat(button.DefaultState, "Width", 100f);
+        AddInstance(project, screen, "ButtonInstance", "ButtonComponent");
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        FindChildByName(screenGue, "ButtonInstance")!.Width.ShouldBe(100f, "sanity: the instance starts at the component's default width");
+
+        // The user resizes the component in the tool; the screen is not edited.
+        SetFloat(button.DefaultState, "Width", 200f);
+
+        GumHotReloadManager.ApplyDiff(
+            new[] { screenGue }, project, SystemManagers.Default);
+
+        FindChildByName(screenGue, "ButtonInstance")!.Width.ShouldBe(200f);
+    }
+
+    [Fact]
+    public void ComponentDefaultStateEdit_DoesNotOverrideTheScreensOwnValueForThatInstance()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        (ScreenSave screen, StateSave screenDefault) = BuildScreen(project);
+        ComponentSave button = AddComponent(project, "ButtonComponent");
+        SetFloat(button.DefaultState, "Width", 100f);
+        AddInstance(project, screen, "ButtonInstance", "ButtonComponent");
+        SetFloat(screenDefault, "ButtonInstance.Width", 150f);
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        FindChildByName(screenGue, "ButtonInstance")!.Width.ShouldBe(150f, "sanity: the screen's value wins at creation");
+
+        SetFloat(button.DefaultState, "Width", 200f);
+
+        GumHotReloadManager.ApplyDiff(
+            new[] { screenGue }, project, SystemManagers.Default);
+
+        FindChildByName(screenGue, "ButtonInstance")!.Width.ShouldBe(150f);
+    }
+
+    [Fact]
+    public void ComponentDefaultStateEdit_ReachesInstancesNestedSeveralLevelsDeep()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        (ScreenSave screen, _) = BuildScreen(project);
+        ComponentSave leaf = AddComponent(project, "LeafComponent");
+        SetFloat(leaf.DefaultState, "Width", 10f);
+        ComponentSave middle = AddComponent(project, "MiddleComponent");
+        AddInstanceToComponent(project, middle, "LeafInstance", "LeafComponent");
+        ComponentSave outer = AddComponent(project, "OuterComponent");
+        AddInstanceToComponent(project, outer, "MiddleInstance", "MiddleComponent");
+        AddInstance(project, screen, "OuterInstance", "OuterComponent");
+        GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        GraphicalUiElement GetLeaf() =>
+            FindChildByName(FindChildByName(FindChildByName(screenGue, "OuterInstance")!, "MiddleInstance")!, "LeafInstance")!;
+        GetLeaf().Width.ShouldBe(10f, "sanity: the leaf starts at its component's default width");
+
+        SetFloat(leaf.DefaultState, "Width", 20f);
+
+        GumHotReloadManager.ApplyDiff(
+            new[] { screenGue }, project, SystemManagers.Default);
+
+        GetLeaf().Width.ShouldBe(20f);
     }
 
     [Fact]

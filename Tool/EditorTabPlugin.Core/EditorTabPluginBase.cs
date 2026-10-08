@@ -438,6 +438,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // Picking a state in the tool re-shows the previewed element in that state (issue #4856).
         this.ReactToStateSaveSelected += _ => _previewLauncher.PushSelection(_selectedState.SelectedElement);
         this.ElementDelete += HandleElementDeleted;
+        // The preview loads its element by name, so a pinned element that is gone or renamed can no
+        // longer be shown; fall back to following the selection (issue #3078).
+        this.ElementRename += (element, _) => UnpinPreviewIf(element);
 
         // Keeps a live .gumx preview session's temp JSON copy in sync with the real, edited project
         // (issue #4748) - the Native AOT preview build can't parse .gumx itself, so its hot-reload
@@ -754,8 +757,17 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void HandleElementDeleted(ElementSave save)
     {
+        UnpinPreviewIf(save);
         _elementCameraMemory.Forget(save);
         _wireframeObjectManager.RefreshAll(true);
+    }
+
+    private void UnpinPreviewIf(ElementSave element)
+    {
+        if (_previewLauncher.PinnedElement == element)
+        {
+            _previewLauncher.Unpin();
+        }
     }
 
     // Returns to where the user left the element's camera, if they moved it there (#5854).
@@ -1680,7 +1692,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     // The preview reads the orderer from every selection-file write, so re-sending the current
     // selection is all it takes to make it follow a Performance-tab toggle (issue #4860).
     void IRecipient<SiblingOrderingChangedMessage>.Receive(SiblingOrderingChangedMessage message) =>
-        _previewLauncher.PushSelection(_selectedState.SelectedElement);
+        _previewLauncher.PushSelection(_previewLauncher.PinnedElement ?? _selectedState.SelectedElement);
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {

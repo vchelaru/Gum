@@ -22,6 +22,8 @@ public class PreviewLauncher : IPreviewLauncher
     private IPreviewProcess? _process;
     private string? _selectionFilePath;
     private bool _isConvertedGumxPreview;
+    private ElementSave? _shownElement;
+    private ElementSave? _pinnedElement;
 
     /// <param name="processStarter">Finds and starts the preview executable.</param>
     /// <param name="isSortByBatchKey">
@@ -47,7 +49,14 @@ public class PreviewLauncher : IPreviewLauncher
     /// <summary>Finds and starts the preview executable; a test swaps it for a stand-in.</summary>
     internal IPreviewProcessStarter ProcessStarter { get; set; }
 
-    private bool IsRunning => _process is { HasExited: false };
+    /// <inheritdoc/>
+    public bool IsRunning => _process is { HasExited: false };
+
+    /// <inheritdoc/>
+    public event Action? PinnedChanged;
+
+    /// <inheritdoc/>
+    public ElementSave? PinnedElement => IsRunning ? _pinnedElement : null;
 
     /// <inheritdoc/>
     public void Launch()
@@ -56,6 +65,7 @@ public class PreviewLauncher : IPreviewLauncher
         {
             DeleteSelectionFileQuietly();
             _process = null;
+            SetPinned(null);
         }
 
         GumProjectSave? project = _projectManager.GumProjectSave;
@@ -76,7 +86,7 @@ public class PreviewLauncher : IPreviewLauncher
         {
             // Re-clicking Preview is an explicit ask to bring the window forward, unlike a passive
             // tree-selection change (issue #4717 follow-up).
-            PushSelection(element, activate: true);
+            PushSelection(PinnedElement ?? element, activate: true);
             return;
         }
 
@@ -119,7 +129,40 @@ public class PreviewLauncher : IPreviewLauncher
             return;
         }
 
+        _shownElement = element;
         _outputManager.AddOutput($"Launched preview for {element.Name}.");
+    }
+
+    /// <inheritdoc/>
+    public bool Pin()
+    {
+        if (!IsRunning || _shownElement == null)
+        {
+            _outputManager.AddError("Open the preview first, then pin it.");
+            return false;
+        }
+        SetPinned(_shownElement);
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public void Unpin()
+    {
+        if (_pinnedElement == null)
+        {
+            return;
+        }
+        SetPinned(null);
+        PushSelection(_selectedState.SelectedElement);
+    }
+
+    private void SetPinned(ElementSave? element)
+    {
+        if (_pinnedElement != element)
+        {
+            _pinnedElement = element;
+            PinnedChanged?.Invoke();
+        }
     }
 
     /// <inheritdoc/>
@@ -129,10 +172,18 @@ public class PreviewLauncher : IPreviewLauncher
         {
             return;
         }
+        // A pinned preview ignores every other element. This also keeps a state picked on another
+        // element (a button's Pressed) from reaching the pinned screen.
+        if (_pinnedElement != null && element != _pinnedElement)
+        {
+            return;
+        }
         if (!PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate).Serialize()))
         {
             _outputManager.AddError("Could not update the running preview: its selection file is locked.");
+            return;
         }
+        _shownElement = element;
     }
 
     /// <inheritdoc/>
@@ -165,7 +216,7 @@ public class PreviewLauncher : IPreviewLauncher
         };
 
         StateSave? state = _selectedState.SelectedStateSave;
-        if (state != null && state != element.DefaultState)
+        if (state != null && state != element.DefaultState && element.AllStates.Contains(state))
         {
             message.StateName = state.Name;
             message.CategoryName = element.Categories.FirstOrDefault(category => category.States.Contains(state))?.Name;

@@ -344,6 +344,18 @@ public class GumHotReloadManager : IGumHotReloadManager
 
             DiffDesignTimeChildren(element, newEs, systemManagers);
 
+            // An instance is built from its own element, so an edit to that element (a component's
+            // default state or its own instances) has to reach it too, however deeply nested.
+            // Innermost first: this element's overrides are applied next and must win over the
+            // component's defaults.
+            foreach (GraphicalUiElement instance in element.ContainedElements.Concat(element.Children).Distinct().ToList())
+            {
+                if (instance.Tag is InstanceSave && instance.ElementSave is not StandardElementSave)
+                {
+                    ApplyDiffRecursive(instance, byName, systemManagers);
+                }
+            }
+
             if (newEs.DefaultState != null)
             {
                 element.SetVariablesRecursively(newEs, newEs.DefaultState);
@@ -363,9 +375,12 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         foreach (GraphicalUiElement child in element.Children.ToList())
         {
-            if (designTimeChildNames != null
-                && child.Name != null
-                && designTimeChildNames.Contains(child.Name))
+            // Instances are handled by the element that owns them (above, or by the screen that
+            // parented them here), so only runtime-added children are left.
+            if (child.Tag is InstanceSave
+                || (designTimeChildNames != null
+                    && child.Name != null
+                    && designTimeChildNames.Contains(child.Name)))
             {
                 continue;
             }
@@ -398,7 +413,11 @@ public class GumHotReloadManager : IGumHotReloadManager
             new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
         foreach (GraphicalUiElement child in parent.ContainedElements.Concat(parent.Children).ToList())
         {
-            if (child.Tag is InstanceSave existingInstance && existingInstance.Name != null)
+            // Only this element's own instances: a child that the screen parented under a
+            // component instance carries the screen's InstanceSave, not the component's.
+            if (child.Tag is InstanceSave existingInstance
+                && existingInstance.Name != null
+                && string.Equals(existingInstance.ParentContainer?.Name, newEs.Name, StringComparison.OrdinalIgnoreCase))
             {
                 designTimeByName[existingInstance.Name] = child;
             }
