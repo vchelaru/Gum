@@ -114,6 +114,68 @@ public class CompositeEditorLogicTests
     }
 
     [Fact]
+    public void ListBoxDisplayLogic_Vector2_AddInsertsBeforeClosingPoint_WhenListIsClosed()
+    {
+        ListBoxDisplayLogic logic = new ListBoxDisplayLogic();
+        List<Vector2> closed = new List<Vector2>
+        {
+            new Vector2(0, 0), new Vector2(10, 0), new Vector2(10, 10), new Vector2(0, 0)
+        };
+
+        logic.AddOrReplace(closed, indexEditing: null, "<5,20>").ShouldBeNull();
+
+        closed.ShouldBe(new[]
+        {
+            new Vector2(0, 0), new Vector2(10, 0), new Vector2(10, 10), new Vector2(5, 20), new Vector2(0, 0)
+        });
+    }
+
+    [Fact]
+    public void ListBoxDisplayLogic_Vector2_AddAppends_WhenListIsOpen()
+    {
+        ListBoxDisplayLogic logic = new ListBoxDisplayLogic();
+        List<Vector2> open = new List<Vector2>
+        {
+            new Vector2(0, 0), new Vector2(10, 0), new Vector2(10, 10)
+        };
+
+        logic.AddOrReplace(open, indexEditing: null, "5,20").ShouldBeNull();
+
+        open.ShouldBe(new[]
+        {
+            new Vector2(0, 0), new Vector2(10, 0), new Vector2(10, 10), new Vector2(5, 20)
+        });
+    }
+
+    [Fact]
+    public void ListBoxDisplayLogic_Vector2_AddAppends_WhenListHasFewerThanTwoPoints()
+    {
+        ListBoxDisplayLogic logic = new ListBoxDisplayLogic();
+        List<Vector2> single = new List<Vector2> { new Vector2(0, 0) };
+
+        logic.AddOrReplace(single, indexEditing: null, "5,20").ShouldBeNull();
+
+        single.ShouldBe(new[] { new Vector2(0, 0), new Vector2(5, 20) });
+    }
+
+    [Fact]
+    public void ListBoxDisplayLogic_Vector2_EditingAClosedListReplacesInPlace()
+    {
+        ListBoxDisplayLogic logic = new ListBoxDisplayLogic();
+        List<Vector2> closed = new List<Vector2>
+        {
+            new Vector2(0, 0), new Vector2(10, 0), new Vector2(10, 10), new Vector2(0, 0)
+        };
+
+        logic.AddOrReplace(closed, indexEditing: 1, "7,7").ShouldBeNull();
+
+        closed.ShouldBe(new[]
+        {
+            new Vector2(0, 0), new Vector2(7, 7), new Vector2(10, 10), new Vector2(0, 0)
+        });
+    }
+
+    [Fact]
     public void MultiFileDisplayLogic_RemovesAndMovesWithinBounds()
     {
         MultiFileDisplayLogic logic = new MultiFileDisplayLogic();

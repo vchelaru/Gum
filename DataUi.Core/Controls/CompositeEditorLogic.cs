@@ -289,8 +289,10 @@ public class ListBoxDisplayLogic
 
     /// <summary>
     /// Appends <paramref name="text"/> to <paramref name="list"/>, or replaces the entry at
-    /// <paramref name="indexEditing"/>. Text that does not parse for the list's type is ignored;
-    /// an unparseable Vector2 returns <see cref="Vector2ParseError"/>.
+    /// <paramref name="indexEditing"/>. A Vector2 list whose last point repeats its first (a closed
+    /// polygon) gets the new point inserted before that repeat so it stays closed. Text that does
+    /// not parse for the list's type is ignored; an unparseable Vector2 returns
+    /// <see cref="Vector2ParseError"/>.
     /// </summary>
     public string? AddOrReplace(IList list, int? indexEditing, string text)
     {
@@ -314,7 +316,16 @@ public class ListBoxDisplayLogic
             case List<Vector2> vectors:
                 if (TryParseVector2(text, out Vector2? vectorValue))
                 {
-                    Set(vectors, indexEditing, vectorValue!.Value);
+                    if (indexEditing == null && IsClosed(vectors))
+                    {
+                        // A closed polygon repeats its first point at the end. Adding after that
+                        // repeat would silently turn it into an open polyline.
+                        vectors.Insert(vectors.Count - 1, vectorValue!.Value);
+                    }
+                    else
+                    {
+                        Set(vectors, indexEditing, vectorValue!.Value);
+                    }
                     return null;
                 }
                 return Vector2ParseError;
@@ -356,6 +367,9 @@ public class ListBoxDisplayLogic
         }
         return text;
     }
+
+    private static bool IsClosed(List<Vector2> points) =>
+        points.Count >= 2 && points[0] == points[points.Count - 1];
 
     private static void Set<T>(List<T> list, int? index, T value)
     {
