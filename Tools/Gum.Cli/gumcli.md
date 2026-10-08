@@ -52,7 +52,7 @@ MyGame/
     ProjectCodeSettings.codsj    already points at MyGame.csproj
 ```
 
-KNI is the same. raylib and Stride have no `Game1.cs`; everything is in `Program.cs`. The Stride project targets `net10.0-windows7.0`, so it builds only on Windows.
+KNI is the same. raylib and Stride have no `Game1.cs`; everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. Targeting `net10.0-windows7.0` enables the GPU path.
 
 Then run it with `dotnet run --project MyGame/MyGame.csproj`. Add screens in the Gum tool by opening `MyGame/Content/GumProject/GumProject.gumj`, and generate code with `gumcli codegen`.
 

@@ -57,6 +57,19 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_Stride_ShouldTargetPlainNet10SoTheCpuRenderPathRuns()
+    {
+        // The net10.0-windows7.0 target selects Gum.Stride's ANGLE GPU path, which needs native ANGLE
+        // libraries that do not load on a clean machine.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Stride, includeFormsTemplate: true);
+
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldContain("<TargetFramework>net10.0</TargetFramework>");
+    }
+
+    [Fact]
     public void Create_WithoutFormsTemplate_ShouldCreateEmptyGumProject()
     {
         string projectDirectory = Path.Combine(_tempDirectory, "MyGame");

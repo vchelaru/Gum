@@ -56,7 +56,7 @@ MyGame/
     ProjectCodeSettings.codsj
 ```
 
-`Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project targets `net10.0-windows7.0` for GPU-accelerated rendering, so it builds only on Windows.
+`Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. To use the GPU path, change the target to `net10.0-windows7.0`; see [Skia Render Path](../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
 
 The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCodeSettings.codsj` already points at `MyGame.csproj` and uses the **Gum Forms** Output Library, so open `Content/GumProject/GumProject.gumj` in the Gum tool, add a screen, and run [`codegen`](codegen.md) to generate classes into the game project.
 
