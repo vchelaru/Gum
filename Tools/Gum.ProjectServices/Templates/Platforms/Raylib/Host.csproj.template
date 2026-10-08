@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gum.raylib" Version="*" />
+    {{GumReference}}
   </ItemGroup>
 
   <ItemGroup>

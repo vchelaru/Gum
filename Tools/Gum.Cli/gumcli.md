@@ -19,6 +19,7 @@ There are two modes:
 | `--template`, `-t` | `forms` | `forms` (all Forms controls, behaviors and assets) or `empty` (standard elements only). |
 | `--platform`, `-p` | none | `monogame`, `kni`, `raylib`, `stride` (Windows only) or `silknet`. Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
 | `--no-restore` | off | With `--platform`, skip the `dotnet restore` that runs after creation. |
+| `--source-linked` | off | With `--platform`, reference the platform's runtime project in the Gum checkout instead of the NuGet package. The checkout is the one this gumcli was built from, or the one the current folder is in. For testing local Gum changes. |
 
 Gum project only:
 

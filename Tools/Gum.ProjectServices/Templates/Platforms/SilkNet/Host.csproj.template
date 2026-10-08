@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gum.SilkNet" Version="*" />
+    {{GumReference}}
     <!-- Windowing.Sdl creates the window and its OpenGL context. Input.Sdl is what window.CreateInput()
          looks for at runtime, and without it that call throws NotSupportedException. -->
     <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />

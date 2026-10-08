@@ -23,7 +23,8 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     private static readonly Regex ValidProjectName = new Regex("^[A-Za-z_][A-Za-z0-9_.-]*$");
 
     /// <inheritdoc/>
-    public PlatformProjectResult Create(string projectDirectory, HostPlatform platform, bool includeFormsTemplate)
+    public PlatformProjectResult Create(
+        string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null)
     {
         string fullDirectory = Path.GetFullPath(projectDirectory)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -49,10 +50,24 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             return Fail($"Gum project already exists: {gumProjectPath}");
         }
 
+        string gumReference = $"<PackageReference Include=\"{GetPackageName(platform)}\" Version=\"*\" />";
+        if (gumSourceDirectory != null)
+        {
+            string runtimeCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, GetRuntimeProjectPath(platform)));
+            if (!File.Exists(runtimeCsproj))
+            {
+                return Fail($"Gum source not found: {runtimeCsproj} does not exist. Pass the root of a Gum checkout.");
+            }
+
+            // MSBuild paths use backslashes by convention; the syntax version detection also expects them.
+            string include = Path.GetRelativePath(fullDirectory, runtimeCsproj).Replace('/', '\\');
+            gumReference = $"<ProjectReference Include=\"{include}\" />";
+        }
+
         Directory.CreateDirectory(gumFolder);
 
         string rootNamespace = projectName.Replace(".", "_").Replace("-", "_");
-        WriteHostFiles(fullDirectory, csprojPath, projectName, rootNamespace, platform);
+        WriteHostFiles(fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference);
 
         if (includeFormsTemplate)
         {
@@ -88,13 +103,38 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         return null;
     }
 
+    private static string GetPackageName(HostPlatform platform) => platform switch
+    {
+        HostPlatform.MonoGame => "Gum.MonoGame",
+        HostPlatform.Kni => "Gum.KNI",
+        HostPlatform.Raylib => "Gum.raylib",
+        HostPlatform.Stride => "Gum.Stride",
+        HostPlatform.SilkNet => "Gum.SilkNet",
+        _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
+    };
+
+    // Location of each package's project inside a Gum checkout.
+    private static string GetRuntimeProjectPath(HostPlatform platform) => platform switch
+    {
+        HostPlatform.MonoGame => Path.Combine("MonoGameGum", "MonoGameGum.csproj"),
+        HostPlatform.Kni => Path.Combine("MonoGameGum", "KniGum", "KniGum.csproj"),
+        HostPlatform.Raylib => Path.Combine("Runtimes", "RaylibGum", "RaylibGum.csproj"),
+        HostPlatform.Stride => Path.Combine("Runtimes", "StrideGum", "StrideGum.csproj"),
+        HostPlatform.SilkNet => Path.Combine("Runtimes", "SilkNetGum", "SilkNetGum.csproj"),
+        _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, null)
+    };
+
     private static void WriteHostFiles(
-        string directory, string csprojPath, string projectName, string rootNamespace, HostPlatform platform)
+        string directory, string csprojPath, string projectName, string rootNamespace, HostPlatform platform,
+        string gumReference)
     {
         string platformFolder = platform.ToString();
         string sharedFolder = platform is HostPlatform.MonoGame or HostPlatform.Kni ? "Xna" : platformFolder;
 
-        File.WriteAllText(csprojPath, ReadTemplate(platformFolder, "Host.csproj.template", projectName, rootNamespace));
+        File.WriteAllText(
+            csprojPath,
+            ReadTemplate(platformFolder, "Host.csproj.template", projectName, rootNamespace)
+                .Replace("{{GumReference}}", gumReference));
         File.WriteAllText(
             Path.Combine(directory, "Program.cs"),
             ReadTemplate(sharedFolder, "Program.cs.template", projectName, rootNamespace));
