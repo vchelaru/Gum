@@ -56,7 +56,25 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 {
     // Gum runtimes that stamp a GumSyntaxVersion. These are both the project names and the
     // assembly (dll) names.
-    private static readonly string[] GumRuntimeNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum" };
+    private static readonly string[] GumRuntimeNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum", "StrideGum" };
+
+    // Published NuGet package IDs of the runtimes above.
+    private static readonly string[] GumPackageNames =
+    {
+        "Gum.MonoGame",
+        "Gum.KNI",
+        "Gum.FNA",
+        "Gum.SkiaSharp",
+        "Gum.raylib",
+        "Gum.sokol",
+        "Gum.SilkNet",
+        "Gum.Stride"
+    };
+
+    // The subset of the runtimes above that shipped before the namespace unification. Only these can
+    // be an old build whose version is unreadable; every other runtime started on the current conventions.
+    private static readonly string[] LegacyEraRuntimeNames = { "MonoGameGum", "KniGum", "FnaGum", "SkiaGum" };
+    private static readonly string[] LegacyEraPackageNames = { "Gum.MonoGame", "Gum.KNI", "Gum.FNA", "Gum.SkiaSharp" };
 
     private readonly ICodeGenLogger _logger;
     private readonly string _nuGetCacheRoot;
@@ -154,7 +172,12 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             return result;
         }
 
-        return CreateFallback("No Gum PackageReference, ProjectReference or assembly Reference found in .csproj.");
+        if (ReferencesLegacyEraRuntime(csprojContents))
+        {
+            return CreateLegacyFallback("A Gum runtime is referenced in the .csproj but its version could not be read.");
+        }
+
+        return CreateFallback("No Gum runtime with a legacy version found in the .csproj.");
     }
 
     private SyntaxVersionResult? TryDetectFromProjectReference(string csprojContents, string csprojPath)
@@ -254,19 +277,7 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 
     private SyntaxVersionResult? TryDetectFromNuGetPackage(string csprojContents)
     {
-        // Look for PackageReference to Gum runtime packages (published NuGet package IDs)
-        string[] gumPackageNames =
-        {
-            "Gum.MonoGame",
-            "Gum.KNI",
-            "Gum.FNA",
-            "Gum.SkiaSharp",
-            "Gum.raylib",
-            "Gum.sokol",
-            "Gum.SilkNet"
-        };
-
-        foreach (string packageName in gumPackageNames)
+        foreach (string packageName in GumPackageNames)
         {
             string? packageVersion = ExtractPackageReferenceVersion(csprojContents, packageName);
             if (packageVersion == null)
@@ -537,14 +548,36 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         return null;
     }
 
-    private SyntaxVersionResult CreateFallback(string reason)
+    // No runtime that has legacy conventions is referenced (nothing at all, or a runtime that never had
+    // them such as Stride, Silk.NET or raylib), so the project gets the current conventions.
+    private SyntaxVersionResult CreateFallback(string reason) => CreateFallback(reason, LatestSyntaxVersion);
+
+    // A runtime from before the unification is referenced but its version could not be read. The
+    // attribute is absent on old builds, so this stays on the legacy conventions rather than guessing newer.
+    private SyntaxVersionResult CreateLegacyFallback(string reason) => CreateFallback(reason, 0);
+
+    private SyntaxVersionResult CreateFallback(string reason, int version)
     {
-        _logger.PrintOutput($"Syntax version auto-detection: {reason} Falling back to version 0.");
+        _logger.PrintOutput($"Syntax version auto-detection: {reason} Falling back to version {version}.");
         return new SyntaxVersionResult
         {
-            Version = 0,
+            Version = version,
             Source = SyntaxVersionSource.Fallback,
-            Description = $"Syntax Version: 0 (fallback — {reason})"
+            Description = $"Syntax Version: {version} (fallback — {reason})"
         };
     }
+
+    /// <summary>
+    /// The newest syntax version this build of the tool knows, read from the stamp on GumCommon.
+    /// </summary>
+    internal static int LatestSyntaxVersion { get; } =
+        typeof(Gum.DataTypes.GumSyntaxVersionAttribute).Assembly
+            .GetCustomAttributes(typeof(Gum.DataTypes.GumSyntaxVersionAttribute), inherit: false)
+            .Cast<Gum.DataTypes.GumSyntaxVersionAttribute>()
+            .FirstOrDefault()?.Version ?? 0;
+
+    private static bool ReferencesLegacyEraRuntime(string csprojContents) =>
+        LegacyEraRuntimeNames.Any(name => ExtractProjectReferencePath(csprojContents, name) != null
+            || ExtractReferenceHintPath(csprojContents, name) != null)
+        || LegacyEraPackageNames.Any(name => ExtractPackageReferenceVersion(csprojContents, name) != null);
 }

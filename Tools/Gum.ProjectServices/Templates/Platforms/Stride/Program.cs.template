@@ -1,0 +1,25 @@
+using System;
+using Gum;
+using Gum.Forms.Controls;
+using Stride.CommunityToolkit.Engine;
+using Stride.CommunityToolkit.Rendering.Compositing;
+using Stride.Engine;
+
+using Game game = new Game();
+
+game.Run(start: Start);
+
+void Start(Scene rootScene)
+{
+    // Stride draws through a GraphicsCompositor and a camera, so both must exist before Gum initializes.
+    game.AddGraphicsCompositor().AddCleanUIStage();
+    game.Add2DCamera();
+
+    // Create screens and components in the Gum tool, generate code, then add them
+    // here with: new MyScreen().AddToRoot();
+    GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumj");
+
+    Button button = new Button();
+    button.AddToRoot();
+    button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+}

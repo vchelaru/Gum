@@ -30,6 +30,21 @@ public class CodegenCommandTests : IDisposable
     }
 
     [Fact]
+    public void Codegen_WhenCsprojReferencesNoGumRuntime_EmitsCurrentNamespacesNotLegacyOnes()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new FormsTemplateCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0);
+        string generated = File.ReadAllText(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.Generated.cs"));
+        generated.ShouldNotContain("MonoGameGum");
+    }
+
+    [Fact]
     public void Codegen_WhenNoCodsjAndCsprojFound_PrintsAutoConfigMessage()
     {
         string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");

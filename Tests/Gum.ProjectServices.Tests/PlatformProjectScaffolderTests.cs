@@ -27,7 +27,8 @@ public class PlatformProjectScaffolderTests : IDisposable
     [Theory]
     [InlineData(HostPlatform.MonoGame, "Gum.MonoGame", OutputLibrary.MonoGameForms)]
     [InlineData(HostPlatform.Kni, "Gum.KNI", OutputLibrary.MonoGameForms)]
-    [InlineData(HostPlatform.Raylib, "Gum.raylib", OutputLibrary.Raylib)]
+    [InlineData(HostPlatform.Raylib, "Gum.raylib", OutputLibrary.MonoGameForms)]
+    [InlineData(HostPlatform.Stride, "Gum.Stride", OutputLibrary.MonoGameForms)]
     public void Create_ShouldReferenceGumPackageAndPointCodegenAtHostProject(
         HostPlatform platform, string expectedPackage, OutputLibrary expectedLibrary)
     {
@@ -53,6 +54,19 @@ public class PlatformProjectScaffolderTests : IDisposable
         settings.OutputLibrary.ShouldBe(expectedLibrary);
         settings.RootNamespace.ShouldBe("MyGame");
         settings.CsprojPath.ShouldBe("../../MyGame.csproj");
+    }
+
+    [Fact]
+    public void Create_Stride_ShouldTargetPlainNet10SoTheCpuRenderPathRuns()
+    {
+        // The net10.0-windows7.0 target selects Gum.Stride's ANGLE GPU path, which needs native ANGLE
+        // libraries that do not load on a clean machine.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Stride, includeFormsTemplate: true);
+
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldContain("<TargetFramework>net10.0</TargetFramework>");
     }
 
     [Fact]

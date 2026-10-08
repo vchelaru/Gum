@@ -13,18 +13,14 @@ Add the Gum.Stride NuGet package ([https://www.nuget.org/packages/Gum.Stride](ht
 Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.Stride" Version="2026.9.3.3-preview.1" />
+<PackageReference Include="Gum.Stride" Version="*" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.Stride --prerelease
+dotnet add package Gum.Stride
 ```
-
-{% hint style="info" %}
-`Gum.Stride` has published preview versions only so far, so the version is spelled out above. To find the package in a search, pass `--prerelease` on the command line, or check **Include prerelease** in the Visual Studio NuGet window.
-{% endhint %}
 
 `Gum.Stride` renders through SkiaSharp and adds real Forms input (mouse, keyboard, gamepad, focus) through `Stride.Input`. Stride owns the window and the render pipeline, and Gum draws into the frame Stride composites.
 

@@ -163,16 +163,18 @@ This is the mode to reach for when the game loads `.gumx` content at runtime and
 accessors over it.
 
 {% hint style="warning" %}
-`OutputLibrary.Raylib` currently supports `FindByName` only. The headless CLI throws
+The legacy `OutputLibrary.Raylib` and `Silk` support `FindByName` only. The headless CLI throws
 `NotSupportedException` and exits 1 on `Raylib` + `FullyInCode`; the interactive tool quietly snaps the
 setting back to `FindByName` instead.
 {% endhint %}
 
 ## Output libraries
 
-`OutputLibrary` selects the target runtime: `MonoGame`, `MonoGameForms`, `Raylib`, `Skia`, `Silk`,
-`WPF`, `XamarinForms`, `Maui`. **MonoGameForms is the recommended default** for new projects; plain
-`MonoGame` exists for legacy and specialized cases.
+Use `MonoGameForms` for every runtime. The Code tab labels it "Gum Forms (recommended)"; the name
+predates runtime unification. Forms controls live in `GumCommon` and every runtime exposes the same
+`Gum.GueDeriving` and `GumService` names, so one generated shape serves MonoGame, KNI, FNA, raylib,
+Skia, Silk.NET, Stride and Unity. `MonoGame`, `Skia`, `Raylib`, `Silk`, `WPF`, `XamarinForms` and `Maui`
+are legacy values kept so existing projects keep generating.
 
 Two consequences worth knowing:
 
@@ -184,9 +186,9 @@ Two consequences worth knowing:
   Screen inheritance resolves in the order `element.BaseType`, then `DefaultScreenBase`, then a
   library-appropriate fallback (`FrameworkElement` for MonoGameForms, `GraphicalUiElement` otherwise).
 
-`MonoGame` and `Raylib` emit an identical shape, because the underlying runtime API is unified across
-them. Code that needs to branch on this uses a shared predicate rather than testing the two values
-separately.
+The legacy `MonoGame`, `Raylib` and `Silk` values emit an identical shape (no Forms wrapping), because
+the runtime API is unified across them. Code that needs to branch on this uses
+`CodeGenerator.UsesUnifiedGumRuntime` rather than testing the values separately.
 
 ## Anatomy of a generated file
 
