@@ -8,11 +8,16 @@ Command-line tool for Gum UI projects. Creates projects, checks for errors, and 
 
 Creates a new Gum project. Everything is optional: with no arguments it creates a Forms-template project in a `GumProject` folder.
 
+There are two modes:
+
+- **Gum project only** (no `--platform`): creates just the Gum project, for use with the Gum tool or an existing game.
+- **Full game** (`--platform`): creates a runnable game project for that platform, plus a Gum project inside it. Use this to try Gum on a platform without setting up a game project yourself. The Gum project gets the Forms template unless you pass `-t empty`.
+
 | Argument / option | Default | Meaning |
 |---|---|---|
 | `path` | `GumProject` | Where to create the project. A name creates `<name>/<name>.gumj`; a path ending in `.gumj` or `.gumx` is used as is. With `--platform` it names the project folder instead. |
 | `--template`, `-t` | `forms` | `forms` (all Forms controls, behaviors and assets) or `empty` (standard elements only). |
-| `--platform`, `-p` | none | `monogame`, `kni` or `raylib`. Also creates a runnable game project that references Gum through NuGet. Without it, only the Gum project is created. |
+| `--platform`, `-p` | none | `monogame`, `kni` or `raylib`. Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
 | `--no-restore` | off | With `--platform`, skip the `dotnet restore` that runs after creation. |
 
 Gum project only:

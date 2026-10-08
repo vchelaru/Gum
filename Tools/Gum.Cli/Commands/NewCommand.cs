@@ -37,9 +37,10 @@ public static class NewCommand
 
         var platformOption = new Option<string?>(
             aliases: new[] { "--platform", "-p" },
-            description: "Also create a runnable host game project for a platform, referencing Gum through NuGet, " +
-                         "with the Gum project inside it at Content/GumProject and code generation already configured. " +
-                         "<path> then names the project folder. Accepted values: 'monogame', 'kni', 'raylib'.");
+            description: "Create a full, runnable game project for a platform (not just a Gum project), referencing Gum " +
+                         "through NuGet, with the Gum project inside it at Content/GumProject and code generation already " +
+                         "configured. <path> then names the project folder. Omit this option to create only a Gum project. " +
+                         "Accepted values: 'monogame', 'kni', 'raylib'.");
 
         var noRestoreOption = new Option<bool>(
             "--no-restore",
