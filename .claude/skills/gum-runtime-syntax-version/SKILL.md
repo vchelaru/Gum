@@ -29,6 +29,8 @@ A manual `SyntaxVersion` in `.codsj` wins. Otherwise reads the consumer's `.cspr
 
 A new runtime must be added to `GumRuntimeNames` and the package list in `SyntaxVersionDetectionService`. A runtime missing from them falls back to version 0 without any error, and codegen emits legacy namespaces that do not compile.
 
+When none of the three finds a version, the fallback depends on the csproj. No Gum runtime referenced at all resolves to `SyntaxVersionDetectionService.LatestSyntaxVersion` (the stamp on GumCommon), so new projects get current namespaces. A runtime that is referenced but unreadable (package not restored, no attribute) resolves to 0, because an old build lacks the attribute.
+
 **GumCommon is not on the detection scan list** — stamping it is for assembly-metadata consistency, not for codegen detection.
 
 ## When to bump

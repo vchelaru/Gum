@@ -59,7 +59,7 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
 
         SyntaxVersionResult result = _sut.Detect(settings, projectDirectory: null);
 
-        result.Version.ShouldBe(0);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
         result.Source.ShouldBe(SyntaxVersionSource.Fallback);
     }
 
@@ -74,7 +74,7 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
 
         SyntaxVersionResult result = _sut.Detect(settings, _tempDirectory);
 
-        result.Version.ShouldBe(0);
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
         result.Source.ShouldBe(SyntaxVersionSource.Fallback);
     }
 
@@ -91,6 +91,33 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
         };
 
         SyntaxVersionResult result = _sut.Detect(settings, _tempDirectory);
+
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+    }
+
+    [Fact]
+    public void Detect_RuntimeReferencedButVersionUnreadable_StaysAtLegacyVersionZero()
+    {
+        // A referenced runtime whose version cannot be read is more likely an old build than a new
+        // one, so only a project with no Gum runtime reference at all is assumed to be the latest.
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.MonoGame"" Version=""1.2.3"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = new SyntaxVersionDetectionService(_logger, Path.Combine(_tempDirectory, "empty-cache"))
+            .Detect(settings, gameDir);
 
         result.Version.ShouldBe(0);
         result.Source.ShouldBe(SyntaxVersionSource.Fallback);

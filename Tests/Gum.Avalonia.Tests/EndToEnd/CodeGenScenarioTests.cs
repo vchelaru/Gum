@@ -55,12 +55,12 @@ public class CodeGenScenarioTests
         int shown = code.Project.Dialogs.Messages.Count;
         code.PickComboItem("Output Library", "SkiaSharp (deprecated)");
         code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count > shown, TimeSpan.FromSeconds(60), "the migration prompt");
-        code.Preview.ShouldContain("partial class CardRuntime : SkiaGum.GueDeriving.ContainerRuntime");
+        code.Preview.ShouldContain("partial class CardRuntime : Gum.GueDeriving.ContainerRuntime");
         code.ClickGenerate();
 
         generated = File.ReadAllText(code.CodeFile("Components/CardRuntime.Generated.cs"));
-        generated.ShouldContain("partial class CardRuntime : SkiaGum.GueDeriving.ContainerRuntime");
-        generated.ShouldContain("Title = new global::SkiaGum.GueDeriving.TextRuntime()");
+        generated.ShouldContain("partial class CardRuntime : Gum.GueDeriving.ContainerRuntime");
+        generated.ShouldContain("Title = new global::Gum.GueDeriving.TextRuntime()");
         generated.ShouldNotContain("GetGraphicalUiElementByName");
 
         code.AssertOracles();

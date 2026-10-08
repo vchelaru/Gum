@@ -58,6 +58,19 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     // assembly (dll) names.
     private static readonly string[] GumRuntimeNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum", "StrideGum" };
 
+    // Published NuGet package IDs of the runtimes above.
+    private static readonly string[] GumPackageNames =
+    {
+        "Gum.MonoGame",
+        "Gum.KNI",
+        "Gum.FNA",
+        "Gum.SkiaSharp",
+        "Gum.raylib",
+        "Gum.sokol",
+        "Gum.SilkNet",
+        "Gum.Stride"
+    };
+
     private readonly ICodeGenLogger _logger;
     private readonly string _nuGetCacheRoot;
 
@@ -152,6 +165,11 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         if (result != null)
         {
             return result;
+        }
+
+        if (ReferencesGumRuntime(csprojContents))
+        {
+            return CreateLegacyFallback("A Gum runtime is referenced in the .csproj but its version could not be read.");
         }
 
         return CreateFallback("No Gum PackageReference, ProjectReference or assembly Reference found in .csproj.");
@@ -254,20 +272,7 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 
     private SyntaxVersionResult? TryDetectFromNuGetPackage(string csprojContents)
     {
-        // Look for PackageReference to Gum runtime packages (published NuGet package IDs)
-        string[] gumPackageNames =
-        {
-            "Gum.MonoGame",
-            "Gum.KNI",
-            "Gum.FNA",
-            "Gum.SkiaSharp",
-            "Gum.raylib",
-            "Gum.sokol",
-            "Gum.SilkNet",
-            "Gum.Stride"
-        };
-
-        foreach (string packageName in gumPackageNames)
+        foreach (string packageName in GumPackageNames)
         {
             string? packageVersion = ExtractPackageReferenceVersion(csprojContents, packageName);
             if (packageVersion == null)
@@ -538,14 +543,35 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         return null;
     }
 
-    private SyntaxVersionResult CreateFallback(string reason)
+    // Nothing says which runtime the project uses, so it is treated as a new project on the current one.
+    private SyntaxVersionResult CreateFallback(string reason) => CreateFallback(reason, LatestSyntaxVersion);
+
+    // A Gum runtime is referenced but its version could not be read. The attribute is absent on old
+    // builds, so this stays on the legacy conventions rather than guessing newer.
+    private SyntaxVersionResult CreateLegacyFallback(string reason) => CreateFallback(reason, 0);
+
+    private SyntaxVersionResult CreateFallback(string reason, int version)
     {
-        _logger.PrintOutput($"Syntax version auto-detection: {reason} Falling back to version 0.");
+        _logger.PrintOutput($"Syntax version auto-detection: {reason} Falling back to version {version}.");
         return new SyntaxVersionResult
         {
-            Version = 0,
+            Version = version,
             Source = SyntaxVersionSource.Fallback,
-            Description = $"Syntax Version: 0 (fallback — {reason})"
+            Description = $"Syntax Version: {version} (fallback — {reason})"
         };
     }
+
+    /// <summary>
+    /// The newest syntax version this build of the tool knows, read from the stamp on GumCommon.
+    /// </summary>
+    internal static int LatestSyntaxVersion { get; } =
+        typeof(Gum.DataTypes.GumSyntaxVersionAttribute).Assembly
+            .GetCustomAttributes(typeof(Gum.DataTypes.GumSyntaxVersionAttribute), inherit: false)
+            .Cast<Gum.DataTypes.GumSyntaxVersionAttribute>()
+            .FirstOrDefault()?.Version ?? 0;
+
+    private bool ReferencesGumRuntime(string csprojContents) =>
+        GumRuntimeNames.Any(name => ExtractProjectReferencePath(csprojContents, name) != null
+            || ExtractReferenceHintPath(csprojContents, name) != null)
+        || GumPackageNames.Any(name => ExtractPackageReferenceVersion(csprojContents, name) != null);
 }
