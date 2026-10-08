@@ -17,7 +17,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     // same-named DLL over the runtime's copy in bin/ and fails at runtime with no build warning.
     private static readonly string[] ReservedProjectNames =
     {
-        "GumCommon", "MonoGameGum", "KniGum", "FnaGum", "RaylibGum", "SkiaGum", "SilkNetGum"
+        "GumCommon", "MonoGameGum", "KniGum", "FnaGum", "RaylibGum", "SkiaGum", "SilkNetGum", "StrideGum"
     };
 
     private static readonly Regex ValidProjectName = new Regex("^[A-Za-z_][A-Za-z0-9_.-]*$");

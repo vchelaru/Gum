@@ -56,7 +56,7 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 {
     // Gum runtimes that stamp a GumSyntaxVersion. These are both the project names and the
     // assembly (dll) names.
-    private static readonly string[] GumRuntimeNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum" };
+    private static readonly string[] GumRuntimeNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum", "StrideGum" };
 
     private readonly ICodeGenLogger _logger;
     private readonly string _nuGetCacheRoot;
@@ -263,7 +263,8 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             "Gum.SkiaSharp",
             "Gum.raylib",
             "Gum.sokol",
-            "Gum.SilkNet"
+            "Gum.SilkNet",
+            "Gum.Stride"
         };
 
         foreach (string packageName in gumPackageNames)

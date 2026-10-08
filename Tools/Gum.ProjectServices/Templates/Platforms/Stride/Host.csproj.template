@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- net10.0-windows7.0 selects Gum.Stride's GPU-accelerated Direct3D11 render path. -->
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <RootNamespace>{{RootNamespace}}</RootNamespace>
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Gum.Stride" Version="*" />
+    <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Content\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -28,6 +28,7 @@ public class PlatformProjectScaffolderTests : IDisposable
     [InlineData(HostPlatform.MonoGame, "Gum.MonoGame", OutputLibrary.MonoGameForms)]
     [InlineData(HostPlatform.Kni, "Gum.KNI", OutputLibrary.MonoGameForms)]
     [InlineData(HostPlatform.Raylib, "Gum.raylib", OutputLibrary.MonoGameForms)]
+    [InlineData(HostPlatform.Stride, "Gum.Stride", OutputLibrary.MonoGameForms)]
     public void Create_ShouldReferenceGumPackageAndPointCodegenAtHostProject(
         HostPlatform platform, string expectedPackage, OutputLibrary expectedLibrary)
     {

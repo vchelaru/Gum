@@ -6,13 +6,13 @@ gumcli new [<path>] [--template <name>] [--platform <name>] [--no-restore]
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
 
-Add `--platform` to also create a runnable game project for MonoGame, KNI, or raylib. Without it, only a Gum project is created.
+Add `--platform` to also create a runnable game project for MonoGame, KNI, raylib, or Stride. Without it, only a Gum project is created.
 
 ## Options
 
 - `<path>` *(optional)* — Path for the new project. Pass a `.gumj` (JSON) or `.gumx` (XML) extension to choose the format. If no extension is given, creates `<path>/<name>.gumj` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumj`. With `--platform`, the path names the game project folder instead, and defaults to `MyGumGame`.
 - `--template` / `-t` — Template to use. Default: `forms`.
-- `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `raylib`.
+- `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `raylib`, `stride`.
 - `--no-restore`: With `--platform`, skips the `dotnet restore` that otherwise runs after the project is created.
 
 ## Templates
@@ -56,7 +56,7 @@ MyGame/
     ProjectCodeSettings.codsj
 ```
 
-`Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib has no `Game1.cs` because everything is in `Program.cs`.
+`Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project targets `net10.0-windows7.0` for GPU-accelerated rendering, so it builds only on Windows.
 
 The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCodeSettings.codsj` already points at `MyGame.csproj` and uses the **Gum Forms** Output Library, so open `Content/GumProject/GumProject.gumj` in the Gum tool, add a screen, and run [`codegen`](codegen.md) to generate classes into the game project.
 

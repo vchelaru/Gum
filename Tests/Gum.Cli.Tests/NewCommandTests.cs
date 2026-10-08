@@ -213,6 +213,19 @@ public class NewCommandTests : IDisposable
     }
 
     [Fact]
+    public void New_WithStridePlatform_ShouldCreateHostProjectWithoutGameClass()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "stride", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj")).ShouldContain("Gum.Stride");
+        File.Exists(Path.Combine(projectDir, "Program.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
     public void New_WithUnknownPlatform_ShouldReturnExitCode2NamingValidValues()
     {
         string projectDir = Path.Combine(_tempDirectory, "MyGame");

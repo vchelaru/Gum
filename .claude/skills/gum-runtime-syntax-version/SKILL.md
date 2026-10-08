@@ -27,6 +27,8 @@ A manual `SyntaxVersion` in `.codsj` wins. Otherwise reads the consumer's `.cspr
 2. Else if `PackageReference` → locates the DLL in the NuGet cache (`NUGET_PACKAGES` if set, else `~/.nuget/packages`), reads the attribute via `MetadataLoadContext`. A floating `Version="*"` / `"2026.*"` resolves to the highest restored stable version in the cache, so the package must be restored before detection works.
 3. Else if a `<Reference>` has a `<HintPath>` to a runtime DLL (how Unity references Gum) → reads that DLL's attribute.
 
+A new runtime must be added to `GumRuntimeNames` and the package list in `SyntaxVersionDetectionService`. A runtime missing from them falls back to version 0 without any error, and codegen emits legacy namespaces that do not compile.
+
 **GumCommon is not on the detection scan list** — stamping it is for assembly-metadata consistency, not for codegen detection.
 
 ## When to bump

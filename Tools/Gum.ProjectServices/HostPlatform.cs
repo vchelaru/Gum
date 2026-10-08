@@ -12,5 +12,8 @@ public enum HostPlatform
     Kni,
 
     /// <summary>raylib-cs, referencing the <c>Gum.raylib</c> package.</summary>
-    Raylib
+    Raylib,
+
+    /// <summary>Stride 3D for Windows (net10.0-windows7.0), referencing the <c>Gum.Stride</c> package.</summary>
+    Stride
 }
