@@ -239,7 +239,11 @@ public class DisplayPropertiesScenarioTests
 
         grid.Editor<ListBoxDisplay>("Points").ListBox.ItemCount.ShouldBe(shownPoints + 1);
         VariableListSave saved = grid.ReadSaved(Component(tree, "Button")).DefaultState!.GetVariableListSave("Outline.Points").ShouldNotBeNull();
-        saved.ValueAsIList.Cast<System.Numerics.Vector2>().Last().ShouldBe(new System.Numerics.Vector2(7, 9));
+        // A new polygon is closed (its last point repeats the first), so the added point goes
+        // before that repeat and the polygon stays closed.
+        List<System.Numerics.Vector2> savedPoints = saved.ValueAsIList.Cast<System.Numerics.Vector2>().ToList();
+        savedPoints[savedPoints.Count - 2].ShouldBe(new System.Numerics.Vector2(7, 9));
+        savedPoints[savedPoints.Count - 1].ShouldBe(savedPoints[0]);
 
         tree.Undo();
         tree.SnapshotFiles().ShouldMatch(start, "undoing the added point should restore the files");
