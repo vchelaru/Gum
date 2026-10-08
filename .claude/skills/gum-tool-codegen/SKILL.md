@@ -75,6 +75,8 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 **Forms placeholders** -- `Gum.ProjectServices` can't reference MonoGameGum, so `FormsControlPlaceholders.cs` hand-mirrors the real Forms controls' members. Codegen reflects on it to skip or `new`-mark generated members that would hide an inherited one (CS0108/CS0114). When a template component gains an exposed variable or state category that collides with a real base member, mirror that member (and its base class) there; `FormsTemplateCodegenHidingTests` in `Gum.Cli.Tests` compares generated output to the real types and fails on a miss.
 
+**Checked-in generated output** -- Any change to generated-code output also requires regenerating the `Tests/CodeGen_*` projects (`Tests/GenerateAllCodeGenProjects.bat`: build `Gum.Cli`, run `gumcli codegen` on each) and committing the diff, or CI's "Codegen Drift Check" fails. On macOS the CLI writes CRLF; `git add` normalizes it, so judge the diff with `git diff --cached --stat`, not `git status`.
+
 **Missing dependency auto-generation** -- When generating for an element, the system checks if referenced elements lack code files and offers to generate them too. In auto-generation mode this happens silently.
 
 **ObjectFinder cache** -- Code generation enables/disables `ObjectFinder.Self` cache around generation loops for performance. Must be managed at the call site (not inside `CodeGenerator`).
