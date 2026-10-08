@@ -36,12 +36,25 @@ namespace Gum.Forms.Controls
         public string Text { get; set; } = string.Empty;
     }
 
+    public class Expander
+    {
+        public string? Header { get; set; }
+    }
+
     public class MenuItem
     {
+        // The real MenuItem declares its state category name as a constant, which the
+        // generated MenuItemCategoryState property hides on purpose.
+        public const string MenuItemCategoryState = "MenuItemCategoryState";
         public virtual string Header { get; set; } = string.Empty;
     }
 
-    public class PasswordBox
+    public abstract class TextBoxBase
+    {
+        public virtual string Placeholder { get; set; } = string.Empty;
+    }
+
+    public class PasswordBox : TextBoxBase
     {
         public string Password { get; set; } = string.Empty;
         public char PasswordChar { get; set; }
@@ -52,10 +65,9 @@ namespace Gum.Forms.Controls
         public string Text { get; set; } = string.Empty;
     }
 
-    public class TextBox
+    public class TextBox : TextBoxBase
     {
         public virtual string Text { get; set; } = string.Empty;
-        public virtual string Placeholder { get; set; } = string.Empty;
         public virtual int? MaxLettersToShow { get; set; }
         public virtual int? MaxNumberOfLines { get; set; }
     }

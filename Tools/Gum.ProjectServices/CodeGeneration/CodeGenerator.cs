@@ -1244,26 +1244,53 @@ public class CodeGenerator
 
     private bool GetIfExposedVariableIsOverride(VariableSave exposedVariable, CodeGenerationContext context)
     {
-        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && exposedVariable.ExposedAsName != null)
+        if(exposedVariable.ExposedAsName != null)
         {
-            GetGumFormsTypeFromBehaviors(context.Element, out string? formsType, out _);
-
-            if(formsType != null)
-            {
-                if(formsType.StartsWith("global::"))
-                {
-                    formsType = formsType.Substring("global::".Length);
-                }
-                var type = this.GetType().Assembly.GetType(formsType);
-                var property = type?.GetProperty(exposedVariable.ExposedAsName);
-                var setter = property?.GetSetMethod();
-                var isVirtual = setter?.IsVirtual == true && !setter.IsFinal;
-                var doTypesMatch =
-                    _typeStringResolver?.GetTypeFromString(exposedVariable.Type) == property?.PropertyType;
-                return isVirtual && doTypesMatch;
-            }
+            var type = GetFormsPlaceholderType(context.Element, context.CodeOutputProjectSettings);
+            var property = type?.GetProperty(exposedVariable.ExposedAsName);
+            var setter = property?.GetSetMethod();
+            var isVirtual = setter?.IsVirtual == true && !setter.IsFinal;
+            var doTypesMatch =
+                _typeStringResolver?.GetTypeFromString(exposedVariable.Type) == property?.PropertyType;
+            return isVirtual && doTypesMatch;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Returns the placeholder type (see FormsControlPlaceholders.cs) standing in for the Forms
+    /// control the element derives from, or null when the output library is not MonoGameForms
+    /// or no placeholder exists for the control.
+    /// </summary>
+    private Type? GetFormsPlaceholderType(ElementSave element, CodeOutputProjectSettings settings)
+    {
+        if(settings.OutputLibrary != OutputLibrary.MonoGameForms)
+        {
+            return null;
+        }
+
+        GetGumFormsTypeFromBehaviors(element, out string? formsType, out _);
+        if(formsType == null)
+        {
+            return null;
+        }
+
+        if(formsType.StartsWith("global::"))
+        {
+            formsType = formsType.Substring("global::".Length);
+        }
+        return this.GetType().Assembly.GetType(formsType);
+    }
+
+    /// <summary>
+    /// Whether the base Forms control declares a member with the given name that a generated
+    /// member of the same name would hide.
+    /// </summary>
+    private bool GetIfNameHidesFormsBaseMember(string name, ElementSave element, CodeOutputProjectSettings settings)
+    {
+        const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic |
+            BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+        return GetFormsPlaceholderType(element, settings)?.GetMember(name, flags).Length > 0;
     }
 
     /// <summary>
@@ -1273,24 +1300,10 @@ public class CodeGenerator
     /// </summary>
     private bool GetIfExposedVariableIsDefinedOnFormsBase(VariableSave exposedVariable, CodeGenerationContext context)
     {
-        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && exposedVariable.ExposedAsName != null)
+        if(exposedVariable.ExposedAsName != null)
         {
-            GetGumFormsTypeFromBehaviors(context.Element, out string? formsType, out _);
-
-            if(formsType != null)
-            {
-                if(formsType.StartsWith("global::"))
-                {
-                    formsType = formsType.Substring("global::".Length);
-                }
-                var type = this.GetType().Assembly.GetType(formsType);
-                var property = type?.GetProperty(exposedVariable.ExposedAsName);
-
-                if(property != null)
-                {
-                    return true;
-                }
-            }
+            var type = GetFormsPlaceholderType(context.Element, context.CodeOutputProjectSettings);
+            return type?.GetProperty(exposedVariable.ExposedAsName) != null;
         }
         return false;
     }
@@ -4133,7 +4146,12 @@ public class CodeGenerator
             stringBuilder.AppendLine(ToTabs(tabCount) + $"{categoryName}? {fieldName};");
 
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {categoryName}? {propertyName}");
+            // The state property deliberately replaces a same-named member on the base Forms
+            // control (MenuItem declares a MenuItemCategoryState constant), so say so explicitly.
+            string possibleNew = GetIfNameHidesFormsBaseMember(propertyName, element, codeProjectSettings)
+                ? "new "
+                : string.Empty;
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleNew}{categoryName}? {propertyName}");
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;

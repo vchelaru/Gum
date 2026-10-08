@@ -44,7 +44,7 @@ partial class MenuItem : global::Gum.Forms.Controls.MenuItem
     }
 
     MenuItemCategory? _menuItemCategoryState;
-    public MenuItemCategory? MenuItemCategoryState
+    public new MenuItemCategory? MenuItemCategoryState
     {
         get => _menuItemCategoryState;
         set
