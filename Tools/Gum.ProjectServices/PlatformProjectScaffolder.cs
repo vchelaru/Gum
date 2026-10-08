@@ -63,7 +63,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             new ProjectCreator().Create(gumProjectPath);
         }
 
-        WriteCodeGenerationSettings(gumProjectPath, csprojPath, platform);
+        WriteCodeGenerationSettings(gumProjectPath, csprojPath);
 
         return new PlatformProjectResult
         {
@@ -119,19 +119,14 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             .Replace("{{RootNamespace}}", rootNamespace);
     }
 
-    // Auto-detection can't tell the runtimes apart (it only recognizes MonoGame-family and raylib
-    // package references), so the library is set from the platform the project was created for.
-    private static void WriteCodeGenerationSettings(string gumProjectPath, string csprojPath, HostPlatform platform)
+    // Every runtime uses the same Gum Forms output (MonoGameForms), so the library does not depend on the platform.
+    private static void WriteCodeGenerationSettings(string gumProjectPath, string csprojPath)
     {
         AutoSetupResult setup = new CodeGenerationAutoSetupService().Run(gumProjectPath, csprojPath);
         CodeOutputProjectSettings settings = setup.Settings
             ?? throw new InvalidOperationException(setup.ErrorMessage);
 
-        settings.OutputLibrary = platform switch
-        {
-            HostPlatform.Raylib => OutputLibrary.Raylib,
-            _ => OutputLibrary.MonoGameForms
-        };
+        settings.OutputLibrary = OutputLibrary.MonoGameForms;
 
         string gumFolder = Path.GetDirectoryName(gumProjectPath)! + Path.DirectorySeparatorChar;
         new CodeOutputProjectSettingsManager(new NullCodeGenLogger(), new FixedProjectDirectoryProvider(gumFolder))
