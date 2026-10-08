@@ -264,7 +264,7 @@ public class ComboBoxDisplay : DataUiDisplayBase
     {
         _logic = new ComboBoxDisplayLogic();
         _label = new TextBlock { Margin = new Thickness(4, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-        _comboBox = new WheelIgnoringComboBox { MinWidth = 60, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center };
+        _comboBox = new WheelIgnoringComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center };
         _comboBox.SelectionChanged += HandleSelectionChanged;
         _comboBox.LostFocus += (_, _) =>
         {
@@ -281,6 +281,8 @@ public class ComboBoxDisplay : DataUiDisplayBase
             ColumnDefinitions = new ColumnDefinitions("100,*"),
             RowDefinitions = new RowDefinitions("Auto,Auto"),
         };
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
+        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 60);
         Grid.SetColumn(_comboBox, 1);
         Grid.SetRow(_hint, 1);
         Grid.SetColumnSpan(_hint, 2);
@@ -304,7 +306,7 @@ public class ComboBoxDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()
     {
-        _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
         _comboBox.ClearValue(TemplatedControl.BackgroundProperty);
     }
 
@@ -469,8 +471,8 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     public SliderDisplay()
     {
         _sliderLogic = new SliderDisplayLogic();
-        _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Top, TextWrapping = TextWrapping.Wrap };
-        _slider = new Slider { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
+        _label = new TextBlock { Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Top, TextWrapping = TextWrapping.Wrap };
+        _slider = new Slider { VerticalAlignment = VerticalAlignment.Center };
         // The template is ~50px tall, which strands the min/max labels well below the track. Negative
         // margins trim the layout height; a fixed Height would clip the thumb.
         _slider.Margin = new Thickness(0, -12);
@@ -497,6 +499,8 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
             ColumnDefinitions = new ColumnDefinitions("100,*,65"),
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
         };
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
+        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 40);
         Grid.SetRowSpan(_label, 2);
         Grid.SetColumn(_slider, 1);
         Grid.SetColumn(_textBox, 2);
@@ -578,7 +582,7 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     protected override void OnInstanceMemberChanged()
     {
         _textLogic.InstanceMember = InstanceMember;
-        _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
     }
 
     /// <inheritdoc/>

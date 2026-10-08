@@ -317,7 +317,7 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
     {
         _buttons = new List<ToggleButton>();
         _options = Array.Empty<ToggleButtonOption>();
-        _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+        _label = new TextBlock { Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
         _buttonPanel = new WrapPanel { Orientation = Orientation.Horizontal };
         _hint = CreateHintTextBlock();
 
@@ -327,6 +327,8 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
             RowDefinitions = new RowDefinitions("Auto,Auto"),
             Margin = new Thickness(0, 4),
         };
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
+        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 30);
         Border buttonGroup = new Border
         {
             Child = _buttonPanel,
@@ -384,7 +386,7 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()
     {
-        _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
     }
 
     /// <inheritdoc/>
@@ -737,8 +739,8 @@ public class FileSelectionDisplay : DataUiDisplayBase
     public FileSelectionDisplay()
     {
         _filePickingLogic = new FilePickingLogic();
-        _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-        _textBox = new EditTrackingTextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
+        _label = new TextBlock { Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+        _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Center };
         _textBox.EditCommitRequested += HandleEditCommitRequested;
         Button pickButton = new Button { Content = "...", MinWidth = 24, Margin = new Thickness(2, 0, 0, 0) };
         pickButton.Click += (_, _) => PickFile();
@@ -752,6 +754,8 @@ public class FileSelectionDisplay : DataUiDisplayBase
             ColumnDefinitions = new ColumnDefinitions("100,*,Auto,Auto"),
             RowDefinitions = new RowDefinitions("Auto,Auto"),
         };
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
+        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 44);
         Grid.SetColumn(_textBox, 1);
         Grid.SetColumn(pickButton, 2);
         Grid.SetColumn(_revealButton, 3);
@@ -801,7 +805,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
     protected override void OnInstanceMemberChanged()
     {
         _textLogic.InstanceMember = InstanceMember;
-        _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
     }
 
     /// <inheritdoc/>
