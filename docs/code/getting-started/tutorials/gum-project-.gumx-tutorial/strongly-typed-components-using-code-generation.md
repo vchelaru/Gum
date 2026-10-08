@@ -6,6 +6,8 @@ This tutorial series represents the old way to add a .gumx project to your MonoG
 This tutorial is still syntactically valid but it is not recommended as of the April 2025 release:
 
 [https://github.com/vchelaru/Gum/releases/tag/Release\_April\_27\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_April_27_2025)
+
+This page generates code with the **MonoGame (deprecated)** Output Library, which produces `...Runtime` classes without Forms controls. New projects use **Gum Forms (recommended)** instead, which works on every runtime. See [Gum Screens](../gum-project-forms-tutorial/gum-screens.md) in the Gum Forms tutorial.
 {% endhint %}
 
 ## Introduction
@@ -75,7 +77,7 @@ We can use strongly-typed classes to solve these problems.
 
 ## Enabling Code Generation
 
-The Gum tool supports code generation which allows us to interact with Gum components without needing to cast or use string names. We can enable code gen in Gum by checking the check boxes in the Code tab. Also, be sure to switch the Output Library to MonoGame.
+The Gum tool supports code generation which allows us to interact with Gum components without needing to cast or use string names. We can enable code gen in Gum by checking the check boxes in the Code tab. Also, be sure to switch the Output Library to **MonoGame (deprecated)**, which is the output this tutorial's code is based on.
 
 <figure><img src="../../../../.gitbook/assets/image (110).png" alt=""><figcaption><p>Enabling MonoGame gum</p></figcaption></figure>
 
