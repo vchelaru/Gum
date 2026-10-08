@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>{{RootNamespace}}</RootNamespace>
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Gum.SilkNet" Version="*" />
+    <!-- Windowing.Sdl creates the window and its OpenGL context. Input.Sdl is what window.CreateInput()
+         looks for at runtime, and without it that call throws NotSupportedException. -->
+    <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />
+    <PackageReference Include="Silk.NET.Input.Sdl" Version="2.21.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Content\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

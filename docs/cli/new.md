@@ -6,13 +6,13 @@ gumcli new [<path>] [--template <name>] [--platform <name>] [--no-restore]
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
 
-Add `--platform` to also create a runnable game project for MonoGame, KNI, raylib, or Stride. Without it, only a Gum project is created.
+Add `--platform` to also create a runnable game project for MonoGame, KNI, raylib, Stride, or Silk.NET. Without it, only a Gum project is created.
 
 ## Options
 
 - `<path>` *(optional)* — Path for the new project. Pass a `.gumj` (JSON) or `.gumx` (XML) extension to choose the format. If no extension is given, creates `<path>/<name>.gumj` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumj`. With `--platform`, the path names the game project folder instead, and defaults to `MyGumGame`.
 - `--template` / `-t` — Template to use. Default: `forms`.
-- `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `raylib`, `stride`.
+- `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `raylib`, `stride`, `silknet`.
 - `--no-restore`: With `--platform`, skips the `dotnet restore` that otherwise runs after the project is created.
 
 ## Templates
@@ -58,6 +58,8 @@ MyGame/
 
 `Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. To use the GPU path, change the target to `net10.0-windows7.0`; see [Skia Render Path](../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
 
+The Silk.NET project runs on Windows, macOS, and Linux. It creates its window with SDL and draws through SkiaSharp on desktop OpenGL 3.3, so its NuGet packages bring every native library it needs and it does not use ANGLE. It requires a graphics driver that supports OpenGL 3.3. For the window and input setup in `Program.cs`, see [Silk.NET](../code/getting-started/setup/adding-initializing-gum/silk.net.md).
+
 The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCodeSettings.codsj` already points at `MyGame.csproj` and uses the **Gum Forms** Output Library, so open `Content/GumProject/GumProject.gumj` in the Gum tool, add a screen, and run [`codegen`](codegen.md) to generate classes into the game project.
 
 `gumcli` runs `dotnet restore` after creating the files. [`codegen`](codegen.md) reads the installed Gum version from the restored package to decide which code to generate, so restore must finish before the first code generation. With `--no-restore`, run `dotnet restore` yourself first. If the restore fails (for example when offline), `gumcli` prints a warning and still exits with code 0.
@@ -77,6 +79,7 @@ gumcli new MyProject -t empty
 gumcli new MyGame --platform monogame
 gumcli new MyGame -p kni
 gumcli new MyGame -p raylib -t empty
+gumcli new MyGame -p silknet
 gumcli new MyGame -p monogame --no-restore
 ```
 

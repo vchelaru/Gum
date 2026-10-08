@@ -29,6 +29,7 @@ public class PlatformProjectScaffolderTests : IDisposable
     [InlineData(HostPlatform.Kni, "Gum.KNI", OutputLibrary.MonoGameForms)]
     [InlineData(HostPlatform.Raylib, "Gum.raylib", OutputLibrary.MonoGameForms)]
     [InlineData(HostPlatform.Stride, "Gum.Stride", OutputLibrary.MonoGameForms)]
+    [InlineData(HostPlatform.SilkNet, "Gum.SilkNet", OutputLibrary.MonoGameForms)]
     public void Create_ShouldReferenceGumPackageAndPointCodegenAtHostProject(
         HostPlatform platform, string expectedPackage, OutputLibrary expectedLibrary)
     {
@@ -70,6 +71,27 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_SilkNet_ShouldReferenceSdlWindowingAndInputButNoAngleNatives()
+    {
+        // Desktop OpenGL needs no ANGLE natives, so the project restores and runs on Windows, macOS and
+        // Linux from NuGet packages alone. Silk.NET.Input.Sdl is required or window.CreateInput() throws.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.SilkNet, includeFormsTemplate: true);
+
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldContain("<PackageReference Include=\"Silk.NET.Windowing.Sdl\"");
+        csproj.ShouldContain("<PackageReference Include=\"Silk.NET.Input.Sdl\"");
+        csproj.ShouldNotContain("ANGLE", Case.Insensitive);
+        csproj.ShouldNotContain("-windows");
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldContain("MyGame");
+        // GetProcAddress throws for the optional GL functions Skia probes for, and FramebufferResize never fires.
+        program.ShouldContain("TryGetProcAddress");
+        program.ShouldContain("window.Resize");
+    }
+
+    [Fact]
     public void Create_WithoutFormsTemplate_ShouldCreateEmptyGumProject()
     {
         string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
@@ -86,6 +108,7 @@ public class PlatformProjectScaffolderTests : IDisposable
     [InlineData("KniGum")]
     [InlineData("RaylibGum")]
     [InlineData("SkiaGum")]
+    [InlineData("SilkNetGum")]
     [InlineData("GumCommon")]
     public void Create_WhenNameCollidesWithRuntimeAssembly_ShouldFailWithoutWritingFiles(string name)
     {

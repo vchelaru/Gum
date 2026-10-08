@@ -15,5 +15,8 @@ public enum HostPlatform
     Raylib,
 
     /// <summary>Stride 3D, referencing the <c>Gum.Stride</c> package.</summary>
-    Stride
+    Stride,
+
+    /// <summary>Silk.NET on SDL (Windows, macOS and Linux), referencing the <c>Gum.SilkNet</c> package.</summary>
+    SilkNet
 }
