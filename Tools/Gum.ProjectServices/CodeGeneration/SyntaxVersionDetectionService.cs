@@ -71,6 +71,11 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         "Gum.Stride"
     };
 
+    // The subset of the runtimes above that shipped before the namespace unification. Only these can
+    // be an old build whose version is unreadable; every other runtime started on the current conventions.
+    private static readonly string[] LegacyEraRuntimeNames = { "MonoGameGum", "KniGum", "FnaGum", "SkiaGum" };
+    private static readonly string[] LegacyEraPackageNames = { "Gum.MonoGame", "Gum.KNI", "Gum.FNA", "Gum.SkiaSharp" };
+
     private readonly ICodeGenLogger _logger;
     private readonly string _nuGetCacheRoot;
 
@@ -167,12 +172,12 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             return result;
         }
 
-        if (ReferencesGumRuntime(csprojContents))
+        if (ReferencesLegacyEraRuntime(csprojContents))
         {
             return CreateLegacyFallback("A Gum runtime is referenced in the .csproj but its version could not be read.");
         }
 
-        return CreateFallback("No Gum PackageReference, ProjectReference or assembly Reference found in .csproj.");
+        return CreateFallback("No Gum runtime with a legacy version found in the .csproj.");
     }
 
     private SyntaxVersionResult? TryDetectFromProjectReference(string csprojContents, string csprojPath)
@@ -543,11 +548,12 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         return null;
     }
 
-    // Nothing says which runtime the project uses, so it is treated as a new project on the current one.
+    // No runtime that has legacy conventions is referenced (nothing at all, or a runtime that never had
+    // them such as Stride, Silk.NET or raylib), so the project gets the current conventions.
     private SyntaxVersionResult CreateFallback(string reason) => CreateFallback(reason, LatestSyntaxVersion);
 
-    // A Gum runtime is referenced but its version could not be read. The attribute is absent on old
-    // builds, so this stays on the legacy conventions rather than guessing newer.
+    // A runtime from before the unification is referenced but its version could not be read. The
+    // attribute is absent on old builds, so this stays on the legacy conventions rather than guessing newer.
     private SyntaxVersionResult CreateLegacyFallback(string reason) => CreateFallback(reason, 0);
 
     private SyntaxVersionResult CreateFallback(string reason, int version)
@@ -570,8 +576,8 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
             .Cast<Gum.DataTypes.GumSyntaxVersionAttribute>()
             .FirstOrDefault()?.Version ?? 0;
 
-    private bool ReferencesGumRuntime(string csprojContents) =>
-        GumRuntimeNames.Any(name => ExtractProjectReferencePath(csprojContents, name) != null
+    private static bool ReferencesLegacyEraRuntime(string csprojContents) =>
+        LegacyEraRuntimeNames.Any(name => ExtractProjectReferencePath(csprojContents, name) != null
             || ExtractReferenceHintPath(csprojContents, name) != null)
-        || GumPackageNames.Any(name => ExtractPackageReferenceVersion(csprojContents, name) != null);
+        || LegacyEraPackageNames.Any(name => ExtractPackageReferenceVersion(csprojContents, name) != null);
 }

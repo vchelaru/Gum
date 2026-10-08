@@ -123,6 +123,36 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
         result.Source.ShouldBe(SyntaxVersionSource.Fallback);
     }
 
+    [Theory]
+    [InlineData("Gum.Stride")]
+    [InlineData("Gum.SilkNet")]
+    [InlineData("Gum.raylib")]
+    [InlineData("Gum.SomeFutureRuntime")]
+    public void Detect_RuntimeWithoutLegacyHistoryButUnreadableVersion_ReturnsLatest(string packageId)
+    {
+        // These runtimes never shipped the legacy namespaces, so an unreadable version (package not
+        // restored yet) must not select them.
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        File.WriteAllText(Path.Combine(gameDir, "MyGame.csproj"),
+$@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""{packageId}"" Version=""*"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = new SyntaxVersionDetectionService(_logger, Path.Combine(_tempDirectory, "empty-cache"))
+            .Detect(settings, gameDir);
+
+        result.Version.ShouldBe(GumCommonSyntaxVersion);
+    }
+
     [Fact]
     public void Detect_ProjectReference_ReadsVersionFromAssemblyAttributes()
     {

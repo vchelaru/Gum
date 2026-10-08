@@ -12,8 +12,8 @@ The Gum tool auto-detects the syntax version from your project:
 
 - **NuGet users:** The tool finds your Gum PackageReference in the `.csproj`, locates the DLL in the NuGet cache, and reads the attribute.
 - **Direct project reference (source linking):** The tool follows the ProjectReference path and reads the version from `AssemblyAttributes.cs`.
-- **No Gum reference found:** If the `.csproj` references no Gum runtime at all, the tool assumes the newest syntax version, so a new project gets current namespaces.
-- **Version not readable:** If a Gum runtime is referenced but its version cannot be read (for example, the NuGet package has not been restored yet), the tool uses version 0 and generates code with the legacy namespaces. Restore the package and generate again.
+- **Newer runtimes:** If the `.csproj` references no MonoGame, KNI, FNA, or SkiaSharp runtime, the tool assumes the newest syntax version. This covers Stride, Silk.NET, raylib, and any new runtime, which never used the legacy namespaces.
+- **Version not readable:** If a MonoGame, KNI, FNA, or SkiaSharp runtime is referenced but its version cannot be read (for example, the NuGet package has not been restored yet), the tool uses version 0 and generates code with the legacy namespaces. Restore the package and generate again.
 - **Manual override:** If auto-detection does not work for your setup, you can set the `SyntaxVersion` field in your `ProjectCodeSettings.codsj` file to an explicit number instead of `"*"` (auto-detect).
 
 The detected version is displayed in the Code tab under "Project-Wide Code Generation."
