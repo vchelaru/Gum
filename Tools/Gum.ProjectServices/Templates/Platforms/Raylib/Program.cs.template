@@ -1,0 +1,37 @@
+using System;
+using Gum;
+using Gum.Forms.Controls;
+using Gum.Wireframe;
+using Raylib_cs;
+
+const int screenWidth = 800;
+const int screenHeight = 450;
+
+Raylib.InitWindow(screenWidth, screenHeight, "{{ProjectName}}");
+Raylib.SetTargetFPS(60);
+
+// This tells Gum to use the entire screen
+GraphicalUiElement.CanvasWidth = screenWidth;
+GraphicalUiElement.CanvasHeight = screenHeight;
+
+GumService gumUI = GumService.Default;
+
+// Create screens and components in the Gum tool, generate code, then add them
+// here with: new MyScreen().AddToRoot();
+gumUI.Initialize("Content/GumProject/GumProject.gumj");
+
+Button button = new Button();
+button.AddToRoot();
+button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+
+while (!Raylib.WindowShouldClose())
+{
+    gumUI.Update(Raylib.GetTime());
+
+    Raylib.BeginDrawing();
+    Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
+    gumUI.Draw();
+    Raylib.EndDrawing();
+}
+
+Raylib.CloseWindow();

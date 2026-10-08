@@ -1,0 +1,46 @@
+using System;
+using Gum;
+using Gum.Forms.Controls;
+using Microsoft.Xna.Framework;
+
+namespace {{RootNamespace}};
+
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
+
+    GumService GumUI => GumService.Default;
+
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
+        // Relative to the Content folder. Create screens and components in the Gum tool,
+        // generate code, then add them here with: new MyScreen().AddToRoot();
+        GumUI.Initialize(this, "GumProject/GumProject.gumj");
+
+        Button button = new Button();
+        button.AddToRoot();
+        button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
+        base.Draw(gameTime);
+    }
+}
