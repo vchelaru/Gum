@@ -26,7 +26,10 @@ options.PreferredStencilBufferBits = 8;
 IWindow window = Window.Create(options);
 window.Initialize();
 
-using GRGlInterface glInterface = GRGlInterface.Create(name => window.GLContext!.GetProcAddress(name));
+// Skia asks for optional OpenGL functions that a driver may not have, and GetProcAddress throws for those.
+// TryGetProcAddress returns false instead, which Skia treats as "not supported".
+using GRGlInterface glInterface = GRGlInterface.Create(
+    name => window.GLContext!.TryGetProcAddress(name, out nint address) ? address : 0);
 using GRContext grContext = GRContext.CreateGl(glInterface);
 
 GRBackendRenderTarget? renderTarget = null;
@@ -54,8 +57,9 @@ Button button = new Button();
 button.AddToRoot();
 button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
 
-Vector2D<int>? pendingResize = null;
-window.FramebufferResize += size => pendingResize = size;
+// The resize is applied once per frame instead of inside the event, where the GL context may not be current.
+bool wasResized = false;
+window.Resize += _ => wasResized = true;
 
 Stopwatch clock = Stopwatch.StartNew();
 
@@ -63,12 +67,13 @@ while (!window.IsClosing)
 {
     window.DoEvents();
 
-    if (pendingResize != null)
+    if (wasResized)
     {
-        CreateSurface(pendingResize.Value);
+        wasResized = false;
+        Vector2D<int> size = window.FramebufferSize;
+        CreateSurface(size);
         gumUI.SystemManagers.Canvas = surface!.Canvas;
-        gumUI.HandleResize(pendingResize.Value.X, pendingResize.Value.Y);
-        pendingResize = null;
+        gumUI.HandleResize(size.X, size.Y);
     }
 
     gumUI.Update(clock.Elapsed.TotalSeconds);

@@ -84,7 +84,11 @@ public class PlatformProjectScaffolderTests : IDisposable
         csproj.ShouldContain("<PackageReference Include=\"Silk.NET.Input.Sdl\"");
         csproj.ShouldNotContain("ANGLE", Case.Insensitive);
         csproj.ShouldNotContain("-windows");
-        File.ReadAllText(Path.Combine(projectDirectory, "Program.cs")).ShouldContain("MyGame");
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldContain("MyGame");
+        // GetProcAddress throws for the optional GL functions Skia probes for, and FramebufferResize never fires.
+        program.ShouldContain("TryGetProcAddress");
+        program.ShouldContain("window.Resize");
     }
 
     [Fact]
