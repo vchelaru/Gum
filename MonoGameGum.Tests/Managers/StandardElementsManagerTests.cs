@@ -135,6 +135,29 @@ public class StandardElementsManagerTests : BaseTestClass
             .ShouldNotContain(v => v.Name == "CustomRadiusTopLeft");
     }
 
+    [Theory]
+    [InlineData("Circle")]
+    [InlineData("ColoredRectangle")]
+    [InlineData("Container")]
+    [InlineData("NineSlice")]
+    [InlineData("Polygon")]
+    [InlineData("Rectangle")]
+    [InlineData("Sprite")]
+    [InlineData("Text")]
+    public void DefaultStates_VisualStandards_ShouldIncludeEventVariables(string standardName)
+    {
+        // Polygon was missing HasEvents/ExposeChildrenEvents, so the Variables tab never
+        // showed "Has Events" for it. Every visual standard (all but Component and Screen,
+        // which have no renderable of their own) must offer them.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        StateSave state = self.DefaultStates[standardName];
+
+        state.Variables.ShouldContain(v => v.Name == "HasEvents" && !v.IsHiddenInPropertyGrid);
+        state.Variables.ShouldContain(v => v.Name == "ExposeChildrenEvents");
+    }
+
     [Fact]
     public void DefaultStates_ShouldStillIncludeColoredRectangle_ForLegacyLoad()
     {

@@ -546,6 +546,8 @@ public class StandardElementsManager
 
             stateSave.VariableLists.Add(pointsVariable);
 
+            AddEventVariables(stateSave);
+
             AddStateVariable(stateSave);
 
             AddVariableReferenceList(stateSave);
