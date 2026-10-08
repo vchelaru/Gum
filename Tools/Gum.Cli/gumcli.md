@@ -4,21 +4,53 @@ Command-line tool for Gum UI projects. Creates projects, checks for errors, and 
 
 ## Commands
 
-### `gumcli new <path> [--template <name>] [--platform <name>] [--no-restore]`
+### `gumcli new [path] [options]`
 
-Creates a new Gum project with standard elements and folder structure.
+Creates a new Gum project. Everything is optional: with no arguments it creates a Forms-template project in a `GumProject` folder.
+
+| Argument / option | Default | Meaning |
+|---|---|---|
+| `path` | `GumProject` | Where to create the project. A name creates `<name>/<name>.gumj`; a path ending in `.gumj` or `.gumx` is used as is. With `--platform` it names the project folder instead. |
+| `--template`, `-t` | `forms` | `forms` (all Forms controls, behaviors and assets) or `empty` (standard elements only). |
+| `--platform`, `-p` | none | `monogame`, `kni` or `raylib`. Also creates a runnable game project that references Gum through NuGet. Without it, only the Gum project is created. |
+| `--no-restore` | off | With `--platform`, skip the `dotnet restore` that runs after creation. |
+
+Gum project only:
 
 ```
-gumcli new MyProject
-gumcli new path/to/MyProject.gumx
-gumcli new MyProject --template forms
-gumcli new MyProject -t empty
-gumcli new MyGame --platform monogame
+gumcli new                          # ./GumProject/GumProject.gumj, Forms template
+gumcli new MyProject                # ./MyProject/MyProject.gumj
+gumcli new path/to/MyProject.gumx   # XML format at exactly that path
+gumcli new MyProject -t empty       # standard elements only
 ```
 
-- If `<path>` has no `.gumx` extension, creates `<path>/<name>.gumx`
-- `--template` / `-t` selects the project template (default: `forms`)
-- `--platform` / `-p` (`monogame`, `kni`, `raylib`) also creates a runnable host game project that references Gum through NuGet. `<path>` then names the project folder: `<path>/<name>.csproj`, `Program.cs` (and `Game1.cs` for MonoGame/KNI), and the Gum project at `<path>/Content/GumProject/GumProject.gumj` with `ProjectCodeSettings.codsj` already pointing at the host project. Runs `dotnet restore` afterwards so the first `gumcli codegen` detects the installed Gum version; `--no-restore` skips it. FNA isn't offered because it isn't on NuGet.
+Game project and Gum project together:
+
+```
+gumcli new MyGame --platform monogame     # MonoGame DesktopGL
+gumcli new MyGame -p kni                  # KNI DesktopGL
+gumcli new MyGame -p raylib               # raylib-cs
+gumcli new MyGame -p monogame -t empty    # no Forms controls in the Gum project
+gumcli new MyGame -p monogame --no-restore
+```
+
+`--platform monogame` creates:
+
+```
+MyGame/
+  MyGame.csproj                  Gum.MonoGame via NuGet
+  Program.cs
+  Game1.cs                       initializes Gum, loads the project, adds a test button
+  Content/GumProject/
+    GumProject.gumj
+    ProjectCodeSettings.codsj    already points at MyGame.csproj
+```
+
+KNI is the same. raylib has no `Game1.cs`; everything is in `Program.cs`.
+
+Then run it with `dotnet run --project MyGame/MyGame.csproj`. Add screens in the Gum tool by opening `MyGame/Content/GumProject/GumProject.gumj`, and generate code with `gumcli codegen`.
+
+`dotnet restore` runs automatically so the first `gumcli codegen` can detect which Gum version the project uses. With `--no-restore`, run `dotnet restore` yourself before the first codegen. A restore failure only prints a warning. FNA isn't offered because it isn't on NuGet.
 
 #### Template: `forms` (default)
 
