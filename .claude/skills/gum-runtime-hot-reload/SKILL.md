@@ -68,7 +68,7 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
      - Otherwise call `instance.ToGraphicalUiElement(systemManagers)` and attach via `Parent = parent` + `ElementGueContainingThis = parent`.
 3. `SetVariablesRecursively(newEs, newEs.DefaultState)` — re-applies the new default-state values. Qualified-name variables (`MyInstance.X`, `MyInstance.Parent`, etc.) flow into the children by `Name`, which also handles reparenting and animates new instances into position.
    - Then `ReorderDesignTimeChildren` reorders, per container (the element, or any instance an instance is parented to), only the slots held by this element's own instances (matched by `InstanceSave` reference against `newEs.Instances`), so `newEs.Instances` order wins. It runs after variables so `Parent` has settled. A move inside an ItemsControl `InnerPanel` relies on the control syncing its collections (see `gum-forms-itemscontrol`).
-4. Recurse into runtime-added children only. Design-time children are skipped — their variables were already set via the parent's qualified-name walk.
+4. Recurse into runtime-added children (no `InstanceSave` tag). Design-time instances are recursed into *before* step 3, at any depth, so an edit to a component's own default state or instances reaches every instance of it, and this element's qualified-name overrides then win over the component's defaults. Standard-element instances are not recursed into. A design-time child is only diffed against the element that owns its `InstanceSave` (`ParentContainer.Name`): a screen instance parented under a component instance sits in that visual's `Children` but belongs to the screen.
 
 ## Non-Obvious Behaviors / Gotchas
 
