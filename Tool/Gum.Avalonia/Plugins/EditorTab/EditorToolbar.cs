@@ -131,18 +131,20 @@ internal sealed class EditorToolbar : DockPanel
 
         PinPreviewButton = new ToggleButton
         {
-            Content = "Pin",
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Pin, 14),
             Margin = new Thickness(0, 0, 4, 0),
             Padding = new Thickness(6, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
+            [!IsEnabledProperty] = new Binding(nameof(EditorViewModel.IsPreviewRunning)),
             [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.IsPreviewPinned)) { Mode = BindingMode.TwoWay },
-            [ToolTip.TipProperty] = "Keep the preview on its current element instead of following the selection",
+            [ToolTip.TipProperty] = "Pin the preview to its current element so it stops following the selection",
         };
         SetDock(PinPreviewButton, global::Avalonia.Controls.Dock.Right);
 
         Children.Add(PreviewButton);
         Children.Add(PinPreviewButton);
+        WatchForPreviewClosing();
         // The controls scroll horizontally in the space beside the Preview button rather than
         // drawing over it when the window is narrow (#5695).
         Children.Add(new ScrollViewer
@@ -151,6 +153,15 @@ internal sealed class EditorToolbar : DockPanel
             VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
             Content = panel,
         });
+    }
+
+    // The tool isn't told when the preview window closes, so look while the toolbar is showing.
+    private void WatchForPreviewClosing()
+    {
+        DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        timer.Tick += (_, _) => (DataContext as EditorViewModel)?.RefreshPreviewRunning();
+        AttachedToVisualTree += (_, _) => timer.Start();
+        DetachedFromVisualTree += (_, _) => timer.Stop();
     }
 
     /// <summary>The "Preview in runtime" button at the right end.</summary>

@@ -42,6 +42,9 @@ public interface IPreviewLauncher
     /// </summary>
     ElementSave? PinnedElement { get; }
 
+    /// <summary>Whether a preview process is currently running.</summary>
+    bool IsRunning { get; }
+
     /// <summary>Raised when the preview becomes pinned or unpinned, including when it unpins itself.</summary>
     event Action? PinnedChanged;
 

@@ -136,4 +136,38 @@ public class EditorViewModelTests
         viewModel.IsPreviewPinned.ShouldBeFalse();
         launcher.Verify(l => l.Unpin(), Times.Never);
     }
+
+    [Fact]
+    public void RefreshPreviewRunning_WhenThePreviewHasClosed_ClearsRunningAndUnchecksPin()
+    {
+        Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();
+        launcher.Setup(l => l.Pin()).Returns(true);
+        launcher.SetupGet(l => l.IsRunning).Returns(true);
+        launcher.SetupGet(l => l.PinnedElement).Returns(new ScreenSave());
+        (EditorViewModel viewModel, _) = CreateSut(previewLauncher: launcher);
+        viewModel.RefreshPreviewRunning();
+        viewModel.IsPreviewPinned = true;
+        viewModel.IsPreviewRunning.ShouldBeTrue();
+
+        launcher.SetupGet(l => l.IsRunning).Returns(false);
+        launcher.SetupGet(l => l.PinnedElement).Returns((ElementSave?)null);
+        viewModel.RefreshPreviewRunning();
+
+        viewModel.IsPreviewRunning.ShouldBeFalse();
+        viewModel.IsPreviewPinned.ShouldBeFalse();
+        launcher.Verify(l => l.Unpin(), Times.Never);
+    }
+
+    [Fact]
+    public void Preview_AfterLaunching_MarksThePreviewRunning()
+    {
+        Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();
+        (EditorViewModel viewModel, _) = CreateSut(previewLauncher: launcher);
+        viewModel.UpdateHasSelectedElement(new ScreenSave());
+        launcher.SetupGet(l => l.IsRunning).Returns(true);
+
+        viewModel.Preview();
+
+        viewModel.IsPreviewRunning.ShouldBeTrue();
+    }
 }

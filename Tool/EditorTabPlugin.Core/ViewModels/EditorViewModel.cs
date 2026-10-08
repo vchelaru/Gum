@@ -406,7 +406,28 @@ public partial class EditorViewModel : ViewModel, IZoomController
     }
 
     [RelayCommand(CanExecute = nameof(CanPreview))]
-    public void Preview() => _previewLauncher.Launch();
+    public void Preview()
+    {
+        _previewLauncher.Launch();
+        RefreshPreviewRunning();
+    }
+
+    /// <summary>
+    /// Whether a preview is running, which is when it can be pinned. Call <see cref="RefreshPreviewRunning"/>
+    /// to update it, since the tool is not told when the preview window closes.
+    /// </summary>
+    public bool IsPreviewRunning
+    {
+        get => Get<bool>();
+        private set => Set(value);
+    }
+
+    /// <summary>Re-reads whether the preview is running, and drops the pin when it has closed.</summary>
+    public void RefreshPreviewRunning()
+    {
+        IsPreviewRunning = _previewLauncher.IsRunning;
+        SyncPreviewPinned();
+    }
 
     internal void HandleProjectLoad(GumProjectSave save)
     {

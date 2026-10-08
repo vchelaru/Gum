@@ -49,7 +49,8 @@ public class PreviewLauncher : IPreviewLauncher
     /// <summary>Finds and starts the preview executable; a test swaps it for a stand-in.</summary>
     internal IPreviewProcessStarter ProcessStarter { get; set; }
 
-    private bool IsRunning => _process is { HasExited: false };
+    /// <inheritdoc/>
+    public bool IsRunning => _process is { HasExited: false };
 
     /// <inheritdoc/>
     public event Action? PinnedChanged;

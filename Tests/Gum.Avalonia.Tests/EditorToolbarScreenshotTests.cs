@@ -37,6 +37,7 @@ public class EditorToolbarScreenshotTests
     {
         Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();
         launcher.Setup(l => l.Pin()).Returns(true);
+        launcher.SetupGet(l => l.IsRunning).Returns(true);
         launcher.SetupGet(l => l.PinnedElement).Returns(new ScreenSave());
         EditorViewModel viewModel = new EditorViewModel(
             Mock.Of<IPluginManager>(),
@@ -45,6 +46,7 @@ public class EditorToolbarScreenshotTests
             Mock.Of<IGridSnapWarningService>(),
             Mock.Of<IProjectManager>(),
             launcher.Object);
+        viewModel.RefreshPreviewRunning();
         viewModel.IsPreviewPinned = true;
         DockPanel content = new DockPanel { DataContext = viewModel, Children = { new EditorToolbar() } };
 
