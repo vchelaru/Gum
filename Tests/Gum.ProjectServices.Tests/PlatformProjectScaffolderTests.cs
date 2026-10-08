@@ -146,6 +146,76 @@ public class PlatformProjectScaffolderTests : IDisposable
         Directory.Exists(projectDirectory).ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, "MonoGameGum/MonoGameGum.csproj", "Gum.MonoGame")]
+    [InlineData(HostPlatform.Kni, "MonoGameGum/KniGum/KniGum.csproj", "Gum.KNI")]
+    [InlineData(HostPlatform.Raylib, "Runtimes/RaylibGum/RaylibGum.csproj", "Gum.raylib")]
+    [InlineData(HostPlatform.Stride, "Runtimes/StrideGum/StrideGum.csproj", "Gum.Stride")]
+    [InlineData(HostPlatform.SilkNet, "Runtimes/SilkNetGum/SilkNetGum.csproj", "Gum.SilkNet")]
+    public void Create_WithGumSource_ShouldReferenceRuntimeProjectInsteadOfPackage(
+        HostPlatform platform, string runtimeCsproj, string packageName)
+    {
+        string gumSource = CreateFakeGumSource(runtimeCsproj);
+        string projectDirectory = Path.Combine(_tempDirectory, "work", "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: true, gumSource);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldNotContain($"<PackageReference Include=\"{packageName}\"");
+        csproj.ShouldNotContain("{{");
+
+        string expectedInclude = Path.GetRelativePath(projectDirectory, Path.Combine(gumSource, runtimeCsproj))
+            .Replace('/', '\\');
+        csproj.ShouldContain($"<ProjectReference Include=\"{expectedInclude}\" />");
+    }
+
+    [Fact]
+    public void Create_WithGumSource_ShouldLetCodegenDetectSyntaxVersionFromTheProjectReference()
+    {
+        string gumSource = CreateFakeGumSource("MonoGameGum/MonoGameGum.csproj");
+        File.WriteAllText(
+            Path.Combine(gumSource, "MonoGameGum", "AssemblyAttributes.cs"),
+            "[assembly: GumSyntaxVersion(Version = 7)]");
+        string projectDirectory = Path.Combine(_tempDirectory, "work", "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false, gumSource);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string gumFolder = Path.Combine(projectDirectory, "Content", "GumProject");
+        CodeOutputProjectSettings? settings = new CodeOutputProjectSettingsManager(
+            new NullCodeGenLogger(), new FixedProjectDirectoryProvider(gumFolder + Path.DirectorySeparatorChar))
+            .TryLoadSettingsForProject();
+        settings.ShouldNotBeNull();
+        SyntaxVersionResult version = new SyntaxVersionDetectionService(new NullCodeGenLogger())
+            .Detect(settings, gumFolder + Path.DirectorySeparatorChar);
+        version.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+        version.Version.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Create_WithGumSourceMissingTheRuntimeProject_ShouldFailWithoutWritingFiles()
+    {
+        string gumSource = Path.Combine(_tempDirectory, "NotGum");
+        Directory.CreateDirectory(gumSource);
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.Raylib, includeFormsTemplate: true, gumSource);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldContain("RaylibGum.csproj");
+        Directory.Exists(projectDirectory).ShouldBeFalse();
+    }
+
+    private string CreateFakeGumSource(string runtimeCsproj)
+    {
+        string gumSource = Path.Combine(_tempDirectory, "GumSource");
+        string csprojPath = Path.Combine(gumSource, runtimeCsproj);
+        Directory.CreateDirectory(Path.GetDirectoryName(csprojPath)!);
+        File.WriteAllText(csprojPath, "<Project />");
+        return gumSource;
+    }
+
     private class NullCodeGenLogger : ICodeGenLogger
     {
         public void PrintOutput(string message) { }

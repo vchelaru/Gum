@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gum.Stride" Version="*" />
+    {{GumReference}}
     <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
   </ItemGroup>
 

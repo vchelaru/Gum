@@ -20,7 +20,7 @@
     <PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" />
     <PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" />
     <PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="4.2.9001.1" />
-    <PackageReference Include="Gum.KNI" Version="*" />
+    {{GumReference}}
   </ItemGroup>
 
   <ItemGroup>

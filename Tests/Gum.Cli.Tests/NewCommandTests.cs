@@ -289,6 +289,32 @@ public class NewCommandTests : IDisposable
         result.StandardError.ShouldContain("already exists");
     }
 
+    [Fact]
+    public void New_WithPlatformAndSourceLinked_ShouldReferenceRuntimeProjectInsteadOfPackage()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("<ProjectReference Include=");
+        csproj.ShouldContain("MonoGameGum.csproj");
+        csproj.ShouldNotContain("Gum.MonoGame\"");
+    }
+
+    [Fact]
+    public void New_WithSourceLinkedButNoPlatform_ShouldReturnExitCode2()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--source-linked");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--platform");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

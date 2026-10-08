@@ -48,12 +48,18 @@ public static class NewCommand
             "Code generation detects which Gum version the project uses from the restored package, so run " +
             "'dotnet restore' yourself before 'gumcli codegen' or the Gum tool's first code generation.");
 
+        var sourceLinkedOption = new Option<bool>(
+            "--source-linked",
+            "With --platform, reference the runtime project of the Gum checkout this gumcli was built from " +
+            "(or that the current folder is in) instead of the NuGet package, for testing local Gum changes.");
+
         var command = new Command("new", "Create a new Gum project.")
         {
             pathArgument,
             templateOption,
             platformOption,
-            noRestoreOption
+            noRestoreOption,
+            sourceLinkedOption
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -62,7 +68,8 @@ public static class NewCommand
             string template = context.ParseResult.GetValueForOption(templateOption) ?? "forms";
             string? platform = context.ParseResult.GetValueForOption(platformOption);
             bool noRestore = context.ParseResult.GetValueForOption(noRestoreOption);
-            context.ExitCode = Execute(path, template, platform, noRestore);
+            bool sourceLinked = context.ParseResult.GetValueForOption(sourceLinkedOption);
+            context.ExitCode = Execute(path, template, platform, noRestore, sourceLinked);
         });
 
         return command;
@@ -71,8 +78,14 @@ public static class NewCommand
     private const string DefaultProjectName = "GumProject";
     private const string DefaultPlatformProjectName = "MyGumGame";
 
-    private static int Execute(string? path, string template, string? platform, bool noRestore)
+    private static int Execute(string? path, string template, string? platform, bool noRestore, bool sourceLinked)
     {
+        if (sourceLinked && platform == null)
+        {
+            Console.Error.WriteLine("--source-linked needs --platform: it links a platform's Gum runtime project.");
+            return 2;
+        }
+
         if (!string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(template, "empty", StringComparison.OrdinalIgnoreCase))
         {
@@ -82,7 +95,7 @@ public static class NewCommand
 
         if (platform != null)
         {
-            return ExecuteWithPlatform(path, template, platform, noRestore);
+            return ExecuteWithPlatform(path, template, platform, noRestore, sourceLinked);
         }
 
         string fullPath;
@@ -129,7 +142,8 @@ public static class NewCommand
         return 0;
     }
 
-    private static int ExecuteWithPlatform(string? path, string template, string platform, bool noRestore)
+    private static int ExecuteWithPlatform(
+        string? path, string template, string platform, bool noRestore, bool sourceLinked)
     {
         HostPlatform hostPlatform;
         switch (platform.ToLowerInvariant())
@@ -164,13 +178,27 @@ public static class NewCommand
             return 2;
         }
 
+        string? gumSourceDirectory = null;
+        if (sourceLinked)
+        {
+            gumSourceDirectory = GumSourceLocator.Find(AppContext.BaseDirectory)
+                ?? GumSourceLocator.Find(Directory.GetCurrentDirectory());
+            if (gumSourceDirectory == null)
+            {
+                Console.Error.WriteLine(
+                    "--source-linked needs a Gum checkout: run a gumcli built from one, or run this from inside one.");
+                return 2;
+            }
+        }
+
         string projectDirectory = Path.GetFullPath(string.IsNullOrEmpty(path) ? DefaultPlatformProjectName : path);
 
         IPlatformProjectScaffolder scaffolder = new PlatformProjectScaffolder();
         PlatformProjectResult result = scaffolder.Create(
             projectDirectory,
             hostPlatform,
-            includeFormsTemplate: string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase));
+            includeFormsTemplate: string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase),
+            gumSourceDirectory);
 
         if (!result.Success)
         {
