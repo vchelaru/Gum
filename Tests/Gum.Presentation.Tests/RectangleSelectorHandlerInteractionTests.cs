@@ -50,7 +50,8 @@ public class RectangleSelectorHandlerInteractionTests
             _camera,
             _mockCursor.Object,
             _mockSelectionRectangleVisual.Object,
-            new CanvasDisplayScale());
+            new CanvasDisplayScale(),
+            Mock.Of<IPreciseHitTester>());
     }
 
     private void SetShiftPressed(bool pressed)

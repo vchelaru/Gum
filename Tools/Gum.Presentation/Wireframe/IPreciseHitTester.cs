@@ -11,4 +11,11 @@ namespace Gum.Wireframe;
 public interface IPreciseHitTester
 {
     bool HasCursorOver(GraphicalUiElement element, float x, float y);
+
+    /// <summary>
+    /// Returns whether the element's shape overlaps the world-space rectangle, used by marquee
+    /// selection. A polygon is tested against its outline and filled area; other elements against
+    /// their bounds.
+    /// </summary>
+    bool IntersectsRectangle(GraphicalUiElement element, float left, float top, float right, float bottom);
 }

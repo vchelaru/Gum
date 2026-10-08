@@ -21,6 +21,7 @@ public class RectangleSelectorTests
     private readonly Mock<IGuiCommands> _mockGuiCommands;
     private readonly Mock<ISelectionRectangleVisual> _mockSelectionRectangleVisual;
     private readonly Mock<IGumCursorState> _mockCursor;
+    private readonly Mock<IPreciseHitTester> _mockPreciseHitTester;
     private readonly Camera _camera;
     private readonly CanvasDisplayScale _displayScale;
     private readonly RectangleSelector _rectangleSelector;
@@ -34,6 +35,7 @@ public class RectangleSelectorTests
         _mockGuiCommands = new Mock<IGuiCommands>();
         _mockSelectionRectangleVisual = new Mock<ISelectionRectangleVisual>();
         _mockCursor = new Mock<IGumCursorState>();
+        _mockPreciseHitTester = new Mock<IPreciseHitTester>();
         _camera = new Camera { Zoom = 1f };
         _displayScale = new CanvasDisplayScale();
 
@@ -49,7 +51,8 @@ public class RectangleSelectorTests
             _camera,
             _mockCursor.Object,
             _mockSelectionRectangleVisual.Object,
-            _displayScale);
+            _displayScale,
+            _mockPreciseHitTester.Object);
     }
 
     private void SetShiftPressed(bool pressed)
@@ -155,6 +158,34 @@ public class RectangleSelectorTests
     #endregion
 
     #region HandleRelease Tests
+
+    [Fact]
+    public void HandleRelease_ShouldSelectOnlyElementsTheHitTesterSaysOverlap()
+    {
+        GraphicalUiElement overlapping = new GraphicalUiElement();
+        GraphicalUiElement notOverlapping = new GraphicalUiElement();
+        _mockWireframeManager.Setup(x => x.GetAllVisibleElements())
+            .Returns(new[] { overlapping, notOverlapping });
+        _mockPreciseHitTester
+            .Setup(x => x.IntersectsRectangle(overlapping, 0f, 0f, 20f, 20f))
+            .Returns(true);
+        _mockPreciseHitTester
+            .Setup(x => x.IntersectsRectangle(notOverlapping, It.IsAny<float>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<float>()))
+            .Returns(false);
+        System.Collections.Generic.List<GraphicalUiElement> selected = new();
+        _mockSelectionManager
+            .Setup(x => x.Select(It.IsAny<System.Collections.Generic.IEnumerable<GraphicalUiElement>>()))
+            .Callback<System.Collections.Generic.IEnumerable<GraphicalUiElement>>(elements => selected.AddRange(elements));
+        _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
+        SetCursorPosition(0f, 0f);
+        _rectangleSelector.HandlePush(0f, 0f);
+        SetCursorPosition(20f, 20f);
+        _rectangleSelector.HandleDrag();
+
+        _rectangleSelector.HandleRelease();
+
+        selected.ShouldBe(new[] { overlapping });
+    }
 
     [Fact]
     public void HandleRelease_ShouldDoNothing_WhenNeverActivated()

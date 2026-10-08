@@ -197,6 +197,16 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso,
     }
 
     /// <summary>
+    /// Returns whether the polygon's outline or filled area overlaps the world-space rectangle.
+    /// </summary>
+    public bool IntersectsRectangle(float left, float top, float right, float bottom)
+    {
+        mLinePrimitive.Position.X = this.GetAbsoluteLeft();
+        mLinePrimitive.Position.Y = this.GetAbsoluteTop();
+        return mLinePrimitive.IntersectsRectangle(left, top, right, bottom, this.GetAbsoluteRotationMatrix());
+    }
+
+    /// <summary>
     /// Returns the X,Y of the point at the argument index in object space (relative to the object's position)
     /// </summary>
     /// <param name="index">The 0-based index.</param>

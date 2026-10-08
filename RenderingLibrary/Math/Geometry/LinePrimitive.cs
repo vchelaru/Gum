@@ -197,6 +197,73 @@ namespace RenderingLibrary.Math.Geometry
             return b;
         }
 
+        internal bool IntersectsRectangle(float left, float top, float right, float bottom, System.Numerics.Matrix4x4 rotationMatrix)
+        {
+            var rotatedRight = rotationMatrix.Right().ToVector2();
+            var rotatedUp = rotationMatrix.Up().ToVector2();
+
+            for (int i = 0, j = mVectors.Count - 1; i < mVectors.Count; j = i++)
+            {
+                var atI = mVectors[i].X * rotatedRight + mVectors[i].Y * rotatedUp + Position;
+                var atJ = mVectors[j].X * rotatedRight + mVectors[j].Y * rotatedUp + Position;
+
+                if (SegmentIntersectsRectangle(atI, atJ, left, top, right, bottom))
+                {
+                    return true;
+                }
+            }
+
+            // No edge touches the rectangle, so it is either entirely inside or entirely outside.
+            return IsPointInside(left, top, rotationMatrix);
+        }
+
+        // Liang-Barsky clip of the segment against the rectangle.
+        private static bool SegmentIntersectsRectangle(Vector2 start, Vector2 end, float left, float top, float right, float bottom)
+        {
+            float tEnter = 0;
+            float tExit = 1;
+            float deltaX = end.X - start.X;
+            float deltaY = end.Y - start.Y;
+
+            return ClipAgainstEdge(-deltaX, start.X - left, ref tEnter, ref tExit) &&
+                ClipAgainstEdge(deltaX, right - start.X, ref tEnter, ref tExit) &&
+                ClipAgainstEdge(-deltaY, start.Y - top, ref tEnter, ref tExit) &&
+                ClipAgainstEdge(deltaY, bottom - start.Y, ref tEnter, ref tExit);
+        }
+
+        private static bool ClipAgainstEdge(float p, float q, ref float tEnter, ref float tExit)
+        {
+            if (p == 0)
+            {
+                return q >= 0;
+            }
+
+            float t = q / p;
+            if (p < 0)
+            {
+                if (t > tExit)
+                {
+                    return false;
+                }
+                if (t > tEnter)
+                {
+                    tEnter = t;
+                }
+            }
+            else
+            {
+                if (t < tEnter)
+                {
+                    return false;
+                }
+                if (t < tExit)
+                {
+                    tExit = t;
+                }
+            }
+            return true;
+        }
+
         internal void SetPointAt(Vector2 point, int index)
         {
             mVectors[index] = point;
