@@ -633,6 +633,43 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
+    [SkippableFact]
+    [Trait("Feature", "CANV-044")]
+    public void PinButton_KeepsThePreviewOnItsElement_UntilUnpinned()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            ScreenSave mainMenu = canvas.Project.AddScreen("MainMenu");
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            PreviewLauncher launcher = canvas.Plugin.PreviewLauncher;
+            IPreviewProcessStarter originalStarter = launcher.ProcessStarter;
+            StandInPreview preview = new StandInPreview();
+            launcher.ProcessStarter = preview;
+            try
+            {
+                canvas.Input.Click(canvas.PreviewButton);
+                canvas.Input.Click(canvas.PinPreviewButton);
+                canvas.PinPreviewButton.IsChecked.ShouldBe(true);
+
+                canvas.Tree.Click(canvas.Tree.NodeFor(mainMenu));
+                preview.Selection(0).ElementName.ShouldBe("Button");
+
+                canvas.Input.Click(canvas.PinPreviewButton);
+                preview.Selection(0).ElementName.ShouldBe("MainMenu");
+                canvas.PinPreviewButton.IsChecked.ShouldBe(false);
+            }
+            finally
+            {
+                preview.HasExited = true;
+                launcher.ProcessStarter = originalStarter;
+                preview.DeleteSelectionFiles();
+            }
+
+            canvas.AssertOracles();
+        });
+    }
+
     // Stands in for GumPreview: records each launch and reports itself running until told otherwise.
     private sealed class StandInPreview : IPreviewProcessStarter, IPreviewProcess
     {

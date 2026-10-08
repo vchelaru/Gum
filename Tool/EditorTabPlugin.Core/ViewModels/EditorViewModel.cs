@@ -31,6 +31,7 @@ public partial class EditorViewModel : ViewModel, IZoomController
     private readonly IGridSnapWarningService _gridSnapWarningService;
     private readonly IProjectManager _projectManager;
     private readonly IPreviewLauncher _previewLauncher;
+    private bool _isSyncingPreviewPinned;
 
     public bool HasGridSnapWarning
     {
@@ -296,6 +297,7 @@ public partial class EditorViewModel : ViewModel, IZoomController
         _gridSnapWarningService = gridSnapWarningService;
         _projectManager = projectManager;
         _previewLauncher = previewLauncher;
+        _previewLauncher.PinnedChanged += SyncPreviewPinned;
         PercentZoomLevel = ZoomLevels.First(item => item.Value == 100);
 
         CustomCanvasSizes = ProjectLoadFills.DefaultCanvasSizes.ToArray();
@@ -370,6 +372,38 @@ public partial class EditorViewModel : ViewModel, IZoomController
     public void UpdateHasSelectedElement(ElementSave? element) => HasSelectedElement = element != null;
 
     private bool CanPreview() => HasSelectedElement;
+
+    /// <summary>
+    /// Whether the running preview is pinned to the element it shows instead of following the tool's
+    /// selection (issue #3078). Turning it on with no preview running turns it back off.
+    /// </summary>
+    public bool IsPreviewPinned
+    {
+        get => Get<bool>();
+        set
+        {
+            if (!Set(value) || _isSyncingPreviewPinned)
+            {
+                return;
+            }
+            if (value)
+            {
+                _previewLauncher.Pin();
+            }
+            else
+            {
+                _previewLauncher.Unpin();
+            }
+            SyncPreviewPinned();
+        }
+    }
+
+    private void SyncPreviewPinned()
+    {
+        _isSyncingPreviewPinned = true;
+        IsPreviewPinned = _previewLauncher.PinnedElement != null;
+        _isSyncingPreviewPinned = false;
+    }
 
     [RelayCommand(CanExecute = nameof(CanPreview))]
     public void Preview() => _previewLauncher.Launch();

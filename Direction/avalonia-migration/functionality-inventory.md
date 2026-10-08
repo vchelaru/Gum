@@ -201,6 +201,7 @@
 - CANV-041 Canvas redraws on change. tested: CanvasRedrawTests
 - CANV-042 Custom renderables (Skia shapes, Lottie). tested: WireframeObjectManagerCustomRenderableTests
 - CANV-043 Switching elements restores the zoom and scroll left on each. tested: ElementCameraMemoryTests
+- CANV-044 Pin toggle keeps the Preview on its element while the selection changes. tested: PreviewLauncherTests, CanvasMenuAndToolbarScenarioTests
 
 ## Variables grid (VAR)
 

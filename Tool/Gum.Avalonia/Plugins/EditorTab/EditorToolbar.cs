@@ -129,7 +129,20 @@ internal sealed class EditorToolbar : DockPanel
         PreviewButton.Click += (_, _) => ShowPreviewLaunchSpinner(previewIcon, previewSpinner, previewSpinnerRotation);
         SetDock(PreviewButton, global::Avalonia.Controls.Dock.Right);
 
+        PinPreviewButton = new ToggleButton
+        {
+            Content = "Pin",
+            Margin = new Thickness(0, 0, 4, 0),
+            Padding = new Thickness(6, 0),
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.IsPreviewPinned)) { Mode = BindingMode.TwoWay },
+            [ToolTip.TipProperty] = "Keep the preview on its current element instead of following the selection",
+        };
+        SetDock(PinPreviewButton, global::Avalonia.Controls.Dock.Right);
+
         Children.Add(PreviewButton);
+        Children.Add(PinPreviewButton);
         // The controls scroll horizontally in the space beside the Preview button rather than
         // drawing over it when the window is narrow (#5695).
         Children.Add(new ScrollViewer
@@ -142,6 +155,9 @@ internal sealed class EditorToolbar : DockPanel
 
     /// <summary>The "Preview in runtime" button at the right end.</summary>
     internal Button PreviewButton { get; }
+
+    /// <summary>The toggle beside <see cref="PreviewButton"/> that pins the preview to its element.</summary>
+    internal ToggleButton PinPreviewButton { get; }
 
     /// <summary>The zoom and font scale +/- buttons, whose width follows the UI base font size.</summary>
     internal IReadOnlyList<Button> SizedButtons => _sizedButtons;

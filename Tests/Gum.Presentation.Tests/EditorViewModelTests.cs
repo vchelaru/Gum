@@ -19,7 +19,7 @@ namespace Gum.Presentation.Tests;
 /// </summary>
 public class EditorViewModelTests
 {
-    private static (EditorViewModel ViewModel, Mock<IPluginManager> PluginManager) CreateSut(Mock<IFileCommands>? fileCommands = null)
+    private static (EditorViewModel ViewModel, Mock<IPluginManager> PluginManager) CreateSut(Mock<IFileCommands>? fileCommands = null, Mock<IPreviewLauncher>? previewLauncher = null)
     {
         Mock<IPluginManager> pluginManager = new Mock<IPluginManager>();
         EditorViewModel viewModel = new EditorViewModel(
@@ -28,7 +28,7 @@ public class EditorViewModelTests
             Mock.Of<IWireframeObjectManager>(),
             Mock.Of<IGridSnapWarningService>(),
             Mock.Of<IProjectManager>(),
-            Mock.Of<IPreviewLauncher>());
+            (previewLauncher ?? new Mock<IPreviewLauncher>()).Object);
         return (viewModel, pluginManager);
     }
 
@@ -78,5 +78,62 @@ public class EditorViewModelTests
 
         viewModel.UpdateHasSelectedElement(null);
         viewModel.PreviewCommand.CanExecute(null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPreviewPinned_WhenSetToTrue_PinsThePreview()
+    {
+        Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();
+        launcher.Setup(l => l.Pin()).Returns(true);
+        launcher.SetupGet(l => l.PinnedElement).Returns(new ScreenSave());
+        (EditorViewModel viewModel, _) = CreateSut(previewLauncher: launcher);
+
+        viewModel.IsPreviewPinned = true;
+
+        launcher.Verify(l => l.Pin(), Times.Once);
+        viewModel.IsPreviewPinned.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsPreviewPinned_WhenNoPreviewIsRunning_RevertsToFalse()
+    {
+        Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();
+        launcher.Setup(l => l.Pin()).Returns(false);
+        (EditorViewModel viewModel, _) = CreateSut(previewLauncher: launcher);
+
+        viewModel.IsPreviewPinned = true;
+
+        viewModel.IsPreviewPinned.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPreviewPinned_WhenSetToFalse_UnpinsThePreview()
+    {
+        Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();
+        launcher.Setup(l => l.Pin()).Returns(true);
+        launcher.SetupGet(l => l.PinnedElement).Returns(new ScreenSave());
+        (EditorViewModel viewModel, _) = CreateSut(previewLauncher: launcher);
+        viewModel.IsPreviewPinned = true;
+
+        launcher.SetupGet(l => l.PinnedElement).Returns((ElementSave?)null);
+        viewModel.IsPreviewPinned = false;
+
+        launcher.Verify(l => l.Unpin(), Times.Once);
+    }
+
+    [Fact]
+    public void IsPreviewPinned_WhenThePreviewUnpinsItself_FollowsWithoutUnpinningAgain()
+    {
+        Mock<IPreviewLauncher> launcher = new Mock<IPreviewLauncher>();
+        launcher.Setup(l => l.Pin()).Returns(true);
+        launcher.SetupGet(l => l.PinnedElement).Returns(new ScreenSave());
+        (EditorViewModel viewModel, _) = CreateSut(previewLauncher: launcher);
+        viewModel.IsPreviewPinned = true;
+
+        launcher.SetupGet(l => l.PinnedElement).Returns((ElementSave?)null);
+        launcher.Raise(l => l.PinnedChanged += null);
+
+        viewModel.IsPreviewPinned.ShouldBeFalse();
+        launcher.Verify(l => l.Unpin(), Times.Never);
     }
 }
