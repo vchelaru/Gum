@@ -63,6 +63,15 @@ Within `CodeProjectRoot`, an element's path mirrors its type and its folder insi
 The `Screens` / `Components` / `Standards` prefix comes from the element's type, not from where the
 `.gucx` sits on disk.
 
+`GeneratedCodeFolder` (relative to `CodeProjectRoot`) moves this whole layout into a subfolder.
+`GeneratedCodeFolderPrefix` goes in front of the `Screens` / `Components` names themselves: `GumCodeGen/`
+makes a `GumCodeGen` folder holding both, `Gum` makes `GumScreens` / `GumComponents`.
+`CodeGenerationFileLocationsService.GetElementCodeSubfolder` is the one place that builds it (it drops
+`.`/`..` segments so files stay inside the output folder). It changes only the code location: the
+namespace, `.gumx` element names and variable-reference names keep the plain `Screens`/`Components`
+(`ElementReference.GetSubfolder` must not be changed for this), and `StandardElements.Generated.cs`
+ignores the prefix.
+
 A per-element `GeneratedFileName` setting overrides this entirely. When set, that path is used verbatim
 (resolved against the Gum project directory if relative), and the folder convention above does not
 apply.
@@ -101,6 +110,8 @@ Two `.codsj` files (JSON despite the extension) drive everything.
 |---|---|
 | `OutputLibrary` | Which runtime to target. Drives almost every shape decision below. |
 | `CodeProjectRoot` | Output folder, relative to the `.gumx`. |
+| `GeneratedCodeFolder` | Optional subfolder of `CodeProjectRoot` that generated code goes in. |
+| `GeneratedCodeFolderPrefix` | Optional text in front of the `Screens` / `Components` folder names (`GumCodeGen/` or `Gum`). |
 | `RootNamespace` | Namespace root. Empty means no namespace is emitted. |
 | `AppendFolderToNamespace` | Append the element's Gum folder path to its namespace. |
 | `ObjectInstantiationType` | `FullyInCode` or `FindByName`. See below. |
@@ -346,9 +357,12 @@ leave-alone steps, matching elements only through the `//Code for` header. `Code
 backs every touched file up through `CodeFileBackupService` (outside the repo, newest 10 per project)
 before changing anything, and restores the backup itself if a step fails. **Restore Last Code File
 Migration** undoes the newest one but never overwrites a file edited since. A Code tab edit to the
-output library, code project root or generated code folder offers the same migration
+output library, code project root, generated code folder or its prefix offers the same migration
 (`CodeFileLocationWatcher` sends `CodeFileLocationsChangedMessage`, and the scan also walks the old
-root), and an orphan row whose element still exists offers Migrate instead of Delete File.
+root), and an orphan row whose element still exists offers Migrate instead of Delete File. After a
+successful apply, the applier removes folders the move emptied, never above `CodeProjectRoot`. A new
+setting that moves files needs only its row in `CodeFileLocationChange.Describe` plus the path logic;
+the scan, planner and applier already follow `GetGeneratedFileName`.
 
 ### Command line
 

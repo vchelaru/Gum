@@ -6,7 +6,7 @@ namespace CodeOutputPlugin;
 /// <summary>
 /// Decides whether a code settings edit moves where code files belong, and describes the change
 /// for the migration prompt. Only the output library (it renames classes, and so files), the code
-/// project root and the generated code folder move files; namespace and inheritance settings change
+/// project root, the generated code folder and its prefix move files; namespace and inheritance settings change
 /// what is inside the files, not where they are (<see cref="CustomCodeHeaderChange"/> covers those).
 /// </summary>
 public class CodeFileLocationChange
@@ -25,6 +25,7 @@ public class CodeFileLocationChange
         }
         AddIfChanged(changes, "Code Project Root", before.CodeProjectRoot, after.CodeProjectRoot);
         AddIfChanged(changes, "Generated Code Folder", before.GeneratedCodeFolder, after.GeneratedCodeFolder);
+        AddIfChanged(changes, "Generated Code Folder Prefix", before.GeneratedCodeFolderPrefix, after.GeneratedCodeFolderPrefix);
 
         return changes.Count == 0 ? null : string.Join(", ", changes);
     }

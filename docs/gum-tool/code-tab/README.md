@@ -84,6 +84,17 @@ If an absolute path is entered, it is saved to a relative path so that generatio
 
 Since the path is saved as relative to your project file location, this path will break if you move your Gum project to a new location. Be sure to update this if you are moving your project file.
 
+### Generated Code Folder Prefix
+
+Text put in front of the Components and Screens folder names. Leave it empty to use `Components` and `Screens`.
+
+* A prefix ending in a slash, such as `GumCodeGen/`, puts both folders inside a folder with that name: `GumCodeGen/Components/Button.Generated.cs` and `GumCodeGen/Screens/MainMenu.Generated.cs`.
+* A prefix without a slash, such as `Gum`, renames the folders: `GumComponents/Button.Generated.cs` and `GumScreens/MainMenu.Generated.cs`.
+
+The prefix is applied inside the Generated Code Folder (or the Code Project Root if that is empty). Changing it offers to move your existing generated and custom code files to the new location, and a copy of every file is kept so the move can be undone with **Content > Restore Last Code File Migration**. Folders left empty by the move are removed. `StandardElements.Generated.cs` stays directly in the output folder.
+
+Like Generated Code Folder, this only moves files. Namespaces are not affected; use Root Namespace and Append Folder to Namespace to control them.
+
 ### Output Library
 
 New projects use **Gum Forms (recommended)** regardless of the runtime. Change the Output Library only if you need one of the deprecated options below.

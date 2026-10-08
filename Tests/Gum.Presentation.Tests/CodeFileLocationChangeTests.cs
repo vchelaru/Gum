@@ -24,6 +24,18 @@ public class CodeFileLocationChangeTests
             "Generated Code Folder from (none) to Generated");
     }
 
+    [Theory]
+    [InlineData("", "GumCodeGen/", "Generated Code Folder Prefix from (none) to GumCodeGen/")]
+    [InlineData("Gum", "", "Generated Code Folder Prefix from Gum to (none)")]
+    [InlineData("Gum", "GumCodeGen/", "Generated Code Folder Prefix from Gum to GumCodeGen/")]
+    public void Describe_NamesAChangedGeneratedCodeFolderPrefix(string beforePrefix, string afterPrefix, string expected)
+    {
+        CodeOutputProjectSettings before = new CodeOutputProjectSettings { GeneratedCodeFolderPrefix = beforePrefix };
+        CodeOutputProjectSettings after = new CodeOutputProjectSettings { GeneratedCodeFolderPrefix = afterPrefix };
+
+        new CodeFileLocationChange().Describe(before, after).ShouldBe(expected);
+    }
+
     [Fact]
     public void Describe_ReturnsNull_WhenNoSettingThatMovesFilesChanged()
     {

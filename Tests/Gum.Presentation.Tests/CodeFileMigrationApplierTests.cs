@@ -114,6 +114,96 @@ public class CodeFileMigrationApplierTests : BaseTestClass
         File.Exists(otherStub.FullPath).ShouldBeTrue();
     }
 
+    [Fact]
+    public void Apply_RemovesTheFoldersItEmptied_ButNotTheCodeProjectRoot()
+    {
+        FilePath oldGenerated = WriteFile("Components/Controls/ButtonCloseRuntime.Generated.cs", "//Code for Controls/ButtonClose (Container)");
+        FilePath oldCustom = WriteFile("Components/Controls/ButtonCloseRuntime.cs", EditedCustomCode);
+        FilePath oldStub = WriteFile("Components/Controls/IconRuntime.cs", "partial class IconRuntime { }");
+        FilePath newCustom = new FilePath(Path.Combine(_tempDirectory, "GumCodeGen", "Components", "Controls", "ButtonClose.cs"));
+        CodeFileMigrationPlan plan = new CodeFileMigrationPlan(new[]
+        {
+            new CodeFileMigrationStep("Controls/ButtonClose", CodeFileMigrationAction.RemoveGenerated, oldGenerated),
+            new CodeFileMigrationStep("Controls/ButtonClose", CodeFileMigrationAction.MoveCustomCode, oldCustom, newCustom),
+            new CodeFileMigrationStep("Controls/Icon", CodeFileMigrationAction.RemoveUntouchedStub, oldStub),
+        });
+
+        CodeFileMigrationResult result = CreateApplier().Apply(_projectFile, CreateProjectSettings(), plan);
+
+        result.Error.ShouldBeNull();
+        Directory.Exists(Path.Combine(_tempDirectory, "Components")).ShouldBeFalse("Components/Controls and Components were left empty");
+        File.Exists(newCustom.FullPath).ShouldBeTrue();
+        Directory.Exists(_tempDirectory).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Apply_KeepsAFolderThatStillHoldsAFile()
+    {
+        FilePath oldGenerated = WriteFile("Components/Controls/ButtonCloseRuntime.Generated.cs", "//Code for Controls/ButtonClose (Container)");
+        FilePath handWritten = WriteFile("Components/Controls/ButtonClose.Input.cs", "partial class ButtonClose { }");
+        CodeFileMigrationPlan plan = new CodeFileMigrationPlan(new[]
+        {
+            new CodeFileMigrationStep("Controls/ButtonClose", CodeFileMigrationAction.RemoveGenerated, oldGenerated),
+        });
+
+        CodeFileMigrationResult result = CreateApplier().Apply(_projectFile, CreateProjectSettings(), plan);
+
+        result.Error.ShouldBeNull();
+        File.Exists(handWritten.FullPath).ShouldBeTrue();
+        File.Exists(oldGenerated.FullPath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Apply_DoesNotRemoveEmptyFoldersOutsideTheCodeProjectRoot()
+    {
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.CodeProjectRoot = "Game/";
+        FilePath outside = WriteFile("Elsewhere/Components/ButtonCloseRuntime.Generated.cs", "//Code for Controls/ButtonClose (Container)");
+        CodeFileMigrationPlan plan = new CodeFileMigrationPlan(new[]
+        {
+            new CodeFileMigrationStep("Controls/ButtonClose", CodeFileMigrationAction.RemoveGenerated, outside),
+        });
+
+        CreateApplier().Apply(_projectFile, settings, plan);
+
+        File.Exists(outside.FullPath).ShouldBeFalse();
+        Directory.Exists(Path.Combine(_tempDirectory, "Elsewhere", "Components")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Apply_DoesNotRemoveFolders_WhenNoCodeProjectRootIsConfigured()
+    {
+        // Without a root there is no boundary to stop at, so no folder may be removed.
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.CodeProjectRoot = string.Empty;
+        FilePath oldGenerated = WriteFile("Components/Controls/ButtonCloseRuntime.Generated.cs", "//Code for Controls/ButtonClose (Container)");
+        CodeFileMigrationPlan plan = new CodeFileMigrationPlan(new[]
+        {
+            new CodeFileMigrationStep("Controls/ButtonClose", CodeFileMigrationAction.RemoveGenerated, oldGenerated),
+        });
+
+        CreateApplier().Apply(_projectFile, settings, plan);
+
+        File.Exists(oldGenerated.FullPath).ShouldBeFalse();
+        Directory.Exists(Path.Combine(_tempDirectory, "Components", "Controls")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Restore_BringsBackTheFoldersApplyRemoved()
+    {
+        FilePath oldGenerated = WriteFile("Components/Controls/ButtonCloseRuntime.Generated.cs", "//Code for Controls/ButtonClose (Container)");
+        CodeFileMigrationPlan plan = new CodeFileMigrationPlan(new[]
+        {
+            new CodeFileMigrationStep("Controls/ButtonClose", CodeFileMigrationAction.RemoveGenerated, oldGenerated),
+        });
+        CodeFileMigrationResult result = CreateApplier().Apply(_projectFile, CreateProjectSettings(), plan);
+        Directory.Exists(Path.Combine(_tempDirectory, "Components")).ShouldBeFalse();
+
+        _backupService.Restore(result.Backup!);
+
+        File.ReadAllText(oldGenerated.FullPath).ShouldBe("//Code for Controls/ButtonClose (Container)");
+    }
+
     private CodeFileMigrationApplier CreateApplier()
     {
         ObjectFinder.Self.GumProjectSave = _project;
