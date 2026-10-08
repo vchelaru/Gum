@@ -224,9 +224,11 @@ public class ColorDisplay : DataUiDisplayBase
         _hint = CreateHintTextBlock();
 
         Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), Margin = new Thickness(0, 3) };
-        // The label's 100px plus its 4px margins, as before; the swatch keeps a floor of its own.
+        // The label's 100px plus its 4px margins, as before; the swatch keeps a floor of its own. The
+        // floor leaves slack at the narrowest width because the hex column's "#" glyph is wider in
+        // some platforms' fonts.
         DataUiRowLayout.ConfigureLabelColumn(grid.ColumnDefinitions[0], 108);
-        DataUiRowLayout.ConfigureValueColumn(grid.ColumnDefinitions[1], 36);
+        DataUiRowLayout.ConfigureValueColumn(grid.ColumnDefinitions[1], 32);
         Grid.SetColumn(swatchButton, 1);
         Grid.SetColumn(hex, 2);
         grid.Children.Add(_label);
