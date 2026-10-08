@@ -107,7 +107,7 @@
 	     to that TFM; net10.0 consumers (Linux/macOS, or Windows on Vulkan/D3D12) keep the CPU
 	     SKSurface path below unconditionally. -->
 	<ItemGroup Condition="'$(TargetFramework)'=='net10.0-windows7.0'">
-		<PackageReference Include="SkiaGameRendering.Stride.D3D11" Version="0.15.0-beta" />
+		<PackageReference Include="SkiaGameRendering.Stride.D3D11" Version="0.17.4-beta" />
 	</ItemGroup>
 
 	<ItemGroup>
