@@ -136,7 +136,7 @@ internal sealed class EditorToolbar : DockPanel
             Padding = new Thickness(6, 0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            [!IsEnabledProperty] = new Binding(nameof(EditorViewModel.IsPreviewRunning)),
+            [!IsVisibleProperty] = new Binding(nameof(EditorViewModel.IsPreviewRunning)),
             [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.IsPreviewPinned)) { Mode = BindingMode.TwoWay },
             [ToolTip.TipProperty] = "Pin the preview to its current element so it stops following the selection",
         };
