@@ -216,6 +216,43 @@ public class CanvasMenuAndToolbarScenarioTests
     }
 
     [SkippableFact]
+    [Trait("Feature", "CANV-014")]
+    [Trait("Feature", "CANV-018")]
+    public void SnapToGrid_OnAPolygonOffTheGrid_LandsTheDraggedPointOnTheGrid_AndMovesLandThePolygonOnTheGrid()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            canvas.AddInstance(button, "Shape", "Polygon", x: 105, y: 107);
+            InstanceSave shape = button.GetInstance("Shape")!;
+            canvas.Tree.Click(canvas.Tree.NodeFor(shape));
+            canvas.Input.Click(canvas.SnapToGridCheckBox);
+            canvas.Input.TypeAndEnter(canvas.GridSizeBox, "20");
+            canvas.Frame();
+
+            // The standard polygon is the square (0,0) (32,0) (32,32) (0,32); its corner (32,32)
+            // is at (137,139). Snapping the point's offset would leave it off the grid.
+            canvas.Drag(canvas.WindowPointOf(137, 139), canvas.WindowPointOf(158, 152));
+            float x = (float)canvas.SavedValue(button, "Shape.X")!;
+            float y = (float)canvas.SavedValue(button, "Shape.Y")!;
+            System.Numerics.Vector2 corner = ((IEnumerable<System.Numerics.Vector2>)canvas.SavedElement(button)
+                .DefaultState!.GetVariableListSave("Shape.Points")!.ValueAsIList).ElementAt(2);
+            x.ShouldBe(105f, "dragging a point leaves the polygon where it was");
+            ((x + corner.X) % 20).ShouldBe(0f, $"the point's absolute X {x + corner.X} should be on the grid");
+            ((y + corner.Y) % 20).ShouldBe(0f, $"the point's absolute Y {y + corner.Y} should be on the grid");
+
+            // Moving the polygon by its body lands the polygon on the grid.
+            canvas.Drag(canvas.WindowPointOf(115, 117), canvas.WindowPointOf(133, 130));
+            x = (float)canvas.SavedValue(button, "Shape.X")!;
+            y = (float)canvas.SavedValue(button, "Shape.Y")!;
+            (x % 20).ShouldBe(0f, $"X {x} should be on the grid");
+            (y % 20).ShouldBe(0f, $"Y {y} should be on the grid");
+
+            canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
     public void SnapToGridNote_FollowsTheUnitsAsTheyAreEdited_NotTheEditBefore()
     {
         OnCanvas(canvas =>
