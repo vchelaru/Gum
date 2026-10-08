@@ -103,15 +103,12 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             {
                 // We used to return the raw value, but I think we want to round it - if it's to use unit coordinates then it should probably always return them.
 
-                return IsPositionBeingDragged ? RoundForDisplay(mCoordinates.X) : RoundIfNecessary(mCoordinates.X);
+                return IsLeftBeingDragged ? RoundForDisplay(mCoordinates.X) : RoundIfNecessary(mCoordinates.X);
             }
             set
             {
                 mCoordinates.X = value;
-
-                mLineRectangle.X = IsPositionBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
-
-                UpdateHandles();
+                RefreshAfterCoordinatesChanged();
             }
         }
 
@@ -119,30 +116,28 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
         {
             get
             {
-                return IsPositionBeingDragged ? RoundForDisplay(mCoordinates.Y) : RoundIfNecessary(mCoordinates.Y);
+                return IsTopBeingDragged ? RoundForDisplay(mCoordinates.Y) : RoundIfNecessary(mCoordinates.Y);
             }
             set
             {
                 mCoordinates.Y = value;
-                mLineRectangle.Y = IsPositionBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
-                UpdateHandles();
-
+                RefreshAfterCoordinatesChanged();
             }
         }
 
         public float Bottom
         {
-            get 
-            { 
-                return Top + Height; 
+            get
+            {
+                return Top + Height;
             }
         }
 
         public float Right
         {
-            get 
-            { 
-                return Left + Width; 
+            get
+            {
+                return Left + Width;
             }
         }
 
@@ -174,7 +169,7 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
         public float CenterX
         {
             get
-            { 
+            {
                 return Left + Width /2.0f;
             }
         }
@@ -191,13 +186,19 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
         {
             get
             {
-                return IsSizeBeingDragged ? RoundForDisplay(mCoordinates.Width) : RoundIfNecessary(mCoordinates.Width);
+                // Dragging the left edge keeps the right edge where it was grabbed, so the width is
+                // measured from the snapped left edge to that fixed edge.
+                if (IsLeftEdgeGrabbed)
+                {
+                    return RoundIfNecessary(mCoordinates.X + mCoordinates.Width) - Left;
+                }
+
+                return IsRightEdgeGrabbed ? RoundForDisplay(mCoordinates.Width) : RoundIfNecessary(mCoordinates.Width);
             }
             set
             {
                 mCoordinates.Width = value;
-                mLineRectangle.Width = IsSizeBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
-                UpdateHandles();
+                RefreshAfterCoordinatesChanged();
             }
         }
 
@@ -205,13 +206,17 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
         {
             get
             {
-                return IsSizeBeingDragged ? RoundForDisplay(mCoordinates.Height) : RoundIfNecessary(mCoordinates.Height);
+                if (IsTopEdgeGrabbed)
+                {
+                    return RoundIfNecessary(mCoordinates.Y + mCoordinates.Height) - Top;
+                }
+
+                return IsBottomEdgeGrabbed ? RoundForDisplay(mCoordinates.Height) : RoundIfNecessary(mCoordinates.Height);
             }
             set
             {
                 mCoordinates.Height = value;
-                mLineRectangle.Height = IsSizeBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
-                UpdateHandles();
+                RefreshAfterCoordinatesChanged();
             }
         }
 
@@ -580,14 +585,39 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
         }
 
 
-        // Grid snapping (SnappingGridSize) only applies to the display of an axis while it's actively
+        // Grid snapping (SnappingGridSize) only applies to the display of an edge while it's actively
         // being dragged, so it never affects the display of a value that was just programmatically
-        // assigned (e.g. from a previously-saved, non-grid-aligned texture region), and a move only
-        // snaps position while a resize only snaps size (see ApplyGridSnappingOnRelease for the
-        // equivalent split at the moment the drag ends). RoundToUnitCoordinates is a separate,
-        // always-on whole-pixel constraint, unrelated to grid snapping.
-        private bool IsPositionBeingDragged => mSideGrabbed == ResizeSide.Middle;
-        private bool IsSizeBeingDragged => mSideGrabbed != ResizeSide.None && mSideGrabbed != ResizeSide.Middle;
+        // assigned (e.g. from a previously-saved, non-grid-aligned texture region). A move snaps
+        // position, and a resize snaps only the edge being dragged: the opposite edge stays where it
+        // was grabbed, otherwise dragging the left or top handle would move the right or bottom edge
+        // (see ApplyGridSnappingOnRelease for the equivalent split at the moment the drag ends).
+        // RoundToUnitCoordinates is a separate, always-on whole-pixel constraint, unrelated to grid snapping.
+        private bool IsLeftEdgeGrabbed => IsLeftEdge(mSideGrabbed);
+        private bool IsRightEdgeGrabbed => IsRightEdge(mSideGrabbed);
+        private bool IsTopEdgeGrabbed => IsTopEdge(mSideGrabbed);
+        private bool IsBottomEdgeGrabbed => IsBottomEdge(mSideGrabbed);
+        private bool IsLeftBeingDragged => mSideGrabbed == ResizeSide.Middle || IsLeftEdgeGrabbed;
+        private bool IsTopBeingDragged => mSideGrabbed == ResizeSide.Middle || IsTopEdgeGrabbed;
+
+        private static bool IsLeftEdge(ResizeSide side) =>
+            side is ResizeSide.Left or ResizeSide.TopLeft or ResizeSide.BottomLeft;
+        private static bool IsRightEdge(ResizeSide side) =>
+            side is ResizeSide.Right or ResizeSide.TopRight or ResizeSide.BottomRight;
+        private static bool IsTopEdge(ResizeSide side) =>
+            side is ResizeSide.Top or ResizeSide.TopLeft or ResizeSide.TopRight;
+        private static bool IsBottomEdge(ResizeSide side) =>
+            side is ResizeSide.Bottom or ResizeSide.BottomLeft or ResizeSide.BottomRight;
+
+        // The outline and handles follow the displayed (rounded/snapped) values, which depend on
+        // more than one coordinate while an edge is dragged, so they are refreshed from the getters.
+        private void RefreshAfterCoordinatesChanged()
+        {
+            mLineRectangle.X = Left;
+            mLineRectangle.Y = Top;
+            mLineRectangle.Width = Width;
+            mLineRectangle.Height = Height;
+            UpdateHandles();
+        }
 
         private float RoundIfNecessary(float value)
         {
@@ -648,9 +678,10 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
         }
 
         /// <summary>
-        /// Commits grid snapping for the axis pair relevant to the interaction that just ended - only
-        /// position (Left/Top) for a move (middle grab), only size (Width/Height) for a resize (any other
-        /// handle). A release with nothing grabbed leaves both pairs untouched.
+        /// Commits grid snapping for the interaction that just ended - position (Left/Top) for a move
+        /// (middle grab). For a resize, only the edges that were dragged: a left or top edge snaps its
+        /// position and keeps the opposite edge fixed, a right or bottom edge snaps its size. A release
+        /// with nothing grabbed leaves everything untouched.
         /// </summary>
         internal void ApplyGridSnappingOnRelease(ResizeSide sideGrabbedBeforeRelease)
         {
@@ -658,10 +689,29 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             {
                 this.Left = RoundToGridIfNecessary(this.Left);
                 this.Top = RoundToGridIfNecessary(this.Top);
+                return;
             }
-            else if (sideGrabbedBeforeRelease != ResizeSide.None)
+
+            float fixedRight = mCoordinates.X + mCoordinates.Width;
+            float fixedBottom = mCoordinates.Y + mCoordinates.Height;
+
+            if (IsLeftEdge(sideGrabbedBeforeRelease))
+            {
+                this.Left = RoundToGridIfNecessary(this.Left);
+                this.Width = fixedRight - mCoordinates.X;
+            }
+            else if (IsRightEdge(sideGrabbedBeforeRelease))
             {
                 this.Width = RoundToGridIfNecessary(this.Width);
+            }
+
+            if (IsTopEdge(sideGrabbedBeforeRelease))
+            {
+                this.Top = RoundToGridIfNecessary(this.Top);
+                this.Height = fixedBottom - mCoordinates.Y;
+            }
+            else if (IsBottomEdge(sideGrabbedBeforeRelease))
+            {
                 this.Height = RoundToGridIfNecessary(this.Height);
             }
         }

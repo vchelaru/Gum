@@ -59,4 +59,59 @@ public class RectangleSelectorDragRoundingTests
         selector.Width.ShouldBe(27f);
         selector.Height.ShouldBe(42f);
     }
+
+    [Theory]
+    [InlineData(ResizeSide.Left)]
+    [InlineData(ResizeSide.TopLeft)]
+    public void Right_WhileLeftEdgeIsDraggedWithGridSnapping_ShouldStayFixed(ResizeSide sideGrabbed)
+    {
+        var selector = CreateSelector();
+        selector.SnappingGridSize = 16;
+        selector.Left = 96f;
+        selector.Width = 48f;
+        selector.Right.ShouldBe(144f);
+
+        // Dragging the left edge 9px right: Left moves, Width shrinks by the same amount.
+        selector.SideGrabbed = sideGrabbed;
+        selector.Left = 105f;
+        selector.Width = 39f;
+
+        selector.Right.ShouldBe(144f);
+    }
+
+    [Fact]
+    public void LeftEdgeDrag_WithGridSnapping_ShouldSnapLeftAndKeepRightFixedAfterRelease()
+    {
+        var selector = CreateSelector();
+        selector.SnappingGridSize = 16;
+        selector.Left = 96f;
+        selector.Width = 48f;
+
+        selector.SideGrabbed = ResizeSide.Left;
+        selector.Left = 105f;
+        selector.Width = 39f;
+        selector.SideGrabbed = ResizeSide.None;
+        selector.ApplyGridSnappingOnRelease(ResizeSide.Left);
+
+        selector.Left.ShouldBe(112f);
+        selector.Right.ShouldBe(144f);
+    }
+
+    [Theory]
+    [InlineData(ResizeSide.Top)]
+    [InlineData(ResizeSide.TopLeft)]
+    public void Bottom_WhileTopEdgeIsDraggedWithGridSnapping_ShouldStayFixed(ResizeSide sideGrabbed)
+    {
+        var selector = CreateSelector();
+        selector.SnappingGridSize = 16;
+        selector.Top = 96f;
+        selector.Height = 48f;
+        selector.Bottom.ShouldBe(144f);
+
+        selector.SideGrabbed = sideGrabbed;
+        selector.Top = 105f;
+        selector.Height = 39f;
+
+        selector.Bottom.ShouldBe(144f);
+    }
 }
