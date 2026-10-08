@@ -7,6 +7,7 @@ using Gum.Avalonia.Services;
 using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using Moq;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using Vector2 = System.Numerics.Vector2;
 
@@ -384,6 +385,43 @@ public class CanvasScenarioTests
             canvas.AssertOracles();
         });
     }
+
+    [SkippableFact]
+    [Trait("Feature", "CANV-014")]
+    public void PolygonDrag_HidesTheAddPointMarker_WhetherMovingThePolygonOrOnePoint()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            InstanceSave shape = canvas.AddInstance(button, "Shape", "Polygon", x: 100, y: 100);
+            canvas.Tree.Click(canvas.Tree.NodeFor(shape));
+
+            // 12 pixels below the top edge's middle: inside the polygon, in range of the marker.
+            Point insideNearTopEdge = canvas.WindowPointOf(116, 112);
+            canvas.MoveTo(insideNearTopEdge);
+            IsAddPointMarkerShowing().ShouldBeTrue("hovering near an edge shows the marker");
+
+            // Dragging the polygon's body keeps the same offset to the moved top edge.
+            canvas.PressButton(insideNearTopEdge);
+            canvas.DragTo(canvas.WindowPointOf(140, 112));
+            IsAddPointMarkerShowing().ShouldBeFalse("moving the polygon should hide the marker");
+            canvas.ReleaseButton();
+            IsAddPointMarkerShowing().ShouldBeTrue("the marker returns once the drag ends");
+
+            // The polygon now starts at x=124. Grab its top-right corner and pull it to within
+            // range of the first edge's middle.
+            Point corner = canvas.WindowPointOf(156, 100);
+            canvas.PressButton(corner);
+            canvas.DragTo(canvas.WindowPointOf(150, 110));
+            IsAddPointMarkerShowing().ShouldBeFalse("dragging a point should hide the marker");
+            canvas.ReleaseButton();
+
+            canvas.AssertOracles();
+        });
+    }
+
+    private static bool IsAddPointMarkerShowing() =>
+        SpriteManager.Self.Sprites.Single(sprite => sprite.Name == "Add point sprite").Visible;
 
     private static List<Vector2> SavedPoints(CanvasHarness canvas, ElementSave element) =>
         ((IEnumerable<Vector2>)canvas.SavedElement(element).DefaultState!.GetVariableListSave("Shape.Points")!.ValueAsIList).ToList();

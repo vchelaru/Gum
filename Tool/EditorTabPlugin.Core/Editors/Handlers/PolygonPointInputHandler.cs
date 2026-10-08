@@ -161,8 +161,10 @@ public class PolygonPointInputHandler : InputHandlerBase
         _pointNodesVisual.HighlightedIndex = indexOver;
         _pointNodesVisual.GrabbedIndex = _grabbedIndex;
 
-        // Disable add point sprite while dragging
-        _addPointSpriteVisual.IsEnabled = _grabbedIndex == null && !IsActive && !Context.IsSelectionLocked();
+        // Disable add point sprite while any drag is in progress, including one owned by another
+        // handler (moving the whole polygon).
+        _addPointSpriteVisual.IsEnabled = _grabbedIndex == null && !IsActive &&
+            !Context.Cursor.PrimaryDownIgnoringIsInWindow && !Context.IsSelectionLocked();
 
         // Hide add point sprite when over existing point
         if (indexOver != null && _addPointSpriteVisual.IsEnabled)
