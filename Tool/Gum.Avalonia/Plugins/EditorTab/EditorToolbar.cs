@@ -158,7 +158,7 @@ internal sealed class EditorToolbar : DockPanel
     // The tool isn't told when the preview window closes, so look while the toolbar is showing.
     private void WatchForPreviewClosing()
     {
-        DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         timer.Tick += (_, _) => (DataContext as EditorViewModel)?.RefreshPreviewRunning();
         AttachedToVisualTree += (_, _) => timer.Start();
         DetachedFromVisualTree += (_, _) => timer.Stop();
