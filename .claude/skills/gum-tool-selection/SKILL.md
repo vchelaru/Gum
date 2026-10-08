@@ -24,6 +24,8 @@ Each handler represents one interaction mode. Concrete handlers:
 | `RotationInputHandler` | `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/RotationInputHandler.cs` | Rotation handle dragging |
 | `PolygonPointInputHandler` | `Tool/EditorTabPlugin.Core/Editors/Handlers/PolygonPointInputHandler.cs` | Polygon vertex select/move/add/delete |
 
+`PolygonPointInputHandler` delegates the drag math to `PolygonPointDrag`. With Snap to Grid on, it snaps the point's absolute (world) position to the nearest grid line via `PolygonPointSnapper`, not its offset from the polygon, so it lands on the grid when the polygon is off-grid or rotated.
+
 ### Handler Lifecycle
 
 ```
