@@ -157,7 +157,21 @@ namespace Gum.Wireframe
             rectangle.LinePixelWidth = _displayScale.DisplayScale;
 
             float left, top, width, height;
-            GetDimensions(pso, out left, out top, out width, out height);
+            if (pso is GraphicalUiElement gue && gue.RenderableComponent is LinePolygon linePolygon)
+            {
+                List<Vector2> points = new List<Vector2>(linePolygon.PointCount);
+                for (int i = 0; i < linePolygon.PointCount; i++)
+                {
+                    points.Add(linePolygon.PointAt(i));
+                }
+
+                (left, top, width, height) = PolygonOutlineBounds.Compute(
+                    points, pso.GetAbsoluteX(), pso.GetAbsoluteY(), pso.GetAbsoluteRotation());
+            }
+            else
+            {
+                GetDimensions(pso, out left, out top, out width, out height);
+            }
 
             rectangle.X = left - adjustedSelectionBorder;
             rectangle.Y = top - adjustedSelectionBorder;
@@ -174,34 +188,8 @@ namespace Gum.Wireframe
 
             left = bounds.left;
             top = bounds.top;
-
-
-            float right = left;
-            float bottom = top;
-
-            if(pso is GraphicalUiElement gue && gue.RenderableComponent is LinePolygon linePolygon)
-            {
-                var absolutePosition = new Vector2(left, top);
-
-                for(int i = 0; i < linePolygon.PointCount; i++)
-                {
-                    var absolutePoint = linePolygon.PointAt(i) + absolutePosition;
-
-                    left = Math.Min(left, absolutePoint.X);
-                    top = Math.Min(top, absolutePoint.Y);
-
-                    right = Math.Max(right, absolutePoint.X);
-                    bottom = Math.Max(bottom, absolutePoint.Y);
-                }
-            }
-            else
-            {
-                right = bounds.right;
-                bottom = bounds.bottom;
-            }
-
-            width = right - left;
-            height = bottom - top;
+            width = bounds.right - bounds.left;
+            height = bounds.bottom - bounds.top;
         }
 
         LineRectangle GetOrMakeRectangleAtIndex(int i)
