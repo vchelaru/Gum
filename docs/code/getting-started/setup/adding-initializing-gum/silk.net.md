@@ -140,6 +140,10 @@ button.Anchor(Anchor.Center);
 button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
 ```
 
+{% hint style="info" %}
+If your file also has `using Silk.NET.Input;`, the compiler reports `Button` as ambiguous because Silk.NET defines its own `Button`. Add `using Button = Gum.Forms.Controls.Button;` to pick the Gum control.
+{% endhint %}
+
 For a working project, see the Gum Silk.NET sample:
 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/SilkNetGum" %}

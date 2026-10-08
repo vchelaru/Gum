@@ -40,7 +40,7 @@ public static class NewCommand
             description: "Create a full, runnable game project for a platform (not just a Gum project), referencing Gum " +
                          "through NuGet, with the Gum project inside it at Content/GumProject and code generation already " +
                          "configured. <path> then names the project folder. Omit this option to create only a Gum project. " +
-                         "Accepted values: 'monogame', 'kni', 'raylib', 'stride' (Windows only).");
+                         "Accepted values: 'monogame', 'kni', 'raylib', 'stride' (Windows only), 'silknet'.");
 
         var noRestoreOption = new Option<bool>(
             "--no-restore",
@@ -146,11 +146,15 @@ public static class NewCommand
             case "stride":
                 hostPlatform = HostPlatform.Stride;
                 break;
+            case "silknet":
+            case "silk.net":
+                hostPlatform = HostPlatform.SilkNet;
+                break;
             case "fna":
                 Console.Error.WriteLine("FNA projects can't be scaffolded: FNA is not published to NuGet, so it has to be linked from source.");
                 return 2;
             default:
-                Console.Error.WriteLine($"Unknown platform '{platform}'. Valid values are: monogame, kni, raylib, stride.");
+                Console.Error.WriteLine($"Unknown platform '{platform}'. Valid values are: monogame, kni, raylib, stride, silknet.");
                 return 2;
         }
 

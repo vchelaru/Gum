@@ -17,7 +17,7 @@ There are two modes:
 |---|---|---|
 | `path` | `GumProject` | Where to create the project. A name creates `<name>/<name>.gumj`; a path ending in `.gumj` or `.gumx` is used as is. With `--platform` it names the project folder instead. |
 | `--template`, `-t` | `forms` | `forms` (all Forms controls, behaviors and assets) or `empty` (standard elements only). |
-| `--platform`, `-p` | none | `monogame`, `kni`, `raylib` or `stride` (Windows only). Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
+| `--platform`, `-p` | none | `monogame`, `kni`, `raylib`, `stride` (Windows only) or `silknet`. Creates a full game project (not just a Gum project) that references Gum through NuGet, with the Gum project inside it. Leave it out for just a Gum project. |
 | `--no-restore` | off | With `--platform`, skip the `dotnet restore` that runs after creation. |
 
 Gum project only:
@@ -36,6 +36,7 @@ gumcli new MyGame --platform monogame     # MonoGame DesktopGL
 gumcli new MyGame -p kni                  # KNI DesktopGL
 gumcli new MyGame -p raylib               # raylib-cs
 gumcli new MyGame -p stride               # Stride 3D, Windows only
+gumcli new MyGame -p silknet              # Silk.NET, Windows/macOS/Linux
 gumcli new MyGame -p monogame -t empty    # no Forms controls in the Gum project
 gumcli new MyGame -p monogame --no-restore
 ```
@@ -52,7 +53,7 @@ MyGame/
     ProjectCodeSettings.codsj    already points at MyGame.csproj
 ```
 
-KNI is the same. raylib and Stride have no `Game1.cs`; everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. Targeting `net10.0-windows7.0` enables the GPU path.
+KNI is the same. raylib, Stride and Silk.NET have no `Game1.cs`; everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. Targeting `net10.0-windows7.0` enables the GPU path.
 
 Then run it with `dotnet run --project MyGame/MyGame.csproj`. Add screens in the Gum tool by opening `MyGame/Content/GumProject/GumProject.gumj`, and generate code with `gumcli codegen`.
 

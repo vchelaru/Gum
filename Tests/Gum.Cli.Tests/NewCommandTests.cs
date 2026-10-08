@@ -225,6 +225,20 @@ public class NewCommandTests : IDisposable
         File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("silknet")]
+    [InlineData("silk.net")]
+    public void New_WithSilkNetPlatform_ShouldCreateHostProjectWithoutGameClass(string platform)
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", platform, "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj")).ShouldContain("Gum.SilkNet");
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeFalse();
+    }
+
     [Fact]
     public void New_WithUnknownPlatform_ShouldReturnExitCode2NamingValidValues()
     {
@@ -235,6 +249,7 @@ public class NewCommandTests : IDisposable
         result.ExitCode.ShouldBe(2);
         result.StandardError.ShouldContain("bogus");
         result.StandardError.ShouldContain("monogame");
+        result.StandardError.ShouldContain("silknet");
         Directory.Exists(projectDir).ShouldBeFalse();
     }
 
