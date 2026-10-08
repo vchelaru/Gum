@@ -5,15 +5,14 @@ using System.Runtime.InteropServices;
 using SkiaGameRendering.Unity;
 using SkiaSharp;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Gum.Unity
 {
     /// <summary>
     /// Initializes <see cref="GumService.Default"/> and draws it every frame into a texture the size of
-    /// the screen. On Windows Direct3D 11 Gum draws on the GPU through SkiaGameRendering's
-    /// <see cref="SkiaUnityRenderTarget"/>; anywhere else it draws into a CPU raster surface that is
-    /// uploaded to a <see cref="Texture2D"/> each frame. Either way <see cref="Texture"/> has Unity's
+    /// the screen. Gum draws on the GPU through SkiaGameRendering's <see cref="SkiaUnityRenderTarget"/>
+    /// wherever SkiaGameRendering supports the graphics device; otherwise it draws into a CPU raster surface
+    /// that is uploaded to a <see cref="Texture2D"/> each frame. Either way <see cref="Texture"/> has Unity's
     /// orientation (row 0 at the bottom). Add <see cref="GumInput"/> next to it for mouse and keyboard.
     ///
     /// Gum is initialized in <c>Awake</c>, so other scripts can build UI from <c>Start</c> on:
@@ -32,10 +31,10 @@ namespace Gum.Unity
         [SerializeField] bool _forceCpu;
 
         SkiaUnityRenderTarget? _gpuTarget;
+        bool _gpuUnavailable;
         SKSurface? _cpuSurface;
         Texture2D? _cpuTexture;
         byte[]? _cpuFlipBuffer;
-        Material? _premultipliedMaterial;
 
         /// <summary>The project file loaded on <c>Awake</c>, relative to StreamingAssets. Empty for none.</summary>
         public string ProjectFile
@@ -102,12 +101,6 @@ namespace Gum.Unity
             }
 
             gum.UseClipboard(new GumUnityClipboard());
-
-            Shader? shader = Resources.Load<Shader>("GumPremultiplied");
-            if (shader != null)
-            {
-                _premultipliedMaterial = new Material(shader);
-            }
         }
 
         void Update()
@@ -168,14 +161,7 @@ namespace Gum.Unity
 
             // The texture's row 0 is its bottom row, which GUI drawing puts at the bottom of the rect.
             var rect = new Rect(0, 0, Screen.width, Screen.height);
-            if (_premultipliedMaterial != null)
-            {
-                UnityEngine.Graphics.DrawTexture(rect, texture, _premultipliedMaterial);
-            }
-            else
-            {
-                GUI.DrawTexture(rect, texture);
-            }
+            UnityEngine.Graphics.DrawTexture(rect, texture, SkiaUnityRenderTarget.PremultipliedGuiMaterial);
         }
 
         void OnDestroy()
@@ -186,10 +172,6 @@ namespace Gum.Unity
                 gum.Uninitialize();
             }
             DisposeTarget();
-            if (_premultipliedMaterial != null)
-            {
-                Destroy(_premultipliedMaterial);
-            }
         }
 
         void CreateTarget(int width, int height)
@@ -197,7 +179,9 @@ namespace Gum.Unity
             CanvasPixelWidth = width;
             CanvasPixelHeight = height;
 
-            if (!_forceCpu && SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11)
+            // SkiaGameRendering decides which graphics devices it supports and throws for the rest, so the
+            // GPU path is simply tried. The failure is remembered so a resize doesn't throw and warn again.
+            if (!_forceCpu && !_gpuUnavailable)
             {
                 try
                 {
@@ -206,12 +190,15 @@ namespace Gum.Unity
                 }
                 catch (Exception exception)
                 {
+                    _gpuUnavailable = true;
                     Debug.LogWarning($"Gum: SkiaGameRendering could not create a GPU target, using the CPU fallback. {exception.Message}");
                 }
             }
 
             _cpuSurface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
-            _cpuTexture = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false, linear: false)
+            // Skia's premultiplied pixels are already sRGB-encoded. This texture is drawn by IMGUI,
+            // which expects gamma output even in a Linear project, so sampling must not decode them.
+            _cpuTexture = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false, linear: true)
             {
                 name = "Gum",
                 wrapMode = TextureWrapMode.Clamp,

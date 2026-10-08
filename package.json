@@ -1,6 +1,6 @@
 {
   "name": "com.vchelaru.gum",
-  "version": "2026.10.2-preview.2.2",
+  "version": "2026.10.8-preview.1.1",
   "displayName": "Gum",
   "description": "Gum UI (layout, Forms controls, .gumx projects) drawn with SkiaSharp. Requires the SkiaGameRendering package (https://github.com/vchelaru/SkiaGameRendering.git#upm), which supplies SkiaSharp. Windows x64 and macOS only so far.",
   "unity": "6000.0",
