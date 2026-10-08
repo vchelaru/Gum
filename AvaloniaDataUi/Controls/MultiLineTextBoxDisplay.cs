@@ -30,7 +30,6 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
         _appliedText = string.Empty;
         _label = new TextBlock
         {
-            MinWidth = 100,
             Padding = new Thickness(4, 4, 4, 0),
             VerticalAlignment = VerticalAlignment.Top,
             TextWrapping = TextWrapping.Wrap,
@@ -77,6 +76,8 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
             ColumnDefinitions = new ColumnDefinitions("100,*"),
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
         };
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
+        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 60);
         Grid.SetRow(_textBox, 1);
         Grid.SetColumnSpan(_textBox, 2);
         Grid.SetColumn(ApplyButton, 1);
@@ -107,7 +108,7 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()
     {
-        _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
         _textBox.ClearValue(TemplatedControl.BackgroundProperty);
     }
 
