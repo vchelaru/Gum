@@ -54,7 +54,7 @@ public class CodeOutputSettingsMembersTests
         categories.Select(category => category.Name).ShouldBe(new[] { "Project-Wide Code Generation", "Element Code Generation" });
         categories[0].Members.Select(member => member.Name).ShouldBe(new[]
         {
-            "Code Project Root", "Generated Code Folder", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
+            "Code Project Root", "Generated Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
             "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Syntax Version",
         });
         categories[1].Members.Select(member => member.Name).ShouldBe(new[]
@@ -146,6 +146,30 @@ public class CodeOutputSettingsMembersTests
         _sut.ProjectSettings.CodeProjectRoot.ShouldBe("Code/", "the .csproj folder stays the syntax-detection root");
         Member("Generated Code Folder").Value.ShouldBe("Gum/Generated");
         changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void GeneratedCodeFolderPrefix_IsStoredTrimmed_KeepsATrailingSlash_AndReportsTheChange()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/" };
+        int changes = 0;
+        _sut.SettingsChanged += (_, _) => changes++;
+
+        Member("Generated Code Folder Prefix").SetValue("  GumCodeGen/  ", SetPropertyCommitType.Full);
+
+        _sut.ProjectSettings.GeneratedCodeFolderPrefix.ShouldBe("GumCodeGen/");
+        Member("Generated Code Folder Prefix").Value.ShouldBe("GumCodeGen/");
+        changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void GeneratedCodeFolderPrefix_WhenCleared_IsStoredEmpty()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/", GeneratedCodeFolderPrefix = "Gum" };
+
+        Member("Generated Code Folder Prefix").SetValue(null, SetPropertyCommitType.Full);
+
+        _sut.ProjectSettings.GeneratedCodeFolderPrefix.ShouldBe(string.Empty);
     }
 
     [Fact]

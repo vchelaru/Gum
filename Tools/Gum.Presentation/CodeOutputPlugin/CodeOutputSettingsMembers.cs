@@ -74,6 +74,7 @@ public class CodeOutputSettingsMembers
         MemberCategory projectCategory = new MemberCategory("Project-Wide Code Generation");
         projectCategory.Members.Add(CreateCodeProjectRootMember());
         projectCategory.Members.Add(CreateGeneratedCodeFolderMember());
+        projectCategory.Members.Add(CreateGeneratedCodeFolderPrefixMember());
         projectCategory.Members.Add(CreateOutputLibrarySelectionMember());
         projectCategory.Members.Add(CreateObjectInstantiationTypeMember());
         projectCategory.Members.Add(CreateProjectUsingStatementsMember());
@@ -249,6 +250,26 @@ public class CodeOutputSettingsMembers
     {
         member.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
         member.PropertiesToSetOnDisplayer["IsFolderDialog"] = true;
+    }
+
+    private InstanceMember CreateGeneratedCodeFolderPrefixMember()
+    {
+        InstanceMember member = new InstanceMember("Generated Code Folder Prefix", this);
+        member.DetailText = "GumCodeGen/ puts Screens and Components in a GumCodeGen folder; Gum names them GumScreens and GumComponents";
+
+        member.CustomSetPropertyEvent += (owner, args) =>
+        {
+            if (ProjectSettings != null)
+            {
+                ProjectSettings.GeneratedCodeFolderPrefix = ((string?)args.Value ?? string.Empty).Trim();
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        };
+
+        member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolderPrefix;
+        member.CustomGetTypeEvent += (owner) => typeof(string);
+
+        return member;
     }
 
     private InstanceMember CreateOutputLibrarySelectionMember()

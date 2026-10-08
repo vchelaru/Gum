@@ -37,6 +37,27 @@ public class CodeFileLocationWatcherTests
     }
 
     [Fact]
+    public void CheckAfterEdit_SendsALocationChange_ButNoHeaderChange_WhenOnlyThePrefixChanges()
+    {
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        List<CodeFileLocationsChangedMessage> locations = new List<CodeFileLocationsChangedMessage>();
+        List<CustomCodeHeadersChangedMessage> headers = new List<CustomCodeHeadersChangedMessage>();
+        messenger.Register<CodeFileLocationsChangedMessage>(this, (_, message) => locations.Add(message));
+        messenger.Register<CustomCodeHeadersChangedMessage>(this, (_, message) => headers.Add(message));
+        CodeFileLocationWatcher watcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, RootNamespace = "Game" };
+        watcher.Reset(settings);
+
+        settings.GeneratedCodeFolderPrefix = "GumCodeGen/";
+        watcher.CheckAfterEdit(settings);
+
+        CodeFileLocationsChangedMessage message = locations.ShouldHaveSingleItem();
+        message.Previous.GeneratedCodeFolderPrefix.ShouldBe(string.Empty);
+        message.Description.ShouldBe("Generated Code Folder Prefix from (none) to GumCodeGen/");
+        headers.ShouldBeEmpty("the prefix moves files; namespaces are unaffected");
+    }
+
+    [Fact]
     public void CheckAfterEdit_SendsAHeaderChange_OnlyWhenAnEditChangesANamespaceSetting()
     {
         WeakReferenceMessenger messenger = new WeakReferenceMessenger();

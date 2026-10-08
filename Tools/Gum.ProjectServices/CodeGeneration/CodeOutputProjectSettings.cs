@@ -71,6 +71,18 @@ using System.Linq;
     public bool ShouldSerializeGeneratedCodeFolder() => !string.IsNullOrEmpty(GeneratedCodeFolder);
 
     /// <summary>
+    /// Optional text put in front of the <c>Screens</c> and <c>Components</c> folder names, under the
+    /// generated code folder. A prefix ending in a slash (<c>GumCodeGen/</c>) makes a folder that holds
+    /// both (<c>GumCodeGen/Screens</c>); one without (<c>Gum</c>) renames them (<c>GumScreens</c>,
+    /// <c>GumComponents</c>). Empty (the default) keeps <c>Screens</c> and <c>Components</c>. This only
+    /// moves files; namespaces are unaffected.
+    /// </summary>
+    public string GeneratedCodeFolderPrefix { get; set; } = string.Empty;
+
+    /// <summary>Leaves the field out of the .codsj while unset, like <see cref="ShouldSerializeGeneratedCodeFolder"/>.</summary>
+    public bool ShouldSerializeGeneratedCodeFolderPrefix() => !string.IsNullOrEmpty(GeneratedCodeFolderPrefix);
+
+    /// <summary>
     /// Optional path to the game .csproj, relative to the .gumx folder. Syntax version and C# version
     /// detection read this .csproj when set. Empty (the default) reads the .csproj in
     /// <see cref="CodeProjectRoot"/>, picking Assembly-CSharp.csproj, then the shortest name, when there

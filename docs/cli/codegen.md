@@ -10,7 +10,7 @@ Generates C# code for elements in a Gum project. Runs error checks before genera
 
 - `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
 - `--element <name>` — Generate code only for the named element. Can be specified multiple times. Supports folder-qualified names.
-- `--prune` — After generating, delete `.Generated.cs` files under the code output folder (`CodeProjectRoot`, plus `GeneratedCodeFolder` when set) that no element in the project accounts for.
+- `--prune` — After generating, delete `.Generated.cs` files under the code output folder (`CodeProjectRoot`, plus `GeneratedCodeFolder` when set; `GeneratedCodeFolderPrefix` changes the Screens and Components folders inside it) that no element in the project accounts for.
 
 ## Examples
 

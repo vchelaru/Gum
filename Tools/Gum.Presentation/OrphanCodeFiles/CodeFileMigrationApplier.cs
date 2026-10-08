@@ -117,8 +117,42 @@ public class CodeFileMigrationApplier : ICodeFileMigrationApplier
             return new CodeFileMigrationResult(backup, exception.Message + " Every file was put back as it was.");
         }
 
+        RemoveEmptiedFolders(projectFile, projectSettings, toBackUp.Where(source => !File.Exists(source.FullPath)));
         return new CodeFileMigrationResult(backup, null);
     }
+
+    // Moving code to a new location (a prefix, say) leaves the old Screens/Components folders behind
+    // empty. Only folders under the code project root, and only empty ones, are removed.
+    private static void RemoveEmptiedFolders(FilePath projectFile, CodeOutputProjectSettings projectSettings, IEnumerable<FilePath> removedFiles)
+    {
+        string? projectDirectory = Path.GetDirectoryName(projectFile.FullPath);
+        if (projectDirectory == null || string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
+        {
+            return;
+        }
+
+        string codeRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.Combine(projectDirectory, projectSettings.CodeProjectRoot)));
+        foreach (FilePath removed in removedFiles)
+        {
+            string? folder = Path.GetDirectoryName(removed.FullPath);
+            while (folder != null && IsUnder(folder, codeRoot) && Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any())
+            {
+                try
+                {
+                    Directory.Delete(folder);
+                }
+                catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException)
+                {
+                    // A leftover empty folder is harmless; the migration itself succeeded.
+                    break;
+                }
+                folder = Path.GetDirectoryName(folder);
+            }
+        }
+    }
+
+    private static bool IsUnder(string folder, string root) =>
+        folder.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 
     private void Move(CodeFileMigrationStep move, CodeOutputProjectSettings projectSettings, CodeFileBackup backup)
     {

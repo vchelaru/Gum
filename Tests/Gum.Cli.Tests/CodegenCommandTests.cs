@@ -186,6 +186,40 @@ public class CodegenCommandTests : IDisposable
         File.Exists(Path.Combine(expectedFolder, "StandardElements.Generated.cs")).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("GumCodeGen/", "GumCodeGen/Screens")]
+    [InlineData("Gum", "GumScreens")]
+    public void Codegen_GeneratedCodeFolderPrefix_WritesTheScreenUnderThePrefixedFolder_AndKeepsTheNamespace(
+        string prefix, string expectedScreensFolder)
+    {
+        string gumxPath = CreateProjectWithScreen("TestScreen", prefix);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        string expectedFolder = Path.Combine(_tempDirectory, Path.Combine(expectedScreensFolder.Split('/')));
+        string generatedPath = Path.Combine(expectedFolder, "TestScreen.Generated.cs");
+        File.Exists(generatedPath).ShouldBeTrue();
+        File.Exists(Path.Combine(expectedFolder, "TestScreen.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Screens", "TestScreen.Generated.cs")).ShouldBeFalse();
+        File.ReadAllText(generatedPath).ShouldContain("namespace TestNamespace.Screens");
+    }
+
+    [Fact]
+    public void Codegen_WithPrune_AndAPrefix_KeepsPrefixedFilesAndPrunesOnesLeftInTheOldFolder()
+    {
+        string gumxPath = CreateProjectWithScreen("TestScreen", "GumCodeGen/");
+        string leftBehind = WriteGeneratedFile("TestScreen");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(Path.Combine(_tempDirectory, "GumCodeGen", "Screens", "TestScreen.Generated.cs")).ShouldBeTrue();
+        File.Exists(leftBehind).ShouldBeFalse(
+            customMessage: "the copy in the unprefixed folder no longer matches where the element generates");
+        result.StandardOutput.ShouldContain("Pruned 1");
+    }
+
     [Fact]
     public void Codegen_WhenProjectHasLocalizationCsv_GeneratedCodeContainsApplyLocalization()
     {
@@ -440,6 +474,37 @@ public class CodegenCommandTests : IDisposable
             """
             {
               "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+        return gumxPath;
+    }
+
+    private string CreateProjectWithScreen(string screenName, string generatedCodeFolderPrefix)
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "Screens", screenName + ".gusx"),
+            $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>{screenName}</Name>
+              <State>
+                <Name>Default</Name>
+              </State>
+            </ScreenSave>
+            """);
+        string gumxContent = File.ReadAllText(gumxPath);
+        File.WriteAllText(gumxPath, gumxContent.Replace("</GumProjectSave>",
+            $"  <ScreenReference Name=\"{screenName}\" />\n</GumProjectSave>"));
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            $$"""
+            {
+              "CodeProjectRoot": "./",
+              "GeneratedCodeFolderPrefix": "{{generatedCodeFolderPrefix}}",
               "RootNamespace": "TestNamespace",
               "OutputLibrary": 5,
               "ObjectInstantiationType": 0,

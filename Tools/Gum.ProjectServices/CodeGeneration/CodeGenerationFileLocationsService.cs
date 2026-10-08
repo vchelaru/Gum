@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.Managers;
+using System.Collections.Generic;
 using System.Linq;
 using ToolsUtilities;
 
@@ -49,7 +50,7 @@ public class CodeGenerationFileLocationsService
 
             if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
             {
-                string prefix = ElementReference.GetSubfolder(selectedElement);
+                string prefix = GetElementCodeSubfolder(selectedElement, codeOutputProjectSettings);
                 var splitName = (prefix + "/" + elementName).Split('/');
 
                 var context = new CodeGenerationContext(_nameVerifier, selectedElement);
@@ -114,6 +115,30 @@ public class CodeGenerationFileLocationsService
         }
 
         return folder;
+    }
+
+    /// <summary>
+    /// The folder, relative to <see cref="GetCodeOutputFolder"/>, that an element's code files go in:
+    /// <c>Screens</c> or <c>Components</c> with <see cref="CodeOutputProjectSettings.GeneratedCodeFolderPrefix"/>
+    /// in front, using <c>/</c> separators. This is only the code location; the element's name inside the
+    /// Gum project and its namespace still use the plain <see cref="ElementReference.GetSubfolder"/> name.
+    /// </summary>
+    public static string GetElementCodeSubfolder(ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        string[] segments = codeOutputProjectSettings.GeneratedCodeFolderPrefix.Trim().Replace('\\', '/').Split('/');
+        List<string> kept = new List<string>();
+        for (int i = 0; i < segments.Length; i++)
+        {
+            // "." and ".." would let the files leave the output folder, which the orphan scan walks;
+            // an empty segment is a leading or doubled slash. Only the last one (a trailing slash) is kept.
+            bool isLast = i == segments.Length - 1;
+            if (segments[i] == "." || segments[i] == ".." || (segments[i].Length == 0 && !isLast))
+            {
+                continue;
+            }
+            kept.Add(segments[i]);
+        }
+        return string.Join("/", kept) + ElementReference.GetSubfolder(element);
     }
 
     private static string WithTrailingSeparator(string folder) =>

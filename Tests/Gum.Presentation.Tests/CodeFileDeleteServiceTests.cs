@@ -239,6 +239,55 @@ public class CodeFileDeleteServiceTests : BaseTestClass
         _fileCommands.Verify(x => x.MoveToRecycleBin(customFile), Times.Never);
     }
 
+    [Theory]
+    [InlineData("GumCodeGen/", "Code/GumCodeGen/Components")]
+    [InlineData("Gum", "Code/GumComponents")]
+    public void ReconcileFilesForDeletedElement_WithAPrefix_RecyclesThePrefixedGeneratedFile_ButNotCustomCode(
+        string prefix, string componentsFolder)
+    {
+        ComponentSave component = GivenComponent("MyComponent");
+        FilePath generatedFile = GivenFile(componentsFolder + "/MyComponent.Generated.cs", "// generated");
+        FilePath customFile = GivenFile(componentsFolder + "/MyComponent.cs", EditedCustomCode);
+        FilePath settingsFile = GivenElementSettingsFile(component, GenerationBehavior.GenerateManually);
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings();
+        projectSettings.GeneratedCodeFolderPrefix = prefix;
+
+        _service.ReconcileFilesForDeletedElement(component, projectSettings);
+
+        _fileCommands.Verify(x => x.MoveToRecycleBin(generatedFile), Times.Once);
+        _fileCommands.Verify(x => x.MoveToRecycleBin(settingsFile), Times.Once);
+        _fileCommands.Verify(x => x.MoveToRecycleBin(customFile), Times.Never);
+    }
+
+    [Fact]
+    public void HandleDeleteOptionsWindowShow_WithAPrefix_OffersTheCheckbox_ForEditedCustomCodeInThePrefixedFolder()
+    {
+        ComponentSave component = GivenComponent("MyComponent");
+        GivenFile("Code/GumCodeGen/Components/MyComponent.cs", EditedCustomCode);
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings();
+        projectSettings.GeneratedCodeFolderPrefix = "GumCodeGen/";
+
+        DeleteOptionCheckboxViewModel? checkbox =
+            _service.HandleDeleteOptionsWindowShow(new object[] { component }, projectSettings);
+
+        checkbox.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void HandleConfirmDelete_WithAPrefix_RecyclesEditedCustomCodeInThePrefixedFolder_WhenCheckboxChecked()
+    {
+        ComponentSave component = GivenComponent("MyComponent");
+        FilePath customFile = GivenFile("Code/GumComponents/MyComponent.cs", EditedCustomCode);
+        FilePath unprefixedFile = GivenFile("Code/Components/MyComponent.cs", EditedCustomCode);
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings();
+        projectSettings.GeneratedCodeFolderPrefix = "Gum";
+
+        _service.HandleConfirmDelete(new object[] { component }, deleteEditedCustomCode: true, projectSettings);
+
+        _fileCommands.Verify(x => x.MoveToRecycleBin(customFile), Times.Once);
+        _fileCommands.Verify(x => x.MoveToRecycleBin(unprefixedFile), Times.Never);
+    }
+
     private ComponentSave GivenComponent(string name)
     {
         ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };

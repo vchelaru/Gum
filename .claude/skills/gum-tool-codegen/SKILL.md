@@ -34,7 +34,7 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 ## Configuration (.codsj files)
 
-**Project-level:** `ProjectCodeSettings.codsj` alongside the `.gumx`. Managed by `CodeOutputProjectSettingsManager`. Key settings: `OutputLibrary`, `CodeProjectRoot`, `RootNamespace`, `ObjectInstantiationType`, `InheritanceLocation`, `AppendFolderToNamespace`. Syntax and C# version detection read the csproj from `CodeProjectCsprojLocator.FindCsproj`: `CsprojPath` when set (no fallback if missing), else the csproj in `CodeProjectRoot`.
+**Project-level:** `ProjectCodeSettings.codsj` alongside the `.gumx`. Managed by `CodeOutputProjectSettingsManager`. Key settings: `OutputLibrary`, `CodeProjectRoot`, `GeneratedCodeFolder`, `GeneratedCodeFolderPrefix`, `RootNamespace`, `ObjectInstantiationType`, `InheritanceLocation`, `AppendFolderToNamespace`. Syntax and C# version detection read the csproj from `CodeProjectCsprojLocator.FindCsproj`: `CsprojPath` when set (no fallback if missing), else the csproj in `CodeProjectRoot`.
 
 **Element-level:** `ElementName.codsj` alongside the `.gucx`/`.gusx`. Managed by `CodeOutputElementSettingsManager`. Key settings: `GenerationBehavior`, namespace override, custom output path.
 

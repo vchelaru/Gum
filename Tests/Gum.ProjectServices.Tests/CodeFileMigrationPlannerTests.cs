@@ -89,6 +89,41 @@ public class CodeFileMigrationPlannerTests : BaseTestClass
         move.Destination.ShouldBe(newCustom);
     }
 
+    [Theory]
+    [InlineData("GumCodeGen/", "GumCodeGen/Components/Controls")]
+    [InlineData("Gum", "GumComponents/Controls")]
+    public void CreatePlan_MovesCustomCodeToThePrefixedFolder_WhenAPrefixIsSet(string prefix, string newFolder)
+    {
+        GumProjectSave project = CreateProject(CreateComponent("Controls/ButtonClose"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolderPrefix = prefix;
+        FilePath oldGenerated = WriteFile("Components/Controls/ButtonClose.Generated.cs", "//Code for Controls/ButtonClose (Container)");
+        FilePath oldCustom = WriteFile("Components/Controls/ButtonClose.cs", EditedCustomCode);
+
+        CodeFileMigrationPlan plan = CreatePlanner(project).CreatePlan(project, projectSettings,
+            new[] { Generated(oldGenerated, "Controls/ButtonClose"), Custom(oldCustom, "Controls/ButtonClose") });
+
+        plan.Steps.Single(step => step.Source == oldGenerated).Action.ShouldBe(CodeFileMigrationAction.RemoveGenerated);
+        CodeFileMigrationStep move = plan.Steps.Single(step => step.Source == oldCustom);
+        move.Action.ShouldBe(CodeFileMigrationAction.MoveCustomCode);
+        move.Destination.ShouldBe(new FilePath(Path.Combine(_tempDirectory, Path.Combine(newFolder.Split('/')), "ButtonClose.cs")));
+    }
+
+    [Fact]
+    public void CreatePlan_MovesCustomCodeBackToTheDefaultFolder_WhenThePrefixIsCleared()
+    {
+        GumProjectSave project = CreateProject(CreateComponent("Controls/ButtonClose"));
+        FilePath oldGenerated = WriteFile("GumCodeGen/Components/Controls/ButtonClose.Generated.cs", "//Code for Controls/ButtonClose (Container)");
+        FilePath oldCustom = WriteFile("GumCodeGen/Components/Controls/ButtonClose.cs", EditedCustomCode);
+
+        CodeFileMigrationPlan plan = CreatePlanner(project).CreatePlan(project, CreateProjectSettings(),
+            new[] { Generated(oldGenerated, "Controls/ButtonClose"), Custom(oldCustom, "Controls/ButtonClose") });
+
+        CodeFileMigrationStep move = plan.Steps.Single(step => step.Source == oldCustom);
+        move.Action.ShouldBe(CodeFileMigrationAction.MoveCustomCode);
+        move.Destination.ShouldBe(new FilePath(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonClose.cs")));
+    }
+
     [Fact]
     public void CreatePlan_SkipsCustomCode_WhenTheCurrentPathAlsoHasRealCode()
     {

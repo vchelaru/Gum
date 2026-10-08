@@ -93,6 +93,98 @@ public class CodeGenScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "CODE-004")]
+    public void Generate_WithGeneratedCodeFolderPrefix_WritesIntoThePrefixedFolders_AndKeepsTheNamespace()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave toggle = code.Project.AddComponent("Controls/Toggle");
+        code.Tree.SaveAll();
+        code.Select(toggle);
+        code.SetUpManualGeneration();
+        code.TypeAndEnter("Root Namespace", "MyGame");
+
+        code.TypeAndEnter("Generated Code Folder Prefix", "GumCodeGen/");
+        code.ClickGenerate();
+
+        string generated = File.ReadAllText(code.CodeFile("GumCodeGen/Components/Controls/Toggle.Generated.cs"));
+        generated.ShouldContain("namespace MyGame.Components", customMessage: "the prefix moves files, not namespaces");
+        generated.ShouldNotContain("GumCodeGen");
+        File.Exists(code.CodeFile("GumCodeGen/Components/Controls/Toggle.cs")).ShouldBeTrue();
+        File.Exists(code.CodeFile("Components/Controls/Toggle.Generated.cs")).ShouldBeFalse();
+        string settings = File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj"));
+        settings.ShouldContain("\"GeneratedCodeFolderPrefix\": \"GumCodeGen/\"");
+
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void ChangingTheGeneratedCodeFolderPrefix_OffersToMigrate_MovesTheCustomCode_RemovesTheEmptiedFolder_AndRestoreLastPutsItBack()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.ClickGenerate();
+        string oldGenerated = code.CodeFile("Components/Card.Generated.cs");
+        string oldCustom = code.CodeFile("Components/Card.cs");
+        string userCode = File.ReadAllText(oldCustom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()");
+        File.WriteAllText(oldCustom, userCode);
+
+        string? prompt = null;
+        code.Project.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            prompt = window.Text();
+            window.ClickButton("Migrate");
+        });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.TypeAndEnter("Generated Code Folder Prefix", "Gum");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the migration prompt and its result");
+
+        prompt.ShouldNotBeNull().ShouldContain("You changed Generated Code Folder Prefix from (none) to Gum.");
+        File.Exists(oldGenerated).ShouldBeFalse();
+        File.Exists(oldCustom).ShouldBeFalse();
+        Directory.Exists(Path.GetDirectoryName(oldCustom)!).ShouldBeFalse("the emptied Components folder is removed");
+        File.ReadAllText(code.CodeFile("GumComponents/Card.cs")).ShouldContain("int userField;");
+        File.Exists(code.CodeFile("GumComponents/Card.Generated.cs")).ShouldBeTrue("migrating regenerates the element at its new path");
+
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.PickMainMenu("Content", "Restore Last Code File Migration…");
+
+        File.ReadAllText(oldCustom).ShouldBe(userCode);
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "CODE-018")]
+    public void RenamingAComponent_WithAPrefix_RenamesItsCodeFilesInThePrefixedFolder()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.TypeAndEnter("Generated Code Folder Prefix", "GumCodeGen/");
+        code.ClickGenerate();
+
+        code.Project.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "Panel"; return true; });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.Click(code.Tree.NodeFor(card));
+        code.Tree.Press(Key.F2, PhysicalKey.F2);
+
+        card.Name.ShouldBe("Panel");
+        File.Exists(code.CodeFile("GumCodeGen/Components/Card.Generated.cs")).ShouldBeFalse();
+        File.Exists(code.CodeFile("GumCodeGen/Components/Card.cs")).ShouldBeFalse();
+        File.ReadAllText(code.CodeFile("GumCodeGen/Components/Panel.Generated.cs")).ShouldContain("partial class Panel");
+        File.ReadAllText(code.CodeFile("GumCodeGen/Components/Panel.cs")).ShouldContain("partial class Panel");
+        File.Exists(code.CodeFile("Components/Panel.Generated.cs")).ShouldBeFalse();
+
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "CODE-007")]
     [Trait("Feature", "CODE-008")]
     [Trait("Feature", "CODE-009")]
