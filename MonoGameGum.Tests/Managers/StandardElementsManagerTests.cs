@@ -152,7 +152,7 @@ public class StandardElementsManagerTests : BaseTestClass
         StandardElementsManager self = StandardElementsManager.Self;
         self.RefreshDefaults();
 
-        StateSave state = self.DefaultStates[standardName];
+        StateSave state = self.DefaultStates![standardName];
 
         state.Variables.ShouldContain(v => v.Name == "HasEvents" && !v.IsHiddenInPropertyGrid);
         state.Variables.ShouldContain(v => v.Name == "ExposeChildrenEvents");
