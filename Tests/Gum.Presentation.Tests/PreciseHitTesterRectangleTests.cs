@@ -112,4 +112,70 @@ public class PreciseHitTesterRectangleTests : BaseTestClass
         tester.IntersectsRectangle(element, 50, 50, 150, 150).ShouldBeTrue();
         tester.IntersectsRectangle(element, 150, 150, 200, 200).ShouldBeFalse();
     }
+
+    // A 100x20 bar at (200,200) rotated 90 degrees stands up from its origin, covering
+    // x 200-220, y 100-200. Its unrotated bounds (x 200-300, y 200-220) are empty space.
+    private static GraphicalUiElement CreateRotatedBar(float rotation)
+    {
+        return new GraphicalUiElement(new InvisibleRenderable())
+        {
+            X = 200,
+            Y = 200,
+            Width = 100,
+            Height = 20,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            Rotation = rotation,
+        };
+    }
+
+    [Fact]
+    public void IntersectsRectangle_RotatedNonPolygon_ReturnsFalse_WhenRectangleOnlyOverlapsUnrotatedBounds()
+    {
+        GraphicalUiElement element = CreateRotatedBar(90);
+
+        bool result = new PreciseHitTester().IntersectsRectangle(element, 250, 200, 290, 210);
+
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IntersectsRectangle_RotatedNonPolygon_ReturnsTrue_WhenRectangleOverlapsRotatedOutline()
+    {
+        GraphicalUiElement element = CreateRotatedBar(90);
+
+        bool result = new PreciseHitTester().IntersectsRectangle(element, 205, 120, 215, 130);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IntersectsRectangle_RotatedNonPolygon_ReturnsTrue_WhenRectangleIsInsideAndCrossesNoEdge()
+    {
+        GraphicalUiElement element = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            X = 200,
+            Y = 200,
+            Width = 100,
+            Height = 100,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            Rotation = 45,
+        };
+
+        // Square rotated 45 degrees about its top-left becomes a diamond centered near (270.7, 200).
+        bool result = new PreciseHitTester().IntersectsRectangle(element, 265, 195, 275, 205);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IntersectsRectangle_RotatedNonPolygon_ReturnsTrue_WhenRectangleContainsTheShape()
+    {
+        GraphicalUiElement element = CreateRotatedBar(90);
+
+        bool result = new PreciseHitTester().IntersectsRectangle(element, 0, 0, 400, 400);
+
+        result.ShouldBeTrue();
+    }
 }
