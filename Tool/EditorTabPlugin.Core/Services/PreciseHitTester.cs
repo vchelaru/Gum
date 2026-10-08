@@ -15,4 +15,17 @@ public class PreciseHitTester : IPreciseHitTester
 
         return element.HasCursorOver(x, y);
     }
+
+    public bool IntersectsRectangle(GraphicalUiElement element, float left, float top, float right, float bottom)
+    {
+        if (element.RenderableComponent is LinePolygon linePolygon)
+        {
+            return linePolygon.IntersectsRectangle(left, top, right, bottom);
+        }
+
+        return !(element.GetAbsoluteRight() < left ||
+                 element.GetAbsoluteLeft() > right ||
+                 element.GetAbsoluteBottom() < top ||
+                 element.GetAbsoluteTop() > bottom);
+    }
 }

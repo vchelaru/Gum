@@ -58,7 +58,8 @@ public class RectangleSelectorStalePushTests
             _camera,
             _mockCursor.Object,
             _mockSelectionRectangleVisual.Object,
-            new CanvasDisplayScale());
+            new CanvasDisplayScale(),
+            Mock.Of<IPreciseHitTester>());
     }
 
     private void SetCursorPosition(float x, float y)

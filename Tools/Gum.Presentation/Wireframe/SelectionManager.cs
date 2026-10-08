@@ -275,7 +275,8 @@ public class SelectionManager : ISelectionManager
             _camera,
             _cursor,
             selectionRectangleVisual,
-            displayScale);
+            displayScale,
+            _preciseHitTester);
     }
 
     /// <summary>
