@@ -551,9 +551,10 @@ namespace RenderingLibrary.Graphics
             SKRect destination = new SKRect(left, top, left + width, top + height);
 
             // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
-            // #3998). The effect is image-independent (declares a `uniform shader inputImage`
-            // child) -- the baked image is only known here, at composite time, so it is bound as
-            // that child shader input on this call rather than cached on the effect.
+            // #3998). The effect is image-independent (declares a `uniform shader SpriteTexture`
+            // child, the same texture name MonoGame .fx/.slang shaders use) -- the baked image is
+            // only known here, at composite time, so it is bound as that child shader input on this
+            // call rather than cached on the effect.
             SKRuntimeEffect? effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
             if (effect == null)
             {
@@ -563,7 +564,7 @@ namespace RenderingLibrary.Graphics
 
             // SKCanvas.DrawImage ignores paint.Shader -- a paint's shader only takes effect on a
             // shape-drawing call, so the shaded path switches to DrawRect and feeds the baked image
-            // in as the effect's "inputImage" child shader instead of passing it as the image arg.
+            // in as the effect's "SpriteTexture" child shader instead of passing it as the image arg.
             // A plain image.ToShader() has an identity local matrix, so it samples using the raw
             // canvas/device coordinate passed to the runtime effect's main() -- correct only when
             // destination starts at (0, 0). The baked image's local (0, 0) corresponds to this
@@ -574,7 +575,19 @@ namespace RenderingLibrary.Graphics
                 SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, SKMatrix.CreateTranslation(left, top));
             using SKRuntimeEffectUniforms uniforms = new SKRuntimeEffectUniforms(effect);
             using SKRuntimeEffectChildren children = new SKRuntimeEffectChildren(effect);
-            children["inputImage"] = imageShader;
+            children["SpriteTexture"] = imageShader;
+
+            // ShadowDusk converts a shader that reads COLOR0 or does UV arithmetic into SkSL that
+            // declares these two uniforms, and an unset uniform reads as zero. White reproduces the
+            // untinted result, and the container size is the size of the image being drawn.
+            if (effect.Uniforms.Contains("ShadowDusk_Color"))
+            {
+                uniforms["ShadowDusk_Color"] = new float[] { 1f, 1f, 1f, 1f };
+            }
+            if (effect.Uniforms.Contains("ShadowDusk_Resolution"))
+            {
+                uniforms["ShadowDusk_Resolution"] = new float[] { width, height };
+            }
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
             managers.Canvas.DrawRect(destination, paint);

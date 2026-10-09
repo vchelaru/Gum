@@ -125,7 +125,7 @@ public class ContainerRuntimeTests
     {
         ContainerRuntime sut = new();
         SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(
-            "uniform shader inputImage; half4 main(float2 coord) { return inputImage.eval(coord); }",
+            "uniform shader SpriteTexture; half4 main(float2 coord) { return SpriteTexture.eval(coord); }",
             out string errors);
         string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
 

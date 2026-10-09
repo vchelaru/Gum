@@ -4,9 +4,13 @@
 
 Gum can be used in Silk.NET projects by importing Gum's `Gum.SilkNet` NuGet package. `Gum.SilkNet` renders through SkiaSharp and adds real Forms input via `Silk.NET.Input`; your project still owns window creation and the render loop.
 
-## Creating an New Project
+## Creating a New Project
 
 Before using Gum, you should first verify that you can create a normal windowed Silk.NET project. For the full API reference, see the Silk.NET documentation: [https://dotnet.github.io/Silk.NET/docs/v3/](https://dotnet.github.io/Silk.NET/docs/v3/)
+
+{% hint style="info" %}
+To skip these steps, run [`gumcli new MyGame -p silknet`](../../../../cli/new.md). It creates a Silk.NET project with Gum already added and a window that opens on Windows, macOS, and Linux.
+{% endhint %}
 
 If you are starting a brand new Silk.NET project from scratch, you can follow these steps:
 
@@ -25,6 +29,7 @@ Next, add the needed NuGet package:
 1. Expand your game project in the Solution Explorer
 2. Right-click on **Dependencies** and select **Manage NuGet Packages**
 3. Search for and install `Silk.NET.Windowing`
+4. Search for and install `Silk.NET.Windowing.Sdl`. Gum requires the SDL window backend.
 {% endtab %}
 {% endtabs %}
 
@@ -32,6 +37,7 @@ Once you have your project set up, it might look similar to the following code b
 
 ```csharp
 using Silk.NET.Windowing;
+using Silk.NET.Windowing.Sdl;
 using Silk.NET.Maths;
 
 namespace SilkNetExample1;
@@ -40,6 +46,8 @@ public class Program
 {
     public static void Main()
     {
+        SdlWindowing.Use();
+
         var options = WindowOptions.Default;
         options.Size = new Vector2D<int>(800, 480);
         options.Title = "Gum Sample";

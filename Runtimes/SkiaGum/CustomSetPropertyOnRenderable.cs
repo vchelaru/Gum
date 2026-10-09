@@ -1171,13 +1171,14 @@ public partial class CustomSetPropertyOnRenderable
 #if SKIA
 
     /// <summary>
-    /// Resolves a <see cref="Gum.GueDeriving.ContainerRuntime.SourceShaderFile"/> reference (a
-    /// <c>.sksl</c> path) into a compiled <see cref="SKRuntimeEffect"/>. Null by default: a
-    /// consumer opts in by assigning this (e.g. compiling the referenced file's text with
-    /// <c>SKRuntimeEffect.CreateShader</c>). With no resolver registered, setting
-    /// <c>SourceShaderFile</c> is a graceful no-op (issue #3998).
+    /// Resolves a <see cref="Gum.GueDeriving.ContainerRuntime.SourceShaderFile"/> reference into a
+    /// compiled <see cref="SKRuntimeEffect"/>. Defaults to <see cref="SkiaGum.Content.SkSlRuntimeEffectLoader.Load"/>,
+    /// which compiles <c>.sksl</c> files. Assign a different resolver to load other formats (the
+    /// Gum.SkiaSharp.ShadowDusk package adds <c>.fx</c> and <c>.slang</c>), or assign null to turn
+    /// <c>SourceShaderFile</c> into a graceful no-op (issue #3998).
     /// </summary>
-    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; }
+    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; } =
+        SkiaGum.Content.SkSlRuntimeEffectLoader.Load;
 
     /// <summary>
     /// Resolves <see cref="RenderTargetEffectResolver"/> and stores the result in the container's
