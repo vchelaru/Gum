@@ -5,6 +5,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary;
 using Shouldly;
+using SkiaGum.Content;
 using SkiaSharp;
 
 namespace SkiaGum.Tests.Renderer;
@@ -122,33 +123,68 @@ half4 main(float2 coord) {
         }
         finally
         {
-            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
             File.Delete(shaderPath);
         }
     }
 
     [Fact]
-    public void Draw_SourceShaderFile_IsNoOp_WhenNoResolverRegistered()
+    public void Draw_SourceShaderFile_IsNoOp_WhenResolverIsCleared()
     {
-        // No resolver registered (clear any leakage from a prior test).
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+        try
+        {
+            // Setting the resolver to null opts out of shader loading entirely.
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
 
-        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
-        GumService.Default.Initialize(surface.Canvas, 64, 64);
+            using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+            GumService.Default.Initialize(surface.Canvas, 64, 64);
 
-        ContainerRuntime renderTarget = BuildRedRenderTarget();
-        GumService.Default.Root.Children.Add(renderTarget);
+            ContainerRuntime renderTarget = BuildRedRenderTarget();
+            GumService.Default.Root.Children.Add(renderTarget);
 
-        // With no resolver the assignment is a graceful no-op (no crash); the container renders
-        // unshaded, so the composited pixel stays red.
-        renderTarget.SourceShaderFile = "resources/DoesNotMatter.sksl";
-        GumService.Default.Draw();
+            // With no resolver the assignment is a graceful no-op (no crash); the container renders
+            // unshaded, so the composited pixel stays red.
+            renderTarget.SourceShaderFile = "resources/DoesNotMatter.sksl";
+            GumService.Default.Draw();
 
-        using SKImage image = surface.Snapshot();
-        using SKBitmap bitmap = SKBitmap.FromImage(image);
-        SKColor center = bitmap.GetPixel(19, 19);
-        center.Red.ShouldBeGreaterThan((byte)200);
-        ((int)center.Red - center.Green).ShouldBeGreaterThan(80);
+            using SKImage image = surface.Snapshot();
+            using SKBitmap bitmap = SKBitmap.FromImage(image);
+            SKColor center = bitmap.GetPixel(19, 19);
+            center.Red.ShouldBeGreaterThan((byte)200);
+            ((int)center.Red - center.Green).ShouldBeGreaterThan(80);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
+        }
+    }
+
+    // No resolver is registered by the test: the built-in .sksl resolver is the default.
+    [Fact]
+    public void Draw_SourceShaderFile_CompilesSkslFile_WithTheDefaultResolver()
+    {
+        string shaderPath = WriteTempShader(GrayscaleSksl);
+        try
+        {
+            using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+            GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+            ContainerRuntime renderTarget = BuildRedRenderTarget();
+            GumService.Default.Root.Children.Add(renderTarget);
+
+            renderTarget.SourceShaderFile = shaderPath;
+            GumService.Default.Draw();
+
+            using SKImage image = surface.Snapshot();
+            using SKBitmap bitmap = SKBitmap.FromImage(image);
+            SKColor center = bitmap.GetPixel(19, 19);
+            Math.Abs(center.Red - center.Green).ShouldBeLessThan(20);
+            Math.Abs(center.Red - center.Blue).ShouldBeLessThan(20);
+        }
+        finally
+        {
+            File.Delete(shaderPath);
+        }
     }
 
     // Regression for #4001: the real SilkNetGum sample's RT Shader screen bakes a SpriteRuntime
@@ -255,7 +291,7 @@ half4 main(float2 coord) {
         }
         finally
         {
-            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
             ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
             File.Delete(shaderAbsolutePath);
             Directory.Delete(Path.GetDirectoryName(shaderAbsolutePath)!);
@@ -294,7 +330,7 @@ half4 main(float2 coord) {
         }
         finally
         {
-            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
             ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
             ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
         }
@@ -335,7 +371,7 @@ half4 main(float2 coord) {
         }
         finally
         {
-            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
             File.Delete(shaderPath);
         }
     }
@@ -363,7 +399,7 @@ half4 main(float2 coord) {
         finally
         {
             CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
-            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
             GraphicalUiElement.MissingFileBehavior = previousBehavior;
         }
     }
@@ -383,7 +419,7 @@ half4 main(float2 coord) {
         }
         finally
         {
-            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = SkSlRuntimeEffectLoader.Load;
             GraphicalUiElement.MissingFileBehavior = previousBehavior;
         }
     }
