@@ -520,114 +520,9 @@ namespace GumRuntime
             allElements.AddRange(project.Components);
             allElements.AddRange(project.Screens);
 
-            // Build a dependency graph: if element A references element B,
-            // then B must be applied before A.
-            Dictionary<ElementSave, List<ElementSave>> dependsOn = new Dictionary<ElementSave, List<ElementSave>>();
-            Dictionary<string, ElementSave> elementsByQualifiedName = new Dictionary<string, ElementSave>();
+            // An element that reads another is applied after it. Elements in a cycle keep project order.
+            List<ElementSave> sorted = ReferenceDependencies.OrderByDependency(allElements);
 
-            foreach (var element in allElements)
-            {
-                dependsOn[element] = new List<ElementSave>();
-                elementsByQualifiedName[ElementReference.GetQualifiedName(element, element.Name)] = element;
-            }
-
-            // Scan variable references to find cross-element dependencies
-            foreach (var element in allElements)
-            {
-                foreach (var state in element.AllStates)
-                {
-                    foreach (var variableList in state.VariableLists)
-                    {
-                        if (variableList.GetRootName() != "VariableReferences")
-                        {
-                            continue;
-                        }
-
-                        foreach (string referenceString in variableList.ValueAsIList)
-                        {
-                            if (referenceString == null || referenceString.StartsWith("//"))
-                            {
-                                continue;
-                            }
-
-                            string? referencedElementName = GetReferencedElementName(referenceString);
-                            if (referencedElementName != null && elementsByQualifiedName.TryGetValue(referencedElementName, out var referencedElement))
-                            {
-                                if (referencedElement != element && !dependsOn[element].Contains(referencedElement))
-                                {
-                                    dependsOn[element].Add(referencedElement);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Topological sort (Kahn's algorithm)
-            List<ElementSave> sorted = new List<ElementSave>();
-            Dictionary<ElementSave, int> inDegree = new Dictionary<ElementSave, int>();
-
-            foreach (var element in allElements)
-            {
-                inDegree[element] = 0;
-            }
-
-            foreach (var kvp in dependsOn)
-            {
-                foreach (var dep in kvp.Value)
-                {
-                    if (inDegree.ContainsKey(dep))
-                    {
-                        // kvp.Key depends on dep, so dep has an outgoing edge to kvp.Key
-                        // We track in-degree of kvp.Key
-                    }
-                }
-            }
-
-            // in-degree = number of dependencies an element has
-            foreach (var element in allElements)
-            {
-                inDegree[element] = dependsOn[element].Count;
-            }
-
-            Queue<ElementSave> queue = new Queue<ElementSave>();
-            foreach (var element in allElements)
-            {
-                if (inDegree[element] == 0)
-                {
-                    queue.Enqueue(element);
-                }
-            }
-
-            while (queue.Count > 0)
-            {
-                var element = queue.Dequeue();
-                sorted.Add(element);
-
-                // Find all elements that depend on this one and reduce their in-degree
-                foreach (var other in allElements)
-                {
-                    if (dependsOn[other].Contains(element))
-                    {
-                        inDegree[other]--;
-                        if (inDegree[other] == 0)
-                        {
-                            queue.Enqueue(other);
-                        }
-                    }
-                }
-            }
-
-            // Any elements not in sorted have circular dependencies — add them at the end
-            foreach (var element in allElements)
-            {
-                if (!sorted.Contains(element))
-                {
-                    sorted.Add(element);
-                }
-            }
-
-            // Apply in sorted order
             foreach (var element in sorted)
             {
                 foreach (var state in element.AllStates)
@@ -648,36 +543,6 @@ namespace GumRuntime
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Extracts the referenced element name from a variable reference string.
-        /// Returns null if the reference is local (no cross-element dependency).
-        /// </summary>
-        private static string? GetReferencedElementName(string referenceString)
-        {
-            // Split on '=' to get the right side
-            var equalsIndex = referenceString.IndexOf('=');
-            if (equalsIndex < 0)
-            {
-                return null;
-            }
-
-            var rightSide = referenceString.Substring(equalsIndex + 1).Trim();
-
-            if (!rightSide.Contains("/"))
-            {
-                return null;
-            }
-
-            // Extract the element path (everything before the first dot)
-            var firstDot = rightSide.IndexOf('.');
-            if (firstDot < 0)
-            {
-                return null;
-            }
-
-            return rightSide.Substring(0, firstDot);
         }
 
         /// <summary>
@@ -871,42 +736,28 @@ namespace GumRuntime
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave, GraphicalUiElement? liveRoot = null,
             bool isFullCommit = true, bool notifyChanges = true)
         {
-            foreach (var variableList in stateSave.VariableLists)
+            // Rows run in dependency order, so a row that reads another row's result sees it whatever
+            // order they are written in. Rows in a cycle run last, in written order.
+            VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, stateSave);
+            foreach (ReferenceRow row in graph.LoadOrderRows)
             {
-                if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                // this applies the variable and returns info about the application:
+                var result = ApplyVariableReferencesOnSpecificOwner(row.Instance, row.Line, stateSave, liveRoot);
+                // In the gum tool, we need to check if the applicatoin actually changed the value
+                // If so, we notify plugins that the variable was changed in case any additional changes
+                // need to happen
+                if (!string.IsNullOrEmpty(result.VariableName))
                 {
-                    InstanceSave? instance = null;
-                    if (!string.IsNullOrEmpty(variableList.SourceObject))
+                    // IsNullOrEmpty above rules out null.
+                    var unqualified = result.VariableName!;
+                    if (unqualified.Contains(".") == true)
                     {
-                        instance = element.GetInstance(variableList.SourceObject);
+                        unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                     }
-
-                    ElementSave? channelOwner = instance != null ? ObjectFinder.Self.GetElementSave(instance) : element;
-
-                    foreach (string referenceString in variableList.ValueAsIList)
+                    if (notifyChanges && !ValueEquality(result.OldValue, result.NewValue))
                     {
-                        foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
-                        {
-                            // this applies the variable and returns info about the application:
-                            var result = ApplyVariableReferencesOnSpecificOwner(instance, expandedReferenceString, stateSave, liveRoot);
-                            // In the gum tool, we need to check if the applicatoin actually changed the value
-                            // If so, we notify plugins that the variable was changed in case any additional changes
-                            // need to happen
-                            if (!string.IsNullOrEmpty(result.VariableName))
-                            {
-                                // IsNullOrEmpty above rules out null.
-                                var unqualified = result.VariableName!;
-                                if (unqualified.Contains(".") == true)
-                                {
-                                    unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
-                                }
-                                if (notifyChanges && !ValueEquality(result.OldValue, result.NewValue))
-                                {
-                                    VariableChangedThroughReference?.Invoke(
-                                        element, null, unqualified, result.OldValue, isFullCommit);
-                                }
-                            }
-                        }
+                        VariableChangedThroughReference?.Invoke(
+                            element, null, unqualified, result.OldValue, isFullCommit);
                     }
                 }
             }

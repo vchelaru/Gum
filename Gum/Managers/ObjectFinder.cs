@@ -1046,17 +1046,12 @@ public class ObjectFinder : IObjectFinder
                     {
                         foreach (string reference in variableList.ValueAsIList)
                         {
-                            if (reference?.Contains("=") == true)
+                            if (reference != null && GumRuntime.ReferenceDependencies.RowReadsElement(reference, elementQualifiedName))
                             {
-                                var indexOfEquals = reference.IndexOf("=");
-                                var rightSide = reference.Substring(indexOfEquals + 1).Trim();
-                                if (rightSide.StartsWith(elementQualifiedName))
-                                {
-                                    var newReference = new TypedElementReference(variableList, ReferenceType.VariableReference);
-                                    newReference.OwnerOfReferencingObject = ownerElement;
-                                    newReference.StateSave = state;
-                                    references.Add(newReference);
-                                }
+                                var newReference = new TypedElementReference(variableList, ReferenceType.VariableReference);
+                                newReference.OwnerOfReferencingObject = ownerElement;
+                                newReference.StateSave = state;
+                                references.Add(newReference);
                             }
                         }
                     }

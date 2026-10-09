@@ -125,13 +125,47 @@ public class VariableReferenceGraphTests : BaseTestClass
     }
 
     [Fact]
-    public void OrderedRows_RowAssigningTheElementsName_IsLeftOut()
+    public void FindAllRows_RowAssigningTheElementsName_IsNotReevaluatedLive()
     {
         ComponentSave element = CreateElement("Name = Other", "Y = Other");
+        VariableReferenceGraph graph = VariableReferenceGraph.GetFor(element);
+        List<ReferenceRow> live = new List<ReferenceRow>();
+
+        graph.FindAllRows(live);
+
+        // The row is still ordered and applied with the others when the element loads.
+        graph.OrderedRows.Select(row => row.Line).ShouldBe(new[] { "Name = Other", "Y = Other" });
+        live.Select(row => row.Line).ShouldBe(new[] { "Y = Other" });
+    }
+
+    [Fact]
+    public void OrderedRows_RowOnAnInstanceThatNoLongerExists_IsLeftOut()
+    {
+        ComponentSave element = CreateElement("Y = 1");
+        VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = "Gone.VariableReferences" };
+        list.Value.Add("X = 2");
+        element.DefaultState.VariableLists.Add(list);
 
         VariableReferenceGraph graph = VariableReferenceGraph.GetFor(element);
 
-        graph.OrderedRows.Select(row => row.Line).ShouldBe(new[] { "Y = Other" });
+        graph.OrderedRows.Select(row => row.Line).ShouldBe(new[] { "Y = 1" });
+    }
+
+    [Theory]
+    [InlineData("Components/Other.Width + 1", "Components/Other")]
+    [InlineData("1 + Components/Styles/Colors.Red * 2", "Components/Styles/Colors")]
+    [InlineData("global::Components/Folder/Other.X", "Components/Folder/Other")]
+    [InlineData("Screens/Main.Count + Standards/Circle.Radius", "Screens/Main,Standards/Circle")]
+    [InlineData("Components/my-item.X", "Components/my-item")]
+    [InlineData("Components/Other + 1", "")]
+    [InlineData("Width / 2", "")]
+    public void ScanReads_ListsTheElementsAnExpressionReads(string expression, string expectedCsv)
+    {
+        List<string> elementReads = new List<string>();
+
+        VariableReferenceGraph.ScanReads(expression, new List<string>(), elementReads);
+
+        string.Join(",", elementReads).ShouldBe(expectedCsv);
     }
 
     [Theory]
