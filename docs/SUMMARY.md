@@ -300,6 +300,7 @@
   * [ColoredRectangleRuntime](code/standard-visuals/coloredrectangleruntime.md)
   * [ContainerRuntime](code/standard-visuals/containerruntime.md)
   * [NineSliceRuntime](code/standard-visuals/ninesliceruntime.md)
+  * [PolygonRuntime](code/standard-visuals/polygonruntime.md)
   * [RectangleRuntime](code/standard-visuals/rectangleruntime.md)
   * [RoundedRectangleRuntime](code/standard-visuals/roundedrectangleruntime/README.md)
     * [CornerRadius](code/standard-visuals/roundedrectangleruntime/cornerradius.md)

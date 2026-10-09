@@ -40,8 +40,83 @@ The following table provides examples on which events are raised when the user p
 
 | User Action                                                                                                                                                                           | Events                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| User moves cursor over a Button, pushes, then releases the left mouse button.                                                                                                         | <ol><li><code>RollOn</code> is raised when the cursor moves over the button</li><li><code>RollOver</code> and <code>RollOverBubbling</code> are raised as the cursor moves over the button every frame, but are not raised if the cursor is stationary</li><li><code>HoverOver</code> is raised every frame the cursor is over the button, even if it is not moving</li><li><code>PushPreview</code> and <code>Push</code> are raised when the user first presses the left mouse button</li><li><code>ClickPreview</code>, <code>Click</code>, and <code>ClickBubbling</code> are raised when the user releases the button</li><li><code>LosePush</code> and <code>RemoveAsPushed</code> are raised when the user releases the left mouse button</li></ol>                                                                                                                                                                                                                                                      |
+| User moves cursor over a Button, pushes, then releases the left mouse button.                                                                                                         | <ol><li><code>RollOn</code> is raised when the cursor moves over the button</li><li><code>RollOver</code> and <code>RollOverBubbling</code> are raised as the cursor moves over the button every frame, but are not raised if the cursor is stationary</li><li><code>HoverOver</code> is raised every frame the cursor is over the button, even if it is not moving</li><li><code>PushPreview</code> and <code>Push</code> are raised when the user first presses the left mouse button</li><li><code>ClickPreview</code>, <code>Click</code>, and <code>ClickBubbling</code> are raised when the user releases the button</li><li><code>LosePush</code> and <code>RemoveAsPushed</code> are raised when the user releases the left mouse button</li></ol>                                                                                                                                                                                                                         |
 | User moves the cursor over a Button, pushes the left mouse button, moves the cursor off of the button while still holding the left mouse button, then releases the left mouse button. | <ol><li><code>RollOn</code> is raised when the cursor moves over the button</li><li><code>RollOver</code> and <code>RollOverBubbling</code> are raised as the cursor moves over the button every frame, but are not raised if the cursor is stationary</li><li><code>HoverOver</code> is raised every frame the cursor is over the button, even if it is not moving</li><li><code>PushPreview</code> and <code>Push</code> are raised when the user first presses the left mouse button</li><li><code>RollOver</code> and <code>Dragging</code> are raised every frame as the cursor moves over the button while the button is held</li><li><code>LosePush</code> is raised when the cursor moves outside of the Button's bounds</li><li><code>Dragging</code> is still raised ever frame as the user holds the left mouse button while moving outside of the Button's bounds</li><li><code>RemoveAsPushed</code> is raised when the user releases the left mouse button</li></ol> |
+
+## Code Example: Polygon Hit Testing
+
+The Polygon type can be used to create custom shapes. All events respect the shape of the polygon, including convex and concave shapes.
+
+The following code shows how to create hit testing for polygons:
+
+```csharp
+protected override void Initialize()
+{
+    base.Initialize();
+    GumUI.Initialize(this);
+
+    label = new Label();
+    label.X = 10;
+    label.Y = 10;
+    label.AddToRoot();
+
+    // Triangle pointing up
+    AddPolygon("Triangle", 10, new[]
+    {
+        new Vector2(0, 100),
+        new Vector2(50, 0),
+        new Vector2(100, 100),
+        new Vector2(0, 100),
+    });
+
+    // Tall pointed shape
+    AddPolygon("Tall", 140, new[]
+    {
+        new Vector2(20, 0),
+        new Vector2(40, 40),
+        new Vector2(40, 160),
+        new Vector2(0, 160),
+        new Vector2(0, 40),
+        new Vector2(20, 0),
+    });
+
+    // L shape (concave). The notch at the top right is outside the polygon.
+    AddPolygon("L Shape", 220, new[]
+    {
+        new Vector2(0, 0),
+        new Vector2(40, 0),
+        new Vector2(40, 60),
+        new Vector2(100, 60),
+        new Vector2(100, 100),
+        new Vector2(0, 100),
+        new Vector2(0, 0),
+    });
+
+}
+
+void AddPolygon(string name, float x, Vector2[] points)
+{
+    var polygon = new PolygonRuntime();
+    polygon.Name = name;
+    polygon.X = x;
+    polygon.Y = 40;
+    polygon.SetPoints(points);
+    polygon.HasEvents = true;
+
+    polygon.RollOver += (_, _) =>
+        label.Text = name + " rolled over at " + System.DateTime.Now;
+
+    polygon.AddToRoot();
+}
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA4VRXW_aQBD8K6t7sqWTZVzaB5AfkjQikSIaAWoSYRRd8IaedB_o7kxII_57dfZBC7GpH2ztzuzueOaD3NpRJcnAmQopqSxXK0sGczJ9tw5lcqWFwKXjWtlkhAoNXxJKRpVMHrjBV8MkEronjyvpCTb5iUunTUYWlEiUL2gsGZA79oIChH8PC7XRvISLsrzX4n2lVWSd4WoFikmk8Co0c7ClEBbNF7DWXDkbF-qjUAAAG2Zg3cxCDgrfIGyaVMpxiVE8bIiBlIyZRM9kEk-QR8hhe9J7ghz66Ulziu6-lhEFNSf4DbPXG1TOQg7ez2GhjgkTLcSPDRooqjTNLnOInik8x5D7-st1Q_ZP7VIyw60LksNE88nA-FhK0H4Xc_tu4IQ0vjOHMy4xGeu3T0ouynKmJ1q72qcdoYQr7jgT_DeSAanvB1_r3Gpao8rb1UsP5dNxebz4n4AbjTPDmVoJbCoKvZT6I_PFIVh_MsQepZ6QxvQz8jWl0Ar00u6hv8iuXRwT4iCsf1ZZ1nXfj_U7kd63TmGdSPu2bC-g_VfuYPqLrQ82Z55-1udOyZ1Au-Da_zPQf6Pp0raLh2T3ByM-ZkuvBAAA)
+
+{% hint style="info" %}
+If a PolygonRuntime has an open shape, then the hit test will register as if the last two points are connected.
+
+![](../../.gitbook/assets/OpenShape.png)
+{% endhint %}
 
 ## Code Example: Handling Visual Events
 
