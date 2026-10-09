@@ -136,6 +136,46 @@ try
             "The trimmer likely removed Button.ToolTip's property metadata that GetProperty(\"ToolTip\") needs.");
     }
 
+    // Variable references under Native AOT (ADR 0022, #5922). This harness does not reference
+    // Gum.Expressions, so rows read plain variable paths through the fallback evaluator, which is
+    // what an AOT game gets. The rows are written in reverse dependency order, and the live
+    // re-evaluation that follows SetProperty has to reach the whole chain.
+    ComponentSave referenceComponent = new ComponentSave { Name = "AotReferenceComponent", BaseType = "Container" };
+    StateSave referenceDefaultState = new StateSave { Name = "Default", ParentContainer = referenceComponent };
+    foreach ((string variableName, float variableValue) in new[] { ("Progress", 3f), ("X", 0f), ("Y", 0f) })
+    {
+        referenceDefaultState.Variables.Add(new VariableSave
+        {
+            Name = variableName,
+            Type = "float",
+            Value = variableValue,
+            SetsValue = true
+        });
+    }
+    VariableListSave<string> referenceRows = new VariableListSave<string> { Name = "VariableReferences", Type = "string" };
+    referenceRows.Value.Add("X = Y");
+    referenceRows.Value.Add("Y = Progress");
+    referenceDefaultState.VariableLists.Add(referenceRows);
+    referenceComponent.States.Add(referenceDefaultState);
+    loadedProject.Components.Add(referenceComponent);
+
+    GraphicalUiElement referenceVisual = referenceComponent.ToGraphicalUiElement(
+        SystemManagers.Default, addToManagers: false);
+    if (referenceVisual.X != 3f || referenceVisual.Y != 3f)
+    {
+        throw new InvalidOperationException(
+            "Chained variable references did not evaluate in dependency order when the element loaded " +
+            $"under Native AOT - expected X = 3 and Y = 3, got X = {referenceVisual.X} and Y = {referenceVisual.Y}.");
+    }
+
+    referenceVisual.SetProperty("Progress", 9f);
+    if (referenceVisual.X != 9f || referenceVisual.Y != 9f)
+    {
+        throw new InvalidOperationException(
+            "Variable references did not re-evaluate after SetProperty changed a variable they read under " +
+            $"Native AOT - expected X = 9 and Y = 9, got X = {referenceVisual.X} and Y = {referenceVisual.Y}.");
+    }
+
     Console.WriteLine(
         "[native-aot-smoke] PASS: GumService.Initialize loaded a real .gumj project " +
         $"({loadedProject.StandardElements.Count} standard element(s), {loadedProject.Components.Count} component(s)) " +

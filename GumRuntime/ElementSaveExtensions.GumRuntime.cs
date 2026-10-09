@@ -1289,6 +1289,14 @@ namespace GumRuntime
                 // ...but call this to change that in case the right-side is a variable belonging to some other component
                 GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
 
+                // A read of the element's own variables through its qualified name still reads the state
+                // being evaluated, which may hold values newer than the saved ones (live re-evaluation).
+                if (ownerOfRightSideVariable != stateSave
+                    && ownerOfRightSideVariable.ParentContainer == stateSave.ParentContainer)
+                {
+                    ownerOfRightSideVariable = stateSave;
+                }
+
                 var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
 
                 var value = recursiveVariableFinder.GetValue(right);
