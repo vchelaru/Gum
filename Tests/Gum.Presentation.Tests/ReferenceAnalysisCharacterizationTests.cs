@@ -14,12 +14,10 @@ using Shouldly;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// Pins how the three places that analyze variable-reference rows behave today
+/// How the places that analyze variable-reference rows order and find them
 /// (<see cref="ElementSaveExtensions.ApplyAllVariableReferences"/>, <see cref="ObjectFinder.GetElementReferencesToThis"/>
-/// and the tool's <see cref="VariableReferenceLogic.ApplyReferencesToElement"/>), including the
-/// cases where they miss a dependency, so that moving them onto one shared analysis (#5920) shows
-/// every difference as a changed test. A test whose name ends in "Today" documents a limitation, not
-/// a goal: when the analysis improves, update the expected value in the same change.
+/// and the tool's <see cref="VariableReferenceLogic.ApplyReferencesToElement"/>). They share one
+/// analysis, so they agree on which rows read which elements and in what order rows run (#5920).
 /// </summary>
 public class ReferenceAnalysisCharacterizationTests : BaseTestClass
 {
@@ -73,24 +71,22 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyAll_RowsInOneElement_AreAppliedInTheOrderTheyAreWrittenToday()
+    public void ApplyAll_RowsInOneElement_AreAppliedInDependencyOrder()
     {
-        // Y reads Offset, which the next row sets. The rows run in written order, so Y sees the
-        // authored Offset (0), not 30.
+        // Y reads Offset, which the next row sets, so the Offset row runs first.
         ComponentSave wave = AddComponent("Wave", Vars(("Progress", 3f), ("Offset", 0f), ("Y", 0f)),
             "Y = Offset + 1", "Offset = Progress * 10");
 
         _project.ApplyAllVariableReferences();
 
         wave.DefaultState!.GetValue("Offset").ShouldBe(30f);
-        wave.DefaultState!.GetValue("Y").ShouldBe(1f);
+        wave.DefaultState!.GetValue("Y").ShouldBe(31f);
     }
 
     [Fact]
-    public void ApplyAll_RowReadingTwoElements_OnlyOrdersAfterTheFirstOneToday()
+    public void ApplyAll_RowReadingTwoElements_OrdersAfterEveryElementItReads()
     {
-        // Z reads C and B, and B reads C. Only the element named first (C) counts as a dependency,
-        // so Z runs before B has its value.
+        // Z reads C and B, and B reads C, so B runs before Z.
         AddComponent("C", Vars(("V", 10f)));
         ComponentSave z = AddComponent("Z", Vars(("V", 0f)), "V = Components/C.V + Components/B.V");
         ComponentSave b = AddComponent("B", Vars(("V", 0f)), "V = Components/C.V * 2");
@@ -98,7 +94,7 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
         _project.ApplyAllVariableReferences();
 
         b.DefaultState!.GetValue("V").ShouldBe(20f);
-        z.DefaultState!.GetValue("V").ShouldBe(10f);
+        z.DefaultState!.GetValue("V").ShouldBe(30f);
     }
 
     [Fact]
@@ -120,7 +116,7 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
     }
 
     [Fact]
-    public void ApplyAll_TwoElementsReadingEachOther_AreAppliedInProjectOrderToday()
+    public void ApplyAll_TwoElementsReadingEachOther_AreAppliedInProjectOrder()
     {
         ComponentSave a = AddComponent("A", Vars(("V", 0f)), "V = Components/B.V + 1");
         ComponentSave b = AddComponent("B", Vars(("V", 0f)), "V = Components/A.V + 1");
@@ -155,24 +151,23 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
     }
 
     [Fact]
-    public void GetElementReferencesToThis_ElementReadAfterAnOperator_IsNotAReferenceToday()
+    public void GetElementReferencesToThis_ElementReadAfterAnOperator_IsAReference()
     {
-        // Only a right side that starts with the element's name counts.
         ComponentSave target = AddComponent("Styles/Colors", Vars(("Red", 1f)));
-        AddComponent("Button", Vars(("Red", 0f)), "Red = 1 + Components/Styles/Colors.Red");
+        ComponentSave reader = AddComponent("Button", Vars(("Red", 0f)), "Red = 1 + Components/Styles/Colors.Red");
 
-        ReferencingOwners(target).ShouldBeEmpty();
+        ReferencingOwners(target).ShouldBe(new[] { reader });
     }
 
     [Fact]
-    public void GetElementReferencesToThis_ElementWhoseNameStartsWithTheTargetName_IsAReferenceToday()
+    public void GetElementReferencesToThis_ElementWhoseNameStartsWithTheTargetName_IsNotAReference()
     {
-        // "Components/ButtonGroup.X" starts with "Components/Button", so it is reported for Button.
+        // "Components/ButtonGroup.X" reads ButtonGroup, not Button.
         ComponentSave target = AddComponent("Button", Vars(("X", 1f)));
         AddComponent("ButtonGroup", Vars(("X", 2f)));
-        ComponentSave reader = AddComponent("Reader", Vars(("X", 0f)), "X = Components/ButtonGroup.X");
+        AddComponent("Reader", Vars(("X", 0f)), "X = Components/ButtonGroup.X");
 
-        ReferencingOwners(target).ShouldBe(new[] { reader });
+        ReferencingOwners(target).ShouldBeEmpty();
     }
 
     [Fact]
@@ -196,9 +191,9 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
     #region Tool propagation
 
     [Fact]
-    public void ApplyReferencesToElement_ChangedElement_UpdatesItsReadersButNotTheirReaders()
+    public void ApplyReferencesToElement_ChangedElement_UpdatesEveryDownstreamReaderInDependencyOrder()
     {
-        // C reads B and B reads A. After A changes, one call updates B; C waits for the next call.
+        // C reads B and B reads A. After A changes, one call updates B and then C.
         ComponentSave a = AddComponent("A", Vars(("V", 10f)));
         ComponentSave b = AddComponent("B", Vars(("V", 0f)), "V = Components/A.V * 2");
         ComponentSave c = AddComponent("C", Vars(("V", 0f)), "V = Components/B.V + 1");
@@ -207,21 +202,31 @@ public class ReferenceAnalysisCharacterizationTests : BaseTestClass
         sut.ApplyReferencesToElement(a, trySave: false);
 
         b.DefaultState!.GetValue("V").ShouldBe(20f);
-        c.DefaultState!.GetValue("V").ShouldBe(0f);
+        c.DefaultState!.GetValue("V").ShouldBe(21f);
     }
 
     [Fact]
-    public void ApplyReferencesToElement_RunAgainForTheReader_ReachesTheNextReader()
+    public void ApplyReferencesToElement_ReaderOfTwoElementsThatBothChange_SeesBothNewValues()
     {
+        // D reads A and B, and B reads A. D has to run after B.
         ComponentSave a = AddComponent("A", Vars(("V", 10f)));
-        ComponentSave b = AddComponent("B", Vars(("V", 0f)), "V = Components/A.V * 2");
-        ComponentSave c = AddComponent("C", Vars(("V", 0f)), "V = Components/B.V + 1");
+        ComponentSave d = AddComponent("D", Vars(("V", 0f)), "V = Components/A.V + Components/B.V");
+        AddComponent("B", Vars(("V", 0f)), "V = Components/A.V * 2");
         VariableReferenceLogic sut = CreateLogic();
 
         sut.ApplyReferencesToElement(a, trySave: false);
-        sut.ApplyReferencesToElement(b, trySave: false);
 
-        c.DefaultState!.GetValue("V").ShouldBe(21f);
+        d.DefaultState!.GetValue("V").ShouldBe(30f);
+    }
+
+    [Fact]
+    public void ApplyReferencesToElement_ElementsReadingEachOther_Finishes()
+    {
+        ComponentSave a = AddComponent("A", Vars(("V", 1f)), "V = Components/B.V + 1");
+        AddComponent("B", Vars(("V", 0f)), "V = Components/A.V + 1");
+        VariableReferenceLogic sut = CreateLogic();
+
+        Should.NotThrow(() => sut.ApplyReferencesToElement(a, trySave: false));
     }
 
     [Fact]

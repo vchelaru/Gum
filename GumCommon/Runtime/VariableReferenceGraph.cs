@@ -15,7 +15,7 @@ namespace GumRuntime;
 public sealed class ReferenceRow
 {
     internal ReferenceRow(string? sourceObject, InstanceSave? instance, string left, string line,
-        string[] reads, bool readsLiveLayout, int authoredIndex)
+        string[] reads, string[] elementReads, bool readsLiveLayout, bool isLiveEvaluable, int authoredIndex)
     {
         SourceObject = sourceObject;
         Instance = instance;
@@ -23,9 +23,22 @@ public sealed class ReferenceRow
         WrittenName = string.IsNullOrEmpty(sourceObject) ? left : sourceObject + "." + left;
         Line = line;
         ReadNames = reads;
+        ElementReads = elementReads;
         ReadsLiveLayout = readsLiveLayout;
+        IsLiveEvaluable = isLiveEvaluable;
         AuthoredIndex = authoredIndex;
     }
+
+    /// <summary>
+    /// The elements the right side reads, by qualified name, such as <c>Components/Styles/Colors</c>.
+    /// </summary>
+    public IReadOnlyList<string> ElementReads { get; }
+
+    /// <summary>
+    /// False for a row that assigns the element's own <c>Name</c> or <c>BaseType</c>. Applying it to a
+    /// state changes the element itself, so it is applied once with the rest but never re-evaluated live.
+    /// </summary>
+    public bool IsLiveEvaluable { get; }
 
     /// <summary>The instance that owns the row, or null for a row on the element itself.</summary>
     public string? SourceObject { get; }
@@ -83,6 +96,7 @@ public sealed class VariableReferenceGraph
     private readonly ReferenceRow[] _orderedRows;
     private readonly ReferenceRow[] _cyclicRows;
     private readonly ReferenceRow[] _loadOrderRows;
+    private readonly ReferenceRow[] _liveRows;
     private readonly bool _hasChains;
     private readonly HashSet<string> _scratch = new HashSet<string>();
 
@@ -106,6 +120,16 @@ public sealed class VariableReferenceGraph
         List<ReferenceRow> loadOrder = new List<ReferenceRow>(ordered);
         loadOrder.AddRange(cyclic);
         _loadOrderRows = loadOrder.ToArray();
+
+        List<ReferenceRow> live = new List<ReferenceRow>(ordered.Length);
+        foreach (ReferenceRow row in ordered)
+        {
+            if (row.IsLiveEvaluable)
+            {
+                live.Add(row);
+            }
+        }
+        _liveRows = live.ToArray();
     }
 
     /// <summary>True when the element has at least one reference row.</summary>
@@ -115,8 +139,9 @@ public sealed class VariableReferenceGraph
     public bool HasChains => _hasChains;
 
     /// <summary>
-    /// Every row that can be re-evaluated, in dependency order: a row comes after every row writing a
-    /// variable it reads. Rows that are part of a cycle are not included.
+    /// Every row in dependency order: a row comes after every row writing a variable it reads. Rows that
+    /// are part of a cycle are not included. Live re-evaluation skips the rows with
+    /// <see cref="ReferenceRow.IsLiveEvaluable"/> false.
     /// </summary>
     public IReadOnlyList<ReferenceRow> OrderedRows => _orderedRows;
 
@@ -246,9 +271,7 @@ public sealed class VariableReferenceGraph
 
                         string left = line.Substring(0, equalsIndex).Trim();
                         string right = line.Substring(equalsIndex + 1).Trim();
-                        // Assigning these through a state renames the element itself, which a live
-                        // re-evaluation must never do.
-                        if (left.Length == 0 || right.Length == 0 || (instance == null && (left == "Name" || left == "BaseType")))
+                        if (left.Length == 0 || right.Length == 0)
                         {
                             continue;
                         }
@@ -257,10 +280,15 @@ public sealed class VariableReferenceGraph
                         right = StripOwnElementQualifier(right, element);
 
                         List<string> reads = new List<string>();
-                        bool readsLiveLayout = ScanReads(right, reads);
+                        List<string> elementReads = new List<string>();
+                        bool readsLiveLayout = ScanReads(right, reads, elementReads);
+
+                        // Assigning these through a state renames the element itself, which a live
+                        // re-evaluation must never do.
+                        bool isLiveEvaluable = !(instance == null && (left == "Name" || left == "BaseType"));
 
                         rows.Add(new ReferenceRow(sourceObject, instance, left, line, reads.ToArray(),
-                            readsLiveLayout, rows.Count));
+                            elementReads.ToArray(), readsLiveLayout, isLiveEvaluable, rows.Count));
                     }
                 }
             }
@@ -292,7 +320,7 @@ public sealed class VariableReferenceGraph
         bool includeLiveLayoutRows = true)
     {
         results.Clear();
-        if (_orderedRows.Length == 0)
+        if (_liveRows.Length == 0)
         {
             return;
         }
@@ -310,7 +338,7 @@ public sealed class VariableReferenceGraph
         bool includeLiveLayoutRows = true)
     {
         results.Clear();
-        if (_orderedRows.Length == 0)
+        if (_liveRows.Length == 0)
         {
             return;
         }
@@ -330,7 +358,7 @@ public sealed class VariableReferenceGraph
     public void FindAffectedRows(string changedName, List<ReferenceRow> results, bool includeLiveLayoutRows = true)
     {
         results.Clear();
-        if (_orderedRows.Length == 0)
+        if (_liveRows.Length == 0)
         {
             return;
         }
@@ -350,7 +378,7 @@ public sealed class VariableReferenceGraph
     public void ApplyAll(ElementSave element, GraphicalUiElement liveRoot)
     {
         StateSave evaluationState = new StateSave { Name = "References", ParentContainer = element };
-        Evaluate(_orderedRows, evaluationState, liveRoot);
+        Evaluate(_liveRows, evaluationState, liveRoot);
     }
 
     /// <summary>
@@ -359,7 +387,7 @@ public sealed class VariableReferenceGraph
     public void FindAllRows(List<ReferenceRow> results)
     {
         results.Clear();
-        results.AddRange(_orderedRows);
+        results.AddRange(_liveRows);
     }
 
     /// <summary>
@@ -368,9 +396,9 @@ public sealed class VariableReferenceGraph
     /// </summary>
     public bool IsAffectedBy(string variableName)
     {
-        for (int i = 0; i < _orderedRows.Length; i++)
+        for (int i = 0; i < _liveRows.Length; i++)
         {
-            ReferenceRow row = _orderedRows[i];
+            ReferenceRow row = _liveRows[i];
             if (row.ReadsLiveLayout)
             {
                 return true;
@@ -392,9 +420,9 @@ public sealed class VariableReferenceGraph
     /// </summary>
     public bool IsAffectedBy(string instanceName, string memberName)
     {
-        for (int i = 0; i < _orderedRows.Length; i++)
+        for (int i = 0; i < _liveRows.Length; i++)
         {
-            ReferenceRow row = _orderedRows[i];
+            ReferenceRow row = _liveRows[i];
             if (row.ReadsLiveLayout)
             {
                 return true;
@@ -417,9 +445,9 @@ public sealed class VariableReferenceGraph
 
     private void Select(List<ReferenceRow> results, bool all, bool includeLiveLayoutRows)
     {
-        for (int i = 0; i < _orderedRows.Length; i++)
+        for (int i = 0; i < _liveRows.Length; i++)
         {
-            ReferenceRow row = _orderedRows[i];
+            ReferenceRow row = _liveRows[i];
             if (all || (includeLiveLayoutRows && row.ReadsLiveLayout) || ReadsAny(row, _scratch))
             {
                 results.Add(row);
@@ -625,7 +653,14 @@ public sealed class VariableReferenceGraph
     /// This is a scan rather than a parse so it works without the optional Roslyn package. It may list
     /// a path that is not a variable, which only costs an unneeded re-evaluation, and never misses one.
     /// </remarks>
-    internal static bool ScanReads(string expression, List<string> reads)
+    internal static bool ScanReads(string expression, List<string> reads) => ScanReads(expression, reads, null);
+
+    /// <summary>
+    /// Lists the variable paths an expression reads, and when <paramref name="elementReads"/> is given,
+    /// the qualified names of the other elements it reads, such as <c>Components/Styles/Colors</c> for
+    /// <c>Components/Styles/Colors.Red</c> (also written <c>global::Components/Styles/Colors.Red</c>).
+    /// </summary>
+    internal static bool ScanReads(string expression, List<string> reads, List<string>? elementReads)
     {
         bool readsLiveLayout = false;
         int i = 0;
@@ -648,13 +683,13 @@ public sealed class VariableReferenceGraph
 
                 if (path == "global" && i + 1 < expression.Length && expression[i] == ':' && expression[i + 1] == ':')
                 {
-                    i = SkipElementPath(expression, i + 2);
+                    i = ReadElementReference(expression, i + 2, elementReads);
                     continue;
                 }
 
                 if (i < expression.Length && expression[i] == '/' && IsElementFolder(path))
                 {
-                    i = SkipElementPath(expression, i);
+                    i = ReadElementReference(expression, start, elementReads);
                     continue;
                 }
 
@@ -735,13 +770,20 @@ public sealed class VariableReferenceGraph
         return i;
     }
 
-    // A path into another element, such as "Components/Other.Width". Not a same-component read.
-    private static int SkipElementPath(string text, int index)
+    // A path into another element, such as "Components/Other.Width". Not a same-component read. The
+    // element's name ends at the first '.'; a path with no '.' names no variable and is not a read.
+    private static int ReadElementReference(string text, int index, List<string>? elementReads)
     {
         int i = index;
-        while (i < text.Length && (IsIdentifierChar(text[i]) || text[i] == '/' || text[i] == '.'))
+        while (i < text.Length && (IsIdentifierChar(text[i]) || text[i] == '/' || text[i] == '-'))
         {
             i++;
+        }
+
+        if (i < text.Length && text[i] == '.' && i + 1 < text.Length && IsIdentifierStart(text[i + 1]))
+        {
+            elementReads?.Add(text.Substring(index, i - index));
+            i = ReadPath(text, i + 1);
         }
         return i;
     }

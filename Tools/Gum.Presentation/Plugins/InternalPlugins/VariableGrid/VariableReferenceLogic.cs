@@ -587,26 +587,29 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     /// <inheritdoc/>
     public void ApplyReferencesToElement(ElementSave element, bool trySave, bool isFullCommit = true)
     {
-        // Every state that references this element, whichever of its values changed; simpler than
-        // tracking which references read the changed variable.
-        var references = ObjectFinder.Self.GetElementReferencesToThis(element)
-            .Where(item => item.ReferenceType == ReferenceType.VariableReference);
-
-        HashSet<StateSave> statesAlreadyApplied = new HashSet<StateSave>();
-        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
-        foreach (var reference in references)
+        GumProjectSave? project = ObjectFinder.Self.GumProjectSave;
+        if (project == null)
         {
-            // ObjectFinder sets the owner and state on every variable reference it returns.
-            if (reference is not { OwnerOfReferencingObject: { } owner, StateSave: { } referencingState })
-            {
-                continue;
-            }
-            if (statesAlreadyApplied.Add(referencingState))
-            {
-                ElementSaveExtensions.ApplyVariableReferences(owner, referencingState,
-                    _wireframeObjectManager.GetRepresentation(owner), isFullCommit);
-                elementsToSave.Add(owner);
-            }
+            return;
+        }
+
+        // Every state that reads this element or an element downstream of it, whichever of its values
+        // changed; simpler than tracking which references read the changed variable. Elements are
+        // applied in dependency order, so a reader of two changed elements sees both new values.
+        List<ElementSave> allElements = new List<ElementSave>();
+        allElements.AddRange(project.StandardElements);
+        allElements.AddRange(project.Components);
+        allElements.AddRange(project.Screens);
+
+        HashSet<string> changedElementNames = new HashSet<string> { ObjectFinder.Self.GetQualifiedElementName(element) };
+        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+
+        // The edited element can read itself through its qualified name.
+        ApplyStatesReading(element, changedElementNames, elementsToSave, isFullCommit);
+        foreach (ElementSave dependent in ReferenceDependencies.GetDependentsInOrder(allElements, element))
+        {
+            ApplyStatesReading(dependent, changedElementNames, elementsToSave, isFullCommit);
+            changedElementNames.Add(ObjectFinder.Self.GetQualifiedElementName(dependent));
         }
 
         if (trySave)
@@ -614,6 +617,20 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             foreach (var elementToSave in elementsToSave)
             {
                 _fileCommands.TryAutoSaveElement(elementToSave);
+            }
+        }
+    }
+
+    private void ApplyStatesReading(ElementSave owner, HashSet<string> elementNames, HashSet<ElementSave> elementsToSave,
+        bool isFullCommit)
+    {
+        foreach (StateSave state in owner.AllStates)
+        {
+            if (ReferenceDependencies.StateReadsAny(state, elementNames))
+            {
+                ElementSaveExtensions.ApplyVariableReferences(owner, state,
+                    _wireframeObjectManager.GetRepresentation(owner), isFullCommit);
+                elementsToSave.Add(owner);
             }
         }
     }
