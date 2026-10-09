@@ -20,7 +20,8 @@ namespace MonoGameGum.Tests.Runtimes;
 /// <summary>
 /// Seeded random element trees, laid out and then edited, with two kinds of check. The golden file pins the
 /// engine's exact output for every seed, so any change to layout code that moves a single element anywhere
-/// in the sweep fails here. The invariant tests check properties that must hold regardless of the engine's
+/// in the sweep fails here. Hashes are taken over LF-normalized text so the golden file is portable across OSes.
+/// The invariant tests check properties that must hold regardless of the engine's
 /// current output (a second layout changes nothing; an edited tree matches a freshly built one).
 /// Set <c>GUM_UPDATE_LAYOUT_SWEEP=1</c> to rewrite the golden file and review the diff; set
 /// <c>GUM_DUMP_LAYOUT_SWEEP=&lt;folder&gt;</c> to write every case's full geometry for diffing two builds.
@@ -611,7 +612,7 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
 
     private static string Hash(string text)
     {
-        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(text));
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(text.Replace("\r\n", "\n")));
         return Convert.ToHexString(hash, 0, 6).ToLowerInvariant();
     }
 
