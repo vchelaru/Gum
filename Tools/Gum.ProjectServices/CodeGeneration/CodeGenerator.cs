@@ -995,12 +995,6 @@ public class CodeGenerator
             // at runtime we use the general unit type:
             type = "global::Gum.Converters.GeneralUnitType";
         }
-        else if(exposedVariable.GetRootName() == "RenderTargetTextureSource")
-        {
-            // The project stores the sibling instance's name as a string, but the runtime property
-            // is an IRenderableIpso.
-            type = "global::RenderingLibrary.Graphics.IRenderableIpso";
-        }
 
         var isState = exposedVariable.IsState(container, out ElementSave? stateContainer, out StateSaveCategory? category);
 
@@ -1109,11 +1103,19 @@ public class CodeGenerator
                 {
                     stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because it references a variable that doesn't exist");
                 }
+                else if (!GetIfRuntimeHasPropertyForVariable(rootVariable, context.CodeOutputProjectSettings.OutputLibrary))
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because the runtime type has no property for it");
+                }
                 else //if (rootVariable != null)
                 {
                     if (shouldSetStateByString)
                     {
                         type = "string";
+                    }
+                    else if (ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave)
+                    {
+                        type = GetRuntimePropertyTypeOverride(rootVariable.Name, context.CodeOutputProjectSettings.OutputLibrary) ?? type;
                     }
 
                     string sourceObjectCSharpName = _codeGenerationNameVerifier.ToCSharpName(sourceObject);
@@ -1165,6 +1167,11 @@ public class CodeGenerator
                     if (rootVariable?.Name == "SourceFile")
                     {
                         // SourceFileName has no getter by default
+                        hasGetter = false;
+                    }
+                    else if (rootVariable?.Name == "SourceShaderFile")
+                    {
+                        // ContainerRuntime.SourceShaderFile is write-only
                         hasGetter = false;
                     }
 
@@ -1246,6 +1253,74 @@ public class CodeGenerator
         }
 
 
+    }
+
+    private static bool IsXamarinFormsFamily(OutputLibrary library) =>
+        library == OutputLibrary.XamarinForms || library == OutputLibrary.Maui;
+
+    /// <summary>
+    /// Returns the C# type of the runtime property for variables whose project type differs from it,
+    /// or null when the project type can be used as is. Exposed properties must match the runtime
+    /// property's type or the generated forwarding getter/setter does not compile.
+    /// </summary>
+    private static string? GetRuntimePropertyTypeOverride(string rootVariableName, OutputLibrary library)
+    {
+        // The XamarinForms/Maui visuals are not Gum runtimes.
+        if (IsXamarinFormsFamily(library))
+        {
+            return null;
+        }
+
+        switch (rootVariableName)
+        {
+            // The project stores the sibling instance's name as a string, but the runtime property
+            // is an IRenderableIpso.
+            case "RenderTargetTextureSource":
+                return "global::RenderingLibrary.Graphics.IRenderableIpso";
+            // The project's "Blend" type name binds to the unrelated Gum.Blend in generated code.
+            case "Blend":
+                return "global::Gum.RenderingLibrary.Blend?";
+            // The project stores an int; the runtime property is a float.
+            case "FontSize":
+                return "float";
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns false when the root variable is defined by a standard element whose runtime type has no
+    /// property for it, so an exposed property forwarding to it cannot compile.
+    /// </summary>
+    private static bool GetIfRuntimeHasPropertyForVariable(VariableSave rootVariable, OutputLibrary library)
+    {
+        if (IsXamarinFormsFamily(library))
+        {
+            return true;
+        }
+
+        // Read by the project loader to pick a generic type; no runtime has a property for it.
+        if (rootVariable.Name == "ContainedType")
+        {
+            return false;
+        }
+
+        if (rootVariable.Name == "HasEvents" || rootVariable.Name == "ExposeChildrenEvents")
+        {
+            // These live on InteractiveGue. Sprite derives from GraphicalUiElement in every runtime, and
+            // the Gum runtimes' Circle and Rectangle do too (SkiaGum's shapes are InteractiveGue).
+            string? standardName = (ObjectFinder.Self.GetContainerOf(rootVariable) as StandardElementSave)?.Name;
+            switch (standardName)
+            {
+                case "Sprite":
+                    return false;
+                case "Circle":
+                case "Rectangle":
+                    return library == OutputLibrary.Skia;
+            }
+        }
+
+        return true;
     }
 
     private bool GetIfExposedVariableIsOverride(VariableSave exposedVariable, CodeGenerationContext context)

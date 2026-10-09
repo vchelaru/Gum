@@ -98,6 +98,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>ComponentWithExposedStandardVariables</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>ComponentWithRenderTargetSource</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
