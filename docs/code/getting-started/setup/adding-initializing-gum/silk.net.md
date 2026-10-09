@@ -39,13 +39,13 @@ dotnet add package Gum.Expressions                           # Optional: arithme
 {% endhint %}
 
 {% hint style="warning" %}
-On Apple Silicon Macs, the SDL native library that `Silk.NET.Windowing.Sdl` brings in can fail macOS's code signature check, and macOS kills the app at launch with no error message. If your app exits immediately, sign the library in your output folder, replacing the path with yours:
+On Apple Silicon Macs, the SDL native library that `Silk.NET.Windowing.Sdl` 2.21.0 brings in fails macOS's code signature check, and macOS kills the app at launch with no error message. Adding a newer build of the library fixes it:
 
 ```bash
-codesign --force --sign - bin/Debug/net10.0/runtimes/osx/native/libSDL2-2.0.dylib
+dotnet add package Ultz.Native.SDL --version 2.32.10
 ```
 
-Building again restores the unsigned copy, so repeat the command after each build.
+Projects created with `gumcli new -p silknet` already include this package.
 {% endhint %}
 
 {% hint style="warning" %}
