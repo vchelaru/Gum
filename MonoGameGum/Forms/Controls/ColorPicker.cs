@@ -137,7 +137,7 @@ public class ColorPicker : FrameworkElement
         PaintHueBar();
 
         // Push handles the initial click; Dragging continues to fire on the pushed element every
-        // frame the cursor moves, even once it leaves the element's bounds, so a drag keeps tracking
+        // frame the button is held, even once it leaves the element's bounds, so a drag keeps tracking
         // the cursor outside the picker (matching Slider/ScrollBar).
         if (_saturationValueContainer != null)
         {

@@ -407,6 +407,42 @@ public class InteractiveGueTests : BaseTestClass
         wasCalled.ShouldBeTrue();
     }
 
+    [Fact]
+    public void Dragging_ShouldBeRaised_WhilePushedAndCursorIsStationary()
+    {
+        Button button = new();
+        button.AddToRoot();
+        _cursor.Setup(x => x.PrimaryDown).Returns(true);
+        _cursor.Setup(x => x.XChange).Returns(0);
+        _cursor.Setup(x => x.YChange).Returns(0);
+        _cursor.Object.WindowPushed = button.Visual;
+
+        int draggingCount = 0;
+        button.Visual.Dragging += (_, _) => draggingCount++;
+
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        draggingCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Dragging_ShouldNotBeRaised_WhenPrimaryButtonIsNotDown()
+    {
+        Button button = new();
+        button.AddToRoot();
+        _cursor.Setup(x => x.PrimaryDown).Returns(false);
+        _cursor.Setup(x => x.XChange).Returns(5);
+        _cursor.Object.WindowPushed = button.Visual;
+
+        int draggingCount = 0;
+        button.Visual.Dragging += (_, _) => draggingCount++;
+
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        draggingCount.ShouldBe(0);
+    }
+
     #region Utilities
 
     void SetCursor(float x, float y)
