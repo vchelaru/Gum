@@ -15,6 +15,7 @@ public class AnimatedReferenceReevaluatorTests
 {
     public AnimatedReferenceReevaluatorTests()
     {
+        StandardElementsManager.Self.Initialize();
         GumExpressionService.Initialize();
     }
 
