@@ -252,6 +252,44 @@ public class ReactiveVariableReferenceTests : BaseTestClass
         gue.Y.ShouldBe(31f);
     }
 
+    [Fact]
+    public void InstanceRows_ChainAcrossInstances_FollowSetPropertyAndTypedProperties()
+    {
+        // The scene from Samples/ReactiveReferencesPlayground: Bar's rows are listed before Ball's,
+        // though Bar.Width reads the result of Ball's X row.
+        ComponentSave element = CreateElement();
+        foreach (string name in new[] { "Bar", "Ball" })
+        {
+            element.Instances.Add(new InstanceSave { Name = name, BaseType = "Container", ParentContainer = element });
+        }
+        AddInstanceRows(element, "Bar", "Width = Ball.X + 20", "Height = Ball.Width");
+        AddInstanceRows(element, "Ball", "X = Progress * 6", "Y = 130 + Sin(Progress * 3.6) * Offset");
+        element.DefaultState.Variables.First(item => item.Name == "Offset").Value = 80f;
+        element.DefaultState.Variables.First(item => item.Name == "Progress").Value = 10f;
+
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        GraphicalUiElement ball = gue.GetGraphicalUiElementByName("Ball")!;
+        GraphicalUiElement bar = gue.GetGraphicalUiElementByName("Bar")!;
+
+        ball.X.ShouldBe(60f);
+        bar.Width.ShouldBe(80f);
+
+        gue.SetProperty("Progress", 50f);
+        ball.X.ShouldBe(300f);
+        ball.Y.ShouldBe(130f + (float)System.Math.Sin(180 * System.Math.PI / 180) * 80f, 0.01f);
+        bar.Width.ShouldBe(320f);
+
+        ball.Width = 70;
+        bar.Height.ShouldBe(70f);
+    }
+
+    private static void AddInstanceRows(ComponentSave element, string instance, params string[] rows)
+    {
+        VariableListSave<string> list = new VariableListSave<string> { Type = "string", Name = instance + ".VariableReferences" };
+        list.Value.AddRange(rows);
+        element.DefaultState.VariableLists.Add(list);
+    }
+
     private static ComponentSave CreateElement(params string[] rows)
     {
         ComponentSave element = new ComponentSave { Name = "Wave", BaseType = "Container" };
