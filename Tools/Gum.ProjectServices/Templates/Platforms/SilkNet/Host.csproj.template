@@ -14,6 +14,9 @@
          looks for at runtime, and without it that call throws NotSupportedException. -->
     <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />
     <PackageReference Include="Silk.NET.Input.Sdl" Version="2.21.0" />
+    <!-- Silk.NET 2.21.0 resolves Ultz.Native.SDL 2.30.1, whose macOS arm64 libSDL2 has an invalid code
+         signature, so macOS kills the app at launch. Remove this once Silk.NET depends on a signed build. -->
+    <PackageReference Include="Ultz.Native.SDL" Version="2.32.10" />
   </ItemGroup>
 
   <ItemGroup>

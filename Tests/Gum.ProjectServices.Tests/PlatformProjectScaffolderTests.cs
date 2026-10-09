@@ -92,6 +92,19 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Fact]
+    public void Create_SilkNet_ShouldPinSdlNativeLibraryWithValidMacSignature()
+    {
+        // Ultz.Native.SDL 2.30.1, which Silk.NET.Windowing.Sdl 2.21.0 resolves on its own, ships a macOS
+        // arm64 libSDL2 with an invalid code signature, so macOS kills the app at launch. 2.32.10 is signed.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, HostPlatform.SilkNet, includeFormsTemplate: true);
+
+        string csproj = File.ReadAllText(result.CsprojPath);
+        csproj.ShouldContain("<PackageReference Include=\"Ultz.Native.SDL\" Version=\"2.32.10\"");
+    }
+
+    [Fact]
     public void Create_WithoutFormsTemplate_ShouldCreateEmptyGumProject()
     {
         string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
