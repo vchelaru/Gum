@@ -46,12 +46,17 @@ public class ReferenceReevaluationAllocationTests : BaseTestClass
         GraphicalUiElement gue = element.ToGraphicalUiElement();
         GraphicalUiElement child = gue.GetGraphicalUiElementByName("Child")!;
         object rotation = 15f;
+        bool toggle = false;
 
         AllocationResult result = AllocationMeasurer.MeasureMinimum(
             () =>
             {
                 gue.SetProperty("Rotation", rotation);
                 child.SetProperty("Rotation", rotation);
+                // Typed properties report without boxing when nothing reads them.
+                gue.Width = toggle ? 10 : 20;
+                child.Rotation = toggle ? 10 : 20;
+                toggle = !toggle;
             },
             attempts: 3,
             warmupIterations: 50,

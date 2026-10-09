@@ -444,6 +444,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
+                ReportTypedPropertyChanged("Visible", value);
             }
 
             bool ShouldUpdateChildren()
@@ -902,6 +903,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mRotation = value;
 
                 UpdateLayout();
+                ReportTypedPropertyChanged("Rotation", value);
             }
         }
     }
@@ -975,6 +977,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     var refreshParent = IgnoredByParentSize == false;
                     UpdateLayout(refreshParent, 0);
                 }
+                ReportTypedPropertyChanged("X", value);
             }
         }
     }
@@ -1015,6 +1018,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     var refreshParent = IgnoredByParentSize == false;
                     UpdateLayout(refreshParent, 0);
                 }
+                ReportTypedPropertyChanged("Y", value);
             }
         }
     }
@@ -1087,6 +1091,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         int.MaxValue / 2
                         );
                 }
+                ReportTypedPropertyChanged("Width", value);
             }
         }
     }
@@ -1160,6 +1165,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         int.MaxValue / 2
                         );
                 }
+                ReportTypedPropertyChanged("Height", value);
             }
         }
     }
@@ -6645,7 +6651,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         SetPropertyCore(propertyName, value);
 
-        if (!VariableReferenceGraph.IsSuppressed)
+        // These names are reported by their own property setter.
+        if (!ReportsFromTypedSetter(propertyName))
         {
             ReportReferenceSourceChanged(propertyName, value);
         }
@@ -6811,10 +6818,32 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     [ThreadStatic]
     private static List<PendingReferenceChange>? _pendingReferenceChanges;
 
-    // Reports a variable written through SetProperty to the elements whose references might read it:
-    // this element's own, and the one containing this instance.
-    private void ReportReferenceSourceChanged(string propertyName, object? value)
+    private static bool ReportsFromTypedSetter(string propertyName)
     {
+        switch (propertyName)
+        {
+            case "X":
+            case "Y":
+            case "Width":
+            case "Height":
+            case "Rotation":
+            case "Visible":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Which elements have a reference that reads the variable: this element's own, and the one
+    // containing this instance. Allocates nothing, so a typed property can ask before boxing its value.
+    private ReferenceAudience GetReferenceAudience(string propertyName)
+    {
+        ReferenceAudience audience = ReferenceAudience.None;
+        if (VariableReferenceGraph.IsSuppressed)
+        {
+            return audience;
+        }
+
         // The element's own rows read plain names. A dotted name was forwarded to the instance, which
         // reports it to this element itself.
         if (ElementSave != null && IsFullyCreated && propertyName.IndexOf('.') < 0)
@@ -6822,7 +6851,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             VariableReferenceGraph? graph = GetReferenceGraph();
             if (graph != null && graph.IsAffectedBy(propertyName))
             {
-                QueueReferenceChange(this, propertyName, value);
+                audience |= ReferenceAudience.Self;
             }
         }
 
@@ -6832,8 +6861,49 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             VariableReferenceGraph? containerGraph = container.GetReferenceGraph();
             if (containerGraph != null && containerGraph.IsAffectedBy(instance.Name, propertyName))
             {
-                QueueReferenceChange(container, instance.Name + "." + propertyName, value);
+                audience |= ReferenceAudience.Container;
             }
+        }
+        return audience;
+    }
+
+    [Flags]
+    private enum ReferenceAudience
+    {
+        None = 0,
+        Self = 1,
+        Container = 2
+    }
+
+    // The typed properties report their own changes so that code such as element.X = 5 updates the
+    // references that read X. Nothing is boxed unless a reference reads the property.
+    private void ReportTypedPropertyChanged(string propertyName, float value)
+    {
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None)
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
+    private void ReportTypedPropertyChanged(string propertyName, bool value)
+    {
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None)
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
+    // Reports a variable that was just written to the elements whose references read it.
+    private void ReportReferenceSourceChanged(string propertyName, object? value)
+    {
+        ReferenceAudience audience = GetReferenceAudience(propertyName);
+        if ((audience & ReferenceAudience.Self) != 0)
+        {
+            QueueReferenceChange(this, propertyName, value);
+        }
+        if ((audience & ReferenceAudience.Container) != 0)
+        {
+            QueueReferenceChange(mWhatContainsThis!, ((InstanceSave)Tag!).Name + "." + propertyName, value);
         }
     }
 

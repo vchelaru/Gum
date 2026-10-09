@@ -194,6 +194,51 @@ public class ReactiveVariableReferenceTests : BaseTestClass
         gue.Y.ShouldBe(12f);
     }
 
+    [Theory]
+    [InlineData("X", "Y = X * 2")]
+    [InlineData("Width", "Y = Width * 2")]
+    [InlineData("Height", "Y = Height * 2")]
+    [InlineData("Rotation", "Y = Rotation * 2")]
+    public void TypedProperty_ReadByAReference_UpdatesTheReferencingVariable(string property, string row)
+    {
+        ComponentSave element = CreateElement(row);
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        switch (property)
+        {
+            case "X": gue.X = 5; break;
+            case "Width": gue.Width = 5; break;
+            case "Height": gue.Height = 5; break;
+            case "Rotation": gue.Rotation = 5; break;
+        }
+
+        gue.Y.ShouldBe(10f);
+    }
+
+    [Fact]
+    public void TypedProperty_VisibleReadByAReference_UpdatesTheReferencingVariable()
+    {
+        ComponentSave element = CreateElement("Y = Visible ? 10 : 20");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        gue.Visible = false;
+
+        gue.Y.ShouldBe(20f);
+    }
+
+    [Fact]
+    public void TypedProperty_OfAChildInstanceReadByAReference_UpdatesTheContainingElement()
+    {
+        ComponentSave element = CreateElement("Y = Child.Width * 2");
+        element.Instances.Add(new InstanceSave { Name = "Child", BaseType = "Container", ParentContainer = element });
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        GraphicalUiElement child = gue.GetGraphicalUiElementByName("Child")!;
+
+        child.Width = 30;
+
+        gue.Y.ShouldBe(60f);
+    }
+
     private static ComponentSave CreateElement(params string[] rows)
     {
         ComponentSave element = new ComponentSave { Name = "Wave", BaseType = "Container" };
