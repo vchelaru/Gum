@@ -315,6 +315,15 @@ Named cases that must exist as explicit tests:
 7. Hiding and re-showing an element restores every sibling and ancestor.
 8. Building the tree in code and through `ApplyState` gives the same result.
 
+Invariants 1 and 3 to 6 are checked over 300 seeded random trees in `LayoutRandomTreeSweepTests` (well-formed trees:
+no child sized from a parent that is sized from its children, no `RelativeToMaxParentOrChildren` or
+`PercentageOfOtherDimension`). The same file pins the engine's exact output for every seed, ill-formed trees
+included, plus event counts and limited-depth layouts, in `LayoutSweepGolden.txt`. A layout change that moves any
+element anywhere in the sweep fails `Sweep_ShouldMatchTheGoldenFile`; set `GUM_UPDATE_LAYOUT_SWEEP=1` to accept it
+after reviewing the diff, or `GUM_DUMP_LAYOUT_SWEEP=<folder>` to dump every case for diffing two builds.
+`LayoutNestedStackModelTests` and `LayoutNestedStackDependentChildTests` check nested content-sized stacks, up to eight
+levels deep, against an independent model and hand-worked numbers. Invariants 2, 7 and 8 are not swept.
+
 ## 10. Defects found by reading, tested and triaged
 
 FIX: fixed with a regression test. DOCUMENT: intended, pinned by a test. LOG: skipped test pointing
