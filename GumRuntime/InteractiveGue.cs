@@ -220,10 +220,10 @@ public partial class InteractiveGue : GraphicalUiElement
     public event EventHandler? DoubleClick;
 
     /// <summary>
-    /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, 
-    /// but is raised even if outside of the bounds of the object. This can be used if an 
-    /// object is to be moved by dragging since it will be raised even if the user moves the 
-    /// cursor quickly outside of its bounds.
+    /// Event raised every frame the primary button is held after pushing on this object, whether
+    /// or not the cursor has moved. Unlike RollOver, it is raised even if the cursor is outside of
+    /// the bounds of the object. This can be used if an object is to be moved by dragging since it
+    /// will be raised even if the user moves the cursor quickly outside of its bounds.
     /// </summary>
     public event EventHandler? Dragging;
 
@@ -1411,7 +1411,7 @@ public static class GueInteractiveExtensionMethods
         {
             cursor.VisualRightPushed = null;
         }
-        if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
+        if(cursor.WindowPushed != null && cursor.PrimaryDown)
         {
             cursor.WindowPushed.TryCallDragging();
         }

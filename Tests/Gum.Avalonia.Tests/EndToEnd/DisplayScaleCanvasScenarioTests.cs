@@ -35,10 +35,16 @@ public class DisplayScaleCanvasScenarioTests
             {
                 Point first = canvas.WindowPointOf(300, 300);
 
+                List<string> trace = new List<string>();
                 bool isDoubleClick = ClickTwice(canvas.Input.Window, first, new Point(first.X + 8, first.Y), canvas.Frame,
-                    time, TimeSpan.FromMilliseconds(100), () => InputLibrary.Cursor.Self.PrimaryDoubleClick);
+                    time, TimeSpan.FromMilliseconds(100), () => InputLibrary.Cursor.Self.PrimaryDoubleClick,
+                    () =>
+                    {
+                        InputLibrary.Cursor cursor = InputLibrary.Cursor.Self;
+                        trace.Add($"({cursor.X}, {cursor.Y}) click {cursor.PrimaryClick} double {cursor.PrimaryDoubleClick}");
+                    });
 
-                isDoubleClick.ShouldBeTrue(canvas.Describe());
+                isDoubleClick.ShouldBeTrue(canvas.Describe() + "; per frame: " + string.Join(" | ", trace));
             }
             finally
             {
@@ -115,19 +121,25 @@ public class DisplayScaleCanvasScenarioTests
     // the second click outside the double-click window. Returns whether the cursor read a double
     // click on the second.
     private static bool ClickTwice(global::Avalonia.Controls.Window window, Point first, Point second, Action frame,
-        ManualTimeProvider time, TimeSpan between, Func<bool> isDoubleClick)
+        ManualTimeProvider time, TimeSpan between, Func<bool> isDoubleClick, Action? afterFrame = null)
     {
+        void Step()
+        {
+            frame();
+            afterFrame?.Invoke();
+        }
+
         window.MouseMove(first, RawInputModifiers.None);
-        frame();
+        Step();
         window.MouseDown(first, MouseButton.Left, RawInputModifiers.None);
-        frame();
+        Step();
         window.MouseUp(first, MouseButton.Left, RawInputModifiers.None);
-        frame();
+        Step();
         time.Advance(between);
         window.MouseDown(second, MouseButton.Left, RawInputModifiers.None);
-        frame();
+        Step();
         window.MouseUp(second, MouseButton.Left, RawInputModifiers.None);
-        frame();
+        Step();
         return isDoubleClick();
     }
 }

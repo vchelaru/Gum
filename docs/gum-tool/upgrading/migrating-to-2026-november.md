@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime. It also adds an `AnimationChainFinished` event to sprites and nine slices playing an animation chain, which replaces `AnimationChainCycled` as the way to detect the end of a chain that does not loop.
+`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime. It also changes `Dragging` on visuals so that it is raised every frame the primary button is held, whether or not the cursor moves. It also adds an `AnimationChainFinished` event to sprites and nine slices playing an animation chain, which replaces `AnimationChainCycled` as the way to detect the end of a chain that does not loop.
 
 ## Breaking Changes and Migrations
 
@@ -154,6 +154,44 @@ This affects you only if a container sized to its children holds a `Relative to 
 To migrate, open your screens and components in the Gum tool and check these containers. If you want the old size, lower or clear the child's `Min Height` or `Min Width`.
 
 For more information see the [Height Units](../gum-elements/general-properties/height-units.md#relative-to-max-of-children-or-parent) page.
+
+### Dragging Is Raised Every Frame While the Button Is Held
+
+`InteractiveGue.Dragging` is now raised every frame that the primary button is held after pushing on the visual, whether or not the cursor moved. It is still raised when the cursor is outside the bounds of the visual.
+
+Before this version, `Dragging` was raised only on frames where the cursor moved. A visual that was pushed and held still raised nothing, so code that updated something every frame during a drag, such as a timer or a readout, stopped while the cursor was stationary.
+
+These cases are unchanged:
+
+* `Dragging` is not raised when the primary button is not down.
+* `RollOver` is still raised only on frames where the cursor moved.
+* Forms controls that use `Dragging` internally, such as `Slider`, `ScrollBar`, `Splitter`, `Window`, `ColorPicker`, `ListBox`, and `TextBox`, behave the same because they compute their result from the cursor position.
+
+This affects you only if your code subscribes to `Dragging` on a visual and does something other than read the cursor position, such as accumulating a value on every call. That handler now runs on frames where the cursor did not move.
+
+To migrate, check the cursor's `XChange` and `YChange` in the handler if you want to run only when the cursor moves.
+
+❌ Old (`Dragging` ran only when the cursor moved):
+
+```csharp
+// Initialize
+button.Visual.Dragging += (_, _) => movesCounted++;
+```
+
+✅ New (same behavior, stated explicitly):
+
+```csharp
+// Initialize
+button.Visual.Dragging += (_, _) =>
+{
+    if (GumUI.Cursor.XChange != 0 || GumUI.Cursor.YChange != 0)
+    {
+        movesCounted++;
+    }
+};
+```
+
+For more information see the [Visual Events](../../code/events-and-interactivity/visual-events.md) page.
 
 ### AnimationChainFinished Replaces AnimationChainCycled at the End of a Non-Looping Chain
 
