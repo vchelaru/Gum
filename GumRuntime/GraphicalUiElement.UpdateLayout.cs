@@ -73,6 +73,48 @@ public partial class GraphicalUiElement
 
     HashSet<GraphicalUiElement> fullyUpdatedChildren = new HashSet<GraphicalUiElement>();
 
+    #region Repeated child layouts (#5927)
+
+    // A parent lays each child out more than once per UpdateLayout (to measure it, then to place it), and a
+    // child that does the same for its own children doubles the work at every level. The later visit of a
+    // child is cut down to placing it when the earlier one, in the same session, left everything in the
+    // child as it found it and the child would read the same from its parent now: laying out an element
+    // that is already laid out, from the same inputs, changes nothing.
+    //
+    // A session is one outermost UpdateLayout. Any entry other than a parent laying out its child (a property
+    // setter, a climb from a descendant, an event handler's edit) starts a new one, so nothing recorded
+    // before it is trusted after it.
+
+    /// <summary>
+    /// Test hook. When false every visit of a child is a full layout, which is the result the shortcut has to
+    /// reproduce exactly.
+    /// </summary>
+    internal static bool SkipRepeatedChildLayouts = true;
+
+    // Session numbers come from one counter so that a number recorded on one thread never matches another's.
+    private static long s_lastSession;
+    [ThreadStatic] private static long s_session;
+
+    // Counts every size or position change a layout makes. A visit that leaves it alone (other than placing the
+    // visited element itself) changed nothing inside the element.
+    [ThreadStatic] private static int s_layoutChangeCount;
+
+    // Set once UpdateLayout gets past its early outs, so a parent can tell a layout from a skipped call.
+    private bool _layoutRan;
+
+    // Whether the last layout placed this element while it was already the size it ended at. A layout measures
+    // twice, and where the element is placed follows the size at that moment.
+    private bool _placedAtFinalSize;
+
+    // What the last layout read from the parent, and (once the parent finds that the visit changed nothing)
+    // the session and axis it ran for. A session of -1 means there is nothing to skip.
+    private float _settledParentWidth;
+    private float _settledParentHeight;
+    private long _settledSession = -1;
+    private int _settledAxis;
+
+    #endregion
+
     /// <summary>
     /// Performs an update to this, and optionally to its parent and children depending on the parameters.
     /// </summary>
@@ -87,6 +129,17 @@ public partial class GraphicalUiElement
     /// position actually changed. This suppresses the O(N) relayout of a parent's other children when
     /// a descendant change does not alter the intermediate element's contribution to the parent.</param>
     public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null, bool gateClimbOnSizeChange = false)
+    {
+        // Anything other than a parent laying out its child starts a new session (see Repeated child layouts).
+        s_session = System.Threading.Interlocked.Increment(ref s_lastSession);
+        UpdateLayoutWithinSession(parentUpdateType, childrenUpdateDepth, xOrY, gateClimbOnSizeChange);
+    }
+
+    /// <summary>
+    /// <see cref="UpdateLayout(ParentUpdateType, int, XOrY?, bool)"/> for a parent laying out its child, which
+    /// continues the parent's session instead of starting one.
+    /// </summary>
+    private void UpdateLayoutWithinSession(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY, bool gateClimbOnSizeChange)
     {
         var updateParent =
             ((parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All) ||
@@ -223,6 +276,13 @@ public partial class GraphicalUiElement
 
         GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float absoluteParentRotation,
             out bool isParentFlippedHorizontally);
+
+        _layoutRan = true;
+        _settledSession = -1;
+        _settledParentWidth = parentWidth;
+        _settledParentHeight = parentHeight;
+        float widthAtPlacement = 0;
+        float heightAtPlacement = 0;
 
         if (mContainedObjectAsIpso != null)
         {
@@ -392,6 +452,8 @@ public partial class GraphicalUiElement
             }
 
 
+            widthAtPlacement = mContainedObjectAsIpso.Width;
+            heightAtPlacement = mContainedObjectAsIpso.Height;
             UpdatePosition(parentWidth, parentHeight, xOrY, absoluteParentRotation, isParentFlippedHorizontally);
 
             if (GetIfParentStacks())
@@ -508,9 +570,12 @@ public partial class GraphicalUiElement
         }
         if (this.mContainedObjectAsIpso != null)
         {
+            _placedAtFinalSize = widthAtPlacement == mContainedObjectAsIpso.Width && heightAtPlacement == mContainedObjectAsIpso.Height;
+
             if (widthBeforeLayout != mContainedObjectAsIpso.Width ||
                 heightBeforeLayout != mContainedObjectAsIpso.Height)
             {
+                s_layoutChangeCount++;
                 if (!isInSizeChange)
                 {
                     isInSizeChange = true;
@@ -522,6 +587,7 @@ public partial class GraphicalUiElement
             if (xBeforeLayout != mContainedObjectAsIpso.X ||
                     yBeforeLayout != mContainedObjectAsIpso.Y)
             {
+                s_layoutChangeCount++;
                 PositionChanged?.Invoke(this, EventArgs.Empty);
             }
         }

@@ -1,0 +1,128 @@
+Layout benchmark after the repeat child visit change (#5927)
+Config:  Release, net8.0, best of 5 batches per cell
+Base:    bb15d34f2 (origin/main) plus the repeat child visit change
+Machine: Apple M5 Pro, 18 cores, macOS 26.5.1
+Date:    2026-10-09
+
+Reading the tables: "exp" is the growth exponent against the previous row,
+log(value ratio) / log(size ratio). 1.0 is linear, 2.0 quadratic. In the
+deep shapes an exponent that keeps rising row after row is exponential.
+calls/run is deterministic; us/run is wall clock and varies by machine and
+for the smallest sizes (JIT noise). Compare calls/run first, us/run second.
+
+=== FlatRegular ===
+scenario     size  nodes   calls/run   calls exp    us/run   time exp
+FullLayout    100    101       101.0           -       7.1          -
+FullLayout    200    201       201.0        0.99      14.3       1.00
+FullLayout    400    401       401.0        1.00      28.7       1.00
+FullLayout    800    801       801.0        1.00      57.5       1.00
+FullLayout   1600   1601      1601.0        1.00     118.7       1.05
+FullLayout   3200   3201      3201.0        1.00     240.7       1.02
+LeafEdit      100    101         1.0           -       0.4          -
+LeafEdit      200    201         1.0        0.00       0.8       0.91
+LeafEdit      400    401         1.0        0.00       1.4       0.84
+LeafEdit      800    801         1.0        0.00       2.9       1.06
+LeafEdit     1600   1601         1.0        0.00       5.5       0.93
+LeafEdit     3200   3201         1.0        0.00      10.7       0.96
+
+=== VerticalStack ===
+scenario     size  nodes   calls/run   calls exp    us/run   time exp
+FullLayout    100    101       101.0           -      13.1          -
+FullLayout    200    201       201.0        0.99      26.1       1.00
+FullLayout    400    401       401.0        1.00      52.4       1.01
+FullLayout    800    801       801.0        1.00     105.2       1.01
+FullLayout   1600   1601      1601.0        1.00     215.0       1.03
+FullLayout   3200   3201      3201.0        1.00     437.6       1.03
+LeafEdit      100    101       102.0           -      13.6          -
+LeafEdit      200    201       202.0        0.99      26.9       0.98
+LeafEdit      400    401       402.0        0.99      53.9       1.00
+LeafEdit      800    801       802.0        1.00     109.3       1.02
+LeafEdit     1600   1601      1602.0        1.00     224.6       1.04
+LeafEdit     3200   3201      3202.0        1.00     453.9       1.01
+
+=== StackOfContentSizedRows ===
+scenario     size  nodes   calls/run   calls exp    us/run   time exp
+FullLayout    100    401       401.0           -      65.6          -
+FullLayout    200    801       801.0        1.00     132.7       1.02
+FullLayout    400   1601      1601.0        1.00     270.5       1.03
+FullLayout    800   3201      3201.0        1.00     552.3       1.03
+FullLayout   1600   6401      6401.0        1.00    1125.3       1.03
+FullLayout   3200  12801     12801.0        1.00    2432.3       1.11
+LeafEdit      100    401       407.0           -      66.5          -
+LeafEdit      200    801       807.0        0.99     134.5       1.02
+LeafEdit      400   1601      1607.0        0.99     273.5       1.02
+LeafEdit      800   3201      3207.0        1.00     557.5       1.03
+LeafEdit     1600   6401      6407.0        1.00    1139.2       1.03
+LeafEdit     3200  12801     12807.0        1.00    2455.6       1.11
+
+=== RatioRow ===
+scenario     size  nodes   calls/run   calls exp    us/run   time exp
+FullLayout    100    101       101.0           -      93.9          -
+FullLayout    200    201       201.0        0.99     357.4       1.93
+FullLayout    400    401       401.0        1.00    1414.9       1.98
+FullLayout    800    801       801.0        1.00    6235.8       2.14
+FullLayout   1600   1601      1601.0        1.00   25034.2       2.01
+FullLayout   3200   3201      3201.0        1.00  102296.9       2.03
+LeafEdit      100    101       101.0           -      96.2          -
+LeafEdit      200    201       201.0        0.99     353.8       1.88
+LeafEdit      400    401       401.0        1.00    1415.2       2.00
+LeafEdit      800    801       801.0        1.00    6141.3       2.12
+LeafEdit     1600   1601      1601.0        1.00   24932.8       2.02
+LeafEdit     3200   3201      3201.0        1.00  101974.6       2.03
+
+=== DeepPercentOfParent ===
+scenario     size  nodes   calls/run   calls exp    us/run   time exp
+FullLayout      2      6         6.0           -       0.4          -
+FullLayout      4     14        14.0        1.22       1.1       1.38
+FullLayout      8     30        30.0        1.10       2.6       1.23
+FullLayout     12     46        46.0        1.05       4.3       1.22
+FullLayout     16     62        62.0        1.04       6.2       1.30
+FullLayout     20     78        78.0        1.03       8.6       1.48
+FullLayout     24     94        94.0        1.02      10.9       1.33
+FullLayout     32    126       126.0        1.02      16.4       1.41
+LeafEdit        2      6         1.0           -       0.1          -
+LeafEdit        4     14         1.0        0.00       0.1       0.07
+LeafEdit        8     30         1.0        0.00       0.1       0.19
+LeafEdit       12     46         1.0        0.00       0.1       0.26
+LeafEdit       16     62         1.0        0.00       0.1       0.31
+LeafEdit       20     78         1.0        0.00       0.1       0.39
+LeafEdit       24     94         1.0        0.00       0.1       0.55
+LeafEdit       32    126         1.0        0.00       0.2       0.55
+
+=== DeepContentSized ===
+scenario     size  nodes   calls/run   calls exp    us/run   time exp
+FullLayout      2      6         6.0           -       0.8          -
+FullLayout      4     14        14.0        1.22       2.2       1.51
+FullLayout      8     30        30.0        1.10       5.6       1.35
+FullLayout     12     46        46.0        1.05       9.9       1.40
+FullLayout     16     62        62.0        1.04      15.2       1.49
+FullLayout     20     78        78.0        1.03      21.8       1.60
+FullLayout     24     94        94.0        1.02      29.0       1.58
+FullLayout     32    126       126.0        1.02      47.2       1.69
+LeafEdit        2      6         9.0           -       1.1          -
+LeafEdit        4     14         9.0        0.00       1.2       0.13
+LeafEdit        8     30         9.0        0.00       1.4       0.20
+LeafEdit       12     46         9.0        0.00       1.6       0.34
+LeafEdit       16     62         9.0        0.00       1.8       0.40
+LeafEdit       20     78         9.0        0.00       2.1       0.58
+LeafEdit       24     94         9.0        0.00       2.3       0.58
+LeafEdit       32    126         9.0        0.00       2.8       0.66
+
+=== ZigZag ===
+scenario     size  nodes   calls/run   calls exp    us/run   time exp
+FullLayout      2      6         7.0           -       6.9          -
+FullLayout      4     14        16.0        1.19       7.7       0.14
+FullLayout      8     30        34.0        1.09       7.9       0.05
+FullLayout     12     46        52.0        1.05      14.2       1.44
+FullLayout     16     62        70.0        1.03      22.2       1.55
+FullLayout     20     78        88.0        1.03      32.1       1.65
+FullLayout     24     94       106.0        1.02      43.3       1.64
+FullLayout     32    126       142.0        1.02      70.8       1.71
+LeafEdit        2      6         3.0           -       2.1          -
+LeafEdit        4     14         3.0        0.00       0.3      -2.77
+LeafEdit        8     30         3.0        0.00       0.3       0.16
+LeafEdit       12     46         3.0        0.00       0.4       0.22
+LeafEdit       16     62         3.0        0.00       0.4       0.39
+LeafEdit       20     78         3.0        0.00       0.5       0.51
+LeafEdit       24     94         3.0        0.00       0.5       0.58
+LeafEdit       32    126         3.0        0.00       0.6       0.64
