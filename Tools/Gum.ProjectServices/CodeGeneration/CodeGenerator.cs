@@ -995,6 +995,12 @@ public class CodeGenerator
             // at runtime we use the general unit type:
             type = "global::Gum.Converters.GeneralUnitType";
         }
+        else if(exposedVariable.GetRootName() == "RenderTargetTextureSource")
+        {
+            // The project stores the sibling instance's name as a string, but the runtime property
+            // is an IRenderableIpso.
+            type = "global::RenderingLibrary.Graphics.IRenderableIpso";
+        }
 
         var isState = exposedVariable.IsState(container, out ElementSave? stateContainer, out StateSaveCategory? category);
 
