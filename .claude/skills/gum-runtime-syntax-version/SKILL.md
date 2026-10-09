@@ -24,8 +24,12 @@ Not the same thing as `.gumx` file format versioning (see `gum-project-versionin
 
 A manual `SyntaxVersion` in `.codsj` wins. Otherwise reads the consumer's `.csproj` (`CodeProjectCsprojLocator` prefers `Assembly-CSharp.csproj`, then the shortest name):
 1. If `ProjectReference` → finds `MonoGameGum`/`RaylibGum`/`SkiaGum`/`KniGum`/`FnaGum`, opens that project's `AssemblyAttributes.cs`, regex-parses the version.
-2. Else if `PackageReference` → locates the DLL in the NuGet cache, reads the attribute via `MetadataLoadContext`.
+2. Else if `PackageReference` → locates the DLL in the NuGet cache (`NUGET_PACKAGES` if set, else `~/.nuget/packages`), reads the attribute via `MetadataLoadContext`. A floating `Version="*"` / `"2026.*"` resolves to the highest restored stable version in the cache, so the package must be restored before detection works.
 3. Else if a `<Reference>` has a `<HintPath>` to a runtime DLL (how Unity references Gum) → reads that DLL's attribute.
+
+A new runtime should be added to `GumRuntimeNames` and `GumPackageNames` in `SyntaxVersionDetectionService` so its stamped version is read. It does not go in the legacy-era lists.
+
+When none of the three finds a version, the fallback depends on which runtimes the csproj references. Only the runtimes that existed before unification (`LegacyEraRuntimeNames` / `LegacyEraPackageNames`: MonoGame, KNI, FNA, Skia) fall back to 0, because an old build lacks the attribute. Anything else (Stride, Silk.NET, raylib, a new runtime, or no Gum reference) resolves to `SyntaxVersionDetectionService.LatestSyntaxVersion`, the stamp on GumCommon.
 
 **GumCommon is not on the detection scan list** — stamping it is for assembly-metadata consistency, not for codegen detection.
 

@@ -1,7 +1,7 @@
 # check-references
 
 ```
-gumcli check-references <project.gumx> [--json] [--fix]
+gumcli check-references <project.gumj> [--json] [--fix]
 ```
 
 Detects (and optionally fixes) `VariableReferences` rows whose left-hand-side scalars are not materialized into the owning state's `Variables`. This inconsistent shape is most commonly produced by AI agents and hand edits that write the references row without running the propagation Gum normally performs when references are authored interactively.
@@ -12,16 +12,16 @@ Use this command from AI agents and CI pre-commit hooks to detect (and optionall
 
 ## Options
 
-- `<project.gumx>` — Path to the `.gumx` project file
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
 - `--json` — Output results as JSON instead of human-readable text
 - `--fix` — Propagate references on affected states and save the modified element files
 
 ## Examples
 
 ```
-gumcli check-references MyProject/MyProject.gumx
-gumcli check-references MyProject/MyProject.gumx --json
-gumcli check-references MyProject/MyProject.gumx --fix
+gumcli check-references MyProject/MyProject.gumj
+gumcli check-references MyProject/MyProject.gumj --json
+gumcli check-references MyProject/MyProject.gumj --fix
 ```
 
 ## What it scans
@@ -80,7 +80,7 @@ If a right-hand side cannot be evaluated (e.g. references a missing element), th
 |------|---------|
 | 0 | No unpropagated references (or all were fixed) |
 | 1 | One or more elements still have unpropagated references |
-| 2 | Project `.gumx` could not be loaded |
+| 2 | Project file could not be loaded |
 
 {% hint style="info" %}
 `--fix` writes evaluated scalars into the affected element files using the same propagation the Gum tool performs at author time. Files are saved in the project's existing format (compact attribute form when the project's `Version` supports it).

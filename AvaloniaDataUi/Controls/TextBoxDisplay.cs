@@ -36,7 +36,6 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     {
         _label = new TextBlock
         {
-            MinWidth = 100,
             Padding = new Thickness(4, 4, 4, 0),
             VerticalAlignment = VerticalAlignment.Center,
             TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
@@ -48,7 +47,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         };
         CapturedPointerDrag.Attach(_labelHost, TryBeginLabelScrub, HandleLabelScrubMoved, EndLabelScrub);
 
-        _textBox = new EditTrackingTextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
+        _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Center };
         _textBox.GotFocus += (_, _) => RefreshPlaceholderText();
         _textBox.EditCommitRequested += HandleEditCommitRequested;
         _textBox.LostFocus += HandleTextBoxLostFocus;
@@ -69,6 +68,8 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
             ColumnDefinitions = new ColumnDefinitions("100,*,Auto"),
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
         };
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
+        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 44);
         Grid.SetColumn(_textBox, 1);
         Grid.SetColumn(_nullableCheckBox, 2);
         Grid.SetRow(_hint, 2);
@@ -140,7 +141,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     {
         _logic.InstanceMember = InstanceMember;
         _lastApplyValueResult = null;
-        _grid.ColumnDefinitions[0].Width = new GridLength(InstanceMember?.FirstGridLength ?? 100);
+        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
         _textBox.ClearValue(TemplatedControl.BackgroundProperty);
     }
 

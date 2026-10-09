@@ -27,6 +27,7 @@ public class PolygonPointInputHandler : InputHandlerBase
     private readonly SelectedPointHighlightVisual _selectedPointHighlightVisual;
 
     private int? _grabbedIndex = null;
+    private PolygonPointDrag? _drag = null;
     private int? _selectedIndex = null;
     // The selected polygon's instance or element. Its visual is rebuilt after every edit, so the
     // visual itself cannot say whether the selection moved to another polygon.
@@ -111,6 +112,7 @@ public class PolygonPointInputHandler : InputHandlerBase
             Context.GrabbedState.HandlePush();
             _grabbedIndex = existingPointIndexOver;
             _selectedIndex = _grabbedIndex;
+            _drag = CreateDrag(existingPointIndexOver.Value);
             UpdateVisualState();
             IsActive = true;
             return true;
@@ -121,6 +123,7 @@ public class PolygonPointInputHandler : InputHandlerBase
             int newIndex = AddPointAt(worldX, worldY);
             _grabbedIndex = newIndex;
             _selectedIndex = newIndex;
+            _drag = CreateDrag(newIndex);
             UpdateVisualState();
             IsActive = true;
             return true;
@@ -143,6 +146,7 @@ public class PolygonPointInputHandler : InputHandlerBase
     protected override void OnRelease()
     {
         _grabbedIndex = null;
+        _drag = null;
         _addPointSpriteVisual.IsEnabled = true;
 
         if (Context.HasChangedAnythingSinceLastPush)
@@ -161,8 +165,10 @@ public class PolygonPointInputHandler : InputHandlerBase
         _pointNodesVisual.HighlightedIndex = indexOver;
         _pointNodesVisual.GrabbedIndex = _grabbedIndex;
 
-        // Disable add point sprite while dragging
-        _addPointSpriteVisual.IsEnabled = _grabbedIndex == null && !IsActive && !Context.IsSelectionLocked();
+        // Disable add point sprite while any drag is in progress, including one owned by another
+        // handler (moving the whole polygon).
+        _addPointSpriteVisual.IsEnabled = _grabbedIndex == null && !IsActive &&
+            !Context.Cursor.PrimaryDownIgnoringIsInWindow && !Context.IsSelectionLocked();
 
         // Hide add point sprite when over existing point
         if (indexOver != null && _addPointSpriteVisual.IsEnabled)
@@ -174,6 +180,7 @@ public class PolygonPointInputHandler : InputHandlerBase
     public override void OnSelectionChanged()
     {
         _grabbedIndex = null;
+        _drag = null;
 
         var currentSelection = Context.SelectedObjects.FirstOrDefault()?.Tag;
 
@@ -230,6 +237,7 @@ public class PolygonPointInputHandler : InputHandlerBase
         {
             _grabbedIndex--;
         }
+        _drag = _grabbedIndex is { } grabbedIndex ? CreateDrag(grabbedIndex) : null;
 
         ApplyVertexValues();
         DoEndOfSettingValuesLogic();
@@ -257,46 +265,17 @@ public class PolygonPointInputHandler : InputHandlerBase
         return newIndex;
     }
 
+    private PolygonPointDrag CreateDrag(int pointIndex) =>
+        new PolygonPointDrag(SelectedLinePolygon!, pointIndex, Context.SnapToGrid, Context.GridSize);
+
     // xChange/yChange are in screen pixels.
     private void MoveGrabbedPoint(float xChange, float yChange)
     {
-        var linePolygon = SelectedLinePolygon;
-        if (linePolygon == null || _grabbedIndex == null) return;
+        if (_drag == null) return;
 
         Context.HasChangedAnythingSinceLastPush = true;
 
-        var pointAtIndex = linePolygon.PointAt(_grabbedIndex.Value);
-        var zoom = Context.Camera.Zoom;
-
-        Matrix.Invert(linePolygon.GetAbsoluteRotationMatrix(), out Matrix rotationMatrix);
-
-        var rightVector = new Vector3(rotationMatrix.M11, rotationMatrix.M12, rotationMatrix.M13);
-        var upVector = new Vector3(rotationMatrix.M21, rotationMatrix.M22, rotationMatrix.M23);
-
-        var change = new Vector2(
-            xChange * rightVector.X + yChange * upVector.X,
-            xChange * rightVector.Y + yChange * upVector.Y) / zoom;
-
-        pointAtIndex.X += change.X;
-        pointAtIndex.Y += change.Y;
-
-        // Round to nearest pixel
-        var roundMultiple = 1 / zoom;
-        pointAtIndex.X = MathFunctions.RoundFloat(pointAtIndex.X, roundMultiple);
-        pointAtIndex.Y = MathFunctions.RoundFloat(pointAtIndex.Y, roundMultiple);
-
-        var shouldSetFirstAndLast = (_grabbedIndex == 0 || _grabbedIndex == linePolygon.PointCount - 1) &&
-            linePolygon.PointAt(0) == linePolygon.PointAt(linePolygon.PointCount - 1);
-
-        if (shouldSetFirstAndLast)
-        {
-            linePolygon.SetPointAt(pointAtIndex, 0);
-            linePolygon.SetPointAt(pointAtIndex, linePolygon.PointCount - 1);
-        }
-        else
-        {
-            linePolygon.SetPointAt(pointAtIndex, _grabbedIndex.Value);
-        }
+        _drag.Apply(xChange, yChange, Context.Camera.Zoom);
 
         Context.GuiCommands.RefreshVariables();
     }

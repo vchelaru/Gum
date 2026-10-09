@@ -60,15 +60,15 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
 
 1. Re-point `element.ElementSave` to the new project's element.
 2. **Structural diff against the new `Instances` list** (`DiffDesignTimeChildren`):
-   - Partition the visual's children into **design-time** (those with `Tag is InstanceSave`) and **everything else** (runtime-added or Tag-cleared).
-   - For each existing design-time child not present in the new `Instances`: `Parent = null` + `RemoveFromManagers()`.
+   - Partition the visual's `ContainedElements` plus `Children` into **design-time** (those with `Tag is InstanceSave`) and **everything else** (runtime-added or Tag-cleared). Matching must use `ContainedElements`: an instance with a `Parent` variable (a ListBoxItem inside a ComboBox) is not in `Children`, and missing it duplicates the instance on every reload.
+   - For each existing design-time child not present in the new `Instances`: `Parent = null`, `ElementGueContainingThis = null`, `RemoveFromManagers()`.
    - For each new `InstanceSave`:
      - If a matching design-time child exists, compare its visual's `ElementSave.Name` against the new `BaseType`. Mismatch → remove+recreate (retype). Match → refresh the `Tag` to point at the new `InstanceSave` instance.
      - If a same-named non-design-time child exists, leave it alone (runtime owns that slot). Do not create a duplicate.
      - Otherwise call `instance.ToGraphicalUiElement(systemManagers)` and attach via `Parent = parent` + `ElementGueContainingThis = parent`.
-   - `ReorderDesignTimeChildren` walks the design-time slots in `Children` and `Move`s items so the design-time subsequence matches `newEs.Instances` order. Non-design-time children keep their slots.
 3. `SetVariablesRecursively(newEs, newEs.DefaultState)` — re-applies the new default-state values. Qualified-name variables (`MyInstance.X`, `MyInstance.Parent`, etc.) flow into the children by `Name`, which also handles reparenting and animates new instances into position.
-4. Recurse into runtime-added children only. Design-time children are skipped — their variables were already set via the parent's qualified-name walk.
+   - Then `ReorderDesignTimeChildren` reorders, per container (the element, or any instance an instance is parented to), only the slots held by this element's own instances (matched by `InstanceSave` reference against `newEs.Instances`), so `newEs.Instances` order wins. It runs after variables so `Parent` has settled. A move inside an ItemsControl `InnerPanel` relies on the control syncing its collections (see `gum-forms-itemscontrol`).
+4. Recurse into runtime-added children (no `InstanceSave` tag). Design-time instances are recursed into *before* step 3, at any depth, so an edit to a component's own default state or instances reaches every instance of it, and this element's qualified-name overrides then win over the component's defaults. Standard-element instances are not recursed into. A design-time child is only diffed against the element that owns its `InstanceSave` (`ParentContainer.Name`): a screen instance parented under a component instance sits in that visual's `Children` but belongs to the screen.
 
 ## Non-Obvious Behaviors / Gotchas
 

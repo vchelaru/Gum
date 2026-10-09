@@ -1171,13 +1171,14 @@ public partial class CustomSetPropertyOnRenderable
 #if SKIA
 
     /// <summary>
-    /// Resolves a <see cref="Gum.GueDeriving.ContainerRuntime.SourceShaderFile"/> reference (a
-    /// <c>.sksl</c> path) into a compiled <see cref="SKRuntimeEffect"/>. Null by default: a
-    /// consumer opts in by assigning this (e.g. compiling the referenced file's text with
-    /// <c>SKRuntimeEffect.CreateShader</c>). With no resolver registered, setting
-    /// <c>SourceShaderFile</c> is a graceful no-op (issue #3998).
+    /// Resolves a <see cref="Gum.GueDeriving.ContainerRuntime.SourceShaderFile"/> reference into a
+    /// compiled <see cref="SKRuntimeEffect"/>. Defaults to <see cref="SkiaGum.Content.SkSlRuntimeEffectLoader.Load"/>,
+    /// which compiles <c>.sksl</c> files. Assign a different resolver to load other formats (the
+    /// Gum.SkiaSharp.ShadowDusk package adds <c>.fx</c> and <c>.slang</c>), or assign null to turn
+    /// <c>SourceShaderFile</c> into a graceful no-op (issue #3998).
     /// </summary>
-    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; }
+    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; } =
+        SkiaGum.Content.SkSlRuntimeEffectLoader.Load;
 
     /// <summary>
     /// Resolves <see cref="RenderTargetEffectResolver"/> and stores the result in the container's
@@ -1290,20 +1291,8 @@ public partial class CustomSetPropertyOnRenderable
         switch(propertyName)
         {
             case "SourceFile":
-                var asString = value as string;
-                if (string.IsNullOrEmpty(asString))
-                {
-                    asNineSlice.Texture = null;
-                }
-                else if (AnimationChainListFileLoader.IsAnimationChainFile(asString))
-                {
-                    AssignAnimationChainSourceFile(asString, asNineSlice.AnimationLogic, asNineSlice, graphicalUiElement);
-                }
-                else
-                {
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    asNineSlice.Texture = loaderManager.LoadContent<SKBitmap>(asString);
-                }
+                graphicalUiElement.ChangeRenderableAndUpdateLayout((value: value as string, asNineSlice, graphicalUiElement),
+                    static state => AssignSourceFileOnNineSlice(state.value, state.asNineSlice, state.graphicalUiElement));
                 return true;
             case nameof(NineSlice.Alpha):
                 if (nineSliceRuntime != null)
@@ -1378,6 +1367,23 @@ public partial class CustomSetPropertyOnRenderable
                 break;
         }
         return false;
+    }
+
+    private static void AssignSourceFileOnNineSlice(string? value, NineSlice asNineSlice, GraphicalUiElement graphicalUiElement)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            asNineSlice.Texture = null;
+        }
+        else if (AnimationChainListFileLoader.IsAnimationChainFile(value))
+        {
+            AssignAnimationChainSourceFile(value, asNineSlice.AnimationLogic, asNineSlice, graphicalUiElement);
+        }
+        else
+        {
+            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+            asNineSlice.Texture = loaderManager.LoadContent<SKBitmap>(value);
+        }
     }
 
     // An .achx/.achj SourceFile loads animation chains instead of a texture, the same as the
@@ -1561,14 +1567,8 @@ public partial class CustomSetPropertyOnRenderable
 
         void ReactToFontValueChange()
         {
+            // Lays out too when the text's measured size changed.
             gue.UpdateToFontValues();
-            // we want to update if the text's size is based on its "children" (the letters it contains)
-            if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                // If height is relative to children, it could be in a stack
-                gue.HeightUnits == DimensionUnitType.RelativeToChildren)
-            {
-                gue.UpdateLayout();
-            }
             handled = true;
         }
 
@@ -1681,18 +1681,12 @@ public partial class CustomSetPropertyOnRenderable
         // Typeface (#3708): an explicit SKTypeface override. Unlike UseCustomFont/CustomFontFile
         // above, this does NOT call ReactToFontValueChange() -- that re-resolves via
         // UpdateToFontValues() (the normal FontName/FontSize path), which would immediately stomp
-        // an explicit override. The property setter itself invalidates the cached RichTextKit
-        // block; only a pending relative-to-children layout still needs an explicit nudge here.
+        // an explicit override. The property setter lays out.
         else if (propertyName == nameof(gueAsTextRuntime.Typeface))
         {
             if (gueAsTextRuntime != null)
             {
                 gueAsTextRuntime.Typeface = value as SkiaSharp.SKTypeface;
-            }
-            if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                gue.HeightUnits == DimensionUnitType.RelativeToChildren)
-            {
-                gue.UpdateLayout();
             }
             handled = true;
         }

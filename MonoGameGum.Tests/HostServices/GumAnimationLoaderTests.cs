@@ -68,6 +68,43 @@ public class GumAnimationLoaderTests
         project.ElementAnimations.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void ShouldWarnEnumerationUnavailable_IsFalse_ForLooseProviderOverRealDirectoryWithNoAnimations()
+    {
+        string directory = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            LooseFileGumFileProvider provider = new LooseFileGumFileProvider(directory);
+
+            GumAnimationLoader.ShouldWarnEnumerationUnavailable(provider, usedBundle: false, loaded: 0)
+                .ShouldBeFalse();
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ShouldWarnEnumerationUnavailable_IsTrue_ForLooseProviderWithMissingRoot()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        LooseFileGumFileProvider provider = new LooseFileGumFileProvider(missing);
+
+        GumAnimationLoader.ShouldWarnEnumerationUnavailable(provider, usedBundle: false, loaded: 0)
+            .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldWarnEnumerationUnavailable_IsFalse_ForBundleOrWhenAnimationsLoaded()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        LooseFileGumFileProvider provider = new LooseFileGumFileProvider(missing);
+
+        GumAnimationLoader.ShouldWarnEnumerationUnavailable(provider, usedBundle: true, loaded: 0).ShouldBeFalse();
+        GumAnimationLoader.ShouldWarnEnumerationUnavailable(provider, usedBundle: false, loaded: 1).ShouldBeFalse();
+    }
+
     private static byte[] Ganx()
     {
         ElementAnimationsSave save = new ElementAnimationsSave();

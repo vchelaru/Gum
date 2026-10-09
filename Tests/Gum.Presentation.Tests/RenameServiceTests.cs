@@ -233,6 +233,76 @@ public class RenameServiceTests : BaseTestClass
         regeneratedCode.ShouldContain("namespace MyGame.Components.Widgets");
     }
 
+    [Theory]
+    [InlineData("GumCodeGen/", "GumCodeGen/Components")]
+    [InlineData("Gum", "GumComponents")]
+    public void HandleRename_WithAPrefix_MovesTheCodeWithinTheFolderAndKeepsTheNamespace(string prefix, string componentsFolder)
+    {
+        string codeFolder = Path.Combine(componentsFolder.Split('/'));
+        GivenFile(componentsFolder + "/MyComponent.cs",
+            "namespace MyGame.Components\r\n" +
+            "{\r\n" +
+            "    partial class MyComponent\r\n" +
+            "    {\r\n" +
+            "        partial void CustomInitialize()\r\n" +
+            "        {\r\n" +
+            "            HandWrittenMarker();\r\n" +
+            "        }\r\n" +
+            "    }\r\n" +
+            "}\r\n");
+        GivenFile(componentsFolder + "/MyComponent.Generated.cs", "//stale generated file");
+        // The per-element settings sit next to the element in the Gum project, not in the code folder.
+        GivenFile("Components/MyComponent.codsj", "{\"UsingStatements\":\"using MovedSettingsMarker;\"}");
+
+        ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+        projectSettings.GeneratedCodeFolderPrefix = prefix;
+
+        _renameService.HandleRename(element, oldName: "MyComponent", projectSettings, VisualApi.Gum);
+
+        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
+        File.Exists(Path.Combine(_codeProjectRoot, codeFolder, "MyComponent.cs")).ShouldBeFalse();
+        File.Exists(Path.Combine(_codeProjectRoot, codeFolder, "MyComponent.Generated.cs")).ShouldBeFalse();
+        string movedCustomCode = File.ReadAllText(Path.Combine(_codeProjectRoot, codeFolder, "Widgets", "MyComponent.cs"));
+        movedCustomCode.ShouldContain("namespace MyGame.Components.Widgets");
+        movedCustomCode.ShouldNotContain("namespace MyGame.Gum");
+        movedCustomCode.ShouldContain("HandWrittenMarker();");
+        string regeneratedCode = File.ReadAllText(Path.Combine(_codeProjectRoot, codeFolder, "Widgets", "MyComponent.Generated.cs"));
+        regeneratedCode.ShouldContain("namespace MyGame.Components.Widgets");
+        File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "Widgets", "MyComponent.codsj")).ShouldContain("MovedSettingsMarker");
+    }
+
+    [Fact]
+    public void HandleRename_WithAPrefix_RenamesAnElementInPlace()
+    {
+        GivenFile("GumComponents/OldName.cs",
+            "namespace MyGame.Components\r\n" +
+            "{\r\n" +
+            "    partial class OldName\r\n" +
+            "    {\r\n" +
+            "        partial void CustomInitialize()\r\n" +
+            "        {\r\n" +
+            "            HandWrittenMarker();\r\n" +
+            "        }\r\n" +
+            "    }\r\n" +
+            "}\r\n");
+        GivenFile("GumComponents/OldName.Generated.cs", "//stale generated file");
+
+        ComponentSave element = GivenComponentInProject("NewName");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+        projectSettings.GeneratedCodeFolderPrefix = "Gum";
+
+        _renameService.HandleRename(element, oldName: "OldName", projectSettings, VisualApi.Gum);
+
+        File.Exists(Path.Combine(_codeProjectRoot, "GumComponents", "OldName.cs")).ShouldBeFalse();
+        File.Exists(Path.Combine(_codeProjectRoot, "GumComponents", "OldName.Generated.cs")).ShouldBeFalse();
+        string movedCustomCode = File.ReadAllText(Path.Combine(_codeProjectRoot, "GumComponents", "NewName.cs"));
+        movedCustomCode.ShouldContain("partial class NewName");
+        movedCustomCode.ShouldContain("HandWrittenMarker();");
+        File.Exists(Path.Combine(_codeProjectRoot, "GumComponents", "NewName.Generated.cs")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(_codeProjectRoot, "Components")).ShouldBeFalse("nothing is written to the default folder");
+    }
+
     [Fact]
     public void HandleRename_WhenElementMovedToFolder_MovesElementSettingsFile()
     {

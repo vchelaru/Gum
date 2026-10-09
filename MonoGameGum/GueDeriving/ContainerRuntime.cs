@@ -94,7 +94,7 @@ public class ContainerRuntime : InteractiveGue
     /// An optional compiled SkSL <see cref="global::SkiaSharp.SKRuntimeEffect"/> applied when this
     /// container is drawn back to the screen as a render target. Only has an effect when
     /// <see cref="IsRenderTarget"/> is true. The effect is image-independent (it declares a
-    /// <c>uniform shader inputImage</c> child) — the baked render-target image is bound to that
+    /// <c>uniform shader SpriteTexture</c> child) — the baked render-target image is bound to that
     /// child and the resulting <c>SKShader</c> built only at composite time, since the image isn't
     /// known until the bake completes. Compile SkSL with
     /// <c>SKRuntimeEffect.CreateShader(sksl, out errors)</c> and assign the result here.

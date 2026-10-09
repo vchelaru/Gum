@@ -421,6 +421,26 @@ public class NameVerifier : INameVerifier
         commonValidationError = CommonValidationError.None;
         return true;
     }
+    /// <summary>
+    /// Replaces every character a name can't contain (including spaces) with an underscore.
+    /// </summary>
+    public static string ToValidName(string candidate)
+    {
+        StringBuilder builder = new StringBuilder(candidate.Length);
+        foreach (Rune rune in candidate.EnumerateRunes())
+        {
+            if (ValidCharacterCategories.Contains(Rune.GetUnicodeCategory(rune)))
+            {
+                builder.Append(rune.ToString());
+            }
+            else
+            {
+                builder.Append('_');
+            }
+        }
+        return builder.ToString();
+    }
+
     private void IsFileNameWindowsReserved(string? name, out string? whyNotValid)
     {
         whyNotValid = null;

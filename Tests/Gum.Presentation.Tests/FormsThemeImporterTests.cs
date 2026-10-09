@@ -6,6 +6,7 @@ using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
 using Moq;
@@ -28,6 +29,7 @@ public class FormsThemeImporterTests
     private readonly Mock<IProjectState> _projectState = new();
     private readonly Mock<IFileWatchManager> _fileWatchManager = new();
     private readonly Mock<ISkiaShapeStandardsLogic> _skiaShapeStandards = new();
+    private readonly Mock<IFontManager> _fontManager = new();
     private readonly FormsThemeImporter _importer;
 
     public FormsThemeImporterTests()
@@ -44,7 +46,66 @@ public class FormsThemeImporterTests
             _importLogic.Object,
             _projectState.Object,
             _fileWatchManager.Object,
-            _skiaShapeStandards.Object);
+            _skiaShapeStandards.Object,
+            _fontManager.Object);
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_TellsTheUserAndStillImports_WhenTheFontCacheCannotBeCleared()
+    {
+        string themeDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GumImporterRanges_" + System.Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(themeDirectory);
+        try
+        {
+            System.IO.File.WriteAllText(System.IO.Path.Combine(themeDirectory, "GumProject.gumx"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <FontRanges>32-126,10003-10007</FontRanges>\n</GumProjectSave>");
+            _projectState.Setup(x => x.GumProjectSave)
+                .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumx", FontRanges = "32-126" });
+            _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns(themeDirectory);
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath>());
+            _fontManager.Setup(x => x.DeleteFontCacheFolder()).Throws(new System.IO.IOException("locked"));
+
+            bool result = await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+            result.ShouldBeTrue();
+            _dialogService.Verify(
+                x => x.ShowMessage(It.Is<string>(m => m.Contains("FontCache")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+                Times.Once);
+        }
+        finally
+        {
+            System.IO.Directory.Delete(themeDirectory, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData("32-126,160-255", true)]
+    [InlineData("32-126,160-255,10003-10007", false)]
+    public async Task ImportThemeAsync_ClearsTheFontCacheOnlyWhenTheThemeWidensTheProjectsFontRanges(
+        string projectRanges, bool shouldClearCache)
+    {
+        string themeDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GumImporterRanges_" + System.Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(themeDirectory);
+        try
+        {
+            System.IO.File.WriteAllText(System.IO.Path.Combine(themeDirectory, "GumProject.gumx"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <FontRanges>32-126,10003-10007</FontRanges>\n</GumProjectSave>");
+            GumProjectSave project = new GumProjectSave { FullFileName = "C:/project/Test.gumx", FontRanges = projectRanges };
+            _projectState.Setup(x => x.GumProjectSave).Returns(project);
+            _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns(themeDirectory);
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath>());
+
+            await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+            _fontManager.Verify(x => x.DeleteFontCacheFolder(), shouldClearCache ? Times.Once() : Times.Never());
+            project.FontRanges.ShouldContain("10003");
+        }
+        finally
+        {
+            System.IO.Directory.Delete(themeDirectory, recursive: true);
+        }
     }
 
     [Fact]

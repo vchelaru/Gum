@@ -724,7 +724,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         // comment already claims ("Stroke visibility is gated separately by StrokeWidth (0 hides
         // stroke)"), so this makes the code match the documented contract.
         var canRender =
-            AbsoluteVisible &&
+            Visible &&
                 ((Width > 0 && Height > 0) || CanRenderAt0Dimension) &&
                 (IsFilled || StrokeWidth > 0);
         if (canRender)

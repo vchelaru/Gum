@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Gum.DataTypes;
 using Gum.Logic;
+using RenderingLibrary.Graphics.Fonts;
 
 namespace GumFormsPlugin.Services;
 
@@ -24,6 +26,8 @@ public sealed class ThemeRequirements
 {
     public const string ThemeRequirementsFileName = "theme.txt";
 
+    private const string ThemeProjectFileName = "GumProject.gumx";
+
     /// <summary>
     /// The font generator the theme expects. Null when the theme does not care.
     /// </summary>
@@ -39,6 +43,13 @@ public sealed class ThemeRequirements
     public bool RequiresSkiaShapes { get; init; }
 
     /// <summary>
+    /// The characters the theme's fonts need, from the theme project's own <c>FontRanges</c>. The
+    /// theme draws some of its controls with glyphs outside Gum's default ranges (a CheckBox's
+    /// check mark is U+2713), and those glyphs only exist in fonts generated with these ranges.
+    /// </summary>
+    public string? FontRanges { get; init; }
+
+    /// <summary>
     /// The standard element whose presence proves the Skia shape bundle is already in the project.
     /// Svg is used because it is added on every project version (unlike the legacy ColoredCircle /
     /// RoundedRectangle, which are no longer added on V3+), making it a version-proof sentinel.
@@ -48,8 +59,32 @@ public sealed class ThemeRequirements
     public static ThemeRequirements LoadFromThemeDirectory(string themeDirectory)
     {
         var path = Path.Combine(themeDirectory, ThemeRequirementsFileName);
-        if (!File.Exists(path)) return new ThemeRequirements();
-        return Parse(File.ReadAllText(path));
+        ThemeRequirements fromFile = File.Exists(path) ? Parse(File.ReadAllText(path)) : new ThemeRequirements();
+        return new ThemeRequirements
+        {
+            FontGenerator = fromFile.FontGenerator,
+            RequiresSkiaShapes = fromFile.RequiresSkiaShapes,
+            FontRanges = ReadThemeProjectFontRanges(themeDirectory),
+        };
+    }
+
+    // Read straight from the theme's .gumx rather than loading the whole project: only this one
+    // value is needed, and it is a plain top-level element. The Add Forms dialog reads this to
+    // describe a theme, so a theme project that can't be read means no requirement, not a crash.
+    private static string? ReadThemeProjectFontRanges(string themeDirectory)
+    {
+        string projectPath = Path.Combine(themeDirectory, ThemeProjectFileName);
+        if (!File.Exists(projectPath)) return null;
+        string? ranges;
+        try
+        {
+            ranges = XDocument.Load(projectPath).Root?.Element("FontRanges")?.Value;
+        }
+        catch (System.Xml.XmlException)
+        {
+            return null;
+        }
+        return string.IsNullOrWhiteSpace(ranges) ? null : ranges.Trim();
     }
 
     /// <summary>
@@ -110,7 +145,42 @@ public sealed class ThemeRequirements
             !project.StandardElementReferences.Any(r =>
                 string.Equals(r.Name, SkiaShapeBundleSentinel, StringComparison.OrdinalIgnoreCase));
 
-        return new ThemeRequirementsDiff(fontGenChange, project.FontGenerator, addSkiaShapes);
+        return new ThemeRequirementsDiff(fontGenChange, project.FontGenerator, addSkiaShapes,
+            GetWidenedFontRanges(project.FontRanges));
+    }
+
+    // The project's ranges plus any of the theme's characters they lack, or null when they already
+    // cover every one. Only ever adds: a project's own extra characters are kept.
+    private string? GetWidenedFontRanges(string? projectRanges)
+    {
+        if (FontRanges == null) return null;
+
+        HashSet<int> projectCharacters = new HashSet<int>(BmfcSave.ParseCharRanges(projectRanges ?? string.Empty));
+        List<int> missing = BmfcSave.ParseCharRanges(FontRanges).Where(c => !projectCharacters.Contains(c)).ToList();
+        if (missing.Count == 0) return null;
+
+        projectCharacters.UnionWith(missing);
+        return FormatRanges(projectCharacters);
+    }
+
+    private static string FormatRanges(IEnumerable<int> characters)
+    {
+        List<string> parts = new List<string>();
+        List<int> sorted = characters.OrderBy(c => c).ToList();
+        int index = 0;
+        while (index < sorted.Count)
+        {
+            int start = sorted[index];
+            int end = start;
+            while (index + 1 < sorted.Count && sorted[index + 1] == end + 1)
+            {
+                index++;
+                end = sorted[index];
+            }
+            parts.Add(start == end ? start.ToString() : $"{start}-{end}");
+            index++;
+        }
+        return string.Join(",", parts);
     }
 }
 
@@ -123,11 +193,13 @@ public sealed class ThemeRequirementsDiff
     public ThemeRequirementsDiff(
         FontGeneratorType? fontGeneratorChange,
         FontGeneratorType currentFontGenerator,
-        bool addSkiaShapes)
+        bool addSkiaShapes,
+        string? fontRangesChange = null)
     {
         FontGeneratorChange = fontGeneratorChange;
         CurrentFontGenerator = currentFontGenerator;
         AddSkiaShapes = addSkiaShapes;
+        FontRangesChange = fontRangesChange;
     }
 
     /// <summary>The new font generator to apply, or null if no change is needed.</summary>
@@ -139,7 +211,10 @@ public sealed class ThemeRequirementsDiff
     /// <summary>True when the full Skia shape Standard bundle must be added.</summary>
     public bool AddSkiaShapes { get; }
 
-    public bool HasChanges => FontGeneratorChange.HasValue || AddSkiaShapes;
+    /// <summary>The project's new font ranges, widened to cover the theme's characters, or null if no change is needed.</summary>
+    public string? FontRangesChange { get; }
+
+    public bool HasChanges => FontGeneratorChange.HasValue || AddSkiaShapes || FontRangesChange != null;
 
     /// <summary>One human-readable bullet per change. Empty when <see cref="HasChanges"/> is false.</summary>
     public IReadOnlyList<string> DescribeChanges()
@@ -154,6 +229,11 @@ public sealed class ThemeRequirementsDiff
         {
             lines.Add("Add Skia shape Standards (Arc, Canvas, Line, LottieAnimation, Svg).");
         }
+        if (FontRangesChange != null)
+        {
+            lines.Add("Add the characters this theme draws (such as the check mark) to the project's font ranges " +
+                      "(regenerates every font in your project).");
+        }
         return lines;
     }
 
@@ -162,6 +242,10 @@ public sealed class ThemeRequirementsDiff
         if (FontGeneratorChange is { } target)
         {
             project.FontGenerator = target;
+        }
+        if (FontRangesChange != null)
+        {
+            project.FontRanges = FontRangesChange;
         }
         if (AddSkiaShapes)
         {

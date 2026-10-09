@@ -474,6 +474,17 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void Typeface_ShouldUpdateLayout()
+    {
+        TextRuntime sut = new();
+        int layoutsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+        sut.Typeface = Raylib.GetFontDefault();
+
+        GraphicalUiElement.UpdateLayoutCallCount.ShouldBeGreaterThan(layoutsBefore);
+    }
+
+    [Fact]
     public void CustomFont_ObsoleteAlias_ShouldForwardToTypeface()
     {
         TextRuntime sut = new();

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace WpfDataUi.Controls;
@@ -28,6 +29,12 @@ public class FilePickingLogic
     public static string FolderRelativeTo { get; set; } = string.Empty;
 
     /// <summary>
+    /// This picker's own base folder for resolving relative paths in <see cref="ShowInExplorer"/>,
+    /// read on every call. When it is unset or returns null, <see cref="FolderRelativeTo"/> is used.
+    /// </summary>
+    public Func<string?>? RelativeToProvider { get; set; }
+
+    /// <summary>
     /// Opens the dialogs for every picker in the process. Assigned once at tool startup; with none
     /// assigned the pickers do nothing.
     /// </summary>
@@ -43,9 +50,9 @@ public class FilePickingLogic
     }
 
     /// <summary>
-    /// Opens the OS file manager and selects the given file. If <see cref="FolderRelativeTo"/> is
-    /// set, the path is resolved against it first. No-op if the path is empty or the resolved file
-    /// does not exist.
+    /// Opens the OS file manager and selects the given file or folder. A relative path is resolved
+    /// against <see cref="RelativeToProvider"/>, or else <see cref="FolderRelativeTo"/>, first. No-op if the path is empty or nothing exists
+    /// at the resolved path.
     /// </summary>
     public void ShowInExplorer(string fileToOpen)
     {
@@ -54,14 +61,20 @@ public class FilePickingLogic
             return;
         }
 
-        if (!string.IsNullOrEmpty(FolderRelativeTo))
+        string relativeTo = RelativeToProvider?.Invoke() ?? FolderRelativeTo;
+        if (!string.IsNullOrEmpty(relativeTo) && !Path.IsPathRooted(fileToOpen))
         {
-            fileToOpen = RemoveDotDotSlash(FolderRelativeTo + fileToOpen);
+            fileToOpen = RemoveDotDotSlash(relativeTo + fileToOpen);
         }
 
         if (File.Exists(fileToOpen))
         {
             FilePicker?.RevealFile(fileToOpen);
+        }
+        else if (Directory.Exists(fileToOpen))
+        {
+            // A trailing separator makes the file manager open the folder instead of selecting it.
+            FilePicker?.RevealFile(fileToOpen.TrimEnd('/', '\\'));
         }
     }
 

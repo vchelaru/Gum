@@ -302,7 +302,7 @@ new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice, KernSmith.RasterizerBacke
 
 ### About Expression Support (Optional)
 
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), the `Gum.Expressions` package added above enables full expression evaluation at runtime. Without it, simple variable references like `Width = OtherInstance.Width` still work. It's typically used together with a Gum project that has variable references defined in the tool; see [Loading a Gum Project (.gumx)](../../loading-a-gum-project-.gumx.md).
+If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), the `Gum.Expressions` package added above enables full expression evaluation at runtime. Without it, simple variable references like `Width = OtherInstance.Width` still work. It's typically used together with a Gum project that has variable references defined in the tool; see [Loading a Gum Project (.gumj/.gumx)](../../loading-a-gum-project-.gumx.md).
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
 

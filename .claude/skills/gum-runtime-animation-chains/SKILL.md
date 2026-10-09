@@ -20,10 +20,12 @@ Both `Sprite` and `NineSlice` compose an `AnimationChainLogic` instance (XNA, So
 State lives entirely on `AnimationChainLogic`:
 
 - `_currentChainIndex` defaults to 0 so assigning `AnimationChains` + `Animate = true` works without setting `CurrentChainName`. `CurrentChainName` setter sets `_currentChainIndex = -1` and resolves the desired name lazily once chains are populated (`RefreshCurrentChainToDesiredName`), then seeds `_isLooping` from the newly-resolved chain's `AnimationChain.Loop` (itself threaded from `AnimationChainSave.Loop`, default `true`) — still freely overridable per-instance afterward via `IsAnimationChainLooping`. The implicit index-0-without-`CurrentChainName` path does **not** reseed; `_isLooping` stays at its own `true` default there.
-- `AnimateSelf(secondDifference)` advances `_timeIntoAnimation`, loops or clamps based on `IsAnimationChainLooping`, fires `AnimationChainCycled`, picks a new frame via `UpdateFrameBasedOffOfTimeIntoAnimation`, and — only if the frame index changed — calls `UpdateToCurrentAnimationFrame()`.
+- `AnimateSelf(secondDifference)` advances `_timeIntoAnimation`, loops or clamps based on `IsAnimationChainLooping`, picks a new frame via `UpdateFrameBasedOffOfTimeIntoAnimation`, and calls `UpdateToCurrentAnimationFrame()` only if the frame index changed.
+- Events: `AnimationChainCycled` fires only when a looping chain wraps (either direction). `AnimationChainFinished` fires once when a non-looping chain hits its end (forward: last frame; negative speed: first frame), after `Animate` turns false and the final frame is applied. Both are forwarded by `Sprite`, `NineSlice` and `SpriteRuntime`, and nulled in `Clone`; a new forwarder or event must do both. The frame lookup wraps at exactly `TotalLength`, so the forward end sets the last index directly instead of calling it.
 - `UpdateToCurrentAnimationFrame()` invokes the `ApplyFrame` delegate the host wired up. **It does not directly mutate the renderable.**
+- With a chain set, an out-of-range frame index or negative time is clamped to the chain (`SeekToFrame`), on set and again in `UpdateToCurrentAnimationFrame` after a chain switch; with no chain they are stored raw.
 
-`AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). The whole subsystem is platform-agnostic — there is no MonoGame coupling in `AnimationChainLogic`.
+`AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). Event handlers may add or remove elements mid-walk, so a list of elements is animated through `GraphicalUiElement.AnimateEach` (children and `GumService.AnimateRoots`), which resumes after the element it just animated wherever it now is; Sokol's `Renderer.TickEach` walks renderables and keeps its own copy. Never `foreach` or snapshot the list (throws or allocates per frame).
 
 ## Frame application is split across two times
 

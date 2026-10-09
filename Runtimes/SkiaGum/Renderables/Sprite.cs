@@ -67,8 +67,9 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// </summary>
     public IRenderableIpso? RenderTargetTextureSource { get; set; }
 
-    public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
-    public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
+    // Image draws in preference to Texture (see DrawBound), so its size wins.
+    public float? TextureWidth => RenderTargetTextureSource?.Width ?? _image?.Width ?? _texture?.Width;
+    public float? TextureHeight => RenderTargetTextureSource?.Height ?? _image?.Height ?? _texture?.Height;
 
     public Rectangle? SourceRectangle;
     private SKBitmap? _texture;
@@ -95,7 +96,11 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             {
                 return RenderTargetTextureSource.Width / RenderTargetTextureSource.Height;
             }
-            return Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
+            if (_image != null)
+            {
+                return _image.Width / (float)_image.Height;
+            }
+            return _texture != null ? (_texture.Width / (float)_texture.Height) : 1.0f;
         }
     }
 

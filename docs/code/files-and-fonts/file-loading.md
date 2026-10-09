@@ -2,17 +2,17 @@
 
 ### Introduction
 
-A typical Gum project references many file types. Aside from the XML files created by the Gum tool (such as a .gumx file), a Gum project also references .png files and .fnt files.
+A typical Gum project references many file types. Aside from the files created by the Gum tool (such as a .gumj file), a Gum project also references .png files and .fnt files.
 
 Files referenced by your Gum project (as created in the Gum UI tool) automatically load their necessary dependencies assuming the files are part of the built file system. Usually your project game project should copy all Gum XML, PNG, and FNT files to the output folder. Gum does not use the MonoGame content pipeline.
 
 ### Files in Gum Projects
 
-When a file is added to a Gum project, the Gum UI tool checks the location of the file. If the file is not relative to the Gum project file (.gumx), the Gum UI tool warns you about the file being located outside of the project's folder. The tool recommends that the file should be copied so that your project remains portable.
+When a file is added to a Gum project, the Gum UI tool checks the location of the file. If the file is not relative to the Gum project file (.gumj), the Gum UI tool warns you about the file being located outside of the project's folder. The tool recommends that the file should be copied so that your project remains portable.
 
-If all of your project files are located relative to the .gumx root project file, then your project should be portable, and all referenced files will be automatically resolved for you when instantiating Screens and Components from your Gum project.
+If all of your project files are located relative to the .gumj root project file, then your project should be portable, and all referenced files will be automatically resolved for you when instantiating Screens and Components from your Gum project.
 
-The Gum runtime library performs all of its loading from-file, so all of your files must be present in the destination directory. As explained in the [Loading .gumx](../getting-started/setup/loading-a-gum-project-.gumx.md) page, all of your files should be set to **Copy if newer** in Visual Studio.
+The Gum runtime library performs all of its loading from-file, so all of your files must be present in the destination directory. As explained in the [Loading a Gum Project (.gumj/.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md) page, all of your files should be set to **Copy if newer** in Visual Studio.
 
 <figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
 
@@ -37,11 +37,11 @@ In the case of the SourceFile assignment, the SpriteRuntime loads the Texture2D 
 
 Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder.
 
-If you call `GumService.Default.Initialize` and pass a .gumx file, then RelativeDirectory is set to the directory containing the Gum project.
+If you call `GumService.Default.Initialize` and pass a .gumj file, then RelativeDirectory is set to the directory containing the Gum project.
 
-If your Gum project (.gumx) is located in the Content folder, RelativeDirectory is set to "Content/".
+If your Gum project (.gumj) is located in the Content folder, RelativeDirectory is set to "Content/".
 
-<figure><img src="../../.gitbook/assets/image (44).png" alt=""><figcaption><p>GumProject.gumx located in the Content folder</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (44).png" alt=""><figcaption><p>GumProject.gumj located in the Content folder</p></figcaption></figure>
 
 If your project is located in a subfolder of Content, then RelativeDirectory is set to the folder containing the Gum project. In this case, RelativeDirectory would be set to "Content/gum/"
 
@@ -60,7 +60,7 @@ It's recommended practice to set the RelativeDirectory to your Gum project's loc
 
 In addition to loose files, Gum can load a project from a single-file `.gumpkg` bundle produced by [`gumcli pack`](../../cli/pack.md). The path you hand to `GumService.Initialize` decides which one you get:
 
-* A path ending in `.gumx` (or `.gumj`) loads loose files. This is the dev-time path, and hot reload works in this mode.
+* A path ending in `.gumj` (or `.gumx`) loads loose files. This is the dev-time path, and hot reload works in this mode.
 * A path ending in `.gumpkg` reads element XML, textures, and fonts from inside the bundle via `FileManager.CustomGetStreamFromFile`. No loose copy is needed in the output directory. MonoGame, KNI, FNA, and raylib load bundles; SkiaGum and Silk.NET read loose files only.
 
 "Fonts" here covers both kinds: the baked `FontCache` `.fnt` and `.png` pages, and a `.ttf` the project rasterizes at runtime.

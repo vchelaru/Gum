@@ -72,21 +72,21 @@ Gum reopens the project you had open last time. To open a different one, select 
 {% tabs %}
 {% tab title="Windows" %}
 ```
-Gum.exe C:\Path\To\MyProject.gumx
+Gum.exe C:\Path\To\MyProject.gumj
 ```
 
-To open `.gumx` files by double-clicking them, right-click a `.gumx` file, select **Open with** > **Choose another app**, and pick `Gum.exe`.
+To open `.gumj` or `.gumx` files by double-clicking them, right-click a project file, select **Open with** > **Choose another app**, and pick `Gum.exe`.
 {% endtab %}
 
 {% tab title="macOS" %}
 ```sh
-/Applications/Gum.app/Contents/MacOS/Gum ~/Path/To/MyProject.gumx
+/Applications/Gum.app/Contents/MacOS/Gum ~/Path/To/MyProject.gumj
 ```
 {% endtab %}
 
 {% tab title="Linux" %}
 ```sh
-~/gum/Gum ~/Path/To/MyProject.gumx
+~/gum/Gum ~/Path/To/MyProject.gumj
 ```
 {% endtab %}
 {% endtabs %}

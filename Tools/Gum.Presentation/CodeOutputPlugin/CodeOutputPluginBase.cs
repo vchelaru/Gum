@@ -53,6 +53,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     private readonly ISelectedState _selectedState;
     private RenameService _renameService;
     private readonly IMessenger _messenger;
+    private readonly CodeFileLocationWatcher _locationWatcher;
     private readonly LocalizationService _localizationService;
     private readonly INameVerifier _nameVerifier;
     private readonly CodeGenerator _codeGenerator;
@@ -135,6 +136,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         _messenger = messenger;
         _codeOutputFileCommands = fileCommands;
+        _locationWatcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
 
         var codeGenLogger = new ToolCodeGenLogger(outputManager);
         _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
@@ -164,6 +166,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         DeleteOptionsConfirmed += HandleDeleteOptionsConfirmed;
         // The project's code settings do not depend on the tab, so they load from here on.
         ProjectLoad += HandleProjectLoaded;
+        ReactToFileChanged += HandleFileChanged;
 
         viewModel = new ViewModels.CodeWindowViewModel(
             projectState,
@@ -263,9 +266,46 @@ public abstract class CodeOutputPluginBase : PluginBase
         // Services resolve ProjectDirectory lazily via IProjectDirectoryProvider,
         // so no reconstruction is needed here — just reload project-scoped settings.
         codeOutputProjectSettings = _codeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+        _locationWatcher.Reset(codeOutputProjectSettings);
         _settingsMembers.HandleProjectLoaded();
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
         HandleElementSelected(null);
+    }
+
+    /// <summary>
+    /// Re-reads ProjectCodeSettings.codsj after it changes on disk (a pull, a branch switch, a hand
+    /// edit). This only reloads: the change arrives with whatever regeneration it needed already
+    /// done, so nothing is regenerated, migrated or written here. An unreadable file (half-written,
+    /// merge conflict) keeps the current settings rather than falling back to defaults that the next
+    /// settings edit would write over it.
+    /// </summary>
+    private void HandleFileChanged(FilePath file)
+    {
+        ///////////////////Early Out///////////////////
+        if (file != _codeOutputProjectSettingsManager.GetProjectCodeSettingsFilePath())
+        {
+            return;
+        }
+
+        CodeOutputProjectSettings? reloaded = _codeOutputProjectSettingsManager.TryLoadSettingsForProject();
+        if (reloaded == null)
+        {
+            return;
+        }
+
+        // Gum's own settings writes come back through the watcher too; skipping an unchanged file
+        // keeps them from rebuilding the settings grid under the user.
+        if (JsonConvert.SerializeObject(reloaded) == JsonConvert.SerializeObject(codeOutputProjectSettings))
+        {
+            return;
+        }
+        /////////////////End Early Out/////////////////
+
+        codeOutputProjectSettings = reloaded;
+        // The files on disk came with these settings, so a later edit compares against them.
+        _locationWatcher.Reset(codeOutputProjectSettings);
+        viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
+        RefreshCodeDisplay();
     }
 
     private void HandleStateSelected(StateSave? state)
@@ -435,6 +475,7 @@ public abstract class CodeOutputPluginBase : PluginBase
             case nameof(viewModel.InheritanceLocation):
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+                _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
                 break;
             default:
                 RefreshCodeDisplay();
@@ -442,7 +483,12 @@ public abstract class CodeOutputPluginBase : PluginBase
         }
     }
 
-    private void HandleCodeOutputPropertyChanged() => _controller?.HandleCodeOutputPropertyChanged(codeOutputProjectSettings);
+    private void HandleCodeOutputPropertyChanged()
+    {
+        _controller?.HandleCodeOutputPropertyChanged(codeOutputProjectSettings);
+        // After the write, so the migration that may follow plans against the saved settings.
+        _locationWatcher.CheckAfterEdit(codeOutputProjectSettings);
+    }
 
     private void HandleGenerateCodeButtonClicked()
     {

@@ -7,6 +7,7 @@ using Gum.Avalonia.Services;
 using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using Moq;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using Vector2 = System.Numerics.Vector2;
 
@@ -385,6 +386,43 @@ public class CanvasScenarioTests
         });
     }
 
+    [SkippableFact]
+    [Trait("Feature", "CANV-014")]
+    public void PolygonDrag_HidesTheAddPointMarker_WhetherMovingThePolygonOrOnePoint()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            InstanceSave shape = canvas.AddInstance(button, "Shape", "Polygon", x: 100, y: 100);
+            canvas.Tree.Click(canvas.Tree.NodeFor(shape));
+
+            // 12 pixels below the top edge's middle: inside the polygon, in range of the marker.
+            Point insideNearTopEdge = canvas.WindowPointOf(116, 112);
+            canvas.MoveTo(insideNearTopEdge);
+            IsAddPointMarkerShowing().ShouldBeTrue("hovering near an edge shows the marker");
+
+            // Dragging the polygon's body keeps the same offset to the moved top edge.
+            canvas.PressButton(insideNearTopEdge);
+            canvas.DragTo(canvas.WindowPointOf(140, 112));
+            IsAddPointMarkerShowing().ShouldBeFalse("moving the polygon should hide the marker");
+            canvas.ReleaseButton();
+            IsAddPointMarkerShowing().ShouldBeTrue("the marker returns once the drag ends");
+
+            // The polygon now starts at x=124. Grab its top-right corner and pull it to within
+            // range of the first edge's middle.
+            Point corner = canvas.WindowPointOf(156, 100);
+            canvas.PressButton(corner);
+            canvas.DragTo(canvas.WindowPointOf(150, 110));
+            IsAddPointMarkerShowing().ShouldBeFalse("dragging a point should hide the marker");
+            canvas.ReleaseButton();
+
+            canvas.AssertOracles();
+        });
+    }
+
+    private static bool IsAddPointMarkerShowing() =>
+        SpriteManager.Self.Sprites.Single(sprite => sprite.Name == "Add point sprite").Visible;
+
     private static List<Vector2> SavedPoints(CanvasHarness canvas, ElementSave element) =>
         ((IEnumerable<Vector2>)canvas.SavedElement(element).DefaultState!.GetVariableListSave("Shape.Points")!.ValueAsIList).ToList();
 
@@ -454,6 +492,54 @@ public class CanvasScenarioTests
 
             canvas.Undo();
             canvas.Tree.SnapshotFiles().ShouldMatch(start, "zooming and panning change no file, and undo reverts the move");
+
+            canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
+    [Trait("Feature", "CANV-043")]
+    public void SwitchingElements_RestoresTheCameraTheUserLeftEachMovedElementAt()
+    {
+        OnCanvas(canvas =>
+        {
+            ScreenSave dialogue = canvas.Project.AddScreen("DialogueScreen");
+            ComponentSave button = canvas.Project.AddComponent("ButtonStandard");
+            ComponentSave icon = canvas.Project.AddComponent("Icon");
+            canvas.Tree.Click(canvas.Tree.NodeFor(dialogue));
+
+            // Zoom in and pan on the screen.
+            canvas.Wheel(canvas.WindowPointOf(300, 300), 1, RawInputModifiers.Control);
+            Point panFrom = new Point(500, 400);
+            canvas.Drag(panFrom, panFrom + new Point(-60, -40), button: MouseButton.Middle);
+            (float X, float Y, int Zoom) onScreen = (canvas.Camera.X, canvas.Camera.Y, canvas.Editor.PercentZoomLevel.Value);
+            onScreen.Zoom.ShouldBeGreaterThan(100);
+
+            // The button is shown where the camera is, then scrolled with the scroll bar.
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            (canvas.Camera.X, canvas.Camera.Y).ShouldBe((onScreen.X, onScreen.Y), "an element never moved keeps the camera as it is");
+            Thumb thumb = canvas.ScrollBarThumb(Orientation.Vertical);
+            Point thumbCenter = canvas.Input.CenterOf(thumb);
+            canvas.Input.Drag(thumbCenter, thumbCenter + new Point(0, 30));
+            canvas.Frame();
+            float onButtonY = canvas.Camera.Y;
+            onButtonY.ShouldBeGreaterThan(onScreen.Y);
+
+            // Clicking through the icon without moving the camera records nothing for it.
+            canvas.Tree.Click(canvas.Tree.NodeFor(icon));
+
+            canvas.Tree.Click(canvas.Tree.NodeFor(dialogue));
+            canvas.Frame();
+            canvas.Camera.X.ShouldBe(onScreen.X);
+            canvas.Camera.Y.ShouldBe(onScreen.Y);
+            canvas.Editor.PercentZoomLevel.Value.ShouldBe(onScreen.Zoom);
+            canvas.Camera.Zoom.ShouldBe(onScreen.Zoom / 100f);
+
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            canvas.Camera.Y.ShouldBe(onButtonY);
+
+            canvas.Tree.Click(canvas.Tree.NodeFor(icon));
+            canvas.Camera.Y.ShouldBe(onButtonY, "the icon was never moved, so it keeps the camera as it is");
 
             canvas.AssertOracles();
         });
@@ -595,6 +681,30 @@ public class CanvasScenarioTests
             canvas.DropOnCanvas(canvas.WindowPointOf(330, 330), FileDrop(texture));
             button.Instances.Count.ShouldBe(2, "a drop on a sprite sets its texture rather than adding one");
             canvas.SavedValue(button, "Existing.SourceFile").ShouldBe("Hero.png");
+
+            canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
+    [Trait("Feature", "DRAG-013")]
+    public void TextureFileDrop_FileNameWithDotsAndSpaces_AddsASpriteWithAValidName()
+    {
+        OnCanvas(canvas =>
+        {
+            // macOS names screenshots like this; the dots used to end up in the instance name,
+            // which then broke every "Instance.Variable" lookup and threw mid-drop.
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            string texture = Path.Combine(canvas.Project.ProjectFolder, "Screenshot 2026-09-25 at 04.52.17.png");
+            File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), texture);
+
+            canvas.DropOnCanvas(canvas.WindowPointOf(60, 70), FileDrop(texture)).ShouldBe(DragDropEffects.Copy);
+
+            InstanceSave added = button.Instances.ShouldHaveSingleItem();
+            added.Name.ShouldBe("Screenshot_2026_09_25_at_04_52_17");
+            canvas.SavedValue(button, $"{added.Name}.SourceFile").ShouldBe("Screenshot 2026-09-25 at 04.52.17.png");
+            canvas.SavedValue(button, $"{added.Name}.X").ShouldBe(60f);
 
             canvas.AssertOracles();
         });

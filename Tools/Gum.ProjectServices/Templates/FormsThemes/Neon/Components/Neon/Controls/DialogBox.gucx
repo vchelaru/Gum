@@ -47,7 +47,7 @@
       <Value xsi:type="xsd:float">-8</Value>
     </Variable>
     <Variable Type="VerticalAlignment" Name="ContinueIndicatorInstance.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="ContinueIndicatorInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>

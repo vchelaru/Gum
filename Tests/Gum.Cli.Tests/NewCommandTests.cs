@@ -181,6 +181,140 @@ public class NewCommandTests : IDisposable
         loadResult.LoadErrors.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void New_WithPlatform_ShouldCreateHostProjectWithGumProjectAndCodegenSettings()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.Exists(Path.Combine(projectDir, "MyGame.csproj")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeTrue();
+        string gumFolder = Path.Combine(projectDir, "Content", "GumProject");
+        File.Exists(Path.Combine(gumFolder, "GumProject.gumj")).ShouldBeTrue();
+        File.Exists(Path.Combine(gumFolder, "ProjectCodeSettings.codsj")).ShouldBeTrue();
+        result.StandardOutput.ShouldContain("MyGame.csproj");
+    }
+
+    [Fact]
+    public void New_WithPlatform_ShouldProduceProjectThatCodegenAcceptsAndChecksClean()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--no-restore");
+        string gumjPath = Path.Combine(projectDir, "Content", "GumProject", "GumProject.gumj");
+
+        CliTestHelper checkResult = CliTestHelper.Run("check", gumjPath);
+        CliTestHelper codegenResult = CliTestHelper.Run("codegen", gumjPath);
+
+        checkResult.ExitCode.ShouldBe(0, checkResult.StandardOutput + checkResult.StandardError);
+        codegenResult.ExitCode.ShouldBe(0, codegenResult.StandardOutput + codegenResult.StandardError);
+        File.Exists(Path.Combine(projectDir, "Screens", "DemoScreenGum.Generated.cs")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void New_WithStridePlatform_ShouldCreateHostProjectWithoutGameClass()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", "stride", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj")).ShouldContain("Gum.Stride");
+        File.Exists(Path.Combine(projectDir, "Program.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("silknet")]
+    [InlineData("silk.net")]
+    public void New_WithSilkNetPlatform_ShouldCreateHostProjectWithoutGameClass(string platform)
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "-p", platform, "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj")).ShouldContain("Gum.SilkNet");
+        File.Exists(Path.Combine(projectDir, "Game1.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithUnknownPlatform_ShouldReturnExitCode2NamingValidValues()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "bogus");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("bogus");
+        result.StandardError.ShouldContain("monogame");
+        result.StandardError.ShouldContain("silknet");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithFnaPlatform_ShouldReturnExitCode2ExplainingItNeedsSource()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "fna");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("FNA");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithPlatformAndProjectFilePath_ShouldReturnExitCode2()
+    {
+        string filePath = Path.Combine(_tempDirectory, "MyGame.gumj");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "--platform", "monogame", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("folder");
+        File.Exists(filePath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithPlatformAndExistingProject_ShouldReturnExitCode2()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+        CliTestHelper.Run("new", projectDir, "--platform", "raylib", "--no-restore");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "raylib", "--no-restore");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("already exists");
+    }
+
+    [Fact]
+    public void New_WithPlatformAndSourceLinked_ShouldReferenceRuntimeProjectInsteadOfPackage()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string csproj = File.ReadAllText(Path.Combine(projectDir, "MyGame.csproj"));
+        csproj.ShouldContain("<ProjectReference Include=");
+        csproj.ShouldContain("MonoGameGum.csproj");
+        csproj.ShouldNotContain("Gum.MonoGame\"");
+    }
+
+    [Fact]
+    public void New_WithSourceLinkedButNoPlatform_ShouldReturnExitCode2()
+    {
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--source-linked");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("--platform");
+        Directory.Exists(projectDir).ShouldBeFalse();
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

@@ -1,4 +1,5 @@
 using Gum;
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -90,6 +91,372 @@ public class RenderTargetTests
 
         SystemManagers.Default.Renderer.HasBakedRenderTargetFor(invisibleRenderTarget).ShouldBeTrue();
     }
+
+    // Pixel coverage for Sprite.RenderTargetTextureSource (#5658).
+    [Fact]
+    public void Draw_SpriteReferencingInvisibleRenderTarget_ShowsContentAtSpritePositionOnly()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime invisibleRenderTarget = CreateSolidRenderTarget(0, 0, 20, 20, SKColors.Red);
+        invisibleRenderTarget.Visible = false;
+        GumService.Default.Root.Children.Add(invisibleRenderTarget);
+
+        GumService.Default.Root.Children.Add(CreateSprite(invisibleRenderTarget, 40, 40, 20, 20));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(50, 50).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Draw_TwoSpritesReferencingOneRenderTarget_BothShowContent()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = CreateSolidRenderTarget(0, 0, 16, 16, SKColors.Red);
+        renderTarget.Visible = false;
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 20, 0, 16, 16));
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 40, 40, 16, 16));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(28, 8).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(48, 48).ShouldBe(SKColors.Red);
+    }
+
+    [Fact]
+    public void Draw_SpriteReferencingVisibleRenderTarget_ShowsBothContainerAndSprite()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = CreateSolidRenderTarget(0, 0, 20, 20, SKColors.Red);
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 40, 40, 20, 20));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(10, 10).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(50, 50).ShouldBe(SKColors.Red);
+    }
+
+    [Fact]
+    public void Draw_SpriteLargerThanRenderTarget_ScalesBakedImage()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        // 20x20 container: left half red, right half blue.
+        ContainerRuntime renderTarget = new()
+        {
+            Width = 20,
+            Height = 20,
+            IsRenderTarget = true,
+            Visible = false,
+        };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            X = 0,
+            Width = 10,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            X = 10,
+            Width = 10,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Blue,
+        });
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        // 2x scale: red should cover x 10..30, blue x 30..50.
+        GumService.Default.Root.Children.Add(CreateSprite(renderTarget, 10, 10, 40, 40));
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(25, 30).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(35, 30).ShouldBe(SKColors.Blue);
+        bitmap.GetPixel(45, 30).ShouldBe(SKColors.Blue);
+        bitmap.GetPixel(5, 30).Alpha.ShouldBe((byte)0);
+        bitmap.GetPixel(55, 30).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Draw_ChildOfInvisibleNonRenderTargetParent_IsNotDrawn()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime invisibleParent = new() { Width = 20, Height = 20, Visible = false };
+        invisibleParent.Children.Add(new RectangleRuntime
+        {
+            Width = 20,
+            Height = 20,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        GumService.Default.Root.Children.Add(invisibleParent);
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
+    }
+
+    // Resize/move between frames (#5657): the cached surface must follow the container's new size and
+    // position, with no stale pixels from the previous frame.
+    [Fact]
+    public void Draw_AfterRenderTargetGrows_FillsNewSize()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = CreateFillingRenderTarget(0, 0, 20, 20, SKColors.Red);
+        GumService.Default.Root.Children.Add(renderTarget);
+        GumService.Default.Draw();
+
+        renderTarget.Width = 40;
+        renderTarget.Height = 40;
+        surface.Canvas.Clear(SKColors.Transparent);
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(30, 30).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(45, 45).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Draw_AfterRenderTargetShrinks_LeavesNoStalePixels()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = CreateFillingRenderTarget(0, 0, 40, 40, SKColors.Red);
+        GumService.Default.Root.Children.Add(renderTarget);
+        GumService.Default.Draw();
+
+        renderTarget.Width = 20;
+        renderTarget.Height = 20;
+        surface.Canvas.Clear(SKColors.Transparent);
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(10, 10).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(30, 30).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Draw_AfterRenderTargetMoves_DrawsAtNewPositionOnly()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = CreateFillingRenderTarget(0, 0, 20, 20, SKColors.Red);
+        GumService.Default.Root.Children.Add(renderTarget);
+        GumService.Default.Draw();
+
+        renderTarget.X = 30;
+        renderTarget.Y = 30;
+        surface.Canvas.Clear(SKColors.Transparent);
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(40, 40).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
+    }
+
+    // Container whose single child tracks the container's size, so resizing the container resizes the content.
+    private static ContainerRuntime CreateFillingRenderTarget(float x, float y, float width, float height, SKColor color)
+    {
+        ContainerRuntime renderTarget = new()
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+            IsRenderTarget = true,
+        };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 100,
+            Height = 100,
+            WidthUnits = DimensionUnitType.PercentageOfParent,
+            HeightUnits = DimensionUnitType.PercentageOfParent,
+            IsFilled = true,
+            FillColor = color,
+        });
+        return renderTarget;
+    }
+
+    // Clipping inside render targets (#5656).
+    [Fact]
+    public void Draw_OversizedChildInClippingRenderTarget_DoesNotDrawOutsideBounds()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = new()
+        {
+            X = 10,
+            Y = 10,
+            Width = 20,
+            Height = 20,
+            IsRenderTarget = true,
+            ClipsChildren = true,
+        };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            X = -10,
+            Y = -10,
+            Width = 60,
+            Height = 60,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(20, 20).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(5, 5).Alpha.ShouldBe((byte)0);
+        bitmap.GetPixel(40, 40).Alpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void Draw_ClippingContainerInsideRenderTarget_ClipsItsChildren()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = new()
+        {
+            Width = 64,
+            Height = 64,
+            IsRenderTarget = true,
+        };
+        ContainerRuntime clipper = new()
+        {
+            X = 10,
+            Y = 10,
+            Width = 20,
+            Height = 20,
+            ClipsChildren = true,
+        };
+        clipper.Children.Add(new RectangleRuntime
+        {
+            X = -10,
+            Y = -10,
+            Width = 60,
+            Height = 60,
+            IsFilled = true,
+            FillColor = SKColors.Red,
+        });
+        renderTarget.Children.Add(clipper);
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        bitmap.GetPixel(20, 20).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(5, 5).Alpha.ShouldBe((byte)0);
+        bitmap.GetPixel(40, 40).Alpha.ShouldBe((byte)0);
+    }
+
+    // Nested render targets (#5655): the inner bakes first, then composites into the outer bake.
+    [Fact]
+    public void Draw_NestedRenderTargets_BakesBoth()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime outer = CreateNestedRenderTargets(out ContainerRuntime inner);
+        GumService.Default.Root.Children.Add(outer);
+
+        GumService.Default.Draw();
+
+        SystemManagers.Default.Renderer.HasBakedRenderTargetFor(outer).ShouldBeTrue();
+        SystemManagers.Default.Renderer.HasBakedRenderTargetFor(inner).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Draw_NestedRenderTargets_ShowsInnerContentOnceAtItsPosition()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime outer = CreateNestedRenderTargets(out _);
+        GumService.Default.Root.Children.Add(outer);
+
+        GumService.Default.Draw();
+
+        using SKBitmap bitmap = SKBitmap.FromImage(surface.Snapshot());
+        // Inner is at (20,20) 16x16 inside outer, which sits at (4,4): content spans 24..40.
+        bitmap.GetPixel(30, 30).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
+        bitmap.GetPixel(45, 45).Alpha.ShouldBe((byte)0);
+    }
+
+    private static ContainerRuntime CreateNestedRenderTargets(out ContainerRuntime inner)
+    {
+        ContainerRuntime outer = new()
+        {
+            X = 4,
+            Y = 4,
+            Width = 56,
+            Height = 56,
+            IsRenderTarget = true,
+        };
+        inner = CreateSolidRenderTarget(20, 20, 16, 16, SKColors.Red);
+        outer.Children.Add(inner);
+        return outer;
+    }
+
+    private static ContainerRuntime CreateSolidRenderTarget(float x, float y, float width, float height, SKColor color)
+    {
+        ContainerRuntime renderTarget = new()
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+            IsRenderTarget = true,
+        };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = width,
+            Height = height,
+            IsFilled = true,
+            FillColor = color,
+        });
+        return renderTarget;
+    }
+
+    private static SpriteRuntime CreateSprite(ContainerRuntime source, float x, float y, float width, float height) =>
+        new()
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+            WidthUnits = DimensionUnitType.Absolute,
+            HeightUnits = DimensionUnitType.Absolute,
+            RenderTargetTextureSource = source,
+        };
 
     [Fact]
     public void Draw_WithNonRenderTargetContainer_CachesNothing()

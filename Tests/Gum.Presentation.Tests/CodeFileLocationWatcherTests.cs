@@ -1,0 +1,81 @@
+using CodeOutputPlugin;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Messages;
+using Gum.ProjectServices.CodeGeneration;
+using Shouldly;
+using System.Collections.Generic;
+
+namespace Gum.Presentation.Tests;
+
+/// <summary>
+/// Tests for <see cref="CodeFileLocationWatcher"/>, which tells the migration when a Code tab edit
+/// moved where code files belong (issue #5846).
+/// </summary>
+public class CodeFileLocationWatcherTests
+{
+    [Fact]
+    public void CheckAfterEdit_SendsTheOldAndNewSettings_OnlyWhenAnEditMovesFiles()
+    {
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        List<CodeFileLocationsChangedMessage> sent = new List<CodeFileLocationsChangedMessage>();
+        messenger.Register<CodeFileLocationsChangedMessage>(this, (_, message) => sent.Add(message));
+        CodeFileLocationWatcher watcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
+        // The tab edits this one object in place, so the watcher has to keep its own copy.
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGame, RootNamespace = "Game" };
+        watcher.Reset(settings);
+
+        settings.RootNamespace = "Renamed";
+        watcher.CheckAfterEdit(settings);
+        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        watcher.CheckAfterEdit(settings);
+        watcher.CheckAfterEdit(settings);
+
+        CodeFileLocationsChangedMessage message = sent.ShouldHaveSingleItem();
+        message.Previous.OutputLibrary.ShouldBe(OutputLibrary.MonoGame);
+        message.Current.ShouldBeSameAs(settings);
+        message.Description.ShouldBe("Output Library from MonoGame (deprecated) to Gum Forms (recommended)");
+    }
+
+    [Fact]
+    public void CheckAfterEdit_SendsALocationChange_ButNoHeaderChange_WhenOnlyThePrefixChanges()
+    {
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        List<CodeFileLocationsChangedMessage> locations = new List<CodeFileLocationsChangedMessage>();
+        List<CustomCodeHeadersChangedMessage> headers = new List<CustomCodeHeadersChangedMessage>();
+        messenger.Register<CodeFileLocationsChangedMessage>(this, (_, message) => locations.Add(message));
+        messenger.Register<CustomCodeHeadersChangedMessage>(this, (_, message) => headers.Add(message));
+        CodeFileLocationWatcher watcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, RootNamespace = "Game" };
+        watcher.Reset(settings);
+
+        settings.GeneratedCodeFolderPrefix = "GumCodeGen/";
+        watcher.CheckAfterEdit(settings);
+
+        CodeFileLocationsChangedMessage message = locations.ShouldHaveSingleItem();
+        message.Previous.GeneratedCodeFolderPrefix.ShouldBe(string.Empty);
+        message.Description.ShouldBe("Generated Code Folder Prefix from (none) to GumCodeGen/");
+        headers.ShouldBeEmpty("the prefix moves files; namespaces are unaffected");
+    }
+
+    [Fact]
+    public void CheckAfterEdit_SendsAHeaderChange_OnlyWhenAnEditChangesANamespaceSetting()
+    {
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        List<CustomCodeHeadersChangedMessage> sent = new List<CustomCodeHeadersChangedMessage>();
+        messenger.Register<CustomCodeHeadersChangedMessage>(this, (_, message) => sent.Add(message));
+        CodeFileLocationWatcher watcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGame, RootNamespace = "Game" };
+        watcher.Reset(settings);
+
+        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        watcher.CheckAfterEdit(settings);
+        settings.RootNamespace = "Renamed";
+        settings.AppendFolderToNamespace = true;
+        watcher.CheckAfterEdit(settings);
+        watcher.CheckAfterEdit(settings);
+
+        CustomCodeHeadersChangedMessage message = sent.ShouldHaveSingleItem();
+        message.Current.ShouldBeSameAs(settings);
+        message.Description.ShouldBe("Root Namespace from Game to Renamed, Append Folder to Namespace from False to True");
+    }
+}

@@ -160,7 +160,7 @@ class MyViewModel : ViewModel
 protected override void Initialize()
 {
     // either one of these:
-    GumUI.Initialize(this, "GumProject/GumProject.gumx");
+    GumUI.Initialize(this, "GumProject/GumProject.gumj");
 
     var screen = new MainMenu();
     screen.AddToRoot();
@@ -208,7 +208,7 @@ class MyViewModel : ViewModel
 protected override void Initialize()
 {
     // either one of these:
-    GumUI.Initialize(this, "GumProject/GumProject.gumx");
+    GumUI.Initialize(this, "GumProject/GumProject.gumj");
 
     var screen = new MainMenu();
     screen.AddToRoot();

@@ -126,6 +126,22 @@ Screenshot/GIF needed: an animated GIF showing a `SpriteRuntime` playing back an
 
 If you need lower-level control — for example, driving animation outside of `GumService.Default.Update` — see the [AnimateSelf](../gum-code-reference/graphicaluielement/animateself.md) page.
 
+### Looping and End of Chain Events
+
+A chain loops by default. `IsAnimationChainLooping` controls whether it starts over after its last frame. Each chain in an `.achx` file can set its own default, which applies when you set `CurrentChainName`.
+
+`AnimationChainCycled` is raised each time a looping chain wraps around. `AnimationChainFinished` is raised once when a chain that does not loop reaches its end. At that point `Animate` becomes `false` and the chain holds its last frame. A chain playing backward (negative `AnimationChainSpeed`) finishes at its first frame instead.
+
+The following code removes a sprite after its animation plays once:
+
+```csharp
+// Initialize
+sprite.CurrentChainName = "Explode";
+sprite.IsAnimationChainLooping = false;
+sprite.Animate = true;
+sprite.AnimationChainFinished += () => sprite.RemoveFromRoot();
+```
+
 ## Per-Frame Position Offsets (Sprite Only)
 
 Each `AnimationFrame` carries optional `RelativeX`/`RelativeY` values, and `Sprite` applies them as a position offset on every render while an animation with those values is playing. `NineSlice` does not apply `RelativeX`/`RelativeY` at all — a `NineSliceRuntime` ignores them even if the source `.achx` sets them.

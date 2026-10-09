@@ -138,7 +138,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible, ICloneable
 #if SKIA
     public void Render(ISystemManagers managers)
     {
-        if (AbsoluteVisible && Animation != null)
+        if (Visible && Animation != null)
         {
             //var textureBox = Animation.Size;
             //var textureWidth = textureBox.Width;

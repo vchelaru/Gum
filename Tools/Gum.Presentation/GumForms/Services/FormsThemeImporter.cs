@@ -7,6 +7,7 @@ using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 using Gum.ToolStates;
 using System.Collections.Generic;
 using System.IO;
@@ -26,6 +27,7 @@ public class FormsThemeImporter : IFormsThemeImporter
     private readonly IProjectState _projectState;
     private readonly IFileWatchManager _fileWatchManager;
     private readonly ISkiaShapeStandardsLogic _skiaShapeStandards;
+    private readonly IFontManager _fontManager;
 
     public FormsThemeImporter(
         IFormsFileService formsFileService,
@@ -34,7 +36,8 @@ public class FormsThemeImporter : IFormsThemeImporter
         IImportLogic importLogic,
         IProjectState projectState,
         IFileWatchManager fileWatchManager,
-        ISkiaShapeStandardsLogic skiaShapeStandards)
+        ISkiaShapeStandardsLogic skiaShapeStandards,
+        IFontManager fontManager)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
@@ -43,6 +46,7 @@ public class FormsThemeImporter : IFormsThemeImporter
         _projectState = projectState;
         _fileWatchManager = fileWatchManager;
         _skiaShapeStandards = skiaShapeStandards;
+        _fontManager = fontManager;
     }
 
     /// <inheritdoc/>
@@ -71,6 +75,15 @@ public class FormsThemeImporter : IFormsThemeImporter
         // written below already contains the new font generator and standard references.
         diff.Apply(project, _skiaShapeStandards);
 
+        // Fonts already cached were generated without the theme's characters. Clearing the cache
+        // before the theme's own FontCache files are copied in leaves those, and the reload below
+        // regenerates the rest with the widened ranges - the same thing the Project Properties
+        // window does when FontRanges changes.
+        if (diff.FontRangesChange != null)
+        {
+            TryClearFontCache();
+        }
+
         SaveFilesToDestination(sourceDestinations);
 
         AddAllElementsToProject(sourceDestinations);
@@ -88,6 +101,20 @@ public class FormsThemeImporter : IFormsThemeImporter
         }
 
         return true;
+    }
+
+    private void TryClearFontCache()
+    {
+        try
+        {
+            _fontManager.DeleteFontCacheFolder();
+        }
+        catch (IOException exception)
+        {
+            _dialogService.ShowMessage(
+                "The project's font ranges were widened for this theme, but the font cache could not be cleared " +
+                $"to regenerate its fonts. Delete the FontCache folder and reopen the project:\n\n{exception.Message}");
+        }
     }
 
     private void AddAllElementsToProject(Dictionary<string, FilePath> sourceDestinations)

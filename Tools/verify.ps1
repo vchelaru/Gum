@@ -72,6 +72,18 @@ foreach ($file in ($changedFiles | Where-Object { $_ -like '*.cs' })) {
     }
 }
 
+# SokolGum projects compile against a Sokol.NET clone that is not a submodule and that most checkouts
+# lack (see Runtimes/SokolGum/README.md), so without it their build always fails. Skip them then.
+$hasSokolCheckout = Test-Path (Join-Path $repo 'Sokol.NET/src/sokol')
+function Test-NeedsSokolCheckout([string]$relativeProject) {
+    ($relativeProject -replace '\\', '/') -match '^(Runtimes/Sokol|Runtimes/SokolGum|Tests/SokolGum\.Tests|Samples/SokolGum[^/]*)/'
+}
+function Skip-WithoutSokol([string]$name, [string]$relativeProject) {
+    if ($hasSokolCheckout -or -not (Test-NeedsSokolCheckout $relativeProject)) { return $false }
+    Write-Host ("skipped      $name`: needs the Sokol.NET clone (Runtimes/SokolGum/README.md), unverified")
+    return $true
+}
+
 $failed = $false
 $warningsOnChangedLines = [System.Collections.Generic.HashSet[string]]::new()
 
@@ -151,11 +163,13 @@ foreach ($project in $testFilters.Keys | Sort-Object) {
         Write-Host ("skipped      test $relativeProject ($filter): hangs on macOS, CI only")
         continue
     }
+    if (Skip-WithoutSokol "test $relativeProject ($filter)" $relativeProject) { continue }
     Invoke-Step -Name "test $relativeProject ($filter)" -Command $command -TimeoutSeconds 300
 }
 
 foreach ($project in $sourceProjects | Sort-Object) {
     $relativeProject = $project.Substring($repo.Length + 1)
+    if (Skip-WithoutSokol "build $relativeProject" $relativeProject) { continue }
     # Same $(SolutionDir) post-build copy as above: the frozen WPF head's plugin projects need it
     # whenever they are built by csproj, not only through the test project.
     Invoke-Step -Name "build $relativeProject" -Command @('build', $project, '-nologo', '-v:q', "-p:SolutionDir=$repo\")

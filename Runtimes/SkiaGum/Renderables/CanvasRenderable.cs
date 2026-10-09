@@ -132,7 +132,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible, ICloneable
     {
         var canvas = ((SystemManagers)managers).Canvas;
 
-        if (AbsoluteVisible)
+        if (Visible)
         {
             var absoluteX = this.GetAbsoluteX();
             var absoluteY = this.GetAbsoluteY();

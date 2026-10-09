@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Gum.Settings;
@@ -20,6 +21,9 @@ public sealed class WritableOptions<T> : IWritableOptions<T> where T : class, ne
     private readonly string _sectionName;
     private readonly string _filePath;
     private readonly object _writeLock = new();
+
+    private const int SaveAttempts = 20;
+    private static readonly TimeSpan SaveRetryDelay = TimeSpan.FromMilliseconds(50);
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -49,31 +53,55 @@ public sealed class WritableOptions<T> : IWritableOptions<T> where T : class, ne
     {
         lock (_writeLock)
         {
-            JsonObject root = File.Exists(_filePath)
-                ? JsonNode.Parse(File.ReadAllText(_filePath), documentOptions: WritableOptionsServiceCollectionExtensions.ConfigurationJsonOptions) as JsonObject ?? new JsonObject()
-                : new JsonObject();
-
-            // Read the section the way it was loaded (the configuration binder), not with
-            // System.Text.Json: the binder also takes enum names, numbers in strings and any key casing.
-            T model = BindSection(root) ?? new T();
-            applyChanges(model);
-
-            // Configuration keys are case-insensitive, so a differently cased copy would be a duplicate key.
-            foreach (string key in root.Select(p => p.Key).Where(IsSectionKey).ToList())
+            for (int attempt = 1; ; attempt++)
             {
-                root.Remove(key);
+                try
+                {
+                    Save(applyChanges);
+                    return;
+                }
+                catch (Exception e) when (IsFileBusy(e) && attempt < SaveAttempts)
+                {
+                    Thread.Sleep(SaveRetryDelay);
+                }
+                catch (Exception e) when (IsFileBusy(e))
+                {
+                    // A setting that can't be saved right now is not worth interrupting the user.
+                    Console.Error.WriteLine($"Could not save {_sectionName} to {_filePath}: {e.Message}");
+                    return;
+                }
             }
-            root[_sectionName] = JsonSerializer.SerializeToNode(model, JsonOpts);
-
-            // Persist to disk atomically
-            var tempPath = _filePath + ".tmp";
-            File.WriteAllText(tempPath, JsonSerializer.Serialize(root, JsonOpts));
-            File.Copy(tempPath, _filePath, overwrite: true);
-            File.Delete(tempPath);
-
-            // Notify config that file changed
-            _configRoot.Reload();
         }
+    }
+
+    private static bool IsFileBusy(Exception e) => e is IOException or UnauthorizedAccessException;
+
+    private void Save(Action<T> applyChanges)
+    {
+        JsonObject root = File.Exists(_filePath)
+            ? JsonNode.Parse(File.ReadAllText(_filePath), documentOptions: WritableOptionsServiceCollectionExtensions.ConfigurationJsonOptions) as JsonObject ?? new JsonObject()
+            : new JsonObject();
+
+        // Read the section the way it was loaded (the configuration binder), not with
+        // System.Text.Json: the binder also takes enum names, numbers in strings and any key casing.
+        T model = BindSection(root) ?? new T();
+        applyChanges(model);
+
+        // Configuration keys are case-insensitive, so a differently cased copy would be a duplicate key.
+        foreach (string key in root.Select(p => p.Key).Where(IsSectionKey).ToList())
+        {
+            root.Remove(key);
+        }
+        root[_sectionName] = JsonSerializer.SerializeToNode(model, JsonOpts);
+
+        // Persist to disk atomically
+        var tempPath = _filePath + ".tmp";
+        File.WriteAllText(tempPath, JsonSerializer.Serialize(root, JsonOpts));
+        File.Copy(tempPath, _filePath, overwrite: true);
+        File.Delete(tempPath);
+
+        // Notify config that file changed
+        _configRoot.Reload();
     }
 
     private bool IsSectionKey(string key) => string.Equals(key, _sectionName, StringComparison.OrdinalIgnoreCase);

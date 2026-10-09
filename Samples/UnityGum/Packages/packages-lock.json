@@ -53,11 +53,11 @@
       }
     },
     "com.vchelaru.skiagamerendering": {
-      "version": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.17.2",
+      "version": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.17.3",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "1bead4eba39f311adcfcb3acb9c366919f6c50d3"
+      "hash": "08c9fc69e7bfb3326e5fda44959377d19e998bc6"
     },
     "com.unity.modules.animation": {
       "version": "1.0.0",

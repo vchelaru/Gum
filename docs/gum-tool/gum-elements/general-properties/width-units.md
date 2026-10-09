@@ -111,6 +111,12 @@ A parent ignores its child if the child uses an `X Units` of `Percentage of Pare
 
 <figure><img src="../../../.gitbook/assets/05_07 45 21.gif" alt=""><figcaption><p><code>X Units</code> of <code>Percentage of Parent Width</code> result in the child ignored</p></figcaption></figure>
 
+### Centered Children
+
+A child with an `X Units` of `Pixels from Center` grows its parent equally to the left and right of the parent's center, so the child stays centered. The parent's width is twice the distance from its center to the child's farthest edge.
+
+For example, a child with an `Absolute` `Width` of 100, an `X Origin` of `Center`, and an `X` of 0 makes the parent 100 pixels wide. Changing the child's `X` to 20 makes the parent 140 pixels wide, because the child's right edge is now 70 pixels from the center.
+
 ### Relative to Children and Auto Grid Horizontal
 
 If a parent sets its `Width Units` to `Relative to Children`, then it resizes itself to contain its children. Normally the width of the entire parent is determined by the child which needs the most space horizontally. If the parent uses an `Auto Grid Horizontal` layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space horizontally determines the width of all cells.
@@ -162,6 +168,12 @@ For example, consider a vertical menu where each menu item contains a Text insta
 <figure><img src="../../../.gitbook/assets/26_09 07 37.gif" alt=""><figcaption><p>Changes to the white rectangle cause size changes in the blue and ultimately red rectangle, which affects the size of sibling blue rectangles</p></figcaption></figure>
 
 Without this unit, you would need to either set a fixed width on all menu items (which cannot adapt to content) or use `Relative to Children` on each item (which makes each item a different width based on its own text).
+
+A parent with `Width Units` of `Relative to Children` measures such a child by its children, limited by the child's `Min Width` and `Max Width`. For example, a child with a `Min Width` of `80` whose children are `30` wide makes its parent `80` wide.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, the parent ignored the child's `Min Width`, so the child extended past its parent. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
 
 ## Percentage of Height
 

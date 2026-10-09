@@ -24,15 +24,15 @@ The Project Default guides uses the value as set through the Project Properties 
 
 ### Customizing Canvas Size Dropdown
 
-You can customize available canvas sizes by editing the .gumx file. At the time of this writing the customization must be done by hand.
+You can customize available canvas sizes by editing the project file (.gumj or .gumx). At the time of this writing the customization must be done by hand.
 
 To do this:
 
-1. Locate the .gumx file for your project
-2. Open the .gumx file in a text editor
+1. Locate the .gumj or .gumx file for your project
+2. Open the project file in a text editor
 3. Search for the `CustomCanvasSizes` tag
 
-You can remove or add new sizes by making changes here. If the entire `CustomCanvasSizes` tag is deleted, Gum automatically re-creates the default set of tags the next time it loads the .gumx file.
+You can remove or add new sizes by making changes here. If the entire `CustomCanvasSizes` tag is deleted, Gum automatically re-creates the default set of tags the next time it loads the project file.
 
 ## Font Scale&#x20;
 

@@ -46,13 +46,13 @@ Instances inside of a generated runtime may be instantiated fully in the generat
 
 <figure><img src="../../.gitbook/assets/ObjectInstantiationType.png" alt=""><figcaption><p>Object Instantiation Type in the Code tab</p></figcaption></figure>
 
-FindByName is the most common option when using generated code. If this value is set to FindByName, then the generated code assumes that the children have already been created and that the generated code is not responsible for creating the children. If you are loading a .gumx file and intend to create instances of runtime classes using elements from the loaded project, then you should use the FindByName property.
+FindByName is the most common option when using generated code. If this value is set to FindByName, then the generated code assumes that the children have already been created and that the generated code is not responsible for creating the children. If you are loading a .gumj file and intend to create instances of runtime classes using elements from the loaded project, then you should use the FindByName property.
 
 Since the children will have already been created, then the generated code does not instantiate new children. Instead, it searches through the children of the generated element by name and assigns the properties. For example, the following screenshot shows how Button instances are assigned by name:
 
 <figure><img src="../../.gitbook/assets/04_16 06 11.png" alt=""><figcaption><p>OkButton and CancelButton being assigned by searching through children</p></figcaption></figure>
 
-If you intend to use Gum to create elements, but you do not want to load the .gumx file at runtime, you can tell the code generator to fully generate all instances by setting Object Instantiation Type to FullyInCode. In this case the generated runtime class can be instantiated without loading a Gum project. Of course, keep in mind that referenced components must still exist in the project.
+If you intend to use Gum to create elements, but you do not want to load the .gumj file at runtime, you can tell the code generator to fully generate all instances by setting Object Instantiation Type to FullyInCode. In this case the generated runtime class can be instantiated without loading a Gum project. Of course, keep in mind that referenced components must still exist in the project.
 
 The following shows the instantiation of the OkButton and CancelButton when using the FullyInCode setting.
 

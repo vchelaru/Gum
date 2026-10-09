@@ -364,6 +364,84 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         });
     }
 
+    [Theory]
+    [InlineData("GumCodeGen/", "GumCodeGen/Screens")]
+    [InlineData("Gum", "GumScreens")]
+    public void Scan_ShouldFlagOrphans_InsidePrefixedFolders_AndNotFlagLiveElements(string prefix, string screensFolder)
+    {
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("LiveScreen"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolderPrefix = prefix;
+        WriteGeneratedFile(screensFolder + "/LiveScreen.Generated.cs", "LiveScreen");
+        WriteGeneratedFile(screensFolder + "/DeletedScreen.Generated.cs", "DeletedScreen");
+        WriteGeneratedFile("StandardElements.Generated.cs", "StandardElements");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath).ShouldBe(new[]
+        {
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, Path.Combine(screensFolder.Split('/')), "DeletedScreen.Generated.cs"))
+        });
+    }
+
+    [Theory]
+    [InlineData("GumCodeGen/", "GumCodeGen/Screens")]
+    [InlineData("Gum", "GumScreens")]
+    public void Scan_ShouldFlagFilesLeftInTheUnprefixedFolders_AfterAPrefixIsSet(string prefix, string screensFolder)
+    {
+        // Left behind, the old pair compiles alongside the new one as a duplicate partial class.
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("LiveScreen"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolderPrefix = prefix;
+        WriteGeneratedFile(screensFolder + "/LiveScreen.Generated.cs", "LiveScreen");
+        WriteGeneratedFile("Screens/LiveScreen.Generated.cs", "LiveScreen");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath).ShouldBe(new[]
+        {
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Screens", "LiveScreen.Generated.cs"))
+        });
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagFilesLeftInThePreviousPrefixFolder_AfterThePrefixIsCleared()
+    {
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("LiveScreen"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Screens/LiveScreen.Generated.cs", "LiveScreen");
+        WriteGeneratedFile("GumCodeGen/Screens/LiveScreen.Generated.cs", "LiveScreen");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath).ShouldBe(new[]
+        {
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "GumCodeGen", "Screens", "LiveScreen.Generated.cs"))
+        });
+    }
+
+    [Fact]
+    public void Scan_ShouldFlagFilesLeftInThePreviousFolder_WhenGeneratedCodeFolderAndPrefixBothChange()
+    {
+        GumProjectSave project = Project;
+        project.Screens.Add(CreateScreen("LiveScreen"));
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        projectSettings.GeneratedCodeFolder = "Gum/Generated";
+        projectSettings.GeneratedCodeFolderPrefix = "My";
+        WriteGeneratedFile("Gum/Generated/MyScreens/LiveScreen.Generated.cs", "LiveScreen");
+        WriteGeneratedFile("Gum/Generated/Screens/LiveScreen.Generated.cs", "LiveScreen");
+
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
+
+        orphans.Select(item => item.FilePath).ShouldBe(new[]
+        {
+            new ToolsUtilities.FilePath(Path.Combine(_tempDirectory, "Gum", "Generated", "Screens", "LiveScreen.Generated.cs"))
+        });
+    }
+
     [Fact]
     public void Scan_ShouldWalkTheGeneratedCodeFolder_WhenItIsOutsideTheCodeProjectRoot()
     {
@@ -393,6 +471,27 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Scan_WithPreviousSettings_AlsoFindsFilesUnderTheOldCodeRoot()
+    {
+        // The Code Project Root moved, so the old files sit outside the folder the scan walks.
+        GumProjectSave project = Project;
+        project.Components.Add(CreateComponent("Card"));
+        CodeOutputProjectSettings previous = CreateProjectSettings();
+        previous.CodeProjectRoot = "OldCode/";
+        CodeOutputProjectSettings current = CreateProjectSettings();
+        current.CodeProjectRoot = "NewCode/";
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "NewCode"));
+        WriteGeneratedFile("OldCode/Components/Card.Generated.cs", "Card");
+        WriteFile("OldCode/Components/Card.cs", "partial class Card { }");
+
+        IReadOnlyList<OrphanCodeFile> withPrevious = CreateService().Scan(project, current, previous).Orphans;
+        IReadOnlyList<OrphanCodeFile> withoutPrevious = CreateService().Scan(project, current).Orphans;
+
+        withPrevious.Select(orphan => orphan.FilePath.FileNameNoPath).ShouldBe(new[] { "Card.Generated.cs", "Card.cs" });
+        withoutPrevious.ShouldBeEmpty();
     }
 
     #region Helpers

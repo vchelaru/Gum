@@ -22,7 +22,8 @@ public class CodeOutputSettingsMembers
     private const string FullyInCode = "Fully in Code (no loaded Gum Project)";
     private const string ReferenceGum = "Reference loaded Gum Project";
 
-    private static readonly Dictionary<OutputLibrary, string> LibraryNames = new Dictionary<OutputLibrary, string>
+    // Also read by CodeFileLocationChange, so the migration prompt names a library as this row does.
+    internal static readonly Dictionary<OutputLibrary, string> LibraryNames = new Dictionary<OutputLibrary, string>
     {
         { OutputLibrary.MonoGameForms, "Gum Forms (recommended)" },
         { OutputLibrary.Skia, "SkiaSharp (deprecated)" },
@@ -73,6 +74,7 @@ public class CodeOutputSettingsMembers
         MemberCategory projectCategory = new MemberCategory("Project-Wide Code Generation");
         projectCategory.Members.Add(CreateCodeProjectRootMember());
         projectCategory.Members.Add(CreateGeneratedCodeFolderMember());
+        projectCategory.Members.Add(CreateGeneratedCodeFolderPrefixMember());
         projectCategory.Members.Add(CreateOutputLibrarySelectionMember());
         projectCategory.Members.Add(CreateObjectInstantiationTypeMember());
         projectCategory.Members.Add(CreateProjectUsingStatementsMember());
@@ -191,7 +193,7 @@ public class CodeOutputSettingsMembers
             }
         };
         member.CustomGetTypeEvent += (owner) => typeof(string);
-        // Not a file selection editor: that only picks files, and this is a folder.
+        UseFolderPicker(member);
 
         _viewModel.NeedsSetup = _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
 
@@ -208,15 +210,10 @@ public class CodeOutputSettingsMembers
             if (ProjectSettings != null)
             {
                 string valueToSet = ((string?)args.Value ?? string.Empty).Trim();
-                string? projectDirectory = _projectState.ProjectDirectory;
-                if (valueToSet.Length > 0 && !FileManager.IsRelative(valueToSet) && projectDirectory != null)
+                string? codeProjectRoot = GetAbsoluteCodeProjectRoot();
+                if (valueToSet.Length > 0 && !FileManager.IsRelative(valueToSet) && codeProjectRoot != null)
                 {
                     // Kept relative, like Code Project Root, so the .codsj works on every machine.
-                    string codeProjectRoot = ProjectSettings.CodeProjectRoot;
-                    if (FileManager.IsRelative(codeProjectRoot))
-                    {
-                        codeProjectRoot = projectDirectory + codeProjectRoot;
-                    }
                     valueToSet = FileManager.MakeRelative(valueToSet, codeProjectRoot, preserveCase: true);
                 }
                 ProjectSettings.GeneratedCodeFolder = valueToSet;
@@ -225,6 +222,51 @@ public class CodeOutputSettingsMembers
         };
 
         member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolder;
+        member.CustomGetTypeEvent += (owner) => typeof(string);
+        UseFolderPicker(member);
+        // The value is relative to the Code Project Root, not the project folder the picker
+        // resolves against by default. Read on each reveal so a root edit is picked up.
+        member.PropertiesToSetOnDisplayer["RevealRelativeTo"] = (Func<string?>)GetAbsoluteCodeProjectRoot;
+
+        return member;
+    }
+
+    // Null when no project or settings are loaded.
+    private string? GetAbsoluteCodeProjectRoot()
+    {
+        string? projectDirectory = _projectState.ProjectDirectory;
+        if (ProjectSettings == null || projectDirectory == null)
+        {
+            return null;
+        }
+
+        string codeProjectRoot = ProjectSettings.CodeProjectRoot;
+        return FileManager.IsRelative(codeProjectRoot) ? projectDirectory + codeProjectRoot : codeProjectRoot;
+    }
+
+    // A text field plus a folder-browse button. The picked folder is absolute; the member's setter
+    // makes it relative.
+    private static void UseFolderPicker(InstanceMember member)
+    {
+        member.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
+        member.PropertiesToSetOnDisplayer["IsFolderDialog"] = true;
+    }
+
+    private InstanceMember CreateGeneratedCodeFolderPrefixMember()
+    {
+        InstanceMember member = new InstanceMember("Generated Code Folder Prefix", this);
+        member.DetailText = "GumCodeGen/ puts Screens and Components in a GumCodeGen folder; Gum names them GumScreens and GumComponents";
+
+        member.CustomSetPropertyEvent += (owner, args) =>
+        {
+            if (ProjectSettings != null)
+            {
+                ProjectSettings.GeneratedCodeFolderPrefix = ((string?)args.Value ?? string.Empty).Trim();
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        };
+
+        member.CustomGetEvent += (owner) => ProjectSettings?.GeneratedCodeFolderPrefix;
         member.CustomGetTypeEvent += (owner) => typeof(string);
 
         return member;

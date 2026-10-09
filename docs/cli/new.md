@@ -1,15 +1,20 @@
 # new
 
 ```
-gumcli new [<path>] [--template <name>]
+gumcli new [<path>] [--template <name>] [--platform <name>] [--source-linked] [--no-restore]
 ```
 
 Creates a new Gum project. The path is optional — when omitted, a `GumProject` subdirectory is created in the current directory.
 
+Add `--platform` to also create a runnable game project for MonoGame, KNI, raylib, Stride, or Silk.NET. Without it, only a Gum project is created.
+
 ## Options
 
-- `<path>` *(optional)* — Path for the new project. If no `.gumx` extension is given, creates `<path>/<name>.gumx` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumx`.
+- `<path>` *(optional)* — Path for the new project. Pass a `.gumj` (JSON) or `.gumx` (XML) extension to choose the format. If no extension is given, creates `<path>/<name>.gumj` inside a new folder named `<name>`. If omitted, the project is created at `./GumProject/GumProject.gumj`. With `--platform`, the path names the game project folder instead, and defaults to `MyGumGame`.
 - `--template` / `-t` — Template to use. Default: `forms`.
+- `--platform` / `-p` *(optional)*: Creates a full game project, not just a Gum project. Accepted values: `monogame`, `kni`, `raylib`, `stride`, `silknet`.
+- `--source-linked`: With `--platform`, references the platform's runtime project in a Gum source checkout instead of the NuGet package. See [Linking to Gum Source](#linking-to-gum-source).
+- `--no-restore`: With `--platform`, skips the `dotnet restore` that otherwise runs after the project is created.
 
 ## Templates
 
@@ -31,23 +36,82 @@ Creates a minimal project with only the standard elements:
 - 8 standard elements (Circle, Component, Container, NineSlice, Polygon, Rectangle, Sprite, Text)
 - `ExampleSpriteFrame.png` (default NineSlice texture)
 
+## Creating a Game Project
+
+```
+gumcli new MyGame --platform monogame
+dotnet run --project MyGame/MyGame.csproj
+```
+
+The first command creates a MonoGame game that references Gum through NuGet, with a Gum project inside it. The second runs it, showing a window with a clickable button.
+
+`gumcli new MyGame --platform monogame` creates the following files:
+
+```
+MyGame/
+  MyGame.csproj
+  Program.cs
+  Game1.cs
+  Content/GumProject/
+    GumProject.gumj
+    ProjectCodeSettings.codsj
+```
+
+`Game1.cs` initializes Gum, loads the Gum project, and adds a test button. KNI creates the same files. raylib and Stride have no `Game1.cs` because everything is in `Program.cs`. The Stride project uses Stride's Windows host package, so it runs only on Windows, and it renders with Skia on the CPU. To use the GPU path, change the target to `net10.0-windows7.0`; see [Skia Render Path](../code/getting-started/setup/adding-initializing-gum/stride.md#skia-render-path).
+
+The Silk.NET project runs on Windows, macOS, and Linux. It creates its window with SDL and draws through SkiaSharp on desktop OpenGL 3.3, so its NuGet packages bring every native library it needs and it does not use ANGLE. It requires a graphics driver that supports OpenGL 3.3. For the window and input setup in `Program.cs`, see [Silk.NET](../code/getting-started/setup/adding-initializing-gum/silk.net.md).
+
+The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCodeSettings.codsj` already points at `MyGame.csproj` and uses the **Gum Forms** Output Library, so open `Content/GumProject/GumProject.gumj` in the Gum tool, add a screen, and run [`codegen`](codegen.md) to generate classes into the game project.
+
+`gumcli` runs `dotnet restore` after creating the files. [`codegen`](codegen.md) reads the installed Gum version from the restored package to decide which code to generate, so restore must finish before the first code generation. With `--no-restore`, run `dotnet restore` yourself first. If the restore fails (for example when offline), `gumcli` prints a warning and still exits with code 0.
+
+{% hint style="info" %}
+`--platform` and `--source-linked` are available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Linking to Gum Source
+
+```
+gumcli new MyGame --platform silknet --source-linked
+```
+
+`--source-linked` makes the game project reference the platform's runtime project in a Gum checkout (for example `Runtimes/SilkNetGum/SilkNetGum.csproj`) instead of the NuGet package. Use it to run a game against Gum changes that are not released yet.
+
+`gumcli` looks for the checkout starting at the folder holding the `gumcli` executable, then at the current folder, and walks up from each. A `gumcli` built from the checkout always finds it. An installed `gumcli` finds it when you run the command from inside the checkout. The game project can be created anywhere, including outside the checkout.
+
 ## Examples
 
 ```
 gumcli new
 gumcli new MyProject
-gumcli new path/to/MyProject.gumx
+gumcli new path/to/MyProject.gumj
 gumcli new MyProject --template forms
 gumcli new MyProject -t empty
+gumcli new MyGame --platform monogame
+gumcli new MyGame -p kni
+gumcli new MyGame -p raylib -t empty
+gumcli new MyGame -p silknet
+gumcli new MyGame -p silknet --source-linked
+gumcli new MyGame -p monogame --no-restore
 ```
 
 Output on success:
 
 ```
-Created project: /full/path/to/MyProject/MyProject.gumx
+Created project: /full/path/to/MyProject/MyProject.gumj
+```
+
+With `--platform`, the output names the game project and the Gum project:
+
+```
+Created project: /full/path/to/MyGame/MyGame.csproj
+Created Gum project: /full/path/to/MyGame/Content/GumProject/GumProject.gumj
 ```
 
 ## Notes
 
-- Exits with code 2 if the project file already exists (including when invoked with no path and a `GumProject/GumProject.gumx` is already present in the current directory).
+- Exits with code 2 if the project file already exists (including when invoked with no path and a `GumProject/GumProject.gumj` is already present in the current directory).
 - Exits with code 2 if an unknown template name is given.
+- Exits with code 2 if an unknown platform name is given. FNA is not offered because it is not published to NuGet.
+- With `--platform`, exits with code 2 if `<path>` ends in `.gumj` or `.gumx`, because the path names a folder. It also exits with code 2 for a project name that is not a valid C# project name or that matches a Gum runtime assembly name such as `MonoGameGum`.
+- `--source-linked` without `--platform` exits with code 2. It also exits with code 2 when no Gum checkout is found.

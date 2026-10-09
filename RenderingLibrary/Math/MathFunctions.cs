@@ -207,7 +207,10 @@ namespace RenderingLibrary.Math
             if (value < 0)
             {
                 didLoop = true;
-                return value + (1 + numberOfTimesIn) * loopPeriod;
+                // Floor, not truncation, so a value more than one period below 0 still lands in
+                // 0..loopPeriod. Rounding can land exactly on loopPeriod, which is the start again.
+                double looped = value - System.Math.Floor(value / loopPeriod) * loopPeriod;
+                return looped >= loopPeriod ? 0 : looped;
             }
             else
             {

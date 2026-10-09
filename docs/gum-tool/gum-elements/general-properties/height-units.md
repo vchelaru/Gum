@@ -147,6 +147,12 @@ A parent ignores its child if the child uses a `Y Units` of `Percentage of Paren
 
 <figure><img src="../../../.gitbook/assets/05_06 52 34.gif" alt=""><figcaption><p><code>Y Units</code> of <code>Percentage of Parent Height</code> results in the child ignored</p></figcaption></figure>
 
+### Centered Children
+
+A child with a `Y Units` of `Pixels from Center` grows its parent equally above and below the parent's center, so the child stays centered. The parent's height is twice the distance from its center to the child's farthest edge.
+
+For example, a child with an `Absolute` `Height` of 100, a `Y Origin` of `Center`, and a `Y` of 0 makes the parent 100 pixels tall. Changing the child's `Y` to 20 makes the parent 140 pixels tall, because the child's bottom edge is now 70 pixels from the center.
+
 ### Relative to Children and Auto Grid Vertical
 
 If a parent sets its `Height Units` to `Relative to Children`, then it resizes itself to contain its children. Normally, the height of the entire parent is determined by the child which needs the most space vertically. If the parent uses an `Auto Grid Vertical` layout, then the children control the size of the _cells_ as well as the entire parent. Since all cells must be the same size, the child which needs the most amount of space vertically determines the height of all cells.
@@ -215,6 +221,12 @@ For example, consider a horizontal row of text frames (colored rectangles each c
 <figure><img src="../../../.gitbook/assets/26_09 14 50.gif" alt=""><figcaption><p>Changes to the text cause size changes in the blue and ultimately red rectangle, which affects the size of sibling blue rectangles</p></figcaption></figure>
 
 Without this unit, you would need to either set a fixed height on all frames (which cannot adapt to content) or use `Relative to Children` on each frame (which makes each frame a different height based on its own content).
+
+A parent with `Height Units` of `Relative to Children` measures such a child by its children, limited by the child's `Min Height` and `Max Height`. For example, a child with a `Min Height` of `80` whose children are `30` tall makes its parent `80` tall.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, the parent ignored the child's `Min Height`, so the child extended past its parent. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}
 
 ## Percentage of Width
 

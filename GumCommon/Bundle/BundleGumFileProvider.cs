@@ -24,6 +24,9 @@ public class BundleGumFileProvider : IGumFileProvider
     }
 
     /// <inheritdoc/>
+    public bool CanEnumerate => true;
+
+    /// <inheritdoc/>
     public bool Exists(string relativePath)
     {
         return _bundle.Entries.ContainsKey(Normalize(relativePath));

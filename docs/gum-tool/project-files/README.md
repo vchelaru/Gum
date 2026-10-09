@@ -9,24 +9,24 @@ A Gum project consists of several files and folders created and managed by the G
 A typical Gum project has the following layout:
 
 ```
-MyProject.gumx
+MyProject.gumj
 .gumfcs
 ProjectCodeSettings.codsj
 TextureCoordinateSettings.tcsj
 MyProject.user.setj
 Screens/
-  MainMenu.gusx
-  MainMenuAnimations.ganx
+  MainMenu.gusj
+  MainMenuAnimations.ganj
 Components/
   Controls/
-    Button.gucx
+    Button.gucj
     Button.codsj
-    ButtonAnimations.ganx
+    ButtonAnimations.ganj
 Standards/
-  Text.gutx
-  Sprite.gutx
+  Text.gutj
+  Sprite.gutj
 Behaviors/
-  ButtonBehavior.behx
+  ButtonBehavior.behj
 FontCache/
   Font12Arial.fnt
   Font12Arial.bmfc
@@ -35,43 +35,54 @@ EventExport/
   gum_events.json
 ```
 
-Not all files and folders are present in every project. For example, `EventExport/` is only created once a change is made in the Gum tool.
+The layout above uses the JSON format (`.gumj`), which new projects use. Projects created in older versions of Gum may use the XML format (`.gumx`) instead. See [JSON and XML Formats](#json-and-xml-formats) below. Not all files and folders are present in every project. For example, `EventExport/` is only created once a change is made in the Gum tool.
 
-## Project File (.gumx)
+## Project File (.gumj/.gumx)
 
-The `.gumx` file is the main project file opened by the Gum tool. It is an XML file containing project-wide settings such as canvas size, font ranges, and display options. It also contains references to all screens, components, and standard elements in the project.
+The `.gumj` file is the main project file opened by the Gum tool. It is a JSON file containing project-wide settings such as canvas size, font ranges, and display options. It also contains references to all screens, components, and standard elements in the project. Older projects use an XML project file with the `.gumx` extension, which holds the same data.
 
 For details on project settings, see the [Project Properties](../project-properties.md) page.
 
 ## Element Files
 
-Element files define the screens, components, standard elements, behaviors, and animations that make up your project. By default all element files use XML format (see [JSON Format](#json-format-native-aot) below for the opt-in alternative); either way they store paths relative to the project and contain no machine-specific data. These files should always be committed to version control.
+Element files define the screens, components, standard elements, behaviors, and animations that make up your project. New projects save element files in JSON format (see [JSON and XML Formats](#json-and-xml-formats) below for the XML counterparts). Either way, element files store paths relative to the project and contain no machine-specific data. These files should always be committed to version control.
 
-### Screen Files (.gusx)
+### Screen Files (.gusj/.gusx)
 
-Located in the `Screens/` folder. Each screen in your project is saved as a separate `.gusx` file containing instances and their property values organized by state.
+Located in the `Screens/` folder. Each screen in your project is saved as a separate `.gusj` file containing instances and their property values organized by state.
 
-### Component Files (.gucx)
+### Component Files (.gucj/.gucx)
 
-Located in the `Components/` folder. Each component is saved as a `.gucx` file with the same structure as screen files. Components can be organized in subfolders within `Components/`.
+Located in the `Components/` folder. Each component is saved as a `.gucj` file with the same structure as screen files. Components can be organized in subfolders within `Components/`.
 
-### Standard Element Files (.gutx)
+### Standard Element Files (.gutj/.gutx)
 
 Located in the `Standards/` folder. These define default property values for built-in element types such as Text, Sprite, Container, ColoredRectangle, and others.
 
-### Behavior Files (.behx)
+### Behavior Files (.behj/.behx)
 
-Located in the `Behaviors/` folder. Behaviors define required state categories for components. For example, `ButtonBehavior.behx` requires that a component have Enabled, Disabled, Highlighted, and Pushed states. For more information, see the [Behaviors](../gum-elements/behaviors/README.md) page.
+Located in the `Behaviors/` folder. Behaviors define required state categories for components. For example, `ButtonBehavior.behj` requires that a component have Enabled, Disabled, Highlighted, and Pushed states. For more information, see the [Behaviors](../gum-elements/behaviors/README.md) page.
 
-### Animation Files (.ganx)
+### Animation Files (.ganj/.ganx)
 
-Animation files are saved alongside their parent element. For example, a component named `Button` would have its animations stored in `ButtonAnimations.ganx` in the same folder as `Button.gucx`. These files store animation sequences that reference states by name. For more information, see the [Animation Tutorials](../tutorials-and-examples/animation-tutorials/README.md).
+Animation files are saved alongside their parent element. For example, a component named `Button` would have its animations stored in `ButtonAnimations.ganj` in the same folder as `Button.gucj`. These files store animation sequences that reference states by name. For more information, see the [Animation Tutorials](../tutorials-and-examples/animation-tutorials/README.md).
 
-## JSON Format (Native AOT)
+## JSON and XML Formats
 
-Every project/element file type above also has a JSON counterpart: `.gumj` (project), `.gusj` (screen), `.gucj` (component), `.gutj` (standard element), `.behj` (behavior), and `.ganj` (animation). JSON exists because `XmlSerializer` is not compatible with Native AOT; the tool's own file/save dispatch picks XML vs. JSON purely from the file's extension.
+Every project and element file type has a JSON form and an XML form:
 
-Conversion is explicit opt-in and non-destructive — nothing converts your project automatically, and converting never deletes or modifies the original XML:
+| Content | JSON | XML |
+| --- | --- | --- |
+| Project | `.gumj` | `.gumx` |
+| Screen | `.gusj` | `.gusx` |
+| Component | `.gucj` | `.gucx` |
+| Standard element | `.gutj` | `.gutx` |
+| Behavior | `.behj` | `.behx` |
+| Animation | `.ganj` | `.ganx` |
+
+JSON is the recommended format, and new projects use it. It also works with Native AOT, which `XmlSerializer` does not. The Gum tool picks the format from the file's extension.
+
+To move an XML project to JSON, conversion is explicit and non-destructive. Nothing converts your project automatically, and converting never deletes or modifies the original XML:
 
 * In the Gum tool, use **Content → Convert to JSON…**.
 * From the command line, run `gumcli convert-to-json <project.gumx>`.
@@ -84,7 +95,7 @@ Both write a `.gumj` sibling of your `.gumx`, plus a JSON sibling for every Scre
 
 A JSON file storing project-wide code generation configuration including the output library, root namespace, using statements, and generation behavior. These settings are configured through the [Code Tab](../code-tab/README.md). This file should be committed to version control so all team members share the same code generation settings.
 
-Individual elements may also have their own `<ElementName>.codsj` files saved alongside the element file (e.g., `Button.codsj` next to `Button.gucx`). These store per-element code generation settings such as namespace overrides and generation behavior.
+Individual elements may also have their own `<ElementName>.codsj` files saved alongside the element file (e.g., `Button.codsj` next to `Button.gucj`). These store per-element code generation settings such as namespace overrides and generation behavior.
 
 ### TextureCoordinateSettings.tcsj
 
@@ -92,7 +103,7 @@ A JSON file storing texture coordinate editor preferences such as whether snap-t
 
 ### \<ProjectName>.user.setj
 
-A JSON file storing per-user UI state such as which tree nodes are expanded in the project tree. The filename is derived from your `.gumx` filename (e.g., `GumProject.gumx` produces `GumProject.user.setj`). This file is automatically created for each user and **should not be committed** to version control. Each user has different expanded nodes, so committing this file causes unnecessary churn.
+A JSON file storing per-user UI state such as which tree nodes are expanded in the project tree. The filename is derived from your project filename (e.g., `GumProject.gumj` produces `GumProject.user.setj`). This file is automatically created for each user and **should not be committed** to version control. Each user has different expanded nodes, so committing this file causes unnecessary churn.
 
 ## Font Character Set File (.gumfcs)
 
@@ -128,9 +139,9 @@ This file is transient and user-specific. It **should not be committed** to vers
 
 ## Missing Source Files (GUM0004)
 
-If the Gum tool opens a project whose `.gumx` references an element (screen, component, or standard element) but the matching element file is not found on disk, the element still appears in the tree with a red "!" indicator. This can happen when an element file is deleted, renamed, or moved outside the Gum tool — for example by a version-control operation that removes the file while the project is open.
+If the Gum tool opens a project whose project file references an element (screen, component, or standard element) but the matching element file is not found on disk, the element still appears in the tree with a red "!" indicator. This can happen when an element file is deleted, renamed, or moved outside the Gum tool — for example by a version-control operation that removes the file while the project is open.
 
-When this happens the Gum tool reports a **GUM0004** error in the [Errors tab](../editor-tab.md), naming the element and the path where its file was expected (for example `Components/Button.gucx`). The element itself is still present in memory, so the project keeps working. To resolve the error, either:
+When this happens the Gum tool reports a **GUM0004** error in the [Errors tab](../editor-tab.md), naming the element and the path where its file was expected (for example `Components/Button.gucj`). The element itself is still present in memory, so the project keeps working. To resolve the error, either:
 
 * **Restore the missing file** — undo the deletion or move it back to the expected location, then reload the project.
 * **Re-save the element** — saving the element (for example by editing it) recreates the file from the in-memory copy.

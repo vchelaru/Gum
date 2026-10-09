@@ -70,7 +70,7 @@ Before making changes, be sure to back up your Gum project or have a commit that
 To use a .gumfcs file:
 
 1. Check the **Use Font Character File (.gumfcs)** option. Gum creates a .gumfcs file if one doesn't exist.
-2. Navigate to the location where your Gum project is located (.gumx)
+2. Navigate to the location where your Gum project is located (.gumj or .gumx)
 3. Open the .gumfcs file in a text editor
 4. Add or remove characters in the .gumfcs file
 5. Save the file to disk - Gum automatically updates the character sets in response

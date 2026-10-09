@@ -1,3 +1,4 @@
+using System;
 using Gum.DataTypes;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
@@ -18,7 +19,8 @@ public interface IPreviewLauncher
 
     /// <summary>
     /// Pushes <paramref name="element"/> to the running preview host so it swaps its root element.
-    /// Does nothing if no preview is currently running. Set <paramref name="activate"/> only for an
+    /// Does nothing if no preview is currently running, or if the preview is pinned to a different
+    /// element. Set <paramref name="activate"/> only for an
     /// explicit user action (re-clicking Preview) that should also raise the preview window; leave
     /// it false for passive updates driven by tool selection changes, so picking a different
     /// screen/component in the tool doesn't yank focus away from it (issue #4717).
@@ -33,4 +35,28 @@ public interface IPreviewLauncher
     /// watching that directory, picks up the change exactly as it would for a real .gumj project.
     /// </summary>
     void RefreshIfRunning();
+
+    /// <summary>
+    /// The element the running preview is pinned to (issue #3078), or null when it follows the
+    /// tool's selection or no preview is running.
+    /// </summary>
+    ElementSave? PinnedElement { get; }
+
+    /// <summary>Whether a preview process is currently running.</summary>
+    bool IsRunning { get; }
+
+    /// <summary>Raised when the preview becomes pinned or unpinned, including when it unpins itself.</summary>
+    event Action? PinnedChanged;
+
+    /// <summary>
+    /// Pins the running preview to the element it is showing, so tool selection changes no longer
+    /// reach it. Returns false (and pins nothing) when no preview is running.
+    /// </summary>
+    bool Pin();
+
+    /// <summary>
+    /// Releases the pin and sends the tool's current selection to the preview. Does nothing when
+    /// the preview isn't pinned.
+    /// </summary>
+    void Unpin();
 }

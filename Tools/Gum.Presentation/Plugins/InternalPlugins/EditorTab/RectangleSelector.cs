@@ -26,6 +26,7 @@ public class RectangleSelector
     private readonly IGumCursorState _cursor;
     private readonly ISelectionRectangleVisual _selectionRectangleVisual;
     private readonly ICanvasDisplayScale _displayScale;
+    private readonly IPreciseHitTester _preciseHitTester;
 
     private bool _isActive;
     private bool _hasMovedEnough;
@@ -59,7 +60,8 @@ public class RectangleSelector
         Camera camera,
         IGumCursorState cursor,
         ISelectionRectangleVisual selectionRectangleVisual,
-        ICanvasDisplayScale displayScale)
+        ICanvasDisplayScale displayScale,
+        IPreciseHitTester preciseHitTester)
     {
         _hotkeyManager = hotkeyManager;
         _wireframeObjectManager = wireframeObjectManager;
@@ -69,6 +71,7 @@ public class RectangleSelector
         _cursor = cursor;
         _selectionRectangleVisual = selectionRectangleVisual;
         _displayScale = displayScale;
+        _preciseHitTester = preciseHitTester;
     }
 
     public void HandlePush(float worldX, float worldY)
@@ -222,34 +225,13 @@ public class RectangleSelector
             if (element.Tag is Gum.DataTypes.InstanceSave { Locked: true })
                 continue;
 
-            // Check if element bounds intersect with selection rectangle
-            if (ElementIntersectsRectangle(element, left, top, right, bottom))
+            if (_preciseHitTester.IntersectsRectangle(element, left, top, right, bottom))
             {
                 result.Add(element);
             }
         }
 
         return result;
-    }
-
-    private bool ElementIntersectsRectangle(
-        GraphicalUiElement element,
-        float left,
-        float top,
-        float right,
-        float bottom)
-    {
-        // Get element bounds in world coordinates
-        var elementLeft = element.GetAbsoluteLeft();
-        var elementRight = element.GetAbsoluteRight();
-        var elementTop = element.GetAbsoluteTop();
-        var elementBottom = element.GetAbsoluteBottom();
-
-        // Check for intersection (not just containment - any overlap counts)
-        return !(elementRight < left ||
-                 elementLeft > right ||
-                 elementBottom < top ||
-                 elementTop > bottom);
     }
 
     #endregion

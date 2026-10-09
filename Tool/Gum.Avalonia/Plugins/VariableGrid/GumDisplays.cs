@@ -106,6 +106,12 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
 /// <summary>X units toggles.</summary>
 public class XUnitsDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.XUnits; }
 
+/// <summary>Gradient inner/outer radius units toggles.</summary>
+public class GradientRadiusUnitsDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GradientRadiusUnits; }
+
+/// <summary>Gradient Y units toggles, without baseline.</summary>
+public class GradientYUnitsDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GradientYUnits; }
+
 /// <summary>Y units toggles.</summary>
 public class YUnitsDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.YUnits; }
 
@@ -176,8 +182,8 @@ public class ColorDisplay : DataUiDisplayBase
     /// <summary>Builds the editor.</summary>
     public ColorDisplay()
     {
-        _label = new TextBlock { MinWidth = 100, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0) };
-        _swatch = new Border { Height = 18, MinWidth = 60, CornerRadius = new CornerRadius(2), BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1) };
+        _label = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0), TextTrimming = TextTrimming.CharacterEllipsis };
+        _swatch = new Border { Height = 18, CornerRadius = new CornerRadius(2), BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1) };
 
         _colorPicker = new CompactColorPicker();
         _colorPicker.ColorChanged += (_, color) => HandleColorPicked(color);
@@ -198,7 +204,7 @@ public class ColorDisplay : DataUiDisplayBase
         // and the row is disabled.
         swatchButton.Classes.Add(GumChromeStyles.ValuePreviewButtonClass);
 
-        _hexTextBox = new EditTrackingTextBox { Width = 76, VerticalAlignment = VerticalAlignment.Center };
+        _hexTextBox = new EditTrackingTextBox { Width = 68, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(_hexTextBox, "Type or paste a hex color (RRGGBB or RRGGBBAA). Alpha is ignored.");
         _hexTextBox.AddHandler(KeyDownEvent, (_, e) =>
         {
@@ -218,6 +224,11 @@ public class ColorDisplay : DataUiDisplayBase
         _hint = CreateHintTextBlock();
 
         Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), Margin = new Thickness(0, 3) };
+        // The label's 100px plus its 4px margins, as before; the swatch keeps a floor of its own. The
+        // floor leaves slack at the narrowest width because the hex column's "#" glyph is wider in
+        // some platforms' fonts.
+        DataUiRowLayout.ConfigureLabelColumn(grid.ColumnDefinitions[0], 108);
+        DataUiRowLayout.ConfigureValueColumn(grid.ColumnDefinitions[1], 32);
         Grid.SetColumn(swatchButton, 1);
         Grid.SetColumn(hex, 2);
         grid.Children.Add(_label);

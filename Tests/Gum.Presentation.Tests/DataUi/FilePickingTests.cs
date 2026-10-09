@@ -98,6 +98,60 @@ public class FilePickingTests : IDisposable
     }
 
     [Fact]
+    public void ShowInExplorer_RevealsAnExistingFolder_WithoutItsTrailingSeparator()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N")) + "/";
+        Directory.CreateDirectory(folder + "Code");
+        Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
+        FilePickingLogic.FilePicker = picker.Object;
+        FilePickingLogic.FolderRelativeTo = folder;
+        FilePickingLogic logic = new FilePickingLogic { IsFolderDialog = true };
+
+        // Folder settings such as Code Project Root are stored with a trailing separator, which
+        // would make the file manager open the folder instead of selecting it.
+        logic.ShowInExplorer("Code/");
+
+        picker.Verify(p => p.RevealFile(It.Is<string>(path => path.EndsWith("/Code"))), Times.Once);
+    }
+
+    [Fact]
+    public void ShowInExplorer_ResolvesAgainstTheInstanceBaseFolder_WhenOneIsGiven()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N")) + "/";
+        Directory.CreateDirectory(folder + "Code/Generated");
+        Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
+        FilePickingLogic.FilePicker = picker.Object;
+        FilePickingLogic.FolderRelativeTo = folder + "Elsewhere/";
+        string? codeRoot = folder + "Code/";
+        FilePickingLogic logic = new FilePickingLogic { RelativeToProvider = () => codeRoot };
+
+        logic.ShowInExplorer("Generated");
+        codeRoot = null;
+        logic.ShowInExplorer("Code/Generated");
+
+        // The provider is read on every reveal, and a null result falls back to FolderRelativeTo,
+        // which doesn't hold the folder here.
+        picker.Verify(p => p.RevealFile(It.Is<string>(path => path.EndsWith("/Code/Generated"))), Times.Once);
+    }
+
+    [Fact]
+    public void ShowInExplorer_DoesNotResolveAnAbsolutePath_AgainstFolderRelativeTo()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        string absoluteFile = Path.Combine(folder, "real.png");
+        File.WriteAllText(absoluteFile, "");
+        Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
+        FilePickingLogic.FilePicker = picker.Object;
+        FilePickingLogic.FolderRelativeTo = Path.Combine(folder, "Other") + "/";
+        FilePickingLogic logic = new FilePickingLogic();
+
+        logic.ShowInExplorer(absoluteFile);
+
+        picker.Verify(p => p.RevealFile(It.Is<string>(path => path.EndsWith("real.png"))), Times.Once);
+    }
+
+    [Fact]
     public void ShowOpenDialog_UsesTheSharedPickerAndFilter()
     {
         Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();

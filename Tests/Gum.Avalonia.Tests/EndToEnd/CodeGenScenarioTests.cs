@@ -49,13 +49,18 @@ public class CodeGenScenarioTests
         code.Project.Dialogs.Messages.Last().ShouldContain("Card.Generated.cs");
 
         code.PickComboItem("Object Instantiation Type", "Fully in Code (no loaded Gum Project)");
+        // The Gum Forms files are left at paths SkiaSharp names differently, so the tool offers to
+        // migrate them; this scenario is about generation, so it declines.
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
+        int shown = code.Project.Dialogs.Messages.Count;
         code.PickComboItem("Output Library", "SkiaSharp (deprecated)");
-        code.Preview.ShouldContain("partial class CardRuntime : SkiaGum.GueDeriving.ContainerRuntime");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count > shown, TimeSpan.FromSeconds(60), "the migration prompt");
+        code.Preview.ShouldContain("partial class CardRuntime : Gum.GueDeriving.ContainerRuntime");
         code.ClickGenerate();
 
         generated = File.ReadAllText(code.CodeFile("Components/CardRuntime.Generated.cs"));
-        generated.ShouldContain("partial class CardRuntime : SkiaGum.GueDeriving.ContainerRuntime");
-        generated.ShouldContain("Title = new global::SkiaGum.GueDeriving.TextRuntime()");
+        generated.ShouldContain("partial class CardRuntime : Gum.GueDeriving.ContainerRuntime");
+        generated.ShouldContain("Title = new global::Gum.GueDeriving.TextRuntime()");
         generated.ShouldNotContain("GetGraphicalUiElementByName");
 
         code.AssertOracles();
@@ -83,6 +88,98 @@ public class CodeGenScenarioTests
         string settings = File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj"));
         settings.ShouldContain("\"CodeProjectRoot\": \"Code");
         settings.ShouldContain("\"GeneratedCodeFolder\": \"Gum/Generated\"");
+
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "CODE-004")]
+    public void Generate_WithGeneratedCodeFolderPrefix_WritesIntoThePrefixedFolders_AndKeepsTheNamespace()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave toggle = code.Project.AddComponent("Controls/Toggle");
+        code.Tree.SaveAll();
+        code.Select(toggle);
+        code.SetUpManualGeneration();
+        code.TypeAndEnter("Root Namespace", "MyGame");
+
+        code.TypeAndEnter("Generated Code Folder Prefix", "GumCodeGen/");
+        code.ClickGenerate();
+
+        string generated = File.ReadAllText(code.CodeFile("GumCodeGen/Components/Controls/Toggle.Generated.cs"));
+        generated.ShouldContain("namespace MyGame.Components", customMessage: "the prefix moves files, not namespaces");
+        generated.ShouldNotContain("GumCodeGen");
+        File.Exists(code.CodeFile("GumCodeGen/Components/Controls/Toggle.cs")).ShouldBeTrue();
+        File.Exists(code.CodeFile("Components/Controls/Toggle.Generated.cs")).ShouldBeFalse();
+        string settings = File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj"));
+        settings.ShouldContain("\"GeneratedCodeFolderPrefix\": \"GumCodeGen/\"");
+
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void ChangingTheGeneratedCodeFolderPrefix_OffersToMigrate_MovesTheCustomCode_RemovesTheEmptiedFolder_AndRestoreLastPutsItBack()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.ClickGenerate();
+        string oldGenerated = code.CodeFile("Components/Card.Generated.cs");
+        string oldCustom = code.CodeFile("Components/Card.cs");
+        string userCode = File.ReadAllText(oldCustom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()");
+        File.WriteAllText(oldCustom, userCode);
+
+        string? prompt = null;
+        code.Project.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            prompt = window.Text();
+            window.ClickButton("Migrate");
+        });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.TypeAndEnter("Generated Code Folder Prefix", "Gum");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the migration prompt and its result");
+
+        prompt.ShouldNotBeNull().ShouldContain("You changed Generated Code Folder Prefix from (none) to Gum.");
+        File.Exists(oldGenerated).ShouldBeFalse();
+        File.Exists(oldCustom).ShouldBeFalse();
+        Directory.Exists(Path.GetDirectoryName(oldCustom)!).ShouldBeFalse("the emptied Components folder is removed");
+        File.ReadAllText(code.CodeFile("GumComponents/Card.cs")).ShouldContain("int userField;");
+        File.Exists(code.CodeFile("GumComponents/Card.Generated.cs")).ShouldBeTrue("migrating regenerates the element at its new path");
+
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.PickMainMenu("Content", "Restore Last Code File Migration…");
+
+        File.ReadAllText(oldCustom).ShouldBe(userCode);
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "CODE-018")]
+    public void RenamingAComponent_WithAPrefix_RenamesItsCodeFilesInThePrefixedFolder()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.TypeAndEnter("Generated Code Folder Prefix", "GumCodeGen/");
+        code.ClickGenerate();
+
+        code.Project.Dialogs.AnswerNext<RenameElementDialogViewModel>(dialog => { dialog.Value = "Panel"; return true; });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.Click(code.Tree.NodeFor(card));
+        code.Tree.Press(Key.F2, PhysicalKey.F2);
+
+        card.Name.ShouldBe("Panel");
+        File.Exists(code.CodeFile("GumCodeGen/Components/Card.Generated.cs")).ShouldBeFalse();
+        File.Exists(code.CodeFile("GumCodeGen/Components/Card.cs")).ShouldBeFalse();
+        File.ReadAllText(code.CodeFile("GumCodeGen/Components/Panel.Generated.cs")).ShouldContain("partial class Panel");
+        File.ReadAllText(code.CodeFile("GumCodeGen/Components/Panel.cs")).ShouldContain("partial class Panel");
+        File.Exists(code.CodeFile("Components/Panel.Generated.cs")).ShouldBeFalse();
 
         code.AssertOracles();
     }
@@ -123,6 +220,9 @@ public class CodeGenScenarioTests
         screenCode.ShouldContain("partial class TitleScreen : MyScreenBase");
 
         code.Select(toggle);
+        // The custom files now declare a stale namespace, so the tool offers to update them; this
+        // scenario is about what Generate writes, so it declines.
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
         code.ClickCheckBox("Append Folder to Namespace");
         File.ReadAllText(Path.Combine(code.Project.ProjectFolder, "ProjectCodeSettings.codsj")).ShouldContain("\"AppendFolderToNamespace\": false");
         code.ClickButton("Selected");
@@ -455,5 +555,115 @@ public class CodeGenScenarioTests
         File.Exists(Path.Combine(code.Project.ProjectFolder, "Components", "Card.codsj")).ShouldBeFalse();
 
         code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void SwitchingOutputLibrary_OffersToMigrate_NamingTheChange_AndMigrateMovesTheCustomCode()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        (string oldGenerated, string oldCustom) = GenerateUnderMonoGameWithUserCode(code);
+
+        string? prompt = null;
+        code.Project.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            prompt = window.Text();
+            if (PrScreenshot.OutputDirectory != null)
+            {
+                PrScreenshot.SaveWindow(window.Window, "migrate-after-library-switch");
+            }
+            window.ClickButton("Migrate");
+        });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.PickComboItem("Output Library", "Gum Forms (recommended)");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the migration prompt and its result");
+
+        prompt.ShouldNotBeNull().ShouldContain("You changed Output Library from MonoGame (deprecated) to Gum Forms (recommended).");
+        File.Exists(oldGenerated).ShouldBeFalse();
+        File.Exists(oldCustom).ShouldBeFalse();
+        File.ReadAllText(code.CodeFile("Components/Card.cs")).ShouldContain("int userField;");
+        File.Exists(code.CodeFile("Components/Card.Generated.cs")).ShouldBeTrue("migrating regenerates the element at its new path");
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void DecliningTheMigration_LeavesErrorRows_WhoseMigrateActionStillMovesTheCode()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        (string oldGenerated, string oldCustom) = GenerateUnderMonoGameWithUserCode(code);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Negative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.PickComboItem("Output Library", "Gum Forms (recommended)");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count > shown, TimeSpan.FromSeconds(60), "the migration prompt");
+        File.Exists(oldCustom).ShouldBeTrue("Cancel changes nothing");
+
+        Gum.Plugins.Errors.AllErrorsViewModel errors = (Gum.Plugins.Errors.AllErrorsViewModel)((global::Avalonia.Controls.Control)code.TabManager.AllTabs
+            .Single(tab => tab.Title == "Errors").Content).DataContext!;
+        code.Tree.WaitUntil(() => errors.Errors.Any(error => error.ActionName == "Migrate Code Files"), TimeSpan.FromSeconds(60), "the orphan rows");
+        Gum.Managers.ErrorViewModel row = errors.Errors.First(error => error.ActionName == "Migrate Code Files");
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        shown = code.Project.Dialogs.Messages.Count;
+        row.ActionCommand!.Execute(null);
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the migration and its result");
+
+        File.Exists(oldGenerated).ShouldBeFalse();
+        File.ReadAllText(code.CodeFile("Components/Card.cs")).ShouldContain("int userField;");
+        code.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void ChangingRootNamespace_OffersToUpdateCustomCode_AndRestoreLastPutsItBack()
+    {
+        using CodeTabHarness code = new CodeTabHarness();
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration();
+        code.TypeAndEnter("Root Namespace", "OldGame");
+        code.ClickGenerate();
+        string custom = code.CodeFile("Components/Card.cs");
+        string oldCustom = File.ReadAllText(custom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()");
+        File.WriteAllText(custom, oldCustom);
+
+        string? prompt = null;
+        code.Project.Dialogs.AnswerNextMessageInWindow(window =>
+        {
+            prompt = window.Text();
+            window.ClickButton("Update");
+        });
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        int shown = code.Project.Dialogs.Messages.Count;
+        code.TypeAndEnter("Root Namespace", "NewGame");
+        code.Tree.WaitUntil(() => code.Project.Dialogs.Messages.Count >= shown + 2, TimeSpan.FromSeconds(60), "the update prompt and its result");
+
+        prompt.ShouldNotBeNull().ShouldContain("You changed Root Namespace from OldGame to NewGame.");
+        prompt.ShouldContain("Components/Card.cs");
+        string updated = File.ReadAllText(custom);
+        updated.ShouldContain("namespace NewGame.Components");
+        updated.ShouldContain("int userField;");
+        File.ReadAllText(code.CodeFile("Components/Card.Generated.cs")).ShouldContain("namespace NewGame.Components",
+            customMessage: "updating regenerates the element, so both halves stay one class");
+
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Project.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        code.Tree.PickMainMenu("Content", "Restore Last Code File Migration…");
+
+        File.ReadAllText(custom).ShouldBe(oldCustom);
+        code.AssertOracles();
+    }
+
+    // Generates Card under MonoGame (CardRuntime) and adds a field to its custom file.
+    private static (string OldGenerated, string OldCustom) GenerateUnderMonoGameWithUserCode(CodeTabHarness code)
+    {
+        ComponentSave card = code.Project.AddComponent("Card");
+        code.Tree.SaveAll();
+        code.Select(card);
+        code.SetUpManualGeneration(library: "MonoGame (deprecated)");
+        code.ClickGenerate();
+        string oldGenerated = code.CodeFile("Components/CardRuntime.Generated.cs");
+        string oldCustom = code.CodeFile("Components/CardRuntime.cs");
+        File.WriteAllText(oldCustom, File.ReadAllText(oldCustom).Replace("partial void CustomInitialize()", "int userField;\n        partial void CustomInitialize()"));
+        return (oldGenerated, oldCustom);
     }
 }

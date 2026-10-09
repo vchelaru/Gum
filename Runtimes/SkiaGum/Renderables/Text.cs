@@ -739,6 +739,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         set;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>The text block is laid out at <see cref="FontScale"/>, so its descent is divided back out.</remarks>
     public float DescenderHeight
     {
         get
@@ -748,6 +750,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (textBlock.Lines.Count > 0)
             {
                 toReturn = textBlock.Lines[textBlock.Lines.Count - 1].MaxDescent;
+            }
+            if (FontScale > 0)
+            {
+                toReturn /= FontScale;
             }
             return toReturn;
         }
@@ -897,7 +903,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         var canvas = ((SystemManagers)managers).Canvas;
 
-        if (AbsoluteVisible)
+        if (Visible)
         {
             var textBlock = GetCachedTextBlock();
             

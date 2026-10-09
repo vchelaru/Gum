@@ -435,6 +435,7 @@ public partial class GumService : IGumService
     /// </summary>
     public GumService()
     {
+        _rootSnapshot = new List<GraphicalUiElement>();
         Root = new ContainerRuntime();
         _rootOwnedByGumService = true;
         Root.Width = 0;
@@ -698,6 +699,10 @@ public partial class GumService : IGumService
     // root can be forwarded to the IEnumerable overload without allocating each frame.
     List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
 
+    // Reused copy of non-list roots taken by AnimateRoots, so handlers can change the caller's
+    // collection mid-frame without allocating a new snapshot each frame (#5836).
+    readonly List<GraphicalUiElement> _rootSnapshot;
+
     // Platform-agnostic front of every frame's Update, run before the platform pumps Forms input:
     // drain the sync context, process deferred actions, and tick hot reload. The public
     // Update(GameTime ...) family is platform-typed (XNA GameTime object vs double seconds) and lives
@@ -719,16 +724,24 @@ public partial class GumService : IGumService
         // the List enumerator each frame that foreach over the IEnumerable parameter would (#1934).
         if (roots is IList<GraphicalUiElement> list)
         {
-            for (int i = 0; i < list.Count; i++)
-            {
-                list[i].AnimateSelf(difference);
-            }
+            // Safe for animation event handlers that add or remove roots.
+            GraphicalUiElement.AnimateEach(list, difference);
         }
         else
         {
-            foreach (var item in roots)
+            // A plain IEnumerable can't be walked while a handler changes it, so animate a copy.
+            // Roots a handler adds start next frame; roots it removes still advance this frame.
+            _rootSnapshot.AddRange(roots);
+            try
             {
-                item.AnimateSelf(difference);
+                for (int i = 0; i < _rootSnapshot.Count; i++)
+                {
+                    _rootSnapshot[i].AnimateSelf(difference);
+                }
+            }
+            finally
+            {
+                _rootSnapshot.Clear();
             }
         }
     }

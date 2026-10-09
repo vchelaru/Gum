@@ -344,10 +344,26 @@ public class GumHotReloadManager : IGumHotReloadManager
 
             DiffDesignTimeChildren(element, newEs, systemManagers);
 
+            // An instance is built from its own element, so an edit to that element (a component's
+            // default state or its own instances) has to reach it too, however deeply nested.
+            // Innermost first: this element's overrides are applied next and must win over the
+            // component's defaults.
+            foreach (GraphicalUiElement instance in element.ContainedElements.Concat(element.Children).Distinct().ToList())
+            {
+                if (instance.Tag is InstanceSave && instance.ElementSave is not StandardElementSave)
+                {
+                    ApplyDiffRecursive(instance, byName, systemManagers);
+                }
+            }
+
             if (newEs.DefaultState != null)
             {
                 element.SetVariablesRecursively(newEs, newEs.DefaultState);
             }
+
+            // After variables, so Parent variables have already moved each instance to its
+            // final container.
+            ReorderDesignTimeChildren(element, newEs.Instances ?? new List<InstanceSave>());
 
             if (newEs.Instances != null)
             {
@@ -359,9 +375,12 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         foreach (GraphicalUiElement child in element.Children.ToList())
         {
-            if (designTimeChildNames != null
-                && child.Name != null
-                && designTimeChildNames.Contains(child.Name))
+            // Instances are handled by the element that owns them (above, or by the screen that
+            // parented them here), so only runtime-added children are left.
+            if (child.Tag is InstanceSave
+                || (designTimeChildNames != null
+                    && child.Name != null
+                    && designTimeChildNames.Contains(child.Name)))
             {
                 continue;
             }
@@ -375,6 +394,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// <c>Instances</c> list: removes missing instances, creates added ones, replaces visuals
     /// whose <c>BaseType</c> changed, and reorders the design-time slice to match the new
     /// order. Runtime-added children (no <c>InstanceSave</c> tag) are left in place.
+    /// Reordering happens later, in <see cref="ReorderDesignTimeChildren"/>.
     /// </summary>
     private static void DiffDesignTimeChildren(
         GraphicalUiElement parent,
@@ -384,14 +404,20 @@ public class GumHotReloadManager : IGumHotReloadManager
         // Two lookup tables: one for design-time children (Tag is InstanceSave) so we can do
         // typed operations like retype/remove, and one keyed by Name across ALL children so
         // we don't duplicate a runtime-claimed child (e.g. one whose Tag was nulled by user
-        // code — the documented limitation in issue #2848).
+        // code — the documented limitation in issue #2848). ContainedElements is included
+        // because an instance with a Parent variable (e.g. a ListBoxItem inside a ComboBox)
+        // belongs to this element without being one of its direct Children.
         Dictionary<string, GraphicalUiElement> designTimeByName =
             new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, GraphicalUiElement> anyByName =
             new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
-        foreach (GraphicalUiElement child in parent.Children.ToList())
+        foreach (GraphicalUiElement child in parent.ContainedElements.Concat(parent.Children).ToList())
         {
-            if (child.Tag is InstanceSave existingInstance && existingInstance.Name != null)
+            // Only this element's own instances: a child that the screen parented under a
+            // component instance carries the screen's InstanceSave, not the component's.
+            if (child.Tag is InstanceSave existingInstance
+                && existingInstance.Name != null
+                && string.Equals(existingInstance.ParentContainer?.Name, newEs.Name, StringComparison.OrdinalIgnoreCase))
             {
                 designTimeByName[existingInstance.Name] = child;
             }
@@ -464,13 +490,12 @@ public class GumHotReloadManager : IGumHotReloadManager
                 }
             }
         }
-
-        ReorderDesignTimeChildren(parent, newInstances);
     }
 
     private static void DetachAndRemove(GraphicalUiElement child)
     {
         child.Parent = null;
+        child.ElementGueContainingThis = null;
         child.RemoveFromManagers();
     }
 
@@ -491,69 +516,71 @@ public class GumHotReloadManager : IGumHotReloadManager
     }
 
     /// <summary>
-    /// Reorders the design-time children of <paramref name="parent"/> so that they appear in the
-    /// same relative order as <paramref name="newInstances"/>. Runtime-added children keep their
-    /// existing slots — only the positions occupied by design-time children are reshuffled.
+    /// Reorders the design-time instances of <paramref name="element"/> so that, within each
+    /// container they sit in, they appear in the same relative order as
+    /// <paramref name="newInstances"/>. A container is the element itself or, for an instance
+    /// with a Parent variable, another instance at any depth. Only the slots held by this
+    /// element's instances are reshuffled: runtime-added children and instances that belong
+    /// to a nested component keep their slots.
     /// </summary>
     private static void ReorderDesignTimeChildren(
-        GraphicalUiElement parent,
+        GraphicalUiElement element,
         IList<InstanceSave> newInstances)
     {
-        ObservableCollection<GraphicalUiElement> children = parent.Children;
-        if (children.Count == 0)
+        Dictionary<InstanceSave, int> orderByInstance = new Dictionary<InstanceSave, int>();
+        for (int i = 0; i < newInstances.Count; i++)
         {
-            return;
+            orderByInstance[newInstances[i]] = i;
         }
 
-        List<int> designTimeSlots = new List<int>();
+        HashSet<GraphicalUiElement> containers = new HashSet<GraphicalUiElement>();
+        foreach (GraphicalUiElement child in element.ContainedElements.Concat(element.Children))
+        {
+            if (child.Tag is InstanceSave instance
+                && orderByInstance.ContainsKey(instance)
+                && child.Parent is GraphicalUiElement container)
+            {
+                containers.Add(container);
+            }
+        }
+
+        foreach (GraphicalUiElement container in containers)
+        {
+            ReorderWithinContainer(container.Children, orderByInstance);
+        }
+    }
+
+    private static void ReorderWithinContainer(
+        ObservableCollection<GraphicalUiElement> children,
+        Dictionary<InstanceSave, int> orderByInstance)
+    {
+        List<int> slots = new List<int>();
+        List<GraphicalUiElement> desired = new List<GraphicalUiElement>();
         for (int i = 0; i < children.Count; i++)
         {
-            if (children[i].Tag is InstanceSave)
+            if (children[i].Tag is InstanceSave instance && orderByInstance.ContainsKey(instance))
             {
-                designTimeSlots.Add(i);
+                slots.Add(i);
+                desired.Add(children[i]);
             }
         }
 
-        if (designTimeSlots.Count == 0)
+        desired.Sort((a, b) =>
+            orderByInstance[(InstanceSave)a.Tag!].CompareTo(orderByInstance[(InstanceSave)b.Tag!]));
+
+        List<GraphicalUiElement> final = children.ToList();
+        for (int i = 0; i < slots.Count; i++)
         {
-            return;
+            final[slots[i]] = desired[i];
         }
 
-        Dictionary<string, GraphicalUiElement> designTimeByName =
-            new Dictionary<string, GraphicalUiElement>(StringComparer.OrdinalIgnoreCase);
-        foreach (int slot in designTimeSlots)
+        // Fill the prefix left to right; every Move pulls the wanted child back from a later index.
+        for (int i = 0; i < final.Count; i++)
         {
-            InstanceSave inst = (InstanceSave)children[slot].Tag!;
-            if (inst.Name != null)
+            if (children[i] != final[i])
             {
-                designTimeByName[inst.Name] = children[slot];
+                children.Move(children.IndexOf(final[i]), i);
             }
-        }
-
-        List<GraphicalUiElement> desired = new List<GraphicalUiElement>();
-        foreach (InstanceSave inst in newInstances)
-        {
-            if (inst.Name != null
-                && designTimeByName.TryGetValue(inst.Name, out GraphicalUiElement? c))
-            {
-                desired.Add(c);
-            }
-        }
-
-        for (int i = 0; i < designTimeSlots.Count && i < desired.Count; i++)
-        {
-            int slot = designTimeSlots[i];
-            GraphicalUiElement want = desired[i];
-            if (children[slot] == want)
-            {
-                continue;
-            }
-            int currentIndex = children.IndexOf(want);
-            if (currentIndex < 0)
-            {
-                continue;
-            }
-            children.Move(currentIndex, slot);
         }
     }
 }

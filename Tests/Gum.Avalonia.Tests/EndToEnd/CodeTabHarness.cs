@@ -179,6 +179,12 @@ internal sealed class CodeTabHarness : IDisposable
     /// </summary>
     public void SetUpManualGeneration(string library = "Gum Forms (recommended)", string instantiation = "Reference loaded Gum Project")
     {
+        // The tab offers setup instead of its settings when any folder above the project holds a
+        // .csproj, which a stray one in the temp folder does on some machines.
+        if (ShowsButton("Manual"))
+        {
+            ClickButton("Manual");
+        }
         TypeAndEnter("Code Project Root", CodeFolderName);
         PickComboItem("Output Library", library);
         PickComboItem("Object Instantiation Type", instantiation);

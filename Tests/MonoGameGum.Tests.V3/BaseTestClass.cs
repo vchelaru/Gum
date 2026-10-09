@@ -16,7 +16,7 @@ public class BaseTestClass : IDisposable
 {
     public BaseTestClass()
     {
-        GumService.Default.InitializeForTesting();
+        Gum.GumService.Default.InitializeForTesting();
         CreateMockCursor();
     }
 
@@ -70,9 +70,9 @@ public class BaseTestClass : IDisposable
 
         InteractiveGue.CurrentInputReceiver = null;
 
-        GumService.Default.Root.Children.Clear();
-        GumService.Default.ModalRoot.Children.Clear();
-        GumService.Default.PopupRoot.Children.Clear();
+        Gum.GumService.Default.Root.Children.Clear();
+        Gum.GumService.Default.ModalRoot.Children.Clear();
+        Gum.GumService.Default.PopupRoot.Children.Clear();
         FrameworkElement.AdditionalPopupRootPairs.Clear();
 
         // Clear any per-capability factories a test registered into the static

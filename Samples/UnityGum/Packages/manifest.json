@@ -6,6 +6,6 @@
     "com.unity.modules.imgui": "1.0.0",
     "com.unity.modules.screencapture": "1.0.0",
     "com.vchelaru.gum": "file:../../../Unity/com.vchelaru.gum",
-    "com.vchelaru.skiagamerendering": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.17.2"
+    "com.vchelaru.skiagamerendering": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.17.3"
   }
 }

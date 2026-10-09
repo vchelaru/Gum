@@ -1,0 +1,91 @@
+using System;
+using System.Diagnostics;
+using Gum;
+using Gum.Forms.Controls;
+using Silk.NET.Input;
+using Silk.NET.Maths;
+using Silk.NET.Windowing;
+using Silk.NET.Windowing.Sdl;
+using SkiaSharp;
+
+// Silk.NET.Input also defines a Button, so this alias selects the Gum control.
+using Button = Gum.Forms.Controls.Button;
+
+// Silk.NET.Input only receives events from a window that Silk.NET.Windowing.Sdl created and initialized itself.
+SdlWindowing.Use();
+
+WindowOptions options = WindowOptions.Default;
+// Desktop OpenGL 3.3 core is available on Windows, macOS and Linux without extra native libraries.
+options.API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.ForwardCompatible, new APIVersion(3, 3));
+options.Size = new Vector2D<int>(800, 450);
+options.Title = "{{ProjectName}}";
+options.VSync = true;
+options.PreferredDepthBufferBits = 24;
+options.PreferredStencilBufferBits = 8;
+
+IWindow window = Window.Create(options);
+window.Initialize();
+
+// Skia asks for optional OpenGL functions that a driver may not have, and GetProcAddress throws for those.
+// TryGetProcAddress returns false instead, which Skia treats as "not supported".
+using GRGlInterface glInterface = GRGlInterface.Create(
+    name => window.GLContext!.TryGetProcAddress(name, out nint address) ? address : 0);
+using GRContext grContext = GRContext.CreateGl(glInterface);
+
+GRBackendRenderTarget? renderTarget = null;
+SKSurface? surface = null;
+
+// Skia draws into a surface that wraps the window's framebuffer, so the surface must match its size.
+void CreateSurface(Vector2D<int> size)
+{
+    surface?.Dispose();
+    renderTarget?.Dispose();
+
+    renderTarget = new GRBackendRenderTarget(size.X, size.Y, 0, 8, new GRGlFramebufferInfo(0, 0x8058));
+    surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+}
+
+CreateSurface(window.FramebufferSize);
+
+GumService gumUI = GumService.Default;
+
+// Create screens and components in the Gum tool, generate code, then add them
+// here with: new MyScreen().AddToRoot();
+gumUI.Initialize(surface!.Canvas, window.CreateInput(), "Content/GumProject/GumProject.gumj");
+
+Button button = new Button();
+button.AddToRoot();
+button.Click += (_, _) => button.Text = "Clicked at\n" + DateTime.Now;
+
+// The resize is applied once per frame instead of inside the event, where the GL context may not be current.
+bool wasResized = false;
+window.Resize += _ => wasResized = true;
+
+Stopwatch clock = Stopwatch.StartNew();
+
+while (!window.IsClosing)
+{
+    window.DoEvents();
+
+    if (wasResized)
+    {
+        wasResized = false;
+        Vector2D<int> size = window.FramebufferSize;
+        CreateSurface(size);
+        gumUI.SystemManagers.Canvas = surface!.Canvas;
+        gumUI.HandleResize(size.X, size.Y);
+    }
+
+    gumUI.Update(clock.Elapsed.TotalSeconds);
+
+    grContext.ResetContext();
+    surface!.Canvas.Clear(SKColors.CornflowerBlue);
+    gumUI.Draw();
+    surface.Canvas.Flush();
+
+    window.GLContext!.SwapBuffers();
+}
+
+surface?.Dispose();
+renderTarget?.Dispose();
+window.Dispose();

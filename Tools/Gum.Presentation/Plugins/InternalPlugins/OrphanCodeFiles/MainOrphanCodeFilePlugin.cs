@@ -14,8 +14,10 @@ using OrphanCodeFilePlugin;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.OrphanCodeFiles;
 
@@ -23,8 +25,11 @@ namespace Gum.Plugins.InternalPlugins.OrphanCodeFiles;
 /// Surfaces code files left behind on disk when an element was deleted, renamed, or moved without
 /// the code files being reconciled (issue #4422). Scans on project load and from the
 /// <b>Content</b> ▸ <b>Scan for Orphaned Code Files</b> menu item, and reports through the Errors
-/// tab with a per-file Delete action. All logic lives in <see cref="OrphanCodeFileReporter"/> and
-/// <see cref="OrphanCodeFileScanService"/> — this plugin is menu/event plumbing only.
+/// tab with a per-file Delete action. <b>Content</b> ▸ <b>Migrate Code Files</b> moves files left at
+/// old paths by a code settings change, and <b>Restore Last Code File Migration</b> undoes it (#5846).
+/// A namespace or inheritance settings change offers to rewrite custom code headers in place (#5855).
+/// All logic lives in <see cref="OrphanCodeFileReporter"/>, <see cref="OrphanCodeFileScanService"/>
+/// and <see cref="CodeFileMigrator"/> — this plugin is menu/event plumbing only.
 /// </summary>
 [Export(typeof(PluginBase))]
 internal class MainOrphanCodeFilePlugin : PluginBase
@@ -32,6 +37,8 @@ internal class MainOrphanCodeFilePlugin : PluginBase
     public override string FriendlyName => "Orphan Code File Plugin";
 
     private readonly OrphanCodeFileReporter _reporter;
+    private readonly CodeFileMigrator _migrator;
+    private readonly ICustomCodeHeaderUpdater _headerUpdater;
     private readonly CodeOutputProjectSettingsManager _projectSettingsManager;
     private readonly IProjectState _projectState;
     private readonly IMessenger _messenger;
@@ -45,7 +52,9 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         IFileCommands fileCommands,
         IDialogService dialogService,
         IMessenger messenger,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IGuiCommands guiCommands,
+        IRetryService retryService)
     {
         _projectState = projectState;
         _messenger = messenger;
@@ -66,14 +75,43 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         IOrphanCodeFileScanService scanService = new OrphanCodeFileScanService(
             codeGenerator, fileLocationsService, elementSettingsManager, projectDirectoryProvider);
 
+        var customCodeGenerator = new CustomCodeGenerator(codeGenerator, codeGenerationNameVerifier);
+        var codeGenerationService = new CodeGenerationService(guiCommands, codeGenerator, dialogService,
+            customCodeGenerator, codeGenerationNameVerifier, projectDirectoryProvider, retryService);
+        // Under the tool's user data folder, outside any repo, and honoring --user-data.
+        var backupService = new CodeFileBackupService(
+            Path.Combine(FileManager.UserApplicationDataForThisApplication, "CodeFileBackups"), () => DateTime.UtcNow);
+
+        _migrator = new CodeFileMigrator(
+            new CodeFileMigrationPlanner(codeGenerator, fileLocationsService, elementSettingsManager, new CustomCodeStubDetector()),
+            new CodeFileMigrationPlanFormatter(),
+            new CodeFileMigrationApplier(backupService, fileCommands,
+                new CustomCodeHeaderRewriter(codeGenerator, customCodeGenerator), elementSettingsManager),
+            backupService,
+            new ElementCodeRegenerator(codeGenerationService, elementSettingsManager),
+            dialogService);
+
+        _headerUpdater = new CustomCodeHeaderUpdater(codeGenerator, fileLocationsService, elementSettingsManager,
+            new CustomCodeHeaderRewriter(codeGenerator, customCodeGenerator), backupService,
+            new ElementCodeRegenerator(codeGenerationService, elementSettingsManager), dialogService);
+
         _reporter = new OrphanCodeFileReporter(scanService, fileCommands, dialogService, dispatcher, outputManager);
         _reporter.OrphansChanged += () =>
             _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
+        // A row whose element still exists migrates the whole project instead of deleting one file.
+        _reporter.MigrateAction = HandleMigrateRequested;
+
+        _messenger.Register<CodeFileLocationsChangedMessage>(this,
+            (_, message) => HandleCodeFileLocationsChanged(message));
+        _messenger.Register<CustomCodeHeadersChangedMessage>(this,
+            (_, message) => HandleCustomCodeHeadersChanged(message));
     }
 
     public override void StartUp()
     {
         AddMenuEntry(HandleScanRequested, "Content", "Scan for Orphaned Code Files…");
+        AddMenuEntry(HandleMigrateRequested, "Content", "Migrate Code Files…");
+        AddMenuEntry(HandleRestoreRequested, "Content", "Restore Last Code File Migration…");
 
         this.ProjectLoad += HandleProjectLoad;
         this.GetAllErrors += HandleGetAllErrors;
@@ -100,6 +138,65 @@ internal class MainOrphanCodeFilePlugin : PluginBase
     private void HandleScanRequested()
     {
         _ = Refresh(_projectState.GumProjectSave, ShowScanSummary);
+    }
+
+    // Rescans first so the plan reflects the disk now, and again afterwards so the Errors tab
+    // drops the migrated files (#5846).
+    private void HandleMigrateRequested()
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project?.FullFileName == null)
+        {
+            return;
+        }
+
+        CodeOutputProjectSettings settings = _projectSettingsManager.CreateOrLoadSettingsForProject();
+        _ = _reporter.RefreshAsync(project, settings, result =>
+        {
+            _migrator.Migrate(project, project.FullFileName, settings, result);
+            _ = Refresh(project, onApplied: null);
+        });
+    }
+
+    // A Code tab edit moved where code files belong: scan the old code root too, and offer the
+    // migration, naming the edit. Says nothing when no file is left at an old path.
+    private void HandleCodeFileLocationsChanged(CodeFileLocationsChangedMessage message)
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project?.FullFileName == null)
+        {
+            return;
+        }
+
+        _ = _reporter.RefreshAsync(project, message.Current, result =>
+        {
+            _migrator.Migrate(project, project.FullFileName, message.Current, result, message.Description);
+            _ = Refresh(project, onApplied: null);
+        }, message.Previous);
+    }
+
+    // A Code tab edit changed what custom code files must declare: offer to rewrite the stale ones.
+    private void HandleCustomCodeHeadersChanged(CustomCodeHeadersChangedMessage message)
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project?.FullFileName == null)
+        {
+            return;
+        }
+
+        _headerUpdater.Update(project, project.FullFileName, message.Current, message.Description);
+    }
+
+    private void HandleRestoreRequested()
+    {
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (project?.FullFileName == null)
+        {
+            return;
+        }
+
+        _migrator.RestoreLast(project.FullFileName);
+        _ = Refresh(project, onApplied: null);
     }
 
     private void ShowScanSummary(OrphanCodeFileScanResult result)

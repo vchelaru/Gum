@@ -3,7 +3,6 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using System;
-using System.Text.RegularExpressions;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using Gum.ToolStates;
@@ -15,10 +14,10 @@ public class RenameService
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
     private readonly CodeGenerationService _codeGenerationService;
     private readonly CodeGenerator _codeGenerator;
-    private readonly CustomCodeGenerator _customCodeGenerator;
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
+    private readonly CustomCodeHeaderRewriter _headerRewriter;
 
     public RenameService(CodeGenerationService codeGenerationService,
         CodeGenerator codeGenerator,
@@ -32,9 +31,9 @@ public class RenameService
         _elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
-        _customCodeGenerator = customCodeGenerator;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
+        _headerRewriter = new CustomCodeHeaderRewriter(codeGenerator, customCodeGenerator);
     }
 
     public void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi)
@@ -266,76 +265,6 @@ public class RenameService
     /// </summary>
     /// <returns>The updated file contents.</returns>
     public string UpdateHeadersInCustomCode(string contents, ElementSave element,
-        CodeOutputElementSettings? elementSettings, CodeOutputProjectSettings codeOutputProjectSettings)
-    {
-        RenameNamespaceInCode(element, elementSettings, codeOutputProjectSettings, ref contents);
-        RenameClassInCode(element, codeOutputProjectSettings, ref contents);
-        return contents;
-    }
-
-    private void RenameNamespaceInCode(ElementSave element, CodeOutputElementSettings? elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, ref string contents)
-    {
-        var newNamespace = _codeGenerator.GetElementNamespace(element, elementSettings, codeOutputProjectSettings);
-
-        ////////////////Early Out/////////////////
-        // Generation would emit no namespace at all, so there is nothing to rename the existing
-        // (presumably hand-written) namespace to.
-        if (string.IsNullOrEmpty(newNamespace))
-        {
-            return;
-        }
-
-        // Matches both block-scoped ("namespace Foo") and file-scoped ("namespace Foo;") declarations.
-        var match = Regex.Match(contents,
-            @"^[ \t]*namespace[ \t]+(?<name>[^\s;{]+)",
-            RegexOptions.Multiline);
-
-        if (!match.Success)
-        {
-            return;
-        }
-        //////////////End Early Out///////////////
-
-        var nameGroup = match.Groups["name"];
-        contents = contents.Remove(nameGroup.Index, nameGroup.Length);
-        contents = contents.Insert(nameGroup.Index, newNamespace);
-    }
-
-    private void RenameClassInCode(ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings, ref string contents)
-    {
-        var startOfLine = contents.IndexOf("partial class ");
-        ////////////////Early Out/////////////////
-        if (startOfLine <= -1)
-        {
-            return;
-        }
-        //////////////End Early Out///////////////
-
-        var endOfLine = contents.IndexOf("\n", startOfLine + 1);
-        if (endOfLine > startOfLine && contents[endOfLine - 1] == '\r')
-        {
-            endOfLine--;
-        }
-
-        var oldClassHeader = contents.Substring(startOfLine, endOfLine - startOfLine);
-        string suffix = string.Empty;
-
-        if (oldClassHeader.Contains(":"))
-        {
-            var colonIndex = oldClassHeader.IndexOf(":");
-            suffix = " " + oldClassHeader.Substring(colonIndex).Trim();
-        }
-
-        contents = contents.Remove(startOfLine, endOfLine - startOfLine);
-
-        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings);
-        // When InheritanceLocation is InCustomCode the generated header already carries the base list,
-        // so re-appending the old one would emit "X : New : Old".
-        if (!newHeader.Contains(":"))
-        {
-            newHeader += suffix;
-        }
-        contents = contents.Insert(startOfLine, newHeader);
-    }
+        CodeOutputElementSettings? elementSettings, CodeOutputProjectSettings codeOutputProjectSettings) =>
+        _headerRewriter.Rewrite(contents, element, elementSettings, codeOutputProjectSettings);
 }

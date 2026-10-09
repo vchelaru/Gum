@@ -1,6 +1,6 @@
 # Layout Engine — Overview
 
-File: `GumRuntime/GraphicalUiElement.cs`
+Files: the `GumRuntime/GraphicalUiElement.*.cs` partials (file map in the **gum-layout-engine** skill).
 
 > For deep internals of the UpdateLayout call chain (debugging, optimizing,
 > extending the engine), see the **gum-layout-engine** skill.

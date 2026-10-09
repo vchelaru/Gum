@@ -6,13 +6,13 @@ title: GumProjectSave
 
 ## Introduction
 
-The GumProjectSave object is a serializable object representing a Gum project. Specifically, the GumProjectSave object represents the data in the .gumx file. The GumProjectSave provides access to all Screens (ScreenSave), Components (ComponentSave), Standard Elements (StandardElementSave), and Behaviors (BehaviorSave).
+The GumProjectSave object is a serializable object representing a Gum project. Specifically, the GumProjectSave object represents the data in the .gumj file. The GumProjectSave provides access to all Screens (ScreenSave), Components (ComponentSave), Standard Elements (StandardElementSave), and Behaviors (BehaviorSave).
 
 The **Save** suffix is added to any model which can e serialized (saved) to disk.
 
 Game projects can load a GumProjectSave through GumServices.Initialize.
 
-The Gum tool loads GumProjectSave instances when the user opens a .gumx file.
+The Gum tool loads GumProjectSave instances when the user opens a .gumj file.
 
 Both games and the Gum tool can access the current GumProjectSave through the `ObjectFinder.Self.GumProjectSave` property.
 

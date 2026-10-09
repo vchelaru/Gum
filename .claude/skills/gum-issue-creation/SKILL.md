@@ -21,6 +21,7 @@ A value you printed while diagnosing something else is an observation, not a rep
 ## Labels
 - **Bug reports get `--label bug`** (label exists, color `#fc2929`). Apply it at creation time.
 - The `bug` label is real and applies silently — don't second-guess it or omit it on later issues.
+- **An issue that needs Vic's decision gets `--label "needs discussion"`** at creation (behavior changes that could move existing projects, open design questions). Vic finds his decision queue by this label.
 
 ## Multi-line GitHub bodies
 Use a real multi-line value for issue comments, issue bodies, and PR bodies. Never write literal `\n` sequences and expect GitHub Markdown to turn them into line breaks.

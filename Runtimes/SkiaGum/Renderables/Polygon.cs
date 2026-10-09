@@ -58,6 +58,14 @@ public class Polygon : RenderableShapeBase
     public void InsertPointAt(Vector2 point, int index) =>
         Points.Insert(index, new SKPoint(point.X, point.Y));
 
+    public int PointCount => Points.Count;
+
+    public Vector2 PointAt(int index)
+    {
+        SKPoint point = Points[index];
+        return new Vector2(point.X, point.Y);
+    }
+
     public void RemovePointAtIndex(int index) => Points.RemoveAt(index);
 
     public void SetPointAt(Vector2 point, int index) =>

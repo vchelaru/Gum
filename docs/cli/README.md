@@ -30,8 +30,14 @@ Once installed, invoke it as `gumcli` from any terminal.
 | Command | Description |
 |---------|-------------|
 | `new` | Create a new Gum project |
+| `add-forms` | Add the Forms controls to an existing project |
 | `check` | Validate a project for errors |
 | `check-references` | Detect (and optionally fix) `VariableReferences` rows with un-materialized scalars |
+| `convert-to-json` | Write a JSON copy of an XML project and its element files |
+| `diff-standards` | Report how a project's Standard elements differ from the defaults |
+| `import-screen` | Import a Screen file into an existing project |
+| `resave` | Load and save a project with no edits to check round trips |
+| `stage-forms-behaviors` | Write a Forms theme's resolved behaviors into one folder |
 | `codegen-init` | Initialize code generation settings |
 | `codegen` | Generate C# code for project elements |
 | `fonts` | Generate missing bitmap font files |
@@ -45,7 +51,7 @@ Once installed, invoke it as `gumcli` from any terminal.
 `gumcli` writes machine-readable command output (JSON, file paths, summaries) to **stdout**, and informational chrome (the version banner, progress messages, error details) to **stderr**. This split means automation can consume stdout directly without filtering:
 
 ```
-gumcli check MyProject/MyProject.gumx --json | jq .
+gumcli check MyProject/MyProject.gumj --json | jq .
 ```
 
 When debugging, capture both streams with `2>&1`.

@@ -145,6 +145,16 @@ namespace Gum.Controls
         protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.XUnits;
     }
 
+    class GradientRadiusUnitsControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GradientRadiusUnits;
+    }
+
+    class GradientYUnitsControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GradientYUnits;
+    }
+
     class YUnitsControl : ToggleButtonOptionContainer
     {
         protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.YUnits;

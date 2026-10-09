@@ -48,7 +48,7 @@ public class InteractiveGueTests : BaseTestClass
 
         _cursor.Setup(x => x.WindowPushed).Returns(button.Visual);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         didClickRun.ShouldBe(true);
     }
@@ -78,14 +78,14 @@ public class InteractiveGueTests : BaseTestClass
             }
         }
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         didRunPush.ShouldBe(true);
 
         _cursor.Object.VisualOver = null;
         _cursor.Object.WindowPushed = null;
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
     }
 
     #region CurrentInputReceiver
@@ -98,7 +98,7 @@ public class InteractiveGueTests : BaseTestClass
 
         InteractiveGue.CurrentInputReceiver.ShouldBe(textBox);
 
-        GumService.Default.Root.Children.Clear();
+        Gum.GumService.Default.Root.Children.Clear();
 
         textBox.IsFocused.ShouldBeFalse();
         InteractiveGue.CurrentInputReceiver.ShouldBeNull();
@@ -113,7 +113,7 @@ public class InteractiveGueTests : BaseTestClass
 
         InteractiveGue.CurrentInputReceiver.ShouldBe(textBox);
 
-        GumService.Default.Root.Children.Remove(textBox.Visual);
+        Gum.GumService.Default.Root.Children.Remove(textBox.Visual);
 
         textBox.IsFocused.ShouldBeFalse();
         InteractiveGue.CurrentInputReceiver.ShouldBeNull();
@@ -129,7 +129,7 @@ public class InteractiveGueTests : BaseTestClass
         second.AddToRoot();
         second.IsFocused = true;
 
-        GumService.Default.Root.Children.Remove(first.Visual);
+        Gum.GumService.Default.Root.Children.Remove(first.Visual);
 
         second.IsFocused.ShouldBeTrue();
 
@@ -147,7 +147,7 @@ public class InteractiveGueTests : BaseTestClass
 
         InteractiveGue.CurrentInputReceiver.ShouldBe(textBox);
 
-        GumService.Default.Root.Children.Clear();
+        Gum.GumService.Default.Root.Children.Clear();
 
         textBox.IsFocused.ShouldBeFalse();
         InteractiveGue.CurrentInputReceiver.ShouldBeNull();
@@ -158,12 +158,12 @@ public class InteractiveGueTests : BaseTestClass
     public void CurrentInputReceiver_ShouldGetUnset_IfControlIsRemovedFromPopup()
     {
         TextBox textBox = new();
-        GumService.Default.PopupRoot.Children.Add(textBox.Visual);
+        Gum.GumService.Default.PopupRoot.Children.Add(textBox.Visual);
         textBox.IsFocused = true;
 
         InteractiveGue.CurrentInputReceiver.ShouldBe(textBox);
 
-        GumService.Default.PopupRoot.Children.Remove(textBox.Visual);
+        Gum.GumService.Default.PopupRoot.Children.Remove(textBox.Visual);
 
         textBox.IsFocused.ShouldBeFalse();
         InteractiveGue.CurrentInputReceiver.ShouldBeNull();
@@ -173,12 +173,12 @@ public class InteractiveGueTests : BaseTestClass
     public void CurrentInputReceiver_ShouldGetUnset_IfControlIsRemovedFromModal()
     {
         TextBox textBox = new();
-        GumService.Default.ModalRoot.Children.Add(textBox.Visual);
+        Gum.GumService.Default.ModalRoot.Children.Add(textBox.Visual);
         textBox.IsFocused = true;
 
         InteractiveGue.CurrentInputReceiver.ShouldBe(textBox);
 
-        GumService.Default.ModalRoot.Children.Remove(textBox.Visual);
+        Gum.GumService.Default.ModalRoot.Children.Remove(textBox.Visual);
 
         textBox.IsFocused.ShouldBeFalse();
         InteractiveGue.CurrentInputReceiver.ShouldBeNull();
@@ -202,7 +202,7 @@ public class InteractiveGueTests : BaseTestClass
 
         SetCursor(1, 1);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
             _cursor.Object.VisualOver == gue;
@@ -210,7 +210,7 @@ public class InteractiveGueTests : BaseTestClass
 
         SetCursor(1000, 1);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         _cursor.Object.VisualOver.ShouldBeNull();
     }
@@ -231,7 +231,7 @@ public class InteractiveGueTests : BaseTestClass
         SetCursor(1, 1);
         _cursor.Setup(x => x.PrimaryPush).Returns(true);
         _cursor.Setup(x => x.PrimaryDown).Returns(true);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
             _cursor.Object.VisualOver == gue;
@@ -242,7 +242,7 @@ public class InteractiveGueTests : BaseTestClass
         _cursor.Setup(x => x.PrimaryPush).Returns(false);
         _cursor.Setup(x => x.PrimaryDown).Returns(false);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         wasCalled.ShouldBeTrue();
     }
@@ -263,7 +263,7 @@ public class InteractiveGueTests : BaseTestClass
         SetCursor(1, 1);
         _cursor.Setup(x => x.PrimaryPush).Returns(true);
         _cursor.Setup(x => x.PrimaryDown).Returns(true);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
             _cursor.Object.VisualOver == gue;
@@ -273,7 +273,7 @@ public class InteractiveGueTests : BaseTestClass
         _cursor.Setup(x => x.PrimaryPush).Returns(false);
         SetCursor(1000, 1);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         wasCalled.ShouldBeTrue();
     }
@@ -317,7 +317,7 @@ public class InteractiveGueTests : BaseTestClass
             .Setup(x => x.ScrollWheelChange).Returns(1);
 
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         didChildRaise.ShouldBeTrue();
         didParentRaise.ShouldBeTrue();
@@ -339,7 +339,7 @@ public class InteractiveGueTests : BaseTestClass
         visual.HasEvents = false;
         visual.AddToRoot();
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         ICursor cursor = FrameworkElement.MainCursor;
         cursor.ShouldNotBeNull();
@@ -347,7 +347,7 @@ public class InteractiveGueTests : BaseTestClass
 
         visual.HasEvents = true;
         visual.Click += (_,_) => { };
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
         cursor.VisualOver.ShouldBe(visual);
     }
 
@@ -365,7 +365,7 @@ public class InteractiveGueTests : BaseTestClass
         };
 
         SetCursor(1000, 1);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
             _cursor.Object.VisualOver == gue;
@@ -373,7 +373,7 @@ public class InteractiveGueTests : BaseTestClass
 
         SetCursor(1, 1);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
   
         wasCalled.ShouldBeTrue();
     }
@@ -392,7 +392,7 @@ public class InteractiveGueTests : BaseTestClass
         };
 
         SetCursor(1, 1);
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
             _cursor.Object.VisualOver == gue;
@@ -402,9 +402,45 @@ public class InteractiveGueTests : BaseTestClass
 
         SetCursor(1000, 1);
 
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         wasCalled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Dragging_ShouldBeRaised_WhilePushedAndCursorIsStationary()
+    {
+        Button button = new();
+        button.AddToRoot();
+        _cursor.Setup(x => x.PrimaryDown).Returns(true);
+        _cursor.Setup(x => x.XChange).Returns(0);
+        _cursor.Setup(x => x.YChange).Returns(0);
+        _cursor.Object.WindowPushed = button.Visual;
+
+        int draggingCount = 0;
+        button.Visual.Dragging += (_, _) => draggingCount++;
+
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        draggingCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Dragging_ShouldNotBeRaised_WhenPrimaryButtonIsNotDown()
+    {
+        Button button = new();
+        button.AddToRoot();
+        _cursor.Setup(x => x.PrimaryDown).Returns(false);
+        _cursor.Setup(x => x.XChange).Returns(5);
+        _cursor.Object.WindowPushed = button.Visual;
+
+        int draggingCount = 0;
+        button.Visual.Dragging += (_, _) => draggingCount++;
+
+        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        draggingCount.ShouldBe(0);
     }
 
     #region Utilities

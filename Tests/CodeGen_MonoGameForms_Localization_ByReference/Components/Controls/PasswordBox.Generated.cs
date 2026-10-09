@@ -74,11 +74,6 @@ partial class PasswordBox : global::Gum.Forms.Controls.PasswordBox
     public ContainerRuntime ClipContainer { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string Placeholder
-    {
-        get => PlaceholderTextInstance.Text;
-        set => PlaceholderTextInstance.Text = value;
-    }
 
     public PasswordBox(InteractiveGue visual) : base(visual)
     {

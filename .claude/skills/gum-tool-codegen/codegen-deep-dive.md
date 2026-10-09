@@ -63,6 +63,15 @@ Within `CodeProjectRoot`, an element's path mirrors its type and its folder insi
 The `Screens` / `Components` / `Standards` prefix comes from the element's type, not from where the
 `.gucx` sits on disk.
 
+`GeneratedCodeFolder` (relative to `CodeProjectRoot`) moves this whole layout into a subfolder.
+`GeneratedCodeFolderPrefix` goes in front of the `Screens` / `Components` names themselves: `GumCodeGen/`
+makes a `GumCodeGen` folder holding both, `Gum` makes `GumScreens` / `GumComponents`.
+`CodeGenerationFileLocationsService.GetElementCodeSubfolder` is the one place that builds it (it drops
+`.`/`..` segments so files stay inside the output folder). It changes only the code location: the
+namespace, `.gumx` element names and variable-reference names keep the plain `Screens`/`Components`
+(`ElementReference.GetSubfolder` must not be changed for this), and `StandardElements.Generated.cs`
+ignores the prefix.
+
 A per-element `GeneratedFileName` setting overrides this entirely. When set, that path is used verbatim
 (resolved against the Gum project directory if relative), and the folder convention above does not
 apply.
@@ -101,6 +110,8 @@ Two `.codsj` files (JSON despite the extension) drive everything.
 |---|---|
 | `OutputLibrary` | Which runtime to target. Drives almost every shape decision below. |
 | `CodeProjectRoot` | Output folder, relative to the `.gumx`. |
+| `GeneratedCodeFolder` | Optional subfolder of `CodeProjectRoot` that generated code goes in. |
+| `GeneratedCodeFolderPrefix` | Optional text in front of the `Screens` / `Components` folder names (`GumCodeGen/` or `Gum`). |
 | `RootNamespace` | Namespace root. Empty means no namespace is emitted. |
 | `AppendFolderToNamespace` | Append the element's Gum folder path to its namespace. |
 | `ObjectInstantiationType` | `FullyInCode` or `FindByName`. See below. |
@@ -163,16 +174,18 @@ This is the mode to reach for when the game loads `.gumx` content at runtime and
 accessors over it.
 
 {% hint style="warning" %}
-`OutputLibrary.Raylib` currently supports `FindByName` only. The headless CLI throws
+The legacy `OutputLibrary.Raylib` and `Silk` support `FindByName` only. The headless CLI throws
 `NotSupportedException` and exits 1 on `Raylib` + `FullyInCode`; the interactive tool quietly snaps the
 setting back to `FindByName` instead.
 {% endhint %}
 
 ## Output libraries
 
-`OutputLibrary` selects the target runtime: `MonoGame`, `MonoGameForms`, `Raylib`, `Skia`, `Silk`,
-`WPF`, `XamarinForms`, `Maui`. **MonoGameForms is the recommended default** for new projects; plain
-`MonoGame` exists for legacy and specialized cases.
+Use `MonoGameForms` for every runtime. The Code tab labels it "Gum Forms (recommended)"; the name
+predates runtime unification. Forms controls live in `GumCommon` and every runtime exposes the same
+`Gum.GueDeriving` and `GumService` names, so one generated shape serves MonoGame, KNI, FNA, raylib,
+Skia, Silk.NET, Stride and Unity. `MonoGame`, `Skia`, `Raylib`, `Silk`, `WPF`, `XamarinForms` and `Maui`
+are legacy values kept so existing projects keep generating.
 
 Two consequences worth knowing:
 
@@ -184,9 +197,9 @@ Two consequences worth knowing:
   Screen inheritance resolves in the order `element.BaseType`, then `DefaultScreenBase`, then a
   library-appropriate fallback (`FrameworkElement` for MonoGameForms, `GraphicalUiElement` otherwise).
 
-`MonoGame` and `Raylib` emit an identical shape, because the underlying runtime API is unified across
-them. Code that needs to branch on this uses a shared predicate rather than testing the two values
-separately.
+The legacy `MonoGame`, `Raylib` and `Silk` values emit an identical shape (no Forms wrapping), because
+the runtime API is unified across them. Code that needs to branch on this uses
+`CodeGenerator.UsesUnifiedGumRuntime` rather than testing the values separately.
 
 ## Anatomy of a generated file
 
@@ -337,6 +350,19 @@ How it decides something is an orphan, and the limits that follow:
 * The walk stops after `MaxCodeRootDirectories` folders and says so in Output (or on stderr for
   `gumcli`). Hitting it almost always means `CodeProjectRoot` resolves to the wrong folder, such as a
   project copied shallow under `%TEMP%` whose `..\..\` lands in `%LOCALAPPDATA%`.
+
+**Content > Migrate Code Files** reuses the scan's result: `CodeFileMigrationPlanner` sorts orphans
+whose element still exists (files left at old paths by a code settings change) into remove, move and
+leave-alone steps, matching elements only through the `//Code for` header. `CodeFileMigrationApplier`
+backs every touched file up through `CodeFileBackupService` (outside the repo, newest 10 per project)
+before changing anything, and restores the backup itself if a step fails. **Restore Last Code File
+Migration** undoes the newest one but never overwrites a file edited since. A Code tab edit to the
+output library, code project root, generated code folder or its prefix offers the same migration
+(`CodeFileLocationWatcher` sends `CodeFileLocationsChangedMessage`, and the scan also walks the old
+root), and an orphan row whose element still exists offers Migrate instead of Delete File. After a
+successful apply, the applier removes folders the move emptied, never above `CodeProjectRoot`. A new
+setting that moves files needs only its row in `CodeFileLocationChange.Describe` plus the path logic;
+the scan, planner and applier already follow `GetGeneratedFileName`.
 
 ### Command line
 

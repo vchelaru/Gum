@@ -178,11 +178,11 @@
     <Variable Type="PositionUnitType" Name="IconInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="float" Name="ListBoxInstance.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">128</Value>
-    </Variable>
     <Variable Type="string" Name="ListBoxInstance.ListBoxCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Enabled</Value>
+    </Variable>
+    <Variable Type="SizingCategory" Name="ListBoxInstance.SizingCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">FitChildren</Value>
     </Variable>
     <Variable Type="bool" Name="ListBoxInstance.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>

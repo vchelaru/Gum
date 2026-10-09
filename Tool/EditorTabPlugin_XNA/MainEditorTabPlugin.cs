@@ -72,12 +72,13 @@ internal class MainEditorTabPlugin : EditorTabPluginBase
         IFavoriteComponentManager favoriteComponentManager,
         IPluginManager pluginManager,
         IFileWatchIgnoreList fileWatchIgnoreList,
-        IProjectState projectState)
+        IProjectState projectState,
+        INameVerifier nameVerifier)
         : base(selectedState, projectManager, guiCommands, outputManager, localizationService, reorderLogic,
             addInstanceLogic, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
             dialogService, hotkeyManager, elementCommands, fileCommands, setVariableLogic, uiSettingsService,
             wireframeCommands, messenger, themingService, dragDropManager, circularReferenceManager,
-            favoriteComponentManager, pluginManager, fileWatchIgnoreList, projectState)
+            favoriteComponentManager, pluginManager, fileWatchIgnoreList, projectState, nameVerifier)
     {
     }
 

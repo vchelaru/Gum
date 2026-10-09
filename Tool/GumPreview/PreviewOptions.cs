@@ -8,13 +8,14 @@ namespace GumPreview;
 /// GumPreview's command line. The tool's launcher passes <c>--project</c>, <c>--element</c>,
 /// <c>--selection-file</c> and <c>--content-root</c> (PreviewProcessStartInfoBuilder in
 /// Tool/EditorTabPlugin.Core); <c>--exit-after</c> and <c>--screenshot</c> are for unattended runs
-/// such as the release package smoke test (#5471).
+/// such as the release package smoke test (#5471), and <c>--focus</c>/<c>--type</c> put a control
+/// into a runtime-only state before that capture.
 /// </summary>
 public sealed class PreviewOptions
 {
     /// <summary>Usage text printed with <see cref="Error"/>.</summary>
     public const string Usage =
-        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--exit-after <seconds> [--screenshot <path.png>]]";
+        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>]]";
 
     private PreviewOptions()
     {
@@ -40,6 +41,12 @@ public sealed class PreviewOptions
 
     /// <summary>With <see cref="ExitAfterSeconds"/>, the absolute path of the PNG the first frame is written to.</summary>
     public string? ScreenshotPath { get; private set; }
+
+    /// <summary>The Forms control to focus once the element is shown, so its focused look can be captured.</summary>
+    public string? FocusName { get; private set; }
+
+    /// <summary>With <see cref="FocusName"/>, text entered into that text box as if typed.</summary>
+    public string? TypedText { get; private set; }
 
     /// <summary>Why the command line is unusable, or null when it is usable.</summary>
     public string? Error { get; private set; }
@@ -76,11 +83,23 @@ public sealed class PreviewOptions
             {
                 options.ScreenshotPath = Path.GetFullPath(args[++i]);
             }
+            else if (args[i] == "--focus" && hasValue)
+            {
+                options.FocusName = args[++i];
+            }
+            else if (args[i] == "--type" && hasValue)
+            {
+                options.TypedText = args[++i];
+            }
         }
 
         if (string.IsNullOrEmpty(options.ProjectPath) || string.IsNullOrEmpty(options.ElementName))
         {
             options.Error = "--project and --element are required.";
+        }
+        else if (options.TypedText != null && options.FocusName == null)
+        {
+            options.Error = "--type needs --focus to name the text box to type into.";
         }
         else if (exitAfterText != null)
         {

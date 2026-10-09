@@ -1,10 +1,10 @@
 # codegen-init
 
 ```
-gumcli codegen-init <project.gumx> [--force] [--csproj <path>]
+gumcli codegen-init <project.gumj> [--force] [--csproj <path>]
 ```
 
-Auto-configures code generation settings for a Gum project by locating the nearest `.csproj` file above the `.gumx` directory. Writes a `ProjectCodeSettings.codsj` settings file next to the `.gumx`.
+Auto-configures code generation settings for a Gum project by locating the nearest `.csproj` file above the `.gumj` directory. Writes a `ProjectCodeSettings.codsj` settings file next to the `.gumj`.
 
 {% hint style="info" %}
 Most projects do not need to run `codegen-init` explicitly. The `codegen` command auto-detects settings and writes them automatically if they are missing. Run `codegen-init` when you want to review or confirm the detected configuration before running codegen.
@@ -12,15 +12,15 @@ Most projects do not need to run `codegen-init` explicitly. The `codegen` comman
 
 ## Options
 
-- `<project.gumx>` — Path to the `.gumx` project file
+- `<project.gumj>` — Path to the `.gumj` or `.gumx` project file
 - `--force` — Overwrite an existing `ProjectCodeSettings.codsj` without prompting
-- `--csproj <path>`: Use this `.csproj` instead of searching for one. Gum records it as `CsprojPath` in the settings, so `codegen` reads this `.csproj` to detect the Gum runtime version and the C# version. Use it when the `.csproj` is not above the `.gumx`, or when a folder has several and the game is not `Assembly-CSharp.csproj` or the shortest name.
+- `--csproj <path>`: Use this `.csproj` instead of searching for one. Gum records it as `CsprojPath` in the settings, so `codegen` reads this `.csproj` to detect the Gum runtime version and the C# version. Use it when the `.csproj` is not above the `.gumj`, or when a folder has several and the game is not `Assembly-CSharp.csproj` or the shortest name.
 
 ## What It Detects
 
-- Walks up from the `.gumx` directory to find the nearest `.csproj`
+- Walks up from the `.gumj` directory to find the nearest `.csproj`
 - If that folder has several `.csproj` files, uses `Assembly-CSharp.csproj`, then the shortest name
-- Derives `CodeProjectRoot` as a relative path from the `.gumx` directory to the `.csproj` directory
+- Derives `CodeProjectRoot` as a relative path from the `.gumj` directory to the `.csproj` directory
 - Extracts `RootNamespace` from the `.csproj`, falling back to the `.csproj` filename (with `.`, `-`, and spaces replaced by `_`)
 - Sets `OutputLibrary` to `MonoGameForms` (shown as **Gum Forms** in the Code tab), the preferred output for every runtime including MonoGame, KNI, FNA, Skia, and Raylib
 - For a Unity project (`Assembly-CSharp.csproj` next to an `Assets` folder), sets `GeneratedCodeFolder` to `Assets/`, because Unity compiles only code under `Assets`
@@ -32,9 +32,9 @@ Most projects do not need to run `codegen-init` explicitly. The `codegen` comman
 ## Examples
 
 ```
-gumcli codegen-init MyProject/MyProject.gumx
-gumcli codegen-init MyProject/MyProject.gumx --force
-gumcli codegen-init Assets/StreamingAssets/GumProject/GumProject.gumx --csproj Assembly-CSharp.csproj
+gumcli codegen-init MyProject/MyProject.gumj
+gumcli codegen-init MyProject/MyProject.gumj --force
+gumcli codegen-init Assets/StreamingAssets/GumProject/GumProject.gumj --csproj Assembly-CSharp.csproj
 ```
 
 Output on success:

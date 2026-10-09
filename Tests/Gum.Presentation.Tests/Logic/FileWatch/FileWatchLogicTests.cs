@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Gum.Presentation.Tests.Logic.FileWatch;
 
-public class FileWatchLogicTests
+public class FileWatchLogicTests : BaseTestClass
 {
     private readonly Mock<IFileWatchManager> _fileWatchManager;
     private readonly Mock<IGuiCommands> _guiCommands;

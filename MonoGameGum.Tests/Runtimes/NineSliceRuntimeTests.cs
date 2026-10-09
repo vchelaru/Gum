@@ -67,6 +67,22 @@ public class NineSliceRuntimeTests
     }
 
     [Fact]
+    public void AnimateSelf_ShouldFireAnimationChainFinishedAndNotCycled_WhenNotLooping()
+    {
+        NineSlice sut = CreateAnimatedNineSlice(1.0f);
+        sut.AnimationLogic.IsAnimationChainLooping = false;
+        int cycleCount = 0;
+        int finishedCount = 0;
+        sut.AnimationChainCycled += () => cycleCount++;
+        sut.AnimationChainFinished += () => finishedCount++;
+
+        sut.AnimateSelf(1.5);
+
+        cycleCount.ShouldBe(0);
+        finishedCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void AnimationChains_ShouldRouteThroughContainedNineSliceAnimationLogic()
     {
         NineSliceRuntime sut = new();

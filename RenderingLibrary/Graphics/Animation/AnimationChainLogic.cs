@@ -58,31 +58,96 @@ public class AnimationChainLogic
         }
     }
 
+    /// <summary>
+    /// Index of the current frame in the current chain. Setting it moves
+    /// <see cref="TimeIntoAnimation"/> to the start of that frame and applies the frame.
+    /// When a chain is set, the index is clamped to the chain's frames, so a value past the end
+    /// selects the last frame and a negative value selects the first. With no chain set, the
+    /// value is stored as given and clamped once a chain is applied.
+    /// </summary>
     public int CurrentFrameIndex
     {
         get => _currentFrameIndex;
         set
         {
-            _currentFrameIndex = value;
-            if (CurrentChain != null && CurrentChain.Count > 0)
+            AnimationChain? chain = CurrentChain;
+            if (chain != null && chain.Count > 0)
             {
-                double time = 0;
-                int clampedIndex = System.Math.Clamp(value, 0, CurrentChain.Count - 1);
-                for (int i = 0; i < clampedIndex; i++)
-                {
-                    time += CurrentChain[i].FrameLength;
-                }
-                _timeIntoAnimation = time;
+                SeekToFrame(chain, value);
             }
+            else
+            {
+                _currentFrameIndex = value;
+            }
+            UpdateToCurrentAnimationFrame();
         }
     }
 
+    // Clamps the index to the chain and moves the time to the start of that frame, so the
+    // index, the time and the frame applied next all agree.
+    void SeekToFrame(AnimationChain chain, int frameIndex)
+    {
+        _currentFrameIndex = System.Math.Clamp(frameIndex, 0, chain.Count - 1);
+        double time = 0;
+        for (int i = 0; i < _currentFrameIndex; i++)
+        {
+            time += chain[i].FrameLength;
+        }
+        _timeIntoAnimation = time;
+    }
+
     public float AnimationSpeed { get => _animationSpeed; set => _animationSpeed = value; }
-    public double TimeIntoAnimation { get => _timeIntoAnimation; set => _timeIntoAnimation = value; }
+
+    /// <summary>
+    /// Seconds into the current chain. Setting it selects and applies the frame at that time,
+    /// wrapping past the end when looping and holding the last frame when not. When a chain is
+    /// set, a negative value is clamped to 0 and selects the first frame. With no chain set, the
+    /// value is stored as given and clamped once a chain is applied.
+    /// </summary>
+    public double TimeIntoAnimation
+    {
+        get => _timeIntoAnimation;
+        set
+        {
+            _timeIntoAnimation = value;
+            AnimationChain? chain = CurrentChain;
+            if (chain == null || chain.Count == 0)
+            {
+                return;
+            }
+            if (value < 0)
+            {
+                SeekToFrame(chain, 0);
+            }
+            else if (!_isLooping && value >= chain.TotalLength)
+            {
+                _currentFrameIndex = chain.Count - 1;
+            }
+            else
+            {
+                UpdateFrameBasedOffOfTimeIntoAnimation();
+            }
+            UpdateToCurrentAnimationFrame();
+        }
+    }
+
     public bool Animate { get => _animate; set => _animate = value; }
     public bool IsAnimationChainLooping { get => _isLooping; set => _isLooping = value; }
 
+    /// <summary>
+    /// Raised when a looping chain wraps around, from its end back to its start or, when
+    /// <see cref="AnimationSpeed"/> is negative, from its start back to its end. A non-looping
+    /// chain never raises this event; see <see cref="AnimationChainFinished"/>.
+    /// </summary>
     public event Action? AnimationChainCycled;
+
+    /// <summary>
+    /// Raised once when a non-looping chain reaches its end and <see cref="Animate"/> becomes
+    /// false. Playing forward, the chain stops on its last frame. Playing backward (negative
+    /// <see cref="AnimationSpeed"/>), it stops on its first frame. A looping chain never raises
+    /// this event; see <see cref="AnimationChainCycled"/>.
+    /// </summary>
+    public event Action? AnimationChainFinished;
 
     /// <summary>
     /// Invoked whenever the current frame changes. Subscribers should copy Texture,
@@ -93,44 +158,51 @@ public class AnimationChainLogic
     /// <summary>
     /// Returns a copy for a cloned renderable. The copy starts at this playback position (chain,
     /// frame, time, speed, looping, animate) and shares the chain list, but advances on its own.
-    /// Its frames go to <paramref name="applyFrame"/>, and <see cref="AnimationChainCycled"/>
-    /// subscribers on this instance are not carried over, since they belong to the source.
+    /// Its frames go to <paramref name="applyFrame"/>. <see cref="AnimationChainCycled"/> and
+    /// <see cref="AnimationChainFinished"/> subscribers on this instance are not carried over,
+    /// since they belong to the source.
     /// </summary>
     public AnimationChainLogic Clone(Action<AnimationFrame>? applyFrame)
     {
         AnimationChainLogic clone = (AnimationChainLogic)MemberwiseClone();
         clone.ApplyFrame = applyFrame;
         clone.AnimationChainCycled = null;
+        clone.AnimationChainFinished = null;
         return clone;
     }
 
     public bool AnimateSelf(double secondDifference)
     {
-        if (!_animate || _currentChainIndex == -1 || _chains == null ||
-            _chains.Count == 0 || _chains[_currentChainIndex].Count == 0)
+        AnimationChain? animationChain = CurrentChain;
+        if (!_animate || animationChain == null || animationChain.Count == 0)
         {
             return false;
         }
 
         int frameBefore = _currentFrameIndex;
-        _timeIntoAnimation += secondDifference * _animationSpeed;
-
-        AnimationChain animationChain = _chains[_currentChainIndex];
+        double advance = secondDifference * _animationSpeed;
+        _timeIntoAnimation += advance;
+        bool justFinished = false;
 
         if (_isLooping)
         {
             _timeIntoAnimation = MathFunctions.Loop(_timeIntoAnimation, animationChain.TotalLength, out _justCycled);
         }
-        else if (_timeIntoAnimation >= animationChain.TotalLength)
-        {
-            _timeIntoAnimation = animationChain.TotalLength;
-            _currentFrameIndex = animationChain.Count - 1;
-            _animate = false;
-            _justCycled = true;
-        }
         else
         {
             _justCycled = false;
+            if (_timeIntoAnimation < 0)
+            {
+                // Clamped to the first frame. A negative time stored before a chain was set is
+                // also clamped here, but only playing backward finishes the chain.
+                _timeIntoAnimation = 0;
+                justFinished = advance < 0;
+            }
+            else if (_timeIntoAnimation >= animationChain.TotalLength)
+            {
+                _timeIntoAnimation = animationChain.TotalLength;
+                justFinished = true;
+            }
         }
 
         if (_justCycled)
@@ -138,27 +210,49 @@ public class AnimationChainLogic
             AnimationChainCycled?.Invoke();
         }
 
-        UpdateFrameBasedOffOfTimeIntoAnimation();
-
-        if (_currentFrameIndex != frameBefore)
+        if (justFinished)
         {
-            return UpdateToCurrentAnimationFrame();
+            _animate = false;
         }
-        return false;
+
+        if (justFinished && _timeIntoAnimation > 0)
+        {
+            // The end time is past the last frame, so the frame lookup would wrap to frame 0.
+            _currentFrameIndex = animationChain.Count - 1;
+        }
+        else
+        {
+            UpdateFrameBasedOffOfTimeIntoAnimation();
+        }
+
+        bool didApplyFrame = _currentFrameIndex != frameBefore && UpdateToCurrentAnimationFrame();
+
+        if (justFinished)
+        {
+            AnimationChainFinished?.Invoke();
+        }
+
+        return didApplyFrame;
     }
 
+    /// <summary>
+    /// Applies the current frame. If the index or time is outside the current chain (the chain
+    /// changed to a shorter one, or they were set before a chain was), they are first clamped to
+    /// it as <see cref="CurrentFrameIndex"/> does.
+    /// </summary>
     public bool UpdateToCurrentAnimationFrame()
     {
-        if (_chains == null || _chains.Count <= _currentChainIndex || _currentChainIndex == -1 ||
-            _currentFrameIndex <= -1 || _chains[_currentChainIndex].Count == 0)
+        AnimationChain? chain = CurrentChain;
+        if (chain == null || chain.Count == 0)
         {
             return false;
         }
 
-        var index = _currentFrameIndex;
-        if (index >= _chains[_currentChainIndex].Count) index = 0;
-        var frame = _chains[_currentChainIndex][index];
-        ApplyFrame?.Invoke(frame);
+        if (_currentFrameIndex < 0 || _currentFrameIndex >= chain.Count || _timeIntoAnimation < 0)
+        {
+            SeekToFrame(chain, _currentFrameIndex);
+        }
+        ApplyFrame?.Invoke(chain[_currentFrameIndex]);
         return true;
     }
 

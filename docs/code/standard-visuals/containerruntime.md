@@ -66,7 +66,7 @@ This uses two properties together:
 2. `RenderTargetEffect` set to an `Effect` — the shader bound for the single draw that blits that render target to the screen.
 
 {% hint style="info" %}
-`RenderTargetEffect` is available only on the XNA-like runtimes (MonoGame, KNI, and FNA), where the effect is a `Microsoft.Xna.Framework.Graphics.Effect`.
+`RenderTargetEffect` is available on the XNA-like runtimes (MonoGame, KNI, and FNA), where the effect is a `Microsoft.Xna.Framework.Graphics.Effect`, and on SkiaSharp, where it is an `SKRuntimeEffect`. See [Render Target Shaders on SkiaSharp](#render-target-shaders-on-skiasharp).
 {% endhint %}
 
 Gum does not compile or load the shader for you — you supply an already-constructed `Effect`. You can load it however you like: the MonoGame content pipeline, `new Effect(graphicsDevice, bytes)` with precompiled shader bytes (no content pipeline required), or a runtime `.fx` compiler such as ShadowDusk.
@@ -100,4 +100,48 @@ Because the `Effect` instance is yours, you can update its parameters each frame
 
 {% hint style="info" %}
 To instead display a container's render target as a regular Sprite (so it can be scaled, rotated, or stacked) rather than post-processing it in place, see [RenderTargetTextureSource](spriteruntime/rendertargettexturesource.md).
+{% endhint %}
+
+### Render Target Shaders on SkiaSharp
+
+On SkiaSharp (including Silk.NET), a render target container applies an `SKRuntimeEffect`, which is compiled from SkSL. Set `SourceShaderFile` to a `.sksl` file and Gum compiles it for you.
+
+```csharp
+// Initialize
+var container = new ContainerRuntime();
+container.Width = 200;
+container.Height = 200;
+container.IsRenderTarget = true;
+container.SourceShaderFile = "Shaders/Grayscale.sksl";
+GumUI.Root.Children.Add(container);
+```
+
+The shader declares one input, named `SpriteTexture`, which holds the container's rendered image:
+
+```
+uniform shader SpriteTexture;
+half4 main(float2 coord) {
+    half4 texel = SpriteTexture.eval(coord);
+    half gray = dot(texel.rgb, half3(0.299, 0.587, 0.114));
+    return half4(gray, gray, gray, texel.a);
+}
+```
+
+A shader that fails to compile throws an exception that includes the SkSL compiler errors. To compile the shader yourself, call `SKRuntimeEffect.CreateShader` and assign the result to `RenderTargetEffect`.
+
+#### Using .fx and .slang files
+
+To share one shader file between MonoGame and SkiaSharp, use the `Gum.SkiaSharp.ShadowDusk` package. Add it to your project and call `UseShadowDusk` once at startup:
+
+```csharp
+// Initialize
+GumUI.UseShadowDusk();
+```
+
+After this call, `SourceShaderFile` also accepts `.fx` and `.slang` files, and `.sksl` files keep working. The package converts the shader to SkSL when it loads.
+
+The shader must sample exactly one texture, named `SpriteTexture`, the same name MonoGame shaders use. Shaders that read the sprite's vertex color or the size of the drawn image also work, because Gum supplies a white tint and the container's size for those. Gum sets no other shader parameters, so a shader that depends on one should hard-code its value.
+
+{% hint style="info" %}
+Loading `.sksl` files by default, the `SpriteTexture` input name, and the `Gum.SkiaSharp.ShadowDusk` package are available in November 2026, or now if building Gum from source. Before this, the input was named `inputImage` and `SourceShaderFile` loaded nothing unless you registered a resolver.
 {% endhint %}

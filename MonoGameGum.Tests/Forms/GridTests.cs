@@ -96,7 +96,7 @@ public class GridTests : BaseTestClass
         grid.ColumnDefinitions.Add(new ColumnDefinition());
 
         Panel panel = new Panel();
-        ColoredRectangleRuntime gue = new ColoredRectangleRuntime();
+        RectangleRuntime gue = new RectangleRuntime();
 
         grid.AddChild(panel, row: 0, column: 0);
         grid.AddChild(gue, row: 0, column: 0);
@@ -291,7 +291,7 @@ public class GridTests : BaseTestClass
         grid.RowDefinitions.Add(new RowDefinition());
         grid.ColumnDefinitions.Add(new ColumnDefinition());
 
-        ColoredRectangleRuntime gue = new ColoredRectangleRuntime();
+        RectangleRuntime gue = new RectangleRuntime();
         Panel panel = new Panel();
 
         grid.AddChild(gue, row: 0, column: 0);
@@ -334,9 +334,9 @@ public class GridTests : BaseTestClass
         grid.RowDefinitions.Add(new RowDefinition());
         grid.ColumnDefinitions.Add(new ColumnDefinition());
 
-        ColoredRectangleRuntime gue1 = new ColoredRectangleRuntime();
-        ColoredRectangleRuntime gue2 = new ColoredRectangleRuntime();
-        ColoredRectangleRuntime gue3 = new ColoredRectangleRuntime();
+        RectangleRuntime gue1 = new RectangleRuntime();
+        RectangleRuntime gue2 = new RectangleRuntime();
+        RectangleRuntime gue3 = new RectangleRuntime();
 
         grid.AddChild(gue1, row: 0, column: 0);
         grid.AddChild(gue2, row: 0, column: 0);

@@ -224,6 +224,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.CurrentChainName = value;
+            UpdateTextureValuesFromCurrentFrame();
             NotifyPropertyChanged();
         }
     }
@@ -237,11 +238,48 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.AnimationChains = value;
-            if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedNineSlice);
-            }
+            UpdateTextureValuesFromCurrentFrame();
             NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// The index of the current frame in the active animation chain. Clamped to the chain's
+    /// frames when a chain is set: past the end selects the last frame, negative the first.
+    /// </summary>
+    public int AnimationChainFrameIndex
+    {
+        get => ContainedNineSlice.AnimationLogic.CurrentFrameIndex;
+        set
+        {
+            ContainedNineSlice.AnimationLogic.CurrentFrameIndex = value;
+            UpdateTextureValuesFromCurrentFrame();
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// The current playback time (in seconds) within the active animation chain. A negative
+    /// value is clamped to 0 when a chain is set.
+    /// </summary>
+    public double AnimationChainTime
+    {
+        get => ContainedNineSlice.AnimationLogic.TimeIntoAnimation;
+        set
+        {
+            ContainedNineSlice.AnimationLogic.TimeIntoAnimation = value;
+            UpdateTextureValuesFromCurrentFrame();
+            NotifyPropertyChanged();
+        }
+    }
+
+    // Same as SpriteRuntime: copy the current frame's source rectangle to the texture values
+    // layout reads, as AnimateSelf does.
+    void UpdateTextureValuesFromCurrentFrame()
+    {
+        if (ContainedNineSlice.AnimationLogic.UpdateToCurrentAnimationFrame())
+        {
+            UpdateTextureValuesFrom(ContainedNineSlice);
         }
     }
 
@@ -297,9 +335,9 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
 #if XNALIKE
-            ContainedNineSlice.SetSingleTexture(value);
+            ChangeRenderableAndUpdateLayout((nineSlice: ContainedNineSlice, value), static state => state.nineSlice.SetSingleTexture(state.value));
 #else
-            ContainedNineSlice.Texture = value;
+            ChangeRenderableAndUpdateLayout((nineSlice: ContainedNineSlice, value), static state => state.nineSlice.Texture = state.value);
 #endif
         }
     }

@@ -356,6 +356,64 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void InnerPanel_MoveListBoxItemVisual_ShouldReorderItemsAndListBoxItems()
+    {
+        ListBox listBox = new();
+        ListBoxItem item0 = new();
+        ListBoxItem item1 = new();
+        ListBoxItem item2 = new();
+        listBox.InnerPanel.Children.Add(item0.Visual);
+        listBox.InnerPanel.Children.Add(item1.Visual);
+        listBox.InnerPanel.Children.Add(item2.Visual);
+
+        listBox.InnerPanel.Children.Move(0, 2);
+
+        ListBoxItem[] expected = new[] { item1, item2, item0 };
+        listBox.ListBoxItems.ShouldBe(expected);
+        listBox.Items!.Cast<ListBoxItem>().ShouldBe(expected);
+
+        listBox.InnerPanel.Children.Move(2, 0);
+
+        expected = new[] { item0, item1, item2 };
+        listBox.ListBoxItems.ShouldBe(expected);
+        listBox.Items!.Cast<ListBoxItem>().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Items_MoveSelfBackedListBoxItem_ShouldMoveEachCollectionOnce()
+    {
+        ListBox listBox = new();
+        ListBoxItem item0 = new();
+        ListBoxItem item1 = new();
+        ListBoxItem item2 = new();
+        listBox.InnerPanel.Children.Add(item0.Visual);
+        listBox.InnerPanel.Children.Add(item1.Visual);
+        listBox.InnerPanel.Children.Add(item2.Visual);
+
+        ((ObservableCollection<object>)listBox.Items!).Move(0, 2);
+
+        ListBoxItem[] expected = new[] { item1, item2, item0 };
+        listBox.ListBoxItems.ShouldBe(expected);
+        listBox.Items.Cast<ListBoxItem>().ShouldBe(expected);
+        listBox.InnerPanel.Children.ShouldBe(expected.Select(i => i.Visual));
+    }
+
+    [Fact]
+    public void InnerPanel_MoveDataBackedItemVisual_ShouldNotReorderCallerOwnedItems()
+    {
+        // Deliberate: a direct InnerPanel move bypasses the ListBox, so it must not write back to
+        // a collection the caller owns (for example a bound view model collection).
+        ListBox listBox = new();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+
+        listBox.InnerPanel.Children.Move(0, 1);
+
+        listBox.Items.Cast<string>().ShouldBe(new[] { "a", "b" });
+        listBox.ListBoxItems.Select(i => i.DataObject).ShouldBe(new object[] { "a", "b" });
+    }
+
+    [Fact]
     public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
     {
         bool didSet = false;
@@ -1883,7 +1941,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("B", separator);
 
         listBox.Items!.Count.ShouldBe(3);
@@ -1911,7 +1969,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         listBox.Items = items;
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.AddDecoration(separator); // "add now" -> after the current last item ("B")
 
         items.Add("C");
@@ -1942,7 +2000,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         separator.Height = 30;
         listBox.InsertDecorationAfter("A", separator);
 
@@ -1979,7 +2037,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("A", separator);
 
         listBox.SelectedIndex = 0;
@@ -2008,7 +2066,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("B", separator);
 
         listBox.InnerPanel.Children.Count.ShouldBe(4);
@@ -2032,7 +2090,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         listBox.Items = items;
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("A", separator); // panel: A, sep, B, C
 
         items.Move(0, 2); // A -> end. Items: B, C, A
@@ -2082,7 +2140,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationBefore("B", separator);
 
         ObservableCollection<GraphicalUiElement> panel = listBox.InnerPanel.Children;
@@ -2104,7 +2162,7 @@ public class ListBoxTests : BaseTestClass
         ListBox listBox = new();
         listBox.Items!.Add("A");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
 
         Should.Throw<ArgumentException>(() => listBox.InsertDecorationAfter("not-in-list", separator));
     }
@@ -2124,7 +2182,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add("C");
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("A", separator);
 
         listBox.SelectedIndex = 2;
@@ -2347,7 +2405,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items!.Add("B");
         listBox.Items!.Add(shared);
 
-        ColoredRectangleRuntime separator = new();
+        RectangleRuntime separator = new();
         listBox.InsertDecorationAfter("B", separator);
 
         listBox.SelectedIndex = 2;

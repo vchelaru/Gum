@@ -33,7 +33,7 @@ For example, consider a file called Frame.png which is located in the Content di
 
 <figure><img src="../../.gitbook/assets/image (4) (1) (1) (1).png" alt=""><figcaption><p>Frame.png in Content</p></figcaption></figure>
 
-This file can be used as a texture by assigning the RelativeDirectory and then loading Frame.png. Note that RelativeDirectory is usually set to Content, or to the location of the .gumx file.
+This file can be used as a texture by assigning the RelativeDirectory and then loading Frame.png. Note that RelativeDirectory is usually set to Content, or to the location of the .gumj file.
 
 ```csharp
 // Initialize

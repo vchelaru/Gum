@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Plain net10.0 renders with Skia on the CPU. net10.0-windows7.0 selects Gum.Stride's Direct3D11
+         GPU path, which needs ANGLE native libraries that are not installed by default. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>{{RootNamespace}}</RootNamespace>
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    {{GumReference}}
+    <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Content\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

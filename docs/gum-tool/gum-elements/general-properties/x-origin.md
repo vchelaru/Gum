@@ -23,3 +23,11 @@ The following image shows a ColoredRectangle with its `X Origin` set to `Center`
 The following image shows a ColoredRectangle with its `X Origin` set to `Right`:
 
 ![ColoredRectangle with its X Origin set to Right](<../../../.gitbook/assets/08_06 20 36.png>)
+
+## X Origin in a Left to Right Stack
+
+A child in a [Left to Right Stack](../container/children-layout.md#left-to-right-stack) which is not the first child ignores its `X Origin`, and the stack positions it as if its `X Origin` were `Left`. This keeps it from overlapping its previous sibling. The first child in the stack uses its `X Origin` normally, and `X Origin` works normally for every child in a `Top to Bottom Stack`.
+
+{% hint style="warning" %}
+**Breaking change in November 2026:** Before this version, `X Origin` applied to every child in a `Left to Right Stack`, so a `Center` or `Right` origin moved a child back over its previous sibling. Available in November 2026, or now if building Gum from source. For more information see [Migrating to 2026 November](../../upgrading/migrating-to-2026-november.md).
+{% endhint %}

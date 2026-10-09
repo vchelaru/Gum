@@ -1433,10 +1433,16 @@ internal static class StandardElementsCodeGenRegistration
       <Variable Type=""int"" Name=""Blue"" Category=""Rendering"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">255</Value>
       </Variable>
+      <Variable Type=""bool"" Name=""ExposeChildrenEvents"" Category=""Behavior"" SetsValue=""true"">
+        <Value xsi:type=""xsd:boolean"">false</Value>
+      </Variable>
       <Variable Type=""int"" Name=""Green"" Category=""Rendering"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">255</Value>
       </Variable>
       <Variable Type=""string"" Name=""Guide"" Category=""Position"" SetsValue=""true"" />
+      <Variable Type=""bool"" Name=""HasEvents"" Category=""Behavior"" SetsValue=""true"">
+        <Value xsi:type=""xsd:boolean"">false</Value>
+      </Variable>
       <Variable Type=""bool"" Name=""IgnoredByParentSize"" Category=""Parent"" SetsValue=""true"">
         <Value xsi:type=""xsd:boolean"">false</Value>
       </Variable>

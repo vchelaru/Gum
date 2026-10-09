@@ -104,7 +104,7 @@ The following code can be used to load and interact with the controls:
 
     protected override void Initialize()
     {
-<strong>        GumUI.Initialize(this, "GumProject/GumProject.gumx");
+<strong>        GumUI.Initialize(this, "GumProject/GumProject.gumj");
 </strong>
 <strong>        var screen = new ExampleScreen();
 </strong><strong>        screen.AddToRoot();
@@ -153,7 +153,7 @@ Generated code is optional - code can access Gum objects without any generated c
 
     protected override void Initialize()
     {
-<strong>        GumUI.Initialize(this, "GumProject/GumProject.gumx");
+<strong>        GumUI.Initialize(this, "GumProject/GumProject.gumj");
 </strong>
 <strong>        var screen = ObjectFinder.Self.GumProjectSave.Screens
 </strong><strong>            .First().ToGraphicalUiElement();

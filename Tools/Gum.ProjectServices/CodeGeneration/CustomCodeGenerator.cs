@@ -90,7 +90,7 @@ namespace Gum.ProjectServices.CodeGeneration
             int resolvedSyntaxVersion = _codeGenerator.ResolveSyntaxVersion(projectSettings);
             if(projectSettings.InheritanceLocation == InheritanceLocation.InCustomCode)
             {
-                inheritance = CodeGenerator.GetInheritance(element, projectSettings, resolvedSyntaxVersion) ?? string.Empty;
+                inheritance = GetBaseClass(element, projectSettings) ?? string.Empty;
             }
 
             var context = new CodeGenerationContext(_nameVerifier, element);
@@ -106,6 +106,13 @@ namespace Gum.ProjectServices.CodeGeneration
             }
             return classHeader;
         }
+
+        /// <summary>
+        /// The base class the element's partial class declares, in whichever half
+        /// <see cref="CodeOutputProjectSettings.InheritanceLocation"/> puts it; null when there is none.
+        /// </summary>
+        public string? GetBaseClass(ElementSave element, CodeOutputProjectSettings projectSettings) =>
+            CodeGenerator.GetInheritance(element, projectSettings, _codeGenerator.ResolveSyntaxVersion(projectSettings));
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
 

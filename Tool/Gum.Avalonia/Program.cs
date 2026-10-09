@@ -132,7 +132,7 @@ public static class Program
 
                 cfg.Sources.Clear();
                 cfg.SetBasePath(appDir);
-                cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                cfg.AddAppSettingsJsonFile("appsettings.json");
             })
             .ConfigureServices((context, services) =>
             {

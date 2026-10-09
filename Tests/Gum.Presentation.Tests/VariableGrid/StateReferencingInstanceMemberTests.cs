@@ -21,7 +21,7 @@ using WpfDataUi.DataTypes;
 
 namespace Gum.Presentation.Tests.VariableGrid;
 
-public class StateReferencingInstanceMemberTests
+public class StateReferencingInstanceMemberTests : BaseTestClass
 {
     private readonly AutoMocker _mocker;
 

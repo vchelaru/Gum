@@ -14,7 +14,7 @@ dotnet tool install -g GumCli
 
 ## Why it works well for agents
 
-* **Machine-readable output** — command results (JSON, file paths, summaries) go to **stdout**, while banners and progress chatter go to **stderr**. An agent can consume stdout directly, for example `gumcli check MyProject.gumx --json`.
+* **Machine-readable output** — command results (JSON, file paths, summaries) go to **stdout**, while banners and progress chatter go to **stderr**. An agent can consume stdout directly, for example `gumcli check MyProject.gumj --json`.
 * **Meaningful exit codes** — `0` for success, `1` for errors found, `2` for a project that could not be loaded or invalid arguments. An agent can branch on the exit code instead of parsing prose.
 * **No editor required** — everything runs headless, so it fits an automated edit → validate → verify loop.
 

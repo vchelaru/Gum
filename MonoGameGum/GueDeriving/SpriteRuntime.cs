@@ -248,7 +248,11 @@ public class SpriteRuntime : GraphicalUiElement
     public string? CurrentChainName
     {
         get => ContainedSprite.AnimationLogic.CurrentChainName;
-        set => ContainedSprite.AnimationLogic.CurrentChainName = value;
+        set
+        {
+            ContainedSprite.AnimationLogic.CurrentChainName = value;
+            UpdateTextureValuesFromCurrentFrame();
+        }
     }
 
     /// <summary>
@@ -260,29 +264,46 @@ public class SpriteRuntime : GraphicalUiElement
         set
         {
             ContainedSprite.AnimationLogic.AnimationChains = value;
-            if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
-            {
-                UpdateTextureValuesFrom(ContainedSprite);
-            }
+            UpdateTextureValuesFromCurrentFrame();
         }
     }
 
     /// <summary>
-    /// The index of the current frame in the active animation chain.
+    /// The index of the current frame in the active animation chain. Clamped to the chain's
+    /// frames when a chain is set: past the end selects the last frame, negative the first.
     /// </summary>
     public int AnimationChainFrameIndex
     {
         get => ContainedSprite.AnimationLogic.CurrentFrameIndex;
-        set => ContainedSprite.AnimationLogic.CurrentFrameIndex = value;
+        set
+        {
+            ContainedSprite.AnimationLogic.CurrentFrameIndex = value;
+            UpdateTextureValuesFromCurrentFrame();
+        }
     }
 
     /// <summary>
-    /// The current playback time (in seconds) within the active animation chain.
+    /// The current playback time (in seconds) within the active animation chain. A negative
+    /// value is clamped to 0 when a chain is set.
     /// </summary>
     public double AnimationChainTime
     {
         get => ContainedSprite.AnimationLogic.TimeIntoAnimation;
-        set => ContainedSprite.AnimationLogic.TimeIntoAnimation = value;
+        set
+        {
+            ContainedSprite.AnimationLogic.TimeIntoAnimation = value;
+            UpdateTextureValuesFromCurrentFrame();
+        }
+    }
+
+    // The current frame's source rectangle changed on the renderable; copy it to the texture
+    // values layout reads, as AnimateSelf does.
+    void UpdateTextureValuesFromCurrentFrame()
+    {
+        if (ContainedSprite.AnimationLogic.UpdateToCurrentAnimationFrame())
+        {
+            UpdateTextureValuesFrom(ContainedSprite);
+        }
     }
 
     /// <summary>
@@ -304,12 +325,22 @@ public class SpriteRuntime : GraphicalUiElement
     }
 
     /// <summary>
-    /// Triggered when the current animation chain completes a full cycle.
+    /// Raised when a looping animation chain wraps around. A non-looping chain raises
+    /// <see cref="AnimationChainFinished"/> instead.
     /// </summary>
     public event Action AnimationChainCycled
     {
         add => ContainedSprite.AnimationLogic.AnimationChainCycled += value;
         remove => ContainedSprite.AnimationLogic.AnimationChainCycled -= value;
+    }
+
+    /// <summary>
+    /// Raised once when a non-looping animation chain reaches its end and Animate becomes false.
+    /// </summary>
+    public event Action AnimationChainFinished
+    {
+        add => ContainedSprite.AnimationLogic.AnimationChainFinished += value;
+        remove => ContainedSprite.AnimationLogic.AnimationChainFinished -= value;
     }
 
     #endregion
@@ -352,43 +383,7 @@ public class SpriteRuntime : GraphicalUiElement
         get => ContainedSprite.Texture;
         set
         {
-            var isUsingPercentage = WidthUnits == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile || 
-                                    HeightUnits == Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-
-            int widthBefore = -1, heightBefore = -1;
-
-            if (isUsingPercentage && ContainedSprite.Texture != null)
-            {
-#if RAYLIB
-                widthBefore = ContainedSprite.Texture.Value.Width;
-                heightBefore = ContainedSprite.Texture.Value.Height;
-#else
-                widthBefore = ContainedSprite.Texture.Width;
-                heightBefore = ContainedSprite.Texture.Height;
-#endif
-            }
-
-            ContainedSprite.Texture = value;
-
-            if (isUsingPercentage)
-            {
-                int widthAfter = -1, heightAfter = -1;
-                if (value != null)
-                {
-#if RAYLIB
-                    widthAfter = value.Value.Width;
-                    heightAfter = value.Value.Height;
-#else
-                    widthAfter = value.Width;
-                    heightAfter = value.Height;
-#endif
-                }
-
-                if (widthBefore != widthAfter || heightBefore != heightAfter)
-                {
-                    UpdateLayout();
-                }
-            }
+            ChangeRenderableAndUpdateLayout((sprite: ContainedSprite, value), static state => state.sprite.Texture = state.value);
 
 #if RAYLIB || SKIA
             NotifyPropertyChanged();
@@ -403,7 +398,7 @@ public class SpriteRuntime : GraphicalUiElement
     public SkiaSharp.SKImage? Image
     {
         get => ContainedSprite.Image;
-        set => ContainedSprite.Image = value;
+        set => ChangeRenderableAndUpdateLayout((sprite: ContainedSprite, value), static state => state.sprite.Image = state.value);
     }
 #endif
 

@@ -241,6 +241,141 @@ public class PreviewLauncherTests : IDisposable
         pushed.Activate.ShouldBeTrue();
     }
 
+    // Launches against a running stand-in preview showing "Dialogue" and returns the launcher.
+    private PreviewLauncher LaunchShowing(ElementSave shown, out RecordingPreviewStarter starter)
+    {
+        GumProjectSave project = new GumProjectSave { FullFileName = "/MyGame/GumProject.gumj" };
+        _projectManager.SetupGet(p => p.GumProjectSave).Returns(project);
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(shown);
+        starter = new RecordingPreviewStarter("/Preview/GumPreview");
+        PreviewLauncher launcher = CreateLauncher();
+        launcher.ProcessStarter = starter;
+        launcher.Launch();
+        return launcher;
+    }
+
+    private static PreviewSelectionMessage? LastPushed(RecordingPreviewStarter starter)
+    {
+        List<string> arguments = starter.Started[0].ArgumentList.ToList();
+        string selectionFile = arguments[arguments.IndexOf("--selection-file") + 1];
+        return PreviewSelectionMessage.TryParse(File.ReadAllLines(selectionFile));
+    }
+
+    private static void DeleteSelectionFile(RecordingPreviewStarter starter)
+    {
+        List<string> arguments = starter.Started[0].ArgumentList.ToList();
+        File.Delete(arguments[arguments.IndexOf("--selection-file") + 1]);
+    }
+
+    [Fact]
+    public void Pin_WhenNoPreviewIsRunning_DoesNotPin()
+    {
+        PreviewLauncher launcher = CreateLauncher();
+
+        launcher.Pin().ShouldBeFalse();
+
+        launcher.PinnedElement.ShouldBeNull();
+    }
+
+    [Fact]
+    public void PushSelection_WhilePinned_IgnoresAnotherElement()
+    {
+        ScreenSave dialogue = new ScreenSave { Name = "Dialogue" };
+        ComponentSave button = new ComponentSave { Name = "ButtonStandard" };
+        PreviewLauncher launcher = LaunchShowing(dialogue, out RecordingPreviewStarter starter);
+        launcher.Pin().ShouldBeTrue();
+
+        launcher.PushSelection(button);
+
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("Dialogue");
+    }
+
+    [Fact]
+    public void PushSelection_WhilePinned_ForwardsAStateOfThePinnedElement()
+    {
+        ScreenSave dialogue = new ScreenSave { Name = "Dialogue" };
+        StateSave open = new StateSave { Name = "Open" };
+        dialogue.Categories.Add(new StateSaveCategory { Name = "Mode", States = { open } });
+        PreviewLauncher launcher = LaunchShowing(dialogue, out RecordingPreviewStarter starter);
+        launcher.Pin();
+        _selectedState.SetupGet(s => s.SelectedStateSave).Returns(open);
+
+        launcher.PushSelection(dialogue);
+
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        pushed.ShouldNotBeNull();
+        pushed.StateName.ShouldBe("Open");
+        pushed.CategoryName.ShouldBe("Mode");
+    }
+
+    [Fact]
+    public void BuildMessage_WhenTheSelectedStateBelongsToAnotherElement_CarriesNoState()
+    {
+        ScreenSave dialogue = new ScreenSave { Name = "Dialogue" };
+        StateSave pressed = new StateSave { Name = "Pressed" };
+        _selectedState.SetupGet(s => s.SelectedStateSave).Returns(pressed);
+
+        PreviewSelectionMessage message = CreateLauncher().BuildMessage(dialogue, activate: false);
+
+        message.StateName.ShouldBeNull();
+        message.CategoryName.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Unpin_PushesTheCurrentSelection_AndFollowsSelectionAgain()
+    {
+        ScreenSave dialogue = new ScreenSave { Name = "Dialogue" };
+        ComponentSave button = new ComponentSave { Name = "ButtonStandard" };
+        PreviewLauncher launcher = LaunchShowing(dialogue, out RecordingPreviewStarter starter);
+        launcher.Pin();
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(button);
+
+        launcher.Unpin();
+
+        launcher.PinnedElement.ShouldBeNull();
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("ButtonStandard");
+    }
+
+    [Fact]
+    public void Launch_WhilePinned_RaisesThePinnedElementInsteadOfTheSelection()
+    {
+        ScreenSave dialogue = new ScreenSave { Name = "Dialogue" };
+        ComponentSave button = new ComponentSave { Name = "ButtonStandard" };
+        PreviewLauncher launcher = LaunchShowing(dialogue, out RecordingPreviewStarter starter);
+        launcher.Pin();
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(button);
+
+        launcher.Launch();
+
+        PreviewSelectionMessage? pushed = LastPushed(starter);
+        DeleteSelectionFile(starter);
+        pushed.ShouldNotBeNull();
+        pushed.ElementName.ShouldBe("Dialogue");
+        pushed.Activate.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Pin_RaisesPinnedChanged_AndUnpinRaisesItAgain()
+    {
+        PreviewLauncher launcher = LaunchShowing(new ScreenSave { Name = "Dialogue" }, out RecordingPreviewStarter starter);
+        int raised = 0;
+        launcher.PinnedChanged += () => raised++;
+
+        launcher.Pin();
+        launcher.Unpin();
+        launcher.Unpin();
+
+        raised.ShouldBe(2);
+        DeleteSelectionFile(starter);
+    }
+
     private sealed class RecordingPreviewStarter : IPreviewProcessStarter, IPreviewProcess
     {
         private readonly string _executablePath;

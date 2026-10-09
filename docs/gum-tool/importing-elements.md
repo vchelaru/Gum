@@ -19,9 +19,9 @@ Files which are already added to a subfolder of your project can be directly imp
 3. Select the component in the list, or click Browse... to locate a component
 4. Click the Import button
 
-## Importing from Project (.gumx)
+## Importing from Project (.gumj/.gumx)
 
-Gum supports importing one or more elements from an existing Gum project (.gumx). When importing elements, Gum also imports:
+Gum supports importing one or more elements from an existing Gum project (.gumj or .gumx). When importing elements, Gum also imports:
 
 * Elements referenced by instances or through inheritance
 * Referenced behaviors
@@ -31,8 +31,8 @@ This option is useful if you would like to import a set of components, such as a
 
 To import from a project:
 
-1. Click the Content -> Import -> .gumx... menu item
-2. Select either Local File or URL depending on the location of the .gumx
+1. Click the Content -> Import -> .gumx... menu item (it opens both .gumj and .gumx projects)
+2. Select either Local File or URL depending on the location of the project file
 3. Browser or enter the location of the project
 4. Select the desired objects to import. You can click entire folders to select all contained objects. Note that dependencies (such as behaviors) are automatically checked.
 5. Click the Import button

@@ -145,6 +145,8 @@ public class LinePolygon : InvisibleRenderable
 
     public IReadOnlyList<Vector2> Points => _points;
 
+    public int PointCount => _points.Count;
+
     public LinePolygon() : this(null) { }
 
     public LinePolygon(SystemManagers? _) { }

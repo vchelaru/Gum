@@ -96,8 +96,8 @@ To recognize this in code: applying a state name changes the look; the control
 does this for you on hover/press/focus. To *customize* appearance you edit the
 states (in the tool, or via the styling APIs) or swap in a different visual —
 you do **not** look for a `Color` property on the control. Don't panic when you
-see categories and states; they are Gum's equivalent of a style sheet. Styling
-guide: <https://docs.flatredball.com/gum/code/styling>.
+see categories and states; they are Gum's equivalent of a style sheet. How to
+restyle controls: **gum-styling**. A complete pre-built look: **gum-theming**.
 
 ## Default visuals
 
