@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -58,10 +59,12 @@ public static class UnhandledExceptionHooks
     // Avalonia's Linux desktop integration (global menu, file portal, IME) makes fire-and-forget
     // DBus calls that fault when the desktop doesn't provide the service, such as Cinnamon having
     // no AppMenu registrar. Gum doesn't depend on them, so they are logged without a dialog.
+    // Likewise a background file operation that hit a file another process had open: transient,
+    // and nothing the user can act on.
     internal static void ReportUnobservedTask(ICrashReporter reporter, AggregateException exception)
     {
-        bool isOnlyDBus = exception.Flatten().InnerExceptions.All(inner => inner is DBusException);
-        if (isOnlyDBus)
+        bool isOnlyIgnorable = exception.Flatten().InnerExceptions.All(inner => inner is DBusException or IOException);
+        if (isOnlyIgnorable)
         {
             reporter.LogRecoverable(exception, "Unobserved task");
         }
