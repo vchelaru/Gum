@@ -28,6 +28,7 @@ public sealed class LayoutBenchmarkRunner
     private const int MinimumRuns = 5;
     private const int MaximumRuns = 5000;
     private const int WarmupRuns = 3;
+    private const int Batches = 5;
 
     private readonly ITestOutputHelper _output;
     private readonly double _abandonMilliseconds;
@@ -84,18 +85,25 @@ public sealed class LayoutBenchmarkRunner
             run();
         }
 
-        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
-        int runs = 0;
-        stopwatch.Restart();
-        while (runs < MaximumRuns && (runs < MinimumRuns || stopwatch.Elapsed.TotalMilliseconds < MinimumMeasuredMilliseconds))
+        // Best of several batches: the minimum is the least noisy estimate of the cost itself.
+        double bestMicrosPerRun = double.MaxValue;
+        double callsPerRun = 0;
+        for (int batch = 0; batch < Batches; batch++)
         {
-            run();
-            runs++;
+            int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+            int runs = 0;
+            stopwatch.Restart();
+            while (runs < MaximumRuns && (runs < MinimumRuns || stopwatch.Elapsed.TotalMilliseconds < MinimumMeasuredMilliseconds))
+            {
+                run();
+                runs++;
+            }
+            double microsPerRun = stopwatch.Elapsed.TotalMilliseconds * 1000 / runs;
+            bestMicrosPerRun = Math.Min(bestMicrosPerRun, microsPerRun);
+            callsPerRun = (double)(GraphicalUiElement.UpdateLayoutCallCount - callsBefore) / runs;
         }
-        double elapsedMicros = stopwatch.Elapsed.TotalMilliseconds * 1000;
-        int calls = GraphicalUiElement.UpdateLayoutCallCount - callsBefore;
 
-        return new BenchmarkSample(scenario, size, tree.NodeCount, (double)calls / runs, elapsedMicros / runs, Abandoned: false);
+        return new BenchmarkSample(scenario, size, tree.NodeCount, callsPerRun, bestMicrosPerRun, Abandoned: false);
     }
 
     private void Report(string shapeName, List<BenchmarkSample> samples)
