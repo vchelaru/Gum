@@ -113,6 +113,49 @@ public class CodeGeneratorRenderTargetTextureSourceTests : BaseTestClass
         }
     }
 
+    [Theory]
+    [InlineData(OutputLibrary.MonoGame)]
+    [InlineData(OutputLibrary.MonoGameForms)]
+    public void GetGeneratedCodeForElement_ExposedRenderTargetTextureSource_TypesPropertyAsIRenderableIpso(OutputLibrary library)
+    {
+        GumProjectSave project = Project;
+        RegisterSpriteRenderTargetTextureSourceVariable();
+
+        ComponentSave main = CreateComponent("MainComponent", "Container");
+        main.Instances.Add(new InstanceSave
+        {
+            Name = "SpriteInstance",
+            BaseType = "Sprite",
+            ParentContainer = main,
+        });
+        main.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "SpriteInstance.RenderTargetTextureSource",
+            Value = null,
+            SetsValue = true,
+            Type = "string",
+            ExposedAsName = "Source",
+        });
+        project.Components.Add(main);
+
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            string code = CreateCodeGenerator().GetGeneratedCodeForElement(
+                main,
+                elementSettings: null!,
+                new CodeOutputProjectSettings { OutputLibrary = library, RootNamespace = "MyGame" });
+
+            // The runtime property is an IRenderableIpso, not the string Gum stores in the project.
+            code.ShouldContain("public global::RenderingLibrary.Graphics.IRenderableIpso Source");
+            code.ShouldNotContain("string Source");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
     [Fact]
     public void GetCodeForInstance_RenderTargetTextureSourceEmpty_EmitsNoAssignment()
     {

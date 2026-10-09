@@ -163,6 +163,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>RenderTargetTextureSource</Name>
+      <Category>Source</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>Rotation</Name>
       <Value xsi:type="xsd:float">0</Value>

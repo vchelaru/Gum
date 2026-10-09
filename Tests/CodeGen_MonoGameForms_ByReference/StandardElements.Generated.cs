@@ -565,6 +565,9 @@ internal static class StandardElementsCodeGenRegistration
       <Variable Type=""float"" Name=""Rotation"" Category=""Flip and Rotation"" SetsValue=""true"">
         <Value xsi:type=""xsd:float"">0</Value>
       </Variable>
+      <Variable IsFile=""true"" Type=""string"" Name=""SourceShaderFile"" Category=""Rendering"" SetsValue=""true"">
+        <Value xsi:type=""xsd:string""></Value>
+      </Variable>
       <Variable Type=""float"" Name=""StackSpacing"" Category=""Children"" SetsValue=""true"">
         <Value xsi:type=""xsd:float"">0</Value>
       </Variable>
@@ -1472,6 +1475,7 @@ internal static class StandardElementsCodeGenRegistration
       <Variable Type=""int"" Name=""Red"" Category=""Rendering"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">255</Value>
       </Variable>
+      <Variable Type=""string"" Name=""RenderTargetTextureSource"" Category=""Source"" SetsValue=""true"" />
       <Variable Type=""float"" Name=""Rotation"" Category=""Flip and Rotation"" SetsValue=""true"">
         <Value xsi:type=""xsd:float"">0</Value>
       </Variable>
