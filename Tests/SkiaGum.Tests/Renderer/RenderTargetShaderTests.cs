@@ -13,20 +13,20 @@ namespace SkiaGum.Tests.Renderer;
 /// Pixel-readback tests for the SkiaGum render-target post-process shader path (issue #3998). A
 /// render-target container carrying a <see cref="ContainerRuntime.RenderTargetEffect"/> (or a
 /// <see cref="ContainerRuntime.SourceShaderFile"/> that resolves into one) has that compiled SkSL
-/// effect bound as the "inputImage" child for the composite draw, so it post-processes the whole
+/// effect bound as the "SpriteTexture" child for the composite draw, so it post-processes the whole
 /// container. Mirrors <c>RaylibGum.Tests.Rendering.RenderTargetShaderTests</c> in shape, but reads
 /// pixels directly off the top-level <see cref="SKSurface"/> (Skia's top-level surface is directly
 /// readable, unlike raylib's bottom-up render texture).
 /// </summary>
 public class RenderTargetShaderTests
 {
-    // Contract SkSL fixture (issue #3998): a fixed "inputImage" child shader collapses the sampled
+    // Contract SkSL fixture (issue #3998): a fixed "SpriteTexture" child shader collapses the sampled
     // color to luma, so a solid-red composite reads back as R ≈ G ≈ B, which a straight blit never
     // would.
     private const string GrayscaleSksl = @"
-uniform shader inputImage;
+uniform shader SpriteTexture;
 half4 main(float2 coord) {
-    half4 texel = inputImage.eval(coord);
+    half4 texel = SpriteTexture.eval(coord);
     half gray = dot(texel.rgb, half3(0.299, 0.587, 0.114));
     return half4(gray, gray, gray, texel.a);
 }
@@ -155,7 +155,7 @@ half4 main(float2 coord) {
     // (a real texture) into a render target, not a solid-fill RectangleRuntime. The existing
     // BuildRedRenderTarget tests above position the container near the origin (X=4, Y=4) with a
     // uniform-colored fill, which happened to mask a coordinate-mapping bug: CompositeRenderTarget
-    // binds the baked image as the effect's "inputImage" child via a plain `image.ToShader()` (no
+    // binds the baked image as the effect's "SpriteTexture" child via a plain `image.ToShader()` (no
     // local matrix), so the shader samples using raw absolute canvas coordinates instead of
     // translating into the baked image's own local (0,0) space. At a small offset the sampled
     // pixel merely landed a few pixels off but still inside the same solid-colored fill, so the
@@ -386,6 +386,69 @@ half4 main(float2 coord) {
             CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
             GraphicalUiElement.MissingFileBehavior = previousBehavior;
         }
+    }
+
+    // ShadowDusk converts a shader that reads the sprite's vertex color (COLOR0) into a
+    // `uniform vec4 ShadowDusk_Color` that SkiaGum must set; an unset uniform reads as zero, which
+    // would turn the whole container transparent black.
+    [Fact]
+    public void Draw_EffectDeclaringShadowDuskColor_TintsWithWhite()
+    {
+        const string tintSksl = @"
+uniform shader SpriteTexture;
+uniform vec4 ShadowDusk_Color;
+half4 main(float2 coord) {
+    return half4(SpriteTexture.eval(coord) * ShadowDusk_Color);
+}
+";
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = BuildRedRenderTarget();
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        using SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(tintSksl, out string errors);
+        string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
+        renderTarget.RenderTargetEffect = effect;
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        SKColor center = bitmap.GetPixel(19, 19);
+        center.Red.ShouldBeGreaterThan((byte)200);
+        center.Alpha.ShouldBe((byte)255);
+    }
+
+    // A converted shader that does UV arithmetic reads `uniform vec2 ShadowDusk_Resolution`: the
+    // pixel size of the element being drawn, which for a render-target container is its own size.
+    [Fact]
+    public void Draw_EffectDeclaringShadowDuskResolution_ReceivesContainerSize()
+    {
+        const string resolutionSksl = @"
+uniform shader SpriteTexture;
+uniform vec2 ShadowDusk_Resolution;
+half4 main(float2 coord) {
+    return half4(ShadowDusk_Resolution.x / 100.0, ShadowDusk_Resolution.y / 200.0, 0, 1);
+}
+";
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        ContainerRuntime renderTarget = BuildRedRenderTarget();
+        GumService.Default.Root.Children.Add(renderTarget);
+
+        using SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(resolutionSksl, out string errors);
+        string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
+        renderTarget.RenderTargetEffect = effect;
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        SKColor center = bitmap.GetPixel(19, 19);
+
+        // The container is 40 x 40, so red reads 40/100 and green reads 40/200.
+        Math.Abs(center.Red - 102).ShouldBeLessThan(4);
+        Math.Abs(center.Green - 51).ShouldBeLessThan(4);
     }
 
     private static string WriteTempShader(string source)
