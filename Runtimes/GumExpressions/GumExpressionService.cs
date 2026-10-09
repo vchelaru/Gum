@@ -1,7 +1,6 @@
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using GumRuntime;
-using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Generic;
 
 namespace Gum.Expressions;
@@ -23,14 +22,11 @@ public static class GumExpressionService
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = EvaluateExpressionAllBranches;
     }
 
+    private static readonly ParsedExpressionCache _parsedExpressions = new ParsedExpressionCache();
+
     private static object? EvaluateExpression(StateSave stateSave, string expression, string? desiredType, GraphicalUiElement? liveRoot)
     {
-        expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
-
-        // Parse as an expression rather than a compilation unit so top-level constructs
-        // like ternaries (`a ? b : c`) are not mis-parsed as nullable variable declarations
-        // (Roslyn treats `Foo? bar` at statement scope as a NullableTypeSyntax + declarator).
-        var syntax = SyntaxFactory.ParseExpression(expression);
+        var syntax = _parsedExpressions.GetOrParse(expression);
 
         if (syntax != null)
         {
@@ -51,13 +47,7 @@ public static class GumExpressionService
     /// </summary>
     private static IEnumerable<object> EvaluateExpressionAllBranches(StateSave stateSave, string expression, string? desiredType, GraphicalUiElement? liveRoot)
     {
-        expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
-        var syntax = SyntaxFactory.ParseExpression(expression);
-
-        if (syntax == null)
-        {
-            yield break;
-        }
+        var syntax = _parsedExpressions.GetOrParse(expression);
 
         foreach (var branch in EvaluatedSyntax.EnumerateAllBranches(syntax, stateSave, liveRoot: liveRoot))
         {
