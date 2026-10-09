@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.SkiaSharp.ShadowDusk: opt-in package that lets a SkiaGum render-target container's
+		SourceShaderFile point at an .fx (HLSL) or .slang file. ShadowDusk converts it to SkSL at
+		runtime and SkiaGum compiles that into an SKRuntimeEffect. SkiaGum itself compiles .sksl
+		files and carries no ShadowDusk dependency, because ShadowDusk brings native shader-compiler
+		binaries most games do not need. Call GumService.UseShadowDusk() once at startup (issue #5659).
+	-->
+	<Import Project="..\RuntimePackage.props" />
+
+	<PropertyGroup>
+		<PackageId>Gum.SkiaSharp.ShadowDusk</PackageId>
+		<Version>2026.4.5.1</Version>
+		<NoWarn>1591</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- 0.21.0 is the first release with the .slang converters (SkslConverter.ConvertSlang). -->
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+	<!-- Collision guard for a consumer assembly named SkiaGum.ShadowDusk (see #4311). -->
+	<ItemGroup>
+		<None Include="build\Gum.SkiaSharp.ShadowDusk.targets" Pack="true" PackagePath="buildTransitive\Gum.SkiaSharp.ShadowDusk.targets" Visible="false" />
+	</ItemGroup>
+
+</Project>

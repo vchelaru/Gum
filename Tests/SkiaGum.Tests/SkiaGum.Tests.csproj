@@ -19,6 +19,7 @@
 	  <!-- Was SkiaGum.csproj directly; the concrete GumService moved to SkiaGum.Standalone.csproj
 	       (issue #4452 phase 2), which still brings SkiaGum.csproj transitively. -->
 	  <ProjectReference Include="..\..\Runtimes\SkiaGum.Standalone\SkiaGum.Standalone.csproj" />
+	  <ProjectReference Include="..\..\Runtimes\SkiaGum.ShadowDusk\SkiaGum.ShadowDusk.csproj" />
 	  <!-- PixelComparer/PixelDiffResult (used by GoldenImages/*Tests.cs) live in the dependency-free
 	       Gum.ImageDiff so gumcli diff-screenshots (#4174) can reuse the same comparer instead of
 	       duplicating it. -->
