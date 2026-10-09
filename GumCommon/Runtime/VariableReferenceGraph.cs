@@ -130,6 +130,23 @@ public sealed class VariableReferenceGraph
     /// <summary>True while rows are being re-evaluated, so the writes they make do not trigger further re-evaluation.</summary>
     internal static bool IsSuppressed => _suppressionDepth > 0;
 
+    /// <summary>
+    /// Runs <paramref name="action"/> without live re-evaluation of references, for a caller that has
+    /// already evaluated them into the values it is about to apply.
+    /// </summary>
+    public static void RunWithoutReevaluation(Action action)
+    {
+        BeginSuppression();
+        try
+        {
+            action();
+        }
+        finally
+        {
+            EndSuppression();
+        }
+    }
+
     internal static void BeginSuppression() => _suppressionDepth++;
 
     internal static void EndSuppression() => _suppressionDepth--;
@@ -325,21 +342,54 @@ public sealed class VariableReferenceGraph
         results.AddRange(_orderedRows);
     }
 
-    /// <summary>True when any row reads the variable, directly or through another row.</summary>
-    public bool IsRead(string variableName)
+    /// <summary>
+    /// True when changing the variable can affect a row: a row reads it, or reads a laid-out value. A
+    /// cheap check that avoids building anything for a change no row cares about.
+    /// </summary>
+    public bool IsAffectedBy(string variableName)
     {
-        if (_orderedRows.Length == 0)
-        {
-            return false;
-        }
-
-        _scratch.Clear();
-        _scratch.Add(variableName);
         for (int i = 0; i < _orderedRows.Length; i++)
         {
-            if (ReadsAny(_orderedRows[i], _scratch))
+            ReferenceRow row = _orderedRows[i];
+            if (row.ReadsLiveLayout)
             {
                 return true;
+            }
+            string[] reads = row.ReadNames;
+            for (int j = 0; j < reads.Length; j++)
+            {
+                if (string.Equals(reads[j], variableName, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// <see cref="IsAffectedBy(string)"/> for the variable <c>instanceName.memberName</c>, without building the name.
+    /// </summary>
+    public bool IsAffectedBy(string instanceName, string memberName)
+    {
+        for (int i = 0; i < _orderedRows.Length; i++)
+        {
+            ReferenceRow row = _orderedRows[i];
+            if (row.ReadsLiveLayout)
+            {
+                return true;
+            }
+            string[] reads = row.ReadNames;
+            for (int j = 0; j < reads.Length; j++)
+            {
+                string read = reads[j];
+                if (read.Length == instanceName.Length + 1 + memberName.Length
+                    && read[instanceName.Length] == '.'
+                    && string.CompareOrdinal(read, 0, instanceName, 0, instanceName.Length) == 0
+                    && string.CompareOrdinal(read, instanceName.Length + 1, memberName, 0, memberName.Length) == 0)
+                {
+                    return true;
+                }
             }
         }
         return false;

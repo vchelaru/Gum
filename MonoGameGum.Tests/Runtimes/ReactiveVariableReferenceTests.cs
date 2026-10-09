@@ -6,6 +6,7 @@ using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using GumRuntime;
 using Shouldly;
+using System.Linq;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -119,6 +120,78 @@ public class ReactiveVariableReferenceTests : BaseTestClass
         gue.RefreshReferences("Other");
 
         gue.Y.ShouldBe(99f);
+    }
+
+    [Fact]
+    public void SetProperty_VariableReadByAReference_UpdatesTheReferencingVariable()
+    {
+        ComponentSave element = CreateElement("Y = Offset * 2");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        gue.SetProperty("Offset", 7f);
+
+        gue.Y.ShouldBe(14f);
+    }
+
+    [Fact]
+    public void SetProperty_ReferencesChained_UpdatesEveryLinkInOrder()
+    {
+        ComponentSave element = CreateElement("X = Y + 1", "Y = Offset * 2");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        gue.SetProperty("Offset", 7f);
+
+        gue.Y.ShouldBe(14f);
+        gue.X.ShouldBe(15f);
+    }
+
+    [Fact]
+    public void SetProperty_ReferencesThatReadEachOther_DoNotLoop()
+    {
+        ComponentSave element = CreateElement("X = Y", "Y = X", "Offset = Offset + 1");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        Should.NotThrow(() => gue.SetProperty("X", 3f));
+        Should.NotThrow(() => gue.SetProperty("Offset", 3f));
+    }
+
+    [Fact]
+    public void SetProperty_VariableOfAChildInstanceReadByAReference_UpdatesTheReferencingVariable()
+    {
+        ComponentSave element = CreateElement("Y = Child.Width * 2");
+        element.Instances.Add(new InstanceSave { Name = "Child", BaseType = "Container", ParentContainer = element });
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        GraphicalUiElement child = gue.GetGraphicalUiElementByName("Child")!;
+
+        child.SetProperty("Width", 30f);
+
+        gue.Y.ShouldBe(60f);
+    }
+
+    [Fact]
+    public void ApplyState_SeveralVariablesReadByReferences_UpdatesFromAllOfThem()
+    {
+        ComponentSave element = CreateElement("Y = Progress + Offset");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        StateSave state = new StateSave();
+        state.Variables.Add(new VariableSave { Name = "Progress", Type = "float", Value = 4f, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Offset", Type = "float", Value = 10f, SetsValue = true });
+
+        gue.ApplyState(state);
+
+        gue.Y.ShouldBe(14f);
+    }
+
+    [Fact]
+    public void SetProperty_WhileTheElementIsStillLoading_DoesNotEvaluateReferencesEarly()
+    {
+        // A row's inputs are not all set yet while the element loads, and loading applies the rows itself.
+        ComponentSave element = CreateElement("Y = Offset * 2");
+        element.DefaultState.Variables.First(item => item.Name == "Offset").Value = 6f;
+
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        gue.Y.ShouldBe(12f);
     }
 
     private static ComponentSave CreateElement(params string[] rows)

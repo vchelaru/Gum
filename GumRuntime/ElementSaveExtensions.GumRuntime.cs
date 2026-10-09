@@ -465,9 +465,19 @@ namespace GumRuntime
                 }
             }
 
-            graphicalElement.ApplyState(stateSave);
+            // This applies the element's references itself, in the order they are written, so the
+            // variables it sets do not also trigger live re-evaluation.
+            VariableReferenceGraph.BeginSuppression();
+            try
+            {
+                graphicalElement.ApplyState(stateSave);
 
-            ApplyVariableReferences(graphicalElement, stateSave);
+                ApplyVariableReferences(graphicalElement, stateSave);
+            }
+            finally
+            {
+                VariableReferenceGraph.EndSuppression();
+            }
         }
 
         public static bool ValueEquality(object? val1, object? val2)
