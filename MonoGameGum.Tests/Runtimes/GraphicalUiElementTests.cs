@@ -2029,6 +2029,7 @@ public class GraphicalUiElementTests : BaseTestClass
     {
         "name", // immutable string
         "<ElementSave>k__BackingField", // the element definition
+        "_referenceGraph", // derived from the element definition, shared by every element built from it
         "mTagIfNoContainedObject", // user data, like an assigned BindingContext
         "<ExplicitIVisibleParent>k__BackingField", // assigned by FlatRedBall, never read by Gum
     };

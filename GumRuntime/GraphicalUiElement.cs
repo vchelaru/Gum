@@ -6715,6 +6715,98 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    #region Variable reference re-evaluation (ADR 0022)
+
+    private VariableReferenceGraph? _referenceGraph;
+
+    [ThreadStatic]
+    private static List<ReferenceRow>? _affectedRowsScratch;
+
+    /// <summary>
+    /// Re-evaluates the same-component variable references that read one of the given variables, so a
+    /// variable such as <c>Y = Math.Sin(Progress)</c> follows <c>Progress</c> when it changes. Rows that read
+    /// a result of an affected row are re-evaluated after it. References to other elements are not
+    /// touched; those stay explicit (see <see cref="RefreshStyles"/>).
+    /// </summary>
+    /// <remarks>
+    /// Animations and state application call this for you. Call it directly after changing a variable
+    /// through a typed property, such as <c>element.X = 5</c>, when a reference reads it. Rows read every other
+    /// variable from the element's authored values.
+    /// </remarks>
+    /// <param name="changedVariables">The variables that changed, with their new values. Names are relative to this element,
+    /// such as <c>Progress</c> or <c>Instance.Width</c>.</param>
+    public void NotifyVariablesChanged(IReadOnlyList<DataTypes.Variables.VariableSave> changedVariables)
+    {
+        ElementSave? element = ElementSave;
+        VariableReferenceGraph? graph = GetReferenceGraph();
+        if (element == null || graph == null || !graph.HasRows || changedVariables.Count == 0)
+        {
+            return;
+        }
+
+        List<ReferenceRow> affected = _affectedRowsScratch ??= new List<ReferenceRow>();
+        graph.FindAffectedRows(changedVariables, affected);
+        if (affected.Count == 0)
+        {
+            return;
+        }
+
+        // Rows read their inputs from a state, so the new values are put in one. It is owned by the
+        // element only to resolve names; nothing else sees it.
+        DataTypes.Variables.StateSave evaluationState = new DataTypes.Variables.StateSave
+        {
+            Name = "ReferenceChanges",
+            ParentContainer = element
+        };
+        for (int i = 0; i < changedVariables.Count; i++)
+        {
+            evaluationState.Variables.Add(changedVariables[i]);
+        }
+
+        VariableReferenceGraph.Evaluate(affected, evaluationState, this);
+    }
+
+    /// <summary>
+    /// Re-evaluates the same-component variable references that read the variable. See
+    /// <see cref="NotifyVariablesChanged"/>.
+    /// </summary>
+    /// <param name="variableName">The variable relative to this element, such as <c>Progress</c>.</param>
+    /// <param name="value">The variable's new value.</param>
+    public void NotifyVariableChanged(string variableName, object? value)
+    {
+        VariableReferenceGraph? graph = GetReferenceGraph();
+        if (graph == null || !graph.HasRows)
+        {
+            return;
+        }
+
+        NotifyVariablesChanged(new[]
+        {
+            new DataTypes.Variables.VariableSave { Name = variableName, Value = value, SetsValue = true }
+        });
+    }
+
+    private VariableReferenceGraph? GetReferenceGraph()
+    {
+        ElementSave? element = ElementSave;
+        // Standard elements (Sprite, Text, ...) hold the styling rows ApplyAllVariableReferences
+        // applies explicitly, not component-local ones.
+        if (element == null || element is StandardElementSave)
+        {
+            return null;
+        }
+
+        VariableReferenceGraph? graph = _referenceGraph;
+        if (graph == null || !graph.IsCurrent(element))
+        {
+            graph = VariableReferenceGraph.GetFor(element);
+            _referenceGraph = graph;
+        }
+        return graph;
+    }
+
+    #endregion
+
     private bool TrySetValueOnThis(string propertyName, object? value)
     {
         bool toReturn = false;

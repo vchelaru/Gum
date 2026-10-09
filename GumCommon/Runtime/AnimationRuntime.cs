@@ -516,6 +516,8 @@ public class AnimationRuntime
         {
             var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, shouldFirstKeyframeBeDefaultState);
             graphicalUiElement.ApplyState(state);
+            // Variables that read an animated variable don't know it changed, so tell them.
+            graphicalUiElement.NotifyVariablesChanged(state.Variables);
         }
         else
         {

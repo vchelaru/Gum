@@ -720,7 +720,7 @@ public sealed class VariableReferenceGraph
 
     // True when the rows this graph was built from are unchanged. Compares references and strings
     // only, so it is cheap enough to run before every use.
-    private bool IsCurrent(ElementSave element)
+    internal bool IsCurrent(ElementSave element)
     {
         if (_baseType != element.BaseType)
         {
