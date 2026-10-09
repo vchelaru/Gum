@@ -465,9 +465,30 @@ namespace GumRuntime
                 }
             }
 
-            graphicalElement.ApplyState(stateSave);
+            // This applies the element's references itself, in the order they are written, so the
+            // variables it sets do not also trigger live re-evaluation.
+            VariableReferenceGraph.BeginSuppression();
+            try
+            {
+                graphicalElement.ApplyState(stateSave);
 
-            ApplyVariableReferences(graphicalElement, stateSave);
+                ApplyVariableReferences(graphicalElement, stateSave);
+
+                // The line above reads every row's inputs from authored values, so a row that reads
+                // another row's result sees it stale. Chains are evaluated again in dependency order.
+                if (stateSave == elementSave.DefaultState && elementSave is not StandardElementSave)
+                {
+                    VariableReferenceGraph graph = VariableReferenceGraph.GetFor(elementSave);
+                    if (graph.HasChains)
+                    {
+                        graph.ApplyAll(elementSave, graphicalElement);
+                    }
+                }
+            }
+            finally
+            {
+                VariableReferenceGraph.EndSuppression();
+            }
         }
 
         public static bool ValueEquality(object? val1, object? val2)

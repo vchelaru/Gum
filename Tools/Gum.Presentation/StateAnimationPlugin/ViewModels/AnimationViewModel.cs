@@ -8,6 +8,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using Gum.StateAnimation.SaveClasses;
+using GumRuntime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -504,7 +505,8 @@ public partial class AnimationViewModel : ViewModel
 
             _selectedState.CustomCurrentStateSave = stateToSet;
             _selectedState.SelectedStateSave = null;
-            _wireframeObjectManager.RootGue?.ApplyState(stateToSet);
+            // The preview already evaluated the references into stateToSet.
+            VariableReferenceGraph.RunWithoutReevaluation(() => _wireframeObjectManager.RootGue?.ApplyState(stateToSet));
         }
     }
 

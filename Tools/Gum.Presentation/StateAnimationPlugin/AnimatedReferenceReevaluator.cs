@@ -49,24 +49,24 @@ internal static class AnimatedReferenceReevaluator
     public static void Apply(ElementSave element, StateSave state, HashSet<string> animatedNames,
         bool animatesUnknownVariables, GraphicalUiElement? liveRoot)
     {
-        List<VariableListSave> referenceLists = new List<VariableListSave>();
-        foreach (VariableListSave list in state.VariableLists)
-        {
-            if (list.GetRootName() == ReferencesName && list.ValueAsIList.Count > 0)
-            {
-                referenceLists.Add(list);
-            }
-        }
+        VariableReferenceGraph graph = VariableReferenceGraph.GetForState(element, state);
 
         //////////////////////// EARLY OUT
-        if (referenceLists.Count == 0)
+        if (!graph.HasRows)
         {
             return;
         }
         ////////////////////// END EARLY OUT
 
-        List<VariableListSave<string>> affected = FindAffectedLists(
-            element, referenceLists, animatedNames, animatesUnknownVariables);
+        List<ReferenceRow> affected = new List<ReferenceRow>();
+        if (animatesUnknownVariables)
+        {
+            graph.FindAllRows(affected);
+        }
+        else
+        {
+            graph.FindAffectedRows(animatedNames, affected);
+        }
 
         state.VariableLists.RemoveAll(list => list.GetRootName() == ReferencesName);
         if (affected.Count == 0)
@@ -74,126 +74,16 @@ internal static class AnimatedReferenceReevaluator
             return;
         }
 
-        state.VariableLists.AddRange(affected);
+        // One list per row keeps the dependency order across instances.
+        foreach (ReferenceRow row in affected)
+        {
+            string listName = string.IsNullOrEmpty(row.SourceObject)
+                ? ReferencesName
+                : row.SourceObject + "." + ReferencesName;
+            VariableListSave<string> list = new VariableListSave<string> { Name = listName, Type = "string" };
+            list.Value.Add(row.Line);
+            state.VariableLists.Add(list);
+        }
         element.ApplyVariableReferences(state, liveRoot, isFullCommit: false, notifyChanges: false);
     }
-
-    // Each pass adds the rows that read a variable written by an earlier pass, and becomes its own
-    // list, so applying the lists in order evaluates a chain (A reads B, B reads the animated C)
-    // source first.
-    private static List<VariableListSave<string>> FindAffectedLists(ElementSave element,
-        List<VariableListSave> referenceLists, HashSet<string> animatedNames, bool animatesUnknownVariables)
-    {
-        List<(string? SourceObject, string Left, string Right, string Line)> remaining = new();
-        foreach (VariableListSave list in referenceLists)
-        {
-            InstanceSave? instance = string.IsNullOrEmpty(list.SourceObject) ? null : element.GetInstance(list.SourceObject);
-            ElementSave? channelOwner = instance != null ? ObjectFinder.Self.GetElementSave(instance) : element;
-            foreach (string referenceString in list.ValueAsIList)
-            {
-                foreach (string line in ElementSaveExtensions.ExpandCompositeReferenceLine(referenceString, channelOwner))
-                {
-                    int equalsIndex = line.IndexOf('=');
-                    if (line.StartsWith("//") || equalsIndex < 0)
-                    {
-                        continue;
-                    }
-                    string left = line.Substring(0, equalsIndex).Trim();
-                    string right = ElementSaveExtensions.ResolveOwnerPrefix(
-                        line.Substring(equalsIndex + 1).Trim(), list.SourceObject);
-                    right = StripOwnElementQualifier(right, element);
-                    remaining.Add((list.SourceObject, left, right, line));
-                }
-            }
-        }
-
-        HashSet<string> writtenNames = new HashSet<string>(animatedNames);
-        List<VariableListSave<string>> result = new List<VariableListSave<string>>();
-
-        bool foundAny = true;
-        while (foundAny && remaining.Count > 0)
-        {
-            foundAny = false;
-            Dictionary<string, VariableListSave<string>> passLists = new Dictionary<string, VariableListSave<string>>();
-            List<string> newNames = new List<string>();
-
-            for (int i = remaining.Count - 1; i >= 0; i--)
-            {
-                var row = remaining[i];
-                if (!animatesUnknownVariables && !ReadsAny(row.Right, writtenNames))
-                {
-                    continue;
-                }
-
-                remaining.RemoveAt(i);
-                foundAny = true;
-
-                string listName = string.IsNullOrEmpty(row.SourceObject)
-                    ? ReferencesName
-                    : row.SourceObject + "." + ReferencesName;
-                if (!passLists.TryGetValue(listName, out VariableListSave<string>? passList))
-                {
-                    passList = new VariableListSave<string> { Name = listName, Type = "string" };
-                    passLists[listName] = passList;
-                }
-                // Walking backwards, so insert at the front to keep authored order.
-                passList.Value.Insert(0, row.Line);
-
-                newNames.Add(string.IsNullOrEmpty(row.SourceObject) ? row.Left : row.SourceObject + "." + row.Left);
-            }
-
-            result.AddRange(passLists.Values);
-            foreach (string name in newNames)
-            {
-                writtenNames.Add(name);
-            }
-        }
-
-        return result;
-    }
-
-    // The tool writes same-element references qualified with the element's own name, as in
-    // "Components/Foo.WaveValue". Dropping that qualifier leaves the plain variable path the animated
-    // names are written in.
-    private static string StripOwnElementQualifier(string right, ElementSave element)
-    {
-        foreach (string folder in new[] { "Components/", "Screens/", "Standards/" })
-        {
-            right = right.Replace(folder + element.Name + ".", string.Empty);
-        }
-        return right;
-    }
-
-    // True when the right side mentions any of the names as a whole variable path. A name preceded by
-    // '.' is a member of something else (Width inside Other.Width), so it does not count. Absolute*
-    // identifiers are read from the live layout, which an animated size or position changes, so they
-    // always count.
-    private static bool ReadsAny(string right, HashSet<string> names)
-    {
-        if (right.IndexOf("Absolute", StringComparison.Ordinal) >= 0)
-        {
-            return true;
-        }
-
-        foreach (string name in names)
-        {
-            int index = right.IndexOf(name, StringComparison.Ordinal);
-            while (index >= 0)
-            {
-                int end = index + name.Length;
-                bool startsClean = index == 0 || !IsPathChar(right[index - 1]);
-                bool endsClean = end == right.Length || !IsIdentifierChar(right[end]);
-                if (startsClean && endsClean)
-                {
-                    return true;
-                }
-                index = right.IndexOf(name, index + 1, StringComparison.Ordinal);
-            }
-        }
-        return false;
-    }
-
-    private static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-    private static bool IsPathChar(char c) => IsIdentifierChar(c) || c == '.';
 }

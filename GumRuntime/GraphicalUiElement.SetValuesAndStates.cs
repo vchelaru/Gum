@@ -282,6 +282,17 @@ public partial class GraphicalUiElement
     /// <param name="value">The value, casted to the correct type.</param>
     public void SetProperty(string propertyName, object? value)
     {
+        SetPropertyCore(propertyName, value);
+
+        // These names are reported by their own property setter.
+        if (!ReportsFromTypedSetter(propertyName))
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
+    private void SetPropertyCore(string propertyName, object? value)
+    {
 
         if (mExposedVariables.ContainsKey(propertyName))
         {
@@ -353,6 +364,250 @@ public partial class GraphicalUiElement
             TrySetCustomVariableOnThis(propertyName, value);
         }
     }
+
+    #region Variable reference re-evaluation (ADR 0022)
+
+    private VariableReferenceGraph? _referenceGraph;
+
+    [ThreadStatic]
+    private static List<ReferenceRow>? _affectedRowsScratch;
+
+    /// <summary>
+    /// Re-evaluates the same-component variable references that read one of the given variables, so a
+    /// variable such as <c>Y = Math.Sin(Progress)</c> follows <c>Progress</c> when it changes. Rows that read
+    /// a result of an affected row are re-evaluated after it. References to other elements are not
+    /// touched; those stay explicit (see <see cref="RefreshStyles"/>).
+    /// </summary>
+    /// <remarks>
+    /// Animations and state application call this for you. Call it directly after changing a variable
+    /// through a typed property, such as <c>element.X = 5</c>, when a reference reads it. Rows read every other
+    /// variable from the element's authored values.
+    /// </remarks>
+    /// <param name="changedVariables">The variables that changed, with their new values. Names are relative to this element,
+    /// such as <c>Progress</c> or <c>Instance.Width</c>.</param>
+    public void NotifyVariablesChanged(IReadOnlyList<DataTypes.Variables.VariableSave> changedVariables)
+    {
+        ElementSave? element = ElementSave;
+        VariableReferenceGraph? graph = GetReferenceGraph();
+        if (element == null || graph == null || !graph.HasRows || changedVariables.Count == 0)
+        {
+            return;
+        }
+
+        List<ReferenceRow> affected = _affectedRowsScratch ??= new List<ReferenceRow>();
+        graph.FindAffectedRows(changedVariables, affected);
+        if (affected.Count == 0)
+        {
+            return;
+        }
+
+        // Rows read their inputs from a state, so the new values are put in one. It is owned by the
+        // element only to resolve names; nothing else sees it.
+        DataTypes.Variables.StateSave evaluationState = new DataTypes.Variables.StateSave
+        {
+            Name = "ReferenceChanges",
+            ParentContainer = element
+        };
+        for (int i = 0; i < changedVariables.Count; i++)
+        {
+            evaluationState.Variables.Add(changedVariables[i]);
+        }
+
+        VariableReferenceGraph.Evaluate(affected, evaluationState, this);
+    }
+
+    /// <summary>
+    /// Re-evaluates the same-component variable references that read the variable. See
+    /// <see cref="NotifyVariablesChanged"/>.
+    /// </summary>
+    /// <param name="variableName">The variable relative to this element, such as <c>Progress</c>.</param>
+    /// <param name="value">The variable's new value.</param>
+    public void NotifyVariableChanged(string variableName, object? value)
+    {
+        VariableReferenceGraph? graph = GetReferenceGraph();
+        if (graph == null || !graph.HasRows)
+        {
+            return;
+        }
+
+        NotifyVariablesChanged(new[]
+        {
+            new DataTypes.Variables.VariableSave { Name = variableName, Value = value, SetsValue = true }
+        });
+    }
+
+    private struct PendingReferenceChange
+    {
+        public GraphicalUiElement Root;
+        public string Name;
+        public object? Value;
+    }
+
+    // While a state is being applied, changes are collected and reported once at the end, so a state
+    // that sets several variables re-evaluates each affected row once.
+    [ThreadStatic]
+    private static int _stateBatchDepth;
+
+    [ThreadStatic]
+    private static List<PendingReferenceChange>? _pendingReferenceChanges;
+
+    private static bool ReportsFromTypedSetter(string propertyName)
+    {
+        switch (propertyName)
+        {
+            case "X":
+            case "Y":
+            case "Width":
+            case "Height":
+            case "Rotation":
+            case "Visible":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Which elements have a reference that reads the variable: this element's own, and the one
+    // containing this instance. Allocates nothing, so a typed property can ask before boxing its value.
+    private ReferenceAudience GetReferenceAudience(string propertyName)
+    {
+        ReferenceAudience audience = ReferenceAudience.None;
+        if (VariableReferenceGraph.IsSuppressed)
+        {
+            return audience;
+        }
+
+        // The element's own rows read plain names. A dotted name was forwarded to the instance, which
+        // reports it to this element itself.
+        if (ElementSave != null && IsFullyCreated && propertyName.IndexOf('.') < 0)
+        {
+            VariableReferenceGraph? graph = GetReferenceGraph();
+            if (graph != null && graph.IsAffectedBy(propertyName))
+            {
+                audience |= ReferenceAudience.Self;
+            }
+        }
+
+        GraphicalUiElement? container = mWhatContainsThis;
+        if (container != null && container.IsFullyCreated && Tag is InstanceSave instance)
+        {
+            VariableReferenceGraph? containerGraph = container.GetReferenceGraph();
+            if (containerGraph != null && containerGraph.IsAffectedBy(instance.Name, propertyName))
+            {
+                audience |= ReferenceAudience.Container;
+            }
+        }
+        return audience;
+    }
+
+    [Flags]
+    private enum ReferenceAudience
+    {
+        None = 0,
+        Self = 1,
+        Container = 2
+    }
+
+    // The typed properties report their own changes so that code such as element.X = 5 updates the
+    // references that read X. Nothing is boxed unless a reference reads the property.
+    private void ReportTypedPropertyChanged(string propertyName, float value)
+    {
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None)
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
+    private void ReportTypedPropertyChanged(string propertyName, bool value)
+    {
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None)
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+    }
+
+    // Reports a variable that was just written to the elements whose references read it.
+    private void ReportReferenceSourceChanged(string propertyName, object? value)
+    {
+        ReferenceAudience audience = GetReferenceAudience(propertyName);
+        if ((audience & ReferenceAudience.Self) != 0)
+        {
+            QueueReferenceChange(this, propertyName, value);
+        }
+        if ((audience & ReferenceAudience.Container) != 0)
+        {
+            QueueReferenceChange(mWhatContainsThis!, ((InstanceSave)Tag!).Name + "." + propertyName, value);
+        }
+    }
+
+    private static void QueueReferenceChange(GraphicalUiElement root, string name, object? value)
+    {
+        if (_stateBatchDepth > 0)
+        {
+            List<PendingReferenceChange> pending = _pendingReferenceChanges ??= new List<PendingReferenceChange>();
+            pending.Add(new PendingReferenceChange { Root = root, Name = name, Value = value });
+        }
+        else
+        {
+            root.NotifyVariableChanged(name, value);
+        }
+    }
+
+    private static void FlushPendingReferenceChanges()
+    {
+        List<PendingReferenceChange>? pending = _pendingReferenceChanges;
+        while (pending != null && pending.Count > 0)
+        {
+            GraphicalUiElement root = pending[0].Root;
+            List<DataTypes.Variables.VariableSave> changed = new List<DataTypes.Variables.VariableSave>();
+            for (int i = pending.Count - 1; i >= 0; i--)
+            {
+                if (pending[i].Root != root)
+                {
+                    continue;
+                }
+
+                // A variable set twice in one state keeps its last value, which comes last in pending.
+                bool alreadyListed = false;
+                for (int j = 0; j < changed.Count; j++)
+                {
+                    if (changed[j].Name == pending[i].Name)
+                    {
+                        alreadyListed = true;
+                        break;
+                    }
+                }
+                if (!alreadyListed)
+                {
+                    changed.Add(new DataTypes.Variables.VariableSave { Name = pending[i].Name, Value = pending[i].Value, SetsValue = true });
+                }
+                pending.RemoveAt(i);
+            }
+            changed.Reverse();
+            root.NotifyVariablesChanged(changed);
+        }
+    }
+
+    private VariableReferenceGraph? GetReferenceGraph()
+    {
+        ElementSave? element = ElementSave;
+        // Standard elements (Sprite, Text, ...) hold the styling rows ApplyAllVariableReferences
+        // applies explicitly, not component-local ones.
+        if (element == null || element is StandardElementSave)
+        {
+            return null;
+        }
+
+        VariableReferenceGraph? graph = _referenceGraph;
+        if (graph == null || !graph.IsCurrent(element))
+        {
+            graph = VariableReferenceGraph.GetFor(element);
+            _referenceGraph = graph;
+        }
+        return graph;
+    }
+
+    #endregion
 
     private bool TrySetValueOnThis(string propertyName, object? value)
     {
@@ -707,89 +962,102 @@ public partial class GraphicalUiElement
         //}
 #endif
         statesInStack.Add(state);
+        _stateBatchDepth++;
+        try
+        {
 
-        if (state.Apply != null)
-        {
-            state.Apply();
-        }
-        else
-        {
-            bool didSuspend = false;
-            // Also check this.IsLayoutSuspended: a state's own Variables can include a category-state
-            // assignment (e.g. "ButtonCategoryState" = "Highlighted"), which TrySetValueOnThis resolves
-            // by calling ApplyState AGAIN on this same instance, nested inside this loop. Without this
-            // check, that nested call would see IsAllLayoutSuspended still false, suspend/resume on its
-            // own, and its ResumeLayout would prematurely clear mIsLayoutSuspended -- and flush any
-            // deferred font load -- before THIS (outer) call finishes applying its own remaining
-            // variables (#4567). Skipping suspend/resume when already suspended lets the nested call's
-            // variables apply under the outer suspension, so only the outermost ApplyState flushes.
-            if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
+            if (state.Apply != null)
             {
-                didSuspend = true;
-                this.SuspendLayout(true);
+                state.Apply();
             }
-
-            var variablesWithoutStatesOnParent =
-                state.Variables.Where(item =>
-                {
-                    if (item.SetsValue)
-                    {
-                        // We can set the variable if it's not setting a state (to prevent recursive setting).
-                        // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
-                        // element sets that state, then we want to allow it.  But should we just allow all states?
-                        // Or should we check if it's defined by the base...
-                        //return (item.IsState(state.ParentContainer) == false ||
-                        //    // If it is setting a state we'll allow it if it's on a child.
-                        //    !string.IsNullOrEmpty(item.SourceObject));
-                        // let's test this out:
-                        return true;
-
-                    }
-                    return false;
-                }).ToArray();
-
-
-            var parentSettingVariables =
-                variablesWithoutStatesOnParent
-                    .Where(item => item.GetRootName() == "Parent")
-                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
-                    .ToArray();
-
-            var nonParentSettingVariables =
-                variablesWithoutStatesOnParent
-                    .Except(parentSettingVariables)
-                    // Even though we removed state-setting variables on the parent, we still allow setting
-                    // states on the contained objects
-                    .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
-                    .ToArray();
-
-            var variablesToConsider =
-                parentSettingVariables.Concat(nonParentSettingVariables)
-                .ToArray();
-
-            int variableCount = variablesToConsider.Length;
-            for (int i = 0; i < variableCount; i++)
+            else
             {
-                var variable = variablesToConsider[i];
-                if (variable.SetsValue && variable.Value != null)
+                bool didSuspend = false;
+                // Also check this.IsLayoutSuspended: a state's own Variables can include a category-state
+                // assignment (e.g. "ButtonCategoryState" = "Highlighted"), which TrySetValueOnThis resolves
+                // by calling ApplyState AGAIN on this same instance, nested inside this loop. Without this
+                // check, that nested call would see IsAllLayoutSuspended still false, suspend/resume on its
+                // own, and its ResumeLayout would prematurely clear mIsLayoutSuspended -- and flush any
+                // deferred font load -- before THIS (outer) call finishes applying its own remaining
+                // variables (#4567). Skipping suspend/resume when already suspended lets the nested call's
+                // variables apply under the outer suspension, so only the outermost ApplyState flushes.
+                if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
                 {
-                    this.SetProperty(variable.Name, variable.Value);
+                    didSuspend = true;
+                    this.SuspendLayout(true);
+                }
+
+                var variablesWithoutStatesOnParent =
+                    state.Variables.Where(item =>
+                    {
+                        if (item.SetsValue)
+                        {
+                            // We can set the variable if it's not setting a state (to prevent recursive setting).
+                            // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
+                            // element sets that state, then we want to allow it.  But should we just allow all states?
+                            // Or should we check if it's defined by the base...
+                            //return (item.IsState(state.ParentContainer) == false ||
+                            //    // If it is setting a state we'll allow it if it's on a child.
+                            //    !string.IsNullOrEmpty(item.SourceObject));
+                            // let's test this out:
+                            return true;
+
+                        }
+                        return false;
+                    }).ToArray();
+
+
+                var parentSettingVariables =
+                    variablesWithoutStatesOnParent
+                        .Where(item => item.GetRootName() == "Parent")
+                        .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                        .ToArray();
+
+                var nonParentSettingVariables =
+                    variablesWithoutStatesOnParent
+                        .Except(parentSettingVariables)
+                        // Even though we removed state-setting variables on the parent, we still allow setting
+                        // states on the contained objects
+                        .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
+                        .ToArray();
+
+                var variablesToConsider =
+                    parentSettingVariables.Concat(nonParentSettingVariables)
+                    .ToArray();
+
+                int variableCount = variablesToConsider.Length;
+                for (int i = 0; i < variableCount; i++)
+                {
+                    var variable = variablesToConsider[i];
+                    if (variable.SetsValue && variable.Value != null)
+                    {
+                        this.SetProperty(variable.Name, variable.Value);
+                    }
+                }
+
+                foreach (var variableList in state.VariableLists)
+                {
+                    this.SetProperty(variableList.Name, variableList.ValueAsIList);
+                }
+
+                if (didSuspend)
+                {
+                    this.ResumeLayout(true);
+
                 }
             }
 
-            foreach (var variableList in state.VariableLists)
-            {
-                this.SetProperty(variableList.Name, variableList.ValueAsIList);
-            }
-
-            if (didSuspend)
-            {
-                this.ResumeLayout(true);
-
-            }
+        }
+        finally
+        {
+            statesInStack.Remove(state);
+            _stateBatchDepth--;
         }
 
-        statesInStack.Remove(state);
+        if (_stateBatchDepth == 0)
+        {
+            FlushPendingReferenceChanges();
+        }
 
     }
 

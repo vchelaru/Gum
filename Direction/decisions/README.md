@@ -41,3 +41,4 @@ re-litigating it.
 | [0019](0019-end-to-end-regression-suite.md) | An end-to-end regression suite, run per PR and nightly | Accepted | 2026-09-28 |
 | [0020](0020-bring-unity-and-godot-into-scope.md) | Bring Unity and Godot into scope, and widen the mission beyond UI-less frameworks | Accepted | 2026-09-30 |
 | [0021](0021-converge-sprite-nineslice-container-polygon-dispatch.md) | Converge Sprite/NineSlice/Container/Polygon dispatch onto their Runtimes, smallest-first | Accepted | 2026-07-16 |
+| [0022](0022-reactive-variable-references-within-a-component.md) | Re-evaluate variable references live, within one component | Accepted | 2026-10-05 |

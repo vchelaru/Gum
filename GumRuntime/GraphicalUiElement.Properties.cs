@@ -188,6 +188,7 @@ public partial class GraphicalUiElement
 
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
+                ReportTypedPropertyChanged("Visible", value);
             }
 
             bool ShouldUpdateChildren()

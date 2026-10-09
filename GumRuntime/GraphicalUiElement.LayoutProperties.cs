@@ -281,6 +281,7 @@ public partial class GraphicalUiElement
                 mRotation = value;
 
                 UpdateLayout();
+                ReportTypedPropertyChanged("Rotation", value);
             }
         }
     }
@@ -343,6 +344,7 @@ public partial class GraphicalUiElement
                     var refreshParent = IgnoredByParentSize == false;
                     UpdateLayout(refreshParent, 0);
                 }
+                ReportTypedPropertyChanged("X", value);
             }
         }
     }
@@ -389,6 +391,7 @@ public partial class GraphicalUiElement
                     var refreshParent = IgnoredByParentSize == false;
                     UpdateLayout(refreshParent, 0);
                 }
+                ReportTypedPropertyChanged("Y", value);
             }
         }
     }
@@ -482,6 +485,7 @@ public partial class GraphicalUiElement
                         int.MaxValue / 2
                         );
                 }
+                ReportTypedPropertyChanged("Width", value);
             }
         }
     }
@@ -555,6 +559,7 @@ public partial class GraphicalUiElement
                         int.MaxValue / 2
                         );
                 }
+                ReportTypedPropertyChanged("Height", value);
             }
         }
     }

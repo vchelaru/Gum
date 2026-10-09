@@ -47,3 +47,12 @@ dive into how this works end-to-end, see the **gum-variable-deep-dive** skill.
 ### `global::Localization.CurrentLanguage`
 
 Reserved identifier (int, mirrors `ILocalizationService.CurrentLanguage`) resolved in `EvaluatedSyntax` against `Gum.Localization.LocalizationRuntimeState.Current` — a GumCommon-level static so `Gum.Expressions` can read it without depending on any platform runtime. `CustomSetPropertyOnRenderable.LocalizationService` (per-platform-compiled) forwards to it. A `CurrentLanguage`-dependent reference needs an explicit `ApplyAllVariableReferences()` + `RefreshStyles()` after a language switch, same as any other reference — `CurrentLanguageChanged` does not trigger re-evaluation on its own.
+
+## Live re-evaluation within a component
+
+Rows on a component or screen that read a variable re-evaluate when it changes: see `VariableReferenceGraph` (`GumCommon/Runtime`) and `GraphicalUiElement.NotifyVariablesChanged`. `SetProperty`, `ApplyState` (batched, so animations need no call) and the typed `X`/`Y`/`Width`/`Height`/`Rotation`/`Visible` setters report changes. Any other typed property needs `RefreshReferences`, or its own `ReportTypedPropertyChanged` call. Design: `Direction/decisions/0022-reactive-variable-references-within-a-component.md`.
+
+- Live evaluation reads every unchanged variable from authored values, not from the live object. Styling and cross-element references stay explicit.
+- Element load is excluded from live re-evaluation (`VariableReferenceGraph.BeginSuppression` in `SetVariablesRecursively`). A reporting path that must stay silent while rows write their results uses the same flag.
+- A new reporting path must check `GetReferenceAudience` before boxing a value; the zero-allocation guard is `ReferenceReevaluationAllocationTests`.
+
