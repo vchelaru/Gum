@@ -239,6 +239,19 @@ public class ReactiveVariableReferenceTests : BaseTestClass
         gue.Y.ShouldBe(60f);
     }
 
+    [Theory]
+    [InlineData("Offset = Progress * 10", "Y = Offset + 1")]
+    [InlineData("Y = Offset + 1", "Offset = Progress * 10")]
+    public void Load_ReferencesChained_EachReadsTheResultOfTheOneBeforeIt(string first, string second)
+    {
+        ComponentSave element = CreateElement(first, second);
+        element.DefaultState.Variables.First(item => item.Name == "Progress").Value = 3f;
+
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        gue.Y.ShouldBe(31f);
+    }
+
     private static ComponentSave CreateElement(params string[] rows)
     {
         ComponentSave element = new ComponentSave { Name = "Wave", BaseType = "Container" };

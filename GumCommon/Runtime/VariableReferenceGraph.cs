@@ -83,6 +83,7 @@ public sealed class VariableReferenceGraph
     private readonly ReferenceRow[] _orderedRows;
     private readonly ReferenceRow[] _cyclicRows;
     private readonly ReferenceRow[] _loadOrderRows;
+    private readonly bool _hasChains;
     private readonly HashSet<string> _scratch = new HashSet<string>();
 
     // What the graph was built from, so a changed row is noticed without rebuilding every frame.
@@ -93,8 +94,9 @@ public sealed class VariableReferenceGraph
     private readonly string? _baseType;
 
     private VariableReferenceGraph(ReferenceRow[] ordered, ReferenceRow[] cyclic, StateSave[] sourceStates,
-        string? baseType)
+        string? baseType, bool hasChains)
     {
+        _hasChains = hasChains;
         _orderedRows = ordered;
         _cyclicRows = cyclic;
         _sourceStates = sourceStates;
@@ -108,6 +110,9 @@ public sealed class VariableReferenceGraph
 
     /// <summary>True when the element has at least one reference row.</summary>
     public bool HasRows => _loadOrderRows.Length > 0;
+
+    /// <summary>True when some row reads a variable another row writes.</summary>
+    public bool HasChains => _hasChains;
 
     /// <summary>
     /// Every row that can be re-evaluated, in dependency order: a row comes after every row writing a
@@ -241,7 +246,9 @@ public sealed class VariableReferenceGraph
 
                         string left = line.Substring(0, equalsIndex).Trim();
                         string right = line.Substring(equalsIndex + 1).Trim();
-                        if (left.Length == 0 || right.Length == 0)
+                        // Assigning these through a state renames the element itself, which a live
+                        // re-evaluation must never do.
+                        if (left.Length == 0 || right.Length == 0 || (instance == null && (left == "Name" || left == "BaseType")))
                         {
                             continue;
                         }
@@ -259,7 +266,7 @@ public sealed class VariableReferenceGraph
             }
         }
 
-        Order(rows, out ReferenceRow[] ordered, out ReferenceRow[] cyclic);
+        Order(rows, out ReferenceRow[] ordered, out ReferenceRow[] cyclic, out bool hasChains);
 
         StateSave[] sourceStates = new StateSave[states.Count];
         for (int i = 0; i < states.Count; i++)
@@ -267,7 +274,7 @@ public sealed class VariableReferenceGraph
             sourceStates[i] = states[i];
         }
 
-        VariableReferenceGraph graph = new VariableReferenceGraph(ordered, cyclic, sourceStates, element.BaseType);
+        VariableReferenceGraph graph = new VariableReferenceGraph(ordered, cyclic, sourceStates, element.BaseType, hasChains);
         graph.RecordSources();
         return graph;
     }
@@ -331,6 +338,19 @@ public sealed class VariableReferenceGraph
         _scratch.Clear();
         _scratch.Add(changedName);
         Select(results, false, includeLiveLayoutRows);
+    }
+
+    /// <summary>
+    /// Evaluates every row in dependency order onto <paramref name="liveRoot"/>, so a row reading another
+    /// row's result sees it whatever order the rows are written in. Rows are read from the element's
+    /// authored values. The authored data is not changed.
+    /// </summary>
+    /// <param name="element">The element the graph was built for.</param>
+    /// <param name="liveRoot">The visual for <paramref name="element"/>.</param>
+    public void ApplyAll(ElementSave element, GraphicalUiElement liveRoot)
+    {
+        StateSave evaluationState = new StateSave { Name = "References", ParentContainer = element };
+        Evaluate(_orderedRows, evaluationState, liveRoot);
     }
 
     /// <summary>
@@ -461,8 +481,10 @@ public sealed class VariableReferenceGraph
 
     // Kahn's algorithm, always taking the earliest-written ready row, so rows with no dependency between
     // them keep their written order and an already-ordered list comes out unchanged.
-    private static void Order(List<ReferenceRow> rows, out ReferenceRow[] ordered, out ReferenceRow[] cyclic)
+    private static void Order(List<ReferenceRow> rows, out ReferenceRow[] ordered, out ReferenceRow[] cyclic,
+        out bool hasChains)
     {
+        hasChains = false;
         int count = rows.Count;
         if (count == 0)
         {
@@ -506,6 +528,7 @@ public sealed class VariableReferenceGraph
             {
                 dependents[writer].Add(reader);
                 waitingOn[reader]++;
+                hasChains = true;
             }
         }
 

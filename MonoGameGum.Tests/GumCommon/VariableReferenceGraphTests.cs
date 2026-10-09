@@ -124,6 +124,16 @@ public class VariableReferenceGraphTests : BaseTestClass
         row.Reads.ShouldBe(new[] { "Circle.Index", "Offset" });
     }
 
+    [Fact]
+    public void OrderedRows_RowAssigningTheElementsName_IsLeftOut()
+    {
+        ComponentSave element = CreateElement("Name = Other", "Y = Other");
+
+        VariableReferenceGraph graph = VariableReferenceGraph.GetFor(element);
+
+        graph.OrderedRows.Select(row => row.Line).ShouldBe(new[] { "Y = Other" });
+    }
+
     [Theory]
     [InlineData("Math.Sin(Progress) * 40", "Progress")]
     [InlineData("\"Width\" + Name", "Name")]

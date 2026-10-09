@@ -1,6 +1,6 @@
 # 0022. Re-evaluate variable references live, within one component
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-05
 - **Deciders:** Victor Chelaru, Claude
 
@@ -67,6 +67,24 @@ Rollout, one step at a time with each step measured before the next:
 
 Steps 4 and 5 change who calls `NotifyVariableChanged`, not the graph, the cache or the evaluator.
 `RefreshReferences` stays valid as the manual override.
+
+### As built
+
+- The cache holds the parsed syntax tree by expression text (`ParsedExpressionCache` in `Gum.Expressions`).
+  The variables a row reads come from a lexical scan in `GumCommon` (`VariableReferenceGraph`), not
+  from the tree, so the graph works without Roslyn. The scan may list a path that is not a variable,
+  which costs one unneeded evaluation and never misses a read.
+- Evaluation is against a small throwaway state holding only the changed values, owned by the element so
+  every other name resolves from authored values. Each result is written into that state so a chain
+  reads it, then onto the live visual. Live re-evaluation therefore reads unchanged variables as
+  authored, not as the live object currently holds them.
+- `ApplyState` collects the changes of every `SetProperty` inside it and re-evaluates once at the end.
+  Animations need no call of their own.
+- Element load applies its rows as before, then evaluates the rows again in dependency order when any row
+  reads another's result. Before this, a chain read stale values at load.
+- Step 5 covers `X`, `Y`, `Width`, `Height`, `Rotation` and `Visible`. Other typed properties still need
+  `RefreshReferences`, or a setter that reports itself the same way.
+- A row in a cycle is skipped by live re-evaluation and listed in `VariableReferenceGraph.CyclicRows`.
 
 ## Consequences
 
