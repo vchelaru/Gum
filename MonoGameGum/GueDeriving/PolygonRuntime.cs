@@ -414,6 +414,18 @@ public class PolygonRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// The number of points in the polygon.
+    /// </summary>
+    public int PointCount => ContainedPolygon.PointCount;
+
+    /// <summary>
+    /// Returns a copy of the point at the argument index, relative to the polygon's origin.
+    /// Does not allocate; use <see cref="SetPointAt"/> to change a point.
+    /// </summary>
+    /// <param name="index">The 0-based index, less than <see cref="PointCount"/>.</param>
+    public Vector2 GetPointAt(int index) => ContainedPolygon.PointAt(index);
+
     public void SetPoints(ICollection<Vector2> points) => ContainedPolygon.SetPoints(points);
     public void InsertPointAt(Vector2 point, int index) => ContainedPolygon.InsertPointAt(point, index);
     public void RemovePointAtIndex(int index) => ContainedPolygon.RemovePointAtIndex(index);
