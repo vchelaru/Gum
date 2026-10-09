@@ -73,6 +73,21 @@ public class UnhandledExceptionHooksTests
         reporter.Verify(x => x.ReportRecoverable(It.IsAny<Exception>(), It.IsAny<string>()), Times.Never);
     }
 
+    // A file another process has open (config reload, antivirus, sync client) clears on its own and
+    // is nothing the user can act on.
+    [Fact]
+    public void UnobservedTask_FileInUse_IsLoggedWithoutTellingTheUser()
+    {
+        Mock<ICrashReporter> reporter = new Mock<ICrashReporter>();
+        AggregateException fault = new AggregateException(new AggregateException(
+            new IOException("The process cannot access the file 'appsettings.json' because it is being used by another process.")));
+
+        UnhandledExceptionHooks.ReportUnobservedTask(reporter.Object, fault);
+
+        reporter.Verify(x => x.LogRecoverable(fault, It.IsAny<string>()), Times.Once);
+        reporter.Verify(x => x.ReportRecoverable(It.IsAny<Exception>(), It.IsAny<string>()), Times.Never);
+    }
+
     [Fact]
     public void UnobservedTask_FaultNotAllDBus_IsReported()
     {
