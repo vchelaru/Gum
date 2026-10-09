@@ -457,8 +457,15 @@ public partial class GraphicalUiElement
                 }
             }
 
+            // A wrapping stack's lines form against the positions its children had when it wrapped. A child
+            // that was not part of the wrap pass (a Ratio or percent size, a position from the parent)
+            // is only laid out in the pass above, and it moves the children stacked after it, so the
+            // lines and with them the stack's size can differ from what was measured.
+            var isWrappingStack = WrapsChildren &&
+                (ChildrenLayout == ChildrenLayout.LeftToRightStack || ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
             // Without a renderable (such as a Screen) there is no size of our own to re-measure.
-            if (sizeDependsOnChildren && canOneDimensionChangeOtherDimension && mContainedObjectAsIpso != null)
+            if (sizeDependsOnChildren && (canOneDimensionChangeOtherDimension || isWrappingStack) && mContainedObjectAsIpso != null)
             {
                 float widthBeforeSecondLayout = mContainedObjectAsIpso.Width;
                 float heightBeforeSecondLayout = mContainedObjectAsIpso.Height;

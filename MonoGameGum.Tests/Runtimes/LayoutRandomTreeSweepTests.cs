@@ -30,13 +30,6 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
     private const int SeedCount = 300;
     private const string GoldenFileName = "LayoutSweepGolden.txt";
 
-    // Well-formed seeds the engine does not lay out consistently (a second layout moves something). Seed 219
-    // is a wrapping TopToBottomStack sized to its children whose children include a 100% height AutoGrid and a
-    // Ratio height AutoGrid: they overflow one column, so the wrap and the width differ between layouts.
-    // Kept out of the invariant tests so they can guard everything else; the test below fails when one is fixed
-    // so the entry is removed.
-    private static readonly HashSet<int> KnownInconsistentSeeds = new() { 219 };
-
     private readonly ITestOutputHelper _output;
 
     public LayoutRandomTreeSweepTests(ITestOutputHelper output)
@@ -658,8 +651,7 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         return Path.Combine(directory, "Runtimes", GoldenFileName);
     }
 
-    private static List<CaseResult> RunWellFormedCases() =>
-        RunAllCases(wellFormed: true).Where(r => !KnownInconsistentSeeds.Contains(r.Seed)).ToList();
+    private static List<CaseResult> RunWellFormedCases() => RunAllCases(wellFormed: true);
 
     private static List<CaseResult> RunAllCases(bool wellFormed)
     {
@@ -728,17 +720,6 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         List<CaseResult> crashed = RunAllCases(wellFormed: true).Where(r => r.Initial.StartsWith("EXCEPTION")).ToList();
 
         crashed.Count.ShouldBe(0, string.Join("; ", crashed.Take(5).Select(r => $"seed {r.Seed}: {r.Initial}")));
-    }
-
-    [Fact]
-    public void Sweep_KnownInconsistentSeeds_ShouldStillBeInconsistent()
-    {
-        List<CaseResult> all = RunAllCases(wellFormed: true).Where(r => KnownInconsistentSeeds.Contains(r.Seed)).ToList();
-
-        // When the engine is fixed, a seed here lays out consistently and should leave KnownInconsistentSeeds.
-        all.Where(r => r.Initial == r.AfterSecondLayout && StripHidden(r.Initial) == r.BuiltLive)
-            .Select(r => r.Seed)
-            .ShouldBeEmpty();
     }
 
     [Fact]
