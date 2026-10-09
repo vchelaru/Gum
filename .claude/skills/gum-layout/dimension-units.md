@@ -91,6 +91,9 @@ right edge is 10px inward from the parent's right edge.
 
 - **PercentageOfOtherDimension on both axes** — only one axis can use this;
   the engine guards against circular dependency.
+  A parent whose width is a percent of its own content-sized height ignores a child
+  that is a percent of the parent on one axis and a percent of its own other axis on
+  the second (`IsSizeFollowingParentContentSize`), since counting it has no finite size.
 - **RelativeToChildren + stacking** — wrapping stacked children affect the
   parent's computed size, which can cause re-layout cascades.
 - **Ratio requires parent context** — if the parent itself has no fixed size

@@ -315,6 +315,17 @@ Named cases that must exist as explicit tests:
 7. Hiding and re-showing an element restores every sibling and ancestor.
 8. Building the tree in code and through `ApplyState` gives the same result.
 
+Invariants 1 and 3 to 6 are checked over 300 seeded random trees in `LayoutRandomTreeSweepTests` (well-formed trees:
+no child sized from a parent that is sized from its children, no `RelativeToMaxParentOrChildren` or
+`PercentageOfOtherDimension`). The same file pins the engine's exact output for every seed, ill-formed trees
+included, plus event counts and limited-depth layouts, in `LayoutSweepGolden.txt`. A layout change that moves any
+element anywhere in the sweep fails `Sweep_ShouldMatchTheGoldenFile`; set `GUM_UPDATE_LAYOUT_SWEEP=1` to accept it
+after reviewing the diff, or `GUM_DUMP_LAYOUT_SWEEP=<folder>` to dump every case for diffing two builds.
+`LayoutNestedStackModelTests` and `LayoutNestedStackDependentChildTests` check nested content-sized stacks, up to eight
+levels deep, against an independent model and hand-worked numbers. Invariants 2, 7 and 8 are not swept. The golden file's
+ill-formed trees are not held to invariants 1 and 3: a few ill-formed seeds still change on a second
+layout (circular units, H55).
+
 ## 10. Defects found by reading, tested and triaged
 
 FIX: fixed with a regression test. DOCUMENT: intended, pinned by a test. LOG: skipped test pointing
@@ -374,6 +385,9 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H50 | `GetMaxCellHeight`/`GetMaxCellWidth` wrap check | A wrapping stack sized to its children compares only its children against its max, so its padding shrinks instead of the line wrapping earlier. Nothing overlaps. Negative padding makes the measure and the bounds-based wrap disagree. | DOCUMENT (#5805; max applies last, padding shrinks) |
 | H52 | `GetMaxCellHeight`/`GetMaxCellWidth` wrap check | A wrapping stack sized to its children with a max measures only its first row, so later rows wrap against that width and a wider child extends past the stack. | FIX (#5806; measures each line against the max and keeps the widest) |
 | H51 | `GetMaxCellHeight`/`GetMaxCellWidth` | A RelativeToMaxParentOrChildren child was counted by its children-based size clamped to its Max but not its Min, so it extended past its RelativeToChildren parent. | FIX (breaking, the parent counts the child at its min) |
+| H53 | `UpdateLayout` post-children check | A wrapping stack sized to its children measured its lines before its Ratio children were placed (those are laid out only in the full children pass), then did not measure again, so a second layout grew it (#5924, `LayoutWrapIdempotencyTests`). | FIX (a wrapping stack sized to its children re-measures after the full children pass) |
+| H54 | `GetChildLayoutType(XOrY, parent)` | A parent whose width is a percent of its own height, whose height is sized from its children, holding a child that is a percent of the parent on one axis and a percent of its own other axis on the second, needed a size that is a multiple of itself: each layout grew it 4x until it reached infinity (an exception under `FULL_DIAGNOSTICS`). | FIX (#5924; the parent ignores such a child, the documented rule for a child sized from its parent. Only when the child's other axis is a percent of or relative to the parent and the parent's matching axis is a percent of an axis sized to its children; `LayoutPercentOfOtherDimensionCycleTests`) |
+| H55 | cold first layout of a parent whose width follows its content-sized height | A tree built with layout suspended leaves a child sized as a percent of that parent taking the size from the canvas on the first `UpdateLayout()`; the second one corrects it. Reproduces without any cycle. Separately, the post-children `UpdateChildren(ChildType.BothAbsoluteAndRelative)` call in `UpdateLayout` matches no child in `CanDoFullUpdate`, so it refreshes nothing; making it match did not fix this case. | LOG (#5924) |
 
 ## Sweep strategy
 

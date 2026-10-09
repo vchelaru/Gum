@@ -110,6 +110,11 @@ public partial class GraphicalUiElement
                 this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ||
                 mWidthUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
             var isPositionedFromLine = GetWrappedLineAxis(parent) == XOrY.X && IsPositionedFromWrappedLineSize(XOrY.X);
+            if (isNotParentDependent && mWidthUnit == DimensionUnitType.PercentageOfOtherDimension &&
+                IsSizeFollowingParentContentSize(XOrY.X, parent))
+            {
+                isNotParentDependent = false;
+            }
             isAbsolute = isNotParentDependent &&
                 (isPositionedFromLine || mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
@@ -133,6 +138,11 @@ public partial class GraphicalUiElement
                 parentHeightDependencyType == HierarchyDependencyType.NoDependency ||
                 parentHeightDependencyType == HierarchyDependencyType.DependsOnParent;
             var isPositionedFromLine = GetWrappedLineAxis(parent) == XOrY.Y && IsPositionedFromWrappedLineSize(XOrY.Y);
+            if (isNotParentDependent && mHeightUnit == DimensionUnitType.PercentageOfOtherDimension &&
+                IsSizeFollowingParentContentSize(XOrY.Y, parent))
+            {
+                isNotParentDependent = false;
+            }
             isAbsolute = isNotParentDependent &&
                 (mYUnits == GeneralUnitType.PixelsFromSmall || isPositionedFromLine ||
                     ((mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
@@ -152,6 +162,33 @@ public partial class GraphicalUiElement
         {
             return isAbsolute ? ChildType.Absolute : ChildType.Relative;
         }
+    }
+
+    /// <summary>
+    /// Whether this child's size on <paramref name="axis"/> (a PercentageOfOtherDimension) is a multiple of the
+    /// parent's own content size, so the parent would need a size that is a multiple of itself. That is the
+    /// case when the child's other axis is sized from the parent, and the parent follows that same axis as
+    /// a percent of its other axis, which is sized from the parent's children. The parent ignores such a
+    /// child, like any child sized from its parent.
+    /// </summary>
+    private bool IsSizeFollowingParentContentSize(XOrY axis, GraphicalUiElement parent)
+    {
+        var otherAxisUnits = axis == XOrY.X ? mHeightUnit : mWidthUnit;
+        if (otherAxisUnits != DimensionUnitType.PercentageOfParent && otherAxisUnits != DimensionUnitType.RelativeToParent)
+        {
+            return false;
+        }
+
+        // The parent axis the child's other axis follows, and the parent's axis that one is a percent of.
+        var parentFollowedUnits = axis == XOrY.X ? parent.mHeightUnit : parent.mWidthUnit;
+        if (parentFollowedUnits != DimensionUnitType.PercentageOfOtherDimension)
+        {
+            return false;
+        }
+
+        var parentOtherUnits = axis == XOrY.X ? parent.mWidthUnit : parent.mHeightUnit;
+        return parentOtherUnits == DimensionUnitType.RelativeToChildren ||
+            parentOtherUnits == DimensionUnitType.RelativeToMaxParentOrChildren;
     }
 
     #endregion
