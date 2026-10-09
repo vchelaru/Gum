@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Gum.Converters;
@@ -19,6 +20,43 @@ namespace Gum.Wireframe;
 /// </summary>
 public static class GraphicalUiElementPropertyReadExtensions
 {
+    /// <summary>
+    /// Re-evaluates the same-component variable references that read the named variables, using each
+    /// variable's current value. Call it after changing a variable through a typed property, such as
+    /// <c>element.X = 5</c>, when a reference reads that variable. Animations and state application
+    /// already do this. See <see cref="GraphicalUiElement.NotifyVariablesChanged"/>.
+    /// </summary>
+    /// <param name="element">The component, screen or instance whose references to refresh.</param>
+    /// <param name="variableNames">The variables that changed, relative to <paramref name="element"/>, such as
+    /// <c>X</c> or <c>Instance.Width</c>. A name that cannot be read is skipped.</param>
+    public static void RefreshReferences(this GraphicalUiElement element, params string[] variableNames)
+    {
+        List<Gum.DataTypes.Variables.VariableSave> changed = new List<Gum.DataTypes.Variables.VariableSave>();
+        foreach (string name in variableNames)
+        {
+            GraphicalUiElement owner = element;
+            string propertyName = name;
+            int dot = name.IndexOf('.');
+            if (dot >= 0)
+            {
+                GraphicalUiElement? instance = element.GetGraphicalUiElementByName(name.Substring(0, dot));
+                if (instance == null)
+                {
+                    continue;
+                }
+                owner = instance;
+                propertyName = name.Substring(dot + 1);
+            }
+
+            if (owner.TryGetProperty(propertyName, out object? value) && value != null)
+            {
+                changed.Add(new Gum.DataTypes.Variables.VariableSave { Name = name, Value = value, SetsValue = true });
+            }
+        }
+
+        element.NotifyVariablesChanged(changed);
+    }
+
     /// <summary>
     /// Attempts to read the current value of a Gum variable (e.g. "X", "Width", "WidthUnits", "Red",
     /// "Text") by name, trying the curated base-set switch first and reflection as a fallback.

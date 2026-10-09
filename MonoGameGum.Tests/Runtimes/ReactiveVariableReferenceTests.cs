@@ -85,6 +85,42 @@ public class ReactiveVariableReferenceTests : BaseTestClass
         gue.Y.ShouldBe(50f);
     }
 
+    [Fact]
+    public void RefreshReferences_AfterSettingATypedProperty_UpdatesRowsReadingIt()
+    {
+        ComponentSave element = CreateElement("Y = Offset * 2");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+
+        // Offset is a custom variable with no typed property, so it is reported by value.
+        gue.NotifyVariableChanged("Offset", 7f);
+
+        gue.Y.ShouldBe(14f);
+    }
+
+    [Fact]
+    public void RefreshReferences_ReadsTheCurrentValueOfTheNamedVariable()
+    {
+        ComponentSave element = CreateElement("Y = X * 2");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        gue.X = 5;
+
+        gue.RefreshReferences("X");
+
+        gue.Y.ShouldBe(10f);
+    }
+
+    [Fact]
+    public void RefreshReferences_NoRowReadsTheVariable_ChangesNothing()
+    {
+        ComponentSave element = CreateElement("Y = Offset * 2");
+        GraphicalUiElement gue = element.ToGraphicalUiElement();
+        gue.Y = 99;
+
+        gue.RefreshReferences("Other");
+
+        gue.Y.ShouldBe(99f);
+    }
+
     private static ComponentSave CreateElement(params string[] rows)
     {
         ComponentSave element = new ComponentSave { Name = "Wave", BaseType = "Container" };
