@@ -39,15 +39,15 @@ partial class Label : global::Gum.Forms.Controls.Label
         InitializeInstances();
         CustomInitialize();
     }
-    public Label() : base(new ContainerRuntime())
+    public Label() : base(new global::Gum.GueDeriving.TextRuntime())
     {
 
-        this.Visual.SetProperty("ColorCategoryState", "White");
-        this.Visual.Height = 0f;
-        this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        this.Visual.SetProperty("StyleCategoryState", "Strong");
-        this.Visual.Width = 0f;
-        this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ((global::Gum.GueDeriving.TextRuntime)this.Visual).SetProperty("ColorCategoryState", "White");
+        ((global::Gum.GueDeriving.TextRuntime)this.Visual).Height = 0f;
+        ((global::Gum.GueDeriving.TextRuntime)this.Visual).HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ((global::Gum.GueDeriving.TextRuntime)this.Visual).SetProperty("StyleCategoryState", "Strong");
+        ((global::Gum.GueDeriving.TextRuntime)this.Visual).Width = 0f;
+        ((global::Gum.GueDeriving.TextRuntime)this.Visual).WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
         InitializeInstances();
 

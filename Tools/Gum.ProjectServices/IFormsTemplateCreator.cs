@@ -13,4 +13,13 @@ public interface IFormsTemplateCreator
     /// </summary>
     /// <param name="filePath">Absolute path ending in .gumx for the new project.</param>
     void Create(string filePath);
+
+    /// <summary>
+    /// Creates a new Gum project from a Forms theme folder (see <see cref="IFormsThemeLocator"/>) instead of the
+    /// embedded Forms template. The theme's files are copied alongside the project file, its shared behaviors
+    /// are written into the project's own Behaviors folder, and the project file takes the name of <paramref name="filePath"/>.
+    /// </summary>
+    /// <param name="filePath">Absolute path ending in .gumx or .gumj for the new project.</param>
+    /// <param name="themeDirectory">The theme folder, containing its <c>GumProject.gumx</c>.</param>
+    void CreateFromTheme(string filePath, string themeDirectory);
 }

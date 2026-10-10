@@ -18,6 +18,11 @@ public interface IPlatformProjectScaffolder
     /// The root of a local Gum checkout. When set, the host references that checkout's runtime project
     /// instead of the NuGet package, and fails if the project is not there.
     /// </param>
+    /// <param name="themeDirectory">
+    /// A Forms theme folder (see <see cref="IFormsThemeLocator"/>) to create the Gum project from instead of the
+    /// plain Forms template. Takes precedence over <paramref name="includeFormsTemplate"/>.
+    /// </param>
     PlatformProjectResult Create(
-        string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null);
+        string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
+        string? themeDirectory = null);
 }

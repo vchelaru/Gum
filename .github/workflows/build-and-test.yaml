@@ -338,6 +338,12 @@ jobs:
           dotnet build "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      # Every bundled Forms theme, created and generated through gumcli (new --theme, codegen)
+      # and compiled against this checkout. The checked-in projects above only cover what their
+      # own components contain; the themes set variables those never do.
+      - name: Build Theme Projects
+        run: pwsh Tools/build-theme-projects.ps1 -Cli "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
+
   Build-and-Test:
     if: github.event_name != 'schedule'
     strategy:

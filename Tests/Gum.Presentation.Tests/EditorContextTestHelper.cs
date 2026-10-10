@@ -32,14 +32,15 @@ internal static class EditorContextTestHelper
         IGumCursorState? cursor = null,
         Camera? camera = null,
         IElementCommands? elementCommands = null,
-        ICanvasDisplayScale? displayScale = null)
+        ICanvasDisplayScale? displayScale = null,
+        IFileCommands? fileCommands = null)
     {
         return new EditorContext(
             selectedState ?? Mock.Of<ISelectedState>(),
             selectionManager ?? Mock.Of<ISelectionManager>(),
             elementCommands ?? Mock.Of<IElementCommands>(),
             Mock.Of<IGuiCommands>(),
-            Mock.Of<IFileCommands>(),
+            fileCommands ?? Mock.Of<IFileCommands>(),
             Mock.Of<ISetVariableLogic>(),
             Mock.Of<IUndoManager>(),
             Mock.Of<IVariableInCategoryPropagationLogic>(),

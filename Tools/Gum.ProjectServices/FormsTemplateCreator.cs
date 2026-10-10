@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Logic.FileWatch;
 
 namespace Gum.ProjectServices;
@@ -49,6 +50,64 @@ public class FormsTemplateCreator : IFormsTemplateCreator
         if (isJsonFormat)
         {
             ConvertExtractedTemplateToJson(extractedXmlProjectPath, extractedPaths);
+        }
+    }
+
+    // Files in a theme folder that describe the theme rather than make up a project: its own code
+    // generation settings (the new project gets settings for its own game project) and gallery preview.
+    private static readonly string[] ThemeOnlyFileNames = { "ProjectCodeSettings.codsj", "preview.png", "theme.txt" };
+
+    /// <inheritdoc/>
+    public void CreateFromTheme(string filePath, string themeDirectory)
+    {
+        string directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(filePath);
+        string xmlProjectFileName = isJsonFormat
+            ? Path.GetFileNameWithoutExtension(filePath) + "." + GumProjectSave.ProjectExtension
+            : Path.GetFileName(filePath);
+        string themeProjectPath = Path.Combine(themeDirectory, ProjectTemplateRelativePath);
+
+        if (!File.Exists(themeProjectPath))
+        {
+            throw new InvalidOperationException($"Theme project not found: '{themeProjectPath}'.");
+        }
+
+        List<string> copiedPaths = new List<string>();
+        foreach (string sourcePath in Directory.GetFiles(themeDirectory, "*", SearchOption.AllDirectories))
+        {
+            string relativePath = Path.GetRelativePath(themeDirectory, sourcePath);
+            if (Array.IndexOf(ThemeOnlyFileNames, relativePath) >= 0)
+            {
+                continue;
+            }
+
+            string destinationPath = relativePath == ProjectTemplateRelativePath
+                ? Path.Combine(directory, xmlProjectFileName)
+                : Path.Combine(directory, relativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            File.Copy(sourcePath, destinationPath, overwrite: true);
+            copiedPaths.Add(destinationPath);
+        }
+
+        // A theme in a checkout links its behaviors to shared files that the copy above can't carry
+        // along. A theme already staged for the tool has them flattened into Behaviors/, and the
+        // staging service skips links that don't resolve.
+        string behaviorsDirectory = Path.Combine(directory, "Behaviors");
+        new FormsThemeBehaviorStagingService().Stage(themeProjectPath, behaviorsDirectory);
+        foreach (string stagedPath in Directory.GetFiles(behaviorsDirectory))
+        {
+            if (!copiedPaths.Contains(stagedPath))
+            {
+                copiedPaths.Add(stagedPath);
+            }
+        }
+
+        string extractedXmlProjectPath = Path.Combine(directory, xmlProjectFileName);
+        StripStaleBehaviorSourcePaths(extractedXmlProjectPath);
+
+        if (isJsonFormat)
+        {
+            ConvertExtractedTemplateToJson(extractedXmlProjectPath, copiedPaths);
         }
     }
 

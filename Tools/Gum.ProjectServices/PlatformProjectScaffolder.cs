@@ -24,7 +24,8 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
     /// <inheritdoc/>
     public PlatformProjectResult Create(
-        string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null)
+        string projectDirectory, HostPlatform platform, bool includeFormsTemplate, string? gumSourceDirectory = null,
+        string? themeDirectory = null)
     {
         string fullDirectory = Path.GetFullPath(projectDirectory)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -69,7 +70,11 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
         string rootNamespace = projectName.Replace(".", "_").Replace("-", "_");
         WriteHostFiles(fullDirectory, csprojPath, projectName, rootNamespace, platform, gumReference);
 
-        if (includeFormsTemplate)
+        if (themeDirectory != null)
+        {
+            new FormsTemplateCreator().CreateFromTheme(gumProjectPath, themeDirectory);
+        }
+        else if (includeFormsTemplate)
         {
             new FormsTemplateCreator().Create(gumProjectPath);
         }

@@ -388,6 +388,41 @@ public class CanvasScenarioTests
 
     [SkippableFact]
     [Trait("Feature", "CANV-014")]
+    public void PolygonScaleHandles_ScaleThePoints_MoveThePositionToKeepTheAnchor_AndUndoIsOneStep()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            InstanceSave shape = canvas.AddInstance(button, "Shape", "Polygon", x: 100, y: 100);
+            canvas.Tree.Click(canvas.Tree.NodeFor(shape));
+            ProjectFileSnapshot start = canvas.Tree.SnapshotFiles();
+
+            // The polygon's box is (100, 100) to (132, 132). The right handle sits just outside the
+            // right edge (a 4 pixel gap, then 12 wide), level with its middle. It covers the edge's
+            // add-point marker, which hides while the pointer is over the handle. Dragging it out 32
+            // doubles the width about the left edge.
+            canvas.MoveTo(canvas.WindowPointOf(142, 116));
+            IsAddPointMarkerShowing().ShouldBeFalse("the handle takes the edge's middle from the marker");
+            canvas.Drag(canvas.WindowPointOf(142, 116), canvas.WindowPointOf(174, 116));
+
+            SavedPoints(canvas, button).ShouldBe(new[] { new Vector2(0, 0), new Vector2(64, 0), new Vector2(64, 32), new Vector2(0, 32), new Vector2(0, 0) });
+            canvas.SavedValue(button, "Shape.X").ShouldBe(100f);
+
+            canvas.Undo();
+            canvas.Tree.SnapshotFiles().ShouldMatch(start, "undoing the scale should restore the files, points and position together");
+
+            // The left handle: the right edge stays at 132, so the position moves with the left edge.
+            canvas.Drag(canvas.WindowPointOf(90, 116), canvas.WindowPointOf(74, 116));
+
+            SavedPoints(canvas, button).ShouldBe(new[] { new Vector2(0, 0), new Vector2(48, 0), new Vector2(48, 32), new Vector2(0, 32), new Vector2(0, 0) });
+            canvas.SavedValue(button, "Shape.X").ShouldBe(84f);
+
+            canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
+    [Trait("Feature", "CANV-014")]
     public void PolygonDrag_HidesTheAddPointMarker_WhetherMovingThePolygonOrOnePoint()
     {
         OnCanvas(canvas =>

@@ -98,6 +98,23 @@ public class CodeGenerationContext
 
     public CodeOutputElementSettings ElementSettings { get; set; } = new();
 
+    /// <summary>
+    /// The fully qualified runtime class behind <c>Visual</c> when <see cref="Element"/> is based directly on
+    /// the Text standard element (a Label), or <see langword="null"/> otherwise. Its variables (Font, FontSize,
+    /// ...) are declared on <c>TextRuntime</c>, not on <c>InteractiveGue</c>, which is what <c>Visual</c> is typed
+    /// as. Forms codegen only accepts a Container base or a Forms behavior, and Label is the one behavior whose
+    /// control sits on a non-Container standard.
+    /// </summary>
+    public string? BaseStandardRuntimeTypeName
+    {
+        get
+        {
+            return Element?.BaseType == "Text"
+                ? "global::" + CodeGenerator.GetGueDerivingNamespace(ResolvedSyntaxVersion, isSkia: false) + ".TextRuntime"
+                : null;
+        }
+    }
+
     public string GumVariablePrefix
     {
         get
@@ -134,7 +151,9 @@ public class CodeGenerationContext
                 {
                     if (CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                     {
-                        return "this.Visual";
+                        return BaseStandardRuntimeTypeName is string runtimeTypeName
+                            ? $"(({runtimeTypeName})this.Visual)"
+                            : "this.Visual";
                     }
                     else
                     {
@@ -3384,7 +3403,7 @@ public class CodeGenerator
             {
                 if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
-                    stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}() : base(new ContainerRuntime())");
+                    stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}() : base(new {context.BaseStandardRuntimeTypeName ?? "ContainerRuntime"}())");
                 }
                 else
                 {
@@ -4100,12 +4119,12 @@ public class CodeGenerator
         {
             foreach (var category in context.Element.Categories)
             {
-                FillWithStatePropertiesForCategory(context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings, isXamarinForms, containerClassName, category);
+                FillWithStatePropertiesForCategory(context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings, context.ResolvedSyntaxVersion, isXamarinForms, containerClassName, category);
             }
         }
     }
 
-    private int FillWithStatePropertiesForCategory(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings, bool isXamarinForms, string containerClassName, StateSaveCategory category)
+    private int FillWithStatePropertiesForCategory(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings, int resolvedSyntaxVersion, bool isXamarinForms, string containerClassName, StateSaveCategory category)
     {
         // If it's Xamarin Forms we want to have the states be bindable
 
@@ -4215,6 +4234,7 @@ public class CodeGenerator
                 CodeGenerationContext context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
                 context.TabCount = tabCount;
                 context.CodeOutputProjectSettings = codeProjectSettings;
+                context.ResolvedSyntaxVersion = resolvedSyntaxVersion;
 
                 AddAssignFromElement(context, stringBuilder);
 

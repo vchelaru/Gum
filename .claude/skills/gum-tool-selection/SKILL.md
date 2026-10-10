@@ -23,8 +23,11 @@ Each handler represents one interaction mode. Concrete handlers:
 | `ResizeInputHandler` | `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/ResizeInputHandler.cs` | Resize handle dragging |
 | `RotationInputHandler` | `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/RotationInputHandler.cs` | Rotation handle dragging |
 | `PolygonPointInputHandler` | `Tool/EditorTabPlugin.Core/Editors/Handlers/PolygonPointInputHandler.cs` | Polygon vertex select/move/add/delete |
+| `PolygonScaleInputHandler` | `Tool/EditorTabPlugin.Core/Editors/Handlers/PolygonScaleInputHandler.cs` | Scale a polygon's points from handles on their bounding box |
 
 `PolygonPointInputHandler` delegates the drag math to `PolygonPointDrag`. With Snap to Grid on, it snaps the point's absolute (world) position to the nearest grid line via `PolygonPointSnapper`, not its offset from the polygon, so it lands on the grid when the polygon is off-grid or rotated.
+
+`PolygonScaleInputHandler` rewrites `Points` and shifts X/Y so the opposite edge stays fixed; the math is `PolygonScaler`, applied from the points captured at grab by `PolygonScaleDrag`. Its handles sit on edge midpoints where the add-point marker also appears, so it outranks `PolygonPointInputHandler` (96 vs 95), yields to a point node under the cursor, and `PolygonWireframeEditor.UpdateHover` hides the marker over a handle.
 
 ### Handler Lifecycle
 
