@@ -485,7 +485,7 @@ Once Variable References are set, the referenced instances (instances in Styles)
 
 This example builds a ruler out of notches. Every notch has the same three variable references, so each one finds its height, label, and width from its own position. Adding more notches takes only copy and paste.
 
-1. Create a component named **Ruler** and set its **Children Layout** to `Left To Right Stack`.
+1. Create a component named **Ruler** and set its **Children Layout** to `Left to Right Stack`.
 2. Add a Text instance to Ruler named `Notch0`.
 3. Select `Notch0` and type the following into the **Variable References** box:
 
