@@ -154,6 +154,13 @@ public class CodeOutputTabController
                         }
                         else if (selectedElement is not StandardElementSave)
                         {
+                            string? baseTypeError = CodeGenerator.GetUnsupportedFormsBaseTypeError(selectedElement, codeOutputProjectSettings);
+                            if (baseTypeError != null)
+                            {
+                                _viewModel.Code = $"// {baseTypeError}";
+                                break;
+                            }
+
                             string gumCode = _codeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                             _viewModel.Code = $"//Code for {selectedElement}\r\n{gumCode}";
                         }
