@@ -65,7 +65,7 @@ A non-zero `Width` when using `Relative to Children` can be used to add addition
 A parent container can ignore its children when it determines its absolute width when using a `Width Units` of `Relative to Children` if any of the following are true:
 
 1. The child's `Ignored By Parent Size` is true.
-2. The child's width depends on its parent's width. This circular dependency is resolved by the parent ignoring this child.
+2. The child's width depends on its parent's width. This circular dependency is resolved by the parent ignoring this child. A child using `Percentage of Height` is ignored only when counting it would create a loop.
 3. The child is explicitly positioned outside of the parent's bounds
 4. The child's `X Units` is `Percentage of Parent Width`
 
@@ -88,6 +88,26 @@ Only YellowRectangle depends on its parent.
 Since BlueRectangle's absolute width value does not depend on the parent, the parent can use BlueRectangle's absolute width when calculating its own absolute width. Since YellowRectangle depends on the parent, the parent ignores the YellowRectangle. Instead, YellowRectangle depends on the parent container's absolute width for calculating its own absolute width. This in effect creates a situation where BlueRectangle affects the width of both its parent and also its YellowRectangle sibling.
 
 <figure><img src="../../../.gitbook/assets/05_07 32 31.gif" alt=""><figcaption><p>Moving BlueRectangle changes the width of both its parent and also YellowRectangle</p></figcaption></figure>
+
+#### Child Follows its Other Dimension
+
+A child with a `Width Units` of `Percentage of Height` has a width that depends on its own height. If that height depends on the parent, the parent still counts the child's width, as long as the parent's size does not depend on that width in return. The parent ignores the child only when counting it would create a loop.
+
+For example, consider a container with a `Width Units` and `Height Units` of `Relative to Children`, and two children:
+
+* BlueRectangle has an `Absolute` `Width` of 10 and `Height` of 50.
+* YellowRectangle has a `Height Units` of `Percentage of Parent` with a `Height` of 100, and a `Width Units` of `Percentage of Height` with a `Width` of 200.
+
+Gum sizes the container in these steps:
+
+1. YellowRectangle's height depends on the container's height, so the container ignores it for height. The container is 50 tall, from BlueRectangle.
+2. YellowRectangle is 100% of 50, so it is 50 tall.
+3. YellowRectangle's width is 200% of its height, so it is 100 wide.
+4. Nothing in steps 1 to 3 depends on the container's width, so there is no loop. The container counts YellowRectangle's width and is 100 wide.
+
+Now change the container's `Height Units` to `Percentage of Width` with a `Height` of 200, and leave its `Width Units` as `Relative to Children`. The container's height follows its width, YellowRectangle's height follows the container's height, YellowRectangle's width follows its height, and the container's width follows YellowRectangle's width. No size satisfies all four, so the container ignores YellowRectangle's width.
+
+The same rule applies to a `Height Units` of `Percentage of Width`. See [Height Units](height-units.md#child-follows-its-other-dimension).
 
 #### Child is Explicitly Positioned Outside of Parent's Bounds (3)
 
