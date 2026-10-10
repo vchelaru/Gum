@@ -52,10 +52,13 @@ public partial class GraphicalUiElement
         var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
 
         // RelativeToMaxParentOrChildren also depends on children, so its size isn't final until they are measured.
+        // A size that is a percent of the other axis is final only once that axis is (#5930).
         var isParentWidthNoDependencyOrOnParent = (parentWidthDependencyType == HierarchyDependencyType.NoDependency || parentWidthDependencyType == HierarchyDependencyType.DependsOnParent) &&
-            parent.WidthUnits != DimensionUnitType.RelativeToMaxParentOrChildren;
+            parent.WidthUnits != DimensionUnitType.RelativeToMaxParentOrChildren &&
+            !(IsSizedFromOtherDimension(parent.WidthUnits) && IsMeasuredFromChildren(parent.HeightUnits));
         var isParentHeightNoDependencyOrOnParent = (parentHeightDependencyType == HierarchyDependencyType.NoDependency || parentHeightDependencyType == HierarchyDependencyType.DependsOnParent) &&
-            parent.HeightUnits != DimensionUnitType.RelativeToMaxParentOrChildren;
+            parent.HeightUnits != DimensionUnitType.RelativeToMaxParentOrChildren &&
+            !(IsSizedFromOtherDimension(parent.HeightUnits) && IsMeasuredFromChildren(parent.WidthUnits));
 
         // In a wrapping stack the line, not the parent, is the parent for cross-axis position (#5802),
         // so a position measured from it does not wait on a parent sized by its children.
