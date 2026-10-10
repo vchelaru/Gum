@@ -283,6 +283,44 @@ public class CodegenCommandTests : IDisposable
     }
 
     [Fact]
+    public void Codegen_WhenFormsComponentInheritsSpriteWithoutBehaviors_SkipsItWithAnErrorAndExitsNonZero()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "Components", "FromSprite.gucx"),
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>FromSprite</Name>
+              <BaseType>Sprite</BaseType>
+              <State>
+                <Name>Default</Name>
+              </State>
+            </ComponentSave>
+            """);
+        string gumxContent = File.ReadAllText(gumxPath);
+        File.WriteAllText(gumxPath, gumxContent.Replace("</GumProjectSave>",
+            "  <ComponentReference Name=\"FromSprite\" />\n</GumProjectSave>"));
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(1, customMessage: result.StandardOutput);
+        result.StandardError.ShouldContain("error: FromSprite:");
+        result.StandardError.ShouldContain("must either inherit from Container");
+        File.Exists(Path.Combine(_tempDirectory, "Components", "FromSprite.Generated.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
     public void Codegen_WhenRaylibOutputLibrary_GeneratesFindByNameWiring()
     {
         string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");

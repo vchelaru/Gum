@@ -822,7 +822,7 @@ public class CodeGenerator
                     // else it is something like a NineSlice-inheriting object, so don't return a forms inheritance
                     else if (ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
                     {
-                        inheritance = $"Invalid inheritance - When using Forms codegen, {element.Name} must either inherit from Container, or must have Forms behaviors. It currently inherits from {element.BaseType}.";
+                        inheritance = GetUnsupportedFormsBaseTypeMessage(element);
                     }
                 }
 
@@ -879,6 +879,30 @@ public class CodeGenerator
 
         return inheritance;
     }
+
+    /// <summary>
+    /// Returns the message explaining why <paramref name="element"/> has no valid Forms base class, or
+    /// null when it does. A component built on a non-Container standard (Sprite, NineSlice, ...) needs a
+    /// Forms behavior to say which Forms control it is; <see cref="GetInheritance"/> writes this message
+    /// into the generated class when it is missing, and <see cref="FormsCodegenBaseTypeErrorSource"/>
+    /// reports it so codegen skips the element instead.
+    /// </summary>
+    internal static string? GetUnsupportedFormsBaseTypeError(ElementSave element, CodeOutputProjectSettings projectSettings)
+    {
+        if (projectSettings.OutputLibrary != OutputLibrary.MonoGameForms ||
+            element is ScreenSave ||
+            element.BaseType == "Container" ||
+            ObjectFinder.Self.GetStandardElement(element.BaseType) == null)
+        {
+            return null;
+        }
+
+        GetGumFormsTypeFromBehaviors(element, out string? gumFormsType, out _);
+        return string.IsNullOrEmpty(gumFormsType) ? GetUnsupportedFormsBaseTypeMessage(element) : null;
+    }
+
+    private static string GetUnsupportedFormsBaseTypeMessage(ElementSave element) =>
+        $"Invalid inheritance - When using Forms codegen, {element.Name} must either inherit from Container, or must have Forms behaviors. It currently inherits from {element.BaseType}.";
 
     #endregion
 
