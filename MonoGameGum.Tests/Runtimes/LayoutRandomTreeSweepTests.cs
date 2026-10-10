@@ -813,6 +813,51 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         (Snapshot(skipping, includeHidden: true) + EventCounts(skipping)).ShouldBe(everyTime);
     }
 
+    [Theory]
+    [InlineData(false, 6, 1.5f)]
+    [InlineData(true, 8, 2f)]
+    public void CutDownSweepTree_StackSizedToChildrenHoldingAPercentOfItself_ShouldIgnoreThatChildAndStayPutOnASecondLayout(
+        bool useFixedStackChildrenSize, float expectedStackHeight, float expectedChildHeight)
+    {
+        // Seed 273, cut down. The first child is a percent of a stack that is sized from its children, so the
+        // stack ignores it, as it ignores any child sized from its parent. With UseFixedStackChildrenSize the
+        // stack measured only its first child and read that child's height anyway, so its height followed its
+        // own previous height and grew on every layout (8, 12, 14, ...). The ignored first child stands in for
+        // the others as zero, leaving only the spacing between them.
+        Node child = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.PercentageOfParent, 25);
+        Node sibling = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0);
+        Node stack = Spec(ChildrenLayout.TopToBottomStack, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren, 6, child, sibling);
+        stack.UseFixedSize = useFixedStackChildrenSize;
+        stack.Spacing = 2;
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, stack);
+
+        BuildSuspended(root);
+        string first = Snapshot(root, includeHidden: true);
+        root.Runtime.UpdateLayout();
+
+        stack.Runtime.AbsoluteHeight.ShouldBe(expectedStackHeight);
+        child.Runtime.AbsoluteHeight.ShouldBe(expectedChildHeight);
+        Snapshot(root, includeHidden: true).ShouldBe(first);
+    }
+
+    [Fact]
+    public void CutDownSweepTree_WidthAndHeightEachDerivedFromTheOtherThroughTheChildren_ShouldGrowOnASecondLayoutBecauseItsUnitsAreCircular()
+    {
+        // Seed 291, cut down. The parent's width is its child's width, which is 200% of the child's height,
+        // which is the larger of the parent and the child's own content plus 4, and the parent's height is 100%
+        // of its width. The width would have to equal twice itself plus 8, which no size satisfies, so every
+        // layout grows it. Undefined input, not an engine defect; pinned so a change shows up.
+        Node child = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfOtherDimension, 200, DimensionUnitType.RelativeToMaxParentOrChildren, 4);
+        Node parent = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.PercentageOfOtherDimension, 100, child);
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, parent);
+
+        BuildSuspended(root);
+        parent.Runtime.AbsoluteWidth.ShouldBe(16);
+
+        root.Runtime.UpdateLayout();
+        parent.Runtime.AbsoluteWidth.ShouldBe(64);
+    }
+
     [Fact]
     public void Sweep_WellFormedTrees_ShouldNotThrow()
     {

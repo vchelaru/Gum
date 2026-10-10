@@ -177,8 +177,12 @@ public partial class GraphicalUiElement
                         if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1 &&
                             GetFirstVisibleChild() is GraphicalUiElement element)
                         {
-                            maxHeight = element.GetRequiredParentHeight();
-                            var elementHeight = element.AbsoluteHeight;
+                            // A first child sized from this parent (a percent of it) is ignored like any such
+                            // child, so it stands in for the others as zero. Reading its height would size this
+                            // stack from its own previous height.
+                            var firstChildCounts = element.GetChildLayoutType(XOrY.Y, this) == ChildType.Absolute;
+                            maxHeight = firstChildCounts ? element.GetRequiredParentHeight() : 0;
+                            var elementHeight = firstChildCounts ? element.AbsoluteHeight : 0;
                             maxHeight += (StackSpacing + elementHeight) * (GetVisibleChildCount() - 1);
                         }
                         else

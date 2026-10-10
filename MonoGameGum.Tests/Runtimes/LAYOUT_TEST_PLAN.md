@@ -328,7 +328,10 @@ content-sized stacks costs about one layout per element, and
 `Sweep_SkippingRepeatedChildLayouts_ShouldMatchLayingEveryChildOutEveryTime` (500 more seeds, past the golden file's)
 checks that cutting repeat child visits down to placing the child reproduces laying out every time, events included. Invariants 2, 7 and 8 are not swept. The golden file's
 ill-formed trees are not held to invariants 1 and 3: a few ill-formed seeds still change on a second
-layout (circular units).
+layout (circular units). Seed 291 is one: a content-sized parent whose width and height are each a percent
+of the other through its child has no size that satisfies it, so each layout grows it
+(`CutDownSweepTree_WidthAndHeightEachDerivedFromTheOtherThroughTheChildren_...`). Seeds 78, 220, 241, 272 and
+289 are not yet reduced (#5931).
 
 ## 10. Defects found by reading, tested and triaged
 
@@ -393,6 +396,8 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H54 | `GetChildLayoutType(XOrY, parent)` | A parent whose width is a percent of its own height, whose height is sized from its children, holding a child that is a percent of the parent on one axis and a percent of its own other axis on the second, needed a size that is a multiple of itself: each layout grew it 4x until it reached infinity (an exception under `FULL_DIAGNOSTICS`). | FIX (#5924; the parent ignores such a child, the documented rule for a child sized from its parent. Only when the child's other axis is a percent of or relative to the parent and the parent's matching axis is a percent of an axis sized to its children; `LayoutPercentOfOtherDimensionCycleTests`) |
 | H55 | cold first layout of a parent whose width follows its content-sized height | A tree built with layout suspended leaves a child sized as a percent of that parent taking the size from the canvas on the first `UpdateLayout()`; the second one corrects it. Reproduces without any cycle. Separately, the post-children `UpdateChildren(ChildType.BothAbsoluteAndRelative)` call in `UpdateLayout` matches no child in `CanDoFullUpdate`, so it refreshes nothing; making it match did not fix this case. The cause was elsewhere: the parent's width was measured from its height before the children were measured, and its children were laid out against that width and not laid out again. | FIXED (#5930: a size that is a percent of an axis measured from the children waits for the children, and its children are `Relative` until then; `LayoutPercentOfOtherDimensionCycleTests`) |
 | H56 | `UpdateChildren` repeat visits | A content-sized stack lays each child out to measure it and again to place it, so k nested stacks cost 2^k layouts; a zig-zag chain of percent-width levels doubled the same way through its axis-only first visit (#5927). | FIX (a later visit of a child that the first visit left unchanged, with the same inputs, only places it; results and events identical to laying out every time) |
+| H57 | `UpdateHeight` fixed-size stack path | A `TopToBottomStack` with `UseFixedStackChildrenSize` and a `RelativeToChildren` height read its first visible child's height even when that child is a percent of the stack. The normal path ignores such a child, so the fixed path sized the stack from its own previous height and it grew on each layout (sweep seeds 25 and 273, #5946). | FIX (a first child that `GetChildLayoutType(XOrY.Y)` does not count stands in for the others as zero, leaving only the spacing; `LayoutRandomTreeSweepTests`) |
+| H58 | `RelativeToMaxParentOrChildren` + `PercentageOfOtherDimension` loop | A content-sized parent whose width is its child's width, itself a percent of the child's height, with the child's height the larger of parent and content plus 4, and the parent's height a percent of its width: the size must equal twice itself plus 8. Every layout grows it (sweep seed 291). | DOCUMENT (circular units, undefined input; pinned by `CutDownSweepTree_WidthAndHeightEachDerivedFromTheOtherThroughTheChildren_...`) |
 
 ## Sweep strategy
 
