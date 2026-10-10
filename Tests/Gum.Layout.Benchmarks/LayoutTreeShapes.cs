@@ -53,6 +53,71 @@ public static class LayoutTreeShapes
         });
     }
 
+    /// <summary>A fixed-size vertical stack of <paramref name="count"/> absolute children, like a menu of fixed height.</summary>
+    public static TreeUnderTest FixedSizeStack(int count)
+    {
+        return Build(() =>
+        {
+            ContainerRuntime root = Box(400, CanvasHeight);
+            root.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+            ContainerRuntime leaf = Box(100, 20);
+            for (int i = 0; i < count; i++)
+            {
+                root.AddChild(i == count / 2 ? leaf : Box(100, 20));
+            }
+            return new TreeUnderTest(root, leaf, count + 1);
+        });
+    }
+
+    /// <summary>A fixed-size auto grid, ten columns wide, of <paramref name="count"/> absolute children.</summary>
+    public static TreeUnderTest AutoGrid(int count)
+    {
+        return Build(() =>
+        {
+            ContainerRuntime root = Box(CanvasWidth, CanvasHeight);
+            root.ChildrenLayout = ChildrenLayout.AutoGridHorizontal;
+            root.AutoGridHorizontalCells = 10;
+            ContainerRuntime leaf = Box(10, 10);
+            for (int i = 0; i < count; i++)
+            {
+                root.AddChild(i == count / 2 ? leaf : Box(10, 10));
+            }
+            return new TreeUnderTest(root, leaf, count + 1);
+        });
+    }
+
+    /// <summary>A content-height auto grid, ten columns wide, of <paramref name="count"/> absolute children.</summary>
+    public static TreeUnderTest AutoGridContentHeight(int count)
+    {
+        return Build(() =>
+        {
+            ContainerRuntime root = ContentHeightStack(ChildrenLayout.AutoGridHorizontal, CanvasWidth);
+            root.AutoGridHorizontalCells = 10;
+            ContainerRuntime leaf = Box(10, 10);
+            for (int i = 0; i < count; i++)
+            {
+                root.AddChild(i == count / 2 ? leaf : Box(10, 10));
+            }
+            return new TreeUnderTest(root, leaf, count + 1);
+        });
+    }
+
+    /// <summary>A content-height horizontal stack that wraps, of <paramref name="count"/> absolute children.</summary>
+    public static TreeUnderTest WrappingStack(int count)
+    {
+        return Build(() =>
+        {
+            ContainerRuntime root = ContentHeightStack(ChildrenLayout.LeftToRightStack, CanvasWidth);
+            root.WrapsChildren = true;
+            ContainerRuntime leaf = Box(30, 20);
+            for (int i = 0; i < count; i++)
+            {
+                root.AddChild(i == count / 2 ? leaf : Box(30, 20));
+            }
+            return new TreeUnderTest(root, leaf, count + 1);
+        });
+    }
+
     /// <summary>A vertical stack of <paramref name="rows"/> content-sized horizontal rows, three absolute cells each.</summary>
     public static TreeUnderTest StackOfContentSizedRows(int rows)
     {

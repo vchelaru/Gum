@@ -102,6 +102,12 @@ before laying it out in full), the same parent size on the axes the child's unit
 `GetRatioWidth`/`GetRatioHeight` still work out to the size the child has now, and a visit that placed the child
 at its final size. Dropping any of them fails a sweep or a test.
 
+Visits are recorded only where a child can be visited twice. `UpdateLayoutWithinSession(mayBeLaidOutAgain)` is true
+for a child of a tracking parent, and a layout tracks its children when it was passed true, sizes from its children,
+wraps, or has a Ratio-first pass (`trackChildVisits` into `UpdateChildren`). The public `UpdateLayout` passes false, so
+a plain `Regular` or fixed-size container laid out once pays none of the bookkeeping. A new second pass over the
+children needs to set `trackChildVisits`.
+
 ### Deferred font realization (step 4.5)
 
 Right after the parent-delegate early-out, before measuring, a node loads any font deferred while

@@ -33,6 +33,30 @@ public class LayoutScalingBenchmarks : LayoutBenchmarkTestBase
     }
 
     [Fact]
+    public void FixedSizeStack()
+    {
+        AssertLaidOut(_runner.RunSeries(nameof(FixedSizeStack), WideSizes, LayoutTreeShapes.FixedSizeStack));
+    }
+
+    [Fact]
+    public void AutoGrid()
+    {
+        AssertLaidOut(_runner.RunSeries(nameof(AutoGrid), WideSizes, LayoutTreeShapes.AutoGrid));
+    }
+
+    [Fact]
+    public void AutoGridContentHeight()
+    {
+        AssertLaidOut(_runner.RunSeries(nameof(AutoGridContentHeight), WideSizes, LayoutTreeShapes.AutoGridContentHeight));
+    }
+
+    [Fact]
+    public void WrappingStack()
+    {
+        AssertLaidOut(_runner.RunSeries(nameof(WrappingStack), WideSizes, LayoutTreeShapes.WrappingStack));
+    }
+
+    [Fact]
     public void StackOfContentSizedRows()
     {
         AssertLaidOut(_runner.RunSeries(nameof(StackOfContentSizedRows), WideSizes, LayoutTreeShapes.StackOfContentSizedRows));

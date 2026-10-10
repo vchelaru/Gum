@@ -135,14 +135,17 @@ public partial class GraphicalUiElement
     {
         // Anything other than a parent laying out its child starts a new session (see Repeated child layouts).
         s_session = System.Threading.Interlocked.Increment(ref s_lastSession);
-        UpdateLayoutWithinSession(parentUpdateType, childrenUpdateDepth, xOrY, gateClimbOnSizeChange);
+        UpdateLayoutWithinSession(parentUpdateType, childrenUpdateDepth, xOrY, gateClimbOnSizeChange, mayBeLaidOutAgain: false);
     }
 
     /// <summary>
     /// <see cref="UpdateLayout(ParentUpdateType, int, XOrY?, bool)"/> for a parent laying out its child, which
     /// continues the parent's session instead of starting one.
     /// </summary>
-    private void UpdateLayoutWithinSession(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY, bool gateClimbOnSizeChange)
+    /// <param name="mayBeLaidOutAgain">Whether the caller, or one of its ancestors, may lay this element out again in
+    /// the same session. An element that no one lays out twice, and that visits each child once, does not record
+    /// its children's visits.</param>
+    private void UpdateLayoutWithinSession(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY, bool gateClimbOnSizeChange, bool mayBeLaidOutAgain)
     {
         var updateParent =
             ((parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All) ||
@@ -280,12 +283,18 @@ public partial class GraphicalUiElement
         GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float absoluteParentRotation,
             out bool isParentFlippedHorizontally);
 
-        _layoutRan = true;
         _settledSession = -1;
-        _settledParentWidth = parentWidth;
-        _settledParentHeight = parentHeight;
+        if (mayBeLaidOutAgain)
+        {
+            _layoutRan = true;
+            _settledParentWidth = parentWidth;
+            _settledParentHeight = parentHeight;
+        }
         float widthAtPlacement = 0;
         float heightAtPlacement = 0;
+
+        // Whether a child can be visited more than once in this session, which is what makes recording visits pay.
+        bool trackChildVisits = mayBeLaidOutAgain;
 
         if (mContainedObjectAsIpso != null)
         {
@@ -337,6 +346,15 @@ public partial class GraphicalUiElement
             heightDependsOnChildren |= heightFollowsContentSizedWidth;
             var hasChildDependency = widthDependsOnChildren || heightDependsOnChildren;
 
+            // Size from the children means a pass for the absolute children and one for all of them, and a
+            // wrapping stack wraps them in a pass of their own.
+            if (!trackChildVisits &&
+                (hasChildDependency ||
+                    (WrapsChildren && (ChildrenLayout == ChildrenLayout.LeftToRightStack || ChildrenLayout == ChildrenLayout.TopToBottomStack))))
+            {
+                trackChildVisits = true;
+            }
+
             if (!widthDependsOnChildren && !heightDependsOnChildren)
             {
                 UpdateDimensions(parentWidth, parentHeight, null, true);
@@ -387,7 +405,7 @@ public partial class GraphicalUiElement
                 }
                 else
                 {
-                    UpdateChildren(childrenUpdateDepth, ChildType.Absolute, skipIgnoreByParentSize: true, newlyUpdated: fullyUpdatedChildren);
+                    UpdateChildren(childrenUpdateDepth, ChildType.Absolute, skipIgnoreByParentSize: true, trackChildVisits, newlyUpdated: fullyUpdatedChildren);
                 }
             }
 
@@ -418,7 +436,7 @@ public partial class GraphicalUiElement
                     ? mContainedObjectAsIpso.Width
                     : mContainedObjectAsIpso.Height;
                 // Now we can update all children that are wrapped:
-                UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
+                UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false, trackChildVisits);
                 if (widthDependsOnChildren || heightDependsOnChildren)
                 {
                     // Both axes: wrapping couples them, so a main-axis change moves children across lines
@@ -433,7 +451,7 @@ public partial class GraphicalUiElement
                         // The children wrapped against a main-axis size measured before they were (a
                         // stack sized to its children with a max), so wrap and measure again at the
                         // measured size.
-                        UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
+                        UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false, trackChildVisits);
                         UpdateDimensions(parentWidth, parentHeight, xOrY: null, considerWrappedStacked: true);
                     }
                 }
@@ -515,7 +533,7 @@ public partial class GraphicalUiElement
 
         if (childrenUpdateDepth > 0)
         {
-            UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize: false, alreadyUpdated: fullyUpdatedChildren);
+            UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize: false, trackChildVisits, alreadyUpdated: fullyUpdatedChildren);
 
             var sizeDependsOnChildren = this.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 this.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren ||
@@ -575,7 +593,7 @@ public partial class GraphicalUiElement
                     widthAtPlacement = mContainedObjectAsIpso.Width;
                     heightAtPlacement = mContainedObjectAsIpso.Height;
                     UpdatePosition(parentWidth, parentHeight, xOrY, absoluteParentRotation, isParentFlippedHorizontally);
-                    UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative, skipIgnoreByParentSize: false);
+                    UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative, skipIgnoreByParentSize: false, trackChildVisits);
                 }
 
             }
@@ -608,7 +626,10 @@ public partial class GraphicalUiElement
         }
         if (this.mContainedObjectAsIpso != null)
         {
-            _placedAtFinalSize = widthAtPlacement == mContainedObjectAsIpso.Width && heightAtPlacement == mContainedObjectAsIpso.Height;
+            if (mayBeLaidOutAgain)
+            {
+                _placedAtFinalSize = widthAtPlacement == mContainedObjectAsIpso.Width && heightAtPlacement == mContainedObjectAsIpso.Height;
+            }
 
             if (widthBeforeLayout != mContainedObjectAsIpso.Width ||
                 heightBeforeLayout != mContainedObjectAsIpso.Height)
