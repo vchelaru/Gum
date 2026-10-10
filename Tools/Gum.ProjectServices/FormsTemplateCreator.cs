@@ -94,7 +94,7 @@ public class FormsTemplateCreator : IFormsTemplateCreator
         // staging service skips links that don't resolve.
         string behaviorsDirectory = Path.Combine(directory, "Behaviors");
         new FormsThemeBehaviorStagingService().Stage(themeProjectPath, behaviorsDirectory);
-        foreach (string stagedPath in Directory.GetFiles(behaviorsDirectory, "*." + BehaviorReference.Extension))
+        foreach (string stagedPath in Directory.GetFiles(behaviorsDirectory))
         {
             if (!copiedPaths.Contains(stagedPath))
             {
