@@ -10,9 +10,10 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 
 /// <summary>
 /// Pins that an unclipped <see cref="SpriteRenderer.BeginSpriteBatch"/> leaves the device's scissor
-/// rectangle covering the whole current render target, not just the camera's client rect (#5950).
-/// MonoGame 3.8.6 DesktopGL's Clear can re-enable the GL scissor test with whatever rect is set, so
-/// any rect smaller than the target clips everything outside it.
+/// rectangle equal to the device viewport's bounds (the whole backbuffer or bound render target by
+/// default), not the camera's client rect (#5950). MonoGame 3.8.6 DesktopGL's Clear can re-enable
+/// the GL scissor test with whatever rect is set, so any rect smaller than the target clips
+/// everything outside it.
 /// </summary>
 public class UnclippedScissorRectangleTests : BaseTestClass
 {
@@ -51,6 +52,21 @@ public class UnclippedScissorRectangleTests : BaseTestClass
         game.GraphicsDevice.ScissorRectangle.ShouldBe(new Rectangle(0, 0, 64, 32));
         renderer.SpriteRenderer.EndSpriteBatch();
         game.GraphicsDevice.SetRenderTarget(null);
+    }
+
+    [Fact]
+    public void BeginSpriteBatch_UnclippedWithSmallerViewport_ScissorMatchesViewport()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        game.GraphicsDevice.Viewport = new Viewport(10, 5, 300, 200);
+        Renderer renderer = SystemManagers.Default.Renderer;
+
+        BeginUnclipped(renderer);
+
+        game.GraphicsDevice.ScissorRectangle.ShouldBe(new Rectangle(10, 5, 300, 200));
+        renderer.SpriteRenderer.EndSpriteBatch();
     }
 
     private static void BeginUnclipped(Renderer renderer)
