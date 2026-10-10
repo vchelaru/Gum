@@ -381,6 +381,26 @@ On a component or screen row, `@` refers to the element itself, so `Width = @Hei
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+### Position Among Siblings with Index
+
+`Index` is the position of an instance among the instances that share its parent, counting from zero. The first instance is `0`, the next is `1`, and so on. Combined with `@`, a single row gives every copy of an instance a value based on where it sits:
+
+```csharp
+X = @Index * 20
+```
+
+Instances placed directly in a component or screen are siblings of each other. Instances whose `Parent` variable names the same container are siblings of each other, separately from instances in other containers. Another instance's position can be read by qualifying it, such as `Item2.Index`.
+
+`Index` is read-only, so it can only appear on the right side of a row. It updates when instances are added, deleted, or reordered. A bare `Index` on an instance row means the containing component or screen, which has no siblings, so use `@Index` or a qualified name such as `Item2.Index`.
+
+{% hint style="info" %}
+If a component defines its own custom variable named `Index`, that variable is used instead of the position.
+{% endhint %}
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ### Color Expansion
 
 Assigning color values is a common part of styling, so to help with this situation, Gum also expands the "Color" variable into all three components when the Variable References text box loses focus. For example, the following text can be used to assign all three values at once:
@@ -460,6 +480,30 @@ The types of the objects that contain the **Variable References** or which are b
 Once Variable References are set, the referenced instances (instances in Styles) can be changed and the changes will immediately propagate throughout the entire project.
 
 <figure><img src="../../../.gitbook/assets/StyleUpdate.gif" alt=""><figcaption><p>Changing the source color values updates all objects referencing the Style.PrimaryColor values</p></figcaption></figure>
+
+## Example - Building a Ruler
+
+This example builds a ruler out of notches. Every notch has the same three variable references, so each one finds its height, label, and width from its own position. Adding more notches takes only copy and paste.
+
+1. Create a component named **Ruler** and set its **Children Layout** to `Left To Right Stack`.
+2. Add a Text instance to Ruler named `Notch0`.
+3. Select `Notch0` and type the following into the **Variable References** box:
+
+```csharp
+Height = @Index % 4 > 0 ? 15 : 30
+Text = @Index * 5
+Width = @Height / 3
+```
+
+4. Copy and paste `Notch0` as many times as you need. Each copy keeps the same three lines, and `@` makes each line read the copy's own values.
+
+The rows work as follows:
+
+* `Height` is `30` when `@Index % 4` is `0`, which happens at positions 0, 4, 8, and so on. Every other notch is `15`. The `%` operator gives the remainder after dividing, so `@Index % 4` counts `0, 1, 2, 3` and then starts over. The comparison `> 0` is true for all but every fourth notch.
+* `Text` shows the position times 5, so the notches read `0, 5, 10, 15, ...`. Gum converts the number to text automatically.
+* `Width` is a third of the notch's own height. `@Height` reads the result of the `Height` row, and Gum evaluates the rows in dependency order, so the order they are typed in does not matter.
+
+Moving a notch to a new position, or deleting one, changes the `Index` of the notches after it. Their heights, labels, and widths update to match.
 
 ## Example: Semantic Color Categories on Standard Elements
 
