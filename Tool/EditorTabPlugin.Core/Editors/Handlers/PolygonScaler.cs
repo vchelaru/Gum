@@ -19,6 +19,9 @@ public static class PolygonScaler
 {
     private const float AxisAlignmentTolerance = 0.001f;
 
+    /// <summary>The decimal places that scaled points and position shifts are rounded to.</summary>
+    public const int DecimalPlaces = 3;
+
     /// <summary>
     /// Scales <paramref name="originalPoints"/> for a drag of the <paramref name="side"/> handle.
     /// Always computed from the points at the start of the drag, so a drag that shrinks to zero
@@ -106,13 +109,23 @@ public static class PolygonScaler
         Vector2[] scaledPoints = new Vector2[originalPoints.Count];
         for (int i = 0; i < scaledPoints.Length; i++)
         {
-            scaledPoints[i] = new Vector2(originalPoints[i].X * scaleX, originalPoints[i].Y * scaleY);
+            scaledPoints[i] = new Vector2(
+                RemoveFloatNoise(originalPoints[i].X * scaleX),
+                RemoveFloatNoise(originalPoints[i].Y * scaleY));
         }
 
-        Vector2 localPositionShift = new Vector2((1 - scaleX) * x.Anchor, (1 - scaleY) * y.Anchor);
+        Vector2 localPositionShift = new Vector2(
+            RemoveFloatNoise((1 - scaleX) * x.Anchor),
+            RemoveFloatNoise((1 - scaleY) * y.Anchor));
 
         return new PolygonScaleResult(scaledPoints, localPositionShift);
     }
+
+    /// <summary>
+    /// Rounds to <see cref="DecimalPlaces"/> places. A scale that is not exactly representable in
+    /// a float leaves results like 30.999998 where the real answer is 31.
+    /// </summary>
+    public static float RemoveFloatNoise(float value) => MathF.Round(value, DecimalPlaces);
 
     private static AxisPlan CreateAxisPlan(float min, float max, bool movesMin, bool movesMax, bool fromCenter)
     {

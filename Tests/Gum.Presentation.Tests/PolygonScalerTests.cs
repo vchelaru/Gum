@@ -111,6 +111,33 @@ public class PolygonScalerTests
     }
 
     [Fact]
+    public void Scale_ShouldReturnExactValues_WhenTheScaleIsNotExactlyRepresentable()
+    {
+        // The middle point is halfway, so after scaling 14 wide to 62 wide it is exactly 31. A
+        // float scale of 62 / 14 puts it at 30.999998.
+        Vector2[] points = { new Vector2(0, 0), new Vector2(7, 0), new Vector2(14, 0) };
+
+        PolygonScaleResult result = PolygonScaler.Scale(points, ResizeSide.Right, new Vector2(48, 0));
+
+        result.Points[1].X.ShouldBe(31f);
+        result.Points[2].X.ShouldBe(62f);
+    }
+
+    [Fact]
+    public void Scale_ShouldReturnWholeNumbers_WhenTheDraggedEdgeSnapsOntoAPolygonWhoseOriginHasFloatNoise()
+    {
+        // The origin is 47.999992 instead of 48, as an earlier scale left it in practice. The right
+        // edge snaps to world 192, which is local 144.000008 from that origin.
+        Vector2[] points = { new Vector2(0, 0), new Vector2(60, 0), new Vector2(80, 0) };
+
+        PolygonScaleResult result = PolygonScaler.Scale(points, ResizeSide.Right, new Vector2(60, 0),
+            gridSize: 16, originWorld: new Vector2(47.999992f, 3), rotation: Matrix4x4.Identity);
+
+        result.Points[2].X.ShouldBe(144f);
+        result.Points[1].X.ShouldBe(108f);
+    }
+
+    [Fact]
     public void Scale_ShouldNotModifyTheOriginalPoints()
     {
         PolygonScaler.Scale(_points, ResizeSide.Right, new Vector2(4, 0));

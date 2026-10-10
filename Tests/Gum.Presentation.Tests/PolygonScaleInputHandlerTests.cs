@@ -166,6 +166,49 @@ public class PolygonScaleInputHandlerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleRelease_ShouldLeaveAPositionWithoutFloatNoise_WhenManySmallFramesMovedIt()
+    {
+        float x = 100;
+        _elementCommands.Setup(e => e.GetCurrentValueForVariable("X", _instance)).Returns(() => x);
+        _elementCommands.Setup(e => e.ModifyVariable("X", It.IsAny<float>(), _instance))
+            .Returns((string _, float amount, InstanceSave _) =>
+            {
+                x += amount;
+                return x;
+            });
+        PolygonScaleInputHandler handler = Grab(ResizeSide.Left);
+
+        // 7 gets past the dead zone, then 30 frames of a tenth of a pixel: 10 in all.
+        MoveCursorBy(handler, -7, 0);
+        for (int frame = 1; frame <= 30; frame++)
+        {
+            MoveCursorBy(handler, -7 - frame * 0.1f, 0);
+        }
+        handler.HandleRelease();
+
+        x.ShouldBe(90f);
+    }
+
+    [Fact]
+    public void HandleRelease_ShouldNotTouchAPositionAxisTheDragDidNotMove()
+    {
+        float y = 5.123456f;
+        _elementCommands.Setup(e => e.GetCurrentValueForVariable("Y", _instance)).Returns(() => y);
+        _elementCommands.Setup(e => e.ModifyVariable("Y", It.IsAny<float>(), _instance))
+            .Returns((string _, float amount, InstanceSave _) =>
+            {
+                y += amount;
+                return y;
+            });
+        PolygonScaleInputHandler handler = Grab(ResizeSide.Left);
+
+        MoveCursorBy(handler, -20, 0);
+        handler.HandleRelease();
+
+        y.ShouldBe(5.123456f);
+    }
+
+    [Fact]
     public void HandleDrag_ShouldScaleAboutTheCenter_WhenResizeFromCenterIsHeld()
     {
         _hotkeys.Setup(h => h.IsPressedInControl(_resizeFromCenter)).Returns(true);

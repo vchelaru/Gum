@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Wireframe.Editors.Visuals;
@@ -23,6 +24,8 @@ public class PolygonScaleInputHandler : InputHandlerBase
     private PolygonScaleDrag? _drag;
     private Vector2 _totalCursorChange;
     private Vector2 _appliedPositionShift;
+    private bool _movedX;
+    private bool _movedY;
 
     // Higher than PolygonPointInputHandler so an edge handle wins over the add-point marker,
     // which sits on the same edge midpoints. A point node under the cursor still wins.
@@ -69,6 +72,8 @@ public class PolygonScaleInputHandler : InputHandlerBase
     {
         _totalCursorChange = Vector2.Zero;
         _appliedPositionShift = Vector2.Zero;
+        _movedX = false;
+        _movedY = false;
 
         LinePolygon? polygon = SelectedLinePolygon;
         if (polygon == null)
@@ -116,6 +121,8 @@ public class PolygonScaleInputHandler : InputHandlerBase
             return;
         }
 
+        RemoveFloatNoiseFromPosition();
+
         if (SelectedLinePolygon is { } polygon)
         {
             List<Vector2> points = new List<Vector2>(polygon.PointCount);
@@ -132,29 +139,67 @@ public class PolygonScaleInputHandler : InputHandlerBase
 
     private void MovePositionBy(Vector2 change)
     {
-        InstanceSave? instance = Context.SelectedState.SelectedInstance;
-        ElementSave? element = Context.SelectedState.SelectedElement;
-
         if (change.X != 0)
         {
-            if (instance != null)
-            {
-                Context.ElementCommands.ModifyVariable("X", change.X, instance);
-            }
-            else if (element != null)
-            {
-                Context.ElementCommands.ModifyVariable("X", change.X, element);
-            }
+            ModifyPosition("X", change.X);
+            _movedX = true;
         }
         if (change.Y != 0)
         {
-            if (instance != null)
+            ModifyPosition("Y", change.Y);
+            _movedY = true;
+        }
+    }
+
+    private void ModifyPosition(string variableName, float amount)
+    {
+        InstanceSave? instance = Context.SelectedState.SelectedInstance;
+        ElementSave? element = Context.SelectedState.SelectedElement;
+
+        if (instance != null)
+        {
+            Context.ElementCommands.ModifyVariable(variableName, amount, instance);
+        }
+        else if (element != null)
+        {
+            Context.ElementCommands.ModifyVariable(variableName, amount, element);
+        }
+    }
+
+    /// <summary>
+    /// Every frame adds a float to X and Y, so after many frames they sit a hair off the value
+    /// the drag was aiming for (47.999992 for 48). Only pixel units are rounded: other units
+    /// convert the amount, so a correction in pixels would not land on a round value.
+    /// </summary>
+    private void RemoveFloatNoiseFromPosition()
+    {
+        GraphicalUiElement? selected = Context.SelectedObjects.FirstOrDefault();
+        if (selected == null)
+        {
+            return;
+        }
+
+        if (_movedX && selected.XUnits.GetIsPixelBased())
+        {
+            RemoveFloatNoiseFrom("X");
+        }
+        if (_movedY && selected.YUnits.GetIsPixelBased())
+        {
+            RemoveFloatNoiseFrom("Y");
+        }
+    }
+
+    private void RemoveFloatNoiseFrom(string variableName)
+    {
+        object? currentAsObject = Context.ElementCommands.GetCurrentValueForVariable(
+            variableName, Context.SelectedState.SelectedInstance);
+
+        if (currentAsObject is float current)
+        {
+            float cleaned = PolygonScaler.RemoveFloatNoise(current);
+            if (cleaned != current)
             {
-                Context.ElementCommands.ModifyVariable("Y", change.Y, instance);
-            }
-            else if (element != null)
-            {
-                Context.ElementCommands.ModifyVariable("Y", change.Y, element);
+                ModifyPosition(variableName, cleaned - current);
             }
         }
     }
