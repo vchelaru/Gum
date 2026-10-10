@@ -208,7 +208,7 @@ public class StandardWireframeEditor : WireframeEditor
 
             foreach (string variableReference in list)
             {
-                var split = variableReference.Split('=');
+                var split = variableReference.Split('=', 2);
 
                 if(split.Length == 2)
                 {
