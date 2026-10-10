@@ -610,6 +610,20 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         return copy;
     }
 
+    /// <summary>Everything a case reports, in full.</summary>
+    private static string Fingerprint(CaseResult result)
+    {
+        StringBuilder builder = new();
+        builder.Append(result.Initial).Append("|").Append(result.AfterSecondLayout).Append("|").Append(result.BuiltLive).Append("|");
+        foreach ((string label, string incremental, string fresh) in result.Edits)
+        {
+            builder.Append(label).Append('|').Append(incremental).Append('|').Append(fresh).Append('|');
+        }
+        builder.Append(string.Join("|", result.Events)).Append(string.Join("|", result.Partials));
+        builder.Append(result.SuspendedEdits).Append('|').Append(result.SuspendedFresh);
+        return builder.ToString();
+    }
+
     private static string Hash(string text)
     {
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(text.Replace("\r\n", "\n")));
@@ -713,6 +727,90 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         differences.Count.ShouldBe(0,
             $"{differences.Count} sweep results changed, first: {string.Join("; ", differences.Take(5))}. " +
             "If the change is intended, rerun with GUM_UPDATE_LAYOUT_SWEEP=1 and review the diff.");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Sweep_SkippingRepeatedChildLayouts_ShouldMatchLayingEveryChildOutEveryTime(bool wellFormed)
+    {
+        // Seeds past the golden file's. Laying a child out again is cut down to placing it when the first
+        // layout changed nothing, which has to give exactly what laying it out in full gives: the same
+        // geometry, edits, partial layouts and events, in trees that settle and in ones that do not.
+        const int firstSeed = SeedCount;
+        const int lastSeed = SeedCount + 500;
+        List<string> differences = new();
+        for (int seed = firstSeed; seed < lastSeed; seed++)
+        {
+            GraphicalUiElement.SkipRepeatedChildLayouts = false;
+            CaseResult everyTime;
+            try
+            {
+                everyTime = RunCase(seed, wellFormed);
+            }
+            finally
+            {
+                GraphicalUiElement.SkipRepeatedChildLayouts = true;
+            }
+            CaseResult skipping = RunCase(seed, wellFormed);
+
+            if (Fingerprint(everyTime) != Fingerprint(skipping))
+            {
+                differences.Add($"seed {seed}");
+            }
+        }
+
+        differences.Count.ShouldBe(0, string.Join(", ", differences.Take(20)));
+    }
+
+    private static Node Spec(ChildrenLayout layout, DimensionUnitType widthUnits, float width, DimensionUnitType heightUnits, float height,
+        params Node[] children)
+    {
+        Node node = new Node { Layout = layout, WidthUnits = widthUnits, Width = width, HeightUnits = heightUnits, Height = height };
+        node.Children.AddRange(children);
+        return node;
+    }
+
+    [Fact]
+    public void CutDownSweepTree_PlacedWhileItsSizeWasStillBeingMeasured_ShouldReportTheSameEventsWhetherOrNotRepeatedChildLayoutsAreSkipped()
+    {
+        // Seed 5367, cut down, laid out a second time. A layout measures an element twice, and for R0 (sized
+        // from its children and its parent) the two measures differ. R0 is placed between them, so where it
+        // goes follows the first size, and placing it again at the final size would move it. A visit placed at
+        // a size other than its final one is therefore not one to skip, and R0 reports its moves as often as before.
+        Node Tree()
+        {
+            Node r000 = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfParent, 25, DimensionUnitType.Absolute, 33);
+            Node r00 = Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute, 45, DimensionUnitType.RelativeToMaxParentOrChildren, 4, r000);
+            r00.Wraps = true;
+            r00.MaxWidth = 97;
+            r00.MaxHeight = 108;
+            Node r0 = Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToMaxParentOrChildren, 0, r00);
+            r0.YOrigin = VerticalAlignment.Center;
+            Node r1 = Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.Ratio, 1, DimensionUnitType.PercentageOfParent, 100);
+            Node root = Spec(ChildrenLayout.AutoGridHorizontal, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren, 0, r0, r1);
+            root.GridCells = 1;
+            return root;
+        }
+
+        GraphicalUiElement.SkipRepeatedChildLayouts = false;
+        string everyTime;
+        try
+        {
+            Node full = Tree();
+            BuildSuspended(full);
+            full.Runtime.UpdateLayout();
+            everyTime = Snapshot(full, includeHidden: true) + EventCounts(full);
+        }
+        finally
+        {
+            GraphicalUiElement.SkipRepeatedChildLayouts = true;
+        }
+        Node skipping = Tree();
+        BuildSuspended(skipping);
+        skipping.Runtime.UpdateLayout();
+
+        (Snapshot(skipping, includeHidden: true) + EventCounts(skipping)).ShouldBe(everyTime);
     }
 
     [Fact]

@@ -84,6 +84,18 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
     up to the parent only if this element's own measured size or position
     actually changed (see Upward Propagation).
 
+### Repeat visits of a child are cut down to placing it
+
+Steps 6, 8 and 11 (and the post-children re-measure) visit the same child more than once, so a chain of k
+nested content-sized stacks would cost 2^k layouts. Every child visit in `UpdateChildren` goes through
+`LayOutChild` (`ChildUpdates.cs`): after a visit that changed no size or position inside the child, a later
+visit in the same *session* (one outermost `UpdateLayout`; `UpdateLayoutWithinSession` continues it, the public
+`UpdateLayout` starts a new one) only places the child again (`TryPlaceInsteadOfLayingOutAgain`). The result
+must equal laying out every time: `GraphicalUiElement.SkipRepeatedChildLayouts = false` is the test hook that
+does that, and `LayoutRandomTreeSweepTests` compares the two. The skip needs the same axis (`xOrY`), the same
+parent size on the axes the child's units read, a child never sized by `Ratio`, and a visit that placed the child
+at its final size. Dropping any of them fails a sweep or a test.
+
 ### Deferred font realization (step 4.5)
 
 Right after the parent-delegate early-out, before measuring, a node loads any font deferred while
@@ -250,6 +262,7 @@ for why the parent, not the toggled element, is the source of truth.
 | `xOrY` parameter | Recalculating unchanged axis | Throughout |
 | `childrenUpdateDepth` | Unbounded recursion | `UpdateChildren` decrements per level |
 | `alreadyUpdated` set | Re-updating children measured in pre-pass | `UpdateChildren` |
+| `LayOutChild` repeat-visit skip | 2^depth layouts for nested content-sized stacks | `UpdateChildren` (`ChildUpdates.cs`) |
 
 ### Diagnostic Counters
 

@@ -348,6 +348,24 @@ public partial class GraphicalUiElement
             RepositionChildrenAlignedInWrappedLines(this.Children, parentlessOnly: false);
 
 
+            // Every layout of a child from here goes through this, so a repeat visit can be cut down to placing it.
+            void LayOutChild(GraphicalUiElement child, int depth, XOrY? xOrY)
+            {
+                if (child.TryPlaceInsteadOfLayingOutAgain(xOrY))
+                {
+                    return;
+                }
+
+                int changesBefore = s_layoutChangeCount;
+                child._layoutRan = false;
+                child.UpdateLayoutWithinSession(ParentUpdateType.None, depth, xOrY, gateClimbOnSizeChange: false);
+
+                if (child._layoutRan)
+                {
+                    child.RecordVisit(xOrY, changesDuringVisit: s_layoutChangeCount - changesBefore);
+                }
+            }
+
             void UpdateChild(GraphicalUiElement child, bool flagAsUpdated)
             {
                 var childLayoutType = child.GetChildLayoutType(this);
@@ -359,7 +377,7 @@ public partial class GraphicalUiElement
                 {
                     // Pass ParentUpdateType.None here so that children do not attempt to update their parent. `this` is
                     // the parent and it's already in an update
-                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                    LayOutChild(child, childrenUpdateDepth - 1, null);
                     if (flagAsUpdated)
                     {
                         newlyUpdated?.Add(child);
@@ -373,7 +391,7 @@ public partial class GraphicalUiElement
                     {
                         // todo - maybe look at the code below to see if we need to do the same thing here for
                         // width/height updates:
-                        child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
+                        LayOutChild(child, childrenUpdateDepth - 1, XOrY.X);
                     }
                     else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                     {
@@ -384,11 +402,11 @@ public partial class GraphicalUiElement
                         if (widthDependencyType != HierarchyDependencyType.DependsOnChildren &&
                             (child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension) || (child.HeightUnits == DimensionUnitType.MaintainFileAspectRatio))
                         {
-                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                            LayOutChild(child, childrenUpdateDepth - 1, null);
                         }
                         else
                         {
-                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
+                            LayOutChild(child, childrenUpdateDepth - 1, XOrY.Y);
 
                         }
                     }
@@ -429,6 +447,74 @@ public partial class GraphicalUiElement
         }
     }
 
+    private static int GetAxisCode(XOrY? xOrY) => xOrY.HasValue ? (int)xOrY.Value : -1;
+
+    /// <summary>
+    /// Called by the parent after it laid this element out. If nothing inside changed, remembers the visit so
+    /// the parent can skip laying this out again with the same inputs. The element itself moving does not
+    /// count: where it goes is the parent's doing, not part of laying out what is inside it.
+    /// </summary>
+    private void RecordVisit(XOrY? xOrY, int changesDuringVisit)
+    {
+        if (changesDuringVisit != 0 || !_placedAtFinalSize)
+        {
+            return;
+        }
+
+        _settledSession = s_session;
+        _settledAxis = GetAxisCode(xOrY);
+    }
+
+    /// <summary>
+    /// If this element was laid out earlier in the same session in a way that changed nothing, and would read
+    /// the same from its parent now, places it again (where it goes depends on the siblings before it, which
+    /// may have moved) instead of laying it out again, and returns true.
+    /// </summary>
+    private bool TryPlaceInsteadOfLayingOutAgain(XOrY? xOrY)
+    {
+        if (_settledSession != s_session || _settledAxis != GetAxisCode(xOrY) ||
+            mContainedObjectAsIpso == null || !SkipRepeatedChildLayouts)
+        {
+            return false;
+        }
+
+        // A Ratio size comes from the siblings, which are not tracked here, so those are always laid out. A size
+        // that comes from the parent is the same as last time only if the parent's size is.
+        var widthDependency = mWidthUnit.GetDependencyType();
+        var heightDependency = mHeightUnit.GetDependencyType();
+        if (widthDependency == HierarchyDependencyType.DependsOnSiblings || heightDependency == HierarchyDependencyType.DependsOnSiblings)
+        {
+            return false;
+        }
+
+        GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float parentAbsoluteRotation,
+            out bool isParentFlippedHorizontally);
+        if ((widthDependency == HierarchyDependencyType.DependsOnParent && parentWidth != _settledParentWidth) ||
+            (heightDependency == HierarchyDependencyType.DependsOnParent && parentHeight != _settledParentHeight))
+        {
+            return false;
+        }
+
+        float xBefore = mContainedObjectAsIpso.X;
+        float yBefore = mContainedObjectAsIpso.Y;
+
+        // The same steps a layout takes to place the element, in the same order.
+        UpdatePosition(parentWidth, parentHeight, xOrY, parentAbsoluteRotation, isParentFlippedHorizontally);
+
+        if (GetIfParentStacks())
+        {
+            RefreshParentRowColumnDimensionForThis();
+        }
+
+        if (xBefore != mContainedObjectAsIpso.X || yBefore != mContainedObjectAsIpso.Y)
+        {
+            s_layoutChangeCount++;
+            PositionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        return true;
+    }
+
     private void UpdatePositionOnly()
     {
         GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float parentAbsoluteRotation,
@@ -441,6 +527,7 @@ public partial class GraphicalUiElement
 
         if (xBefore != mContainedObjectAsIpso.X || yBefore != mContainedObjectAsIpso.Y)
         {
+            s_layoutChangeCount++;
             PositionChanged?.Invoke(this, EventArgs.Empty);
         }
     }
