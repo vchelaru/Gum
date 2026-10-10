@@ -906,7 +906,7 @@ public class CodeGenerator
     /// into the generated class when it is missing, and <see cref="FormsCodegenBaseTypeErrorSource"/>
     /// reports it so codegen skips the element instead.
     /// </summary>
-    internal static string? GetUnsupportedFormsBaseTypeError(ElementSave element, CodeOutputProjectSettings projectSettings)
+    public static string? GetUnsupportedFormsBaseTypeError(ElementSave element, CodeOutputProjectSettings projectSettings)
     {
         if (projectSettings.OutputLibrary != OutputLibrary.MonoGameForms ||
             element is ScreenSave ||

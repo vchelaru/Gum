@@ -369,6 +369,29 @@ public class CodeOutputTabControllerTests : BaseTestClass
     }
 
     [Fact]
+    public void RefreshCodeDisplay_UnsupportedFormsBaseType_ShowsErrorInsteadOfClassWithSentenceAsBase()
+    {
+        GumProjectSave project = new();
+        StandardElementSave sprite = new() { Name = "Sprite" };
+        sprite.States.Add(new StateSave { Name = "Default", ParentContainer = sprite });
+        project.StandardElements.Add(sprite);
+        ComponentSave component = new() { Name = "MySprite", BaseType = "Sprite" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        _selectedState.Setup(s => s.SelectedElement).Returns(component);
+        _tabSelectionState.Setup(t => t.IsSelected).Returns(true);
+        _view.SetupProperty(v => v.CodeOutputElementSettings,
+            new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateManually });
+        CodeOutputTabController controller = CreateController();
+
+        controller.RefreshCodeDisplay(new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms });
+
+        _viewModel.Code.ShouldContain("must either inherit from Container");
+        _viewModel.Code.ShouldNotContain("partial class");
+    }
+
+    [Fact]
     public void RefreshCodeDisplay_GenerationBehaviorNeverGenerate_ShowsDisabledMessage()
     {
         ScreenSave screen = new() { Name = "MyScreen" };

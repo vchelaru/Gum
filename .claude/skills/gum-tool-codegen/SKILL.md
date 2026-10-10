@@ -71,6 +71,8 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 **Unsupported Forms base type** -- A component on a non-Container standard (Sprite, NineSlice, ...) with no Forms behavior has no valid Forms base class. `gumcli codegen` reports it as an element error through `FormsCodegenBaseTypeErrorSource` and skips the element; `GetInheritance` still writes the same message into the class for callers that skip the error pass (the tool). `gumcli check` does not run it, since it depends on the output library.
 
+**Unsupported Forms base type** -- A component on a non-Container standard with no Forms behavior has no valid Forms base class. `CodeGenerator.GetUnsupportedFormsBaseTypeError` is the one check: `gumcli codegen` reports it via `FormsCodegenBaseTypeErrorSource` and skips the element, and the tool's `CodeGenerationService` and Code tab display call it directly, since the tool's Code tab runs no error checker.
+
 **Screen inheritance resolution order** -- `CodeGenerator.GetInheritance` for `ScreenSave` resolves inheritance in this priority: `element.BaseType` > `projectSettings.DefaultScreenBase` > library-appropriate fallback (`FrameworkElement` for MonoGameForms, `GraphicalUiElement` otherwise). `DefaultScreenBase` defaults to empty string so users can switch `OutputLibrary` without stale base classes bleeding through.
 
 **State generation suppressed for Forms standards** -- When OutputLibrary is MonoGameForms and the state container is a `StandardElementSave`, state code is not generated; the Forms framework handles it.

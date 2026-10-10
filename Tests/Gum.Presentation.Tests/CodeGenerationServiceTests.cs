@@ -66,6 +66,59 @@ public class CodeGenerationServiceTests : BaseTestClass
         return component;
     }
 
+    private static StandardElementSave CreateSpriteStandard()
+    {
+        StandardElementSave sprite = new() { Name = "Sprite" };
+        sprite.States.Add(new StateSave { Name = "Default", ParentContainer = sprite });
+        return sprite;
+    }
+
+    private static ComponentSave CreateBehaviorlessSpriteComponent()
+    {
+        GumProjectSave project = new();
+        project.StandardElements.Add(CreateSpriteStandard());
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave component = new() { Name = "MySprite", BaseType = "Sprite" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        project.Components.Add(component);
+        return component;
+    }
+
+    private static CodeOutputProjectSettings CreateFormsSettings() => new()
+    {
+        CodeProjectRoot = Path.Combine(Path.GetTempPath(), "GumCodeGenerationServiceTests_NeverWritten") + Path.DirectorySeparatorChar,
+        OutputLibrary = OutputLibrary.MonoGameForms
+    };
+
+    [Fact]
+    public void GenerateCodeForElement_UnsupportedFormsBaseType_PrintsErrorAndWritesNothing()
+    {
+        ComponentSave component = CreateBehaviorlessSpriteComponent();
+
+        _codeGenerationService.GenerateCodeForElement(
+            component, new CodeOutputElementSettings(), CreateFormsSettings(), showPopups: false);
+
+        _guiCommands.Verify(
+            x => x.PrintOutput(It.Is<string>(m => m.Contains("MySprite") && m.Contains("must either inherit from Container"))),
+            Times.Once);
+        _retryService.Verify(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public void GenerateCodeForElement_UnsupportedFormsBaseType_AndShowPopups_ShowsErrorInDialog()
+    {
+        ComponentSave component = CreateBehaviorlessSpriteComponent();
+
+        _codeGenerationService.GenerateCodeForElement(
+            component, new CodeOutputElementSettings(), CreateFormsSettings(), showPopups: true);
+
+        _dialogService.Verify(
+            x => x.ShowMessage(It.Is<string>(m => m.Contains("MySprite")), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+        _retryService.Verify(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()), Times.Never);
+    }
+
     [Fact]
     public void GenerateCodeForElement_WithEmptyCodeProjectRoot_AndShowPopups_ShowsErrorMessage()
     {
