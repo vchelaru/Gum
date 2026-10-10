@@ -95,6 +95,57 @@ public class LayoutRepeatedChildVisitTests : BaseTestClass
         }
     }
 
+    /// <summary>
+    /// A 400-wide, content-high stack that holds, at every level, a nested stack (<c>Ratio</c> width, content
+    /// height) and then a 10x5 box, <paramref name="depth"/> levels deep. With <paramref name="ratioOnHeight"/> the
+    /// nested stacks are instead content wide and <c>Ratio</c> high inside a fixed-height, left to right root.
+    /// </summary>
+    private static ContainerRuntime BuildRatioChain(int depth, bool ratioOnHeight, out int nodeCount)
+    {
+        ContainerRuntime Level(bool isRoot)
+        {
+            ContainerRuntime stack = new();
+            if (ratioOnHeight)
+            {
+                stack.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+                stack.WidthUnits = isRoot ? DimensionUnitType.Absolute : DimensionUnitType.RelativeToChildren;
+                stack.Width = isRoot ? 400 : 0;
+                stack.HeightUnits = isRoot ? DimensionUnitType.Absolute : DimensionUnitType.Ratio;
+                stack.Height = isRoot ? 300 : 1;
+            }
+            else
+            {
+                stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+                stack.WidthUnits = isRoot ? DimensionUnitType.Absolute : DimensionUnitType.Ratio;
+                stack.Width = isRoot ? 400 : 1;
+                stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+                stack.Height = 0;
+            }
+            return stack;
+        }
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        try
+        {
+            ContainerRuntime root = Level(isRoot: true);
+            ContainerRuntime current = root;
+            nodeCount = 1;
+            for (int level = 1; level <= depth; level++)
+            {
+                ContainerRuntime next = Level(isRoot: false);
+                current.AddChild(next);
+                current.AddChild(Box(10, 5));
+                current = next;
+                nodeCount += 2;
+            }
+            return root;
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+    }
+
     private static int CountLayoutCalls(Action layout)
     {
         int before = GraphicalUiElement.UpdateLayoutCallCount;
@@ -137,6 +188,49 @@ public class LayoutRepeatedChildVisitTests : BaseTestClass
             try
             {
                 full = BuildChain(12, zigZag, out _);
+                full.UpdateLayout();
+            }
+            finally
+            {
+                GraphicalUiElement.SkipRepeatedChildLayouts = true;
+            }
+
+            Snapshot(shortcut).ShouldBe(Snapshot(full));
+        }
+    }
+
+    [Theory]
+    [InlineData(8, false)]
+    [InlineData(20, false)]
+    [InlineData(8, true)]
+    [InlineData(20, true)]
+    public void NestedStacksSizedWithRatio_ShouldCostAboutOneLayoutPerElement_WhenBuiltAndWhenLaidOutAgain(int depth, bool ratioOnHeight)
+    {
+        ContainerRuntime root = BuildRatioChain(depth, ratioOnHeight, out int nodeCount);
+
+        int firstLayout = CountLayoutCalls(() => root.UpdateLayout());
+        int secondLayout = CountLayoutCalls(() => root.UpdateLayout());
+
+        _output.WriteLine($"depth {depth} ratioOnHeight {ratioOnHeight}: {nodeCount} elements, first layout {firstLayout} calls, second layout {secondLayout} calls");
+
+        firstLayout.ShouldBeLessThanOrEqualTo(nodeCount * 3);
+        secondLayout.ShouldBeLessThanOrEqualTo(nodeCount * 3);
+    }
+
+    [Fact]
+    public void NestedStacksSizedWithRatio_ShouldLayOutTheSameAsLayingEveryChildOutEveryTime()
+    {
+        // Depth 10 is small enough to lay out in full (about two thousand calls) to compare against.
+        foreach (bool ratioOnHeight in new[] { false, true })
+        {
+            ContainerRuntime shortcut = BuildRatioChain(10, ratioOnHeight, out _);
+            shortcut.UpdateLayout();
+
+            GraphicalUiElement.SkipRepeatedChildLayouts = false;
+            ContainerRuntime full;
+            try
+            {
+                full = BuildRatioChain(10, ratioOnHeight, out _);
                 full.UpdateLayout();
             }
             finally

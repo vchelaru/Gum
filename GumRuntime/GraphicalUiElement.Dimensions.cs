@@ -313,95 +313,7 @@ public partial class GraphicalUiElement
             #region Ratio
             case DimensionUnitType.Ratio:
                 {
-                    // A negative ratio takes no space, like 0.
-                    if (this.Height <= 0)
-                    {
-                        pixelHeightToSet = 0;
-                    }
-                    else if (GetIfParentIsAutoGrid())
-                    {
-                        // Each grid child has its own cell, so there are no siblings to share it with.
-                        pixelHeightToSet = parentHeight;
-                    }
-                    else
-                    {
-                        var heightToSplit = parentHeight;
-
-                        var numberOfVisibleChildren = 0;
-
-                        var ratioSiblings = GetLayoutSiblings(out bool onlyParentless);
-
-                        if (ratioSiblings != null)
-                        {
-                            for (int i = 0; i < ratioSiblings.Count; i++)
-                            {
-                                var child = ratioSiblings[i];
-                                if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
-                                {
-                                    if (gue.HeightUnits == DimensionUnitType.Absolute)
-                                    {
-                                        heightToSplit -= gue.Height;
-                                    }
-                                    else if (gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                                    {
-                                        heightToSplit -= gue.Height * GlobalFontScale;
-                                    }
-                                    else if (gue.HeightUnits == DimensionUnitType.RelativeToParent)
-                                    {
-                                        var childAbsoluteWidth = parentHeight + gue.Height;
-                                        heightToSplit -= childAbsoluteWidth;
-                                    }
-                                    else if (gue.HeightUnits == DimensionUnitType.PercentageOfParent)
-                                    {
-                                        var childAbsoluteWidth = (parentHeight * gue.Height) / 100f;
-                                        heightToSplit -= childAbsoluteWidth;
-                                    }
-                                    // this depends on the sibling being updated before this:
-                                    else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren ||
-                                        gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                        gue.HeightUnits == DimensionUnitType.PercentageOfSourceFile ||
-                                        gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                                        gue.HeightUnits == DimensionUnitType.ScreenPixel ||
-                                        gue.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
-                                    {
-                                        var childAbsoluteWidth = gue.AbsoluteHeight;
-                                        heightToSplit -= childAbsoluteWidth;
-                                    }
-                                    numberOfVisibleChildren++;
-                                }
-                            }
-                        }
-
-                        if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
-                        {
-                            var numberOfSpaces = numberOfVisibleChildren;
-                            heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
-                        }
-
-                        // Siblings that overflow the parent leave no space, not negative space.
-                        heightToSplit = System.Math.Max(0, heightToSplit);
-
-                        float totalRatio = 0;
-                        if (ratioSiblings != null)
-                        {
-                            for (int i = 0; i < ratioSiblings.Count; i++)
-                            {
-                                var child = ratioSiblings[i];
-                                if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
-                                {
-                                    totalRatio += System.Math.Max(0, gue.Height);
-                                }
-                            }
-                        }
-                        if (totalRatio > 0)
-                        {
-                            pixelHeightToSet = heightToSplit * (this.Height / totalRatio);
-                        }
-                        else
-                        {
-                            pixelHeightToSet = heightToSplit;
-                        }
-                    }
+                    pixelHeightToSet = GetRatioHeight(parentHeight);
                 }
                 break;
                 #endregion
@@ -432,6 +344,202 @@ public partial class GraphicalUiElement
         pixelHeightToSet = ClampToMinMax(pixelHeightToSet, _minHeight, _maxHeight);
 
         RequiredContainedObject.Height = pixelHeightToSet;
+    }
+
+    /// <summary>
+    /// The unclamped width a <see cref="DimensionUnitType.Ratio"/> width takes from the space its siblings leave in
+    /// <paramref name="parentWidth"/>. Reads the siblings as they are now.
+    /// </summary>
+    private float GetRatioWidth(float parentWidth)
+    {
+        // A negative ratio takes no space, like 0.
+        if (this.Width <= 0)
+        {
+            return 0;
+        }
+        else if (GetIfParentIsAutoGrid())
+        {
+            // Each grid child has its own cell, so there are no siblings to share it with.
+            return parentWidth;
+        }
+        else
+        {
+            var widthToSplit = parentWidth;
+
+            var numberOfVisibleChildren = 0;
+
+            var ratioSiblings = GetLayoutSiblings(out bool onlyParentless);
+
+            if (ratioSiblings != null)
+            {
+                for (int i = 0; i < ratioSiblings.Count; i++)
+                {
+                    var child = ratioSiblings[i];
+                    if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
+                    {
+                        if (gue.WidthUnits == DimensionUnitType.Absolute)
+                        {
+                            widthToSplit -= gue.Width;
+                        }
+                        else if (gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                        {
+                            widthToSplit -= gue.Width * GlobalFontScale;
+                        }
+                        else if (gue.WidthUnits == DimensionUnitType.RelativeToParent)
+                        {
+                            var childAbsoluteWidth = parentWidth + gue.Width;
+                            widthToSplit -= childAbsoluteWidth;
+                        }
+                        else if (gue.WidthUnits == DimensionUnitType.PercentageOfParent)
+                        {
+                            var childAbsoluteWidth = (parentWidth * gue.Width) / 100f;
+                            widthToSplit -= childAbsoluteWidth;
+                        }
+                        // this depends on the sibling being updated before this:
+                        else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                            gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                            gue.WidthUnits == DimensionUnitType.PercentageOfSourceFile ||
+                            gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                            gue.WidthUnits == DimensionUnitType.ScreenPixel ||
+                            gue.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
+                        {
+                            var childAbsoluteWidth = gue.AbsoluteWidth;
+                            widthToSplit -= childAbsoluteWidth;
+                        }
+                        numberOfVisibleChildren++;
+                    }
+                }
+            }
+
+            if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+            {
+                var numberOfSpaces = numberOfVisibleChildren;
+
+                widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
+            }
+
+            // Siblings that overflow the parent leave no space, not negative space.
+            widthToSplit = System.Math.Max(0, widthToSplit);
+
+            float totalRatio = 0;
+            if (ratioSiblings != null)
+            {
+                for (int i = 0; i < ratioSiblings.Count; i++)
+                {
+                    var child = ratioSiblings[i];
+                    if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
+                    {
+                        totalRatio += System.Math.Max(0, gue.Width);
+                    }
+                }
+            }
+            if (totalRatio > 0)
+            {
+                return widthToSplit * (this.Width / totalRatio);
+
+            }
+            else
+            {
+                return widthToSplit;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The unclamped height a <see cref="DimensionUnitType.Ratio"/> height takes from the space its siblings leave in
+    /// <paramref name="parentHeight"/>. Reads the siblings as they are now.
+    /// </summary>
+    private float GetRatioHeight(float parentHeight)
+    {
+        // A negative ratio takes no space, like 0.
+        if (this.Height <= 0)
+        {
+            return 0;
+        }
+        else if (GetIfParentIsAutoGrid())
+        {
+            // Each grid child has its own cell, so there are no siblings to share it with.
+            return parentHeight;
+        }
+        else
+        {
+            var heightToSplit = parentHeight;
+
+            var numberOfVisibleChildren = 0;
+
+            var ratioSiblings = GetLayoutSiblings(out bool onlyParentless);
+
+            if (ratioSiblings != null)
+            {
+                for (int i = 0; i < ratioSiblings.Count; i++)
+                {
+                    var child = ratioSiblings[i];
+                    if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
+                    {
+                        if (gue.HeightUnits == DimensionUnitType.Absolute)
+                        {
+                            heightToSplit -= gue.Height;
+                        }
+                        else if (gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                        {
+                            heightToSplit -= gue.Height * GlobalFontScale;
+                        }
+                        else if (gue.HeightUnits == DimensionUnitType.RelativeToParent)
+                        {
+                            var childAbsoluteWidth = parentHeight + gue.Height;
+                            heightToSplit -= childAbsoluteWidth;
+                        }
+                        else if (gue.HeightUnits == DimensionUnitType.PercentageOfParent)
+                        {
+                            var childAbsoluteWidth = (parentHeight * gue.Height) / 100f;
+                            heightToSplit -= childAbsoluteWidth;
+                        }
+                        // this depends on the sibling being updated before this:
+                        else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren ||
+                            gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                            gue.HeightUnits == DimensionUnitType.PercentageOfSourceFile ||
+                            gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                            gue.HeightUnits == DimensionUnitType.ScreenPixel ||
+                            gue.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
+                        {
+                            var childAbsoluteWidth = gue.AbsoluteHeight;
+                            heightToSplit -= childAbsoluteWidth;
+                        }
+                        numberOfVisibleChildren++;
+                    }
+                }
+            }
+
+            if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+            {
+                var numberOfSpaces = numberOfVisibleChildren;
+                heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
+            }
+
+            // Siblings that overflow the parent leave no space, not negative space.
+            heightToSplit = System.Math.Max(0, heightToSplit);
+
+            float totalRatio = 0;
+            if (ratioSiblings != null)
+            {
+                for (int i = 0; i < ratioSiblings.Count; i++)
+                {
+                    var child = ratioSiblings[i];
+                    if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
+                    {
+                        totalRatio += System.Math.Max(0, gue.Height);
+                    }
+                }
+            }
+            if (totalRatio > 0)
+            {
+                return heightToSplit * (this.Height / totalRatio);
+            }
+            else
+            {
+                return heightToSplit;
+            }
+        }
     }
 
     // Min wins over max when they conflict.
@@ -721,97 +829,7 @@ public partial class GraphicalUiElement
 
             case DimensionUnitType.Ratio:
                 {
-                    // A negative ratio takes no space, like 0.
-                    if (this.Width <= 0)
-                    {
-                        pixelWidthToSet = 0;
-                    }
-                    else if (GetIfParentIsAutoGrid())
-                    {
-                        // Each grid child has its own cell, so there are no siblings to share it with.
-                        pixelWidthToSet = parentWidth;
-                    }
-                    else
-                    {
-                        var widthToSplit = parentWidth;
-
-                        var numberOfVisibleChildren = 0;
-
-                        var ratioSiblings = GetLayoutSiblings(out bool onlyParentless);
-
-                        if (ratioSiblings != null)
-                        {
-                            for (int i = 0; i < ratioSiblings.Count; i++)
-                            {
-                                var child = ratioSiblings[i];
-                                if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
-                                {
-                                    if (gue.WidthUnits == DimensionUnitType.Absolute)
-                                    {
-                                        widthToSplit -= gue.Width;
-                                    }
-                                    else if (gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                                    {
-                                        widthToSplit -= gue.Width * GlobalFontScale;
-                                    }
-                                    else if (gue.WidthUnits == DimensionUnitType.RelativeToParent)
-                                    {
-                                        var childAbsoluteWidth = parentWidth + gue.Width;
-                                        widthToSplit -= childAbsoluteWidth;
-                                    }
-                                    else if (gue.WidthUnits == DimensionUnitType.PercentageOfParent)
-                                    {
-                                        var childAbsoluteWidth = (parentWidth * gue.Width) / 100f;
-                                        widthToSplit -= childAbsoluteWidth;
-                                    }
-                                    // this depends on the sibling being updated before this:
-                                    else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                                        gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                        gue.WidthUnits == DimensionUnitType.PercentageOfSourceFile ||
-                                        gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                                        gue.WidthUnits == DimensionUnitType.ScreenPixel ||
-                                        gue.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
-                                    {
-                                        var childAbsoluteWidth = gue.AbsoluteWidth;
-                                        widthToSplit -= childAbsoluteWidth;
-                                    }
-                                    numberOfVisibleChildren++;
-                                }
-                            }
-                        }
-
-                        if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
-                        {
-                            var numberOfSpaces = numberOfVisibleChildren;
-
-                            widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
-                        }
-
-                        // Siblings that overflow the parent leave no space, not negative space.
-                        widthToSplit = System.Math.Max(0, widthToSplit);
-
-                        float totalRatio = 0;
-                        if (ratioSiblings != null)
-                        {
-                            for (int i = 0; i < ratioSiblings.Count; i++)
-                            {
-                                var child = ratioSiblings[i];
-                                if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
-                                {
-                                    totalRatio += System.Math.Max(0, gue.Width);
-                                }
-                            }
-                        }
-                        if (totalRatio > 0)
-                        {
-                            pixelWidthToSet = widthToSplit * (this.Width / totalRatio);
-
-                        }
-                        else
-                        {
-                            pixelWidthToSet = widthToSplit;
-                        }
-                    }
+                    pixelWidthToSet = GetRatioWidth(parentWidth);
                 }
                 break;
                 #endregion
