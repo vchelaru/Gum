@@ -1005,31 +1005,205 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         (child.Runtime.AbsoluteWidth, child.Runtime.AbsoluteHeight).ShouldBe((4f, 4f));
     }
 
+
+    [Fact]
+    public void CutDownSweepTree_WrappingStackWhoseSuspendedChildrenAreRepositionedAfterItResizes_ShouldNotThrowAndShouldMatchAFreshBuild()
+    {
+        // Seed 705, cut down, and not specific to ill-formed trees. Three children are centered in their line, so
+        // their position reads the line's size. While layout is suspended the stack narrows (each child now
+        // wraps) and the children grow, then everything resumes. The stack lays out first, while its children
+        // are still suspended and keep their old lines, and repositions them against the new line sizes.
+        // That moved the second child to a new line that no child had measured, and the third child then summed
+        // a line size that did not exist.
+        Node Tree(float stackWidth, float childHeight)
+        {
+            Node Child()
+            {
+                Node child = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 30, DimensionUnitType.Absolute, childHeight);
+                child.YUnits = GeneralUnitType.PixelsFromMiddle;
+                return child;
+            }
+            Node stack = Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute, stackWidth, DimensionUnitType.Absolute, 100,
+                Child(), Child(), Child());
+            stack.Wraps = true;
+            return Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 200, DimensionUnitType.Absolute, 200, stack);
+        }
+
+        Node edited = Tree(stackWidth: 100, childHeight: 10);
+        BuildSuspended(edited);
+        edited.Runtime.SuspendLayout(recursive: true);
+        edited.Children[0].Runtime.Width = 40;
+        foreach (Node child in edited.Children[0].Children)
+        {
+            child.Runtime.Height = 20;
+        }
+        edited.Runtime.ResumeLayout(recursive: true);
+
+        Node fresh = Tree(stackWidth: 40, childHeight: 20);
+        BuildSuspended(fresh);
+
+        Snapshot(edited, includeHidden: true).ShouldBe(Snapshot(fresh, includeHidden: true));
+    }
+
+
+    [Fact]
+    public void CutDownSweepTree_ChildSizedByARatioWhoseHeightIsAPercentOfItsWidth_ShouldBeIgnoredByAContentSizedParentWhoseWidthFollowsItsHeight()
+    {
+        // Seed 848, cut down. Like seed 291 but the child's width is a Ratio, which also comes from the parent's
+        // size. The parent's width is 200% of its height, its height is the larger of its own content and its
+        // parent, and the child's content is 200% of the child's width: the height would have to be four times
+        // itself, so each layout grew it until it was infinite.
+        Node child = Spec(ChildrenLayout.Regular, DimensionUnitType.Ratio, 2, DimensionUnitType.PercentageOfOtherDimension, 200);
+        Node parent = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfOtherDimension, 200, DimensionUnitType.RelativeToMaxParentOrChildren, 0, child);
+        child.YUnits = GeneralUnitType.PixelsFromMiddle;
+        child.Y = 15;
+        Node outer = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 10, DimensionUnitType.RelativeToChildren, 0, parent);
+        outer.XUnits = GeneralUnitType.Percentage;
+        Node outer2 = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 10, DimensionUnitType.RelativeToChildren, 0, outer);
+        outer2.YUnits = GeneralUnitType.PixelsFromMiddle;
+        outer2.Y = 10;
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 10, DimensionUnitType.RelativeToChildren, 0, outer2);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        (parent.Runtime.AbsoluteWidth, parent.Runtime.AbsoluteHeight).ShouldBe((0f, 0f));
+        (child.Runtime.AbsoluteWidth, child.Runtime.AbsoluteHeight).ShouldBe((0f, 0f));
+    }
+
+
+    [Fact]
+    public void CutDownSweepTree_FixedSizeStackWhoseFirstChildIsTheLargerOfTheStackAndItsContent_ShouldMeasureThatChildByItsContentAndStayPutOnASecondLayout()
+    {
+        // Seed 742, cut down. With UseFixedStackChildrenSize the stack measured its first child by its laid-out
+        // height. That child is the larger of the stack's height and its content, so its height includes the
+        // stack's own previous height, and the stack grew with it on every layout. The measure that does not
+        // use the fixed size already counts such a child by its content only.
+        Node first = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 10, DimensionUnitType.RelativeToMaxParentOrChildren, 0);
+        first.Y = 3;
+        Node second = Absolute(10, 10);
+        Node stack = Spec(ChildrenLayout.TopToBottomStack, DimensionUnitType.Absolute, 10, DimensionUnitType.RelativeToChildren, 0, first, second);
+        stack.UseFixedSize = true;
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 10, DimensionUnitType.Absolute, 10, stack);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        (stack.Runtime.AbsoluteHeight, first.Runtime.AbsoluteHeight).ShouldBe((0f, 0f));
+    }
+
+
+    [Fact]
+    public void CutDownSweepTree_FixedSizeStackSizedToChildrenOnBothAxes_ShouldMeasureEveryChildOnTheFirstLayout()
+    {
+        // Seed 985, cut down, and not specific to ill-formed trees. A fixed-size stack lays out only its first
+        // child before it is measured, which is enough for its height, but its width is the widest child.
+        // The second child, centered with an offset, was measured before it had a width or a position, so
+        // the stack was 10 wide until the next layout made it 24.
+        Node first = Absolute(10, 10);
+        Node second = Absolute(10, 10);
+        second.XUnits = GeneralUnitType.PixelsFromMiddle;
+        second.X = 2;
+        Node stack = Spec(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren, 0, first, second);
+        stack.UseFixedSize = true;
+
+        LayOutTwiceAndExpectNoChange(stack);
+
+        (stack.Runtime.AbsoluteWidth, stack.Runtime.AbsoluteHeight).ShouldBe((24f, 20f));
+    }
+
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CutDownSweepTree_ChangingTheAxisAnotherAxisIsAPercentOf_ShouldMoveTheElementAsAFreshBuildWould(bool widthFollowsHeight)
+    {
+        // Seeds 433, 897 and 924, cut down, and not specific to ill-formed trees. A child whose width is a percent
+        // of its height and whose origin is its center sits half its width to the left. Setting its height lays
+        // out that axis only, but the width follows it, and the position was left at the old width.
+        Node Tree(float height)
+        {
+            Node child = widthFollowsHeight
+                ? Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfOtherDimension, 50, DimensionUnitType.Absolute, height)
+                : Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, height, DimensionUnitType.PercentageOfOtherDimension, 50);
+            child.XOrigin = HorizontalAlignment.Center;
+            child.YOrigin = VerticalAlignment.Center;
+            return Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 100, DimensionUnitType.Absolute, 100, child);
+        }
+
+        Node edited = Tree(10);
+        BuildSuspended(edited);
+        if (widthFollowsHeight)
+        {
+            edited.Children[0].Runtime.Height = 40;
+        }
+        else
+        {
+            edited.Children[0].Runtime.Width = 40;
+        }
+        Node fresh = Tree(40);
+        BuildSuspended(fresh);
+
+        Snapshot(edited, includeHidden: true).ShouldBe(Snapshot(fresh, includeHidden: true));
+    }
+
+    // Ill-formed seeds past the golden file's are held to the same checks. These are the ones that are not, each
+    // with why. A cycle that runs through an intermediate container (not directly between a parent and its
+    // child) is not detected, so it either grows without bound or approaches its fixed point a little on each layout.
+    private static readonly Dictionary<int, string> IllFormedSeedsNotHeld = new()
+    {
+        [848] = "units are circular through an intermediate container, and the size grows to infinity (#5959)",
+        [1185] = "a wrapped text's height depends on its width, which follows the container's height (#5959)",
+        [1271] = "units are circular through a sibling and settle toward a fixed point over repeated layouts (#5959)"
+    };
+
+    // Seeds whose edited tree differs from a fresh build and are not yet explained (#5954).
+    private static readonly Dictionary<int, string> IllFormedSeedsNotHeldToEdits = new()
+    {
+        [14] = "a Ratio-width descendant of an ignored sibling keeps a width of 0 after an earlier sibling is hidden (#5958)"
+    };
+
     [Fact]
     public void Sweep_IllFormedTrees_ShouldNotThrowAndShouldSettleOnASecondLayout()
     {
         // Ill-formed trees are held to the invariants that do not depend on the input making sense: no
-        // exception, a second layout changes nothing, and building with layout live or suspended, or making
-        // the edits suspended, gives the same result as a fresh build. (Edited-vs-fresh is not swept here.)
+        // exception, a second layout changes nothing, building with layout live or suspended, or making
+        // the edits suspended, gives the same result as a fresh build, and so does editing the tree live.
+        const int lastSeed = 1300;
         List<string> failures = new();
-        foreach (CaseResult result in RunAllCases(wellFormed: false))
+        for (int seed = 0; seed < lastSeed; seed++)
         {
+            if (IllFormedSeedsNotHeld.ContainsKey(seed))
+            {
+                continue;
+            }
+
+            CaseResult result = RunCase(seed, wellFormed: false);
             if (result.Initial.StartsWith("EXCEPTION"))
             {
-                failures.Add($"seed {result.Seed} threw");
+                failures.Add($"seed {seed} threw");
                 continue;
             }
             if (result.Initial != result.AfterSecondLayout)
             {
-                failures.Add($"seed {result.Seed} second layout");
+                failures.Add($"seed {seed} second layout");
             }
             if (StripHidden(result.Initial) != result.BuiltLive)
             {
-                failures.Add($"seed {result.Seed} live");
+                failures.Add($"seed {seed} live");
             }
             if (result.SuspendedEdits != result.SuspendedFresh)
             {
-                failures.Add($"seed {result.Seed} suspended edits");
+                failures.Add($"seed {seed} suspended edits");
+            }
+            if (!IllFormedSeedsNotHeldToEdits.ContainsKey(seed))
+            {
+                for (int i = 0; i < result.Edits.Count; i++)
+                {
+                    if (result.Edits[i].incremental.Split("ALL\n")[0] != result.Edits[i].fresh)
+                    {
+                        failures.Add($"seed {seed} edit{i} {result.Edits[i].label}");
+                        break;
+                    }
+                }
             }
         }
 
@@ -1101,6 +1275,8 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         _output.WriteLine($"{failures.Count}: {string.Join(", ", failures)}");
         failures.Count.ShouldBe(0, string.Join(", ", failures.Take(20)));
     }
+
+
 
     /// <summary>The spec of a seed's tree, one node per line, for reading a failure.</summary>
     private static string Describe(int seed, bool wellFormed)

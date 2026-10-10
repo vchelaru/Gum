@@ -181,8 +181,28 @@ public partial class GraphicalUiElement
                             // child, so it stands in for the others as zero. Reading its height would size this
                             // stack from its own previous height.
                             var firstChildCounts = element.GetChildLayoutType(XOrY.Y, this) == ChildType.Absolute;
-                            maxHeight = firstChildCounts ? element.GetRequiredParentHeight() : 0;
-                            var elementHeight = firstChildCounts ? element.AbsoluteHeight : 0;
+                            float elementHeight = 0;
+                            if (firstChildCounts)
+                            {
+                                if (element.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren &&
+                                    element.mContainedObjectAsIpso != null)
+                                {
+                                    // Its laid-out height includes this stack's own previous height, so measure it by
+                                    // its content only, as GetMaxCellHeight does.
+                                    elementHeight = ClampToMinMax(element.GetMaxCellHeight(considerWrappedStacked, 0) + element.mHeight,
+                                        element.MinHeight, element.MaxHeight);
+                                    maxHeight = elementHeight;
+                                }
+                                else
+                                {
+                                    maxHeight = element.GetRequiredParentHeight();
+                                    elementHeight = element.AbsoluteHeight;
+                                }
+                            }
+                            else
+                            {
+                                maxHeight = 0;
+                            }
                             maxHeight += (StackSpacing + elementHeight) * (GetVisibleChildCount() - 1);
                         }
                         else
