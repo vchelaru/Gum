@@ -639,6 +639,13 @@ public class EvaluatedSyntax
     // name when the other operand is a string; otherwise defer to object.Equals.
     private static bool AreEqual(object? left, object? right)
     {
+        // A float variable compared with an int literal (Width == 50) is equal by value, not by type.
+        if (left != null && right != null
+            && TryGetNumericType(left, out Type leftType) && TryGetNumericType(right, out Type rightType))
+        {
+            Type widerType = GetWiderNumericType(leftType, rightType);
+            return object.Equals(Convert.ChangeType(left, widerType), Convert.ChangeType(right, widerType));
+        }
         if (left is Enum leftEnum && right is string rightString)
         {
             return string.Equals(leftEnum.ToString(), rightString, StringComparison.Ordinal);

@@ -1217,7 +1217,7 @@ namespace GumRuntime
             ////////////////////////////End Early Out///////////////////////////////
 
             var split = referenceString
-                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
 
             if (split.Length != 2)
@@ -1360,7 +1360,7 @@ namespace GumRuntime
             }
 
             var split = referenceString
-                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
 
             if (split.Length != 2)

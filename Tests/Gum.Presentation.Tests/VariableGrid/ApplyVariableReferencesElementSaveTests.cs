@@ -408,6 +408,27 @@ public class ApplyVariableReferencesElementSaveTests : BaseTestClass
 
     #endregion
 
+    #region ComparisonOperators
+
+    [Theory]
+    [InlineData("Width = Height == 50 ? 30 : 15", 30f)]
+    [InlineData("Width = Height != 50 ? 30 : 15", 15f)]
+    [InlineData("Width = Height <= 49 ? 30 : 15", 15f)]
+    [InlineData("Width = Height >= 50 ? 30 : 15", 30f)]
+    public void ApplyVariableReferences_ComparisonContainingEqualsSign_EvaluatesTheWholeRightSide(string row, float expectedWidth)
+    {
+        ScreenSave screen = BuildScreenWithReference(
+            row,
+            ("Width", 0f, "float"),
+            ("Height", 50f, "float"));
+
+        screen.ApplyVariableReferences(screen.DefaultState);
+
+        screen.DefaultState.GetValue("Width").ShouldBe(expectedWidth);
+    }
+
+    #endregion
+
     #region EnumCoercion
 
     [Fact]

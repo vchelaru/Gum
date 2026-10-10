@@ -37,4 +37,20 @@ public class GumExpressionServiceTests : BaseTestClass
         result.ShouldNotBeNull();
         result.Value.Values.ToList().ShouldBe(new List<object> { "B" });
     }
+
+    [Fact]
+    public void GetAllVariableReferenceBranches_ConditionContainingEqualsSign_ReturnsBothBranches()
+    {
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = new StateSave { ParentContainer = screen };
+        screen.States.Add(state);
+        state.Variables.Add(new VariableSave { Name = "Mode", Value = 1, Type = "int", SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Text", Value = "A", Type = "string", SetsValue = true });
+
+        (string VariableName, IEnumerable<object> Values)? result =
+            ElementSaveExtensions.GetAllVariableReferenceBranches(null, "Text = Mode == 1 ? \"On\" : \"Off\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.Values.ToList().ShouldBe(new List<object> { "On", "Off" });
+    }
 }
