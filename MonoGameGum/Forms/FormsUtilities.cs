@@ -247,19 +247,34 @@ public class FormsUtilities
                 {
                     var removedElements = e.OldItems;
 
-                    var topParent = GetRootElement(recieverVisual);
-
-                    if (e.Action == NotifyCollectionChangedAction.Reset && topParent == container)
+                    if (e.Action == NotifyCollectionChangedAction.Reset && GetRootElement(recieverVisual) == container)
                     {
                         InteractiveGue.CurrentInputReceiver = null;
                     }
-                    else if (removedElements?.Contains(topParent) == true)
+                    else if (removedElements != null && IsSelfOrDescendantOfAny(recieverVisual, removedElements))
                     {
                         InteractiveGue.CurrentInputReceiver = null;
                     }
                 }
             }
         }
+    }
+
+    // Walks up from the item rather than comparing its top-most parent: setting Parent = null
+    // raises the root's Remove event while the removed element is still parented to the root,
+    // so the top-most parent is the root itself and never matches the removed element.
+    static bool IsSelfOrDescendantOfAny(GraphicalUiElement item, System.Collections.IList removedElements)
+    {
+        GraphicalUiElement? current = item;
+        while (current != null)
+        {
+            if (removedElements.Contains(current))
+            {
+                return true;
+            }
+            current = current.Parent;
+        }
+        return false;
     }
 
     static GraphicalUiElement GetRootElement(GraphicalUiElement item)
