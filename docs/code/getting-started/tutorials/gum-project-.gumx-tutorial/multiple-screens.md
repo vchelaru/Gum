@@ -134,7 +134,11 @@ partial class Screen2Runtime : Gum.Wireframe.GraphicalUiElement
 }
 ```
 
-Each screen removes itself from managers when its button is clicked, then creates and adds the next screen to managers.
+Each screen removes everything under the root with `GumService.Default.Root.Children.Clear()` when its button is clicked, then creates the next screen and adds it with `AddToRoot()`.
+
+{% hint style="info" %}
+`Root.Children.Clear()` removes everything under Root. If other top-level content should stay (a HUD, for example), call `RemoveFromRoot()` on the screen instead, which removes only that screen. `PopupRoot` and `ModalRoot` are not affected by either.
+{% endhint %}
 
 <figure><img src="../../../../.gitbook/assets/24_18 29 52.gif" alt=""><figcaption><p>The Go to Screen button destroys the current Screen and shows the next Screen</p></figcaption></figure>
 
@@ -142,8 +146,8 @@ Each screen removes itself from managers when its button is clicked, then create
 
 This tutorial assumes that a Gum screen is always displayed.
 
-Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Clear();`
+Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Children.Clear()`.
 
 ### Conclusion
 
-This tutorial showed how to switch between two screens by removing the old screen with RemoveFromManagers and creating a new screen with ToGraphicalUiElement.
+This tutorial showed how to switch between two screens by clearing the root and creating a new screen with `ToGraphicalUiElement` and `AddToRoot`.

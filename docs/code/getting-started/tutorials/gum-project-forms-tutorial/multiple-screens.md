@@ -197,7 +197,11 @@ partial class Screen2
 {% endtab %}
 {% endtabs %}
 
-Each screen clears the root (removes the previous screen) when its button is clicked, then creates and adds the next screen to the root.
+Each screen clears the root (removing everything under it) when its button is clicked, then creates and adds the next screen to the root.
+
+{% hint style="info" %}
+`Root.Children.Clear()` removes everything under Root. If other top-level content should stay (a HUD, for example), call `RemoveFromRoot()` on the screen instead, which removes only that screen. `PopupRoot` and `ModalRoot` are not affected by either.
+{% endhint %}
 
 <figure><img src="../../../../.gitbook/assets/10_06 34 29 (1).gif" alt=""><figcaption><p>Switching Screens with Buttons</p></figcaption></figure>
 
@@ -205,8 +209,8 @@ Each screen clears the root (removes the previous screen) when its button is cli
 
 This tutorial assumes that a Gum screen is always displayed.
 
-Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Children.Clear();`
+Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Children.Clear()`.
 
 ## Conclusion
 
-This tutorial showed how to switch between two screens by removing the old screen and creating a new screen. Although this is a simple example, the same concepts could be applied to a full game to switch between multiple screens.
+This tutorial showed how to switch between two screens by clearing the root and creating a new screen. Although this is a simple example, the same concepts could be applied to a full game to switch between multiple screens.

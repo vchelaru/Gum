@@ -2,4 +2,11 @@
 
 ### Introduction
 
-The AddToMangers methods adds the calling GraphicalUiElement to the SystemManagers. This should be called if the GraphicalUiElement needs to be treated as a root-most object. This is automatically called if an ElementSave's ToGraphicalUiElement passes `true` for its `addToManagers` parameter.&#x20;
+AddToManagers is the older way to display a GraphicalUiElement as a root-most object, and it is marked obsolete. Call `AddToRoot()` instead, which parents the element to `GumService.Default.Root` so it is drawn, receives input, and is laid out.
+
+```csharp
+var graphicalUiElement = elementSave.ToGraphicalUiElement();
+graphicalUiElement.AddToRoot();
+```
+
+To remove the element later, see [RemoveFromManagers](removefrommanagers.md).
