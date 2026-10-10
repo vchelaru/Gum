@@ -129,6 +129,11 @@ updated **first**. Ratio children need sibling sizes to compute remaining space.
 Pass 1 (conditional): update children with `DoesDimensionNeedUpdateFirstForRatio`
 units. Pass 2: update all remaining children.
 
+A `Ratio` child is resized by siblings, not by its own subtree, so a depth-limited visit (a climb out of a
+short subtree, such as hiding content) can resize it while stopping short of its descendants. `LayOutChild`
+therefore lays a `Ratio` child out again to full depth, in a new session, when its size changed under a
+limited depth.
+
 ### shouldFlagAsUpdated
 
 For `Regular` layout, children are flagged as updated to avoid redundant work.

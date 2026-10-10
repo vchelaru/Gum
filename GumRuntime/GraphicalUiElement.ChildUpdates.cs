@@ -363,8 +363,25 @@ public partial class GraphicalUiElement
                 }
 
                 int changesBefore = s_layoutChangeCount;
+                float widthBefore = child.mContainedObjectAsIpso?.Width ?? 0;
+                float heightBefore = child.mContainedObjectAsIpso?.Height ?? 0;
                 child._layoutRan = false;
                 child.UpdateLayoutWithinSession(ParentUpdateType.None, depth, xOrY, gateClimbOnSizeChange: false);
+
+                // A Ratio child is sized by its siblings, so a change somewhere else can resize it even though
+                // the depth this pass was given stops short of its descendants, which read its size.
+                if (child._layoutRan && depth < FullUpdateDepth / 2 && child.mContainedObjectAsIpso != null &&
+                    (child.mContainedObjectAsIpso.Width != widthBefore || child.mContainedObjectAsIpso.Height != heightBefore) &&
+                    (child.mWidthUnit.GetDependencyType() == HierarchyDependencyType.DependsOnSiblings ||
+                     child.mHeightUnit.GetDependencyType() == HierarchyDependencyType.DependsOnSiblings))
+                {
+                    // The descendants are laid out against a new size, so visits recorded for them earlier in this
+                    // session are void.
+                    long session = s_session;
+                    s_session = System.Threading.Interlocked.Increment(ref s_lastSession);
+                    child.UpdateLayoutWithinSession(ParentUpdateType.None, FullUpdateDepth, xOrY, gateClimbOnSizeChange: false);
+                    s_session = session;
+                }
 
                 if (child._layoutRan)
                 {
