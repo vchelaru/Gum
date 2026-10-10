@@ -155,6 +155,31 @@ public class SpriteRenderer
         isRotationNearZero && offsetPixel &&
         (isIntegerScale || (SnapPositionEvenWhenScaled && dimensionSnapping == DimensionSnapping.DimensionSnapping));
 
+    /// <summary>
+    /// The scissor rectangle handed to SpriteBatch. Unclipped draws disable the scissor test, so the
+    /// rect is normally ignored, but MonoGame 3.8.6 DesktopGL's Clear can re-enable the GL scissor
+    /// test from a stale state and leave it on with this rect, which blanks the frame if it is 0x0
+    /// (#5947). The camera's client rect makes that leak harmless.
+    /// </summary>
+    internal static Rectangle GetEffectiveScissorRectangle(Rectangle? clipRectangle, Camera camera)
+    {
+        if (clipRectangle is not Rectangle clip)
+        {
+            return new Rectangle(camera.ClientLeft, camera.ClientTop, camera.ClientWidth, camera.ClientHeight);
+        }
+
+        // Make sure values of with and height are never less than 0:
+        if (clip.Width < 0)
+        {
+            clip.Width = 0;
+        }
+        if (clip.Height < 0)
+        {
+            clip.Height = 0;
+        }
+        return clip;
+    }
+
     #endregion
 
     public void Initialize(GraphicsDevice graphicsDevice)
@@ -200,21 +225,7 @@ public class SpriteRenderer
 
         var rasterizerState = isFullscreen ? scissorTestDisabled : scissorTestEnabled;
 
-        var scissorRectangle = new Rectangle();
-        if (renderStates.ClipRectangle is Rectangle clipRectangle)
-        {
-            scissorRectangle = clipRectangle;
-
-            // Make sure values of with and height are never less than 0:
-            if (scissorRectangle.Width < 0)
-            {
-                scissorRectangle.Width = 0;
-            }
-            if (scissorRectangle.Height < 0)
-            {
-                scissorRectangle.Height = 0;
-            }
-        }
+        var scissorRectangle = GetEffectiveScissorRectangle(renderStates.ClipRectangle, camera);
 
         // February 8, 2025
         // Gum used to DepthRead
