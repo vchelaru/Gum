@@ -355,7 +355,7 @@
     <Variable Type="float" Name="VerticalScrollBarInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
     </Variable>
-    <Variable Type="HorizontalAlignment" Name="VerticalScrollBarInstance.YOrigin" SetsValue="true">
+    <Variable Type="VerticalAlignment" Name="VerticalScrollBarInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="VerticalScrollBarInstance.YUnits" SetsValue="true">

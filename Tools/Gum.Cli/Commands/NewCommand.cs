@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Gum.DataTypes;
 using Gum.ProjectServices;
 
@@ -35,6 +36,11 @@ public static class NewCommand
                          "Accepted values: 'forms' (default) includes all Forms controls, behaviors, and assets; " +
                          "'empty' creates a minimal project with only the standard elements.");
 
+        var themeOption = new Option<string?>(
+            "--theme",
+            "With the 'forms' template, start from a bundled Forms theme (for example Meadow or Bubblegum) instead of the " +
+            "plain Forms controls. 'Standard' is the plain Forms controls. Unknown names list the themes found.");
+
         var platformOption = new Option<string?>(
             aliases: new[] { "--platform", "-p" },
             description: "Create a full, runnable game project for a platform (not just a Gum project), referencing Gum " +
@@ -57,6 +63,7 @@ public static class NewCommand
         {
             pathArgument,
             templateOption,
+            themeOption,
             platformOption,
             noRestoreOption,
             sourceLinkedOption
@@ -66,10 +73,11 @@ public static class NewCommand
         {
             string? path = context.ParseResult.GetValueForArgument(pathArgument);
             string template = context.ParseResult.GetValueForOption(templateOption) ?? "forms";
+            string? theme = context.ParseResult.GetValueForOption(themeOption);
             string? platform = context.ParseResult.GetValueForOption(platformOption);
             bool noRestore = context.ParseResult.GetValueForOption(noRestoreOption);
             bool sourceLinked = context.ParseResult.GetValueForOption(sourceLinkedOption);
-            context.ExitCode = Execute(path, template, platform, noRestore, sourceLinked);
+            context.ExitCode = Execute(path, template, theme, platform, noRestore, sourceLinked);
         });
 
         return command;
@@ -78,7 +86,8 @@ public static class NewCommand
     private const string DefaultProjectName = "GumProject";
     private const string DefaultPlatformProjectName = "MyGumGame";
 
-    private static int Execute(string? path, string template, string? platform, bool noRestore, bool sourceLinked)
+    private static int Execute(
+        string? path, string template, string? theme, string? platform, bool noRestore, bool sourceLinked)
     {
         if (sourceLinked && platform == null)
         {
@@ -93,9 +102,24 @@ public static class NewCommand
             return 2;
         }
 
+        string? themeDirectory = null;
+        if (theme != null)
+        {
+            if (!string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine("--theme needs the 'forms' template: themes style the Forms controls.");
+                return 2;
+            }
+
+            if (!TryFindThemeDirectory(theme, out themeDirectory))
+            {
+                return 2;
+            }
+        }
+
         if (platform != null)
         {
-            return ExecuteWithPlatform(path, template, platform, noRestore, sourceLinked);
+            return ExecuteWithPlatform(path, template, themeDirectory, platform, noRestore, sourceLinked);
         }
 
         string fullPath;
@@ -127,7 +151,12 @@ public static class NewCommand
             Directory.CreateDirectory(directory);
         }
 
-        if (string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase))
+        if (themeDirectory != null)
+        {
+            IFormsTemplateCreator themeCreator = new FormsTemplateCreator();
+            themeCreator.CreateFromTheme(fullPath, themeDirectory);
+        }
+        else if (string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase))
         {
             IFormsTemplateCreator formsCreator = new FormsTemplateCreator();
             formsCreator.Create(fullPath);
@@ -142,8 +171,29 @@ public static class NewCommand
         return 0;
     }
 
+    // The default theme is the plain Forms template, so it resolves to no folder and the caller falls through to it.
+    private static bool TryFindThemeDirectory(string theme, out string? themeDirectory)
+    {
+        themeDirectory = null;
+        if (string.Equals(theme, "Standard", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        IFormsThemeLocator locator = FormsThemeLocator.CreateDefault(AppContext.BaseDirectory, Directory.GetCurrentDirectory());
+        themeDirectory = locator.FindThemeDirectory(theme);
+        if (themeDirectory != null)
+        {
+            return true;
+        }
+
+        string available = string.Join(", ", new[] { "Standard" }.Concat(locator.GetAvailableThemes()));
+        Console.Error.WriteLine($"Unknown theme '{theme}'. Available themes: {available}.");
+        return false;
+    }
+
     private static int ExecuteWithPlatform(
-        string? path, string template, string platform, bool noRestore, bool sourceLinked)
+        string? path, string template, string? themeDirectory, string platform, bool noRestore, bool sourceLinked)
     {
         HostPlatform hostPlatform;
         switch (platform.ToLowerInvariant())
@@ -198,7 +248,8 @@ public static class NewCommand
             projectDirectory,
             hostPlatform,
             includeFormsTemplate: string.Equals(template, "forms", StringComparison.OrdinalIgnoreCase),
-            gumSourceDirectory);
+            gumSourceDirectory,
+            themeDirectory);
 
         if (!result.Success)
         {
