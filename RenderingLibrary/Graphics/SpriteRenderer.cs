@@ -158,14 +158,17 @@ public class SpriteRenderer
     /// <summary>
     /// The scissor rectangle handed to SpriteBatch. Unclipped draws disable the scissor test, so the
     /// rect is normally ignored, but MonoGame 3.8.6 DesktopGL's Clear can re-enable the GL scissor
-    /// test from a stale state and leave it on with this rect, which blanks the frame if it is 0x0
-    /// (#5947). The camera's client rect makes that leak harmless.
+    /// test from a stale state and leave it on with this rect, which clips the frame to the rect
+    /// (blank if it is 0x0, #5947). <paramref name="unclippedBounds"/> is the device's viewport
+    /// bounds: the region MonoGame treats as the default scissor, which follows a bound render
+    /// target and is read without allocating. A smaller rect such as the camera's client rect would
+    /// still clip what lies outside it (#5950).
     /// </summary>
-    internal static Rectangle GetEffectiveScissorRectangle(Rectangle? clipRectangle, Camera camera)
+    internal static Rectangle GetEffectiveScissorRectangle(Rectangle? clipRectangle, Rectangle unclippedBounds)
     {
         if (clipRectangle is not Rectangle clip)
         {
-            return new Rectangle(camera.ClientLeft, camera.ClientTop, camera.ClientWidth, camera.ClientHeight);
+            return unclippedBounds;
         }
 
         // Make sure values of with and height are never less than 0:
@@ -225,7 +228,10 @@ public class SpriteRenderer
 
         var rasterizerState = isFullscreen ? scissorTestDisabled : scissorTestEnabled;
 
-        var scissorRectangle = GetEffectiveScissorRectangle(renderStates.ClipRectangle, camera);
+        var viewport = mSpriteBatch.GraphicsDevice.Viewport;
+        var scissorRectangle = GetEffectiveScissorRectangle(
+            renderStates.ClipRectangle,
+            new Rectangle(viewport.X, viewport.Y, viewport.Width, viewport.Height));
 
         // February 8, 2025
         // Gum used to DepthRead
