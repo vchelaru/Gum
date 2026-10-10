@@ -271,6 +271,125 @@ public class LayoutRepeatedChildVisitTests : BaseTestClass
     }
 
     [Fact]
+    public void RatioChildWhoseSiblingResizesAfterItWasLaidOut_ShouldBeLaidOutAgainAtTheNewSize()
+    {
+        // The row is 400 wide and as high as its Ratio child, which holds one 20 high box. S is as wide as it is
+        // high, and it is half the row's height, which the row only has once its Ratio child is measured. So S
+        // is 10 x 10 in the end, and the Ratio child gets the 390 left. The outer stack lays the row out twice
+        // and the row's last step visits its children again after its own height changed, so by then the
+        // Ratio child has been laid out once at the width left by an S that did not have its final size.
+        // Laying every child out every time ends in the same place.
+        string Run(bool skipRepeatedChildLayouts)
+        {
+            GraphicalUiElement.SkipRepeatedChildLayouts = skipRepeatedChildLayouts;
+            try
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = true;
+                ContainerRuntime outer = ContentSized();
+
+                ContainerRuntime row = new();
+                row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+                row.WidthUnits = DimensionUnitType.Absolute;
+                row.Width = 400;
+                row.HeightUnits = DimensionUnitType.RelativeToChildren;
+                row.Height = 0;
+
+                ContainerRuntime ratio = new();
+                ratio.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+                ratio.WidthUnits = DimensionUnitType.Ratio;
+                ratio.Width = 1;
+                ratio.HeightUnits = DimensionUnitType.RelativeToChildren;
+                ratio.Height = 0;
+                ContainerRuntime fill = Box(0, 20);
+                fill.WidthUnits = DimensionUnitType.PercentageOfParent;
+                fill.Width = 100;
+                ratio.AddChild(fill);
+
+                ContainerRuntime square = new();
+                square.WidthUnits = DimensionUnitType.PercentageOfOtherDimension;
+                square.Width = 100;
+                square.HeightUnits = DimensionUnitType.PercentageOfParent;
+                square.Height = 50;
+
+                row.AddChild(ratio);
+                row.AddChild(square);
+                outer.AddChild(row);
+                outer.AddChild(Box(7, 5));
+                GraphicalUiElement.IsAllLayoutSuspended = false;
+
+                outer.UpdateLayout();
+
+                row.AbsoluteHeight.ShouldBe(20);
+                square.AbsoluteWidth.ShouldBe(10);
+                square.AbsoluteHeight.ShouldBe(10);
+                ratio.AbsoluteWidth.ShouldBe(390);
+                fill.AbsoluteWidth.ShouldBe(390);
+                return Snapshot(outer);
+            }
+            finally
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = false;
+                GraphicalUiElement.SkipRepeatedChildLayouts = true;
+            }
+        }
+
+        Run(skipRepeatedChildLayouts: true).ShouldBe(Run(skipRepeatedChildLayouts: false));
+    }
+
+    [Fact]
+    public void NestedStacksSizedWithRatioAndMaxWidth_ShouldClampEveryLevelAndStayLinear()
+    {
+        // Without a clamp each level would be 10 narrower than the one around it (the box beside it takes 10).
+        // Level k is no wider than 400 - 20 k, which is always less than that, so every level is its clamp:
+        // 380, 360, 340, 320. A clamped Ratio level is the size it has, not the size its Ratio comes to.
+        // Comparing the two without the clamp would never match, and every visit of the level would be a full
+        // layout again (the result is the same, the cost doubles per level).
+        string Run(bool skipRepeatedChildLayouts, out ContainerRuntime root)
+        {
+            GraphicalUiElement.SkipRepeatedChildLayouts = skipRepeatedChildLayouts;
+            try
+            {
+                root = BuildRatioChain(4, ratioOnHeight: false, out _);
+                GraphicalUiElement current = root;
+                for (int level = 1; level <= 4; level++)
+                {
+                    current = (GraphicalUiElement)current.Children[0];
+                    current.MaxWidth = 400 - 20 * level;
+                }
+
+                root.UpdateLayout();
+                return Snapshot(root);
+            }
+            finally
+            {
+                GraphicalUiElement.SkipRepeatedChildLayouts = true;
+            }
+        }
+
+        string withSkipping = Run(skipRepeatedChildLayouts: true, out ContainerRuntime root);
+        withSkipping.ShouldBe(Run(skipRepeatedChildLayouts: false, out _));
+
+        GraphicalUiElement level1 = (GraphicalUiElement)root.Children[0];
+        GraphicalUiElement level2 = (GraphicalUiElement)level1.Children[0];
+        GraphicalUiElement level3 = (GraphicalUiElement)level2.Children[0];
+        GraphicalUiElement level4 = (GraphicalUiElement)level3.Children[0];
+        level1.AbsoluteWidth.ShouldBe(380);
+        level2.AbsoluteWidth.ShouldBe(360);
+        level3.AbsoluteWidth.ShouldBe(340);
+        level4.AbsoluteWidth.ShouldBe(320);
+
+        ContainerRuntime deep = BuildRatioChain(16, ratioOnHeight: false, out int nodeCount);
+        GraphicalUiElement deepLevel = deep;
+        for (int level = 1; level <= 16; level++)
+        {
+            deepLevel = (GraphicalUiElement)deepLevel.Children[0];
+            deepLevel.MaxWidth = 400 - 20 * level;
+        }
+
+        CountLayoutCalls(() => deep.UpdateLayout()).ShouldBeLessThanOrEqualTo(nodeCount * 3);
+    }
+
+    [Fact]
     public void WideningABoxInAZigZagChain_ShouldWidenThePercentLevelsBelowIt()
     {
         // Four levels where levels 1 and 3 are 100% of their parent's width, which their parent's size
