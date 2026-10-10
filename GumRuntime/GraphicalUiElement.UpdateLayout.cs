@@ -43,6 +43,9 @@ public partial class GraphicalUiElement
 {
 
     #region UpdateLayout calls
+    // The children depth that reaches every descendant.
+    private const int FullUpdateDepth = int.MaxValue / 2;
+
     public void UpdateLayout()
     {
         UpdateLayout(true, true);

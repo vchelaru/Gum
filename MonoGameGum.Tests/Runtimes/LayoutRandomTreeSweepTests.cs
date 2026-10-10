@@ -1145,6 +1145,33 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         Snapshot(edited, includeHidden: true).ShouldBe(Snapshot(fresh, includeHidden: true));
     }
 
+    [Fact]
+    public void CutDownSweepTree_HidingContentInASiblingOfARatioElement_ShouldResizeTheRatioElementsDescendantsAsAFreshBuildWould()
+    {
+        // Seed 14, cut down, and well-formed. Hiding the 50 wide content of A makes A, which is sized from it,
+        // narrower, so the Ratio element B takes the room that frees up. Hiding reaches A one level up, so B's
+        // width is reached with a short depth, and B's grandchildren read B's width two levels down.
+        Node Tree(bool contentVisible)
+        {
+            Node content = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 50, DimensionUnitType.Absolute, 10);
+            content.Visible = contentVisible;
+            Node a = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.Absolute, 15, content);
+            Node percentChild = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfParent, 50, DimensionUnitType.Absolute, 5);
+            Node b0 = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfParent, 100, DimensionUnitType.Absolute, 22, percentChild);
+            Node b = Spec(ChildrenLayout.Regular, DimensionUnitType.Ratio, 1, DimensionUnitType.Absolute, 50, b0);
+            return Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute, 100, DimensionUnitType.Absolute, 65, a, b);
+        }
+
+        Node edited = Tree(contentVisible: true);
+        BuildSuspended(edited);
+        edited.Children[0].Children[0].Visible = false;
+        edited.Children[0].Children[0].Runtime.Visible = false;
+        Node fresh = Tree(contentVisible: false);
+        BuildSuspended(fresh);
+
+        Snapshot(edited, includeHidden: false).ShouldBe(Snapshot(fresh, includeHidden: false));
+    }
+
     // Ill-formed seeds past the golden file's are held to the same checks. These are the ones that are not, each
     // with why. A cycle that runs through an intermediate container (not directly between a parent and its
     // child) is not detected, so it either grows without bound or approaches its fixed point a little on each layout.
@@ -1153,12 +1180,6 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         [848] = "units are circular through an intermediate container, and the size grows to infinity (#5959)",
         [1185] = "a wrapped text's height depends on its width, which follows the container's height (#5959)",
         [1271] = "units are circular through a sibling and settle toward a fixed point over repeated layouts (#5959)"
-    };
-
-    // Seeds whose edited tree differs from a fresh build and are not yet explained (#5954).
-    private static readonly Dictionary<int, string> IllFormedSeedsNotHeldToEdits = new()
-    {
-        [14] = "a Ratio-width descendant of an ignored sibling keeps a width of 0 after an earlier sibling is hidden (#5958)"
     };
 
     [Fact]
@@ -1194,15 +1215,12 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
             {
                 failures.Add($"seed {seed} suspended edits");
             }
-            if (!IllFormedSeedsNotHeldToEdits.ContainsKey(seed))
+            for (int i = 0; i < result.Edits.Count; i++)
             {
-                for (int i = 0; i < result.Edits.Count; i++)
+                if (result.Edits[i].incremental.Split("ALL\n")[0] != result.Edits[i].fresh)
                 {
-                    if (result.Edits[i].incremental.Split("ALL\n")[0] != result.Edits[i].fresh)
-                    {
-                        failures.Add($"seed {seed} edit{i} {result.Edits[i].label}");
-                        break;
-                    }
+                    failures.Add($"seed {seed} edit{i} {result.Edits[i].label}");
+                    break;
                 }
             }
         }
