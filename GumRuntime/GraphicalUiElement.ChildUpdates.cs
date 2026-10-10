@@ -170,14 +170,16 @@ public partial class GraphicalUiElement
     /// <summary>
     /// Whether this child's size on <paramref name="axis"/> (a PercentageOfOtherDimension) is a multiple of the
     /// parent's own content size, so the parent would need a size that is a multiple of itself. That is the
-    /// case when the child's other axis is sized from the parent, and the parent follows that same axis as
+    /// case when the child's other axis is sized from the parent (a percent of it, relative to it, or the larger
+    /// of it and the child's content), and the parent follows that same axis as
     /// a percent of its other axis, which is sized from the parent's children. The parent ignores such a
     /// child, like any child sized from its parent.
     /// </summary>
     private bool IsSizeFollowingParentContentSize(XOrY axis, GraphicalUiElement parent)
     {
         var otherAxisUnits = axis == XOrY.X ? mHeightUnit : mWidthUnit;
-        if (otherAxisUnits != DimensionUnitType.PercentageOfParent && otherAxisUnits != DimensionUnitType.RelativeToParent)
+        if (otherAxisUnits != DimensionUnitType.PercentageOfParent && otherAxisUnits != DimensionUnitType.RelativeToParent &&
+            otherAxisUnits != DimensionUnitType.RelativeToMaxParentOrChildren)
         {
             return false;
         }
@@ -216,6 +218,7 @@ public partial class GraphicalUiElement
 
             return
                 childrenUpdateType == ChildType.All ||
+                childrenUpdateType == ChildType.BothAbsoluteAndRelative ||
                 (childrenUpdateType == ChildType.Absolute && thisChildUpdateType == ChildType.Absolute) ||
                 (childrenUpdateType == ChildType.Relative && (thisChildUpdateType == ChildType.Relative || thisChildUpdateType == ChildType.BothAbsoluteAndRelative)) ||
                 (childrenUpdateType == ChildType.StackedWrapped && thisChildUpdateType == ChildType.StackedWrapped);
@@ -586,12 +589,24 @@ public partial class GraphicalUiElement
             {
                 return 0;
             }
+            if (mHeightUnit == DimensionUnitType.RelativeToMaxParentOrChildren && DependsOnChildren(parent.HeightUnits) &&
+                mContainedObjectAsIpso != null)
+            {
+                // Its own height reads the parent's, which is measured from this line: only its content counts.
+                return ClampToMinMax(GetMaxCellHeight(false, 0) + mHeight, MinHeight, MaxHeight);
+            }
             return GetRequiredParentHeightFromEdges();
         }
 
         if (IsSizeDependentOnParent(mWidthUnit) && DependsOnChildren(parent.WidthUnits))
         {
             return 0;
+        }
+        if (mWidthUnit == DimensionUnitType.RelativeToMaxParentOrChildren && DependsOnChildren(parent.WidthUnits) &&
+            mContainedObjectAsIpso != null)
+        {
+            // Its own width reads the parent's, which is measured from this line: only its content counts.
+            return ClampToMinMax(GetMaxCellWidth(false, 0) + mWidth, MinWidth, MaxWidth);
         }
         return GetRequiredParentWidthFromEdges();
     }

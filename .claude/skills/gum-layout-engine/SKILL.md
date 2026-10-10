@@ -80,7 +80,10 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
 12. **Post-layout dimension check + gated climb** — re-update dimensions if a
     child change could have altered them (always for a wrapping stack sized to
     its children: Ratio children are placed only in step 11 and move the
-    siblings stacked after them, which changes the lines); then, for a propagated climb, continue
+    siblings stacked after them, which changes the lines). If that changes the
+    size, this element is placed again (an origin other than top-left reads its
+    own size) and every child, ignored ones included, is laid out again against
+    the new size; then, for a propagated climb, continue
     up to the parent only if this element's own measured size or position
     actually changed (see Upward Propagation).
 

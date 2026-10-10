@@ -553,7 +553,13 @@ public partial class GraphicalUiElement
                 if (widthBeforeSecondLayout != mContainedObjectAsIpso.Width ||
                     heightBeforeSecondLayout != mContainedObjectAsIpso.Height)
                 {
-                    UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative, skipIgnoreByParentSize: true);
+                    // The size changed after this was placed, and an origin other than the top-left puts it
+                    // relative to its own size. Children that read this size, including ones ignored by it,
+                    // were laid out against the old one.
+                    widthAtPlacement = mContainedObjectAsIpso.Width;
+                    heightAtPlacement = mContainedObjectAsIpso.Height;
+                    UpdatePosition(parentWidth, parentHeight, xOrY, absoluteParentRotation, isParentFlippedHorizontally);
+                    UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative, skipIgnoreByParentSize: false);
                 }
 
             }

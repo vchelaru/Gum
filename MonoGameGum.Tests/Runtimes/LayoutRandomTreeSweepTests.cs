@@ -840,22 +840,200 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         Snapshot(root, includeHidden: true).ShouldBe(first);
     }
 
+    /// <summary>Lays the tree out suspended, then again, and returns the first result after checking the second matches it.</summary>
+    private static string LayOutTwiceAndExpectNoChange(Node root)
+    {
+        BuildSuspended(root);
+        string first = Snapshot(root, includeHidden: true);
+        root.Runtime.UpdateLayout();
+        Snapshot(root, includeHidden: true).ShouldBe(first);
+        return first;
+    }
+
+    private static Node Absolute(float width, float height) =>
+        Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, width, DimensionUnitType.Absolute, height);
+
     [Fact]
-    public void CutDownSweepTree_WidthAndHeightEachDerivedFromTheOtherThroughTheChildren_ShouldGrowOnASecondLayoutBecauseItsUnitsAreCircular()
+    public void CutDownSweepTree_ParentHeightSetByAnotherChildAfterTheMaxChildWasLaidOut_ShouldLayTheMaxChildOutAgainAtTheFinalHeight()
+    {
+        // Seed 220, cut down. The parent is sized from its children, and its height comes from the first child
+        // (a percent of the child's width, itself relative to the parent). The second child is the larger of
+        // the parent's height and its own content, and was laid out while the parent was still 0 high.
+        Node first = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToParent, -5, DimensionUnitType.PercentageOfOtherDimension, 100);
+        Node second = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 10, DimensionUnitType.RelativeToMaxParentOrChildren, 0);
+        Node parent = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren, 0, first, second);
+
+        LayOutTwiceAndExpectNoChange(parent);
+
+        (parent.Runtime.AbsoluteHeight, second.Runtime.AbsoluteHeight).ShouldBe((5f, 5f));
+    }
+
+    [Fact]
+    public void CutDownSweepTree_ChildIgnoredByParentSizeThatReadsTheParentWidth_ShouldBeLaidOutAgainWhenTheParentShrinks()
+    {
+        // Seed 241, cut down. A child ignored by its parent's size can still be the larger of the parent's
+        // width and its content. It was laid out against a width the parent then measured smaller.
+        Node ignored = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToMaxParentOrChildren, 0, DimensionUnitType.Absolute, 35);
+        ignored.Ignored = true;
+        ignored.YOrigin = VerticalAlignment.Center;
+        Node sized = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren, 0);
+        Node stack = Spec(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToChildren, 6, DimensionUnitType.Absolute, 29, ignored, sized);
+        stack.Wraps = true;
+        stack.MaxWidth = 64;
+        stack.MaxHeight = 64;
+        stack.Spacing = 5;
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, stack);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        (stack.Runtime.AbsoluteWidth, ignored.Runtime.AbsoluteWidth).ShouldBe((6f, 6f));
+    }
+
+    [Fact]
+    public void CutDownSweepTree_WrappingStackWithABottomOrigin_ShouldBePlacedAtItsFinalHeight()
+    {
+        // Seed 78, cut down. The stack is sized to its children and wraps, so its height is only known after
+        // its children wrap. It was placed from a bottom origin before that, at the height it had then.
+        Node ratio = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToParent, -20, DimensionUnitType.Ratio, 1);
+        Node other = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToParent, -20, DimensionUnitType.Absolute, 0);
+        Node stack = Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute, 57, DimensionUnitType.RelativeToChildren, 0, ratio, other);
+        stack.Wraps = true;
+        stack.MaxWidth = 44;
+        stack.MaxHeight = 92;
+        stack.Spacing = 5;
+        stack.YOrigin = VerticalAlignment.Bottom;
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, stack);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        (stack.Runtime.AbsoluteHeight, stack.Runtime.AbsoluteTop).ShouldBe((5f, -5f));
+    }
+
+    [Fact]
+    public void CutDownSweepTree_WrappingStackWithAMaxChildAndARelativeToParentChild_ShouldNotSizeItselfFromTheMaxChildsOwnWidth()
+    {
+        // Seed 241, cut down. A child that is the larger of its parent's width and its content reads the width
+        // the wrapping stack measures from its columns. Counting that child's full width made each layout add
+        // the stack's own previous width to itself.
+        Node max = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToMaxParentOrChildren, 0, DimensionUnitType.Absolute, 0);
+        Node relative = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToParent, -5, DimensionUnitType.Ratio, 2);
+        Node stack = Spec(ChildrenLayout.TopToBottomStack, DimensionUnitType.RelativeToChildren, 6, DimensionUnitType.Absolute, 0,
+            max, relative, Absolute(0, 10));
+        stack.Wraps = true;
+        stack.MaxWidth = 64;
+        stack.MaxHeight = 64;
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, stack);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        (stack.Runtime.AbsoluteWidth, max.Runtime.AbsoluteWidth).ShouldBe((6f, 6f));
+    }
+
+    [Fact]
+    public void CutDownSweepTree_WrappingRowWithAMaxChildAndARelativeToParentChild_ShouldNotSizeItselfFromTheMaxChildsOwnHeight()
+    {
+        // Seed 241 with the axes swapped: a wrapping left-to-right stack sized to its children in height.
+        Node max = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToMaxParentOrChildren, 0);
+        Node relative = Spec(ChildrenLayout.Regular, DimensionUnitType.Ratio, 2, DimensionUnitType.RelativeToParent, -5);
+        Node stack = Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute, 0, DimensionUnitType.RelativeToChildren, 6,
+            max, relative, Absolute(10, 0));
+        stack.Wraps = true;
+        stack.MaxWidth = 64;
+        stack.MaxHeight = 64;
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, stack);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        (stack.Runtime.AbsoluteHeight, max.Runtime.AbsoluteHeight).ShouldBe((6f, 6f));
+    }
+
+    [Fact]
+    public void CutDownSweepTree_TextWithAPercentWidthInAContentSizedParent_ShouldBePlacedAtTheFinalParentSize()
+    {
+        // Seed 272, cut down. The text's width is a percent of a parent sized from its children and it is
+        // anchored to the bottom, so its height and where it goes follow a parent size that is measured last.
+        Node text = new Node
+        {
+            IsText = true,
+            Text = "Hello world",
+            WidthUnits = DimensionUnitType.PercentageOfParent,
+            Width = 50,
+            HeightUnits = DimensionUnitType.RelativeToChildren,
+            Height = 6,
+            YUnits = GeneralUnitType.PixelsFromLarge,
+            Y = 9,
+            YOrigin = VerticalAlignment.Bottom
+        };
+        Node sibling = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfOtherDimension, 100, DimensionUnitType.Absolute, 52);
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.RelativeToChildren, 0, text, sibling);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        // The text hangs 9 below its parent's bottom edge from a bottom origin, so its top is at 0.
+        (root.Runtime.AbsoluteWidth, root.Runtime.AbsoluteHeight).ShouldBe((52f, 81f));
+        (text.Runtime.AbsoluteTop, text.Runtime.AbsoluteHeight).ShouldBe((0f, 90f));
+    }
+
+    [Fact]
+    public void CutDownSweepTree_WidthAndHeightEachDerivedFromTheOtherThroughTheChildren_ShouldIgnoreTheChildAndStayPutOnASecondLayout()
     {
         // Seed 291, cut down. The parent's width is its child's width, which is 200% of the child's height,
         // which is the larger of the parent and the child's own content plus 4, and the parent's height is 100%
-        // of its width. The width would have to equal twice itself plus 8, which no size satisfies, so every
-        // layout grows it. Undefined input, not an engine defect; pinned so a change shows up.
+        // of its width. No size satisfies that, so each layout used to grow it. The parent now ignores such a
+        // child on that axis, like any child sized from its parent.
         Node child = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfOtherDimension, 200, DimensionUnitType.RelativeToMaxParentOrChildren, 4);
         Node parent = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.PercentageOfOtherDimension, 100, child);
         Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, parent);
 
-        BuildSuspended(root);
-        parent.Runtime.AbsoluteWidth.ShouldBe(16);
+        LayOutTwiceAndExpectNoChange(root);
 
-        root.Runtime.UpdateLayout();
-        parent.Runtime.AbsoluteWidth.ShouldBe(64);
+        (parent.Runtime.AbsoluteWidth, parent.Runtime.AbsoluteHeight).ShouldBe((0f, 0f));
+        (child.Runtime.AbsoluteWidth, child.Runtime.AbsoluteHeight).ShouldBe((8f, 4f));
+    }
+
+    [Fact]
+    public void CutDownSweepTree_HeightAndWidthEachDerivedFromTheOtherThroughTheChildren_ShouldIgnoreTheChildAndStayPutOnASecondLayout()
+    {
+        // Seed 289, cut down: seed 291 with the axes swapped.
+        Node child = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToMaxParentOrChildren, 4, DimensionUnitType.PercentageOfOtherDimension, 100);
+        Node parent = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfOtherDimension, 200, DimensionUnitType.RelativeToChildren, 0, child);
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 0, DimensionUnitType.Absolute, 0, parent);
+
+        LayOutTwiceAndExpectNoChange(root);
+
+        (parent.Runtime.AbsoluteWidth, parent.Runtime.AbsoluteHeight).ShouldBe((0f, 0f));
+        (child.Runtime.AbsoluteWidth, child.Runtime.AbsoluteHeight).ShouldBe((4f, 4f));
+    }
+
+    [Fact]
+    public void Sweep_IllFormedTrees_ShouldNotThrowAndShouldSettleOnASecondLayout()
+    {
+        // Ill-formed trees are held to the invariants that do not depend on the input making sense: no
+        // exception, a second layout changes nothing, and building with layout live or suspended, or making
+        // the edits suspended, gives the same result as a fresh build. (Edited-vs-fresh is not swept here.)
+        List<string> failures = new();
+        foreach (CaseResult result in RunAllCases(wellFormed: false))
+        {
+            if (result.Initial.StartsWith("EXCEPTION"))
+            {
+                failures.Add($"seed {result.Seed} threw");
+                continue;
+            }
+            if (result.Initial != result.AfterSecondLayout)
+            {
+                failures.Add($"seed {result.Seed} second layout");
+            }
+            if (StripHidden(result.Initial) != result.BuiltLive)
+            {
+                failures.Add($"seed {result.Seed} live");
+            }
+            if (result.SuspendedEdits != result.SuspendedFresh)
+            {
+                failures.Add($"seed {result.Seed} suspended edits");
+            }
+        }
+
+        failures.Count.ShouldBe(0, string.Join(", ", failures.Take(20)));
     }
 
     [Fact]
