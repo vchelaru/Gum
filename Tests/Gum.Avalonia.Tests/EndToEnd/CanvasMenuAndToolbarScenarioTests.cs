@@ -253,6 +253,45 @@ public class CanvasMenuAndToolbarScenarioTests
     }
 
     [SkippableFact]
+    [Trait("Feature", "CANV-014")]
+    [Trait("Feature", "CANV-018")]
+    public void SnapToGrid_ScalingAPolygonFromItsHandles_SavesCleanValues()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            canvas.AddInstance(button, "Shape", "Polygon", x: 105, y: 107);
+            InstanceSave shape = button.GetInstance("Shape")!;
+            canvas.Tree.Click(canvas.Tree.NodeFor(shape));
+            canvas.Input.Click(canvas.SnapToGridCheckBox);
+            canvas.Input.TypeAndEnter(canvas.GridSizeBox, "20");
+            canvas.Frame();
+
+            // The polygon's box is (105, 107) to (137, 139). The right handle's middle is at
+            // (147, 123); 137 + 21 snaps to 160, a width of 55.
+            canvas.Drag(canvas.WindowPointOf(147, 123), canvas.WindowPointOf(168, 123));
+            // The left handle: 105 - 23 snaps to 80, so 55 becomes 80 and the scale is not a power of two.
+            canvas.Drag(canvas.WindowPointOf(95, 123), canvas.WindowPointOf(72, 123));
+
+            float x = (float)canvas.SavedValue(button, "Shape.X")!;
+            float y = (float)canvas.SavedValue(button, "Shape.Y")!;
+            List<System.Numerics.Vector2> points = ((IEnumerable<System.Numerics.Vector2>)canvas.SavedElement(button)
+                .DefaultState!.GetVariableListSave("Shape.Points")!.ValueAsIList).ToList();
+
+            x.ShouldBe(80f);
+            y.ShouldBe(107f);
+            foreach (System.Numerics.Vector2 point in points)
+            {
+                point.X.ShouldBe(MathF.Round(point.X, 3), $"point {point} should have no float noise");
+                point.Y.ShouldBe(MathF.Round(point.Y, 3), $"point {point} should have no float noise");
+            }
+            points[1].X.ShouldBe(80f);
+
+            canvas.AssertOracles();
+        });
+    }
+
+    [SkippableFact]
     public void SnapToGridNote_FollowsTheUnitsAsTheyAreEdited_NotTheEditBefore()
     {
         OnCanvas(canvas =>

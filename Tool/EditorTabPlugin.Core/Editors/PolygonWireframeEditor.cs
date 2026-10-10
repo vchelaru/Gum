@@ -30,8 +30,11 @@ public class PolygonWireframeEditor : WireframeEditor
     private readonly SelectedPointHighlightVisual _selectedPointHighlightVisual;
     private readonly OriginDisplayVisual _originDisplayVisual;
     
-    // Input handler
+    private readonly PolygonScaleHandlesVisual _scaleHandlesVisual;
+
+    // Input handlers
     private readonly PolygonPointInputHandler _pointInputHandler;
+    private readonly PolygonScaleInputHandler _scaleInputHandler;
 
     Layer layer;
 
@@ -47,7 +50,7 @@ public class PolygonWireframeEditor : WireframeEditor
             var y = cursor.GetWorldY();
 
             // Check if handler has cursor over (points, add point sprite)
-            if (_pointInputHandler.HasCursorOver(x, y))
+            if (_pointInputHandler.HasCursorOver(x, y) || _scaleInputHandler.HasCursorOver(x, y))
             {
                 return true;
             }
@@ -104,23 +107,39 @@ public class PolygonWireframeEditor : WireframeEditor
         _addPointSpriteVisual = new AddPointSpriteVisual(_context, layer);
         _selectedPointHighlightVisual = new SelectedPointHighlightVisual(_context, layer);
         _originDisplayVisual = new OriginDisplayVisual(_context);
+        _scaleHandlesVisual = new PolygonScaleHandlesVisual(_context, System.Drawing.Color.White);
 
-        // Create input handler (uses the visual components)
+        // Create input handlers (use the visual components)
         _pointInputHandler = new PolygonPointInputHandler(
             _context,
             _pointNodesVisual,
             _addPointSpriteVisual,
             _selectedPointHighlightVisual);
+        _scaleInputHandler = new PolygonScaleInputHandler(_context, _scaleHandlesVisual,
+            (worldX, worldY) => _pointNodesVisual.GetIndexOver(worldX, worldY) != null);
 
         // Register handlers and visuals with base class
-        // Handlers will be checked in priority order (PolygonPoint=95, Move=80)
+        // Handlers will be checked in priority order (PolygonScale=96, PolygonPoint=95, Move=80)
         _inputHandlers.Add(_pointInputHandler);
+        _inputHandlers.Add(_scaleInputHandler);
         _inputHandlers.Add(_moveInputHandler); // From base class
 
+        _visuals.Add(_scaleHandlesVisual);
         _visuals.Add(_pointNodesVisual);
         _visuals.Add(_addPointSpriteVisual);
         _visuals.Add(_selectedPointHighlightVisual);
         _visuals.Add(_originDisplayVisual);
+    }
+
+    public override void UpdateHover(float worldX, float worldY)
+    {
+        base.UpdateHover(worldX, worldY);
+
+        // The add-point marker sits on edge midpoints, where the scale handles also reach.
+        if (_scaleInputHandler.HasCursorOver(worldX, worldY))
+        {
+            _addPointSpriteVisual.IsEnabled = false;
+        }
     }
 
     public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)

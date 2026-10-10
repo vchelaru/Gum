@@ -135,7 +135,7 @@ public abstract class WireframeEditor
     /// Updates hover state for all handlers.
     /// This should be called EVERY frame to show hover highlights correctly.
     /// </summary>
-    public void UpdateHover(float worldX, float worldY)
+    public virtual void UpdateHover(float worldX, float worldY)
     {
         foreach (var handler in _inputHandlers)
         {

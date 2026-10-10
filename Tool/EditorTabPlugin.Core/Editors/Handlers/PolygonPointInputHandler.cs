@@ -292,26 +292,7 @@ public class PolygonPointInputHandler : InputHandlerBase
             vectors.Add(linePolygon.PointAt(i));
         }
 
-        var variableName = "Points";
-        if (Context.SelectedState.SelectedInstance != null)
-        {
-            variableName = Context.SelectedState.SelectedInstance.Name + "." + variableName;
-        }
-
-        var stateSave = Context.SelectedState.SelectedStateSave;
-        if (stateSave == null) return;
-
-        var pointsVariableList =
-            stateSave.VariableLists.FirstOrDefault(item => item.Name == variableName);
-
-        if (pointsVariableList == null)
-        {
-            pointsVariableList = new VariableListSave<Vector2>();
-            pointsVariableList.Name = variableName;
-            pointsVariableList.Type = "Vector2";
-            stateSave.VariableLists.Add(pointsVariableList);
-        }
-        pointsVariableList.ValueAsIList = vectors;
+        PolygonPointsStateWriter.Write(Context, vectors);
     }
 
     private void UpdateVisualState()
