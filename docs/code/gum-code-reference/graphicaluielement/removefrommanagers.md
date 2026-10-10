@@ -2,25 +2,26 @@
 
 ## Introduction
 
-RemoveFromManagers removes the calling GraphicalUiElement from the SystemManagers. This method is typically not called, and instead RemoveFromRoot should be called in most cases.
+RemoveFromManagers removes the calling GraphicalUiElement from the SystemManagers. It is the older counterpart to AddToManagers and is typically not called. Use `RemoveFromRoot()` instead, or clear the root.
 
 ## Code Example
 
 The following code shows how to add and remove a GraphicalUiElement.
 
 ```csharp
-// Initialize
-// You can create a GrahicalUiElement from an ElementSave.
 // Assume elementSave is valid, such as a Screen obtained from a Gum project
 var graphicalUiElement = elementSave.ToGraphicalUiElement();
 
-graphicalUiElement.AddToManagers();
+graphicalUiElement.AddToRoot();
 
-// alternatively, could pass addToManagers:false, and explicitly call
-// AddToManagers
-
-// ...later...
-graphicalUiElement.RemoveFromManagers();
+// ...later, removes only this element:
+graphicalUiElement.RemoveFromRoot();
 ```
 
-Keep in mind that if a GraphicalUiElement is not added to managers, it does not need to be removed from managers. For more info see the Parent page.
+To remove everything under the root, such as when switching screens, clear its children:
+
+```csharp
+GumService.Default.Root.Children.Clear();
+```
+
+`PopupRoot` and `ModalRoot` are not affected. For a full example, see [Multiple Screens](../../getting-started/tutorials/gum-project-forms-tutorial/multiple-screens.md). For more info on parenting, see the [Parent](parent.md) page.
