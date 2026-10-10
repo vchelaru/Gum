@@ -100,6 +100,9 @@ public partial class GraphicalUiElement
     static bool IsSizedFromOtherDimension(DimensionUnitType unit) =>
         unit == DimensionUnitType.PercentageOfOtherDimension || unit == DimensionUnitType.MaintainFileAspectRatio;
 
+    static bool IsMeasuredFromChildren(DimensionUnitType unit) =>
+        unit.GetDependencyType() == HierarchyDependencyType.DependsOnChildren || unit == DimensionUnitType.RelativeToMaxParentOrChildren;
+
     public void UpdateHeight(float parentHeight, bool considerWrappedStacked)
     {
         float pixelHeightToSet = mHeight;

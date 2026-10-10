@@ -118,14 +118,9 @@ public class LayoutPercentOfOtherDimensionCycleTests : BaseTestClass
             DimensionUnitType.PercentageOfOtherDimension, 200, DimensionUnitType.RelativeToMaxParentOrChildren, 0,
             yFollowedUnits, yFollowed, DimensionUnitType.PercentageOfOtherDimension, 200);
 
-        // X itself is right on the first layout. Y can still hold a size taken against the canvas on the very
-        // first layout of a tree built with layout suspended (a separate, existing cold-start problem of a
-        // parent whose width follows its content-sized height, seen without any cycle: H55 in the test plan),
-        // so Y is checked after one more layout, and a layout after that must change nothing.
         float xCycle = 51;
         CycleSize(x, throughHeight).ShouldBe(xCycle);
         FollowedSize(x, throughHeight).ShouldBe(xCycle * 2);
-        parent.UpdateLayout();
         FollowedSize(y, throughHeight).ShouldBe(xCycle * 2);
         CycleSize(y, throughHeight).ShouldBe(xCycle * 4);
         string settled = Snapshot(parent, x, y);
@@ -190,9 +185,32 @@ public class LayoutPercentOfOtherDimensionCycleTests : BaseTestClass
 
         CycleSize(x, throughHeight).ShouldBe(80);
         FollowedSize(x, throughHeight).ShouldBe(160);
+        FollowedSize(y, throughHeight).ShouldBe(160);
         parent.UpdateLayout();
         CycleSize(x, throughHeight).ShouldBe(80);
         FollowedSize(y, throughHeight).ShouldBe(160);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public void ParentSizedToChildrenOnTheCycleAxis_ShouldSizeTheChildFromTheParentOnTheFirstLayout(bool throughHeight, bool buildLive)
+    {
+        // X is sized to its children along the cycle axis (RelativeToChildren, not the max with P) and counts
+        // Y's 80, so X is 80 along the cycle axis and 200% of that, 160, across. Y is as wide as X: 160, not
+        // a size taken from the canvas before X was measured.
+        (ContainerRuntime parent, ContainerRuntime x, ContainerRuntime y) = Build(throughHeight, buildLive,
+            DimensionUnitType.PercentageOfOtherDimension, 200, DimensionUnitType.RelativeToChildren, 0,
+            DimensionUnitType.PercentageOfParent, 100, DimensionUnitType.Absolute, 80);
+
+        CycleSize(x, throughHeight).ShouldBe(80);
+        FollowedSize(x, throughHeight).ShouldBe(160);
+        FollowedSize(y, throughHeight).ShouldBe(160);
+        string settled = Snapshot(parent, x, y);
+        parent.UpdateLayout();
+        Snapshot(parent, x, y).ShouldBe(settled);
     }
 
     [Theory]

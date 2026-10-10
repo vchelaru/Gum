@@ -325,6 +325,13 @@ public partial class GraphicalUiElement
                 this.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren;
             var heightDependsOnChildren = heightDependencyType == HierarchyDependencyType.DependsOnChildren ||
                 this.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren;
+
+            // A size that is a percent of the other axis is only as final as that axis, so when the other axis
+            // is measured from the children it has to wait for them too (#5930).
+            var widthFollowsContentSizedHeight = !widthDependsOnChildren && heightDependsOnChildren && IsSizedFromOtherDimension(mWidthUnit);
+            var heightFollowsContentSizedWidth = !heightDependsOnChildren && widthDependsOnChildren && IsSizedFromOtherDimension(mHeightUnit);
+            widthDependsOnChildren |= widthFollowsContentSizedHeight;
+            heightDependsOnChildren |= heightFollowsContentSizedWidth;
             var hasChildDependency = widthDependsOnChildren || heightDependsOnChildren;
 
             if (!widthDependsOnChildren && !heightDependsOnChildren)
@@ -382,11 +389,20 @@ public partial class GraphicalUiElement
             // This will update according to all absolute children
             // Now that the children have been updated, we can do any dimensions that still need updating based on the children changes:
 
-            if (widthDependsOnChildren)
+            // The axis that follows the other one is measured last, from the other one's final size.
+            if (widthDependsOnChildren && !widthFollowsContentSizedHeight)
             {
                 UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
             }
-            if (heightDependsOnChildren)
+            if (heightDependsOnChildren && !heightFollowsContentSizedWidth)
+            {
+                UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
+            }
+            if (widthFollowsContentSizedHeight)
+            {
+                UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
+            }
+            if (heightFollowsContentSizedWidth)
             {
                 UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
             }
