@@ -472,25 +472,32 @@ public partial class GraphicalUiElement
     /// </summary>
     private bool TryPlaceInsteadOfLayingOutAgain(XOrY? xOrY)
     {
-        if (_settledSession != s_session || _settledAxis != GetAxisCode(xOrY) ||
+        // A layout of both axes also settles a request for one of them. A parent measures a Ratio child on the
+        // axis it can before laying it out in full, and every later visit has to find the full one.
+        if (_settledSession != s_session || (_settledAxis != GetAxisCode(xOrY) && _settledAxis != GetAxisCode(null)) ||
             mContainedObjectAsIpso == null || !SkipRepeatedChildLayouts)
         {
             return false;
         }
 
-        // A Ratio size comes from the siblings, which are not tracked here, so those are always laid out. A size
-        // that comes from the parent is the same as last time only if the parent's size is.
+        // A size that comes from the parent is the same as last time only if the parent's size is.
         var widthDependency = mWidthUnit.GetDependencyType();
         var heightDependency = mHeightUnit.GetDependencyType();
-        if (widthDependency == HierarchyDependencyType.DependsOnSiblings || heightDependency == HierarchyDependencyType.DependsOnSiblings)
-        {
-            return false;
-        }
 
         GetParentLayoutInputs(out float parentWidth, out float parentHeight, out float parentAbsoluteRotation,
             out bool isParentFlippedHorizontally);
         if ((widthDependency == HierarchyDependencyType.DependsOnParent && parentWidth != _settledParentWidth) ||
             (heightDependency == HierarchyDependencyType.DependsOnParent && parentHeight != _settledParentHeight))
+        {
+            return false;
+        }
+
+        // A Ratio size comes from the siblings, which are not tracked here, so it is worked out again from them
+        // as they are now. It is the same as last time if it comes to the size this was laid out at.
+        if ((widthDependency == HierarchyDependencyType.DependsOnSiblings &&
+                ClampToMinMax(GetRatioWidth(parentWidth), _minWidth, _maxWidth) != mContainedObjectAsIpso.Width) ||
+            (heightDependency == HierarchyDependencyType.DependsOnSiblings &&
+                ClampToMinMax(GetRatioHeight(parentHeight), _minHeight, _maxHeight) != mContainedObjectAsIpso.Height))
         {
             return false;
         }

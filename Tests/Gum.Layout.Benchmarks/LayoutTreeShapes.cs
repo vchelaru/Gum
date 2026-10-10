@@ -116,6 +116,32 @@ public static class LayoutTreeShapes
         });
     }
 
+    /// <summary>
+    /// A chain <paramref name="depth"/> levels deep where every level is a content-high vertical stack holding
+    /// the next level, sized <c>Ratio</c> wide, and then a 10x5 box.
+    /// </summary>
+    public static TreeUnderTest RatioNestedChain(int depth)
+    {
+        return Build(() =>
+        {
+            ContainerRuntime root = ContentHeightStack(ChildrenLayout.TopToBottomStack, 400);
+            ContainerRuntime current = root;
+            int nodes = 1;
+            for (int level = 0; level < depth; level++)
+            {
+                ContainerRuntime next = ContentHeightStack(ChildrenLayout.TopToBottomStack, 1);
+                next.WidthUnits = DimensionUnitType.Ratio;
+                current.AddChild(next);
+                current.AddChild(Box(10, 5));
+                current = next;
+                nodes += 2;
+            }
+            ContainerRuntime leaf = Box(30, 10);
+            current.AddChild(leaf);
+            return new TreeUnderTest(root, leaf, nodes + 1);
+        });
+    }
+
     private static TreeUnderTest Chain(int depth, Func<int, ContainerRuntime> createLevel)
     {
         ContainerRuntime root = createLevel(0);

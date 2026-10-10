@@ -45,6 +45,12 @@ public class LayoutScalingBenchmarks : LayoutBenchmarkTestBase
     }
 
     [Fact]
+    public void RatioNestedChain()
+    {
+        AssertLaidOut(_runner.RunSeries(nameof(RatioNestedChain), DeepSizes, LayoutTreeShapes.RatioNestedChain));
+    }
+
+    [Fact]
     public void DeepContentSized()
     {
         AssertLaidOut(_runner.RunSeries(nameof(DeepContentSized), DeepSizes, LayoutTreeShapes.DeepContentSized));

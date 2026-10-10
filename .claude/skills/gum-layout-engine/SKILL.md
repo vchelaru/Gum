@@ -92,8 +92,10 @@ nested content-sized stacks would cost 2^k layouts. Every child visit in `Update
 visit in the same *session* (one outermost `UpdateLayout`; `UpdateLayoutWithinSession` continues it, the public
 `UpdateLayout` starts a new one) only places the child again (`TryPlaceInsteadOfLayingOutAgain`). The result
 must equal laying out every time: `GraphicalUiElement.SkipRepeatedChildLayouts = false` is the test hook that
-does that, and `LayoutRandomTreeSweepTests` compares the two. The skip needs the same axis (`xOrY`), the same
-parent size on the axes the child's units read, a child never sized by `Ratio`, and a visit that placed the child
+does that, and `LayoutRandomTreeSweepTests` compares the two. The skip needs the same axis (`xOrY`, or a
+settled visit of both axes, which also covers a one-axis request: a parent measures a `Ratio` child on one axis
+before laying it out in full), the same parent size on the axes the child's units read, a `Ratio` size that
+`GetRatioWidth`/`GetRatioHeight` still work out to the size the child has now, and a visit that placed the child
 at its final size. Dropping any of them fails a sweep or a test.
 
 ### Deferred font realization (step 4.5)
