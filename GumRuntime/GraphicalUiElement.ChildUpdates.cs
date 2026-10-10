@@ -206,7 +206,10 @@ public partial class GraphicalUiElement
         unitType == DimensionUnitType.ScreenPixel ||
         unitType == DimensionUnitType.RelativeToMaxParentOrChildren;
 
-    private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<GraphicalUiElement>? alreadyUpdated = null, HashSet<GraphicalUiElement>? newlyUpdated = null)
+    /// <param name="trackChildVisits">Whether a child may be laid out more than once in this session, so its visits
+    /// are recorded and a repeat can be cut down to placing it (see Repeated child layouts). False when this
+    /// element is laid out once and visits each child once, where recording only costs.</param>
+    private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, bool trackChildVisits, HashSet<GraphicalUiElement>? alreadyUpdated = null, HashSet<GraphicalUiElement>? newlyUpdated = null)
     {
         bool CanDoFullUpdate(ChildType thisChildUpdateType, GraphicalUiElement childGue)
         {
@@ -314,6 +317,9 @@ public partial class GraphicalUiElement
 
             var shouldUpdateRelativeFirst = (doesAnyChildUseRatioWidth && doesAnyChildNeedWidthUpdatedFirst) || (doesAnyChildUseRatioHeight && doesAnyChildNeedHeightUpdatedFirst);
 
+            // The relative-first pass visits those children once more in the normal pass.
+            bool trackVisits = trackChildVisits || shouldUpdateRelativeFirst;
+
             // Update - if this item stacks, then it cannot mark the children as updated - it needs to do another
             // pass later to update the position of the children in order from top-to-bottom. If we flag as updated,
             // then the pass later that does the actual stacking will skip anything that is flagged as updated.
@@ -357,6 +363,13 @@ public partial class GraphicalUiElement
             // Every layout of a child from here goes through this, so a repeat visit can be cut down to placing it.
             void LayOutChild(GraphicalUiElement child, int depth, XOrY? xOrY)
             {
+                // A depth-limited visit may need the full-depth relayout below, which reads what the visit recorded.
+                if (!trackVisits && depth >= FullUpdateDepth / 2)
+                {
+                    child.UpdateLayoutWithinSession(ParentUpdateType.None, depth, xOrY, gateClimbOnSizeChange: false, mayBeLaidOutAgain: false);
+                    return;
+                }
+
                 if (child.TryPlaceInsteadOfLayingOutAgain(xOrY))
                 {
                     return;
@@ -366,7 +379,7 @@ public partial class GraphicalUiElement
                 float widthBefore = child.mContainedObjectAsIpso?.Width ?? 0;
                 float heightBefore = child.mContainedObjectAsIpso?.Height ?? 0;
                 child._layoutRan = false;
-                child.UpdateLayoutWithinSession(ParentUpdateType.None, depth, xOrY, gateClimbOnSizeChange: false);
+                child.UpdateLayoutWithinSession(ParentUpdateType.None, depth, xOrY, gateClimbOnSizeChange: false, mayBeLaidOutAgain: true);
 
                 // A Ratio child is sized by its siblings, so a change somewhere else can resize it even though
                 // the depth this pass was given stops short of its descendants, which read its size.
@@ -379,7 +392,7 @@ public partial class GraphicalUiElement
                     // session are void.
                     long session = s_session;
                     s_session = System.Threading.Interlocked.Increment(ref s_lastSession);
-                    child.UpdateLayoutWithinSession(ParentUpdateType.None, FullUpdateDepth, xOrY, gateClimbOnSizeChange: false);
+                    child.UpdateLayoutWithinSession(ParentUpdateType.None, FullUpdateDepth, xOrY, gateClimbOnSizeChange: false, mayBeLaidOutAgain: true);
                     s_session = session;
                 }
 
