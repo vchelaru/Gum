@@ -166,7 +166,8 @@ public static class CodegenCommand
 
         // Check errors and generate
         ITypeResolver typeResolver = new DefaultTypeResolver();
-        IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(typeResolver);
+        IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(
+            typeResolver, new IAdditionalErrorSource[] { new FormsCodegenBaseTypeErrorSource(projectSettings) });
 
         int generatedCount = 0;
         int blockedCount = 0;
