@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>BaseTypes/FromPolygon</Name>
+  <BaseType>Polygon</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>i</Type>
+      <Name>n</Name>
+      <Value xsi:type="">t</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>R</Type>
+      <Name>e</Name>
+      <Value xsi:type="">d</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>1</Type>
+      <Name>0</Name>
+      <Value xsi:type=""></Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Behaviors />
+</ComponentSave>

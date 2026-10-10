@@ -76,6 +76,53 @@ public class NewCommandTests : IDisposable
     }
 
     [Fact]
+    public void New_WithTheme_ShouldCreateProjectFromTheme()
+    {
+        string filePath = Path.Combine(_tempDirectory, "Themed.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "meadow");
+
+        result.ExitCode.ShouldBe(0);
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Meadow", "Controls", "Label.gucx")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void New_WithUnknownTheme_ShouldReturnExitCode2AndListThemes()
+    {
+        string filePath = Path.Combine(_tempDirectory, "Themed.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "NoSuchTheme");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("NoSuchTheme");
+        result.StandardError.ShouldContain("Meadow");
+        File.Exists(filePath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithThemeAndEmptyTemplate_ShouldReturnExitCode2()
+    {
+        string filePath = Path.Combine(_tempDirectory, "Themed.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "--template", "empty", "--theme", "Meadow");
+
+        result.ExitCode.ShouldBe(2);
+        File.Exists(filePath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void New_WithStandardTheme_ShouldCreateTheDefaultFormsTemplate()
+    {
+        string filePath = Path.Combine(_tempDirectory, "Standard.gumx");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath, "--theme", "Standard");
+
+        result.ExitCode.ShouldBe(0);
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void New_WhenProjectAlreadyExists_ShouldReturnExitCode2()
     {
         string filePath = Path.Combine(_tempDirectory, "Existing.gumx");
