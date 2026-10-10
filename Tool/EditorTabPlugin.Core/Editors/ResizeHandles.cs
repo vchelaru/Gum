@@ -203,6 +203,24 @@ namespace Gum.Wireframe
             UpdateToProperties();
         }
 
+        /// <summary>
+        /// Places the handles around a rectangle given directly instead of read from an object.
+        /// </summary>
+        /// <param name="x">World X of the rectangle's top-left corner.</param>
+        /// <param name="y">World Y of the rectangle's top-left corner.</param>
+        /// <param name="rotation">Absolute rotation in degrees, about the top-left corner.</param>
+        public void SetBounds(float x, float y, float width, float height, float rotation)
+        {
+            mX = x;
+            mY = y;
+            mWidth = width;
+            mHeight = height;
+            mRotation = rotation;
+
+            AdjustOriginDisplayCount(0);
+            UpdateToProperties();
+        }
+
         public void SetValuesFrom(IEnumerable<IRenderableIpso> ipsoList)
         {
             var count = ipsoList.Count();
