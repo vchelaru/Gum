@@ -357,9 +357,11 @@ public partial class GraphicalUiElement
                 // 2. This stacks in the same axis as the children
                 // 3. This is using FixedStackSpacing
                 // 4. This has more than one child
+                // 5. The width is not measured from the children, since only the first child is laid out
                 // for now, let's do this only on the vertical axis as a test:
                 if (this.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack &&
                     this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren &&
+                    !widthDependsOnChildren &&
                     this.UseFixedStackChildrenSize &&
                     this.Children.Count > 1)
                 {
@@ -470,7 +472,18 @@ public partial class GraphicalUiElement
 
             widthAtPlacement = mContainedObjectAsIpso.Width;
             heightAtPlacement = mContainedObjectAsIpso.Height;
-            UpdatePosition(parentWidth, parentHeight, xOrY, absoluteParentRotation, isParentFlippedHorizontally);
+
+            // A size that is a percent of the other axis follows it, and an origin or position unit other than
+            // the top-left reads this element's size, so the axis not asked for moves when its size did. A parent
+            // laying out its child one axis at a time places it in full afterwards.
+            XOrY? axisToPlace = xOrY;
+            if (parentUpdateType != ParentUpdateType.None &&
+                ((xOrY == XOrY.X && heightAtPlacement != heightBeforeLayout) ||
+                (xOrY == XOrY.Y && widthAtPlacement != widthBeforeLayout)))
+            {
+                axisToPlace = null;
+            }
+            UpdatePosition(parentWidth, parentHeight, axisToPlace, absoluteParentRotation, isParentFlippedHorizontally);
 
             if (GetIfParentStacks())
             {

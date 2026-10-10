@@ -58,7 +58,8 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
 6. **First children pass (if dimensions depend on children)** — update children
    with absolute layout types so the parent can measure them. With
    `UseFixedStackChildrenSize`, only the first child is updated here (O(1)
-   instead of O(n)).
+   instead of O(n)), and only when the width is not measured from the children:
+   the other children are unmeasured, so they would give a width that is too small.
 
 7. **Post-children dimensions** — update RelativeToChildren / RelativeToMaxParentOrChildren
    dimensions now that children have been measured.
@@ -179,7 +180,13 @@ calling it on one child afterwards drops later siblings from the max. In a
 wrapping stack the row is the cross-axis parent for position, so a row-aligned
 child placed before the row's largest member is fixed up by
 `RepositionChildrenAlignedInWrappedLines` (position only, no row refresh) at the
-end of `UpdateChildren`.
+end of `UpdateChildren`. It skips suspended children: they were not laid out in the
+pass, so no line recorded them, and their own layout places them on resume.
+
+An axis-only layout from a property setter (`Height` lays out `XOrY.Y`) also places the other
+axis when that axis's size changed, since a width that is a percent of the height moves a
+center or right origin. A parent laying out a child one axis at a time places it in full later,
+so only the originating call does this.
 
 ## Dirty State and Suspension
 

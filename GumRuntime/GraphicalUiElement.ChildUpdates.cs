@@ -179,7 +179,7 @@ public partial class GraphicalUiElement
     {
         var otherAxisUnits = axis == XOrY.X ? mHeightUnit : mWidthUnit;
         if (otherAxisUnits != DimensionUnitType.PercentageOfParent && otherAxisUnits != DimensionUnitType.RelativeToParent &&
-            otherAxisUnits != DimensionUnitType.RelativeToMaxParentOrChildren)
+            otherAxisUnits != DimensionUnitType.RelativeToMaxParentOrChildren && otherAxisUnits != DimensionUnitType.Ratio)
         {
             return false;
         }
@@ -439,7 +439,10 @@ public partial class GraphicalUiElement
         for (int i = 0; i < children.Count; i++)
         {
             var child = children[i];
+            // A suspended child was not laid out in this pass, so no line has recorded it. Its own layout
+            // positions it when it resumes.
             if (float.IsNaN(child._wrappedLineSizeUsedForPosition) || child.mContainedObjectAsIpso == null || !child.Visible ||
+                child.mIsLayoutSuspended || IsAllLayoutSuspended ||
                 (parentlessOnly && child.Parent != null && child.Parent != this))
             {
                 continue;
