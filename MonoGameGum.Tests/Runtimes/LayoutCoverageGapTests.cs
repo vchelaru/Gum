@@ -245,6 +245,28 @@ public class LayoutCoverageGapTests : BaseTestClass
         (stack.AbsoluteHeight, first.AbsoluteHeight).ShouldBe((0f, 0f));
     }
 
+    // The ignored first child stands in for every child as zero, so only the spacing between them is left,
+    // and the later children's own heights do not count. The result must not change on another layout.
+    [Fact]
+    public void FixedSizeStack_ShouldBeOnlyOffsetAndSpacing_WhenFirstChildHeightIsPercentageOfTheStack()
+    {
+        ContainerRuntime stack = CreateFixedSizeStack();
+        stack.Height = 6;
+        stack.StackSpacing = 2;
+        ContainerRuntime first = CreateContainer(50, 0);
+        first.HeightUnits = DimensionUnitType.PercentageOfParent;
+        first.Height = 25;
+        stack.AddChild(first);
+        stack.AddChild(CreateContainer(50, 40));
+        stack.AddChild(CreateContainer(50, 40));
+
+        float afterBuild = stack.AbsoluteHeight;
+        stack.UpdateLayout();
+        stack.UpdateLayout();
+
+        (afterBuild, stack.AbsoluteHeight).ShouldBe((10f, 10f));
+    }
+
     #endregion
 
     #region Height and width units
