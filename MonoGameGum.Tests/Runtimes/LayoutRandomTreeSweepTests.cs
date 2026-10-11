@@ -1172,14 +1172,41 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         Snapshot(edited, includeHidden: false).ShouldBe(Snapshot(fresh, includeHidden: false));
     }
 
+    [Fact]
+    public void CutDownSweepTree_DivergentCycleThroughAnIntermediateContainer_ShouldLayOutToFiniteSizes()
+    {
+        // Seed 848, cut down. The cycle runs through M, so the engine does not detect it: the parent's height is
+        // the height of M, which is 5 plus the height of I, which is 200% of I's width, a Ratio share of M's
+        // width, which is the parent's width, which is 200% of its height. The height would be four times itself
+        // plus 5, so each layout grew it, past what a float holds after about 60 layouts. Circular input has no right answer,
+        // but no size may be infinite.
+        Node inner = Spec(ChildrenLayout.Regular, DimensionUnitType.Ratio, 1, DimensionUnitType.PercentageOfOtherDimension, 200);
+        Node middle = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfParent, 100, DimensionUnitType.RelativeToChildren, 5, inner);
+        Node parent = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfOtherDimension, 200, DimensionUnitType.RelativeToChildren, 0, middle);
+        Node root = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 10, DimensionUnitType.RelativeToChildren, 0, parent);
+
+        BuildSuspended(root);
+        for (int layout = 0; layout < 100; layout++)
+        {
+            root.Runtime.UpdateLayout();
+        }
+
+        foreach (Node node in new[] { root, parent, middle, inner })
+        {
+            float.IsFinite(node.Runtime.AbsoluteWidth).ShouldBeTrue($"width {node.Runtime.AbsoluteWidth}");
+            float.IsFinite(node.Runtime.AbsoluteHeight).ShouldBeTrue($"height {node.Runtime.AbsoluteHeight}");
+        }
+    }
+
     // Ill-formed seeds past the golden file's are held to the same checks. These are the ones that are not, each
     // with why. A cycle that runs through an intermediate container (not directly between a parent and its
-    // child) is not detected, so it either grows without bound or approaches its fixed point a little on each layout.
+    // child) is circular input with no defined result (#5959): it may grow without bound, approach its fixed
+    // point a little on each layout, or depend on a wrapped text. The engine does not detect these.
     private static readonly Dictionary<int, string> IllFormedSeedsNotHeld = new()
     {
-        [848] = "units are circular through an intermediate container, and the size grows to infinity (#5959)",
-        [1185] = "a wrapped text's height depends on its width, which follows the container's height (#5959)",
-        [1271] = "units are circular through a sibling and settle toward a fixed point over repeated layouts (#5959)"
+        [848] = "circular input: units are circular through an intermediate container and the size diverges, written as 0 once it is not finite (#5959)",
+        [1185] = "circular input: a wrapped text's height depends on its width, which follows the container's height (#5959)",
+        [1271] = "circular input: units are circular through a sibling and settle toward a fixed point over repeated layouts (#5959)"
     };
 
     [Fact]

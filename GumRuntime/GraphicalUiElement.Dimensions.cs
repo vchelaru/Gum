@@ -368,7 +368,7 @@ public partial class GraphicalUiElement
         }
 
 
-        pixelHeightToSet = ClampToMinMax(pixelHeightToSet, _minHeight, _maxHeight);
+        pixelHeightToSet = ClampToMinMax(ToFiniteSize(pixelHeightToSet), _minHeight, _maxHeight);
 
         RequiredContainedObject.Height = pixelHeightToSet;
     }
@@ -568,6 +568,11 @@ public partial class GraphicalUiElement
             }
         }
     }
+
+    // Circular units (#5959) can grow a size every layout until it is infinite. Written as 0 instead, so it cannot
+    // spread to positions and to the sizes of the parent and siblings. NaN is left alone: it comes from bad input
+    // such as a NaN canvas size, which FULL_DIAGNOSTICS reports.
+    static float ToFiniteSize(float size) => float.IsInfinity(size) ? 0 : size;
 
     // Min wins over max when they conflict.
     static float ClampToMinMax(float value, float? min, float? max)
@@ -884,7 +889,7 @@ public partial class GraphicalUiElement
         }
 
 
-        pixelWidthToSet = ClampToMinMax(pixelWidthToSet, _minWidth, _maxWidth);
+        pixelWidthToSet = ClampToMinMax(ToFiniteSize(pixelWidthToSet), _minWidth, _maxWidth);
 
         RequiredContainedObject.Width = pixelWidthToSet;
 

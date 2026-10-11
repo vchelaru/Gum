@@ -334,6 +334,11 @@ and the range is seeds 0 to 1299. `IllFormedSeedsNotHeld` lists the seeds that a
 through an intermediate container or sibling, or a wrapped text, that the engine does not detect, #5959). A tree whose units are circular and have no size that satisfies them is resolved by the
 parent ignoring the child on that axis (H54, H58), not by iterating.
 
+Those three seeds are circular input with no defined result, by decision (#5959): no rule per cycle shape and no
+general cycle detection. The only guard is that a size is never written as infinity (`ToFiniteSize`; a divergent
+cycle such as 848 lays out to finite sizes instead of spreading infinity), pinned by
+`CutDownSweepTree_DivergentCycleThroughAnIntermediateContainer_ShouldLayOutToFiniteSizes`.
+
 ## 10. Defects found by reading, tested and triaged
 
 FIX: fixed with a regression test. DOCUMENT: intended, pinned by a test. LOG: skipped test pointing
@@ -405,7 +410,7 @@ at an issue that needs a behavior decision. CLEARED: the test passed, no defect.
 | H62 | `UpdateHeight` fixed-size stack path | The first child, when it is the larger of the stack and its content (`RelativeToMaxParentOrChildren`), was measured by its laid-out height, which includes the stack's own previous height, so the stack grew on each layout (seeds 742, 1211). | FIX (#5953; measured by its content, as `GetMaxCellHeight` does; `CutDownSweepTree_FixedSizeStackWhoseFirstChild...`) |
 | H63 | `UpdateLayout` step 6 | A fixed-size stack sized to its children on both axes laid out only its first child before measuring, so the width read children with no size or position yet and was too small until the next layout (seed 985; well-formed seeds 353 and 1238 change). | FIX (#5953; the first-child-only pass needs a width that is not measured from the children; `CutDownSweepTree_FixedSizeStackSizedToChildrenOnBothAxes...`) |
 | H64 | `UpdateLayout` placement after an axis-only layout | Setting Height (or Width) on an element whose other axis is a percent of it laid out one axis and placed one axis, so a center or right origin stayed at the old width (seeds 76, 87, 227 and others past 299; #5954). | FIX (#5953, #5954; the originating call places the other axis too when its size changed; `CutDownSweepTree_ChangingTheAxisAnotherAxisIsAPercentOf...`) |
-| H65 | `IsSizeFollowingParentContentSize` | H54's rule did not cover a child whose other axis is a Ratio, which is also sized from the parent (seed 848 in part). Cycles that pass through an intermediate container are still not detected: 848 grows to infinity, 1271 approaches a fixed point, 1185 depends on a wrapped text's height. | FIX for the direct case (#5953; `CutDownSweepTree_ChildSizedByARatio...`); DOCUMENT the rest (circular input, #5959) |
+| H65 | `IsSizeFollowingParentContentSize` | H54's rule did not cover a child whose other axis is a Ratio, which is also sized from the parent (seed 848 in part). Cycles that pass through an intermediate container are still not detected: 848 grows to infinity, 1271 approaches a fixed point, 1185 depends on a wrapped text's height. | FIX for the direct case (#5953; `CutDownSweepTree_ChildSizedByARatio...`); DOCUMENT the rest (circular input, #5959; a size that would be infinite is written as 0) |
 | H66 | `UpdateChildren` depth of a Ratio child | A change climbing out of a short subtree (hiding content inside a sibling of a Ratio element) reaches the Ratio element with a depth of one or two, so its size changed but its grandchildren, which read that size, kept the old one (ill-formed seed 14; the cut-down tree is well-formed, #5958). | FIX (#5958; a Ratio child whose size changed during a depth-limited visit is laid out again to full depth, as a new session so earlier recorded visits do not skip it; well-formed output changes only for limited-depth layouts of 13 of 1300 seeds; `CutDownSweepTree_HidingContentInASiblingOfARatioElement...`) |
 
 ## Sweep strategy
