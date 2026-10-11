@@ -366,7 +366,7 @@ def drag_standard_chip(c: Ctx):
         g.drag(*CHIP_CIRCLE, *CANVAS_DROP)
     c.check("Dragging the Circle chip onto the canvas added an instance",
             g.instance_count(element) == before + 1,
-            f"instances {before} -> {g.instance_count(element)} after {attempts} drags (a real mouse movement during the drag cancels it; rerun with the machine untouched)")
+            f"instances {before} -> {g.instance_count(element)} after {attempts} drags (see README, 'Flaky drop')")
 
 
 @scenario("last-project-reopens")

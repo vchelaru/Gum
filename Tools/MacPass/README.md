@@ -14,8 +14,19 @@ python3 Tools/MacPass/macpass.py --list
 ```
 
 Read `publish/macpass/report.txt`. `FAIL` lines carry the failed checks and the path of a screenshot of
-the window; `KNOWN` is a scenario that reproduces an open issue (it does not fail the run); `FLAKY` is a scenario whose input path is unreliable (`drag-standard-chip`: the drag session starts but the drop is sometimes not delivered, cause not found); `FIXED?`
+the window; `KNOWN` is a scenario that reproduces an open issue (it does not fail the run); `FLAKY` is a scenario whose input path is unreliable and does not fail the run (see "Flaky drop"); `FIXED?`
 means a known bug no longer reproduces, so remove its `known_bug` argument.
+
+## Flaky drop
+
+`drag-standard-chip` passed on some runs and failed on others with no change in the app or the
+script. While it fails, the native drag session runs (the drag image follows the pointer) but the
+canvas never shows the copy badge, and a tree-row drag onto the canvas fails the same way, so the
+canvas is rejecting the drag, not the chip's payload code. Ruled out: the pointer ends exactly where
+sent (no stray real input), event tap (HID or session), a longer dwell over the target, a wait after
+launch, which scenario ran before, and a gap after a clean quit. Not ruled out: Avalonia reading its
+application data formats from the macOS drag pasteboard, and a drag by a real hand failing the same
+way. Check by hand first (drag a Standards chip onto the canvas) before suspecting the script.
 
 ## Prerequisites
 

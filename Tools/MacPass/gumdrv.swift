@@ -11,7 +11,8 @@ import ApplicationServices
 //   menu PID Top [Sub ...] Leaf      press a menu item by its title path (no coordinates)
 //   menuinfo PID                     every menu item: path|enabled|cmdChar|cmdModifiers
 
-func post(_ e: CGEvent?) { e?.post(tap: .cghidEventTap); usleep(15000) }
+let tapLocation: CGEventTapLocation = ProcessInfo.processInfo.environment["GUMDRV_TAP"] == "session" ? .cgSessionEventTap : .cghidEventTap
+func post(_ e: CGEvent?) { e?.post(tap: tapLocation); usleep(15000) }
 
 func mouse(_ type: CGEventType, _ x: Double, _ y: Double, _ btn: CGMouseButton = .left, clicks: Int64 = 1) {
     let e = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: CGPoint(x: x, y: y), mouseButton: btn)
@@ -122,7 +123,9 @@ case "drag":
         let t = Double(i) / 40
         mouse(.leftMouseDragged, x1 + 14 + (x2 - x1 - 14) * t, y1 + 7 + (y2 - y1 - 7) * t); usleep(30000)
     }
-    usleep(300000)
+    // Keep reporting drag motion over the target: the destination needs updates before it accepts a drop.
+    let dwell = a.count > 6 ? Int(a[6])! : 300
+    for i in 0..<max(1, dwell / 50) { mouse(.leftMouseDragged, x2 + Double(i % 2), y2); usleep(50000) }
     mouse(.leftMouseUp, x2, y2)
 case "key":
     guard let code = keyCodes[a[2].lowercased()] else { print("unknown key \(a[2])"); exit(2) }
@@ -146,6 +149,9 @@ case "scroll":
     post(CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: Int32(a[4])!, wheel2: 0, wheel3: 0))
 case "activate":
     NSRunningApplication(processIdentifier: pid_t(a[2])!)?.activate(options: [.activateIgnoringOtherApps])
+case "where":
+    let loc = CGEvent(source: nil)?.location ?? .zero
+    print("\(Int(loc.x)) \(Int(loc.y))")
 case "active":
     print(NSRunningApplication(processIdentifier: pid_t(a[2])!)?.isActive ?? false)
 case "title":
