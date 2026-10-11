@@ -249,7 +249,7 @@ public partial class GraphicalUiElement
                     if ((child.Parent == null || child.Parent == this) &&
                         (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits)))
                     {
-                        child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                        LayOutScreenChild(child);
                     }
                 }
             }
@@ -266,12 +266,25 @@ public partial class GraphicalUiElement
                 if (child.Parent == null || child.Parent == this)
                 {
                     // Without a renderable, children are only updated with ChildType.All, which always allows a full update.
-                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                    LayOutScreenChild(child);
                     newlyUpdated?.Add(child);
                 }
             }
 
             RepositionChildrenAlignedInWrappedLines(mWhatThisContains, parentlessOnly: true);
+
+            void LayOutScreenChild(GraphicalUiElement child)
+            {
+                float widthBefore = child.mContainedObjectAsIpso?.Width ?? 0;
+                float heightBefore = child.mContainedObjectAsIpso?.Height ?? 0;
+                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+
+                // UpdateLayout starts a session of its own, so the visits it recorded are already void for this one.
+                if (child.NeedsFullDepthLayoutAfterSiblingsResizedIt(childrenUpdateDepth - 1, widthBefore, heightBefore))
+                {
+                    child.UpdateLayout(ParentUpdateType.None, FullUpdateDepth);
+                }
+            }
         }
         else
         {
@@ -383,10 +396,7 @@ public partial class GraphicalUiElement
 
                 // A Ratio child is sized by its siblings, so a change somewhere else can resize it even though
                 // the depth this pass was given stops short of its descendants, which read its size.
-                if (child._layoutRan && depth < FullUpdateDepth / 2 && child.mContainedObjectAsIpso != null &&
-                    (child.mContainedObjectAsIpso.Width != widthBefore || child.mContainedObjectAsIpso.Height != heightBefore) &&
-                    (child.mWidthUnit.GetDependencyType() == HierarchyDependencyType.DependsOnSiblings ||
-                     child.mHeightUnit.GetDependencyType() == HierarchyDependencyType.DependsOnSiblings))
+                if (child._layoutRan && child.NeedsFullDepthLayoutAfterSiblingsResizedIt(depth, widthBefore, heightBefore))
                 {
                     // The descendants are laid out against a new size, so visits recorded for them earlier in this
                     // session are void.
@@ -452,6 +462,16 @@ public partial class GraphicalUiElement
 
         }
     }
+
+    /// <summary>
+    /// Whether this Ratio element, laid out by its parent with a depth that stops short of its descendants, came out
+    /// a different size, so its descendants (which read its size) have to be laid out against it to full depth.
+    /// </summary>
+    private bool NeedsFullDepthLayoutAfterSiblingsResizedIt(int depth, float widthBefore, float heightBefore) =>
+        depth < FullUpdateDepth / 2 && mContainedObjectAsIpso != null &&
+        (mContainedObjectAsIpso.Width != widthBefore || mContainedObjectAsIpso.Height != heightBefore) &&
+        (mWidthUnit.GetDependencyType() == HierarchyDependencyType.DependsOnSiblings ||
+         mHeightUnit.GetDependencyType() == HierarchyDependencyType.DependsOnSiblings);
 
     /// <summary>
     /// Repositions the children of this wrapping stack whose cross-axis position is measured from their

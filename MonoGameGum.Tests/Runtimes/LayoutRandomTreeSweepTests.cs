@@ -74,6 +74,7 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
     private sealed class Node
     {
         public bool IsText;
+        public bool IsScreen;
         public string Text = "";
         public DimensionUnitType WidthUnits;
         public DimensionUnitType HeightUnits;
@@ -306,6 +307,10 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
             text.Text = node.Text;
             node.Runtime = text;
         }
+        else if (node.IsScreen)
+        {
+            node.Runtime = new GraphicalUiElement();
+        }
         else
         {
             node.Runtime = new ContainerRuntime();
@@ -321,7 +326,15 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
         foreach (Node child in node.Children)
         {
             BuildInto(child);
-            node.Runtime.AddChild(child.Runtime);
+            if (node.IsScreen)
+            {
+                // A Screen has no renderable, so it has no Children collection; its elements are attached as ParentGue.
+                child.Runtime.ParentGue = node.Runtime;
+            }
+            else
+            {
+                node.Runtime.AddChild(child.Runtime);
+            }
         }
     }
 
@@ -1196,6 +1209,34 @@ public class LayoutRandomTreeSweepTests : BaseTestClass
             float.IsFinite(node.Runtime.AbsoluteWidth).ShouldBeTrue($"width {node.Runtime.AbsoluteWidth}");
             float.IsFinite(node.Runtime.AbsoluteHeight).ShouldBeTrue($"height {node.Runtime.AbsoluteHeight}");
         }
+    }
+
+    [Fact]
+    public void CutDownSweepTree_HidingContentInASiblingOfARatioElementUnderAScreen_ShouldResizeTheRatioElementsDescendantsAsAFreshBuildWould()
+    {
+        // The tree of the test above with a Screen (no contained renderable) as the stack, so its children are
+        // updated by the branch of UpdateChildren that has no renderable (#5962).
+        Node Tree(bool contentVisible)
+        {
+            Node content = Spec(ChildrenLayout.Regular, DimensionUnitType.Absolute, 50, DimensionUnitType.Absolute, 10);
+            content.Visible = contentVisible;
+            Node a = Spec(ChildrenLayout.Regular, DimensionUnitType.RelativeToChildren, 0, DimensionUnitType.Absolute, 15, content);
+            Node percentChild = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfParent, 50, DimensionUnitType.Absolute, 5);
+            Node b0 = Spec(ChildrenLayout.Regular, DimensionUnitType.PercentageOfParent, 100, DimensionUnitType.Absolute, 22, percentChild);
+            Node b = Spec(ChildrenLayout.Regular, DimensionUnitType.Ratio, 1, DimensionUnitType.Absolute, 50, b0);
+            Node screen = Spec(ChildrenLayout.LeftToRightStack, DimensionUnitType.Absolute, 100, DimensionUnitType.Absolute, 65, a, b);
+            screen.IsScreen = true;
+            return screen;
+        }
+
+        Node edited = Tree(contentVisible: true);
+        BuildSuspended(edited);
+        edited.Children[0].Children[0].Visible = false;
+        edited.Children[0].Children[0].Runtime.Visible = false;
+        Node fresh = Tree(contentVisible: false);
+        BuildSuspended(fresh);
+
+        Snapshot(edited, includeHidden: false).ShouldBe(Snapshot(fresh, includeHidden: false));
     }
 
     // Ill-formed seeds past the golden file's are held to the same checks. These are the ones that are not, each
