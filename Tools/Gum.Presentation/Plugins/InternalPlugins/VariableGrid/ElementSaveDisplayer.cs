@@ -212,7 +212,7 @@ public class ElementSaveDisplayer
                     if (variablesSetThroughReference.ContainsKey(variableName))
                     {
                         isReadonly = true;
-                        subtext = variablesSetThroughReference[variableName];
+                        subtext = "Set by " + variablesSetThroughReference[variableName];
                     }
                     var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, isSetByReference, subtext, addedNames);
 
@@ -240,7 +240,7 @@ public class ElementSaveDisplayer
                 if (isSetByReference)
                 {
                     isReadonly = true;
-                    subtext = variablesSetThroughReference[variableName];
+                    subtext = "Set by " + variablesSetThroughReference[variableName];
                 }
                 var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, isSetByReference, subtext, addedNames);
 
@@ -300,7 +300,7 @@ public class ElementSaveDisplayer
             if (isSetByReference)
             {
                 isReadonly = true;
-                subtext += "=" + variablesSetThroughReference[variableName];
+                subtext = "Set by " + variablesSetThroughReference[variableName];
             }
 
             if (instanceSave != null)

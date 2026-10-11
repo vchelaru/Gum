@@ -91,11 +91,11 @@ public class ElementSaveDisplayerCompositeReferenceTests : BaseTestClass
         red.ShouldNotBeNull();
         red.IsAssignedByReference.ShouldBeTrue();
         red.IsReadOnly.ShouldBeTrue();
-        red.DetailText.ShouldBe("=Components/Styles.Primary.FillRed");
+        red.DetailText.ShouldBe("Set by Components/Styles.Primary.FillRed");
 
         var blue = members.FirstOrDefault(member => member.RootVariableName == "Blue");
         blue.ShouldNotBeNull();
         blue.IsAssignedByReference.ShouldBeTrue();
-        blue.DetailText.ShouldBe("=Components/Styles.Primary.FillBlue");
+        blue.DetailText.ShouldBe("Set by Components/Styles.Primary.FillBlue");
     }
 }
