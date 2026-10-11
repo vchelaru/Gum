@@ -1151,7 +1151,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _ => null
         };
 
-    private void AdjustFontSourceToggle(List<MemberCategory> categories, StateSave stateSave, InstanceSave? instance)
+    internal void AdjustFontSourceToggle(List<MemberCategory> categories, StateSave stateSave, InstanceSave? instance)
     {
         var fontCategory = categories.FirstOrDefault(c => c.Name == "Font");
         if (fontCategory == null)
@@ -1192,8 +1192,16 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         toggleMember.CustomOptions = new List<object> { "System Font", "From File" };
         toggleMember.CustomGetTypeEvent += (_) => typeof(string);
         toggleMember.CustomGetEvent += (_) => isTtfMode ? "From File" : "System Font";
+        // A Font set through a variable reference (or on a locked instance) has no setter, so the
+        // toggle that rewrites it must be read-only too.
+        toggleMember.IsReadOnly = fontMember.IsReadOnly;
         toggleMember.CustomSetPropertyEvent += (_, args) =>
         {
+            if (fontMember.IsReadOnly)
+            {
+                return;
+            }
+
             string? newValue = args.Value as string;
             if (newValue == "From File" && !isTtfMode)
             {
