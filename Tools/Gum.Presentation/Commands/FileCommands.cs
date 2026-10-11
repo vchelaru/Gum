@@ -226,12 +226,6 @@ public class FileCommands : IFileCommands
 
     public async Task NewProjectAsync()
     {
-        _selectedState.SelectedElement = null;
-        _selectedState.SelectedInstance = null;
-        _selectedState.SelectedBehavior = null;
-        _selectedState.SelectedStateCategorySave = null;
-        _selectedState.SelectedStateSave = null;
-
         await _newProjectLogic.CreateNewProjectAsync();
 
         _guiCommands.RefreshStateTreeView();

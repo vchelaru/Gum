@@ -17,6 +17,22 @@ public class ThemeSelectionViewModel : ViewModel
 {
     private readonly IFormsFileService _formsFileService;
     private readonly IProjectState _projectState;
+    private GumProjectSave? _targetProject;
+
+    /// <summary>
+    /// The project the requirements panel compares the theme against. Null means the loaded
+    /// project. New Project sets this to the blank project it is about to create, since that
+    /// dialog opens before the open project is replaced.
+    /// </summary>
+    public GumProjectSave? TargetProject
+    {
+        get => _targetProject;
+        set
+        {
+            _targetProject = value;
+            RefreshRequirementsDescription();
+        }
+    }
 
     public IReadOnlyList<string> AvailableThemes
     {
@@ -90,7 +106,7 @@ public class ThemeSelectionViewModel : ViewModel
     private void RefreshRequirementsDescription()
     {
         string? theme = SelectedTheme;
-        GumProjectSave? project = _projectState.GumProjectSave;
+        GumProjectSave? project = _targetProject ?? _projectState.GumProjectSave;
         if (string.IsNullOrEmpty(theme) || project is null)
         {
             RequirementsDescription = string.Empty;

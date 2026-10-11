@@ -68,6 +68,25 @@ public interface IProjectManager
     void LoadSettings();
     Task Initialize();
     void CreateNewProject();
+
+    /// <summary>
+    /// Builds an empty project with the settings a new project starts with, without loading it or
+    /// notifying plugins. Lets the New Project dialog describe what it would create while the
+    /// open project stays loaded.
+    /// </summary>
+    GumProjectSave CreateBlankProject();
+
+    /// <summary>
+    /// Asks the user where to save a new project, confirming when the folder is not empty.
+    /// </summary>
+    /// <returns>The chosen project file, or null if the user cancelled.</returns>
+    string? AskUserForNewProjectLocation();
+
+    /// <summary>
+    /// Sets the loaded project's file location and tells plugins, as when the user first saves it.
+    /// </summary>
+    void SetProjectLocation(string fileName);
+
     Task<bool> LoadProjectAsync();
     Task LoadProjectAsync(FilePath fileName);
     bool SaveProject(bool forceSaveContainedElements = false);
