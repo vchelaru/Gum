@@ -47,17 +47,17 @@ If the fiddle demonstrates a custom class (e.g. `TextInputDialog`), the file sho
 Example skeleton:
 
 **Rules for `#code=` files:**
-- Always include `using MonoGameGum;` and `using Gum.Forms;` — never `MonoGameGum.Forms.*` (obsolete)
+- Always include `using Gum;` (home of `GumService`; the `MonoGameGum.GumService` alias is obsolete and warns) and `using Gum.Forms;`. Never `MonoGameGum.Forms.*` (obsolete)
 - Always include `using Gum.Forms.DefaultVisuals.V3;` — **never** `using Gum.Forms.DefaultVisuals;` (the non-V3 namespace is obsolete and must not be used)
 - Always declare `GumService GumUI => GumService.Default;` as a property on `Game1`
 - Always fully qualify `Anchor` and `Dock` arguments: `Gum.Wireframe.Anchor.Center`, `Gum.Wireframe.Dock.Fill`
 - `GumUI.Update` takes only `gameTime` — **not** `this`
 
 ```csharp
-using MonoGameGum;
+using Gum;
 using Gum.Forms;
 using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
+using Gum.GueDeriving;
 using Gum.Forms.DefaultVisuals.V3;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
