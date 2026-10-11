@@ -97,6 +97,17 @@ public class StandardMenuModelBuilder
                 _dialogService.ShowMessage($"Error loading project:\n{ex.Message}");
             }
         }));
+        file.Items.Add(new MenuItemModel("Close Project", async () =>
+        {
+            try
+            {
+                await _fileCommands.CloseProjectAsync();
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessage($"Error closing project:\n{ex.Message}");
+            }
+        }));
         file.Items.Add(MenuItemModel.Separator());
         file.Items.Add(new MenuItemModel("Save Project", () => SaveProject(saveAll: false)));
         file.Items.Add(new MenuItemModel("Save All", () => SaveProject(saveAll: true)));

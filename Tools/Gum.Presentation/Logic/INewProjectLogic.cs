@@ -12,7 +12,13 @@ public interface INewProjectLogic
     /// <summary>
     /// Replaces the loaded project with a new one, prompting for a save location and (unless the
     /// user opts out) importing the default Forms theme and adding a starting screen. A cancelled
-    /// prompt leaves an empty, unsaved project.
+    /// prompt keeps the loaded project, or creates an empty, unsaved one when none is loaded.
     /// </summary>
     Task CreateNewProjectAsync();
+
+    /// <summary>
+    /// Closes the loaded project, leaving an empty, unsaved one, then offers
+    /// <see cref="CreateNewProjectAsync"/>. A cancelled prompt leaves the empty project.
+    /// </summary>
+    Task CloseProjectAsync();
 }

@@ -89,6 +89,33 @@ public class DialogScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "DLG-004")]
+    [Trait("Feature", "FILE-001")]
+    public void CloseProject_Cancelled_LeavesABlankUnsavedProject()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Card");
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        GumProjectSave openProject = projectManager.GumProjectSave.ShouldNotBeNull();
+        bool answered = false;
+        tree.Dialogs.AnswerNext<NewProjectDialogViewModel>(_ =>
+        {
+            answered = true;
+            return false;
+        });
+
+        tree.PickMainMenu("File", "Close Project");
+        tree.WaitUntil(() => answered, AsyncWork, "the New Project dialog to be cancelled");
+
+        GumProjectSave closedProject = projectManager.GumProjectSave.ShouldNotBeNull();
+        closedProject.ShouldNotBeSameAs(openProject);
+        closedProject.FullFileName.ShouldBeNullOrEmpty();
+        closedProject.Components.ShouldBeEmpty();
+        tree.ChildTexts(tree.RootNode("Components")).ShouldBeEmpty();
+        // No AssertOracles: they save and reload the project, and an unsaved one has nowhere to save.
+    }
+
     #endregion
 
     #region Loading and importing
