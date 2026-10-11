@@ -18,7 +18,7 @@ depend on the tab.
 
 ## PR screenshots
 
-A tool UI PR gets a before/after table from screenshot tests. `PrScreenshot.cs` shows a dialog view
+A tool UI change gets before/after PNGs from screenshot tests, shown to the reviewer in chat, not in the PR body. `PrScreenshot.cs` shows a dialog view
 model in the head's `DialogWindow` (`ShowDialog`) or any control in a plain window (`Show`), with an
 optional light or dark theme; the returned `ScreenshotWindow` pumps frames, finds and clicks
 controls, hovers one for its tooltip (`HoverForToolTip`, a real-time wait), and saves a PNG.
@@ -43,15 +43,15 @@ public class ManagePluginsScreenshotTests
 folder or user name in a path; feed the view made-up paths. Then:
 
 ```
-pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests [-DryRun]
+pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests -DryRun
 ```
 
 It renders the tests here (after) and in a reused sibling worktree at `origin/main` (before, `-Base`
 to change, `-NoBefore` for new UI), copying the screenshot tests into it, so they must compile
-against the base. It uploads the PNGs to the `pr-screenshots` branch under `pr-<num>/` and writes
-the table into the PR body between `pr-screenshots` markers, replacing it on a rerun. `-DryRun`
-leaves the PNGs and the proposed body in `%TEMP%\gum-pr-screenshots\pr-<num>\` and changes nothing
-on GitHub.
+against the base. Always pass `-DryRun`: it leaves the PNGs in `%TEMP%\gum-pr-screenshots\pr-<num>\{before,after}`
+and changes nothing on GitHub. Without it the script uploads the PNGs to the `pr-screenshots` branch
+and writes a table into the PR body, which is not how screenshots are shared here. Send the PNGs to
+the user in chat instead.
 
 ## App-wide window wiring
 
