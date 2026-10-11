@@ -94,9 +94,9 @@
 		<!-- Input + the AddSceneRenderer/AddGraphicsCompositor extension methods GumService.Stride.cs
 		     uses to self-register its GumSceneRenderer. Stride.CommunityToolkit.Windows/.Bepu (window
 		     backend, physics) are a consuming game's choice, not this adapter's concern. -->
-		<PackageReference Include="Stride.Engine" Version="4.4.0-beta5" />
-		<PackageReference Include="Stride.Input" Version="4.4.0-beta5" />
-		<PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.63" />
+		<PackageReference Include="Stride.Engine" Version="4.4.0" />
+		<PackageReference Include="Stride.Input" Version="4.4.0" />
+		<PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.66" />
 		<!-- Stride's runtime (unlike its WPF GameStudio editor) exposes no clipboard API; this is the
 		     cross-platform fallback for Gum.Input.StrideGumClipboard. -->
 		<PackageReference Include="TextCopy" Version="6.2.1" />

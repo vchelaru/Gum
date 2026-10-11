@@ -27,7 +27,7 @@ dotnet add package Gum.Stride
 `Gum.Stride` leaves the choice of window backend to you, so your project also needs a Stride host package. The Gum sample uses the Community Toolkit's Windows host:
 
 ```xml
-<PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
+<PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.66" />
 ```
 
 Your project must target `net10.0` at minimum, since Stride's own packages ship `net10.0` builds only. Targeting `net10.0-windows7.0` instead unlocks GPU-accelerated rendering on Direct3D11; see [Skia Render Path](#skia-render-path) below.
