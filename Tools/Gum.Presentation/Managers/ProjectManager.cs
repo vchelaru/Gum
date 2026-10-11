@@ -273,18 +273,21 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
     }
 
+    /// <inheritdoc/>
+    public GumProjectSave CreateBlankProject() => new GumProjectSave
+    {
+        FontGenerator = FontGeneratorType.KernSmith,
+        // PopulateProjectWithDefaultStandards (in CreateNewProject) seeds the latest variable surface
+        // on the standard elements, so stamp the project at the matching version rather
+        // than the GumProjectSave ctor default. Without this, the variable-grid version
+        // gate hides newer-only variables (Fill/Dropshadow/Gradient, LocalizeText, etc.)
+        // on a brand-new project.
+        Version = GumProjectSave.NativeVersion
+    };
+
     public void CreateNewProject()
     {
-        _gumProjectSave = new GumProjectSave
-        {
-            FontGenerator = FontGeneratorType.KernSmith,
-            // PopulateProjectWithDefaultStandards (below) seeds the latest variable surface
-            // on the standard elements, so stamp the project at the matching version rather
-            // than the GumProjectSave ctor default. Without this, the variable-grid version
-            // gate hides newer-only variables (Fill/Dropshadow/Gradient, LocalizeText, etc.)
-            // on a brand-new project.
-            Version = GumProjectSave.NativeVersion
-        };
+        _gumProjectSave = CreateBlankProject();
         ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_gumProjectSave);
@@ -867,57 +870,73 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         {
             shouldSave = false;
 
-            string? chosenFileName = _dialogService.SaveFile(new SaveFileDialogOptions
+            if (AskUserForNewProjectLocation() is { } chosenFileName)
             {
-                // .gumj (JSON, AOT-safe) is the default (#4705). It is listed first because macOS's
-                // save panel appends the first extension to a name typed without one (#4980). XML stays
-                // available - the user can still type/pick a .gumx name.
-                Filter = "Gum Project (*.gumj;*.gumx)|*.gumj;*.gumx",
-                Title = "Where would you like to save the Gum project?",
-                FileName = "NewProject.gumj",
-            });
-
-            if (chosenFileName != null && !HasProjectExtension(chosenFileName))
-            {
-                chosenFileName += ".gumj";
-            }
-
-            bool shouldProceed = chosenFileName != null;
-
-            if (shouldProceed)
-            {
-                FilePath desiredLocation = chosenFileName!;
-                var directory = desiredLocation.GetDirectoryContainingThis();
-
-                if(directory?.Exists() == true)
-                {
-                    var files = System.IO.Directory.GetFiles(directory.FullPath);
-                    var directories = System.IO.Directory.GetDirectories(directory.FullPath);
-
-                    if(files.Length > 0 || directories.Length > 0)
-                    {
-                        bool areYouSure = _dialogService.ShowYesNoMessage(
-                            $"The location\n\n{directory}\n\nis not empty. It's best to save new Gum projects in " +
-                            $"an empty folder. Do you want to continue?");
-
-                        shouldProceed = areYouSure;
-                    }
-                }
-            }
-
-            if(shouldProceed)
-            {
-                project.FullFileName = chosenFileName!;
-                var filePath = new FilePath(chosenFileName!);
-                _pluginManager.ProjectLocationSet(filePath);
-                // The save dialog returns an absolute path, so it has a containing directory.
-                _filePickingFolderProvider.FolderRelativeTo = filePath.GetDirectoryContainingThis()!.FullPath;
+                SetProjectLocation(chosenFileName);
 
                 shouldSave = true;
                 isProjectNew = true;
             }
         }
         return shouldSave;
+    }
+
+    /// <inheritdoc/>
+    public string? AskUserForNewProjectLocation()
+    {
+        string? chosenFileName = _dialogService.SaveFile(new SaveFileDialogOptions
+        {
+            // .gumj (JSON, AOT-safe) is the default (#4705). It is listed first because macOS's
+            // save panel appends the first extension to a name typed without one (#4980). XML stays
+            // available - the user can still type/pick a .gumx name.
+            Filter = "Gum Project (*.gumj;*.gumx)|*.gumj;*.gumx",
+            Title = "Where would you like to save the Gum project?",
+            FileName = "NewProject.gumj",
+        });
+
+        if (chosenFileName == null)
+        {
+            return null;
+        }
+
+        if (!HasProjectExtension(chosenFileName))
+        {
+            chosenFileName += ".gumj";
+        }
+
+        FilePath desiredLocation = chosenFileName;
+        var directory = desiredLocation.GetDirectoryContainingThis();
+
+        if(directory?.Exists() == true)
+        {
+            var files = System.IO.Directory.GetFiles(directory.FullPath);
+            var directories = System.IO.Directory.GetDirectories(directory.FullPath);
+
+            if(files.Length > 0 || directories.Length > 0)
+            {
+                bool areYouSure = _dialogService.ShowYesNoMessage(
+                    $"The location\n\n{directory}\n\nis not empty. It's best to save new Gum projects in " +
+                    $"an empty folder. Do you want to continue?");
+
+                if (!areYouSure)
+                {
+                    return null;
+                }
+            }
+        }
+
+        return chosenFileName;
+    }
+
+    /// <inheritdoc/>
+    public void SetProjectLocation(string fileName)
+    {
+        GumProjectSave project = GumProjectSave ?? throw new InvalidOperationException("No project is loaded.");
+        project.FullFileName = fileName;
+        var filePath = new FilePath(fileName);
+        _pluginManager.ProjectLocationSet(filePath);
+        // The save dialog returns an absolute path, so it has a containing directory.
+        _filePickingFolderProvider.FolderRelativeTo = filePath.GetDirectoryContainingThis()!.FullPath;
     }
 
     private static bool HasProjectExtension(string fileName)

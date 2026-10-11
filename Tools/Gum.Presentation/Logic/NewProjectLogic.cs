@@ -51,23 +51,35 @@ public class NewProjectLogic : INewProjectLogic
     /// <inheritdoc/>
     public async Task CreateNewProjectAsync()
     {
-        // Create first so the tool always has a valid GumProjectSave, even if the user backs out
-        // of everything below.
-        _projectManager.CreateNewProject();
-
-        if (!_dialogService.Show<NewProjectDialogViewModel>(null, out NewProjectDialogViewModel viewModel))
+        // The open project is replaced only once the user has accepted both prompts, so backing out
+        // leaves it loaded (#5968). The theme picker describes what the new project would need, so
+        // it is pointed at a blank one rather than the open project.
+        GumProjectSave blankProject = _projectManager.CreateBlankProject();
+        if (!_dialogService.Show<NewProjectDialogViewModel>(
+                vm => vm.ThemeSelection.TargetProject = blankProject, out NewProjectDialogViewModel viewModel))
         {
+            EnsureProjectLoaded();
             return;
         }
 
         // The theme import copies files next to the gumx, so the project needs a location on disk
         // before it can run.
-        if (!_projectManager.AskUserForProjectNameIfNecessary(out _))
+        if (_projectManager.AskUserForNewProjectLocation() is not { } projectLocation)
         {
+            EnsureProjectLoaded();
             return;
         }
 
-        // AskUserForProjectNameIfNecessary just set FullFileName above, so SaveProject's own
+        _selectedState.SelectedElement = null;
+        _selectedState.SelectedInstance = null;
+        _selectedState.SelectedBehavior = null;
+        _selectedState.SelectedStateCategorySave = null;
+        _selectedState.SelectedStateSave = null;
+
+        _projectManager.CreateNewProject();
+        _projectManager.SetProjectLocation(projectLocation);
+
+        // SetProjectLocation just set FullFileName above, so SaveProject's own
         // internal call to it (to compute saveContainedElements) would see a non-empty name and
         // report isProjectNew: false -- even though this is genuinely the project's first save.
         // Force it, since this method already knows unambiguously that it is.
@@ -90,5 +102,15 @@ public class NewProjectLogic : INewProjectLogic
         ScreenSave startingScreen = new() { Name = StartingScreenName };
         _projectCommands.AddScreen(startingScreen);
         _selectedState.SelectedScreen = startingScreen;
+    }
+
+    // The tool assumes a non-null GumProjectSave, so a cancel at startup (nothing loaded yet) still
+    // needs a blank one.
+    private void EnsureProjectLoaded()
+    {
+        if (_projectManager.GumProjectSave == null)
+        {
+            _projectManager.CreateNewProject();
+        }
     }
 }

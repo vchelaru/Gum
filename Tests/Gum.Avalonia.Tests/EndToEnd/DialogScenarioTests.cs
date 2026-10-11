@@ -63,6 +63,32 @@ public class DialogScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    [Trait("Feature", "DLG-004")]
+    [Trait("Feature", "FILE-001")]
+    public void NewProject_Cancelled_KeepsTheOpenProjectLoaded()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Card");
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        GumProjectSave openProject = projectManager.GumProjectSave.ShouldNotBeNull();
+        bool answered = false;
+        tree.Dialogs.AnswerNext<NewProjectDialogViewModel>(_ =>
+        {
+            answered = true;
+            return false;
+        });
+
+        tree.PickMainMenu("File", "New Project");
+        tree.WaitUntil(() => answered, AsyncWork, "the New Project dialog to be cancelled");
+
+        projectManager.GumProjectSave.ShouldBeSameAs(openProject);
+        openProject.Components.Select(component => component.Name).ShouldBe(new[] { "Card" });
+        tree.ChildTexts(tree.RootNode("Components")).ShouldBe(new[] { "Card" });
+
+        tree.AssertOracles();
+    }
+
     #endregion
 
     #region Loading and importing

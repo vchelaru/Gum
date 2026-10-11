@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
@@ -102,5 +104,39 @@ public class ThemeSelectionViewModelTests
 
         sut.PreviewImagePath.ShouldBeNull();
         sut.HasPreviewImage.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TargetProject_DescribesRequirementsAgainstThatProject_InsteadOfTheLoadedOne()
+    {
+        // New Project shows this picker before the new project replaces the open one (#5968), so the
+        // requirements must be measured against the project about to be created.
+        string themeDirectory = Path.Combine(Path.GetTempPath(), "ThemeSelectionTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(themeDirectory);
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(themeDirectory, ThemeRequirements.ThemeRequirementsFileName),
+                "RequiresSkiaShapes: true");
+            _formsFileService.Setup(x => x.GetAvailableThemes()).Returns(new List<string> { "Standard" });
+            _formsFileService.Setup(x => x.GetThemeDirectory("Standard")).Returns(themeDirectory);
+
+            GumProjectSave loadedProject = new GumProjectSave();
+            loadedProject.StandardElementReferences.Add(
+                new ElementReference { Name = "Svg", ElementType = ElementType.Standard });
+            _projectState.Setup(x => x.GumProjectSave).Returns(loadedProject);
+            GumProjectSave blankProject = new GumProjectSave();
+
+            ThemeSelectionViewModel sut = CreateSut();
+            sut.HasRequirements.ShouldBeFalse();
+
+            sut.TargetProject = blankProject;
+
+            sut.HasRequirements.ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(themeDirectory, recursive: true);
+        }
     }
 }
