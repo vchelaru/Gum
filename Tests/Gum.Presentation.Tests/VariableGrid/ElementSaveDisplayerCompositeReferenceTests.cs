@@ -5,9 +5,11 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Presentation.Tests.VariableGrid;
 
@@ -97,5 +99,35 @@ public class ElementSaveDisplayerCompositeReferenceTests : BaseTestClass
         blue.ShouldNotBeNull();
         blue.IsAssignedByReference.ShouldBeTrue();
         blue.DetailText.ShouldBe("Set by Components/Styles.Primary.FillBlue");
+    }
+
+    [Fact]
+    public void GetCategories_ShouldAttachSourceLink_WhenRowIsSetByReference()
+    {
+        InstanceSave instance = new InstanceSave
+        {
+            Name = "Background",
+            BaseType = "NineSlice",
+            ParentContainer = _screen
+        };
+        _screen.Instances.Add(instance);
+        VariableListSave<string> references = new VariableListSave<string>
+        {
+            Type = "string",
+            Name = "Background.VariableReferences"
+        };
+        references.Value.Add("Width = Other.Width");
+        _screenDefaultState.VariableLists.Add(references);
+        DetailTextLink link = new DetailTextLink("Other.Width", () => { });
+        _mocker.GetMock<IVariableReferenceLinkLogic>()
+            .Setup(x => x.GetLink("Other.Width", _screen))
+            .Returns(link);
+
+        List<VariableGridEntry> members = _displayer.GetCategories(_screen, instance, _screenDefaultState, null)
+            .SelectMany(category => category.Members)
+            .ToList();
+
+        members.First(member => member.RootVariableName == "Width").DetailLink.ShouldBe(link);
+        members.First(member => member.RootVariableName == "Height").DetailLink.ShouldBeNull();
     }
 }

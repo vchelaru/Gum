@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Controls.Primitives;
@@ -181,6 +182,27 @@ internal sealed class VariableGridHarness : IDisposable
         InstanceMember member = Member(memberName);
         return Grid.LiveContainers.FirstOrDefault(row => row.Member == member)
             ?? throw new InvalidOperationException($"The {memberName} row has no live editor.");
+    }
+
+    /// <summary>Clicks the link in <paramref name="memberName"/>'s detail text, at the middle of the link's own text.</summary>
+    public void ClickDetailLink(string memberName)
+    {
+        DetailTextLink link = Member(memberName).DetailLink
+            ?? throw new InvalidOperationException($"The {memberName} row has no detail link.");
+        // A hint with a link is built from inlines, so its text is the runs joined.
+        static string TextOf(TextBlock text) => text.Inlines is { Count: > 0 }
+            ? string.Concat(text.Inlines.OfType<global::Avalonia.Controls.Documents.Run>().Select(run => run.Text))
+            : text.Text ?? "";
+        TextBlock hint = Row(memberName).GetVisualDescendants().OfType<TextBlock>()
+            .First(text => text.IsVisible && TextOf(text).Contains(link.Text));
+        hint.BringIntoView();
+        _driver.Layout();
+
+        int linkStart = TextOf(hint).IndexOf(link.Text, StringComparison.Ordinal);
+        Rect middle = hint.TextLayout.HitTestTextPosition(linkStart + link.Text.Length / 2);
+        Point point = hint.TranslatePoint(middle.Center, _driver.Window)
+            ?? throw new InvalidOperationException("The detail text is not in the window.");
+        _driver.ClickAt(point);
     }
 
     /// <summary>The editor of <paramref name="memberName"/>'s row, as <typeparamref name="T"/>.</summary>

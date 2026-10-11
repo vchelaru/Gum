@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Avalonia.Styling;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -28,6 +32,8 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         Background = Brushes.Transparent;
         DataUiContextMenus.Attach(this, this);
         Styles.Add(new Style(x => x.OfType<TextBox>()) { Setters = { new Setter(ContextFlyoutProperty, null) } });
+        AddHandler(PointerMovedEvent, HandleHintPointerMoved);
+        AddHandler(PointerPressedEvent, HandleHintPointerPressed);
     }
 
     /// <inheritdoc/>
@@ -80,7 +86,8 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     protected virtual void HandleMemberPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
-            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText))
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink))
         {
             Refresh();
         }
@@ -104,7 +111,10 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         }
     }
 
-    /// <summary>Creates the small wrapping text under a row that shows <see cref="InstanceMember.DetailText"/>.</summary>
+    /// <summary>
+    /// Creates the small wrapping text under a row that shows <see cref="InstanceMember.DetailText"/>,
+    /// including its <see cref="InstanceMember.DetailLink"/> as a clickable span.
+    /// </summary>
     protected static TextBlock CreateHintTextBlock()
     {
         TextBlock hint = new TextBlock
@@ -116,6 +126,43 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         };
         BindCaptionFontSize(hint);
         return hint;
+    }
+
+    private static readonly Cursor HandCursor = new Cursor(StandardCursorType.Hand);
+
+    /// <summary>Where the link sits inside a hint's text.</summary>
+    private sealed record HintLink(int Start, int Length, DetailTextLink Link);
+
+    private TextBlock? _linkHint;
+    private HintLink? _hintLink;
+
+    /// <summary>
+    /// The link clicks are handled here, not on the hint: a read-only row disables its content (the
+    /// hint included), and a disabled control gets no pointer events, so they go to this enabled control.
+    /// </summary>
+    private bool IsOverLink(PointerEventArgs e)
+    {
+        if (_linkHint == null || _hintLink == null)
+        {
+            return false;
+        }
+
+        TextHitTestResult hit = _linkHint.TextLayout.HitTestPoint(e.GetPosition(_linkHint));
+        return hit.IsInside && hit.TextPosition >= _hintLink.Start && hit.TextPosition < _hintLink.Start + _hintLink.Length;
+    }
+
+    private void HandleHintPointerMoved(object? sender, PointerEventArgs e)
+    {
+        Cursor = IsOverLink(e) ? HandCursor : null;
+    }
+
+    private void HandleHintPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && IsOverLink(e))
+        {
+            e.Handled = true;
+            _hintLink!.Link.Navigate();
+        }
     }
 
     /// <summary>
@@ -133,7 +180,28 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     protected void RefreshHint(TextBlock hint)
     {
         string? detailText = InstanceMember?.DetailText;
-        hint.Text = detailText;
+        DetailTextLink? link = InstanceMember?.DetailLink;
+        int linkStart = link == null || detailText == null ? -1 : detailText.IndexOf(link.Text, StringComparison.Ordinal);
+
+        hint.Inlines?.Clear();
+        if (link == null || detailText == null || linkStart < 0)
+        {
+            _linkHint = null;
+            _hintLink = null;
+            Cursor = null;
+            hint.Text = detailText;
+        }
+        else
+        {
+            Run linkRun = new Run(link.Text) { TextDecorations = TextDecorations.Underline };
+            linkRun.Bind(TextElement.ForegroundProperty, hint.GetResourceObservable("Frb.Brushes.Link"));
+            _linkHint = hint;
+            _hintLink = new HintLink(linkStart, link.Text.Length, link);
+            hint.Inlines ??= new InlineCollection();
+            hint.Inlines.Add(new Run(detailText.Substring(0, linkStart)));
+            hint.Inlines.Add(linkRun);
+            hint.Inlines.Add(new Run(detailText.Substring(linkStart + link.Text.Length)));
+        }
         hint.IsVisible = !string.IsNullOrEmpty(detailText);
     }
 

@@ -103,6 +103,9 @@ public class VariableGridEntry
     /// <summary>Help text shown under the row in the Variables tab.</summary>
     public string? DetailText { get; set; }
 
+    /// <summary>The part of <see cref="DetailText"/> that navigates to the variable's source when clicked, or null.</summary>
+    public DetailTextLink? DetailLink { get; set; }
+
     /// <summary>Tooltip text shown for the row.</summary>
     public string? ToolTipText { get; set; }
 

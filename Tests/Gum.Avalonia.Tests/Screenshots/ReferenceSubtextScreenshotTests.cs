@@ -5,8 +5,8 @@ using Gum.DataTypes;
 namespace Gum.Avalonia.Tests.Screenshots;
 
 /// <summary>
-/// A Variables tab row driven by a variable reference, for a PR's before/after table
-/// (<c>Tools/pr-screenshots.ps1 -Filter ReferenceSubtextScreenshotTests</c>).
+/// A Variables tab row driven by a variable reference, for a PR's before/after images
+/// (<c>Tools/pr-screenshots.ps1 -Filter ReferenceSubtextScreenshotTests -DryRun</c>).
 /// Uses only API that main already has, so the same file renders the "before" side.
 /// </summary>
 [Trait("Category", PrScreenshot.Category)]
@@ -17,11 +17,12 @@ public class ReferenceSubtextScreenshotTests
     {
         using VariableGridHarness grid = new VariableGridHarness();
         ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave leader = grid.Project.AddInstance(button, "Leader", "Text");
         InstanceSave label = grid.Project.AddInstance(button, "Label", "Text");
-        grid.Select(button);
+        grid.Select(leader);
         grid.TypeAndEnter("Width", "120");
         grid.Select(label);
-        grid.TypeLinesAndApply("VariableReferences", "Width = Width + 10");
+        grid.TypeLinesAndApply("VariableReferences", "Width = Leader.Width");
         grid.Input.TypeInto(grid.View.FilterTextBox, "Width");
 
         PrScreenshot.SaveWindow(grid.Input.Window, "reference-driven-row");
