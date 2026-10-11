@@ -123,6 +123,10 @@ descender) goes through `ChangeRenderableAndUpdateLayout`, which lays out only w
 element uses reads a value that changed. Font loads get the same check in `LoadFontFromProperties`.
 A new texture, source file or font setter that writes the renderable directly skips layout.
 
+## Circular Input Is Undefined
+
+The engine rejects only the cycles between a parent and its child (`IsSizeFollowingParentContentSize`, `GetChildLayoutType`). A cycle through an intermediate element, a convergent cycle, or a wrapped text whose height follows its width has no defined result: it may need several layouts to settle, may never settle, and is not worth a rule per shape or a dependency-graph cycle detector. `LayoutRandomTreeSweepTests.IllFormedSeedsNotHeld` lists the sweep seeds that do this. The one guard is `ToFiniteSize` in `.Dimensions.cs`, which writes an infinite size as 0 so a divergent cycle cannot spread infinity into positions; it is a safety net, not a fix.
+
 ## UpdateChildren Internals
 
 ### Two-pass ordering for Ratio dependencies
