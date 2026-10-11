@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 
 /// <summary>
 /// Batch-mode entry point that builds the sample as a player for the host OS (Windows x64 or macOS):
-/// <c>Unity.exe -batchmode -quit -projectPath Samples/UnityGum -executeMethod SampleBuild.Build [-il2cpp] [-stripping Low] [-linear]</c>.
+/// <c>Unity.exe -batchmode -quit -projectPath Samples/UnityGum -executeMethod SampleBuild.Build [-il2cpp] [-stripping Low|Minimal] [-linear]</c>.
 /// Output goes to Build/Mono or Build/IL2CPP. Run Unity/build-unity-package.ps1 first so the Gum package
 /// has its DLLs.
 /// </summary>
@@ -33,13 +33,12 @@ public static class SampleBuild
         PlayerSettings.colorSpace = Array.IndexOf(Environment.GetCommandLineArgs(), "-linear") >= 0 ? ColorSpace.Linear : ColorSpace.Gamma;
         PlayerSettings.SetScriptingBackend(target, il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
 
-        // IL2CPP uses Low stripping until a Minimal build is verified: RichTextKit is still built
-        // against SkiaSharp 2.88 (#5529). -stripping overrides it.
+        // -stripping overrides the Minimal default.
         string[] args = Environment.GetCommandLineArgs();
         int strippingIndex = Array.IndexOf(args, "-stripping");
         ManagedStrippingLevel stripping = strippingIndex >= 0
             ? (ManagedStrippingLevel)Enum.Parse(typeof(ManagedStrippingLevel), args[strippingIndex + 1])
-            : ManagedStrippingLevel.Low;
+            : ManagedStrippingLevel.Minimal;
         PlayerSettings.SetManagedStrippingLevel(target, stripping);
 
         if (!File.Exists(ScenePath))

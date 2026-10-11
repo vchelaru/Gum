@@ -72,6 +72,13 @@ public sealed class GumSample : MonoBehaviour
         _label.Text = "Clicks: 0";
         panel.AddChild(_label);
 
+        // Outlined text goes through RichTextKit's halo path, which is what IL2CPP stripping can break.
+        var outlined = new Gum.GueDeriving.TextRuntime();
+        outlined.Text = "Outlined";
+        outlined.FontSize = 32;
+        outlined.OutlineThickness = 3;
+        panel.Visual.AddChild(outlined);
+
         _button = new Button();
         _button.Text = "Click me";
         _button.Click += (_, _) =>
