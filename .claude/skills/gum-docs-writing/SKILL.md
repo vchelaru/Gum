@@ -227,6 +227,8 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 
 ## Code Sample Rules
 
+- **Parallel samples share one design.** When a page shows the same task in two forms (code-only vs. a generated screen, MonoGame vs. raylib), a design change to one sample (where navigation lives, how the classes are split up) gets applied to the others in the same pass, or the page explains why they differ.
+
 - **One-time initialization goes first, never mid-sample** — put all startup/registration calls (e.g. `GumUI.UseKeyboardDefaults()`, `GumUI.UseGamepadDefaults()`, input-device registration, service configuration) at the **top** of the sample, right under the `// Initialize` comment where `GumUI` is set up — before the feature code. Readers copy a sample as one block, so a setup call buried between feature lines reads as part of the feature logic and is confusing. Group setup first, then the feature it enables. Bad: create the control, add items, *then* `UseKeyboardDefaults()`, then wire focus. Good: `UseKeyboardDefaults()` first, then create the control and wire focus.
 - **No reflection** — never use `GetType()`, `typeof()`, `MemberInfo`, or any `System.Reflection` APIs in doc code samples. Use `is` pattern matching instead: `if (device is Gum.Input.Keyboard)`. The one exception is `typeof(T)` on a generic type parameter, which `is` cannot replace, as in an `IContentLoader` sample branching on the requested asset type.
 - **Fully qualify non-Gum types** — any type that is not part of the Gum API must use its fully qualified name. For example, use `System.DateTime` not `DateTime`. Do not rely on implicit `using` statements for non-Gum types.

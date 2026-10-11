@@ -325,6 +325,7 @@
     * [VerticalAlignment](code/standard-visuals/textruntime/verticalalignment.md)
 * [Visual Tree](code/visual-tree/README.md)
   * [Finding Elements](code/visual-tree/finding-elements.md)
+  * [Showing and Removing UI](code/visual-tree/showing-and-removing-ui.md)
 * [Rendering](code/rendering/README.md)
   * [GumBatch](code/rendering/gumbatch.md)
   * [Render Targets](code/rendering/render-targets.md)
