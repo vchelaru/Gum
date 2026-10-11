@@ -51,8 +51,11 @@ relative to the main window in the default 1280x720 layout (`TREE_ROW_SELECTED`,
   system's modifier state stuck, every later mouse event then reports Command, and a Command drag is a
   move that the canvas's copy-only drop target rejects (the drag looks fine and the drop is cancelled,
   which read as a flaky drag for hours). `gumdrv key ... cmd` presses and releases the modifier;
-  `gumdrv flags` shows the state and `gumdrv clearflags` releases everything; `macpass.py` clears it
-  before each scenario and fails a scenario that leaves Command down. `gumdrv listen N` prints the mouse
+  `gumdrv flags` shows the state and `gumdrv clearflags` releases everything. Three guards keep it from
+  coming back: `macpass.py` clears modifiers before each scenario and fails if one is still held
+  (a key physically down), fails any scenario that leaves one down, and the `driver-releases-modifiers`
+  scenario pins the driver itself (it fails with the old flags-only key events). A failed drag also
+  reports the modifiers held. `gumdrv listen N` prints the mouse
   events the session sees, with the process that posted each.
 - Type with `gumdrv type` (real key codes); the unicode fallback is dropped by some focused text boxes.
 - One launch per scenario, on a fresh copy of the sample project and a fresh `--user-data` folder, so

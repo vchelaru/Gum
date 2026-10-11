@@ -47,6 +47,15 @@ def drv(*args, check=True) -> str:
     return r.stdout.strip()
 
 
+MODIFIER_BITS = {"Shift": 0x20000, "Control": 0x40000, "Option": 0x80000, "Command": 0x100000}
+
+
+def held_modifiers() -> str:
+    """The modifier keys the system currently believes are down, e.g. 'Command+Shift'; empty when none."""
+    state = int(drv("flags").split()[0], 16)
+    return "+".join(name for name, bit in MODIFIER_BITS.items() if state & bit)
+
+
 def wait_until(pred, timeout=10.0, step=0.25):
     end = time.time() + timeout
     while time.time() < end:
@@ -367,7 +376,16 @@ def drag_standard_chip(c: Ctx):
     g.drag(*CHIP_CIRCLE, *CANVAS_DROP)
     c.check("Dragging the Circle chip onto the canvas added an instance",
             wait_until(lambda: g.instance_count(element) == before + 1, 8),
-            f"instances {before} -> {g.instance_count(element)}")
+            f"instances {before} -> {g.instance_count(element)}; modifiers held: '{held_modifiers() or 'none'}'")
+
+
+@scenario("driver-releases-modifiers")
+def driver_releases_modifiers(c: Ctx):
+    """Pins the driver: a key press with modifiers must leave none held, or later drags become Command drags."""
+    g = c.launch()
+    for mods in ("cmd", "shift", "alt", "ctrl", "cmd,shift", "cmd,shift,alt,ctrl"):
+        g.key("f12", mods)  # F12 is go to definition in Gum, harmless with nothing selected
+        c.check(f"key f12 with {mods} left no modifier held", not held_modifiers(), held_modifiers())
 
 
 @scenario("last-project-reopens")
@@ -434,13 +452,17 @@ def main():
         started = time.time()
         drv("clearflags")  # start from no modifier held, whatever an earlier run left
         try:
+            held = held_modifiers()
+            if held:
+                raise Failure(f"{held} still held after clearing; is a key physically down?")
             fn(ctx)
         except Exception as e:  # a launch timeout, a missing menu item, a crash mid-scenario
             ctx.failures.append(f"{type(e).__name__}: {e}")
             if not isinstance(e, Failure):
                 traceback.print_exc()
-        if int(drv("flags").split()[0], 16) & 0x100000:
-            ctx.failures.append("the scenario left Command held down (it turns drags into moves)")
+        held = held_modifiers()
+        if held:
+            ctx.failures.append(f"the scenario left {held} held down (a held Command turns drags into moves)")
         first_line = len(lines)
         evidence = ctx.evidence() if ctx.failures else ""
         if ctx.gum and not ctx.gum.alive() and ctx.failures:
