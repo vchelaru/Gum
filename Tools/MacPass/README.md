@@ -14,19 +14,8 @@ python3 Tools/MacPass/macpass.py --list
 ```
 
 Read `publish/macpass/report.txt`. `FAIL` lines carry the failed checks and the path of a screenshot of
-the window; `KNOWN` is a scenario that reproduces an open issue (it does not fail the run); `FLAKY` is a scenario whose input path is unreliable and does not fail the run (see "Flaky drop"); `FIXED?`
+the window; `KNOWN` is a scenario that reproduces an open issue (it does not fail the run); `FIXED?`
 means a known bug no longer reproduces, so remove its `known_bug` argument.
-
-## Flaky drop
-
-`drag-standard-chip` passed on some runs and failed on others with no change in the app or the
-script. While it fails, the native drag session runs (the drag image follows the pointer) but the
-canvas never shows the copy badge, and a tree-row drag onto the canvas fails the same way, so the
-canvas is rejecting the drag, not the chip's payload code. Ruled out: the pointer ends exactly where
-sent (no stray real input), event tap (HID or session), a longer dwell over the target, a wait after
-launch, which scenario ran before, and a gap after a clean quit. Not ruled out: Avalonia reading its
-application data formats from the macOS drag pasteboard, and a drag by a real hand failing the same
-way. Check by hand first (drag a Standards chip onto the canvas) before suspecting the script.
 
 ## Prerequisites
 
@@ -58,6 +47,13 @@ relative to the main window in the default 1280x720 layout (`TREE_ROW_SELECTED`,
   press Open or Save. Open panels: Cmd+Shift+G first.
 - The drag in `gumdrv` is deliberately slow with a small wiggle. A fast one never starts the
   platform's drag session.
+- Modifier keys must be real key events. A key event that only carries a Command flag leaves the
+  system's modifier state stuck, every later mouse event then reports Command, and a Command drag is a
+  move that the canvas's copy-only drop target rejects (the drag looks fine and the drop is cancelled,
+  which read as a flaky drag for hours). `gumdrv key ... cmd` presses and releases the modifier;
+  `gumdrv flags` shows the state and `gumdrv clearflags` releases everything; `macpass.py` clears it
+  before each scenario and fails a scenario that leaves Command down. `gumdrv listen N` prints the mouse
+  events the session sees, with the process that posted each.
 - Type with `gumdrv type` (real key codes); the unicode fallback is dropped by some focused text boxes.
 - One launch per scenario, on a fresh copy of the sample project and a fresh `--user-data` folder, so
   the run never touches `Samples/` or the real settings. Use `Ctx.launch()` again in a scenario to

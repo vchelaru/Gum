@@ -75,7 +75,8 @@ class Gum:
         self.userdata = work / "userdata"
         self.userdata.mkdir(exist_ok=True)
         self.log = open(work / f"gum{run}.log", "w")
-        cmd = [str(APP / "Contents/MacOS/Gum"), "--user-data", str(self.userdata)]
+        exe = os.environ.get("GUM_EXE") or str(APP / "Contents/MacOS/Gum")  # GUM_EXE: an unpackaged build
+        cmd = [exe, "--user-data", str(self.userdata)]
         if project:
             cmd.append(str(self.dir / project))
         self.proc = subprocess.Popen(cmd + list(args), stdout=self.log, stderr=self.log)
@@ -130,6 +131,15 @@ class Gum:
     def type(self, text):
         drv("type", text)
         time.sleep(0.25)
+
+    def has_sheet(self):
+        return "AXSheet" in drv("tree", self.pid, 3, check=False)
+
+    def wait_for_sheet(self, timeout=15):
+        """Waits for a native open or save panel (a sheet on the main window), then lets it take focus."""
+        if not wait_until(self.has_sheet, timeout):
+            raise Failure("the native panel never appeared")
+        time.sleep(1.0)
 
     def focus_tree(self):
         """Cmd+F then Escape puts keyboard focus in the tree and keeps the selection (clicking a row would not)."""
@@ -224,16 +234,10 @@ CANVAS_DROP = (780, 330)
 SCENARIOS = []
 
 
-FLAKY = set()
-
-
-def scenario(name, known_bug=None, flaky=False):
-    """known_bug: the issue number a failing scenario is expected to reproduce; it does not fail the run.
-    flaky: the scenario's input path is unreliable on some runs; a failure is reported but does not fail the run."""
+def scenario(name, known_bug=None):
+    """known_bug: the issue number a failing scenario is expected to reproduce; it does not fail the run."""
     def wrap(fn):
         SCENARIOS.append((name, fn, known_bug))
-        if flaky:
-            FLAKY.add(name)
         return fn
     return wrap
 
@@ -307,7 +311,7 @@ def open_project_native_panel(c: Ctx):
     shutil.copytree(SAMPLE, second)
     (second / "GumProject.gumx").rename(second / "SecondProject.gumx")
     g.menu("File", "Load Project...")
-    time.sleep(2.0)  # the native open panel
+    g.wait_for_sheet()
     g.key("g", "cmd,shift")  # Go to the folder
     time.sleep(0.8)
     g.type(str(second / "SecondProject.gumx"))
@@ -322,7 +326,7 @@ def export_image_on_disk(c: Ctx):
     g = c.launch(args=["--select", "ComponentWithState"])
     out = c.work / "exported.png"
     g.menu("File", "Export", "Export as Image")
-    time.sleep(2.0)  # the native save panel
+    g.wait_for_sheet()
     g.type(str(out))
     g.key("return")  # a typed path first sets the panel's folder and name
     time.sleep(0.8)
@@ -355,18 +359,15 @@ def quit_is_clean(c: Ctx):
     c.check("Quit left no crash report", after == before, str(after - before))
 
 
-@scenario("drag-standard-chip", flaky=True)
+@scenario("drag-standard-chip")
 def drag_standard_chip(c: Ctx):
     g = c.launch(args=["--select", "ComponentWithState"])
     element = g.gucx("ComponentWithState")
     before = g.instance_count(element)
-    attempts = 0
-    while attempts < 3 and not wait_until(lambda: g.instance_count(element) == before + 1, 4):
-        attempts += 1
-        g.drag(*CHIP_CIRCLE, *CANVAS_DROP)
+    g.drag(*CHIP_CIRCLE, *CANVAS_DROP)
     c.check("Dragging the Circle chip onto the canvas added an instance",
-            g.instance_count(element) == before + 1,
-            f"instances {before} -> {g.instance_count(element)} after {attempts} drags (see README, 'Flaky drop')")
+            wait_until(lambda: g.instance_count(element) == before + 1, 8),
+            f"instances {before} -> {g.instance_count(element)}")
 
 
 @scenario("last-project-reopens")
@@ -431,12 +432,15 @@ def main():
     for name, fn, bug in selected:
         ctx = Ctx(name)
         started = time.time()
+        drv("clearflags")  # start from no modifier held, whatever an earlier run left
         try:
             fn(ctx)
         except Exception as e:  # a launch timeout, a missing menu item, a crash mid-scenario
             ctx.failures.append(f"{type(e).__name__}: {e}")
             if not isinstance(e, Failure):
                 traceback.print_exc()
+        if int(drv("flags").split()[0], 16) & 0x100000:
+            ctx.failures.append("the scenario left Command held down (it turns drags into moves)")
         first_line = len(lines)
         evidence = ctx.evidence() if ctx.failures else ""
         if ctx.gum and not ctx.gum.alive() and ctx.failures:
@@ -447,10 +451,6 @@ def main():
         if not ctx.failures:
             status = "FIXED?" if bug else "PASS"
             lines.append(f"{status}  {name} ({took})" + (f"  known bug #{bug} no longer reproduces" if bug else ""))
-        elif name in FLAKY:
-            lines.append(f"FLAKY  {name} ({took}): " + "; ".join(ctx.failures))
-            if evidence:
-                lines.append(f"      screenshot: {evidence}")
         elif bug:
             lines.append(f"KNOWN  {name} ({took})  #{bug}: " + "; ".join(ctx.failures))
         else:

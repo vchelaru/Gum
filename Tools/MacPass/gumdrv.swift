@@ -10,13 +10,17 @@ import ApplicationServices
 //   setframe PID X Y W H             move and resize the first window
 //   menu PID Top [Sub ...] Leaf      press a menu item by its title path (no coordinates)
 //   menuinfo PID                     every menu item: path|enabled|cmdChar|cmdModifiers
+//   flags   clearflags               the system's modifier state; release every modifier key
+//   where   listen SECONDS           the pointer position; mouse events seen, with the process that posted each
 
-let tapLocation: CGEventTapLocation = ProcessInfo.processInfo.environment["GUMDRV_TAP"] == "session" ? .cgSessionEventTap : .cghidEventTap
-func post(_ e: CGEvent?) { e?.post(tap: tapLocation); usleep(15000) }
+func post(_ e: CGEvent?) { e?.post(tap: .cghidEventTap); usleep(15000) }
+
+let eventSource = CGEventSource(stateID: .hidSystemState)
 
 func mouse(_ type: CGEventType, _ x: Double, _ y: Double, _ btn: CGMouseButton = .left, clicks: Int64 = 1) {
-    let e = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: CGPoint(x: x, y: y), mouseButton: btn)
+    let e = CGEvent(mouseEventSource: eventSource, mouseType: type, mouseCursorPosition: CGPoint(x: x, y: y), mouseButton: btn)
     e?.setIntegerValueField(.mouseEventClickState, value: clicks)
+    e?.flags = []  // a mouse event must not inherit a modifier the system believes is held
     post(e)
 }
 
@@ -47,9 +51,30 @@ func flags(_ s: String) -> CGEventFlags {
     return f
 }
 
+// Modifiers are pressed and released as real key events. Posting only a flags field on the key leaves
+// the system's modifier state stuck (Command stayed down), and a stuck Command turns every later drag
+// into a move, which a Copy-only drop target rejects.
+let modifierKeys: [(CGEventFlags, CGKeyCode)] = [(.maskCommand, 55), (.maskShift, 56), (.maskAlternate, 58), (.maskControl, 59)]
+
 func keyPress(_ code: CGKeyCode, _ f: CGEventFlags) {
-    let d = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true); d?.flags = f; post(d)
-    let u = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: false); u?.flags = f; post(u)
+    let held = modifierKeys.filter { f.contains($0.0) }
+    var current: CGEventFlags = []
+    for (flag, key) in held {
+        current.insert(flag)
+        let d = CGEvent(keyboardEventSource: eventSource, virtualKey: key, keyDown: true); d?.type = .flagsChanged; d?.flags = current; post(d)
+    }
+    let d = CGEvent(keyboardEventSource: eventSource, virtualKey: code, keyDown: true); d?.flags = f; post(d)
+    let u = CGEvent(keyboardEventSource: eventSource, virtualKey: code, keyDown: false); u?.flags = f; post(u)
+    for (flag, key) in held.reversed() {
+        current.remove(flag)
+        let r = CGEvent(keyboardEventSource: eventSource, virtualKey: key, keyDown: false); r?.type = .flagsChanged; r?.flags = current; post(r)
+    }
+}
+
+func clearModifiers() {
+    for (_, key) in modifierKeys {
+        let r = CGEvent(keyboardEventSource: eventSource, virtualKey: key, keyDown: false); r?.type = .flagsChanged; r?.flags = []; post(r)
+    }
 }
 
 func attr(_ el: AXUIElement, _ name: String) -> AnyObject? {
@@ -149,6 +174,34 @@ case "scroll":
     post(CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: Int32(a[4])!, wheel2: 0, wheel3: 0))
 case "activate":
     NSRunningApplication(processIdentifier: pid_t(a[2])!)?.activate(options: [.activateIgnoringOtherApps])
+case "listen":
+    // Prints every mouse event the session sees for N seconds, with the process that posted it
+    // (0 for hardware). Needs the Input Monitoring permission.
+    let mask: CGEventMask = [CGEventType.leftMouseDown, .leftMouseUp, .leftMouseDragged, .mouseMoved, .rightMouseDown, .rightMouseUp, .scrollWheel]
+        .reduce(0) { $0 | (1 << $1.rawValue) }
+    let start = Date()
+    let callback: CGEventTapCallBack = { _, type, event, _ in
+        let p = event.location
+        let pid = event.getIntegerValueField(.eventSourceUnixProcessID)
+        let state = event.getIntegerValueField(.eventSourceStateID)
+        print(String(format: "%.3f type=%d at=%d,%d pid=%d state=%d flags=%llx", Date().timeIntervalSince1970.truncatingRemainder(dividingBy: 1000), type.rawValue, Int(p.x), Int(p.y), pid, state, event.flags.rawValue))
+        fflush(stdout)
+        return Unmanaged.passUnretained(event)
+    }
+    guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly, eventsOfInterest: mask, callback: callback, userInfo: nil) else {
+        print("could not create the event tap (Input Monitoring permission?)"); exit(5)
+    }
+    let source = CFMachPortCreateRunLoopSource(nil, tap, 0)
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+    CGEvent.tapEnable(tap: tap, enable: true)
+    CFRunLoopRunInMode(.defaultMode, Double(a[2]) ?? 5, false)
+    _ = start
+case "clearflags":
+    clearModifiers()
+case "flags":
+    // The modifier state the system currently reports; a stuck Command turns a drag into a move.
+    print(String(CGEventSource.flagsState(.hidSystemState).rawValue, radix: 16),
+          String(CGEventSource.flagsState(.combinedSessionState).rawValue, radix: 16))
 case "where":
     let loc = CGEvent(source: nil)?.location ?? .zero
     print("\(Int(loc.x)) \(Int(loc.y))")
