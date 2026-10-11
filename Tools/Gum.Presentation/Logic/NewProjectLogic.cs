@@ -70,11 +70,7 @@ public class NewProjectLogic : INewProjectLogic
             return;
         }
 
-        _selectedState.SelectedElement = null;
-        _selectedState.SelectedInstance = null;
-        _selectedState.SelectedBehavior = null;
-        _selectedState.SelectedStateCategorySave = null;
-        _selectedState.SelectedStateSave = null;
+        ClearSelection();
 
         _projectManager.CreateNewProject();
         _projectManager.SetProjectLocation(projectLocation);
@@ -102,6 +98,24 @@ public class NewProjectLogic : INewProjectLogic
         ScreenSave startingScreen = new() { Name = StartingScreenName };
         _projectCommands.AddScreen(startingScreen);
         _selectedState.SelectedScreen = startingScreen;
+    }
+
+    /// <inheritdoc/>
+    public async Task CloseProjectAsync()
+    {
+        ClearSelection();
+        _projectManager.CreateNewProject();
+
+        await CreateNewProjectAsync();
+    }
+
+    private void ClearSelection()
+    {
+        _selectedState.SelectedElement = null;
+        _selectedState.SelectedInstance = null;
+        _selectedState.SelectedBehavior = null;
+        _selectedState.SelectedStateCategorySave = null;
+        _selectedState.SelectedStateSave = null;
     }
 
     // The tool assumes a non-null GumProjectSave, so a cancel at startup (nothing loaded yet) still

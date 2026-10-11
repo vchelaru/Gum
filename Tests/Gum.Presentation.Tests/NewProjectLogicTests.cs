@@ -181,6 +181,60 @@ public class NewProjectLogicTests
     }
 
     [Fact]
+    public async Task CloseProjectAsync_ClosesTheOpenProjectBeforeShowingTheDialog()
+    {
+        List<string> calls = new();
+        _projectManager.Setup(x => x.CreateNewProject()).Callback(() => calls.Add("create"));
+        NewProjectDialogViewModel viewModel = new(CreateThemeSelection());
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
+            .Returns(false)
+            .Callback(() => calls.Add("dialog"));
+
+        await _logic.CloseProjectAsync();
+
+        calls.ShouldBe(new[] { "create", "dialog" });
+    }
+
+    [Fact]
+    public async Task CloseProjectAsync_ClearsTheSelection_WhenTheDialogIsCancelled()
+    {
+        SetUpDialog(accepted: false);
+
+        await _logic.CloseProjectAsync();
+
+        _selectedState.VerifySet(x => x.SelectedElement = null, Times.Once);
+        _selectedState.VerifySet(x => x.SelectedInstance = null, Times.Once);
+        _selectedState.VerifySet(x => x.SelectedBehavior = null, Times.Once);
+        _selectedState.VerifySet(x => x.SelectedStateCategorySave = null, Times.Once);
+        _selectedState.VerifySet(x => x.SelectedStateSave = null, Times.Once);
+    }
+
+    [Fact]
+    public async Task CloseProjectAsync_CreatesTheStarterProject_WhenBothPromptsAreAccepted()
+    {
+        SetUpDialog(accepted: true);
+        SetUpSaveLocationPrompt(accepted: true);
+
+        await _logic.CloseProjectAsync();
+
+        _projectManager.Verify(x => x.SetProjectLocation(ChosenLocation), Times.Once);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CloseProjectAsync_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
+    {
+        SetUpDialog(accepted: true);
+        SetUpSaveLocationPrompt(accepted: false);
+
+        await _logic.CloseProjectAsync();
+
+        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateNewProjectAsync_ClearsTheSelection_OnlyOnceTheNewProjectReplacesTheOpenOne()
     {
         SetUpDialog(accepted: true);

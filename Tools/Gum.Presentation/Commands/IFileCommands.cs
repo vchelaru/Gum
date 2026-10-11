@@ -59,6 +59,12 @@ public interface IFileCommands
 
     Task NewProjectAsync();
 
+    /// <summary>
+    /// Closes the loaded project and offers the New Project dialog. Cancelling it leaves an
+    /// empty, unsaved project.
+    /// </summary>
+    Task CloseProjectAsync();
+
     bool TryAutoSaveProject(bool forceSaveContainedElements = false);
 
     void ForceSaveProject(bool forceSaveContainedElements = false);

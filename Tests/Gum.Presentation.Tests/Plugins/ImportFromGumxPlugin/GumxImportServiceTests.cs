@@ -1273,6 +1273,7 @@ public class GumxImportServiceTests : IDisposable
         public void TryAutoSaveBehavior(BehaviorSave behavior) { }
         public void TryAutoSaveObject(object objectToSave) { }
         public Task NewProjectAsync() => Task.CompletedTask;
+        public Task CloseProjectAsync() => Task.CompletedTask;
         public void ForceSaveProject(bool forceSaveContainedElements = false) { }
         public void ForceSaveElement(ElementSave element) { }
         public FilePath GetFullFileName(ElementSave element) => new FilePath(string.Empty);

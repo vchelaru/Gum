@@ -232,6 +232,14 @@ public class FileCommands : IFileCommands
         _guiCommands.RefreshVariables();
     }
 
+    public async Task CloseProjectAsync()
+    {
+        await _newProjectLogic.CloseProjectAsync();
+
+        _guiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshVariables();
+    }
+
     /// <summary>
     /// Attempts to save the project (gumx) and optionally all contained elements.
     /// Does not save if auto save is turned off, or if there were errors loading the
