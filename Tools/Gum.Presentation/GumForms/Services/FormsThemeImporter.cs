@@ -1,9 +1,6 @@
 using Gum.DataTypes;
-using Gum.DataTypes.Behaviors;
-using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
-using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
@@ -41,6 +38,7 @@ public class FormsThemeImporter : IFormsThemeImporter
     private readonly IGumxSourceService _sourceService;
     private readonly IGumxDependencyResolver _dependencyResolver;
     private readonly IGumxImportService _importService;
+    private readonly IModifiedStandardsFinder _modifiedStandards;
 
     public FormsThemeImporter(
         IFormsFileService formsFileService,
@@ -53,7 +51,8 @@ public class FormsThemeImporter : IFormsThemeImporter
         IImportFromGumxDialog importDialog,
         IGumxSourceService sourceService,
         IGumxDependencyResolver dependencyResolver,
-        IGumxImportService importService)
+        IGumxImportService importService,
+        IModifiedStandardsFinder modifiedStandards)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
@@ -66,6 +65,7 @@ public class FormsThemeImporter : IFormsThemeImporter
         _sourceService = sourceService;
         _dependencyResolver = dependencyResolver;
         _importService = importService;
+        _modifiedStandards = modifiedStandards;
     }
 
     /// <inheritdoc/>
@@ -103,7 +103,7 @@ public class FormsThemeImporter : IFormsThemeImporter
         bool isDefaultTheme = string.Equals(themeName, _formsFileService.DefaultThemeName, StringComparison.OrdinalIgnoreCase);
         ImportSelections selections = BuildSelections(theme, isDefaultTheme, isIncludeDemoScreenGum);
 
-        ImportDecision decision = GetImportDecision(theme, selections, themeName, isDefaultTheme, isIncludeDemoScreenGum);
+        ImportDecision decision = GetImportDecision(theme, selections, isDefaultTheme);
         if (decision == ImportDecision.PickWhatToImport)
         {
             return await PickWhatToImportAsync(themeProjectPath, themeName, isDefaultTheme, isIncludeDemoScreenGum, diff, project);
@@ -171,8 +171,8 @@ public class FormsThemeImporter : IFormsThemeImporter
 
     /// <summary>
     /// Opens the Import from .gumx dialog on the theme's own project so the user picks items one by
-    /// one (and sees its Skip/Overwrite prompt). The theme's prerequisites apply only if that
-    /// import goes through.
+    /// one (and sees its Skip/Overwrite prompt and Standards differences). The theme's prerequisites
+    /// apply only if that import goes through.
     /// </summary>
     private Task<bool> PickWhatToImportAsync(
         string themeProjectPath,
@@ -256,30 +256,24 @@ public class FormsThemeImporter : IFormsThemeImporter
         PickWhatToImport,
     }
 
-    private ImportDecision GetImportDecision(
-        GumProjectSave theme,
-        ImportSelections selections,
-        string themeName,
-        bool isDefaultTheme,
-        bool isIncludeDemoScreenGum)
+    private ImportDecision GetImportDecision(GumProjectSave theme, ImportSelections selections, bool isDefaultTheme)
     {
-        List<string> changedInProject = GetItemsChangedInProject(theme, selections);
-        if (changedInProject.Count > 0)
+        List<string> changedInProject = GetItemsChangedInProject(theme, selections, isDefaultTheme);
+        if (changedInProject.Count == 0)
         {
-            string message = "These already exist in your project with different content:"
-                + "\n\n" + string.Join("\n", changedInProject);
-            MessageDialogResult answer = _dialogService.ShowMessage(message, "Add Forms",
-                new MessageDialogStyle { AffirmativeText = "Pick what to import", NegativeText = "Cancel" });
-            return answer == MessageDialogResult.Affirmative ? ImportDecision.PickWhatToImport : ImportDecision.Cancel;
+            return ImportDecision.Proceed;
         }
 
-        return isDefaultTheme && !ConfirmStandardsOverwrite(themeName, isIncludeDemoScreenGum)
-            ? ImportDecision.Cancel
-            : ImportDecision.Proceed;
+        string message = "These already exist in your project with different content:"
+            + "\n\n" + string.Join("\n", changedInProject);
+        MessageDialogResult answer = _dialogService.ShowMessage(message, "Add Forms",
+            new MessageDialogStyle { AffirmativeText = "Pick what to import", NegativeText = "Cancel" });
+        return answer == MessageDialogResult.Affirmative ? ImportDecision.PickWhatToImport : ImportDecision.Cancel;
     }
 
-    // The selected components, screens and behaviors the project already has with other content.
-    private List<string> GetItemsChangedInProject(GumProjectSave theme, ImportSelections selections)
+    // What the import would replace that the project has changed: components, screens and behaviors
+    // with other content, and, for the default theme, Standards the user modified and uses.
+    private List<string> GetItemsChangedInProject(GumProjectSave theme, ImportSelections selections, bool isDefaultTheme)
     {
         ImportDestinationStatus status = _importService.GetDestinationStatus(theme, string.Empty);
         List<string> changed = new List<string>();
@@ -292,103 +286,10 @@ public class FormsThemeImporter : IFormsThemeImporter
         changed.AddRange(selections.Behaviors
             .Where(behavior => status.Differing.Contains(new ImportItemKey(ElementItemType.Behavior, behavior.Name)))
             .Select(behavior => "Behaviors/" + behavior.Name));
+        if (isDefaultTheme)
+        {
+            changed.AddRange(_modifiedStandards.FindModifiedInUse(theme).Select(name => "Standards/" + name));
+        }
         return changed;
-    }
-
-    // The default theme replaces the project's Standards. Those the user modified and that something
-    // uses are worth a confirmation; unmodified or unused ones are not.
-    private bool ConfirmStandardsOverwrite(string themeName, bool isIncludeDemoScreenGum)
-    {
-        List<string> standardFiles = _formsFileService.GetSourceDestinations(themeName, isIncludeDemoScreenGum)
-            .Where(kvp => FormsFileService.IsStandardExtension(kvp.Value.Extension)
-                && kvp.Value.Exists()
-                && !AreFilesIdentical(kvp.Key, kvp.Value.FullPath))
-            .Select(kvp => kvp.Value.RelativeTo(_projectState.ProjectDirectory!))
-            .ToList();
-
-        RemoveUnmodifiedAndUnusedStandards(standardFiles);
-        if (!standardFiles.Any())
-        {
-            return true;
-        }
-
-        string message = "Forms Component styling requires modifications to the Standard Elements " +
-            "in your project." +
-            "\n\nIf you have made any modification to any of the Standard Elements, " +
-            "this will overwrite that styling." +
-            "\n\nThe following components need to be modified:" +
-            "\n\n" + string.Join("\n", standardFiles) +
-            "\n\nProceed?";
-        return _dialogService.ShowYesNoMessage(message, "Overwrite files?");
-    }
-
-    private static bool AreFilesIdentical(string sourcePath, string destinationPath)
-    {
-        // The source is always a real on-disk theme file in production, but some test doubles use
-        // placeholder source keys with no backing file - treat that as "not identical" (preserves
-        // the original always-block behavior) rather than throwing.
-        if (!File.Exists(sourcePath))
-        {
-            return false;
-        }
-
-        FileInfo sourceInfo = new FileInfo(sourcePath);
-        FileInfo destinationInfo = new FileInfo(destinationPath);
-        if (sourceInfo.Length != destinationInfo.Length)
-        {
-            return false;
-        }
-
-        return File.ReadAllBytes(sourcePath).SequenceEqual(File.ReadAllBytes(destinationPath));
-    }
-
-    private void RemoveUnmodifiedAndUnusedStandards(List<string> standardFiles)
-    {
-        List<string> toRemove = new List<string>();
-        foreach (string standardFile in standardFiles)
-        {
-            FilePath filePath = new FilePath(standardFile);
-            string standardElementName = filePath.CaseSensitiveNoPathNoExtension;
-            ElementSave? standardElement = ObjectFinder.Self.GetStandardElement(standardElementName);
-
-            if (standardElement != null)
-            {
-                // See if the states differ:
-                StateSave? potentiallyModifiedDefault = standardElement.DefaultState;
-                StateSave? actualDefault =
-                    StandardElementsManager.Self.GetDefaultStateFor(standardElementName)?.Clone();
-                if (actualDefault != null)
-                {
-                    actualDefault.Variables.Sort((a, b) => GumProjectSave.CompareNames(a.Name, b.Name));
-
-                    // JSON comparison requires we have Newtonsoft, or requires running a newer version
-                    // of .NET to have the JSON serailzier present. This isn't currently supported in Gum
-                    // tool, so we need to use XML:
-                    FileManager.XmlSerialize(potentiallyModifiedDefault, out string potentiallyModifiedSerialized);
-                    FileManager.XmlSerialize(actualDefault, out string actualDefaultSerialized);
-                    bool differ = potentiallyModifiedSerialized != actualDefaultSerialized;
-
-                    if (!differ)
-                    {
-                        differ = standardElement.Categories.Count > 0;
-                    }
-                    if (!differ)
-                    {
-                        toRemove.Add(standardFile);
-                    }
-
-                    if (differ)
-                    {
-                        // If it differs, we don't care if this isn't used anywhere so let's check
-                        if (ObjectFinder.Self.GetElementReferencesToThis(standardElement).Count == 0)
-                        {
-                            toRemove.Add(standardFile);
-                        }
-                    }
-                }
-            }
-        }
-
-        standardFiles.RemoveAll(item => toRemove.Contains(item));
     }
 }

@@ -40,6 +40,7 @@ public class FormsThemeImporterTests
     private readonly Mock<IGumxSourceService> _sourceService = new();
     private readonly Mock<IGumxDependencyResolver> _dependencyResolver = new();
     private readonly Mock<IGumxImportService> _importService = new();
+    private readonly Mock<IModifiedStandardsFinder> _modifiedStandards = new();
     private readonly GumProjectSave _theme = new GumProjectSave();
     private readonly FormsThemeImporter _importer;
 
@@ -65,6 +66,7 @@ public class FormsThemeImporterTests
             .Returns((IEnumerable<ComponentSave> components, GumProjectSave _) => components.Reverse().ToList());
         _importService.Setup(x => x.GetDestinationStatus(It.IsAny<GumProjectSave>(), It.IsAny<string>()))
             .Returns(ImportDestinationStatus.None);
+        _modifiedStandards.Setup(x => x.FindModifiedInUse(It.IsAny<GumProjectSave>())).Returns(new List<string>());
         _importService
             .Setup(x => x.ImportAsync(
                 It.IsAny<ImportSelections>(), It.IsAny<GumProjectSave>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -92,7 +94,8 @@ public class FormsThemeImporterTests
             _importDialog.Object,
             _sourceService.Object,
             _dependencyResolver.Object,
-            _importService.Object);
+            _importService.Object,
+            _modifiedStandards.Object);
     }
 
     private static ComponentSave Component(string name) => new ComponentSave { Name = name };
@@ -434,40 +437,39 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public async Task ImportThemeAsync_AsksBeforeReplacingStandards_AndStopsWhenTheUserDeclines()
+    public async Task ImportThemeAsync_TreatsAStandardTheUserModifiedAndUses_AsAConflict_ListedWithTheRest()
     {
-        // A Standard of the project's that differs from the theme's. For an unknown element the
-        // confirmation cannot tell it is unmodified, so it asks; a "No" (the mock's default) stops.
-        string tempDirectory = Path.Combine(Path.GetTempPath(), "GumImporterStandards_" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempDirectory);
-        try
-        {
-            string sourceStandard = Path.Combine(tempDirectory, "SourceText.gutx");
-            string existingStandard = Path.Combine(tempDirectory, "Text.gutj");
-            File.WriteAllText(sourceStandard, "theme");
-            File.WriteAllText(existingStandard, "project");
-            _projectState.Setup(x => x.ProjectDirectory).Returns(tempDirectory + Path.DirectorySeparatorChar);
-            _formsFileService.Setup(x => x.GetSourceDestinations("Standard", false))
-                .Returns(new Dictionary<string, FilePath> { [sourceStandard] = existingStandard });
+        // Replacing it would lose the user's styling, so it goes through the same Pick/Cancel choice.
+        AddThemeContent();
+        _modifiedStandards.Setup(x => x.FindModifiedInUse(_theme)).Returns(new List<string> { "Text" });
 
-            bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
+        bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
-            result.ShouldBeFalse();
-            _dialogService.Verify(
-                x => x.ShowMessage(It.Is<string>(m => m.Contains("Standard Elements")), "Overwrite files?", It.Is<MessageDialogStyle?>(s => s != null)),
-                Times.Once);
-            _importedSelections.ShouldBeNull();
-        }
-        finally
-        {
-            Directory.Delete(tempDirectory, recursive: true);
-        }
+        result.ShouldBeFalse("Cancel is the mock's default answer");
+        _dialogService.Verify(
+            x => x.ShowMessage(It.Is<string>(m => m.Contains("Standards/Text")), It.IsAny<string?>(),
+                It.Is<MessageDialogStyle?>(s => s != null && s.AffirmativeText == "Pick what to import")),
+            Times.Once);
+        _importedSelections.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ImportThemeAsync_NeverAsksAboutStandards_ForAThemeThatDoesNotTouchThem()
+    public async Task ImportThemeAsync_ImportsWithoutAsking_WhenNoModifiedStandardIsInUse()
     {
-        _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+        AddThemeContent();
+
+        bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
+
+        result.ShouldBeTrue();
+        _dialogService.Verify(
+            x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_NeverLooksAtStandards_ForAThemeThatDoesNotTouchThem()
+    {
+        _modifiedStandards.Setup(x => x.FindModifiedInUse(It.IsAny<GumProjectSave>()))
             .Throws(new InvalidOperationException("a non-default theme has no Standards to ask about"));
 
         bool result = await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);

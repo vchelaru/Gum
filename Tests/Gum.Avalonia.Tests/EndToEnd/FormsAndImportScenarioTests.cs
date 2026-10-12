@@ -172,6 +172,50 @@ public class FormsAndImportScenarioTests
     }
 
     [AvaloniaFact]
+    public void AddForms_WhenAStandardTheUserChangedIsInUse_OffersPickWhatToImport_ShowingWhatDiffers()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        tree.Project.AddInstance(card, "Title", "Text");
+        tree.Project.Standard("Text").DefaultState.SetValue("FontSize", 99, "int");
+        tree.SaveAll();
+        GumProjectSave openProject = tree.Project.Project;
+        tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
+        {
+            dialog.ThemeSelection.SelectedTheme = "Standard";
+            dialog.IsIncludeDemoScreenGum = false;
+            return true;
+        });
+        // "Pick what to import" on the prompt that lists the changed Text Standard.
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        bool dialogShown = false;
+        List<string> groups = new List<string>();
+        bool? textIsCheckable = null;
+        bool textHasDiffRows = false;
+        tree.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            // Read here and asserted below: a failure inside the dialog would be lost.
+            groups.AddRange(dialog.RootNodes.Select(node => node.DisplayName));
+            ImportTreeNodeViewModel text = Leaf(dialog, "Text");
+            // The preview adds what the checked components need on its next pass.
+            tree.WaitUntil(() => text.RequiredReason != null, AsyncWork, "the preview to flag the Standard the components use");
+            textIsCheckable = text.IsCheckable;
+            textHasDiffRows = text.StandardDiffRows != null;
+            dialogShown = true;
+            return false;
+        });
+
+        tree.PickMainMenu("Content", "Add Forms Components");
+        tree.WaitUntil(() => dialogShown, AsyncWork, "the import dialog to open");
+
+        groups.ShouldContain("Standards");
+        textHasDiffRows.ShouldBeTrue("the row shows how the theme's Text differs from the project's");
+        textIsCheckable.ShouldBe(false, "the theme's components use it, so it comes with them");
+        Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldBeSameAs(openProject);
+        tree.Project.Standard("Text").DefaultState.GetValue("FontSize").ShouldBe(99, "cancelling leaves the user's Standard alone");
+    }
+
+    [AvaloniaFact]
     public void AddForms_WhenThePickedImportIsCancelled_ChangesNothing()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
