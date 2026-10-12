@@ -52,15 +52,15 @@ change, run the same test into a second folder for the "after". Nothing has to c
 If the source was already edited when you remembered the "before", render both sides with:
 
 ```
-pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests -DryRun
+pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests
 ```
 
 It renders the tests here (after) and in a reused sibling worktree at `origin/main` (before, `-Base`
 to change, `-NoBefore` for new UI), copying the screenshot tests into it, so they must compile
-against the base. Always pass `-DryRun`: it leaves the PNGs in `%TEMP%\gum-pr-screenshots\pr-<num>\{before,after}`
-and changes nothing on GitHub. Without it the script uploads the PNGs to the `pr-screenshots` branch
-and writes a table into the PR body, which is not how screenshots are shared here. Send the PNGs to
-the user in chat instead.
+against the base. It leaves the PNGs in `%TEMP%\gum-pr-screenshots\pr-<num>\{before,after}` and
+changes nothing on GitHub; send them to the user in chat. `-Publish` uploads them to the
+`pr-screenshots` branch and writes a table into the PR body, which is not how screenshots are shared
+here.
 
 ## App-wide window wiring
 
