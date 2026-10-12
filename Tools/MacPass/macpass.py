@@ -276,17 +276,16 @@ def menu_bar(c: Ctx):
         c.check(f"{item} exists", item in items)
 
 
-@scenario("window-content-in-ax-tree", known_bug=5969)
+@scenario("window-content-in-ax-tree")
 def window_content_in_ax_tree(c: Ctx):
     g = c.launch(args=["--select", "ComponentWithState"])
 
+    # The window nests its content more than 16 levels deep, so a shallower walk stops at empty groups.
     def walk():
-        return drv("tree", g.pid, 16, check=False).splitlines()
+        return drv("tree", g.pid, 40, check=False).splitlines()
 
-    # The Avalonia side of this tree is pinned by MainWindowAutomationTreeTests: tabs, buttons and
-    # tree rows all have a peer and a name. Each query below is kept in the artifacts so a failure
-    # shows whether the content never appears, or appears only after the window changes (a stale
-    # cache in Avalonia's bridge).
+    # Both queries are kept in the artifacts so a failure shows whether the content never appears,
+    # or appears only after the window changes (a stale cache in Avalonia's bridge).
     first = walk()
     (ARTIFACTS / "ax-tree-first.txt").write_text("\n".join(first))
     g.activate()
@@ -299,9 +298,18 @@ def window_content_in_ax_tree(c: Ctx):
         text = "\n".join(lines)
         return all(f'title="{name}"' in text for name in ("Project", "Variables", "Editor", "Preview in runtime"))
 
+    # A tree row is static text whose value is its name. A row whose parent chain does not reach the
+    # window reports the zero frame "0 982 0 0" (#5969).
+    def rows_with_frames(lines):
+        rows = [line for line in lines if "AXStaticText" in line
+                and any(f'value="{name}"' in line for name in ("Screens", "Components", "ComponentWithState"))]
+        return len(rows) >= 3 and all("[0 982 0 0]" not in row for row in rows)
+
     c.check("tabs and the Preview button are in the tree on the first query", exposes(first),
             f"{len(first)} nodes")
     c.check("they are there after a resize too", exposes(after_resize), f"{len(after_resize)} nodes")
+    c.check("the project tree's rows are named and have a frame", rows_with_frames(first))
+    c.check("they still do after a resize", rows_with_frames(after_resize))
 
 
 @scenario("hotkeys-on-disk")

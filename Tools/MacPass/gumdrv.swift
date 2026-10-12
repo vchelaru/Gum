@@ -95,8 +95,11 @@ func frame(_ el: AXUIElement) -> String {
 
 func dump(_ el: AXUIElement, _ depth: Int, _ maxDepth: Int) {
     let desc = (attr(el, kAXDescriptionAttribute) as? String) ?? ""
+    // Static text (a tree row's name, for one) carries its text as the value, not the title.
+    let value = (attr(el, kAXValueAttribute) as? String) ?? ""
     print(String(repeating: "  ", count: depth) + role(el)
         + (title(el).isEmpty ? "" : " title=\"\(title(el))\"")
+        + (value.isEmpty ? "" : " value=\"\(value)\"")
         + (desc.isEmpty ? "" : " desc=\"\(desc)\"") + " [" + frame(el) + "]")
     if depth < maxDepth { for k in kids(el) { dump(k, depth + 1, maxDepth) } }
 }

@@ -45,7 +45,7 @@ public sealed class AvaloniaGumTreeView : UserControl
     private const double AutoScrollStep = 12;
 
     private readonly ObservableCollection<TreeRow> _rows;
-    private readonly RowsItemsControl _itemsControl;
+    private readonly ItemsControl _itemsControl;
     private readonly ScrollViewer _scrollViewer;
     private readonly global::Avalonia.Controls.Canvas _dropOverlay;
     private readonly Border _dropParentHighlight;
@@ -73,11 +73,11 @@ public sealed class AvaloniaGumTreeView : UserControl
         Focusable = true;
         Background = Brushes.Transparent;
 
-        _itemsControl = new RowsItemsControl
+        _itemsControl = new ItemsControl
         {
             ItemsSource = _rows,
             ItemTemplate = new FuncDataTemplate<TreeRow>((_, _) => new TreeRowView(this)),
-            ItemsPanel = new FuncTemplate<Panel?>(() => new VirtualizingStackPanel()),
+            ItemsPanel = new FuncTemplate<Panel?>(() => new OrderedRowsPanel()),
         };
         _scrollViewer = new ScrollViewer
         {
@@ -1002,55 +1002,35 @@ internal sealed class TreeRowView : Border
 }
 
 /// <summary>
-/// The tree's row list. A virtualizing panel appends a row realized after the first layout at the end
+/// The tree's row panel. A virtualizing panel appends a row realized after the first layout at the end
 /// of its children, so the default automation peer reports it last even though it draws in the right
-/// place; this peer reports the realized rows in item order (#5591).
+/// place; this panel's peer reports the realized rows in item order (#5591). The reordering lives on
+/// the panel, not on the <see cref="ItemsControl"/>, so every peer still sits under its visual
+/// parent's peer. A peer that skipped the template left each row's parent chain ending in a detached
+/// fragment, and macOS, which derives an element's frame and window from that chain, reported every
+/// row at a zero-size frame off-screen (#5969).
 /// </summary>
-internal sealed class RowsItemsControl : ItemsControl
+internal sealed class OrderedRowsPanel : VirtualizingStackPanel
 {
-    // Fluent styles ItemsControl by type; without this the subclass would get no template.
-    protected override Type StyleKeyOverride => typeof(ItemsControl);
+    protected override AutomationPeer OnCreateAutomationPeer() => new OrderedRowsPeer(this);
 
-    protected override AutomationPeer OnCreateAutomationPeer() => new RowsAutomationPeer(this);
-
-    private sealed class RowsAutomationPeer : ItemsControlAutomationPeer
+    private sealed class OrderedRowsPeer : NoneAutomationPeer
     {
-        private readonly ItemsControl _owner;
+        private readonly OrderedRowsPanel _owner;
 
-        public RowsAutomationPeer(ItemsControl owner) : base(owner)
+        public OrderedRowsPeer(OrderedRowsPanel owner) : base(owner)
         {
             _owner = owner;
         }
 
         protected override IReadOnlyList<AutomationPeer>? GetChildrenCore()
         {
-            List<AutomationPeer> children = new List<AutomationPeer>();
-            Panel? panel = _owner.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
-            if (panel == null)
+            List<Control> containers = _owner.Children.OfType<Control>().Where(child => child.IsVisible).ToList();
+            if (containers.Count > 0 && ItemsControl.ItemsControlFromItemContainer(containers[0]) is { } items)
             {
-                return children;
+                containers = containers.OrderBy(child => items.IndexFromContainer(child)).ToList();
             }
-            foreach (Control container in panel.Children.OrderBy(child => _owner.IndexFromContainer(child)))
-            {
-                AddPeers(container, children);
-            }
-            return children;
-        }
-
-        // Layout-only controls (the row's container, its borders) have no peer of their own; as in
-        // the default peer, their children stand in for them.
-        private static void AddPeers(Control control, List<AutomationPeer> into)
-        {
-            AutomationPeer peer = CreatePeerForElement(control);
-            if (peer.GetAutomationControlType() != AutomationControlType.None)
-            {
-                into.Add(peer);
-                return;
-            }
-            foreach (Control child in control.GetVisualChildren().OfType<Control>())
-            {
-                AddPeers(child, into);
-            }
+            return containers.Select(child => GetOrCreate(child)).ToList();
         }
     }
 }
