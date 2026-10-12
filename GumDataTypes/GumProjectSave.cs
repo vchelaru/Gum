@@ -80,6 +80,19 @@ public class CustomCanvasSize
     public string FriendlyName { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// The character ranges baked for one font family, or for every family without an entry of its own
+/// when <see cref="FontFamily"/> is null or empty. See <see cref="GumProjectSave.FontRangeEntries"/>.
+/// </summary>
+public class FontRangeEntry
+{
+    /// <summary>The font family this entry applies to. Null or empty is the project-wide default.</summary>
+    public string? FontFamily { get; set; }
+
+    /// <summary>Comma-separated codepoints or "start-end" pairs, e.g. "32-126,160-255".</summary>
+    public string Ranges { get; set; } = string.Empty;
+}
+
 #endregion
 
 /// <summary>
@@ -180,7 +193,108 @@ public class GumProjectSave
 
     #region Properties
 
-    public string FontRanges { get; set; } = "32-126,160-255";
+    private const string DefaultFontRanges = "32-126,160-255";
+
+    /// <summary>
+    /// The character ranges for every font family without its own entry in
+    /// <see cref="FontRangeEntries"/>.
+    /// </summary>
+    /// <remarks>
+    /// Legacy shim over the global (null-family) entry of <see cref="FontRangeEntries"/>. It is still
+    /// written on every save so older Gum versions, which only know this element, keep reading the
+    /// project-wide range. Declared before <see cref="FontRangeEntriesArray"/> so a file with both
+    /// elements applies the list last.
+    /// </remarks>
+    [XmlElement("FontRanges")]
+    public string FontRanges
+    {
+        get => GetFontRanges(fontFamily: null) ?? DefaultFontRanges;
+        set
+        {
+            FontRangeEntry? global = FontRangeEntries.FirstOrDefault(entry => IsGlobalFontRangeEntry(entry));
+            if (global == null)
+            {
+                FontRangeEntries.Add(new FontRangeEntry { Ranges = value });
+            }
+            else
+            {
+                global.Ranges = value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Character ranges per font family. An entry with a null or empty <see cref="FontRangeEntry.FontFamily"/>
+    /// is the project-wide default. At most one entry per family is meaningful (the first wins, matched
+    /// ignoring case), and duplicates are dropped on save.
+    /// </summary>
+    [XmlIgnore]
+    public List<FontRangeEntry> FontRangeEntries { get; set; } = new List<FontRangeEntry>
+    {
+        new FontRangeEntry { Ranges = DefaultFontRanges }
+    };
+
+    /// <summary>
+    /// Backing array used by XmlSerializer so that deserialization REPLACES
+    /// <see cref="FontRangeEntries"/> instead of appending to it after the legacy
+    /// <c>&lt;FontRanges&gt;</c> element has already set the global entry. Duplicate families are
+    /// dropped here, which is what makes a save reject ambiguous entries.
+    /// </summary>
+    [XmlArray("FontRangeEntries")]
+    [XmlArrayItem("FontRangeEntry")]
+    public FontRangeEntry[] FontRangeEntriesArray
+    {
+        get => DeduplicateFontRangeEntries(FontRangeEntries);
+        set => FontRangeEntries = value == null
+            ? new List<FontRangeEntry>()
+            : DeduplicateFontRangeEntries(value).ToList();
+    }
+
+    /// <summary>
+    /// Only written once a family has its own entry. A project with just the global range stays in
+    /// the legacy single-element shape, which already carries everything.
+    /// </summary>
+    public bool ShouldSerializeFontRangeEntriesArray() =>
+        FontRangeEntries.Any(entry => !IsGlobalFontRangeEntry(entry));
+
+    /// <summary>
+    /// The ranges to bake for <paramref name="fontFamily"/>: its own entry, else the global entry.
+    /// Null when neither exists, in which case callers fall back to the default ranges.
+    /// </summary>
+    public string? GetFontRanges(string? fontFamily)
+    {
+        if (!string.IsNullOrWhiteSpace(fontFamily))
+        {
+            foreach (FontRangeEntry entry in FontRangeEntries)
+            {
+                if (string.Equals(entry.FontFamily, fontFamily, StringComparison.OrdinalIgnoreCase))
+                {
+                    return entry.Ranges;
+                }
+            }
+        }
+
+        return FontRangeEntries.FirstOrDefault(entry => IsGlobalFontRangeEntry(entry))?.Ranges;
+    }
+
+    private static bool IsGlobalFontRangeEntry(FontRangeEntry entry) => string.IsNullOrWhiteSpace(entry.FontFamily);
+
+    private static FontRangeEntry[] DeduplicateFontRangeEntries(IEnumerable<FontRangeEntry> entries)
+    {
+        HashSet<string> seenFamilies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        List<FontRangeEntry> result = new List<FontRangeEntry>();
+
+        foreach (FontRangeEntry entry in entries)
+        {
+            bool isGlobal = IsGlobalFontRangeEntry(entry);
+            if (seenFamilies.Add(isGlobal ? string.Empty : entry.FontFamily!))
+            {
+                result.Add(isGlobal ? new FontRangeEntry { Ranges = entry.Ranges } : entry);
+            }
+        }
+
+        return result.ToArray();
+    }
 
     public int FontSpacingVertical { get; set; } = 1;
     public int FontSpacingHorizontal { get; set; } = 1;

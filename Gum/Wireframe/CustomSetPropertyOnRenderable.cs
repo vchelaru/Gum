@@ -1596,7 +1596,7 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         var gumProject = ObjectFinder.Self.GumProjectSave;
-        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+        bmfcSave.Ranges = gumProject?.GetFontRanges(bmfcSave.FontName) ?? BmfcSave.GetEffectiveDefaultRanges();
         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 
@@ -1628,7 +1628,7 @@ public partial class CustomSetPropertyOnRenderable
             bmfcSave, fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
 
         var gumProject = ObjectFinder.Self.GumProjectSave;
-        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+        bmfcSave.Ranges = gumProject?.GetFontRanges(bmfcSave.FontName) ?? BmfcSave.GetEffectiveDefaultRanges();
         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 
@@ -2198,7 +2198,7 @@ public partial class CustomSetPropertyOnRenderable
                             // that doesn't exist, create it on demand. This parallels the font creation in
                             // UpdateToFontValues — both use FontService.CreateFontIfNecessary with the same pattern.
                             var gumProject = ObjectFinder.Self.GumProjectSave;
-                            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                            bmfcSave.Ranges = gumProject?.GetFontRanges(bmfcSave.FontName) ?? BmfcSave.GetEffectiveDefaultRanges();
                             bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
                             bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 #endif
