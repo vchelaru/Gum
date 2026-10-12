@@ -56,7 +56,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab;
 /// </summary>
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable - This is never disposed so suppressing this
 public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>, IRecipient<SiblingOrderingChangedMessage>,
-    IRecipient<ZoomCanvasToFitSelectionMessage>
+    IRecipient<ZoomCanvasToFitSelectionMessage>, IRecipient<StepCanvasZoomMessage>
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     #region Fields/Properties
@@ -1701,6 +1701,18 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     void IRecipient<ZoomCanvasToFitSelectionMessage>.Receive(ZoomCanvasToFitSelectionMessage message) =>
         message.Reply(ZoomToFitSelection(message));
+
+    void IRecipient<StepCanvasZoomMessage>.Receive(StepCanvasZoomMessage message)
+    {
+        if (message.ZoomIn)
+        {
+            _editorViewModel.ZoomIn();
+        }
+        else
+        {
+            _editorViewModel.ZoomOut();
+        }
+    }
 
     // Frames the selection: the element for an unattended screenshot (#5142), the selected
     // instances for the focus hotkey (#5981). The camera's view size comes from the last drawn

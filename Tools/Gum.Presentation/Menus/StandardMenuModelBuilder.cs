@@ -156,6 +156,16 @@ public class StandardMenuModelBuilder
             _messenger.Send(new StandardsPaletteSettingChangedMessage(_projectManager.EffectiveUseStandardsPalette));
         };
         view.Items.Add(_standardsPaletteMenuItem);
+        // No gesture on the zoom items: with the tree focused the zoom hotkeys zoom the whole app, and a
+        // menu key equivalent (macOS) would take that over.
+        view.Items.Add(new MenuItemModel("Zoom In", () => _messenger.Send(new StepCanvasZoomMessage(ZoomIn: true)))
+        {
+            ToolTip = "Zoom the canvas in one step",
+        });
+        view.Items.Add(new MenuItemModel("Zoom Out", () => _messenger.Send(new StepCanvasZoomMessage(ZoomIn: false)))
+        {
+            ToolTip = "Zoom the canvas out one step",
+        });
         view.Items.Add(new MenuItemModel("Focus on Selection",
             () => _messenger.Send(ZoomCanvasToFitSelectionMessage.FocusOnSelection()))
         {

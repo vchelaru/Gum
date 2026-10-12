@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
+using EditorTabPlugin_XNA.ViewModels;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -446,6 +447,49 @@ public class CanvasMenuAndToolbarScenarioTests
             screenX.ShouldBe(canvas.Camera.ClientWidth / 2f, tolerance: 1.5f, when);
             screenY.ShouldBe(canvas.Camera.ClientHeight / 2f, tolerance: 1.5f, when);
         }
+    }
+
+    [SkippableFact]
+    public void ViewMenuZoomInAndOut_StepTheCanvasZoomLikeTheToolbarButtons_AndStopAtTheEnds()
+    {
+        OnCanvas(canvas =>
+        {
+            IMessenger messenger = Services.GetRequiredService<IMessenger>();
+            ZoomLevel[] levels = canvas.Editor.ZoomLevels;
+            try
+            {
+                canvas.Editor.PercentZoom = 100;
+                canvas.Frame();
+                int index = canvas.Editor.CurrentZoomIndex;
+
+                messenger.Send(new StepCanvasZoomMessage(ZoomIn: true));
+                canvas.Frame();
+                canvas.Editor.PercentZoomLevel.Value.ShouldBe(levels[index - 1].Value);
+                canvas.Camera.Zoom.ShouldBe(levels[index - 1].Value / 100f);
+
+                messenger.Send(new StepCanvasZoomMessage(ZoomIn: false));
+                messenger.Send(new StepCanvasZoomMessage(ZoomIn: false));
+                canvas.Frame();
+                canvas.Editor.PercentZoomLevel.Value.ShouldBe(levels[index + 1].Value);
+                canvas.Camera.Zoom.ShouldBe(levels[index + 1].Value / 100f);
+
+                // Past either end of the list nothing changes, as with the toolbar buttons.
+                for (int i = 0; i < levels.Length; i++)
+                {
+                    messenger.Send(new StepCanvasZoomMessage(ZoomIn: true));
+                }
+                canvas.Editor.PercentZoomLevel.Value.ShouldBe(levels[0].Value);
+                for (int i = 0; i < levels.Length; i++)
+                {
+                    messenger.Send(new StepCanvasZoomMessage(ZoomIn: false));
+                }
+                canvas.Editor.PercentZoomLevel.Value.ShouldBe(levels[^1].Value);
+            }
+            finally
+            {
+                canvas.ResetCamera();
+            }
+        });
     }
 
     private static float LabelWidth(CanvasHarness canvas) =>
