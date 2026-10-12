@@ -50,7 +50,7 @@ public class NestedDialogScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "DLG-021")]
-    public void AddForms_TheOverwritePromptIsOwnedByTheAddFormsDialog()
+    public void AddForms_TheConflictPromptIsOwnedByTheAddFormsDialog()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         // A styled, used standard is what the theme would overwrite, so Add Forms asks first.
@@ -71,15 +71,15 @@ public class NestedDialogScenarioTests
         {
             promptOwner = prompt.Window.Owner as Window;
             promptTitle = prompt.Title;
-            prompt.ClickButton("No");
+            prompt.ClickButton("Cancel");
         });
 
         tree.PickMainMenu("Content", "Add Forms Components");
         dialogs.AssertFinished();
 
-        promptTitle.ShouldBe("Overwrite files?");
+        promptTitle.ShouldBe("Add Forms");
         addFormsDialog.ShouldNotBeNull();
         promptOwner.ShouldBeSameAs(addFormsDialog);
-        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Card" }, "declining the overwrite imports nothing");
+        tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Card" }, "cancelling imports nothing");
     }
 }

@@ -10,11 +10,11 @@ namespace ImportFromGumxPlugin.ViewModels;
 /// <param name="GumxPath">The source project. Its elements keep their names; no destination subfolder is added.</param>
 /// <param name="Title">The dialog title.</param>
 /// <param name="IncludeStandards">Whether the source's Standards are offered.</param>
-/// <param name="BeforeProjectSave">Runs after a successful import, just before the project is saved and reloaded.</param>
+/// <param name="BeforeImport">Runs once the import is going ahead, before anything is written.</param>
 /// <param name="PreselectScreens">Whether screens the project does not have yet start checked like components do.</param>
 public record FixedImportSource(
     string GumxPath,
     string Title,
     bool IncludeStandards,
-    Action? BeforeProjectSave,
+    Action? BeforeImport,
     bool PreselectScreens = false);

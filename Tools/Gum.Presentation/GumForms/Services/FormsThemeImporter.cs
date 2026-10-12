@@ -1,16 +1,12 @@
-using Gum.Commands;
 using Gum.DataTypes;
-using Gum.DataTypes.Behaviors;
-using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
-using Gum.Managers;
-using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
 using ImportFromGumxPlugin;
+using ImportFromGumxPlugin.Services;
 using ImportFromGumxPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -22,41 +18,54 @@ using ToolsUtilities;
 namespace GumFormsPlugin.Services;
 
 /// <inheritdoc/>
+/// <remarks>
+/// The theme is imported through <see cref="IGumxImportService"/>, the same pipeline as Import from
+/// .gumx. What stays here is specific to Forms themes: the theme's prerequisites, which Standards a
+/// theme may touch, the optional demo screen, and the font license files.
+/// </remarks>
 public class FormsThemeImporter : IFormsThemeImporter
 {
+    private const string DemoScreenName = "DemoScreenGum";
+
     private readonly IFormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
-    private readonly IFileCommands _fileCommands;
-    private readonly IImportLogic _importLogic;
     private readonly IProjectState _projectState;
-    private readonly IFileWatchManager _fileWatchManager;
+    private readonly IFileWatchIgnoreList _fileWatch;
     private readonly ISkiaShapeStandardsLogic _skiaShapeStandards;
     private readonly IFontManager _fontManager;
     private readonly IImportVersionGate _versionGate;
     private readonly IImportFromGumxDialog _importDialog;
+    private readonly IGumxSourceService _sourceService;
+    private readonly IGumxDependencyResolver _dependencyResolver;
+    private readonly IGumxImportService _importService;
+    private readonly IModifiedStandardsFinder _modifiedStandards;
 
     public FormsThemeImporter(
         IFormsFileService formsFileService,
         IDialogService dialogService,
-        IFileCommands fileCommands,
-        IImportLogic importLogic,
         IProjectState projectState,
-        IFileWatchManager fileWatchManager,
+        IFileWatchIgnoreList fileWatch,
         ISkiaShapeStandardsLogic skiaShapeStandards,
         IFontManager fontManager,
         IImportVersionGate versionGate,
-        IImportFromGumxDialog importDialog)
+        IImportFromGumxDialog importDialog,
+        IGumxSourceService sourceService,
+        IGumxDependencyResolver dependencyResolver,
+        IGumxImportService importService,
+        IModifiedStandardsFinder modifiedStandards)
     {
-        _versionGate = versionGate;
-        _importDialog = importDialog;
         _formsFileService = formsFileService;
         _dialogService = dialogService;
-        _fileCommands = fileCommands;
-        _importLogic = importLogic;
         _projectState = projectState;
-        _fileWatchManager = fileWatchManager;
+        _fileWatch = fileWatch;
         _skiaShapeStandards = skiaShapeStandards;
         _fontManager = fontManager;
+        _versionGate = versionGate;
+        _importDialog = importDialog;
+        _sourceService = sourceService;
+        _dependencyResolver = dependencyResolver;
+        _importService = importService;
+        _modifiedStandards = modifiedStandards;
     }
 
     /// <inheritdoc/>
@@ -69,8 +78,8 @@ public class FormsThemeImporter : IFormsThemeImporter
             return false;
         }
 
-        ThemeRequirements requirements =
-            ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(themeName));
+        string themeDirectory = _formsFileService.GetThemeDirectory(themeName);
+        ThemeRequirements requirements = ThemeRequirements.LoadFromThemeDirectory(themeDirectory);
         if (requirements.ProjectVersion is { } themeVersion)
         {
             string? rejection = _versionGate.GetRejection(themeVersion, project.Version, "The Forms theme");
@@ -83,33 +92,55 @@ public class FormsThemeImporter : IFormsThemeImporter
 
         ThemeRequirementsDiff diff = requirements.Diff(project);
 
-        Dictionary<string, FilePath> sourceDestinations =
-            _formsFileService.GetSourceDestinations(themeName, isIncludeDemoScreenGum);
+        string themeProjectPath = _formsFileService.GetFormsGumxPath(themeName);
+        GumProjectSave? theme = await _sourceService.LoadProjectAsync(themeProjectPath);
+        if (theme == null)
+        {
+            _dialogService.ShowMessage($"The {themeName} theme could not be loaded from {themeProjectPath}.");
+            return false;
+        }
 
-        ImportDecision decision = GetImportDecision(sourceDestinations);
+        bool isDefaultTheme = string.Equals(themeName, _formsFileService.DefaultThemeName, StringComparison.OrdinalIgnoreCase);
+        ImportSelections selections = BuildSelections(theme, isDefaultTheme, isIncludeDemoScreenGum);
+
+        ImportDecision decision = GetImportDecision(theme, selections, isDefaultTheme);
         if (decision == ImportDecision.PickWhatToImport)
         {
-            return await PickWhatToImportAsync(themeName, isIncludeDemoScreenGum, diff, project);
+            return await PickWhatToImportAsync(themeProjectPath, themeName, isDefaultTheme, isIncludeDemoScreenGum, diff, project);
         }
         if (decision == ImportDecision.Cancel)
         {
             return false;
         }
 
-        ApplyRequirements(diff, project);
+        // The prerequisites apply before the elements are imported, since they can need what the
+        // prerequisites add (a Skia shape Standard, for example). A theme's Standards are replaced
+        // whole but never their animations: Add Forms has never touched those.
+        ImportResult result = await _importService.ImportAsync(
+            selections,
+            theme,
+            _sourceService.GetSourceBase(themeProjectPath),
+            destinationSubfolder: string.Empty,
+            beforeImport: () => ApplyRequirements(diff, project),
+            replaceStandardAnimations: false);
 
-        SaveFilesToDestination(sourceDestinations);
-
-        AddAllElementsToProject(sourceDestinations);
-
-        // reload standards:
-        string? fileName = project.FullFileName;
-        bool wasSaved = _fileCommands.TryAutoSaveProject();
-        if (wasSaved && fileName is not null)
+        if (result.ConflictingElements.Count > 0)
         {
-            await _fileCommands.LoadProjectAsync(fileName);
+            _dialogService.ShowMessage(
+                "Add Forms stopped because these changed in your project while it was working:\n\n" +
+                string.Join("\n", result.ConflictingElements));
+            return false;
         }
-        else
+
+        CopyFontLicenseFiles(themeDirectory);
+
+        if (result.SkippedElements.Count > 0)
+        {
+            _dialogService.ShowMessage(
+                "These were not added because files they use could not be found:\n\n" +
+                string.Join("\n", result.SkippedElements));
+        }
+        if (result.NeedsManualSave)
         {
             _dialogService.ShowMessage("You must Save, then close/reopen the project.");
         }
@@ -118,20 +149,44 @@ public class FormsThemeImporter : IFormsThemeImporter
     }
 
     /// <summary>
+    /// Everything the theme adds: all its components (in an order that is safe to import), behaviors,
+    /// the demo screen when asked for, and its Standards for the default theme only. A non-default
+    /// theme never touches the project's Standards: its look must live in its own Components, or
+    /// importing one theme would stomp another.
+    /// </summary>
+    private ImportSelections BuildSelections(GumProjectSave theme, bool isDefaultTheme, bool isIncludeDemoScreenGum)
+    {
+        return new ImportSelections
+        {
+            // Direct rather than transitive components, so behaviors are registered first.
+            DirectComponents = _dependencyResolver.SortLeavesFirst(theme.Components, theme).ToList(),
+            DirectScreens = isIncludeDemoScreenGum ? theme.Screens.Where(IsDemoScreen).ToList() : new List<ScreenSave>(),
+            Behaviors = theme.Behaviors.ToList(),
+            Standards = isDefaultTheme ? theme.StandardElements.ToList() : new List<StandardElementSave>(),
+        };
+    }
+
+    private static bool IsDemoScreen(ScreenSave screen) =>
+        screen.Name == DemoScreenName || screen.Name.EndsWith("/" + DemoScreenName, StringComparison.Ordinal);
+
+    /// <summary>
     /// Opens the Import from .gumx dialog on the theme's own project so the user picks items one by
-    /// one (and sees its Skip/Overwrite prompt). The theme's prerequisites apply only if that
-    /// import goes through. A non-default theme never offers Standards: its look must live in its
-    /// Components, never in the project's shared Standards.
+    /// one (and sees its Skip/Overwrite prompt and Standards differences). The theme's prerequisites
+    /// apply only if that import goes through.
     /// </summary>
     private Task<bool> PickWhatToImportAsync(
-        string themeName, bool isIncludeDemoScreenGum, ThemeRequirementsDiff diff, GumProjectSave project)
+        string themeProjectPath,
+        string themeName,
+        bool isDefaultTheme,
+        bool isIncludeDemoScreenGum,
+        ThemeRequirementsDiff diff,
+        GumProjectSave project)
     {
-        bool includeStandards = string.Equals(themeName, _formsFileService.DefaultThemeName, StringComparison.OrdinalIgnoreCase);
         FixedImportSource source = new FixedImportSource(
-            _formsFileService.GetFormsGumxPath(themeName),
+            themeProjectPath,
             $"Add Forms: {themeName}",
-            includeStandards,
-            BeforeProjectSave: () => ApplyRequirements(diff, project),
+            IncludeStandards: isDefaultTheme,
+            BeforeImport: () => ApplyRequirements(diff, project),
             PreselectScreens: isIncludeDemoScreenGum);
         return _importDialog.ShowAsync(source);
     }
@@ -165,97 +220,32 @@ public class FormsThemeImporter : IFormsThemeImporter
         }
     }
 
-    private void AddAllElementsToProject(Dictionary<string, FilePath> sourceDestinations)
+    /// <summary>
+    /// Copies the license text beside each bundled font (for example <c>Fonts/OFL.txt</c>) into the
+    /// project. Nothing references them, so the import does not carry them. A file the project
+    /// already has is left alone.
+    /// </summary>
+    private void CopyFontLicenseFiles(string themeDirectory)
     {
-        // Each import triggers a synchronous post-import error check (PluginManager.ElementImported
-        // -> MainErrorsPlugin -> HeadlessErrorChecker), which resolves every VariableReferences
-        // owner's BaseType via ObjectFinder. A screen's own instances are typically Components, so a
-        // screen imported before the components it places crashes that check with a
-        // NullReferenceException (ObjectFinder can't find a not-yet-imported component). Behaviors
-        // and Components never depend on Screens, so importing strictly in that order - Behaviors,
-        // then Components, then Screens - is always dependency-safe, regardless of the filesystem
-        // enumeration order sourceDestinations was built in.
-        //
-        // Filtered by the SOURCE file's extension, not the destination's: a theme's own content is
-        // always authored as XML, but SaveFilesToDestination converts it to the destination
-        // project's own format (#4710), so the destination extension varies.
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => FileManager.GetExtension(kvp.Key) == "behx"))
+        string? projectDirectory = _projectState.ProjectDirectory;
+        string themeFontsDirectory = Path.Combine(themeDirectory, "Fonts");
+        if (projectDirectory == null || !Directory.Exists(themeFontsDirectory))
         {
-            _importLogic.ImportBehavior(item.Value, saveProject: false);
+            return;
         }
 
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => FileManager.GetExtension(kvp.Key) == "gucx"))
+        foreach (string licenseFile in Directory.GetFiles(themeFontsDirectory, "*.txt"))
         {
-            _importLogic.ImportComponent(item.Value, saveProject: false);
-        }
-
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => FileManager.GetExtension(kvp.Key) == "gusx"))
-        {
-            _importLogic.ImportScreen(item.Value, saveProject: false);
-        }
-        // standards are already added
-    }
-
-    private void SaveFilesToDestination(Dictionary<string, FilePath> sourceDestinations)
-    {
-        foreach (KeyValuePair<string, FilePath> kvp in sourceDestinations)
-        {
-            string sourcePath = kvp.Key;
-            FilePath destination = kvp.Value;
-
-            // don't save the project file — overwriting it would wipe existing
-            // projects which may have screens or other components referenced.
-            if (destination.Extension == "gumx")
+            string destination = Path.Combine(projectDirectory, "Fonts", Path.GetFileName(licenseFile));
+            if (File.Exists(destination))
             {
                 continue;
             }
 
-            string directory = Path.GetDirectoryName(destination.FullPath)!;
-
-            _fileWatchManager.IgnoreNextChangeUntil(directory);
-            _fileWatchManager.IgnoreNextChangeUntil(destination.FullPath);
-            Directory.CreateDirectory(directory);
-
-            string sourceExtension = FileManager.GetExtension(sourcePath);
-            if (sourceExtension == destination.Extension)
-            {
-                File.Copy(sourcePath, destination.FullPath, overwrite: true);
-            }
-            else
-            {
-                // FormsFileService.GetSourceDestinations already rewrote this destination's
-                // extension to the project's own JSON format - a theme's content is always authored
-                // as XML, so convert it here rather than leaving a dead XML copy a .gumj project
-                // never loads (#4710). Standards are the one case with a real correctness gap: a
-                // copied .gutx is never routed through _importLogic below, so the raw byte copy used
-                // to be the entire mechanism that applied a theme's Standards to a .gumx project (the
-                // reload at the end of ImportTheme just re-reads it from disk) - for .gumj that
-                // reload only ever resolves .gutj, so the .gutx copy was silently ignored.
-                SaveConvertedContentFile(sourcePath, sourceExtension, destination.FullPath);
-            }
-        }
-    }
-
-    private static void SaveConvertedContentFile(string sourcePath, string sourceExtension, string destinationPath)
-    {
-        switch (sourceExtension)
-        {
-            case "gucx":
-                ElementReference.DeserializeElement<ComponentSave>(sourcePath, GumProjectSave.NativeVersion)
-                    .Save(destinationPath, useCompactFormat: true);
-                break;
-            case "gusx":
-                ElementReference.DeserializeElement<ScreenSave>(sourcePath, GumProjectSave.NativeVersion)
-                    .Save(destinationPath, useCompactFormat: true);
-                break;
-            case "gutx":
-                ElementReference.DeserializeElement<StandardElementSave>(sourcePath, GumProjectSave.NativeVersion)
-                    .Save(destinationPath, useCompactFormat: true);
-                break;
-            case "behx":
-                BehaviorReference.DeserializeBehavior(sourcePath, GumProjectSave.NativeVersion)
-                    .Save(destinationPath, useCompactFormat: true);
-                break;
+            _fileWatch.IgnoreNextChangeUntil(new FilePath(Path.GetDirectoryName(destination)!));
+            _fileWatch.IgnoreNextChangeUntil(new FilePath(destination));
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.Copy(licenseFile, destination);
         }
     }
 
@@ -266,154 +256,40 @@ public class FormsThemeImporter : IFormsThemeImporter
         PickWhatToImport,
     }
 
-    private ImportDecision GetImportDecision(Dictionary<string, FilePath> sourceDestinations)
+    private ImportDecision GetImportDecision(GumProjectSave theme, ImportSelections selections, bool isDefaultTheme)
     {
-        // A destination file that already exists but is byte-identical to the theme's own copy
-        // (e.g. a bundled Fonts/*.ttf the plain "File > New Project" bundler already wrote - #4674)
-        // isn't a real conflict - overwriting it would be a no-op. Drop those before any block/prompt
-        // logic runs, the same way RemoveUnmodifiedAndUnusedStandards drops an unmodified .gutx below.
-        List<FilePath> existingFiles = sourceDestinations
-            .Where(kvp => kvp.Value.Exists() && !AreFilesIdentical(kvp.Key, kvp.Value.FullPath))
-            .Select(kvp => kvp.Value)
-            .ToList();
-
-        bool doStandardsExist = existingFiles.Any(item => FormsFileService.IsStandardExtension(item.Extension));
-        List<FilePath> nonStandardFiles = existingFiles.Where(item => !FormsFileService.IsStandardExtension(item.Extension)).ToList();
-
-        // don't block on gumx:
-        List<FilePath> nonStandardWhichBlockCopying =
-            nonStandardFiles.Where(item => item.Extension != "gumx").ToList();
-
-        bool shouldSave = false;
-        if (nonStandardWhichBlockCopying.Count > 0)
+        List<string> changedInProject = GetItemsChangedInProject(theme, selections, isDefaultTheme);
+        if (changedInProject.Count == 0)
         {
-            string message = "These files already exist in your project with different content:"
-                + "\n\n" + string.Join("\n", nonStandardWhichBlockCopying);
-            MessageDialogResult answer = _dialogService.ShowMessage(message, "Add Forms",
-                new MessageDialogStyle { AffirmativeText = "Pick what to import", NegativeText = "Cancel" });
-            return answer == MessageDialogResult.Affirmative ? ImportDecision.PickWhatToImport : ImportDecision.Cancel;
-        }
-        else if (doStandardsExist)
-        {
-            List<string> filesWhichWouldGetOverwritten = existingFiles
-                .Where(item => item.Extension != "gumx")
-                .Select(item => item.RelativeTo(_projectState.ProjectDirectory!))
-                .ToList();
-
-            List<string> standardFiles = filesWhichWouldGetOverwritten.Where(IsStandardFile).ToList();
-            List<string> otherFiles = filesWhichWouldGetOverwritten.Except(standardFiles)
-                // Be sure to ToList it here to evaluate on the spot
-                .ToList();
-
-            RemoveUnmodifiedAndUnusedStandards(standardFiles);
-
-            string message = "";
-            if (standardFiles.Any())
-            {
-                message += "Forms Component styling requires modifications to the Standard Elements " +
-                    "in your project." +
-                    "\n\nIf you have made any modification to any of the Standard Elements, " +
-                    "this will overwrite that styling." +
-                    "\n\nThe following components need to be modified:" +
-                    "\n\n" + string.Join("\n", standardFiles);
-            }
-
-            if (otherFiles.Any())
-            {
-                message += "\n\nThe following files will also be ovewritten:" +
-                    "\n\n" + string.Join("\n", otherFiles);
-            }
-
-            if (standardFiles.Any() || otherFiles.Any())
-            {
-                message += "\n\nProceed?";
-                shouldSave = _dialogService.ShowYesNoMessage(message, "Overwrite files?");
-            }
-            else
-            {
-                shouldSave = true;
-            }
-        }
-        else
-        {
-            // I guess the user completely deleted everything?
-            shouldSave = true;
+            return ImportDecision.Proceed;
         }
 
-        return shouldSave ? ImportDecision.Proceed : ImportDecision.Cancel;
+        string message = "These already exist in your project with different content:"
+            + "\n\n" + string.Join("\n", changedInProject);
+        MessageDialogResult answer = _dialogService.ShowMessage(message, "Add Forms",
+            new MessageDialogStyle { AffirmativeText = "Pick what to import", NegativeText = "Cancel" });
+        return answer == MessageDialogResult.Affirmative ? ImportDecision.PickWhatToImport : ImportDecision.Cancel;
     }
 
-    private static bool IsStandardFile(string relativePath) =>
-        relativePath.EndsWith("." + GumProjectSave.StandardExtension) ||
-        relativePath.EndsWith("." + GumProjectSave.StandardJsonExtension);
-
-    private static bool AreFilesIdentical(string sourcePath, string destinationPath)
+    // What the import would replace that the project has changed: components, screens and behaviors
+    // with other content, and, for the default theme, Standards the user modified and uses.
+    private List<string> GetItemsChangedInProject(GumProjectSave theme, ImportSelections selections, bool isDefaultTheme)
     {
-        // The source is always a real on-disk theme file in production, but some test doubles use
-        // placeholder source keys with no backing file - treat that as "not identical" (preserves
-        // the original always-block behavior) rather than throwing.
-        if (!File.Exists(sourcePath))
+        ImportDestinationStatus status = _importService.GetDestinationStatus(theme, string.Empty);
+        List<string> changed = new List<string>();
+        changed.AddRange(selections.DirectComponents
+            .Where(component => status.Differing.Contains(new ImportItemKey(ElementItemType.Component, component.Name)))
+            .Select(component => "Components/" + component.Name));
+        changed.AddRange(selections.DirectScreens
+            .Where(screen => status.Differing.Contains(new ImportItemKey(ElementItemType.Screen, screen.Name)))
+            .Select(screen => "Screens/" + screen.Name));
+        changed.AddRange(selections.Behaviors
+            .Where(behavior => status.Differing.Contains(new ImportItemKey(ElementItemType.Behavior, behavior.Name)))
+            .Select(behavior => "Behaviors/" + behavior.Name));
+        if (isDefaultTheme)
         {
-            return false;
+            changed.AddRange(_modifiedStandards.FindModifiedInUse(theme).Select(name => "Standards/" + name));
         }
-
-        FileInfo sourceInfo = new FileInfo(sourcePath);
-        FileInfo destinationInfo = new FileInfo(destinationPath);
-        if (sourceInfo.Length != destinationInfo.Length)
-        {
-            return false;
-        }
-
-        return File.ReadAllBytes(sourcePath).SequenceEqual(File.ReadAllBytes(destinationPath));
-    }
-
-    private void RemoveUnmodifiedAndUnusedStandards(List<string> standardFiles)
-    {
-        List<string> toRemove = new List<string>();
-        foreach (string standardFile in standardFiles)
-        {
-            FilePath filePath = new FilePath(standardFile);
-            string standardElementName = filePath.CaseSensitiveNoPathNoExtension;
-            ElementSave? standardElement = ObjectFinder.Self.GetStandardElement(standardElementName);
-
-            if (standardElement != null)
-            {
-                // See if the states differ:
-                StateSave? potentiallyModifiedDefault = standardElement.DefaultState;
-                StateSave? actualDefault =
-                    StandardElementsManager.Self.GetDefaultStateFor(standardElementName)?.Clone();
-                if (actualDefault != null)
-                {
-                    actualDefault.Variables.Sort((a, b) => GumProjectSave.CompareNames(a.Name, b.Name));
-
-                    // JSON comparison requires we have Newtonsoft, or requires running a newer version
-                    // of .NET to have the JSON serailzier present. This isn't currently supported in Gum
-                    // tool, so we need to use XML:
-                    FileManager.XmlSerialize(potentiallyModifiedDefault, out string potentiallyModifiedSerialized);
-                    FileManager.XmlSerialize(actualDefault, out string actualDefaultSerialized);
-                    bool differ = potentiallyModifiedSerialized != actualDefaultSerialized;
-
-                    if (!differ)
-                    {
-                        differ = standardElement.Categories.Count > 0;
-                    }
-                    if (!differ)
-                    {
-                        toRemove.Add(standardFile);
-                    }
-
-                    if (differ)
-                    {
-                        // If it differs, we don't care if this isn't used anywhere so let's check
-                        if (ObjectFinder.Self.GetElementReferencesToThis(standardElement).Count == 0)
-                        {
-                            toRemove.Add(standardFile);
-                        }
-                    }
-                }
-            }
-        }
-
-        standardFiles.RemoveAll(item => toRemove.Contains(item));
+        return changed;
     }
 }

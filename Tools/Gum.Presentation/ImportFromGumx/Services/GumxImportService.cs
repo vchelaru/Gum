@@ -5,6 +5,7 @@ using Gum.DataTypes.Serialization;
 using Gum.DataTypes.Serialization.Json;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Commands;
+using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.ToolStates;
@@ -29,14 +30,17 @@ public class GumxImportService : IGumxImportService
     private readonly IFileCommands _fileCommands;
     private readonly IGumxSourceService _sourceService;
     private readonly IImportVersionGate _versionGate;
+    private readonly IFileWatchIgnoreList _fileWatch;
 
     public GumxImportService(
         IImportLogic importLogic,
         IProjectState projectState,
         IFileCommands fileCommands,
         IGumxSourceService sourceService,
-        IImportVersionGate versionGate)
+        IImportVersionGate versionGate,
+        IFileWatchIgnoreList fileWatch)
     {
+        _fileWatch = fileWatch;
         _importLogic = importLogic;
         _projectState = projectState;
         _fileCommands = fileCommands;
@@ -94,7 +98,8 @@ public class GumxImportService : IGumxImportService
         string sourceBase,
         string destinationSubfolder,
         ConflictResolution conflictResolution = ConflictResolution.Cancel,
-        Action? beforeProjectSave = null)
+        Action? beforeImport = null,
+        bool replaceStandardAnimations = true)
     {
         var result = new ImportResult();
         if (_projectState.GumProjectSave is { } destination)
@@ -128,6 +133,8 @@ public class GumxImportService : IGumxImportService
         }
         var conflictNameSet = new HashSet<string>(conflicts, StringComparer.Ordinal);
         selections = selections.WithoutUnchanged(unchanged);
+
+        beforeImport?.Invoke();
 
         // Pre-fetch all assets for all candidate elements in parallel, so we can gate each
         // element's import on whether its required assets are actually available.
@@ -198,18 +205,24 @@ public class GumxImportService : IGumxImportService
             "Screens", nameMap, sourceBase, projectDir);
         // A standard's animations are replaced whole along with its element file (#5238, #5340),
         // including by none when the source has none. Standards are never renamed, so no name map.
-        await CopyGanxFilesAsync(
-            selections.Standards.Cast<ElementSave>().Where(s => !skippedElements.Contains(s)),
-            "Standards", new Dictionary<string, string>(), sourceBase, projectDir,
-            removeWhenSourceHasNone: true);
+        if (replaceStandardAnimations)
+        {
+            await CopyGanxFilesAsync(
+                selections.Standards.Cast<ElementSave>().Where(s => !skippedElements.Contains(s)),
+                "Standards", new Dictionary<string, string>(), sourceBase, projectDir,
+                removeWhenSourceHasNone: true);
+        }
 
         // 8. Save project then reload (standards take effect only after reload)
-        beforeProjectSave?.Invoke();
         string? fileName = _projectState.GumProjectSave?.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
         if (wasSaved && fileName is not null)
         {
             await _fileCommands.LoadProjectAsync(fileName);
+        }
+        else
+        {
+            result.NeedsManualSave = true;
         }
 
         return result;
@@ -276,6 +289,7 @@ public class GumxImportService : IGumxImportService
 
             if (assetCache.TryGetValue(relativePath, out var bytes) && bytes != null)
             {
+                MuteFileWatcher(destPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
                 await File.WriteAllBytesAsync(destPath, bytes);
                 result.CopiedAssets.Add(relativePath);
@@ -314,11 +328,13 @@ public class GumxImportService : IGumxImportService
             {
                 if (removeWhenSourceHasNone && File.Exists(destPath))
                 {
+                    MuteFileWatcher(destPath);
                     File.Delete(destPath);
                 }
                 continue;
             }
 
+            MuteFileWatcher(destPath);
             Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
             animations.Save(destPath);
         }
@@ -733,6 +749,7 @@ public class GumxImportService : IGumxImportService
     /// </summary>
     private void WriteElementToDisk(ElementSave element, string destPath)
     {
+        MuteFileWatcher(destPath);
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
         bool useCompact = _projectState.GumProjectSave?.Version
             >= (int)GumProjectSave.GumxVersions.AttributeVersion;
@@ -778,6 +795,7 @@ public class GumxImportService : IGumxImportService
         string? content = await _sourceService.FetchElementTextAsync(relativeSourcePath, sourceBase);
         if (content == null) return false;
 
+        MuteFileWatcher(destPath);
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         T? element = DeserializeElementText<T>(relativeSourcePath, content);
@@ -793,6 +811,7 @@ public class GumxImportService : IGumxImportService
         string? content = await _sourceService.FetchElementTextAsync(relativeSourcePath, sourceBase);
         if (content == null) return false;
 
+        MuteFileWatcher(destPath);
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         BehaviorSave? behavior =
@@ -819,6 +838,13 @@ public class GumxImportService : IGumxImportService
         return string.Equals(extension, jsonExtension, StringComparison.OrdinalIgnoreCase)
             ? GumJsonFileSerializer.DeserializeElement<T>(content)
             : GumFileSerializer.DeserializeElementSave<T>(content, GumProjectSave.NativeVersion);
+    }
+
+    // A file the import writes itself would otherwise come back from the watcher as an outside change.
+    private void MuteFileWatcher(string path)
+    {
+        _fileWatch.IgnoreNextChangeUntil(new FilePath(Path.GetDirectoryName(path)!));
+        _fileWatch.IgnoreNextChangeUntil(new FilePath(path));
     }
 
     private static string ComponentExtension(bool isJsonFormat) =>

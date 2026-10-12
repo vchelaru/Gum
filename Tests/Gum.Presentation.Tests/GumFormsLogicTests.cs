@@ -38,86 +38,34 @@ public class GumFormsLogicTests
             _projectState.Object);
     }
 
-    [Fact]
-    public void GetIfProjectHasForms_NoMatchingDestinationFilesExist_ReturnsFalse()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GetIfProjectHasForms_AsksWhetherTheProjectHasTheDefaultThemesElements(bool projectHasThem)
     {
-        _formsFileService.Setup(x => x.GetSourceDestinations("Standard", false))
-            .Returns(new Dictionary<string, FilePath>
-            {
-                ["a"] = @"C:\nonexistent\SomeScreen.gutx",
-                ["b"] = @"C:\nonexistent\logo.png",
-            });
+        _formsFileService.Setup(x => x.ProjectHasElementsOf("Standard")).Returns(projectHasThem);
 
-        _logic.GetIfProjectHasForms().ShouldBeFalse();
-    }
-
-    [Fact]
-    public void GetIfProjectHasForms_OnlyAGutjStandardExists_ReturnsFalse()
-    {
-        // #4710: FormsFileService now computes a .gutj (not .gutx) Standards destination for a
-        // .gumj project. Every project always has its default Standards on disk, so if that .gutj
-        // were mistaken for real Forms content, this would permanently report true for any .gumj
-        // project and hide the "Add Forms" menu item forever, even before Forms was ever added.
-        string existingFile = Path.GetTempFileName();
-        string existingGutj = existingFile + ".gutj";
-        try
-        {
-            File.Move(existingFile, existingGutj);
-            _formsFileService.Setup(x => x.GetSourceDestinations("Standard", false))
-                .Returns(new Dictionary<string, FilePath> { ["a"] = existingGutj });
-
-            _logic.GetIfProjectHasForms().ShouldBeFalse();
-        }
-        finally
-        {
-            File.Delete(existingGutj);
-        }
-    }
-
-    [Fact]
-    public void GetIfProjectHasForms_AMatchingDestinationFileExistsOnDisk_ReturnsTrue()
-    {
-        string existingFile = Path.GetTempFileName();
-        try
-        {
-            _formsFileService.Setup(x => x.GetSourceDestinations("Standard", false))
-                .Returns(new Dictionary<string, FilePath>
-                {
-                    ["a"] = existingFile,
-                });
-
-            _logic.GetIfProjectHasForms().ShouldBeTrue();
-        }
-        finally
-        {
-            File.Delete(existingFile);
-        }
+        _logic.GetIfProjectHasForms().ShouldBe(projectHasThem);
     }
 
     [Fact]
     public void ShouldShowAddFormsMenuItem_ProjectHasNoFullFileName_ReturnsTrue()
     {
         GumProjectSave save = new() { FullFileName = "" };
+        _formsFileService.Setup(x => x.ProjectHasElementsOf("Standard")).Returns(true);
 
         _logic.ShouldShowAddFormsMenuItem(save).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ShouldShowAddFormsMenuItem_ProjectAlreadyHasForms_ReturnsFalse()
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void ShouldShowAddFormsMenuItem_HidesTheItemOnceTheProjectHasForms(bool projectHasForms, bool expectVisible)
     {
-        string existingFile = Path.GetTempFileName();
-        try
-        {
-            _formsFileService.Setup(x => x.GetSourceDestinations("Standard", false))
-                .Returns(new Dictionary<string, FilePath> { ["a"] = existingFile });
-            GumProjectSave save = new() { FullFileName = @"C:\SomeProject.gumx" };
+        _formsFileService.Setup(x => x.ProjectHasElementsOf("Standard")).Returns(projectHasForms);
+        GumProjectSave save = new() { FullFileName = @"C:\SomeProject.gumx" };
 
-            _logic.ShouldShowAddFormsMenuItem(save).ShouldBeFalse();
-        }
-        finally
-        {
-            File.Delete(existingFile);
-        }
+        _logic.ShouldShowAddFormsMenuItem(save).ShouldBe(expectVisible);
     }
 
     [Fact]

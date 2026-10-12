@@ -20,6 +20,8 @@ public class ImportResult
     public List<string> ConflictingElements { get; } = new();
     /// <summary>Why the import was refused because the source project is newer than the destination; null when it was not.</summary>
     public string? VersionRejection { get; set; }
+    /// <summary>True when the imported files are on disk but the project could not be saved and reloaded, so the user must save and reopen it.</summary>
+    public bool NeedsManualSave { get; set; }
 }
 
 /// <summary>
@@ -92,9 +94,14 @@ public interface IGumxImportService
     /// Imports all selections from the source project into the destination.
     /// Import order: standards → transitive components (topological) → behaviors → direct components → screens → assets → save/reload.
     /// </summary>
-    /// <param name="beforeProjectSave">
-    /// Runs once the import has written everything, just before the project is saved and reloaded.
-    /// It does not run when the import is refused or stops at a conflict.
+    /// <param name="beforeImport">
+    /// Runs once the import is going ahead, before anything is written or registered, so the project
+    /// can take on what the imported elements need. It does not run when the import is refused or
+    /// stops at a conflict.
+    /// </param>
+    /// <param name="replaceStandardAnimations">
+    /// Whether a selected Standard's animation file is replaced along with it (the default), or left
+    /// as the project has it.
     /// </param>
     Task<ImportResult> ImportAsync(
         ImportSelections selections,
@@ -102,5 +109,6 @@ public interface IGumxImportService
         string sourceBase,
         string destinationSubfolder,
         ConflictResolution conflictResolution = ConflictResolution.Cancel,
-        Action? beforeProjectSave = null);
+        Action? beforeImport = null,
+        bool replaceStandardAnimations = true);
 }

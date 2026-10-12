@@ -94,11 +94,37 @@ public class FormsAndImportScenarioTests
         componentNames.ShouldContain("Card");
         theme.Components.Select(component => component.Name).ShouldBeSubsetOf(componentNames);
         project.Screens.ShouldBeEmpty("no demo screen was asked for");
+        Directory.GetFiles(Path.Combine(tree.Project.ProjectFolder, "Fonts"), "*.txt")
+            .ShouldNotBeEmpty("the theme's font license text comes along with its fonts");
         tree.ChildTexts(tree.RootNode("Components")).ShouldContain("Card");
         MainMenuHeaders("Content").ShouldNotContain("Add Forms Components", "a project that has Forms is not offered them again");
         tree.Click(tree.NodeFor(ComponentNamed(project, "Card")));
         tree.Undo();
         VariableGridHarness.StoredValue(ComponentNamed(project, "Card"), "Width").ShouldBeNull("the edit made before adding Forms is still in Card's history");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void AddForms_IntoAJsonProject_WritesTheThemeInTheProjectsFormat()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness("Harness.gumj");
+        tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
+        {
+            dialog.ThemeSelection.SelectedTheme = "Bubblegum";
+            dialog.IsIncludeDemoScreenGum = true;
+            return true;
+        });
+
+        tree.PickMainMenu("Content", "Add Forms Components");
+        GumProjectSave project = WaitForTheImportsReload(tree);
+
+        project.Components.Select(component => component.Name).ShouldContain("Bubblegum/Controls/Button");
+        project.Screens.Select(screen => screen.Name).ShouldContain("Bubblegum/DemoScreenGum");
+        File.Exists(ElementFile(tree, "Components", "Bubblegum/Controls/Button", "gucj")).ShouldBeTrue();
+        File.Exists(ElementFile(tree, "Components", "Bubblegum/Controls/Button", "gucx")).ShouldBeFalse("a JSON project only loads .gucj");
+        File.Exists(ElementFile(tree, "Screens", "Bubblegum/DemoScreenGum", "gusj")).ShouldBeTrue();
+        File.Exists(ElementFile(tree, "Behaviors", "ButtonBehavior", "behj")).ShouldBeTrue();
 
         tree.AssertOracles();
     }
@@ -143,6 +169,50 @@ public class FormsAndImportScenarioTests
         project.FontRanges.Contains("10003").ShouldBeTrue("the theme's prerequisites apply once the picked import goes through");
 
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void AddForms_WhenAStandardTheUserChangedIsInUse_OffersPickWhatToImport_ShowingWhatDiffers()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        tree.Project.AddInstance(card, "Title", "Text");
+        tree.Project.Standard("Text").DefaultState!.SetValue("FontSize", 99, "int");
+        tree.SaveAll();
+        GumProjectSave openProject = tree.Project.Project;
+        tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
+        {
+            dialog.ThemeSelection.SelectedTheme = "Standard";
+            dialog.IsIncludeDemoScreenGum = false;
+            return true;
+        });
+        // "Pick what to import" on the prompt that lists the changed Text Standard.
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        bool dialogShown = false;
+        List<string> groups = new List<string>();
+        bool? textIsCheckable = null;
+        bool textHasDiffRows = false;
+        tree.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            // Read here and asserted below: a failure inside the dialog would be lost.
+            groups.AddRange(dialog.RootNodes.Select(node => node.DisplayName));
+            ImportTreeNodeViewModel text = Leaf(dialog, "Text");
+            // The preview adds what the checked components need on its next pass.
+            tree.WaitUntil(() => text.RequiredReason != null, AsyncWork, "the preview to flag the Standard the components use");
+            textIsCheckable = text.IsCheckable;
+            textHasDiffRows = text.StandardDiffRows != null;
+            dialogShown = true;
+            return false;
+        });
+
+        tree.PickMainMenu("Content", "Add Forms Components");
+        tree.WaitUntil(() => dialogShown, AsyncWork, "the import dialog to open");
+
+        groups.ShouldContain("Standards");
+        textHasDiffRows.ShouldBeTrue("the row shows how the theme's Text differs from the project's");
+        textIsCheckable.ShouldBe(false, "the theme's components use it, so it comes with them");
+        Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldBeSameAs(openProject);
+        tree.Project.Standard("Text").DefaultState!.GetValue("FontSize").ShouldBe(99, "cancelling leaves the user's Standard alone");
     }
 
     [AvaloniaFact]

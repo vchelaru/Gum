@@ -20,6 +20,10 @@ All three concrete services above (and their interfaces) live in the headless **
 - `Tools/Gum.ProjectServices/ImportFromGumx/StandardDiffRowViewModel` — passive `Kind + Summary` display record for one diff entry (same headless assembly; sibling `ImportPreviewItemViewModel.cs` holds the `ElementItemType`/`InclusionState` enums).
 - `Tool/Gum.Avalonia/Plugins/PluginDialogs/ImportFromGumxViews.cs` — the dialog (`ImportFromGumxView`) and the read-only "Details..." modal (`StandardDiffDetailsView`), built in C#. The modal's view model is `Tools/Gum.Presentation/ImportFromGumx/StandardDiffDetailsViewModel`.
 
+## Other callers: Add Forms
+
+Add Forms (`gum-forms-theme-import`) imports a theme through `GumxImportService` and, on a conflict, opens this dialog on the theme with a `FixedImportSource` (`ImportFromGumxDialog.ShowAsync`): no source or subfolder rows, Standards hidden unless asked, `GetDestinationStatus` marks rows the project has (`StatusNote`/`StatusHint`) and starts only new ones checked. `ImportAsync`'s `beforeImport` hook runs once the import is going ahead, before any write. An existing destination file whose content equals what would be written is not a conflict.
+
 ## InclusionState bookkeeping (#2642)
 
 Three sets of state live on `ImportFromGumxViewModel`:

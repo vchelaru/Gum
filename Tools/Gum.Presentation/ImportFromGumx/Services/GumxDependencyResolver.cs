@@ -186,6 +186,13 @@ public class GumxDependencyResolver : IGumxDependencyResolver
         }
     }
 
+    /// <inheritdoc/>
+    public IReadOnlyList<ComponentSave> SortLeavesFirst(IEnumerable<ComponentSave> components, GumProjectSave source)
+    {
+        Dictionary<string, ComponentSave> sourceComponentsByName = source.Components.ToDictionary(c => c.Name, c => c);
+        return TopologicalSort(components.ToList(), sourceComponentsByName);
+    }
+
     private static List<ComponentSave> TopologicalSort(
         List<ComponentSave> components,
         Dictionary<string, ComponentSave> sourceComponentsByName)

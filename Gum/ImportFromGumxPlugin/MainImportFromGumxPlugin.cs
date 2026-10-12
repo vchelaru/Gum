@@ -1,4 +1,5 @@
 using Gum.Commands;
+using Gum.Logic.FileWatch;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.ImportPlugin.Manager;
@@ -29,10 +30,11 @@ public class MainImportFromGumxPlugin : PluginBase
         IImportLogic importLogic,
         IFileCommands fileCommands,
         IDialogService dialogService,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IFileWatchIgnoreList fileWatch)
     {
         _importFromGumxLogic = new ImportFromGumxLogic(
-            projectState, importLogic, fileCommands, dialogService, dispatcher);
+            projectState, importLogic, fileCommands, dialogService, dispatcher, fileWatch);
     }
 
     public override void StartUp()

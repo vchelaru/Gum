@@ -40,7 +40,8 @@ public class ImportFromGumxViewModelTests
         _projectState = new FakeProjectState();
         ImportVersionGate versionGate = new ImportVersionGate();
         GumxImportService importService = new GumxImportService(
-            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService, versionGate);
+            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService, versionGate,
+            new Moq.Mock<Gum.Logic.FileWatch.IFileWatchIgnoreList>().Object);
 
         _dialogService = new FakeDialogService();
         _sut = new ImportFromGumxViewModel(
@@ -488,7 +489,7 @@ public class ImportFromGumxViewModelTests
             string path = WriteSourceProject(sourceDir);
             _projectState.GumProjectSave.Version = 5;
 
-            await _sut.UseFixedSourceAsync(new FixedImportSource(path, "Add Forms: Neon", includeStandards, BeforeProjectSave: null));
+            await _sut.UseFixedSourceAsync(new FixedImportSource(path, "Add Forms: Neon", includeStandards, BeforeImport: null));
 
             _sut.IsPreviewLoaded.ShouldBeTrue();
             _sut.IsSourceEditable.ShouldBeFalse();
@@ -542,7 +543,7 @@ public class ImportFromGumxViewModelTests
                 _dialogService, new SynchronousDispatcher(), new ImportVersionGate());
 
             await viewModel.UseFixedSourceAsync(new FixedImportSource(
-                path, "Add Forms: Neon", IncludeStandards: false, BeforeProjectSave: null, PreselectScreens: preselectScreens));
+                path, "Add Forms: Neon", IncludeStandards: false, BeforeImport: null, PreselectScreens: preselectScreens));
 
             ImportTreeNodeViewModel Leaf(string name, ElementItemType type) =>
                 FindLeaf(viewModel, name, type);
@@ -615,7 +616,7 @@ public class ImportFromGumxViewModelTests
             viewModel.WasImported.ShouldBeFalse();
             viewModel.OnAffirmative();
 
-            importService.LastBeforeProjectSave.ShouldBeSameAs(hook);
+            importService.LastBeforeImport.ShouldBeSameAs(hook);
             viewModel.WasImported.ShouldBeTrue();
         }
         finally
@@ -754,7 +755,7 @@ public class ImportFromGumxViewModelTests
 
     private class RecordingImportService : IGumxImportService
     {
-        public Action? LastBeforeProjectSave { get; private set; }
+        public Action? LastBeforeImport { get; private set; }
 
         public ImportDestinationStatus Status { get; set; } = ImportDestinationStatus.None;
 
@@ -766,9 +767,10 @@ public class ImportFromGumxViewModelTests
             string sourceBase,
             string destinationSubfolder,
             ConflictResolution conflictResolution = ConflictResolution.Cancel,
-            Action? beforeProjectSave = null)
+            Action? beforeImport = null,
+            bool replaceStandardAnimations = true)
         {
-            LastBeforeProjectSave = beforeProjectSave;
+            LastBeforeImport = beforeImport;
             return Task.FromResult(new ImportResult());
         }
     }

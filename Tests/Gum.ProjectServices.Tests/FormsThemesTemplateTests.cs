@@ -84,9 +84,8 @@ public class FormsThemesTemplateTests
             new object[] { folder, "Screens", GumProjectSave.ScreenExtension },
         });
 
-    // Add Forms installs every element file on disk (FormsFileService.GetSourceDestinations), while
-    // the tool and gumcli check only see what the .gumx references. An element on disk but not in
-    // the .gumx is installed without ever being checked or seen while the theme is edited (#5348).
+    // Add Forms imports what the theme's .gumx references. An element on disk but not in the .gumx
+    // is never imported, and is never checked or seen while the theme is edited (#5348).
     [Theory]
     [MemberData(nameof(TemplateFoldersAndSubfolders))]
     public void GumxReferences_ShouldMatchElementFilesOnDisk(string templateFolder, string subfolder, string extension)

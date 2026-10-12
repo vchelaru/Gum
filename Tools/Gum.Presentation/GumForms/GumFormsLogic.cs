@@ -2,9 +2,6 @@ using Gum.DataTypes;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
 using GumFormsPlugin.ViewModels;
-using System.Collections.Generic;
-using System.Linq;
-using ToolsUtilities;
 
 namespace GumFormsPlugin;
 
@@ -29,25 +26,11 @@ public class GumFormsLogic
     }
 
     /// <summary>
-    /// Whether the project already has Forms components imported. Independent of the theme picker -
-    /// the default theme's destination set is used since the same destination paths get written
-    /// regardless of which theme produced them.
+    /// Whether the project already has Forms components imported. Independent of the theme picker:
+    /// the default theme's components stand for Forms.
     /// </summary>
-    public bool GetIfProjectHasForms()
-    {
-        Dictionary<string, FilePath> files =
-            _formsFileService.GetSourceDestinations(_formsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
-
-        return files.Values
-            .Any(item =>
-                item.Extension != "png" &&
-                !FormsFileService.IsStandardExtension(item.Extension) &&
-                item.Extension != "fnt" &&
-                item.Extension != "bmfc" &&
-                item.Extension != "setj" &&
-                item.Extension != "json" &&
-                item.Exists());
-    }
+    public bool GetIfProjectHasForms() =>
+        _formsFileService.ProjectHasElementsOf(_formsFileService.DefaultThemeName);
 
     /// <summary>
     /// Whether the "Add Forms Components" menu item should be present for the given project. A

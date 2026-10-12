@@ -8,6 +8,7 @@ using Gum.Avalonia.Controls;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Plugins.PluginDialogs;
 using Gum.Commands;
+using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -143,7 +144,7 @@ public class PluginDialogTests
 
         await viewModel.UseFixedSourceAsync(new FixedImportSource(
             Path.Combine(Path.GetTempPath(), "GumNoSuchProject_" + Guid.NewGuid().ToString("N") + ".gumx"),
-            "Add Forms: Neon", IncludeStandards: false, BeforeProjectSave: null));
+            "Add Forms: Neon", IncludeStandards: false, BeforeImport: null));
         Dispatcher.UIThread.RunJobs();
         window.UpdateLayout();
 
@@ -214,7 +215,8 @@ public class PluginDialogTests
         Services.GetRequiredService<IImportLogic>(),
         Services.GetRequiredService<IFileCommands>(),
         Services.GetRequiredService<IDialogService>(),
-        Services.GetRequiredService<IDispatcher>()).CreateImportViewModel();
+        Services.GetRequiredService<IDispatcher>(),
+        Services.GetRequiredService<IFileWatchIgnoreList>()).CreateImportViewModel();
 
     private static void ShouldBeInsideWindow(Control control, Window window)
     {
