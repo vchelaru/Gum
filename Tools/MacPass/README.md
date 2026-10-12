@@ -36,7 +36,8 @@ means a known bug no longer reproduces, so remove its `known_bug` argument.
 3. **Window titles and frames** (`Gum.title()`, `Gum.windows()`).
 4. **The clipboard** (`pbpaste`).
 
-Window content (tree rows, buttons) is not in the Accessibility tree (#5969), so clicks use points
+Window content (tree rows, buttons) is not in the Accessibility tree (#5969; the `window-content-in-ax-tree`
+scenario records the tree it does see), so clicks use points
 relative to the main window in the default 1280x720 layout (`TREE_ROW_SELECTED`, `CHIP_CIRCLE`,
 `CANVAS_DROP`). A moved control means updating one constant.
 

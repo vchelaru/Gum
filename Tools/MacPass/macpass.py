@@ -276,6 +276,34 @@ def menu_bar(c: Ctx):
         c.check(f"{item} exists", item in items)
 
 
+@scenario("window-content-in-ax-tree", known_bug=5969)
+def window_content_in_ax_tree(c: Ctx):
+    g = c.launch(args=["--select", "ComponentWithState"])
+
+    def walk():
+        return drv("tree", g.pid, 16, check=False).splitlines()
+
+    # The Avalonia side of this tree is pinned by MainWindowAutomationTreeTests: tabs, buttons and
+    # tree rows all have a peer and a name. Each query below is kept in the artifacts so a failure
+    # shows whether the content never appears, or appears only after the window changes (a stale
+    # cache in Avalonia's bridge).
+    first = walk()
+    (ARTIFACTS / "ax-tree-first.txt").write_text("\n".join(first))
+    g.activate()
+    w = g.main_window()
+    g.set_frame(w["x"], w["y"], w["w"] + 40, w["h"])
+    after_resize = walk()
+    (ARTIFACTS / "ax-tree-after-resize.txt").write_text("\n".join(after_resize))
+
+    def exposes(lines):
+        text = "\n".join(lines)
+        return all(f'title="{name}"' in text for name in ("Project", "Variables", "Editor", "Preview in runtime"))
+
+    c.check("tabs and the Preview button are in the tree on the first query", exposes(first),
+            f"{len(first)} nodes")
+    c.check("they are there after a resize too", exposes(after_resize), f"{len(after_resize)} nodes")
+
+
 @scenario("hotkeys-on-disk")
 def hotkeys_on_disk(c: Ctx):
     g = c.launch(args=["--select", "ComponentWithState"])
