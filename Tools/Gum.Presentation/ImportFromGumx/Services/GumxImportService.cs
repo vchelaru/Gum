@@ -8,6 +8,7 @@ using Gum.Commands;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
+using Gum.ProjectServices;
 using Gum.ToolStates;
 using ImportFromGumxPlugin.ViewModels;
 using System;

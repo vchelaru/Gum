@@ -1,7 +1,6 @@
-using Gum.Plugins.ImportPlugin.Services;
 using Shouldly;
 
-namespace Gum.Presentation.Tests.Plugins.ImportFromGumxPlugin;
+namespace Gum.ProjectServices.Tests;
 
 public class ImportVersionGateTests
 {

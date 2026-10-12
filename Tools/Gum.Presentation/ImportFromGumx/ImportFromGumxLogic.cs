@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
+using Gum.ProjectServices;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;

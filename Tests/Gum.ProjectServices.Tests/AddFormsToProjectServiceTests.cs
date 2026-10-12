@@ -62,6 +62,28 @@ public class AddFormsToProjectServiceTests : IDisposable
         result.ErrorMessage!.ShouldContain("not found");
     }
 
+    [Fact]
+    public void AddFormsTo_WhenProjectIsOlderThanTemplate_ShouldRejectAndLeaveProjectUntouched()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        new ProjectCreator().Create(filePath);
+        ProjectLoadResult created = new ProjectLoader().Load(filePath);
+        created.Project!.Version = (int)GumProjectSave.GumxVersions.AttributeVersion;
+        created.Project.Save(filePath, saveElements: false);
+        string before = File.ReadAllText(filePath);
+
+        AddFormsResult result = _sut.AddFormsTo(filePath);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldNotBeNull();
+        result.ErrorMessage!.ShouldContain("docs.flatredball.com/gum/gum-tool/upgrading/upgrading-file-gumx-version");
+        result.AddedComponents.ShouldBeEmpty();
+        File.ReadAllText(filePath).ShouldBe(before);
+        Directory.GetFiles(_tempDirectory, "*", SearchOption.AllDirectories)
+            .Where(f => f.Contains("Components") || f.Contains("Behaviors") || f.EndsWith("UISpriteSheet.png"))
+            .ShouldBeEmpty();
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

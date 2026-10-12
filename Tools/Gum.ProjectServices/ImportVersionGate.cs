@@ -1,4 +1,4 @@
-namespace Gum.Plugins.ImportPlugin.Services;
+namespace Gum.ProjectServices;
 
 /// <summary>
 /// The one version check shared by every path that copies Gum files into the open project
