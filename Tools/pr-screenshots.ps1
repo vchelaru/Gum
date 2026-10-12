@@ -1,8 +1,9 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Renders a PR's screenshot tests on the branch (after) and on a base commit (before), uploads the
-    PNGs to the pr-screenshots branch and puts a before/after table in the PR body.
+    Renders a PR's screenshot tests on the branch (after) and on a base commit (before). With -Publish
+    it also uploads the PNGs to the pr-screenshots branch and puts a before/after table in the PR body.
+    Without it (the default) it only renders: nothing is uploaded and the PR is left alone.
 
 .DESCRIPTION
     Screenshot tests live in Tests/Gum.Avalonia.Tests, tagged [Trait("Category", "Screenshot")] and
@@ -12,8 +13,9 @@
     "After" runs in this checkout. "Before" runs in a sibling worktree detached at -Base, reused
     between runs so its build stays warm; the screenshot helpers and every test file that uses
     PrScreenshot.Category are copied into it from this checkout, so they must compile against the
-    base. PNGs go to pr-<num>/before-<name>.png and after-<name>.png on the never-merged
-    pr-screenshots branch through the GitHub contents API. The PR body's table sits between
+    base. The PNGs and a proposed PR body are left in %TEMP%\gum-pr-screenshots\pr-<num>\. With
+    -Publish, PNGs go to pr-<num>/before-<name>.png and after-<name>.png on the never-merged
+    pr-screenshots branch through the GitHub contents API, and the PR body's table sits between
     <!-- pr-screenshots:start/end --> markers, so a rerun replaces it.
 
 .PARAMETER Pr
@@ -29,23 +31,30 @@
 .PARAMETER NoBefore
     Skip the "before" side, for UI that does not exist on the base.
 
+.PARAMETER Publish
+    Upload the PNGs to the pr-screenshots branch and write the before/after table into the PR body.
+    Off by default: screenshots are normally shared with the reviewer in chat, not in the PR.
+
 .PARAMETER DryRun
-    Render both sides and write the proposed PR body, but upload nothing and leave the PR alone.
+    The default, accepted so existing calls keep working. Cannot be combined with -Publish.
 
 .EXAMPLE
     pwsh Tools/pr-screenshots.ps1 -Pr 5341 -Filter ManagePluginsScreenshotTests
 .EXAMPLE
-    pwsh Tools/pr-screenshots.ps1 -Pr 5341 -Filter ManagePluginsScreenshotTests -DryRun
+    pwsh Tools/pr-screenshots.ps1 -Pr 5341 -Filter ManagePluginsScreenshotTests -Publish
 #>
 param(
     [Parameter(Mandatory)][int]$Pr,
     [Parameter(Mandatory)][string]$Filter,
     [string]$Base = 'origin/main',
     [switch]$NoBefore,
+    [switch]$Publish,
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
+if ($Publish -and $DryRun) { throw '-Publish and -DryRun contradict each other; pass one.' }
+$DryRun = -not $Publish
 $repo = Split-Path -Parent $PSScriptRoot
 $testProject = 'Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj'
 $screenshotBranch = 'pr-screenshots'
@@ -210,7 +219,7 @@ $bodyFile = Join-Path $outRoot 'body.md'
 Set-Content -LiteralPath $bodyFile -Value $newBody -Encoding utf8NoBOM -NoNewline
 
 if ($DryRun) {
-    Write-Host "Dry run: nothing uploaded, PR #$Pr untouched. PNGs: $outRoot\{before,after}; proposed body: $bodyFile"
+    Write-Host "Nothing uploaded, PR #$Pr untouched (pass -Publish to upload). PNGs: $outRoot\{before,after}; proposed body: $bodyFile"
     exit 0
 }
 Invoke-Native 'gh pr edit' { gh pr edit $Pr --body-file $bodyFile }
