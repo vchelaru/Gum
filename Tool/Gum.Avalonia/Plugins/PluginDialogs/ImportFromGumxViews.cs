@@ -104,7 +104,13 @@ public sealed class ImportFromGumxView : Grid
 
         Grid preview = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Margin = new Thickness(0, 8, 0, 0) };
         preview.Bind(IsVisibleProperty, new Binding(nameof(ImportFromGumxViewModel.IsPreviewVisible)));
-        preview.Children.Add(new TextBlock { Text = "Select items to import", FontWeight = FontWeight.SemiBold, Margin = new Thickness(0, 0, 0, 4) });
+        StackPanel previewHeader = new StackPanel { Margin = new Thickness(0, 0, 0, 4) };
+        previewHeader.Children.Add(new TextBlock { Text = "Select items to import", FontWeight = FontWeight.SemiBold });
+        TextBlock hint = new TextBlock { TextWrapping = TextWrapping.Wrap, Opacity = 0.8, Margin = new Thickness(0, 2, 0, 0) };
+        hint.Bind(TextBlock.TextProperty, new Binding(nameof(ImportFromGumxViewModel.StatusHint)));
+        hint.Bind(IsVisibleProperty, new Binding(nameof(ImportFromGumxViewModel.IsStatusHintVisible)));
+        previewHeader.Children.Add(hint);
+        preview.Children.Add(previewHeader);
         Border listBorder = new Border { BorderThickness = new Thickness(1), BorderBrush = Brushes.Gray, Padding = new Thickness(4), Child = listArea };
         Grid.SetRow(listBorder, 1);
         preview.Children.Add(listBorder);
@@ -156,8 +162,19 @@ public sealed class ImportFromGumxView : Grid
         details.Bind(IsVisibleProperty, new Binding(nameof(ImportTreeNodeViewModel.IsDetailsButtonVisible)));
         details.Click += (_, _) => (DataContext as ImportFromGumxViewModel)?.ShowStandardDiffCommand.Execute(node);
 
+        TextBlock note = new TextBlock
+        {
+            FontStyle = FontStyle.Italic,
+            Opacity = 0.7,
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        note.Bind(TextBlock.TextProperty, new Binding(nameof(ImportTreeNodeViewModel.StatusNote)));
+        note.Bind(IsVisibleProperty, new Binding(nameof(ImportTreeNodeViewModel.IsStatusNoteVisible)));
+
         StackPanel row = new StackPanel { Orientation = Orientation.Horizontal };
         row.Children.Add(checkBox);
+        row.Children.Add(note);
         row.Children.Add(details);
         return row;
     }

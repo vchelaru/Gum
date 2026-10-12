@@ -8,6 +8,7 @@ using Gum.Commands;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.ToolStates;
+using ImportFromGumxPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,6 +42,46 @@ public class GumxImportService : IGumxImportService
         _fileCommands = fileCommands;
         _sourceService = sourceService;
         _versionGate = versionGate;
+    }
+
+    /// <inheritdoc/>
+    public ImportDestinationStatus GetDestinationStatus(GumProjectSave source, string destinationSubfolder)
+    {
+        if (_projectState.ProjectDirectory is not { } projectDir)
+        {
+            return ImportDestinationStatus.None;
+        }
+
+        ImportSelections everything = new ImportSelections
+        {
+            DirectComponents = source.Components.ToList(),
+            DirectScreens = source.Screens.ToList(),
+            Behaviors = source.Behaviors.ToList(),
+        };
+        var (_, unchanged, differing) = ClassifyExistingDestinations(
+            everything,
+            BuildNameMap(everything, destinationSubfolder),
+            BuildQualifiedNameMap(everything, destinationSubfolder),
+            projectDir,
+            IsDestinationJsonFormat);
+
+        return new ImportDestinationStatus(ToKeys(differing), ToKeys(unchanged));
+
+        HashSet<ImportItemKey> ToKeys(HashSet<object> items)
+        {
+            HashSet<ImportItemKey> keys = new HashSet<ImportItemKey>();
+            foreach (object item in items)
+            {
+                keys.Add(item switch
+                {
+                    ComponentSave component => new ImportItemKey(ElementItemType.Component, component.Name),
+                    ScreenSave screen => new ImportItemKey(ElementItemType.Screen, screen.Name),
+                    BehaviorSave behavior => new ImportItemKey(ElementItemType.Behavior, behavior.Name),
+                    _ => throw new InvalidOperationException($"Unexpected import item {item.GetType().Name}."),
+                });
+            }
+            return keys;
+        }
     }
 
     private static readonly HashSet<string> _assetExtensions =
@@ -78,7 +119,7 @@ public class GumxImportService : IGumxImportService
         // since the element is already known in-memory and will refresh on the post-import reload).
         // A destination file whose content already equals what would be written is not a conflict:
         // it is left alone, so re-importing an unchanged source stays a no-op.
-        var (conflicts, unchanged) = ClassifyExistingDestinations(
+        var (conflicts, unchanged, _) = ClassifyExistingDestinations(
             selections, nameMap, qualifiedNameMap, projectDir, IsDestinationJsonFormat);
         if (conflicts.Count > 0 && conflictResolution == ConflictResolution.Cancel)
         {
@@ -316,7 +357,7 @@ public class GumxImportService : IGumxImportService
     /// #4595). An existing file whose content equals what the import would write is unchanged, not
     /// a conflict; an unreadable one counts as different.
     /// </summary>
-    private static (List<string> Conflicts, HashSet<object> Unchanged) ClassifyExistingDestinations(
+    private static (List<string> Conflicts, HashSet<object> Unchanged, HashSet<object> Differing) ClassifyExistingDestinations(
         ImportSelections selections,
         Dictionary<string, string> nameMap,
         Dictionary<string, string> qualifiedNameMap,
@@ -325,19 +366,20 @@ public class GumxImportService : IGumxImportService
     {
         var conflicts = new List<string>();
         var unchanged = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        var differing = new HashSet<object>(ReferenceEqualityComparer.Instance);
 
         foreach (var component in selections.TransitiveComponents.Concat(selections.DirectComponents))
         {
             string destName = nameMap.TryGetValue(component.Name, out var mapped) ? mapped : component.Name;
             string destPath = Path.Combine(projectDir, "Components", destName + "." + ComponentExtension(isJsonFormat));
-            ClassifyElement(component, destName, destPath, nameMap, qualifiedNameMap, conflicts, unchanged);
+            ClassifyElement(component, destName, destPath, nameMap, qualifiedNameMap, conflicts, unchanged, differing);
         }
 
         foreach (var screen in selections.DirectScreens)
         {
             string destName = nameMap.TryGetValue(screen.Name, out var mapped) ? mapped : screen.Name;
             string destPath = Path.Combine(projectDir, "Screens", destName + "." + ScreenExtension(isJsonFormat));
-            ClassifyElement(screen, destName, destPath, nameMap, qualifiedNameMap, conflicts, unchanged);
+            ClassifyElement(screen, destName, destPath, nameMap, qualifiedNameMap, conflicts, unchanged, differing);
         }
 
         foreach (var behavior in selections.Behaviors)
@@ -352,10 +394,11 @@ public class GumxImportService : IGumxImportService
             else
             {
                 conflicts.Add(behavior.Name);
+                differing.Add(behavior);
             }
         }
 
-        return (conflicts, unchanged);
+        return (conflicts, unchanged, differing);
     }
 
     private static void ClassifyElement<T>(
@@ -365,7 +408,8 @@ public class GumxImportService : IGumxImportService
         Dictionary<string, string> nameMap,
         Dictionary<string, string> qualifiedNameMap,
         List<string> conflicts,
-        HashSet<object> unchanged)
+        HashSet<object> unchanged,
+        HashSet<object> differing)
         where T : ElementSave, new()
     {
         if (!File.Exists(destPath)) { return; }
@@ -378,6 +422,7 @@ public class GumxImportService : IGumxImportService
         else
         {
             conflicts.Add(destName);
+            differing.Add(source);
         }
     }
 

@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using ImportFromGumxPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,12 +60,34 @@ public class ImportSelections
     };
 }
 
+/// <summary>One source item: its kind and its name in the source project.</summary>
+public readonly record struct ImportItemKey(ElementItemType Type, string Name);
+
+/// <summary>
+/// Which source items already exist in the destination project. An item in neither set is new.
+/// </summary>
+/// <param name="Differing">Items whose destination file exists with different content.</param>
+/// <param name="Identical">Items whose destination file already equals what would be written.</param>
+public record ImportDestinationStatus(IReadOnlySet<ImportItemKey> Differing, IReadOnlySet<ImportItemKey> Identical)
+{
+    /// <summary>No source item exists in the destination.</summary>
+    public static ImportDestinationStatus None { get; } = new(new HashSet<ImportItemKey>(), new HashSet<ImportItemKey>());
+}
+
 /// <summary>
 /// Orchestrates the actual import of elements from a source <see cref="GumProjectSave"/> into the
 /// destination project.
 /// </summary>
 public interface IGumxImportService
 {
+    /// <summary>
+    /// Reports, for every component, screen and behavior of <paramref name="source"/>, whether the
+    /// destination project already has it (as <see cref="ImportAsync"/> would write it, with
+    /// <paramref name="destinationSubfolder"/> applied) and whether that copy differs. Standards are
+    /// not covered: an import always replaces them.
+    /// </summary>
+    ImportDestinationStatus GetDestinationStatus(GumProjectSave source, string destinationSubfolder);
+
     /// <summary>
     /// Imports all selections from the source project into the destination.
     /// Import order: standards → transitive components (topological) → behaviors → direct components → screens → assets → save/reload.

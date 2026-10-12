@@ -503,6 +503,98 @@ public class ImportFromGumxViewModelTests
         }
     }
 
+    private static string WriteSourceProjectWithElements(string directory)
+    {
+        GumProjectSave source = new GumProjectSave { Version = 3 };
+        foreach (string name in new[] { "Fresh", "Changed", "Same" })
+        {
+            source.ComponentReferences.Add(new ElementReference { Name = name, ElementType = ElementType.Component });
+            source.Components.Add(new ComponentSave { Name = name });
+        }
+        source.ScreenReferences.Add(new ElementReference { Name = "Demo", ElementType = ElementType.Screen });
+        source.Screens.Add(new ScreenSave { Name = "Demo" });
+        source.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+        source.Behaviors.Add(new BehaviorSave { Name = "ButtonBehavior" });
+        string path = Path.Combine(directory, "GumProject.gumx");
+        source.Save(path, saveElements: true);
+        return path;
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UseFixedSourceAsync_MarksItemsTheProjectHas_AndChecksOnlyTheNewOnes(bool preselectScreens)
+    {
+        string sourceDir = Path.Combine(Path.GetTempPath(), "GumImportFixed_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sourceDir);
+        try
+        {
+            string path = WriteSourceProjectWithElements(sourceDir);
+            _projectState.GumProjectSave.Version = 5;
+            RecordingImportService importService = new RecordingImportService
+            {
+                Status = new ImportDestinationStatus(
+                    new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Changed") },
+                    new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Same") }),
+            };
+            ImportFromGumxViewModel viewModel = new ImportFromGumxViewModel(
+                new GumxSourceService(), new GumxDependencyResolver(), importService, _projectState,
+                _dialogService, new SynchronousDispatcher(), new ImportVersionGate());
+
+            await viewModel.UseFixedSourceAsync(new FixedImportSource(
+                path, "Add Forms: Neon", IncludeStandards: false, BeforeProjectSave: null, PreselectScreens: preselectScreens));
+
+            ImportTreeNodeViewModel Leaf(string name, ElementItemType type) =>
+                FindLeaf(viewModel, name, type);
+            Leaf("Fresh", ElementItemType.Component).IsChecked.ShouldBe(true);
+            Leaf("Fresh", ElementItemType.Component).StatusNote.ShouldBeNull();
+            Leaf("Changed", ElementItemType.Component).IsChecked.ShouldBe(false);
+            Leaf("Changed", ElementItemType.Component).StatusNote.ShouldNotBeNull().ShouldContain("differs");
+            Leaf("Same", ElementItemType.Component).IsChecked.ShouldBe(false);
+            Leaf("Same", ElementItemType.Component).StatusNote.ShouldNotBeNull().ShouldContain("already in your project");
+            Leaf("ButtonBehavior", ElementItemType.Behavior).IsChecked.ShouldBe(true);
+            Leaf("Demo", ElementItemType.Screen).IsChecked.ShouldBe(preselectScreens);
+            viewModel.StatusHint.ShouldNotBeNull().ShouldContain("differs");
+        }
+        finally
+        {
+            Directory.Delete(sourceDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task UseFixedSourceAsync_HasNoHint_WhenNothingDiffers()
+    {
+        string sourceDir = Path.Combine(Path.GetTempPath(), "GumImportFixed_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sourceDir);
+        try
+        {
+            string path = WriteSourceProjectWithElements(sourceDir);
+            _projectState.GumProjectSave.Version = 5;
+            ImportFromGumxViewModel viewModel = new ImportFromGumxViewModel(
+                new GumxSourceService(), new GumxDependencyResolver(), new RecordingImportService(), _projectState,
+                _dialogService, new SynchronousDispatcher(), new ImportVersionGate());
+
+            await viewModel.UseFixedSourceAsync(new FixedImportSource(path, "Add Forms: Neon", false, null));
+
+            viewModel.StatusHint.ShouldBeNull();
+        }
+        finally
+        {
+            Directory.Delete(sourceDir, recursive: true);
+        }
+    }
+
+    private static ImportTreeNodeViewModel FindLeaf(ImportFromGumxViewModel viewModel, string fullName, ElementItemType elementType)
+    {
+        foreach (ImportTreeNodeViewModel root in viewModel.RootNodes)
+        {
+            ImportTreeNodeViewModel? found = FindLeafRecursive(root, fullName, elementType);
+            if (found != null) { return found; }
+        }
+        throw new InvalidOperationException($"Leaf not found: {fullName} ({elementType})");
+    }
+
     [Fact]
     public async Task OnAffirmative_PassesTheFixedSourcesHookToTheImportAndMarksTheImportDone()
     {
@@ -663,6 +755,10 @@ public class ImportFromGumxViewModelTests
     private class RecordingImportService : IGumxImportService
     {
         public Action? LastBeforeProjectSave { get; private set; }
+
+        public ImportDestinationStatus Status { get; set; } = ImportDestinationStatus.None;
+
+        public ImportDestinationStatus GetDestinationStatus(GumProjectSave source, string destinationSubfolder) => Status;
 
         public Task<ImportResult> ImportAsync(
             ImportSelections selections,

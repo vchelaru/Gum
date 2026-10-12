@@ -6,6 +6,7 @@ using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.ToolStates;
 using ImportFromGumxPlugin.Services;
+using ImportFromGumxPlugin.ViewModels;
 using Shouldly;
 using System;
 using System.IO;
@@ -186,6 +187,58 @@ public class GumxImportServiceTests : IDisposable
         result.ConflictingElements.ShouldContain(conflictingName);
         result.SkippedElements.ShouldBeEmpty();
         _importLogic.ImportedComponentPaths.ShouldBeEmpty();
+    }
+
+    // ── destination status (which items already exist) ────────────────────
+
+    [Fact]
+    public void GetDestinationStatus_SeparatesDifferingFromIdenticalFromNew()
+    {
+        string componentsDir = Path.Combine(_projectDir, "Components");
+        Directory.CreateDirectory(componentsDir);
+        ComponentWithWidth("Same", 100).Save(Path.Combine(componentsDir, "Same.gucx"), useCompactFormat: true);
+        ComponentWithWidth("Changed", 50).Save(Path.Combine(componentsDir, "Changed.gucx"), useCompactFormat: true);
+        string behaviorsDir = Path.Combine(_projectDir, "Behaviors");
+        Directory.CreateDirectory(behaviorsDir);
+        new BehaviorSave { Name = "ButtonBehavior" }.Save(Path.Combine(behaviorsDir, "ButtonBehavior.behx"), useCompactFormat: true);
+        string screensDir = Path.Combine(_projectDir, "Screens");
+        Directory.CreateDirectory(screensDir);
+        File.WriteAllText(Path.Combine(screensDir, "Menu.gusx"), "not a screen");
+
+        GumProjectSave source = SourceProject();
+        source.Components.Add(ComponentWithWidth("Same", 100));
+        source.Components.Add(ComponentWithWidth("Changed", 100));
+        source.Components.Add(ComponentWithWidth("Fresh", 100));
+        source.Screens.Add(ScreenNoAssets("Menu"));
+        source.Behaviors.Add(new BehaviorSave { Name = "ButtonBehavior" });
+
+        ImportDestinationStatus status = _sut.GetDestinationStatus(source, destinationSubfolder: "");
+
+        status.Identical.ShouldBe(new[]
+        {
+            new ImportItemKey(ElementItemType.Component, "Same"),
+            new ImportItemKey(ElementItemType.Behavior, "ButtonBehavior"),
+        }, ignoreOrder: true);
+        status.Differing.ShouldBe(new[]
+        {
+            new ImportItemKey(ElementItemType.Component, "Changed"),
+            new ImportItemKey(ElementItemType.Screen, "Menu"),
+        }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void GetDestinationStatus_KeysItemsByTheirSourceName_WhenASubfolderIsApplied()
+    {
+        string destPath = Path.Combine(_projectDir, "Components", "Theme", "MyButton.gucx");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        ComponentWithWidth("Theme/MyButton", 100).Save(destPath, useCompactFormat: true);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(ComponentWithWidth("MyButton", 100));
+
+        ImportDestinationStatus status = _sut.GetDestinationStatus(source, destinationSubfolder: "Theme");
+
+        status.Identical.ShouldBe(new[] { new ImportItemKey(ElementItemType.Component, "MyButton") });
+        status.Differing.ShouldBeEmpty();
     }
 
     // ── beforeProjectSave hook ────────────────────────────────────────────

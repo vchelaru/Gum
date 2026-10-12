@@ -1,12 +1,11 @@
 using Avalonia.Threading;
 using Avalonia.Styling;
+using Gum.DataTypes;
 using Gum.Avalonia.Tests.Harness;
-using Gum.Services;
+using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
-using Gum.Commands;
-using Gum.Plugins.ImportPlugin.Manager;
 using Gum.ToolStates;
-using ImportFromGumxPlugin;
+using ImportFromGumxPlugin.Services;
 using ImportFromGumxPlugin.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,12 +22,18 @@ public class ImportFromGumxFixedSourceScreenshotTests
     public void PickWhatToImport() => PrScreenshot.Run(() =>
     {
         IServiceProvider services = TestAppBuilder.Services;
-        ImportFromGumxViewModel viewModel = new ImportFromGumxLogic(
+        // The project already has a Button that differs and a Label that is identical to the theme's.
+        StubImportService importService = new StubImportService(new ImportDestinationStatus(
+            new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Neon/Controls/Button") },
+            new HashSet<ImportItemKey> { new ImportItemKey(ElementItemType.Component, "Neon/Controls/Label") }));
+        ImportFromGumxViewModel viewModel = new ImportFromGumxViewModel(
+            new GumxSourceService(),
+            new GumxDependencyResolver(),
+            importService,
             services.GetRequiredService<IProjectState>(),
-            services.GetRequiredService<IImportLogic>(),
-            services.GetRequiredService<IFileCommands>(),
             services.GetRequiredService<IDialogService>(),
-            services.GetRequiredService<Gum.Services.IDispatcher>()).CreateImportViewModel();
+            services.GetRequiredService<Gum.Services.IDispatcher>(),
+            new ImportVersionGate());
         string themeProject = Path.Combine(AppContext.BaseDirectory, "Content", "FormsThemes", "Neon", "GumProject.gumx");
 
         Task load = viewModel.UseFixedSourceAsync(
@@ -43,4 +48,24 @@ public class ImportFromGumxFixedSourceScreenshotTests
         using ScreenshotWindow window = PrScreenshot.ShowDialog(viewModel, ThemeVariant.Dark);
         window.Save("add-forms-pick-what-to-import");
     });
+
+    private sealed class StubImportService : IGumxImportService
+    {
+        private readonly ImportDestinationStatus _status;
+
+        public StubImportService(ImportDestinationStatus status)
+        {
+            _status = status;
+        }
+
+        public ImportDestinationStatus GetDestinationStatus(GumProjectSave source, string destinationSubfolder) => _status;
+
+        public Task<ImportResult> ImportAsync(
+            ImportSelections selections,
+            GumProjectSave source,
+            string sourceBase,
+            string destinationSubfolder,
+            ConflictResolution conflictResolution = ConflictResolution.Cancel,
+            Action? beforeProjectSave = null) => Task.FromResult(new ImportResult());
+    }
 }

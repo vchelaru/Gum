@@ -176,6 +176,20 @@ public class ImportFromGumxViewModel : DialogViewModel
     [DependsOn(nameof(FixedSource))]
     public bool IsSourceEditable => FixedSource == null;
 
+    /// <summary>
+    /// A line above the item list that explains the marks on rows the project already has; null when
+    /// there is nothing to explain.
+    /// </summary>
+    public string? StatusHint
+    {
+        get => Get<string?>();
+        private set => Set(value);
+    }
+
+    /// <summary>Whether <see cref="StatusHint"/> is shown.</summary>
+    [DependsOn(nameof(StatusHint))]
+    public bool IsStatusHintVisible => !string.IsNullOrEmpty(StatusHint);
+
     /// <summary>True once an import has gone through.</summary>
     public bool WasImported { get; private set; }
 
@@ -447,6 +461,10 @@ public class ImportFromGumxViewModel : DialogViewModel
             }
 
             PopulateItems(project);
+            if (FixedSource is { } fixedSource)
+            {
+                ApplyDestinationStatus(project, fixedSource);
+            }
             IsPreviewLoaded = true;
         }
         catch (Exception ex)
@@ -458,6 +476,41 @@ public class ImportFromGumxViewModel : DialogViewModel
             IsLoading = false;
             LoadingStatus = null;
         }
+    }
+
+    /// <summary>
+    /// Marks each row the project already has, and starts only the new ones checked, so the user
+    /// can see what is and is not already there instead of remembering it.
+    /// </summary>
+    private void ApplyDestinationStatus(GumProjectSave project, FixedImportSource fixedSource)
+    {
+        ImportDestinationStatus status = _importService.GetDestinationStatus(project, DestinationSubfolder);
+        bool anyDiffers = false;
+
+        foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
+        {
+            if (leaf.ElementType is not { } type || type == ElementItemType.Standard) { continue; }
+
+            ImportItemKey key = new ImportItemKey(type, leaf.FullName);
+            if (status.Differing.Contains(key))
+            {
+                leaf.StatusNote = "differs from the one in your project";
+                anyDiffers = true;
+            }
+            else if (status.Identical.Contains(key))
+            {
+                leaf.StatusNote = "already in your project";
+            }
+            else if (type != ElementItemType.Screen || fixedSource.PreselectScreens)
+            {
+                leaf.IsChecked = true;
+            }
+        }
+
+        StatusHint = anyDiffers
+            ? "Items marked \"differs\" already exist in your project with other content. " +
+              "Importing one asks whether to skip or overwrite it."
+            : null;
     }
 
     private bool IsSameFileAsCurrentProject(string path)

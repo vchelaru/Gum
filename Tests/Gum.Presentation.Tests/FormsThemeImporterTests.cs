@@ -209,10 +209,10 @@ public class FormsThemeImporterTests
     }
 
     [Theory]
-    [InlineData("Standard", true)]
-    [InlineData("Neon", false)]
+    [InlineData("Standard", true, false)]
+    [InlineData("Neon", false, true)]
     public async Task ImportThemeAsync_OpensTheImportDialogOnTheThemeProject_WhenTheUserPicksWhatToImport(
-        string themeName, bool expectStandards)
+        string themeName, bool expectStandards, bool includeDemoScreen)
     {
         string existingFile = System.IO.Path.GetTempFileName();
         try
@@ -228,12 +228,13 @@ public class FormsThemeImporterTests
                 .Callback<FixedImportSource>(source => shown = source)
                 .ReturnsAsync(true);
 
-            bool result = await _importer.ImportThemeAsync(themeName, isIncludeDemoScreenGum: false);
+            bool result = await _importer.ImportThemeAsync(themeName, includeDemoScreen);
 
             result.ShouldBeTrue();
             shown.ShouldNotBeNull();
             shown.GumxPath.ShouldBe("C:/themes/" + themeName + "/GumProject.gumx");
             shown.IncludeStandards.ShouldBe(expectStandards);
+            shown.PreselectScreens.ShouldBe(includeDemoScreen);
             shown.BeforeProjectSave.ShouldNotBeNull();
             _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
         }

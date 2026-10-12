@@ -89,7 +89,7 @@ public class FormsThemeImporter : IFormsThemeImporter
         ImportDecision decision = GetImportDecision(sourceDestinations);
         if (decision == ImportDecision.PickWhatToImport)
         {
-            return await PickWhatToImportAsync(themeName, diff, project);
+            return await PickWhatToImportAsync(themeName, isIncludeDemoScreenGum, diff, project);
         }
         if (decision == ImportDecision.Cancel)
         {
@@ -123,14 +123,16 @@ public class FormsThemeImporter : IFormsThemeImporter
     /// import goes through. A non-default theme never offers Standards: its look must live in its
     /// Components, never in the project's shared Standards.
     /// </summary>
-    private Task<bool> PickWhatToImportAsync(string themeName, ThemeRequirementsDiff diff, GumProjectSave project)
+    private Task<bool> PickWhatToImportAsync(
+        string themeName, bool isIncludeDemoScreenGum, ThemeRequirementsDiff diff, GumProjectSave project)
     {
         bool includeStandards = string.Equals(themeName, _formsFileService.DefaultThemeName, StringComparison.OrdinalIgnoreCase);
         FixedImportSource source = new FixedImportSource(
             _formsFileService.GetFormsGumxPath(themeName),
             $"Add Forms: {themeName}",
             includeStandards,
-            BeforeProjectSave: () => ApplyRequirements(diff, project));
+            BeforeProjectSave: () => ApplyRequirements(diff, project),
+            PreselectScreens: isIncludeDemoScreenGum);
         return _importDialog.ShowAsync(source);
     }
 

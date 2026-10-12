@@ -122,8 +122,13 @@ public class FormsAndImportScenarioTests
         {
             dialog.IsSourceEditable.ShouldBeFalse();
             dialog.RootNodes.Select(node => node.DisplayName).ShouldNotContain("Standards", "a non-default theme never touches the project's Standards");
-            Leaf(dialog, "Neon/Controls/CheckBox").IsChecked = true;
-            tree.WaitUntil(() => Leaf(dialog, "CheckBoxBehavior").IsChecked == true, AsyncWork, "the preview to include the check box's behavior");
+            // The conflicting Button is marked and left unchecked; what the project lacks starts checked.
+            Leaf(dialog, "Neon/Controls/Button").StatusNote.ShouldNotBeNull().ShouldContain("differs");
+            Leaf(dialog, "Neon/Controls/Button").IsChecked.ShouldBe(false);
+            Leaf(dialog, "Neon/Controls/CheckBox").IsChecked.ShouldBe(true);
+            Leaf(dialog, "Neon/Controls/CheckBox").StatusNote.ShouldBeNull();
+            dialog.StatusHint.ShouldNotBeNull();
+            Leaf(dialog, "Neon/DemoScreenGum").IsChecked.ShouldBe(false, "the demo screen was not asked for in Add Forms");
             return true;
         });
 
@@ -132,7 +137,9 @@ public class FormsAndImportScenarioTests
 
         project.Components.Select(component => component.Name).ShouldContain("Neon/Controls/CheckBox");
         ComponentNamed(project, "Neon/Controls/Button").Instances.ShouldBeEmpty("the Button the user already had was not picked");
-        project.Components.Select(component => component.Name).ShouldNotContain("Neon/Controls/ListBox", "only the picked item is imported");
+        project.Components.Select(component => component.Name).ShouldContain("Neon/Controls/ListBox", "what the project lacked was preselected");
+        project.Screens.ShouldBeEmpty("the demo screen was not asked for");
+        project.Behaviors.Select(behavior => behavior.Name).ShouldContain("CheckBoxBehavior");
         project.FontRanges.Contains("10003").ShouldBeTrue("the theme's prerequisites apply once the picked import goes through");
 
         tree.AssertOracles();
