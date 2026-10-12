@@ -50,7 +50,7 @@ public class GumxImportServiceTests : IDisposable
         _projectState  = new FakeProjectState(_projectDir, _gumProject);
         _importLogic   = new FakeImportLogic(_projectDir);
 
-        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService);
+        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService, new ImportVersionGate());
     }
 
     public void Dispose()
@@ -186,6 +186,99 @@ public class GumxImportServiceTests : IDisposable
         result.ConflictingElements.ShouldContain(conflictingName);
         result.SkippedElements.ShouldBeEmpty();
         _importLogic.ImportedComponentPaths.ShouldBeEmpty();
+    }
+
+    // ── identical destination content is not a conflict ───────────────────
+
+    private static ComponentSave ComponentWithWidth(string name, float width) =>
+        new ComponentSave
+        {
+            Name = name,
+            States = new()
+            {
+                new StateSave
+                {
+                    Name = "Default",
+                    Variables = new() { new VariableSave { Name = "Width", Type = "float", Value = width, SetsValue = true } }
+                }
+            }
+        };
+
+    [Fact]
+    public async Task ImportAsync_ComponentIdenticalToDestination_IsNotAConflictAndIsNotReregistered()
+    {
+        string destPath = Path.Combine(_projectDir, "Components", "Theme", "MyButton.gucx");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        ComponentWithWidth("Theme/MyButton", 100).Save(destPath, useCompactFormat: true);
+
+        ComponentSave component = ComponentWithWidth("MyButton", 100);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        ImportResult result = await _sut.ImportAsync(
+            SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "Theme");
+
+        result.ConflictingElements.ShouldBeEmpty();
+        _importLogic.RegisteredComponents.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ImportAsync_ComponentDifferingFromDestination_IsStillAConflict()
+    {
+        string destPath = Path.Combine(_projectDir, "Components", "MyButton.gucx");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        ComponentWithWidth("MyButton", 50).Save(destPath, useCompactFormat: true);
+
+        ComponentSave component = ComponentWithWidth("MyButton", 100);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        ImportResult result = await _sut.ImportAsync(
+            SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "");
+
+        result.ConflictingElements.ShouldBe(new[] { "MyButton" });
+    }
+
+    [Fact]
+    public async Task ImportAsync_ScreenIdenticalToDestination_IsNotAConflict()
+    {
+        string destPath = Path.Combine(_projectDir, "Screens", "GameScreen.gusx");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        ScreenNoAssets("GameScreen").Save(destPath, useCompactFormat: true);
+
+        ScreenSave screen = ScreenNoAssets("GameScreen");
+        GumProjectSave source = SourceProject();
+        source.Screens.Add(screen);
+        ImportSelections selections = new ImportSelections
+        {
+            DirectScreens = new() { screen },
+        };
+
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+
+        result.ConflictingElements.ShouldBeEmpty();
+        _importLogic.ImportedScreenPaths.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ImportAsync_BehaviorIdenticalToDestination_IsNotAConflict()
+    {
+        string destPath = Path.Combine(_projectDir, "Behaviors", "ButtonBehavior.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        new BehaviorSave { Name = "ButtonBehavior" }.Save(destPath, useCompactFormat: true);
+
+        WriteSourceBehavior("ButtonBehavior");
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        GumProjectSave source = SourceProject();
+        ImportSelections selections = new ImportSelections
+        {
+            Behaviors = new() { behavior },
+        };
+
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+
+        result.ConflictingElements.ShouldBeEmpty();
+        _importLogic.ImportedBehaviorPaths.ShouldBeEmpty();
     }
 
     [Fact]

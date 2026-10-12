@@ -5,6 +5,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
@@ -47,7 +48,8 @@ public class FormsThemeImporterTests
             _projectState.Object,
             _fileWatchManager.Object,
             _skiaShapeStandards.Object,
-            _fontManager.Object);
+            _fontManager.Object,
+            new ImportVersionGate());
     }
 
     [Fact]

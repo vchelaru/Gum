@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ImportFromGumxPlugin.Services;
@@ -42,6 +43,19 @@ public class ImportSelections
     public List<ComponentSave> TransitiveComponents { get; init; } = new();
     public List<BehaviorSave> Behaviors { get; init; } = new();
     public List<StandardElementSave> Standards { get; init; } = new();
+
+    /// <summary>
+    /// A copy without the given components, screens and behaviors (matched by reference);
+    /// Standards are always kept.
+    /// </summary>
+    internal ImportSelections WithoutUnchanged(IReadOnlySet<object> unchanged) => new()
+    {
+        DirectComponents = DirectComponents.Where(c => !unchanged.Contains(c)).ToList(),
+        DirectScreens = DirectScreens.Where(s => !unchanged.Contains(s)).ToList(),
+        TransitiveComponents = TransitiveComponents.Where(c => !unchanged.Contains(c)).ToList(),
+        Behaviors = Behaviors.Where(b => !unchanged.Contains(b)).ToList(),
+        Standards = Standards,
+    };
 }
 
 /// <summary>

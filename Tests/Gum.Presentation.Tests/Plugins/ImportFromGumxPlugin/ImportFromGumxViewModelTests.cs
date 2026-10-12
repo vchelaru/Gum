@@ -38,12 +38,14 @@ public class ImportFromGumxViewModelTests
         GumxSourceService sourceService = new GumxSourceService();
         GumxDependencyResolver resolver = new GumxDependencyResolver();
         _projectState = new FakeProjectState();
+        ImportVersionGate versionGate = new ImportVersionGate();
         GumxImportService importService = new GumxImportService(
-            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService);
+            new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService, versionGate);
 
         _dialogService = new FakeDialogService();
         _sut = new ImportFromGumxViewModel(
-            sourceService, resolver, importService, _projectState, _dialogService, new SynchronousDispatcher());
+            sourceService, resolver, importService, _projectState, _dialogService, new SynchronousDispatcher(),
+            versionGate);
     }
 
     [Fact]

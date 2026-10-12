@@ -5,10 +5,12 @@ namespace Gum.Presentation.Tests.Plugins.ImportFromGumxPlugin;
 
 public class ImportVersionGateTests
 {
+    private readonly ImportVersionGate _sut = new ImportVersionGate();
+
     [Fact]
     public void GetRejection_ReturnsMessage_WhenSourceIsNewerThanDestination()
     {
-        string? rejection = ImportVersionGate.GetRejection(
+        string? rejection = _sut.GetRejection(
             sourceVersion: 5, destinationVersion: 3, sourceDescription: "The source project");
 
         rejection.ShouldNotBeNull();
@@ -23,7 +25,7 @@ public class ImportVersionGateTests
     [InlineData(3, 5)]
     public void GetRejection_ReturnsNull_WhenSourceIsNotNewerThanDestination(int sourceVersion, int destinationVersion)
     {
-        string? rejection = ImportVersionGate.GetRejection(sourceVersion, destinationVersion, "The source project");
+        string? rejection = _sut.GetRejection(sourceVersion, destinationVersion, "The source project");
 
         rejection.ShouldBeNull();
     }

@@ -27,17 +27,20 @@ public class GumxImportService : IGumxImportService
     private readonly IProjectState _projectState;
     private readonly IFileCommands _fileCommands;
     private readonly IGumxSourceService _sourceService;
+    private readonly IImportVersionGate _versionGate;
 
     public GumxImportService(
         IImportLogic importLogic,
         IProjectState projectState,
         IFileCommands fileCommands,
-        IGumxSourceService sourceService)
+        IGumxSourceService sourceService,
+        IImportVersionGate versionGate)
     {
         _importLogic = importLogic;
         _projectState = projectState;
         _fileCommands = fileCommands;
         _sourceService = sourceService;
+        _versionGate = versionGate;
     }
 
     private static readonly HashSet<string> _assetExtensions =
@@ -54,7 +57,7 @@ public class GumxImportService : IGumxImportService
         var result = new ImportResult();
         if (_projectState.GumProjectSave is { } destination)
         {
-            result.VersionRejection = ImportVersionGate.GetRejection(
+            result.VersionRejection = _versionGate.GetRejection(
                 source.Version, destination.Version, "The source project");
             if (result.VersionRejection != null)
             {
@@ -72,13 +75,17 @@ public class GumxImportService : IGumxImportService
         // The set of names is needed downstream regardless of resolution so writers can decide
         // whether to skip the file write (Skip) or skip the IImportLogic registration (Overwrite,
         // since the element is already known in-memory and will refresh on the post-import reload).
-        var conflicts = FindConflictingElements(selections, nameMap, projectDir, IsDestinationJsonFormat);
+        // A destination file whose content already equals what would be written is not a conflict:
+        // it is left alone, so re-importing an unchanged source stays a no-op.
+        var (conflicts, unchanged) = ClassifyExistingDestinations(
+            selections, nameMap, qualifiedNameMap, projectDir, IsDestinationJsonFormat);
         if (conflicts.Count > 0 && conflictResolution == ConflictResolution.Cancel)
         {
             result.ConflictingElements.AddRange(conflicts);
             return result;
         }
         var conflictNameSet = new HashSet<string>(conflicts, StringComparer.Ordinal);
+        selections = selections.WithoutUnchanged(unchanged);
 
         // Pre-fetch all assets for all candidate elements in parallel, so we can gate each
         // element's import on whether its required assets are actually available.
@@ -301,42 +308,124 @@ public class GumxImportService : IGumxImportService
     }
 
     /// <summary>
-    /// A conflict is a destination file that already exists, so every path here uses the
-    /// destination project's own format - in a .gumj project the existing file is a .gucj, and
-    /// probing for .gucx would report no conflict and then silently overwrite (issue #4595).
+    /// A conflict is a destination file that already exists with different content, so every path
+    /// here uses the destination project's own format - in a .gumj project the existing file is a
+    /// .gucj, and probing for .gucx would report no conflict and then silently overwrite (issue
+    /// #4595). An existing file whose content equals what the import would write is unchanged, not
+    /// a conflict; an unreadable one counts as different.
     /// </summary>
-    private static List<string> FindConflictingElements(
+    private static (List<string> Conflicts, HashSet<object> Unchanged) ClassifyExistingDestinations(
         ImportSelections selections,
         Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap,
         string projectDir,
         bool isJsonFormat)
     {
         var conflicts = new List<string>();
+        var unchanged = new HashSet<object>(ReferenceEqualityComparer.Instance);
 
         foreach (var component in selections.TransitiveComponents.Concat(selections.DirectComponents))
         {
             string destName = nameMap.TryGetValue(component.Name, out var mapped) ? mapped : component.Name;
             string destPath = Path.Combine(projectDir, "Components", destName + "." + ComponentExtension(isJsonFormat));
-            if (File.Exists(destPath))
-                conflicts.Add(destName);
+            ClassifyElement(component, destName, destPath, nameMap, qualifiedNameMap, conflicts, unchanged);
         }
 
         foreach (var screen in selections.DirectScreens)
         {
             string destName = nameMap.TryGetValue(screen.Name, out var mapped) ? mapped : screen.Name;
             string destPath = Path.Combine(projectDir, "Screens", destName + "." + ScreenExtension(isJsonFormat));
-            if (File.Exists(destPath))
-                conflicts.Add(destName);
+            ClassifyElement(screen, destName, destPath, nameMap, qualifiedNameMap, conflicts, unchanged);
         }
 
         foreach (var behavior in selections.Behaviors)
         {
             string destPath = Path.Combine(projectDir, "Behaviors", behavior.Name + "." + BehaviorExtension(isJsonFormat));
-            if (File.Exists(destPath))
+            if (!File.Exists(destPath)) { continue; }
+
+            if (IsSameContent(TryReadBehavior(destPath), behavior))
+            {
+                unchanged.Add(behavior);
+            }
+            else
+            {
                 conflicts.Add(behavior.Name);
+            }
         }
 
-        return conflicts;
+        return (conflicts, unchanged);
+    }
+
+    private static void ClassifyElement<T>(
+        T source,
+        string destName,
+        string destPath,
+        Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap,
+        List<string> conflicts,
+        HashSet<object> unchanged)
+        where T : ElementSave, new()
+    {
+        if (!File.Exists(destPath)) { return; }
+
+        T incoming = BuildImportClone(source, destName, nameMap, qualifiedNameMap);
+        if (IsSameContent(TryReadElement<T>(destPath), incoming))
+        {
+            unchanged.Add(source);
+        }
+        else
+        {
+            conflicts.Add(destName);
+        }
+    }
+
+    private static bool IsSameContent<T>(T? existing, T incoming) where T : class
+    {
+        return existing != null && SerializeCompact(existing) == SerializeCompact(incoming);
+    }
+
+    private static T? TryReadElement<T>(string path) where T : ElementSave, new()
+    {
+        try
+        {
+            T? element = DeserializeElementText<T>(path, File.ReadAllText(path));
+            if (element != null)
+            {
+                foreach (var state in element.AllStates)
+                {
+                    state.FixEnumerations();
+                }
+            }
+            return element;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private static BehaviorSave? TryReadBehavior(string path)
+    {
+        try
+        {
+            string content = File.ReadAllText(path);
+            return string.Equals(FileManager.GetExtension(path), BehaviorReference.JsonExtension,
+                StringComparison.OrdinalIgnoreCase)
+                ? GumJsonFileSerializer.DeserializeBehavior(content)
+                : GumFileSerializer.DeserializeBehaviorSave(content, GumProjectSave.NativeVersion);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private static string SerializeCompact<T>(T value)
+    {
+        var serializer = GumFileSerializer.GetCompactSerializer(typeof(T));
+        using var writer = new StringWriter();
+        serializer.Serialize(writer, value);
+        return writer.ToString();
     }
 
     private static Dictionary<string, string> BuildNameMap(
@@ -438,10 +527,7 @@ public class GumxImportService : IGumxImportService
         bool isConflict = conflictNameSet.Contains(destName);
         if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
 
-        ComponentSave clone = CloneElement(sourceComponent);
-        clone.Name = destName;
-        RemapBaseTypes(clone, nameMap);
-        RemapVariableReferences(clone, qualifiedNameMap);
+        ComponentSave clone = BuildImportClone(sourceComponent, destName, nameMap, qualifiedNameMap);
 
         if (isConflict && conflictResolution == ConflictResolution.Overwrite)
         {
@@ -475,10 +561,7 @@ public class GumxImportService : IGumxImportService
         bool isConflict = conflictNameSet.Contains(destName);
         if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
 
-        ScreenSave clone = CloneElement(sourceScreen);
-        clone.Name = destName;
-        RemapBaseTypes(clone, nameMap);
-        RemapVariableReferences(clone, qualifiedNameMap);
+        ScreenSave clone = BuildImportClone(sourceScreen, destName, nameMap, qualifiedNameMap);
 
         if (isConflict && conflictResolution == ConflictResolution.Overwrite)
         {
@@ -493,6 +576,24 @@ public class GumxImportService : IGumxImportService
     }
 
     /// <summary>
+    /// The element exactly as the import writes it: a clone of <paramref name="source"/> renamed to
+    /// <paramref name="destName"/> with its base types and variable references remapped.
+    /// </summary>
+    private static T BuildImportClone<T>(
+        T source,
+        string destName,
+        Dictionary<string, string> nameMap,
+        Dictionary<string, string> qualifiedNameMap)
+        where T : ElementSave, new()
+    {
+        T clone = CloneElement(source);
+        clone.Name = destName;
+        RemapBaseTypes(clone, nameMap);
+        RemapVariableReferences(clone, qualifiedNameMap);
+        return clone;
+    }
+
+    /// <summary>
     /// Clones an ElementSave via a serializer round-trip. Round-tripping (rather than mutating
     /// the source instance) protects the source GumProjectSave's in-memory copy, which may still
     /// be visible to the import preview dialog. <see cref="StateSave.FixEnumerations"/> is called
@@ -502,9 +603,7 @@ public class GumxImportService : IGumxImportService
     private static T CloneElement<T>(T source) where T : ElementSave, new()
     {
         var serializer = GumFileSerializer.GetCompactSerializer(typeof(T));
-        using var writer = new StringWriter();
-        serializer.Serialize(writer, source);
-        using var reader = new StringReader(writer.ToString());
+        using var reader = new StringReader(SerializeCompact(source));
         var clone = (T)serializer.Deserialize(reader)!;
 
         foreach (var state in clone.AllStates)

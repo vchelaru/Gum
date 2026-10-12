@@ -48,7 +48,8 @@ public class ImportFromGumxLogic
     {
         GumxSourceService sourceService = new();
         GumxDependencyResolver dependencyResolver = new();
-        GumxImportService importService = new(_importLogic, _projectState, _fileCommands, sourceService);
+        ImportVersionGate versionGate = new();
+        GumxImportService importService = new(_importLogic, _projectState, _fileCommands, sourceService, versionGate);
 
         return new ImportFromGumxViewModel(
             sourceService,
@@ -56,6 +57,7 @@ public class ImportFromGumxLogic
             importService,
             _projectState,
             _dialogService,
-            _dispatcher);
+            _dispatcher,
+            versionGate);
     }
 }

@@ -29,6 +29,7 @@ public class FormsThemeImporter : IFormsThemeImporter
     private readonly IFileWatchManager _fileWatchManager;
     private readonly ISkiaShapeStandardsLogic _skiaShapeStandards;
     private readonly IFontManager _fontManager;
+    private readonly IImportVersionGate _versionGate;
 
     public FormsThemeImporter(
         IFormsFileService formsFileService,
@@ -38,8 +39,10 @@ public class FormsThemeImporter : IFormsThemeImporter
         IProjectState projectState,
         IFileWatchManager fileWatchManager,
         ISkiaShapeStandardsLogic skiaShapeStandards,
-        IFontManager fontManager)
+        IFontManager fontManager,
+        IImportVersionGate versionGate)
     {
+        _versionGate = versionGate;
         _formsFileService = formsFileService;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
@@ -64,7 +67,7 @@ public class FormsThemeImporter : IFormsThemeImporter
             ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(themeName));
         if (requirements.ProjectVersion is { } themeVersion)
         {
-            string? rejection = ImportVersionGate.GetRejection(themeVersion, project.Version, "The Forms theme");
+            string? rejection = _versionGate.GetRejection(themeVersion, project.Version, "The Forms theme");
             if (rejection != null)
             {
                 _dialogService.ShowMessage(rejection);

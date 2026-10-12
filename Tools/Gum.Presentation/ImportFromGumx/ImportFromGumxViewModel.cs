@@ -31,6 +31,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     private readonly IProjectState _projectState;
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
+    private readonly IImportVersionGate _versionGate;
 
     private GumProjectSave? _sourceProject;
     private string _sourceBase = string.Empty;
@@ -170,8 +171,10 @@ public class ImportFromGumxViewModel : DialogViewModel
         IGumxImportService importService,
         IProjectState projectState,
         IDialogService dialogService,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IImportVersionGate versionGate)
     {
+        _versionGate = versionGate;
         _sourceService = sourceService;
         _dependencyResolver = dependencyResolver;
         _importService = importService;
@@ -396,7 +399,7 @@ public class ImportFromGumxViewModel : DialogViewModel
 
             if (_projectState.GumProjectSave is { } destination)
             {
-                string? rejection = ImportVersionGate.GetRejection(
+                string? rejection = _versionGate.GetRejection(
                     project.Version, destination.Version, "The source project");
                 if (rejection != null)
                 {
