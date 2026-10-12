@@ -19,7 +19,7 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <!-- SKSurface for the in-memory raster canvas the bootstrap initializes against. -->
-    <PackageReference Include="SkiaSharp" VersionOverride="3.119.4" />
+    <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
   </ItemGroup>
 
   <ItemGroup>

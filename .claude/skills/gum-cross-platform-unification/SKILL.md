@@ -59,11 +59,13 @@ Before adding a "forward to the contained renderable" property to a runtime, che
 
 When you swap *how* a renderable achieves an effect (e.g. Skia text outline moving between RichTextKit's native halo and a render-time recolor+dilate pass), grep the test projects for assertions against the old mechanism (`Halo`, the old `GetStyle` shape) — they compile fine and fail only at run time, and a per-OS CI job that fail-fasts hides which one broke. Run the whole affected test project locally, not a name-filtered subset.
 
-## SkiaGum Uses Gum's RichTextKit Fork
+## SkiaGum's RichTextKit and SkiaSharp Versions
 
-SkiaGum, SilkNetGum and StrideGum reference `Gum.Topten.RichTextKit`, not `Topten.RichTextKit`. It is Gum's published fork with a fix for `Style.HaloWidth` spiking at acute glyph corners. Switching back to the real `0.4.167` reintroduces the spike. See `ThirdParty/README.md` for how to re-pack it and when to switch back.
+SkiaGum, SilkNetGum and StrideGum reference `Topten.RichTextKit`. RichTextKit 0.4.167 spikes `Style.HaloWidth` text outlines at acute glyph corners, so don't go back to it. Each RichTextKit release requires a specific SkiaSharp version (0.6.170 needs 4.153.1), so the two are bumped together.
 
-**SilkNetGum and StrideGum each have their own `PackageReference`** — they link SkiaGum's `Renderables/*.cs` source via `<Compile Include>` rather than referencing `SkiaGum.csproj`, so bumping the version in one csproj does not carry to the others. Change all three together, or the shared `Text.cs` silently runs against unpatched behavior in whichever csproj was missed, with no compile error and no failing test to catch it.
+**SilkNetGum and StrideGum each have their own `PackageReference`** — they link SkiaGum's `Renderables/*.cs` source via `<Compile Include>` rather than referencing `SkiaGum.csproj`, so bumping the version in one csproj does not carry to the others. Change all three together, or the shared `Text.cs` silently runs against different behavior in whichever csproj was missed, with no compile error and no failing test to catch it.
+
+**The Skia-family projects share one SkiaSharp version with SkiaGameRendering** (its `eng/Versions.props`). `SkiaGameRendering.Stride.D3D11` pins it exactly, and the Unity package gets its SkiaSharp from SkiaGameRendering, so a SkiaSharp bump waits for a SkiaGameRendering release on that version.
 
 ## Never Widen an Obsolete API
 

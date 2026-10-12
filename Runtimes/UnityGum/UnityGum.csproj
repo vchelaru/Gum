@@ -43,8 +43,8 @@
 	     script copies into Plugins/. Must match the HarfBuzzSharp version this project resolves; the
 	     script fails if it doesn't. -->
 	<ItemGroup>
-		<PackageDownload Include="HarfBuzzSharp.NativeAssets.Win32" Version="[7.3.0.2]" />
-		<PackageDownload Include="HarfBuzzSharp.NativeAssets.macOS" Version="[7.3.0.2]" />
+		<PackageDownload Include="HarfBuzzSharp.NativeAssets.Win32" Version="[14.2.1.301]" />
+		<PackageDownload Include="HarfBuzzSharp.NativeAssets.macOS" Version="[14.2.1.301]" />
 	</ItemGroup>
 
 	<ItemGroup>

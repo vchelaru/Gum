@@ -37,15 +37,15 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
 
     public SKPath GetClipPath()
     {
-        SKPath path = new SKPath();
+        using var builder = new SKPathBuilder();
 
         var absoluteX = this.GetAbsoluteX();
         var absoluteY = this.GetAbsoluteY();
         var boundingRect = new SKRect(absoluteX, absoluteY, absoluteX + this.Width, absoluteY + this.Height);
 
-        path.AddRoundRect(boundingRect, CornerRadius, CornerRadius);
+        builder.AddRoundRect(boundingRect, CornerRadius, CornerRadius);
 
-        return path;
+        return builder.Detach();
     }
 
     /// <inheritdoc cref="RenderableShapeBase.Clone"/>
@@ -116,21 +116,21 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
         float bottomLeft = System.Math.Min(System.Math.Max(0f, (CustomRadiusBottomLeft ?? CornerRadius) - additionalRadiusInset), maxRadius);
         float bottomRight = System.Math.Min(System.Math.Max(0f, (CustomRadiusBottomRight ?? CornerRadius) - additionalRadiusInset), maxRadius);
 
-        SKPath path = new SKPath();
-        path.MoveTo(boundingRect.Left + topLeft, boundingRect.Top);
-        path.LineTo(boundingRect.Right - topRight, boundingRect.Top);
-        path.ArcTo(SKRect.Create(boundingRect.Right - topRight * 2, boundingRect.Top, topRight * 2, topRight * 2), 270, 90, false);
+        using var builder = new SKPathBuilder();
+        builder.MoveTo(boundingRect.Left + topLeft, boundingRect.Top);
+        builder.LineTo(boundingRect.Right - topRight, boundingRect.Top);
+        builder.ArcTo(SKRect.Create(boundingRect.Right - topRight * 2, boundingRect.Top, topRight * 2, topRight * 2), 270, 90, false);
 
-        path.LineTo(boundingRect.Right, boundingRect.Bottom - bottomRight);
-        path.ArcTo(SKRect.Create(boundingRect.Right - bottomRight * 2, boundingRect.Bottom - bottomRight * 2, bottomRight * 2, bottomRight * 2), 0, 90, false);
+        builder.LineTo(boundingRect.Right, boundingRect.Bottom - bottomRight);
+        builder.ArcTo(SKRect.Create(boundingRect.Right - bottomRight * 2, boundingRect.Bottom - bottomRight * 2, bottomRight * 2, bottomRight * 2), 0, 90, false);
 
-        path.LineTo(boundingRect.Left + bottomLeft, boundingRect.Bottom);
-        path.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Bottom - bottomLeft * 2, bottomLeft * 2, bottomLeft * 2), 90, 90, false);
+        builder.LineTo(boundingRect.Left + bottomLeft, boundingRect.Bottom);
+        builder.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Bottom - bottomLeft * 2, bottomLeft * 2, bottomLeft * 2), 90, 90, false);
 
-        path.LineTo(boundingRect.Left, boundingRect.Top + topLeft);
-        path.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Top, topLeft * 2, topLeft * 2), 180, 90, false);
+        builder.LineTo(boundingRect.Left, boundingRect.Top + topLeft);
+        builder.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Top, topLeft * 2, topLeft * 2), 180, 90, false);
 
-        path.Close();
-        return path;
+        builder.Close();
+        return builder.Detach();
     }
 }

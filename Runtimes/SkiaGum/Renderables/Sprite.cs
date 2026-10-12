@@ -300,7 +300,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
                     }
                     else
                     {
-                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
+                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
                     }
 
                 }
@@ -314,7 +314,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
                 }
                 else
                 {
-                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
+                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, Renderer.TextureSampling, paint);
                 }
             }
 
@@ -327,7 +327,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             }
             else
             {
-                canvas.DrawBitmap(Texture, boundingRect, paint);
+                canvas.DrawBitmap(Texture, boundingRect, Renderer.TextureSampling, paint);
             }
         }
     }
