@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
@@ -202,6 +203,81 @@ public class VariableScenarioTests
         grid.Editor<ColorDisplay>("Color").HexTextBox.Text.ShouldBe("40FF80");
 
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "DISP-016")]
+    [Trait("Feature", "EDIT-001")]
+    [Trait("Feature", "EDIT-002")]
+    public void PickingAColorWithTheMouse_SavesTheChannels_AndEachPickUndoesInOneStep()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        InstanceSave label = tree.Project.AddInstance(button, "Label", "Text");
+        tree.Click(tree.NodeFor(label));
+        VariableGridHarness grid = tree.Grid;
+        ProjectFileSnapshot start = tree.SnapshotFiles();
+
+        // Undo rebuilds the grid, which closes the flyout and replaces the editor, so each pick
+        // opens the flyout again with a click on the swatch.
+        CompactColorPicker OpenPicker()
+        {
+            ColorDisplay display = grid.Editor<ColorDisplay>("Color");
+            grid.Input.Click(display.GetVisualDescendants().OfType<Button>().Single());
+            display.ColorPicker.IsEffectivelyVisible.ShouldBeTrue("a click on the swatch should open the flyout");
+            return display.ColorPicker;
+        }
+
+        CompactColorPicker picker = OpenPicker();
+
+        // The square's right edge is full saturation and its top edge full value, so from the
+        // picker's starting white (hue 0) its top-right corner is pure red.
+        grid.Input.ClickAt(PointInSpectrum(grid, picker, across: 0.99, down: 0.01));
+
+        picker.Color.R.ShouldBeGreaterThan((byte)245);
+        picker.Color.G.ShouldBeLessThan((byte)10);
+        picker.Color.B.ShouldBeLessThan((byte)10);
+        ComponentSave saved = grid.ReadSaved(Component(tree, "Button"));
+        int redFromSquare = (int)VariableGridHarness.StoredValue(saved, "Label.Red")!;
+        redFromSquare.ShouldBeGreaterThan(245);
+        ((int)VariableGridHarness.StoredValue(saved, "Label.Green")!).ShouldBeLessThan(10);
+
+        tree.Undo();
+        tree.SnapshotFiles().ShouldMatch(start, "one undo should undo the pick on the square");
+        tree.Redo();
+        picker = OpenPicker();
+
+        // A third of the way along the hue bar is green (hue 120), at the square's full saturation and value.
+        Point from = PointInHueBar(grid, picker, across: 0.1);
+        Point to = PointInHueBar(grid, picker, across: 1.0 / 3);
+        grid.Input.Drag(from, to);
+
+        // The bar's thumb inset moves the hue a few degrees off 120.
+        picker.Spectrum.HsvColor.H.ShouldBe(120, tolerance: 10);
+        picker.Color.G.ShouldBeGreaterThan((byte)245);
+        picker.Color.R.ShouldBeLessThan((byte)60);
+        picker.Color.B.ShouldBeLessThan((byte)60);
+        VariableGridHarness.StoredValue(grid.ReadSaved(Component(tree, "Button")), "Label.Green").ShouldBe(picker.Color.G);
+
+        tree.Undo();
+        VariableGridHarness.StoredValue(Component(tree, "Button"), "Label.Red")
+            .ShouldBe(redFromSquare, "one undo should put back the red picked on the square");
+
+        tree.AssertOracles();
+    }
+
+    private static Point PointInSpectrum(VariableGridHarness grid, CompactColorPicker picker, double across, double down)
+    {
+        // The box is drawn as a square centered in the control; the Canvas over it takes the pointer.
+        Control square = picker.Spectrum.GetVisualDescendants().OfType<global::Avalonia.Controls.Canvas>().First();
+        Point origin = grid.Input.CenterOf(square) - new Point(square.Bounds.Width / 2, square.Bounds.Height / 2);
+        return new Point(origin.X + square.Bounds.Width * across, origin.Y + square.Bounds.Height * down);
+    }
+
+    private static Point PointInHueBar(VariableGridHarness grid, CompactColorPicker picker, double across)
+    {
+        Point center = grid.Input.CenterOf(picker.HueSlider);
+        return new Point(center.X - picker.HueSlider.Bounds.Width / 2 + picker.HueSlider.Bounds.Width * across, center.Y);
     }
 
     #endregion
