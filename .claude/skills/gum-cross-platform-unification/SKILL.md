@@ -67,6 +67,8 @@ SkiaGum, SilkNetGum and StrideGum reference `Topten.RichTextKit`. RichTextKit 0.
 
 **The Skia-family projects share one SkiaSharp version with SkiaGameRendering** (its `eng/Versions.props`). `SkiaGameRendering.Stride.D3D11` pins it exactly, and the Unity package gets its SkiaSharp from SkiaGameRendering, so a SkiaSharp bump waits for a SkiaGameRendering release on that version.
 
+**The tool stays on SkiaSharp 3, but `Gum/SvgPlugin/SkiaPlugin.csproj` links SkiaGum's `Arc.cs`, `RoundedRectangle.cs` and a few other renderables.** Those files must compile on both versions: a SkiaSharp 4-only API used in them (such as `SKPathBuilder`) needs a stand-in inside the plugin, like `Gum/SvgPlugin/SKPathBuilder.cs`. The break shows up only in the tool and Avalonia-head builds, not when building SkiaGum.
+
 ## Never Widen an Obsolete API
 
 When a member gated under `#if` carries `[Obsolete]` (or is otherwise a deprecated back-compat shim) and a *sibling* runtime exposes it on more platforms, **do not "fix the inconsistency" by widening the obsolete member to the missing platforms.** Obsolete APIs are deprecated paths we want consumers off of — adding them to a backend that never had them plants a fresh dead surface in new code. Leave the gate at its current footprint and add a code comment explaining it is intentionally not widened. Two sibling runtimes disagreeing on which platforms carry an obsolete member (e.g. one gated `#if !SKIA`, another only `#if XNALIKE`) is not itself the bug — comment both as intentional rather than widening the narrower one to match. This is the one asymmetry the boyscout/"two platforms agree, the outlier is wrong" heuristics do **not** apply to — for obsolete members, the narrower footprint wins.
