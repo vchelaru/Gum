@@ -1,4 +1,6 @@
 using Gum.Commands;
+using Gum.Logic.FileWatch;
+using Moq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -32,6 +34,7 @@ public class GumxImportServiceTests : IDisposable
     // ── fakes ─────────────────────────────────────────────────────────────
     private readonly FakeImportLogic _importLogic;
     private readonly FakeFileCommands _fileCommands = new();
+    private readonly Mock<IFileWatchIgnoreList> _fileWatch = new();
     private readonly FakeProjectState _projectState;
     private readonly GumProjectSave _gumProject;
 
@@ -51,7 +54,7 @@ public class GumxImportServiceTests : IDisposable
         _projectState  = new FakeProjectState(_projectDir, _gumProject);
         _importLogic   = new FakeImportLogic(_projectDir);
 
-        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService, new ImportVersionGate());
+        _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService, new ImportVersionGate(), _fileWatch.Object);
     }
 
     public void Dispose()
@@ -241,31 +244,85 @@ public class GumxImportServiceTests : IDisposable
         status.Differing.ShouldBeEmpty();
     }
 
-    // ── beforeProjectSave hook ────────────────────────────────────────────
+    // ── project save ──────────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task ImportAsync_ReportsWhenTheProjectCouldNotBeSaved_SoItCanBeSavedByHand(
+        bool saveSucceeds, bool expectNeedsManualSave)
+    {
+        _fileCommands.SaveSucceeds = saveSucceeds;
+        ComponentSave component = ComponentWithWidth("MyButton", 100);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        ImportResult result = await _sut.ImportAsync(
+            SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "");
+
+        result.NeedsManualSave.ShouldBe(expectNeedsManualSave);
+    }
+
+    // ── file watcher ──────────────────────────────────────────────────────
 
     [Fact]
-    public async Task ImportAsync_RunsBeforeProjectSaveHookOnceAndBeforeTheProjectIsSaved()
+    public async Task ImportAsync_MutesTheFileWatcherForEachFileItWritesDirectly()
     {
+        // A file the import writes itself would otherwise come back as an outside change.
+        StandardElementSave standard = WriteSourceStandard("Text");
+        WriteSourceBehavior("ButtonBehavior");
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(standard);
+        ImportSelections selections = new ImportSelections
+        {
+            Standards = new() { standard },
+            Behaviors = new() { new BehaviorSave { Name = "ButtonBehavior" } },
+        };
+
+        await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+
+        VerifyMuted("Standards/Text.gutx");
+        VerifyMuted("Behaviors/ButtonBehavior.behx");
+        VerifyMuted("Standards");
+        VerifyMuted("Behaviors");
+    }
+
+    private void VerifyMuted(string pathEnd) =>
+        _fileWatch.Verify(
+            watch => watch.IgnoreNextChangeUntil(It.Is<FilePath>(path => path.FullPath.Replace('\\', '/').EndsWith(pathEnd)), It.IsAny<DateTime?>()),
+            Times.AtLeastOnce);
+
+    // ── beforeImport hook ────────────────────────────────────────────
+
+    [Fact]
+    public async Task ImportAsync_RunsBeforeImportHookOnce_BeforeAnythingIsRegisteredOrSaved()
+    {
+        // A theme's prerequisites (such as the Skia shape Standards its components use) must exist
+        // before the elements that need them are imported.
         ComponentSave component = ComponentWithWidth("MyButton", 100);
         GumProjectSave source = SourceProject();
         source.Components.Add(component);
         int hookCalls = 0;
+        int registeredWhenHookRan = -1;
         int savesWhenHookRan = -1;
 
         await _sut.ImportAsync(SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "",
-            beforeProjectSave: () =>
+            beforeImport: () =>
             {
                 hookCalls++;
+                registeredWhenHookRan = _importLogic.RegisteredComponents.Count;
                 savesWhenHookRan = _fileCommands.SaveProjectCallCount;
             });
 
         hookCalls.ShouldBe(1);
+        registeredWhenHookRan.ShouldBe(0);
         savesWhenHookRan.ShouldBe(0);
+        _importLogic.RegisteredComponents.Count.ShouldBe(1);
         _fileCommands.SaveProjectCallCount.ShouldBe(1);
     }
 
     [Fact]
-    public async Task ImportAsync_DoesNotRunBeforeProjectSaveHook_WhenTheImportStopsAtAConflict()
+    public async Task ImportAsync_DoesNotRunBeforeImportHook_WhenTheImportStopsAtAConflict()
     {
         string destPath = Path.Combine(_projectDir, "Components", "MyButton.gucx");
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
@@ -277,7 +334,7 @@ public class GumxImportServiceTests : IDisposable
 
         ImportResult result = await _sut.ImportAsync(
             SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "",
-            beforeProjectSave: () => hookCalls++);
+            beforeImport: () => hookCalls++);
 
         result.ConflictingElements.ShouldNotBeEmpty();
         hookCalls.ShouldBe(0);
@@ -609,6 +666,23 @@ public class GumxImportServiceTests : IDisposable
         written.Categories.ShouldNotContain(c => c.Name == "UserCategory");
     }
 
+    [Fact]
+    public async Task ImportAsync_WritesAStandardInTheDestinationsJsonFormat_WhenTheSourceIsXml()
+    {
+        // A .gumj project only ever loads .gutj; a .gutx written for it would be silently ignored (#4710).
+        _gumProject.FullFileName = Path.Combine(_projectDir, "Test.gumj");
+        StandardElementSave standard = WriteSourceStandard("Text");
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(standard);
+
+        await _sut.ImportAsync(SelectionsForStandard(standard), source, _sourceDir, destinationSubfolder: "");
+
+        string destGutj = Path.Combine(_projectDir, "Standards", $"Text.{GumProjectSave.StandardJsonExtension}");
+        File.Exists(destGutj).ShouldBeTrue();
+        File.Exists(Path.Combine(_projectDir, "Standards", $"Text.{GumProjectSave.StandardExtension}")).ShouldBeFalse();
+        ElementReference.DeserializeElement<StandardElementSave>(destGutj, GumProjectSave.NativeVersion).Name.ShouldBe("Text");
+    }
+
     private static StandardElementSave StandardWithFontSize(string name, int fontSize) =>
         new StandardElementSave
         {
@@ -666,6 +740,27 @@ public class GumxImportServiceTests : IDisposable
         await _sut.ImportAsync(SelectionsForStandard(standard), source, _sourceDir, destinationSubfolder: "");
 
         File.Exists(Path.Combine(_projectDir, "Standards", $"{standardName}Animations.ganx")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ImportAsync_LeavesTheDestinationsStandardAnimationsAlone_WhenToldNotToReplaceThem()
+    {
+        // Add Forms replaces the project's Standards but has never touched their animations.
+        string standardName = "Text";
+        StandardElementSave standard = WriteSourceStandard(standardName);
+        WriteAnimationSidecar(_sourceDir, "Standards", standardName, isJsonFormat: false,
+            new AnimationSave { Name = "FromSource" });
+        WriteAnimationSidecar(_projectDir, "Standards", standardName, isJsonFormat: false,
+            new AnimationSave { Name = "Mine" });
+        GumProjectSave source = SourceProject();
+        source.StandardElements.Add(standard);
+
+        await _sut.ImportAsync(SelectionsForStandard(standard), source, _sourceDir, destinationSubfolder: "",
+            replaceStandardAnimations: false);
+
+        ElementAnimationsSave.Load(Path.Combine(_projectDir, "Standards", $"{standardName}Animations.ganx"))
+            .Animations.Select(a => a.Name).ShouldBe(new[] { "Mine" });
+        File.Exists(Path.Combine(_projectDir, "Standards", $"{standardName}.{GumProjectSave.StandardExtension}")).ShouldBeTrue();
     }
 
     [Fact]
@@ -1480,10 +1575,12 @@ public class GumxImportServiceTests : IDisposable
 
         public int SaveProjectCallCount { get; private set; }
 
+        public bool SaveSucceeds { get; set; }
+
         public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
         {
             SaveProjectCallCount++;
-            return false;
+            return SaveSucceeds;
         }
         public Task LoadProjectAsync(string fileName) => Task.CompletedTask;
         public void DeleteDirectory(FilePath filePath) { }

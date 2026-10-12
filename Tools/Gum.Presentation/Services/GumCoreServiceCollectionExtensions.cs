@@ -111,6 +111,9 @@ public static class GumCoreServiceCollectionExtensions
         // imports the default theme without going through the plugin's Add Forms dialog.
         services.AddSingleton<IFormsFileService, FormsFileService>();
         services.AddSingleton<IImportVersionGate, ImportVersionGate>();
+        services.AddSingleton<IGumxSourceService, GumxSourceService>();
+        services.AddSingleton<ImportFromGumxPlugin.Services.IGumxDependencyResolver, ImportFromGumxPlugin.Services.GumxDependencyResolver>();
+        services.AddSingleton<ImportFromGumxPlugin.Services.IGumxImportService, ImportFromGumxPlugin.Services.GumxImportService>();
         services.AddSingleton<ImportFromGumxPlugin.IImportFromGumxLogic, ImportFromGumxPlugin.ImportFromGumxLogic>();
         services.AddSingleton<ImportFromGumxPlugin.IImportFromGumxDialog, ImportFromGumxPlugin.ImportFromGumxDialog>();
         services.AddSingleton<IFormsThemeImporter, FormsThemeImporter>();

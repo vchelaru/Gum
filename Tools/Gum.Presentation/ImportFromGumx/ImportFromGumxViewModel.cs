@@ -280,10 +280,10 @@ public class ImportFromGumxViewModel : DialogViewModel
         try
         {
             var selections = BuildSelections();
-            Action? beforeProjectSave = FixedSource?.BeforeProjectSave;
+            Action? beforeImport = FixedSource?.BeforeImport;
             var result = await _importService.ImportAsync(
                 selections, _sourceProject, _sourceBase, DestinationSubfolder,
-                beforeProjectSave: beforeProjectSave);
+                beforeImport: beforeImport);
 
             if (result.VersionRejection != null)
             {
@@ -307,7 +307,7 @@ public class ImportFromGumxViewModel : DialogViewModel
 
                 result = await _importService.ImportAsync(
                     selections, _sourceProject, _sourceBase, DestinationSubfolder, resolution.Value,
-                    beforeProjectSave);
+                    beforeImport);
             }
 
             _isImportComplete = true;

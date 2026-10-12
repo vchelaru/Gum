@@ -51,6 +51,31 @@ public class GumxDependencyResolverTests
         result.DifferingStandardUsers.Values.Single().ShouldBe(new[] { "Button", "Label" });
     }
 
+    [Fact]
+    public void SortLeavesFirst_PutsBaseTypesInstancesAndReferencedComponentsBeforeTheOnesThatUseThem()
+    {
+        GumProjectSave source = new GumProjectSave();
+        ComponentSave panel = AddComponent(source, "Panel");
+        ComponentSave list = AddComponent(source, "List");
+        ComponentSave fancyList = AddComponent(source, "FancyList");
+        fancyList.BaseType = "List";
+        ComponentSave label = AddComponent(source, "Label");
+        panel.Instances.Add(new InstanceSave { Name = "Items", BaseType = "FancyList", ParentContainer = panel });
+        list.Instances.Add(new InstanceSave { Name = "Caption", BaseType = "Label", ParentContainer = list });
+        ComponentSave styles = AddComponent(source, "Styles");
+        AddReferences(label, "VariableReferences", "Width = Components/Styles.Width");
+
+        IReadOnlyList<ComponentSave> sorted = new GumxDependencyResolver().SortLeavesFirst(
+            new List<ComponentSave> { panel, fancyList, list, label, styles }, source);
+
+        List<string> names = sorted.Select(component => component.Name).ToList();
+        names.Count.ShouldBe(5);
+        names.IndexOf("Styles").ShouldBeLessThan(names.IndexOf("Label"));
+        names.IndexOf("Label").ShouldBeLessThan(names.IndexOf("List"));
+        names.IndexOf("List").ShouldBeLessThan(names.IndexOf("FancyList"));
+        names.IndexOf("FancyList").ShouldBeLessThan(names.IndexOf("Panel"));
+    }
+
     private static StandardElementSave AddStandard(GumProjectSave project, string name)
     {
         StandardElementSave standard = new StandardElementSave { Name = name };

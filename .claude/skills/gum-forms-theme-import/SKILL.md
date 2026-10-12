@@ -68,7 +68,8 @@ testing after the fact. Sequence a new theme port like this:
 
 | File | Role |
 |------|------|
-| `Tools/Gum.Presentation/GumForms/Services/FormsFileService.cs` | `GetAvailableThemes`, `GetThemeDirectory`, `GetSourceDestinations` — computes what gets copied where |
+| `Tools/Gum.Presentation/GumForms/Services/FormsThemeImporter.cs` | Imports a theme through the shared `GumxImportService` (the Import from .gumx pipeline). Only Forms-specific steps live here: prerequisites, which Standards a theme may touch, the demo screen, font license files, the conflict choice that opens the Import dialog (`gum-tool-import-from-gumx`) |
+| `Tools/Gum.Presentation/GumForms/Services/FormsFileService.cs` | `GetAvailableThemes`, `GetThemeDirectory`, `GetFormsGumxPath`; `GetSourceDestinations` is now used only by the Standards overwrite confirmation |
 | `Tools/Gum.Presentation/GumForms/ViewModels/AddFormsViewModel.cs` | Add Forms dialog: theme selection, save/import |
 | `Tools/Gum.Presentation/GumForms/Services/ThemeRequirements.cs` | Project-level prerequisites, not content: optional `theme.txt` (font generator, Skia shapes) plus the theme `.gumx`'s `FontRanges`, which import merges into the user's project so glyphs like the check mark (U+2713) get generated |
 | `Gum/GumFormsPlugin/GumFormsPlugin.csproj` | Postbuild `<Exec>` stages each theme into the built `Content/FormsThemes/<Name>/` — **one hand-written `xcopy` + `stage-forms-behaviors` block per theme, not a loop over the folder.** A new theme is invisible to `FormsFileService.GetAvailableThemes()` in a built tool until its own block is added here, mirroring the existing per-theme blocks exactly. |
@@ -89,13 +90,14 @@ reference surface: `.gumx` `ComponentReference`/`ScreenReference` `Name` attribu
 (`Components/Styles.X` → `Components/Bubblegum/Styles.X`), and a `.behx`'s
 `<DefaultImplementation>` (points at a themed *component*, so it gets the prefix even though the
 behavior file itself doesn't — see below). `StandardElementReference` and `BehaviorReference` stay
-unprefixed. Without this, importing a second theme into the same project silently overwrites the
-first theme's entire Components/Screens tree (`GetSourceDestinations` maps every theme file to an
-identical unnamespaced destination with `overwrite: true`).
+unprefixed. Without this, every element of a second theme imported into the same project would
+share a name with the first theme's, so each one counts as a conflict.
 
-**Add Forms copies every file in the theme folder.** A theme component must be listed in its
-`.gumx`, or check, codegen and the tool never see it (enforced by `FormsThemesTemplateTests`).
-A rename pass built only from the `.gumx`'s reference list misses any orphan file, leaving a stale un-prefixed `<Name>` that
+**Add Forms imports what the theme's `.gumx` lists, nothing else.** A theme component missing from
+its `.gumx` is never imported, and check, codegen and the tool never see it (enforced by
+`FormsThemesTemplateTests`). Files no element references are not copied either, except the license
+text beside the bundled fonts (`Fonts/*.txt`), which `FormsThemeImporter` copies itself. A rename pass built only from the `.gumx`'s
+reference list misses any orphan file, leaving a stale un-prefixed `<Name>` that
 duplicates or collides with the correctly-renamed content. Verify by scanning physical files
 directly (`Directory.GetFiles(..., SearchOption.AllDirectories)`), not `project.AllElements`, which
 only reflects what's registered.
@@ -115,7 +117,8 @@ guarantee the copies actually stay identical as Forms controls gain new properti
 
 ## Standard elements: only the default theme may touch them
 
-`GetSourceDestinations` skips `.gutx` files for any theme except `DefaultThemeName` ("Standard") —
+`FormsThemeImporter` selects Standards only for the theme named `DefaultThemeName` ("Standard"), and
+the dialog opened by "Pick what to import" hides them for every other theme —
 a theme's own styling must live entirely in its Components, never in shared Standards, or
 importing it stomps the destination project's real defaults (and any other theme already
 imported). A theme's `Standards/` folder still needs to exist on disk with real content, though —
@@ -213,6 +216,13 @@ style must point `Font` at the bold-weight file directly (`"Fonts/SairaCondensed
 `Styles.Normal.Font`/`Styles.Strong.Font` — then grep the whole theme for the bare family-name
 string, since a demo screen's own `Text` instances can hardcode `Font` directly instead of routing
 through `Styles`, and a hardcoded value has no reference for the reapply pass to cascade into.
+
+## The staged theme is a standalone project
+
+Staging (`FormsThemeBehaviorStagingService`) copies each behavior into the staged theme's `Behaviors/`
+and drops the `SourcePath` from the staged `GumProject.gumx`'s behavior references. That is what lets
+Add Forms and Import from .gumx load a staged theme as a normal source; a `SourcePath` into the
+repo's `FormsBehaviors` would dangle there and the import would skip those behaviors without a message.
 
 ## Verifying theme content changes
 

@@ -37,7 +37,7 @@ public class ImportFromGumxFixedSourceScreenshotTests
         string themeProject = Path.Combine(AppContext.BaseDirectory, "Content", "FormsThemes", "Neon", "GumProject.gumx");
 
         Task load = viewModel.UseFixedSourceAsync(
-            new FixedImportSource(themeProject, "Add Forms: Neon", IncludeStandards: false, BeforeProjectSave: null));
+            new FixedImportSource(themeProject, "Add Forms: Neon", IncludeStandards: false, BeforeImport: null));
         DateTime giveUp = DateTime.UtcNow.AddSeconds(30);
         while (!load.IsCompleted && DateTime.UtcNow < giveUp)
         {
@@ -66,6 +66,7 @@ public class ImportFromGumxFixedSourceScreenshotTests
             string sourceBase,
             string destinationSubfolder,
             ConflictResolution conflictResolution = ConflictResolution.Cancel,
-            Action? beforeProjectSave = null) => Task.FromResult(new ImportResult());
+            Action? beforeImport = null,
+            bool replaceStandardAnimations = true) => Task.FromResult(new ImportResult());
     }
 }

@@ -25,7 +25,7 @@ public class ImportFromGumxLogicTests
     public ImportFromGumxLogicTests()
     {
         _logic = new ImportFromGumxLogic(
-            _projectState.Object, _importLogic.Object, _fileCommands.Object, _dialogService.Object, _dispatcher.Object);
+            _projectState.Object, _importLogic.Object, _fileCommands.Object, _dialogService.Object, _dispatcher.Object, new Mock<Gum.Logic.FileWatch.IFileWatchIgnoreList>().Object);
     }
 
     [Fact]

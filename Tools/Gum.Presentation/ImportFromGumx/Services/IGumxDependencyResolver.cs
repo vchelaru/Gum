@@ -64,4 +64,10 @@ public interface IGumxDependencyResolver
         IList<ElementSave> directSelected,
         GumProjectSave source,
         GumProjectSave destination);
+
+    /// <summary>
+    /// Orders <paramref name="components"/> so each comes after its base type, the components its
+    /// instances use, and the components its variable references read from (safe import order).
+    /// </summary>
+    IReadOnlyList<ComponentSave> SortLeavesFirst(IEnumerable<ComponentSave> components, GumProjectSave source);
 }
