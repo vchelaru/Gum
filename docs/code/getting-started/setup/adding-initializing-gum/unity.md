@@ -91,9 +91,7 @@ Gum draws on the GPU through SkiaGameRendering on every graphics API it supports
 
 ## IL2CPP
 
-If you build with IL2CPP, add both of these to your project:
-
-* An `Assets/link.xml` file that keeps `netstandard`:
+If you build with IL2CPP, add an `Assets/link.xml` file to your project that keeps `netstandard`:
 
 ```xml
 <linker>
@@ -101,6 +99,4 @@ If you build with IL2CPP, add both of these to your project:
 </linker>
 ```
 
-* A **Managed Stripping Level** of at least **Low** in **Player Settings**.
-
-The `Samples/UnityGum` project in the Gum repository has both.
+The `Samples/UnityGum` project in the Gum repository has one.
