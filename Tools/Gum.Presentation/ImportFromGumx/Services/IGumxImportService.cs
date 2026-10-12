@@ -15,6 +15,8 @@ public class ImportResult
     public List<string> SkippedElements { get; } = new();
     /// <summary>Elements whose destination files already exist. When non-empty the import was cancelled.</summary>
     public List<string> ConflictingElements { get; } = new();
+    /// <summary>Why the import was refused because the source project is newer than the destination; null when it was not.</summary>
+    public string? VersionRejection { get; set; }
 }
 
 /// <summary>

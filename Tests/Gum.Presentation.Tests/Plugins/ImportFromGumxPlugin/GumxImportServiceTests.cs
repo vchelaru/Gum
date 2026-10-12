@@ -523,6 +523,40 @@ public class GumxImportServiceTests : IDisposable
             .Animations.Single().Name.ShouldBe("Original");
     }
 
+    // ── version gate (#5977) ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task ImportAsync_SourceNewerThanDestination_RejectsAndWritesNothing()
+    {
+        _gumProject.Version = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion;
+        StandardElementSave sprite = WriteSourceStandard("Sprite");
+        sprite.States[0].Variables.Add(new VariableSave { Name = "ColorOperation", Type = "ColorOperation", Value = "Modulate", SetsValue = true });
+        GumProjectSave source = SourceProject();
+        source.Version = (int)GumProjectSave.GumxVersions.ColorOperationExpansion;
+        source.StandardElements.Add(sprite);
+
+        ImportResult result = await _sut.ImportAsync(SelectionsForStandard(sprite), source, _sourceDir, destinationSubfolder: "");
+
+        result.VersionRejection.ShouldNotBeNull();
+        File.Exists(Path.Combine(_projectDir, "Standards", $"Sprite.{GumProjectSave.StandardExtension}")).ShouldBeFalse();
+        _gumProject.Version.ShouldBe((int)GumProjectSave.GumxVersions.ShapeVariableExpansion);
+    }
+
+    [Fact]
+    public async Task ImportAsync_SourceOlderThanDestination_Imports()
+    {
+        _gumProject.Version = (int)GumProjectSave.GumxVersions.ColorOperationExpansion;
+        StandardElementSave sprite = WriteSourceStandard("Sprite");
+        GumProjectSave source = SourceProject();
+        source.Version = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion;
+        source.StandardElements.Add(sprite);
+
+        ImportResult result = await _sut.ImportAsync(SelectionsForStandard(sprite), source, _sourceDir, destinationSubfolder: "");
+
+        result.VersionRejection.ShouldBeNull();
+        File.Exists(Path.Combine(_projectDir, "Standards", $"Sprite.{GumProjectSave.StandardExtension}")).ShouldBeTrue();
+    }
+
     private StandardElementSave WriteSourceStandard(string name)
     {
         string file = Path.Combine(_sourceDir, "Standards", $"{name}.{GumProjectSave.StandardExtension}");
