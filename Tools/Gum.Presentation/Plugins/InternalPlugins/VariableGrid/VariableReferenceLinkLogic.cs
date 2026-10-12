@@ -72,7 +72,7 @@ public class VariableReferenceLinkLogic : IVariableReferenceLinkLogic
             return null;
         }
 
-        return new DetailTextLink("Unlink", () =>
+        return new DetailTextLink("Unlink", IconName: "Delete", ToolTip: "Unlink (keeps the value)", Navigate: () =>
         {
             int index = FindLine();
             if (index < 0)

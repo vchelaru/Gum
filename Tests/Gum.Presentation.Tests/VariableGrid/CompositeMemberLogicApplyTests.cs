@@ -171,9 +171,11 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         _logic.Apply(categories, component, instance: null);
         CompositeInstanceMember composite = (CompositeInstanceMember)category.Members.Single();
 
-        composite.DetailText.ShouldContain("Red: Set by A.Red");
-        composite.DetailText.ShouldContain("Green: Set by A.Green");
-        composite.DetailText.ShouldContain("Blue: Set by A.Blue");
+        string? detailText = composite.DetailText;
+        detailText.ShouldNotBeNull();
+        detailText.ShouldContain("Red: Set by A.Red");
+        detailText.ShouldContain("Green: Set by A.Green");
+        detailText.ShouldContain("Blue: Set by A.Blue");
     }
 
     private static InstanceMember DisabledChannel(string name, string detailText)

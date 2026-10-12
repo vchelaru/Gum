@@ -4,6 +4,7 @@ using Avalonia.Input;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Services;
+using Gum.Avalonia.Themes;
 using Gum.Input;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.VariableGrid;
@@ -26,6 +27,9 @@ public class AvaloniaVariableGridHead : IVariableGridHead
         _referenceHandlers = new ConditionalWeakTable<StringListTextBoxDisplay, EventHandler<KeyEventArgs>>();
         Displayers = DataUiGrid.CreateStandardRegistry();
         RegisterDisplayers(Displayers);
+        // The same icon the category remove button uses.
+        DataUiDisplayBase.DetailIconFactory = name =>
+            name == "Delete" ? GumFluentIcons.Create(FluentIcons.Common.Icon.Delete, 12) : null;
     }
 
     /// <summary>The displayers the Variables tab's grids use.</summary>

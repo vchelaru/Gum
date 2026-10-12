@@ -132,10 +132,20 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
 
     private static readonly Cursor HandCursor = new Cursor(StandardCursorType.Hand);
 
-    /// <summary>Where a link sits inside a hint's displayed text.</summary>
-    private sealed record HintLink(int Start, int Length, DetailTextLink Link);
+    /// <summary>
+    /// Draws the icon a <see cref="DetailTextLink.IconName"/> names (such as <c>Delete</c>), or returns null
+    /// for a name it does not know, in which case the link's text is shown. The head sets this, since the
+    /// icons belong to the tool and this library has no icon set of its own.
+    /// </summary>
+    public static Func<string, Control?>? DetailIconFactory { get; set; }
+
+    /// <summary>Where a link sits inside a hint's displayed text; <paramref name="Icon"/> replaces its text when set.</summary>
+    private sealed record HintLink(int Start, int Length, DetailTextLink Link, Control? Icon = null);
 
     private const string ActionSeparator = " · ";
+
+    // An inline control takes one position in the text layout, like this placeholder character.
+    private const string InlineControlPlaceholder = "￼";
 
     private TextBlock? _linkHint;
     private List<HintLink> _hintLinks = new List<HintLink>();
@@ -153,14 +163,18 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         }
 
         TextHitTestResult hit = _linkHint.TextLayout.HitTestPoint(e.GetPosition(_linkHint));
+        // The character hit, not TextPosition: TextPosition counts the trailing half of a character as the next one.
+        int index = hit.CharacterHit.FirstCharacterIndex;
         return hit.IsInside
-            ? _hintLinks.FirstOrDefault(span => hit.TextPosition >= span.Start && hit.TextPosition < span.Start + span.Length)
+            ? _hintLinks.FirstOrDefault(span => index >= span.Start && index < span.Start + span.Length)
             : null;
     }
 
     private void HandleHintPointerMoved(object? sender, PointerEventArgs e)
     {
-        Cursor = GetLinkUnder(e) != null ? HandCursor : null;
+        HintLink? span = GetLinkUnder(e);
+        Cursor = span != null ? HandCursor : null;
+        ToolTip.SetTip(this, span?.Link.ToolTip);
     }
 
     private void HandleHintPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -198,8 +212,10 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             {
                 int firstLineEnd = detailText.IndexOf('\n');
                 firstLineEnd = firstLineEnd < 0 ? detailText.Length : firstLineEnd;
-                displayed = detailText.Insert(firstLineEnd, ActionSeparator + action.Text);
-                links.Add(new HintLink(firstLineEnd + ActionSeparator.Length, action.Text.Length, action));
+                Control? icon = action.IconName == null ? null : DetailIconFactory?.Invoke(action.IconName);
+                string actionText = icon != null ? InlineControlPlaceholder : action.Text;
+                displayed = detailText.Insert(firstLineEnd, ActionSeparator + actionText);
+                links.Add(new HintLink(firstLineEnd + ActionSeparator.Length, actionText.Length, action, icon));
             }
 
             DetailTextLink? source = InstanceMember?.DetailLink;
@@ -217,6 +233,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         {
             _linkHint = null;
             Cursor = null;
+            ToolTip.SetTip(this, null);
             hint.Text = displayed;
         }
         else
@@ -227,9 +244,16 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
             foreach (HintLink span in links)
             {
                 hint.Inlines.Add(new Run(displayed!.Substring(position, span.Start - position)));
-                Run linkRun = new Run(span.Link.Text) { TextDecorations = TextDecorations.Underline };
-                linkRun.Bind(TextElement.ForegroundProperty, hint.GetResourceObservable("Frb.Brushes.Link"));
-                hint.Inlines.Add(linkRun);
+                if (span.Icon != null)
+                {
+                    hint.Inlines.Add(new InlineUIContainer(span.Icon));
+                }
+                else
+                {
+                    Run linkRun = new Run(span.Link.Text) { TextDecorations = TextDecorations.Underline };
+                    linkRun.Bind(TextElement.ForegroundProperty, hint.GetResourceObservable("Frb.Brushes.Link"));
+                    hint.Inlines.Add(linkRun);
+                }
                 position = span.Start + span.Length;
             }
             hint.Inlines.Add(new Run(displayed!.Substring(position)));

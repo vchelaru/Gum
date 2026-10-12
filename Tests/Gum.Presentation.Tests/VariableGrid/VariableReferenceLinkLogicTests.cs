@@ -103,7 +103,7 @@ public class VariableReferenceLinkLogicTests : BaseTestClass
         DetailTextLink? action = _sut.GetUnlinkAction("X", _leader, _button, state);
 
         action.ShouldNotBeNull();
-        action.Text.ShouldBe("Unlink");
+        action.IconName.ShouldBe("Delete");
         action.Navigate();
         List<string> lines = ((VariableListSave<string>)state.VariableLists[0]).Value;
         lines.ShouldBe(new[] { "//X = Other.X", "Y = Other.Y" });

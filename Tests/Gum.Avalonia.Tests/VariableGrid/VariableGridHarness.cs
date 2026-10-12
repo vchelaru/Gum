@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Headless;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -189,18 +190,34 @@ internal sealed class VariableGridHarness : IDisposable
     {
         DetailTextLink link = Member(memberName).DetailLink
             ?? throw new InvalidOperationException($"The {memberName} row has no detail link.");
-        ClickHintText(memberName, link.Text);
+        _driver.ClickAt(HintTextPoint(memberName, link.Text));
     }
 
     /// <summary>Clicks the action (such as Unlink) shown after <paramref name="memberName"/>'s detail text.</summary>
-    public void ClickDetailAction(string memberName)
+    public void ClickDetailAction(string memberName) => _driver.ClickAt(DetailActionPoint(memberName));
+
+    /// <summary>Moves the pointer over the action shown after <paramref name="memberName"/>'s detail text.</summary>
+    public void HoverDetailAction(string memberName) => _driver.Hover(DetailActionPoint(memberName));
+
+    /// <summary>The window point at the middle of the action's icon, or of its text when it has no icon.</summary>
+    private Point DetailActionPoint(string memberName)
     {
         DetailTextLink action = Member(memberName).DetailAction
             ?? throw new InvalidOperationException($"The {memberName} row has no detail action.");
-        ClickHintText(memberName, action.Text);
+        TextBlock? iconHint = Row(memberName).GetVisualDescendants().OfType<TextBlock>()
+            .FirstOrDefault(text => text.IsVisible && text.Inlines?.OfType<InlineUIContainer>().Any() == true);
+        if (iconHint == null)
+        {
+            return HintTextPoint(memberName, action.Text);
+        }
+
+        iconHint.BringIntoView();
+        Control icon = iconHint.Inlines!.OfType<InlineUIContainer>().First().Child
+            ?? throw new InvalidOperationException("The action's icon is missing.");
+        return _driver.CenterOf(icon);
     }
 
-    private void ClickHintText(string memberName, string textToClick)
+    private Point HintTextPoint(string memberName, string textToClick)
     {
         // A hint with a link is built from inlines, so its text is the runs joined.
         static string TextOf(TextBlock text) => text.Inlines is { Count: > 0 }
@@ -213,9 +230,8 @@ internal sealed class VariableGridHarness : IDisposable
 
         int start = TextOf(hint).IndexOf(textToClick, StringComparison.Ordinal);
         Rect middle = hint.TextLayout.HitTestTextPosition(start + textToClick.Length / 2);
-        Point point = hint.TranslatePoint(middle.Center, _driver.Window)
+        return hint.TranslatePoint(middle.Center, _driver.Window)
             ?? throw new InvalidOperationException("The detail text is not in the window.");
-        _driver.ClickAt(point);
     }
 
     /// <summary>The editor of <paramref name="memberName"/>'s row, as <typeparamref name="T"/>.</summary>

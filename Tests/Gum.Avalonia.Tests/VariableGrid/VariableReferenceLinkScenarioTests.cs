@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -50,6 +51,9 @@ public class VariableReferenceLinkScenarioTests
         grid.Select(follower);
         grid.TypeLinesAndApply("VariableReferences", "X = Leader.X");
         grid.Member("X").DetailAction.ShouldNotBeNull();
+
+        grid.HoverDetailAction("X");
+        ToolTip.GetTip(grid.Row("X").Displayer!).ShouldBe("Unlink (keeps the value)");
 
         grid.ClickDetailAction("X");
 
