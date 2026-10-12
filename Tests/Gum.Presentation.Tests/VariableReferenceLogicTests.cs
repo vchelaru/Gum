@@ -127,6 +127,23 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList.Value[0].ShouldBe("Color = Background.Color");
     }
 
+    [Theory]
+    [InlineData("//X = Leader.X")]
+    [InlineData("// note about the row")]
+    [InlineData("  //Leader.X")]
+    public void ReactIfChangedMemberIsVariableReference_CommentedLine_IsLeftUntouched(string line)
+    {
+        // A commented line must never be expanded as shorthand ("Leader.X" -> "X = Leader.X"), or
+        // commenting a reference out would turn it into a broken assignment.
+        (StateSave defaultState, VariableListSave<string> varList) =
+            BuildOwnerWithChannelsAndReference(line, "Red", "Green", "Blue");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
+
+        varList.Value.ShouldBe(new[] { line });
+    }
+
     [Fact]
     public void ReactIfChangedMemberIsVariableReference_FillColorAssignment_StaysCollapsed()
     {

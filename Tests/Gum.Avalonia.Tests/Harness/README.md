@@ -18,7 +18,7 @@ depend on the tab.
 
 ## PR screenshots
 
-A tool UI PR gets a before/after table from screenshot tests. `PrScreenshot.cs` shows a dialog view
+A tool UI change gets before/after PNGs from screenshot tests, shown to the reviewer in chat, not in the PR body. `PrScreenshot.cs` shows a dialog view
 model in the head's `DialogWindow` (`ShowDialog`) or any control in a plain window (`Show`), with an
 optional light or dark theme; the returned `ScreenshotWindow` pumps frames, finds and clicks
 controls, hovers one for its tooltip (`HoverForToolTip`, a real-time wait), and saves a PNG.
@@ -38,20 +38,29 @@ public class ManagePluginsScreenshotTests
 }
 ```
 
+Take every screenshot at 100%, zoomed in and zoomed out. The tool zooms by changing the base font size (default 12), so anything sized in fixed pixels (an icon, a margin) does not follow the text and an alignment that is right at 100% can break at 9 or 24. Call `PrScreenshot.SaveWindowAtZoomLevels(window, name)` instead of `SaveWindow`: it saves `name-zoom-9.png`, `-12`, `-16` and `-24` (`PrScreenshot.ZoomLevels`) and restores the zoom; `ReferenceSubtextScreenshotTests` is the example. Look at the smallest and largest. The `--exit-after --screenshot` launch shows only the user's current zoom.
+
 `PrScreenshot.Run` skips the test unless `GUM_SCREENSHOT_DIR` names an output folder, so CI and
 `Tools/verify.ps1` report it as skipped. A save fails when the window shows the user's profile
-folder or user name in a path; feed the view made-up paths. Then:
+folder or user name in a path; feed the view made-up paths.
+
+**Take the "before" first.** Write the screenshot test before the first source edit, run it with
+`GUM_SCREENSHOT_DIR` pointing at a scratch folder, and keep those PNGs as the "before". After the
+change, run the same test into a second folder for the "after". Nothing has to compile against
+`main`, so the test may use any API in the branch. A brand-new UI has no "before".
+
+If the source was already edited when you remembered the "before", render both sides with:
 
 ```
-pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests [-DryRun]
+pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests -DryRun
 ```
 
 It renders the tests here (after) and in a reused sibling worktree at `origin/main` (before, `-Base`
 to change, `-NoBefore` for new UI), copying the screenshot tests into it, so they must compile
-against the base. It uploads the PNGs to the `pr-screenshots` branch under `pr-<num>/` and writes
-the table into the PR body between `pr-screenshots` markers, replacing it on a rerun. `-DryRun`
-leaves the PNGs and the proposed body in `%TEMP%\gum-pr-screenshots\pr-<num>\` and changes nothing
-on GitHub.
+against the base. Always pass `-DryRun`: it leaves the PNGs in `%TEMP%\gum-pr-screenshots\pr-<num>\{before,after}`
+and changes nothing on GitHub. Without it the script uploads the PNGs to the `pr-screenshots` branch
+and writes a table into the PR body, which is not how screenshots are shared here. Send the PNGs to
+the user in chat instead.
 
 ## App-wide window wiring
 

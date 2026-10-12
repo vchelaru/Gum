@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Headless;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -181,6 +183,56 @@ internal sealed class VariableGridHarness : IDisposable
         InstanceMember member = Member(memberName);
         return Grid.LiveContainers.FirstOrDefault(row => row.Member == member)
             ?? throw new InvalidOperationException($"The {memberName} row has no live editor.");
+    }
+
+    /// <summary>Clicks the source link in <paramref name="memberName"/>'s detail text, at the middle of the link's own text.</summary>
+    public void ClickDetailLink(string memberName)
+    {
+        DetailTextLink link = Member(memberName).DetailLink
+            ?? throw new InvalidOperationException($"The {memberName} row has no detail link.");
+        _driver.ClickAt(HintTextPoint(memberName, link.Text));
+    }
+
+    /// <summary>Clicks the action (such as Unlink) shown after <paramref name="memberName"/>'s detail text.</summary>
+    public void ClickDetailAction(string memberName) => _driver.ClickAt(DetailActionPoint(memberName));
+
+    /// <summary>Moves the pointer over the action shown after <paramref name="memberName"/>'s detail text.</summary>
+    public void HoverDetailAction(string memberName) => _driver.Hover(DetailActionPoint(memberName));
+
+    /// <summary>The window point at the middle of the action's icon, or of its text when it has no icon.</summary>
+    private Point DetailActionPoint(string memberName)
+    {
+        DetailTextLink action = Member(memberName).DetailAction
+            ?? throw new InvalidOperationException($"The {memberName} row has no detail action.");
+        TextBlock? iconHint = Row(memberName).GetVisualDescendants().OfType<TextBlock>()
+            .FirstOrDefault(text => text.IsVisible && text.Inlines?.OfType<InlineUIContainer>().Any() == true);
+        if (iconHint == null)
+        {
+            return HintTextPoint(memberName, action.Text);
+        }
+
+        iconHint.BringIntoView();
+        Control icon = iconHint.Inlines!.OfType<InlineUIContainer>().First().Child
+            ?? throw new InvalidOperationException("The action's icon is missing.");
+        icon.BringIntoView();
+        return _driver.CenterOf(icon);
+    }
+
+    private Point HintTextPoint(string memberName, string textToClick)
+    {
+        // A hint with a link is built from inlines, so its text is the runs joined.
+        static string TextOf(TextBlock text) => text.Inlines is { Count: > 0 }
+            ? string.Concat(text.Inlines.OfType<global::Avalonia.Controls.Documents.Run>().Select(run => run.Text))
+            : text.Text ?? "";
+        TextBlock hint = Row(memberName).GetVisualDescendants().OfType<TextBlock>()
+            .First(text => text.IsVisible && TextOf(text).Contains(textToClick));
+        hint.BringIntoView();
+        _driver.Layout();
+
+        int start = TextOf(hint).IndexOf(textToClick, StringComparison.Ordinal);
+        Rect middle = hint.TextLayout.HitTestTextPosition(start + textToClick.Length / 2);
+        return hint.TranslatePoint(middle.Center, _driver.Window)
+            ?? throw new InvalidOperationException("The detail text is not in the window.");
     }
 
     /// <summary>The editor of <paramref name="memberName"/>'s row, as <typeparamref name="T"/>.</summary>

@@ -386,6 +386,39 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        DetailTextLink? detailLink;
+        /// <summary>The part of <see cref="DetailText"/> shown as a clickable link, or null.</summary>
+        public DetailTextLink? DetailLink
+        {
+            get => detailLink;
+            set
+            {
+                if (detailLink != value)
+                {
+                    detailLink = value;
+                    OnPropertyChanged(nameof(DetailLink));
+                }
+            }
+        }
+
+        DetailTextLink? detailAction;
+        /// <summary>
+        /// An action shown as a link at the end of the first line of <see cref="DetailText"/> (for example
+        /// "Unlink"), or null. Its <see cref="DetailTextLink.Text"/> is added to the text by the view.
+        /// </summary>
+        public DetailTextLink? DetailAction
+        {
+            get => detailAction;
+            set
+            {
+                if (detailAction != value)
+                {
+                    detailAction = value;
+                    OnPropertyChanged(nameof(DetailAction));
+                }
+            }
+        }
+
         string? toolTipText;
         public string? ToolTipText
         {

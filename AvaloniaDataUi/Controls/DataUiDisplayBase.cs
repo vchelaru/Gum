@@ -1,9 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Avalonia.Styling;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -28,6 +33,8 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         Background = Brushes.Transparent;
         DataUiContextMenus.Attach(this, this);
         Styles.Add(new Style(x => x.OfType<TextBox>()) { Setters = { new Setter(ContextFlyoutProperty, null) } });
+        AddHandler(PointerMovedEvent, HandleHintPointerMoved);
+        AddHandler(PointerPressedEvent, HandleHintPointerPressed);
     }
 
     /// <inheritdoc/>
@@ -80,7 +87,9 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     protected virtual void HandleMemberPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
-            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText))
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailAction))
         {
             Refresh();
         }
@@ -104,7 +113,10 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         }
     }
 
-    /// <summary>Creates the small wrapping text under a row that shows <see cref="InstanceMember.DetailText"/>.</summary>
+    /// <summary>
+    /// Creates the small wrapping text under a row that shows <see cref="InstanceMember.DetailText"/>,
+    /// including its <see cref="InstanceMember.DetailLink"/> as a clickable span.
+    /// </summary>
     protected static TextBlock CreateHintTextBlock()
     {
         TextBlock hint = new TextBlock
@@ -116,6 +128,91 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         };
         BindCaptionFontSize(hint);
         return hint;
+    }
+
+    private static readonly Cursor HandCursor = new Cursor(StandardCursorType.Hand);
+
+    /// <summary>
+    /// Draws the icon a <see cref="DetailTextLink.IconName"/> names (such as <c>Delete</c>), or returns null
+    /// for a name it does not know, in which case the link's text is shown. The head sets this, since the
+    /// icons belong to the tool and this library has no icon set of its own.
+    /// </summary>
+    public static Func<string, Control?>? DetailIconFactory { get; set; }
+
+    /// <summary>
+    /// Sizes an icon placed in the hint's text to that text's font size, so it follows the tool's zoom,
+    /// and sits it a little low in its line: centered on the line it reads high against the lettering.
+    /// </summary>
+    private sealed class InlineIconHost : Decorator
+    {
+        private const double DropFraction = 0.25;
+
+        static InlineIconHost()
+        {
+            AffectsMeasure<InlineIconHost>(TextElement.FontSizeProperty);
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            double size = TextElement.GetFontSize(this);
+            // The icon is drawn at its own size inside a Viewbox, which scales it to the text.
+            Child?.Measure(new Size(size, size));
+            return new Size(size, size * (1 + DropFraction));
+        }
+
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            double size = TextElement.GetFontSize(this);
+            Child?.Arrange(new Rect(0, size * DropFraction, size, size));
+            return finalSize;
+        }
+    }
+
+    /// <summary>Where a link sits inside a hint's displayed text; <paramref name="Icon"/> replaces its text when set.</summary>
+    private sealed record HintLink(int Start, int Length, DetailTextLink Link, Control? Icon = null);
+
+    private const string ActionSeparator = " · ";
+
+    // An inline control takes one position in the text layout, like this placeholder character.
+    private const string InlineControlPlaceholder = "￼";
+
+    private TextBlock? _linkHint;
+    private List<HintLink> _hintLinks = new List<HintLink>();
+
+    /// <summary>
+    /// The link under the pointer, if any. Clicks are handled on this control, not on the hint: a
+    /// read-only row disables its content (the hint included), and a disabled control gets no pointer
+    /// events, so they go to this enabled control.
+    /// </summary>
+    private HintLink? GetLinkUnder(PointerEventArgs e)
+    {
+        if (_linkHint == null || _hintLinks.Count == 0)
+        {
+            return null;
+        }
+
+        TextHitTestResult hit = _linkHint.TextLayout.HitTestPoint(e.GetPosition(_linkHint));
+        // The character hit, not TextPosition: TextPosition counts the trailing half of a character as the next one.
+        int index = hit.CharacterHit.FirstCharacterIndex;
+        return hit.IsInside
+            ? _hintLinks.FirstOrDefault(span => index >= span.Start && index < span.Start + span.Length)
+            : null;
+    }
+
+    private void HandleHintPointerMoved(object? sender, PointerEventArgs e)
+    {
+        HintLink? span = GetLinkUnder(e);
+        Cursor = span != null ? HandCursor : null;
+        ToolTip.SetTip(this, span?.Link.ToolTip);
+    }
+
+    private void HandleHintPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && GetLinkUnder(e) is { } span)
+        {
+            e.Handled = true;
+            span.Link.Navigate();
+        }
     }
 
     /// <summary>
@@ -133,8 +230,68 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     protected void RefreshHint(TextBlock hint)
     {
         string? detailText = InstanceMember?.DetailText;
-        hint.Text = detailText;
-        hint.IsVisible = !string.IsNullOrEmpty(detailText);
+        string? displayed = detailText;
+        List<HintLink> links = new List<HintLink>();
+
+        if (detailText != null)
+        {
+            // The action (such as Unlink) closes the first line of the text, after the source it acts on.
+            DetailTextLink? action = InstanceMember?.DetailAction;
+            if (action != null)
+            {
+                int firstLineEnd = detailText.IndexOf('\n');
+                firstLineEnd = firstLineEnd < 0 ? detailText.Length : firstLineEnd;
+                Control? icon = action.IconName == null ? null : DetailIconFactory?.Invoke(action.IconName);
+                string actionText = icon != null ? InlineControlPlaceholder : action.Text;
+                string separator = icon != null ? " " : ActionSeparator;
+                displayed = detailText.Insert(firstLineEnd, separator + actionText);
+                links.Add(new HintLink(firstLineEnd + separator.Length, actionText.Length, action, icon));
+            }
+
+            DetailTextLink? source = InstanceMember?.DetailLink;
+            int sourceStart = source == null ? -1 : displayed!.IndexOf(source.Text, StringComparison.Ordinal);
+            if (source != null && sourceStart >= 0)
+            {
+                links.Add(new HintLink(sourceStart, source.Text.Length, source));
+            }
+        }
+        links.Sort((a, b) => a.Start.CompareTo(b.Start));
+
+        hint.Inlines?.Clear();
+        _hintLinks = links;
+        if (links.Count == 0)
+        {
+            _linkHint = null;
+            Cursor = null;
+            ToolTip.SetTip(this, null);
+            hint.Text = displayed;
+        }
+        else
+        {
+            _linkHint = hint;
+            hint.Inlines ??= new InlineCollection();
+            int position = 0;
+            foreach (HintLink span in links)
+            {
+                hint.Inlines.Add(new Run(displayed!.Substring(position, span.Start - position)));
+                if (span.Icon != null)
+                {
+                    // The inline's visual parent chain does not inherit the hint's font size, so follow it explicitly.
+                    InlineIconHost iconHost = new InlineIconHost { Child = new Viewbox { Child = span.Icon } };
+                    iconHost.Bind(TextElement.FontSizeProperty, hint.GetObservable(TextBlock.FontSizeProperty));
+                    hint.Inlines.Add(new InlineUIContainer(iconHost) { BaselineAlignment = BaselineAlignment.Center });
+                }
+                else
+                {
+                    Run linkRun = new Run(span.Link.Text) { TextDecorations = TextDecorations.Underline };
+                    linkRun.Bind(TextElement.ForegroundProperty, hint.GetResourceObservable("Frb.Brushes.Link"));
+                    hint.Inlines.Add(linkRun);
+                }
+                position = span.Start + span.Length;
+            }
+            hint.Inlines.Add(new Run(displayed!.Substring(position)));
+        }
+        hint.IsVisible = !string.IsNullOrEmpty(displayed);
     }
 
 }

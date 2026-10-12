@@ -5,9 +5,11 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Presentation.Tests.VariableGrid;
 
@@ -91,11 +93,48 @@ public class ElementSaveDisplayerCompositeReferenceTests : BaseTestClass
         red.ShouldNotBeNull();
         red.IsAssignedByReference.ShouldBeTrue();
         red.IsReadOnly.ShouldBeTrue();
-        red.DetailText.ShouldBe("=Components/Styles.Primary.FillRed");
+        red.DetailText.ShouldBe("Set by Components/Styles.Primary.FillRed");
 
         var blue = members.FirstOrDefault(member => member.RootVariableName == "Blue");
         blue.ShouldNotBeNull();
         blue.IsAssignedByReference.ShouldBeTrue();
-        blue.DetailText.ShouldBe("=Components/Styles.Primary.FillBlue");
+        blue.DetailText.ShouldBe("Set by Components/Styles.Primary.FillBlue");
+    }
+
+    [Fact]
+    public void GetCategories_ShouldAttachSourceLink_WhenRowIsSetByReference()
+    {
+        InstanceSave instance = new InstanceSave
+        {
+            Name = "Background",
+            BaseType = "NineSlice",
+            ParentContainer = _screen
+        };
+        _screen.Instances.Add(instance);
+        VariableListSave<string> references = new VariableListSave<string>
+        {
+            Type = "string",
+            Name = "Background.VariableReferences"
+        };
+        references.Value.Add("Width = Other.Width");
+        _screenDefaultState.VariableLists.Add(references);
+        DetailTextLink link = new DetailTextLink("Other.Width", () => { });
+        _mocker.GetMock<IVariableReferenceLinkLogic>()
+            .Setup(x => x.GetLink("Other.Width", _screen))
+            .Returns(link);
+
+        DetailTextLink unlink = new DetailTextLink("Unlink", () => { });
+        _mocker.GetMock<IVariableReferenceLinkLogic>()
+            .Setup(x => x.GetUnlinkAction("Width", instance, _screen, _screenDefaultState))
+            .Returns(unlink);
+
+        List<VariableGridEntry> members = _displayer.GetCategories(_screen, instance, _screenDefaultState, null)
+            .SelectMany(category => category.Members)
+            .ToList();
+
+        members.First(member => member.RootVariableName == "Width").DetailLink.ShouldBe(link);
+        members.First(member => member.RootVariableName == "Width").DetailAction.ShouldBe(unlink);
+        members.First(member => member.RootVariableName == "Height").DetailLink.ShouldBeNull();
+        members.First(member => member.RootVariableName == "Height").DetailAction.ShouldBeNull();
     }
 }

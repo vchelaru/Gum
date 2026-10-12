@@ -18,6 +18,7 @@ using System.Collections;
 using Gum.Commands;
 using Gum.Reflection;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using WpfDataUi.DataTypes;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -50,6 +51,7 @@ public class ElementSaveDisplayer
         "System.Drawing.Design.UITypeEditor");
 
     private readonly SubtextLogic _subtextLogic;
+    private readonly IVariableReferenceLinkLogic _referenceLinkLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly TypeManager _typeManager;
@@ -84,7 +86,8 @@ public class ElementSaveDisplayer
         string? Subtext,
         string? DisplayName = null,
         string? ToolTipText = null,
-        Dictionary<string, object>? PropertiesToSetOnDisplayer = null);
+        Dictionary<string, object>? PropertiesToSetOnDisplayer = null,
+        string? ReferenceSource = null);
 
     #endregion
 
@@ -103,9 +106,11 @@ public class ElementSaveDisplayer
         ISetVariableLogic setVariableLogic,
         IWireframeObjectManager wireframeObjectManager,
         IClipboardService clipboardService,
-        IProjectState projectState)
+        IProjectState projectState,
+        IVariableReferenceLinkLogic referenceLinkLogic)
     {
         _subtextLogic = subtextLogic;
+        _referenceLinkLogic = referenceLinkLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _typeManager = typeManager;
@@ -212,9 +217,9 @@ public class ElementSaveDisplayer
                     if (variablesSetThroughReference.ContainsKey(variableName))
                     {
                         isReadonly = true;
-                        subtext = variablesSetThroughReference[variableName];
+                        subtext = "Set by " + variablesSetThroughReference[variableName];
                     }
-                    var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, isSetByReference, subtext, addedNames);
+                    var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, isSetByReference, subtext, addedNames, variablesSetThroughReference.GetValueOrDefault(variableName));
 
                     if(property != null)
                     {
@@ -240,9 +245,9 @@ public class ElementSaveDisplayer
                 if (isSetByReference)
                 {
                     isReadonly = true;
-                    subtext = variablesSetThroughReference[variableName];
+                    subtext = "Set by " + variablesSetThroughReference[variableName];
                 }
-                var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, isSetByReference, subtext, addedNames);
+                var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, isSetByReference, subtext, addedNames, variablesSetThroughReference.GetValueOrDefault(variableName));
 
                 if (property != null)
                 {
@@ -300,7 +305,7 @@ public class ElementSaveDisplayer
             if (isSetByReference)
             {
                 isReadonly = true;
-                subtext += "=" + variablesSetThroughReference[variableName];
+                subtext = "Set by " + variablesSetThroughReference[variableName];
             }
 
             if (instanceSave != null)
@@ -329,7 +334,7 @@ public class ElementSaveDisplayer
 
             if(!shouldSkip)
             {
-                var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, isSetByReference, subtext, addedNames);
+                var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, isSetByReference, subtext, addedNames, variablesSetThroughReference.GetValueOrDefault(variableName));
                 if(property != null)
                 {
                     propertyList.Add(property);
@@ -829,6 +834,15 @@ public class ElementSaveDisplayer
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
         SetSubtext(stateSave, propertyData.Subtext, entry, variableName);
 
+        if (propertyData.ReferenceSource != null && instanceOwner != null)
+        {
+            entry.DetailLink = _referenceLinkLogic.GetLink(propertyData.ReferenceSource, instanceOwner);
+            if (stateSave != null)
+            {
+                entry.DetailAction = _referenceLinkLogic.GetUnlinkAction(propertyData.OriginalName, instance, instanceOwner, stateSave);
+            }
+        }
+
         if(stateSave != null)
         {
             if (_subtextLogic.HasSubtextFunctionFor(stateSave, variableName))
@@ -1002,7 +1016,7 @@ public class ElementSaveDisplayer
     }
 
     private PropertyData? CreatePropertyData(ElementSave elementSave, InstanceSave? instanceSave,
-        AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string? subtext, HashSet<string> addedNames)
+        AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string? subtext, HashSet<string> addedNames, string? referenceSource = null)
     {
         ElementSave? container = elementSave;
         if (instanceSave != null)
@@ -1142,7 +1156,7 @@ public class ElementSaveDisplayer
             }
 
             return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext,
-                ToolTipText: defaultVariable.ToolTipText);
+                ToolTipText: defaultVariable.ToolTipText, ReferenceSource: referenceSource);
         }
         return null;
     }

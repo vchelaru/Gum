@@ -163,17 +163,19 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         // otherwise the swatch is disabled with no explanation of why (issue #3058).
         ComponentSave component = MakeColorComponent();
         MemberCategory category = CategoryWith(
-            DisabledChannel("Red", "=A.Red"),
-            DisabledChannel("Green", "=A.Green"),
-            DisabledChannel("Blue", "=A.Blue"));
+            DisabledChannel("Red", "Set by A.Red"),
+            DisabledChannel("Green", "Set by A.Green"),
+            DisabledChannel("Blue", "Set by A.Blue"));
         List<MemberCategory> categories = new() { category };
 
         _logic.Apply(categories, component, instance: null);
         CompositeInstanceMember composite = (CompositeInstanceMember)category.Members.Single();
 
-        composite.DetailText.ShouldContain("Red=A.Red");
-        composite.DetailText.ShouldContain("Green=A.Green");
-        composite.DetailText.ShouldContain("Blue=A.Blue");
+        string? detailText = composite.DetailText;
+        detailText.ShouldNotBeNull();
+        detailText.ShouldContain("Red: Set by A.Red");
+        detailText.ShouldContain("Green: Set by A.Green");
+        detailText.ShouldContain("Blue: Set by A.Blue");
     }
 
     private static InstanceMember DisabledChannel(string name, string detailText)

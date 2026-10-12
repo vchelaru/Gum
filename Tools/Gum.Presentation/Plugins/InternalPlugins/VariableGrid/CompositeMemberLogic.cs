@@ -172,7 +172,7 @@ public class CompositeMemberLogic
             InstanceMember channelMember = triple.ChannelMembers[i];
             if (channelMember.IsReadOnly && !string.IsNullOrEmpty(channelMember.DetailText))
             {
-                detailSegments.Add(triple.ChannelRootNames[i] + channelMember.DetailText);
+                detailSegments.Add(triple.ChannelRootNames[i] + ": " + channelMember.DetailText);
             }
         }
 

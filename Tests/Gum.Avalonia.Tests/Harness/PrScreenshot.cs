@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Styling;
 using Gum.Avalonia.Dialogs;
+using Gum.Avalonia.Shell;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -60,5 +62,38 @@ internal static class PrScreenshot
     {
         ScreenshotWindow.Pump(window);
         return ScreenshotWindow.SaveFrame(window, name);
+    }
+
+    /// <summary>
+    /// The base font sizes a screenshot covers: zoomed out, 100% (the tool's default of 12), and two
+    /// zoomed-in sizes. The tool zooms by changing the base font size.
+    /// </summary>
+    public static readonly IReadOnlyList<double> ZoomLevels = new[] { 9d, 12d, 16d, 24d };
+
+    /// <summary>
+    /// Saves <paramref name="window"/> once per <see cref="ZoomLevels"/> entry as
+    /// <paramref name="name"/>-zoom-&lt;size&gt;.png, then puts the zoom back. Anything sized in fixed
+    /// pixels (an icon, a margin) does not follow the text, so a layout right at 100% can break at the
+    /// other sizes; every tool UI screenshot goes through this rather than <see cref="SaveWindow"/> alone.
+    /// </summary>
+    public static IReadOnlyList<string> SaveWindowAtZoomLevels(Window window, string name)
+    {
+        IAppScaleProvider scale = TestAppBuilder.Services.GetRequiredService<IAppScaleProvider>();
+        double originalSize = scale.BaseFontSize;
+        using IDisposable fontSizeFollower = AppWideWindowInput.FollowBaseFontSize(window, scale);
+        List<string> paths = new List<string>();
+        try
+        {
+            foreach (double size in ZoomLevels)
+            {
+                scale.BaseFontSize = size;
+                paths.Add(SaveWindow(window, $"{name}-zoom-{size}"));
+            }
+        }
+        finally
+        {
+            scale.BaseFontSize = originalSize;
+        }
+        return paths;
     }
 }
