@@ -65,6 +65,20 @@ public class ImportTreeNodeViewModel : ViewModel
         }
     }
 
+    /// <summary>
+    /// A note shown beside the row when the project already has this item (for example that its
+    /// copy differs); null when it is new.
+    /// </summary>
+    public string? StatusNote
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
+    /// <summary>Whether <see cref="StatusNote"/> is shown.</summary>
+    [DependsOn(nameof(StatusNote))]
+    public bool IsStatusNoteVisible => !string.IsNullOrEmpty(StatusNote);
+
     /// <summary>Whether the user can change this row's check box. False while <see cref="RequiredReason"/> is set.</summary>
     public bool IsCheckable => _requiredReason == null;
 

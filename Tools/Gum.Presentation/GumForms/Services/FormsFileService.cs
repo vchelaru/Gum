@@ -44,9 +44,7 @@ public class FormsFileService : IFormsFileService
         return names!;
     }
 
-    /// <summary>
-    /// Returns the path to the GumProject.gumx file for the given theme.
-    /// </summary>
+    /// <inheritdoc/>
     public string GetFormsGumxPath(string themeName) =>
         Path.Combine(GetThemeDirectory(themeName), FormsGumxName)
             .Replace('\\', '/');

@@ -5,10 +5,13 @@ using Gum.DataTypes.Behaviors;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
+using ImportFromGumxPlugin;
+using ImportFromGumxPlugin.ViewModels;
 using Moq;
 using Shouldly;
 using System.Threading.Tasks;
@@ -30,6 +33,7 @@ public class FormsThemeImporterTests
     private readonly Mock<IFileWatchManager> _fileWatchManager = new();
     private readonly Mock<ISkiaShapeStandardsLogic> _skiaShapeStandards = new();
     private readonly Mock<IFontManager> _fontManager = new();
+    private readonly Mock<IImportFromGumxDialog> _importDialog = new();
     private readonly FormsThemeImporter _importer;
 
     public FormsThemeImporterTests()
@@ -47,7 +51,9 @@ public class FormsThemeImporterTests
             _projectState.Object,
             _fileWatchManager.Object,
             _skiaShapeStandards.Object,
-            _fontManager.Object);
+            _fontManager.Object,
+            new ImportVersionGate(),
+            _importDialog.Object);
     }
 
     [Fact]
@@ -175,9 +181,11 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public async Task ImportThemeAsync_ReturnsFalseWithoutCopying_WhenNonStandardFilesWouldBeOverwritten()
+    public async Task ImportThemeAsync_ReturnsFalseWithoutCopying_WhenTheUserCancelsOverNonStandardFilesThatWouldBeOverwritten()
     {
-        // An existing non-gutx/non-gumx destination file blocks the whole import.
+        // An existing non-gutx/non-gumx destination file with different content is a conflict. The
+        // user is offered "Pick what to import" or "Cancel"; Cancel (the mock's default answer)
+        // leaves the project alone.
         string existingFile = System.IO.Path.GetTempFileName();
         try
         {
@@ -187,11 +195,93 @@ public class FormsThemeImporterTests
             bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
             result.ShouldBeFalse();
+            _dialogService.Verify(
+                x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(),
+                    It.Is<MessageDialogStyle?>(s => s != null && s.AffirmativeText == "Pick what to import" && s.NegativeText == "Cancel")),
+                Times.Once);
+            _importDialog.Verify(x => x.ShowAsync(It.IsAny<FixedImportSource>()), Times.Never);
             _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
         }
         finally
         {
             System.IO.File.Delete(existingFile);
+        }
+    }
+
+    [Theory]
+    [InlineData("Standard", true, false)]
+    [InlineData("Neon", false, true)]
+    public async Task ImportThemeAsync_OpensTheImportDialogOnTheThemeProject_WhenTheUserPicksWhatToImport(
+        string themeName, bool expectStandards, bool includeDemoScreen)
+    {
+        string existingFile = System.IO.Path.GetTempFileName();
+        try
+        {
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath> { ["source"] = existingFile });
+            _formsFileService.Setup(x => x.GetFormsGumxPath(themeName)).Returns("C:/themes/" + themeName + "/GumProject.gumx");
+            _dialogService.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(),
+                    It.Is<MessageDialogStyle?>(s => s != null && s.AffirmativeText == "Pick what to import")))
+                .Returns(MessageDialogResult.Affirmative);
+            FixedImportSource? shown = null;
+            _importDialog.Setup(x => x.ShowAsync(It.IsAny<FixedImportSource>()))
+                .Callback<FixedImportSource>(source => shown = source)
+                .ReturnsAsync(true);
+
+            bool result = await _importer.ImportThemeAsync(themeName, includeDemoScreen);
+
+            result.ShouldBeTrue();
+            shown.ShouldNotBeNull();
+            shown.GumxPath.ShouldBe("C:/themes/" + themeName + "/GumProject.gumx");
+            shown.IncludeStandards.ShouldBe(expectStandards);
+            shown.PreselectScreens.ShouldBe(includeDemoScreen);
+            shown.BeforeProjectSave.ShouldNotBeNull();
+            _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
+        }
+        finally
+        {
+            System.IO.File.Delete(existingFile);
+        }
+    }
+
+    [Fact]
+    public async Task ImportThemeAsync_AppliesThemeRequirementsOnlyWhenThePickedImportRuns()
+    {
+        string themeDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GumImporterPick_" + System.Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(themeDirectory);
+        string existingFile = System.IO.Path.GetTempFileName();
+        try
+        {
+            System.IO.File.WriteAllText(System.IO.Path.Combine(themeDirectory, "GumProject.gumx"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <FontRanges>32-126,10003-10007</FontRanges>\n</GumProjectSave>");
+            GumProjectSave project = new GumProjectSave { FullFileName = "C:/project/Test.gumx", FontRanges = "32-126" };
+            _projectState.Setup(x => x.GumProjectSave).Returns(project);
+            _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns(themeDirectory);
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath> { ["source"] = existingFile });
+            _dialogService.Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(),
+                    It.Is<MessageDialogStyle?>(s => s != null && s.AffirmativeText == "Pick what to import")))
+                .Returns(MessageDialogResult.Affirmative);
+            FixedImportSource? shown = null;
+            _importDialog.Setup(x => x.ShowAsync(It.IsAny<FixedImportSource>()))
+                .Callback<FixedImportSource>(source => shown = source)
+                .ReturnsAsync(true);
+
+            await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+            // Nothing is applied to the project merely by opening the dialog...
+            project.FontRanges.ShouldBe("32-126");
+            _fontManager.Verify(x => x.DeleteFontCacheFolder(), Times.Never);
+
+            // ...only when the import it hosts reaches its save step.
+            shown!.BeforeProjectSave!();
+            project.FontRanges.ShouldContain("10003");
+            _fontManager.Verify(x => x.DeleteFontCacheFolder(), Times.Once);
+        }
+        finally
+        {
+            System.IO.File.Delete(existingFile);
+            System.IO.Directory.Delete(themeDirectory, recursive: true);
         }
     }
 

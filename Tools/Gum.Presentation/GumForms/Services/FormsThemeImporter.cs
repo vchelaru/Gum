@@ -10,6 +10,9 @@ using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
+using ImportFromGumxPlugin;
+using ImportFromGumxPlugin.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,6 +32,8 @@ public class FormsThemeImporter : IFormsThemeImporter
     private readonly IFileWatchManager _fileWatchManager;
     private readonly ISkiaShapeStandardsLogic _skiaShapeStandards;
     private readonly IFontManager _fontManager;
+    private readonly IImportVersionGate _versionGate;
+    private readonly IImportFromGumxDialog _importDialog;
 
     public FormsThemeImporter(
         IFormsFileService formsFileService,
@@ -38,8 +43,12 @@ public class FormsThemeImporter : IFormsThemeImporter
         IProjectState projectState,
         IFileWatchManager fileWatchManager,
         ISkiaShapeStandardsLogic skiaShapeStandards,
-        IFontManager fontManager)
+        IFontManager fontManager,
+        IImportVersionGate versionGate,
+        IImportFromGumxDialog importDialog)
     {
+        _versionGate = versionGate;
+        _importDialog = importDialog;
         _formsFileService = formsFileService;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
@@ -64,7 +73,7 @@ public class FormsThemeImporter : IFormsThemeImporter
             ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(themeName));
         if (requirements.ProjectVersion is { } themeVersion)
         {
-            string? rejection = ImportVersionGate.GetRejection(themeVersion, project.Version, "The Forms theme");
+            string? rejection = _versionGate.GetRejection(themeVersion, project.Version, "The Forms theme");
             if (rejection != null)
             {
                 _dialogService.ShowMessage(rejection);
@@ -77,23 +86,17 @@ public class FormsThemeImporter : IFormsThemeImporter
         Dictionary<string, FilePath> sourceDestinations =
             _formsFileService.GetSourceDestinations(themeName, isIncludeDemoScreenGum);
 
-        if (!GetIfShouldSave(sourceDestinations))
+        ImportDecision decision = GetImportDecision(sourceDestinations);
+        if (decision == ImportDecision.PickWhatToImport)
+        {
+            return await PickWhatToImportAsync(themeName, isIncludeDemoScreenGum, diff, project);
+        }
+        if (decision == ImportDecision.Cancel)
         {
             return false;
         }
 
-        // Apply the prerequisite edits to the in-memory project before saving, so the gumx
-        // written below already contains the new font generator and standard references.
-        diff.Apply(project, _skiaShapeStandards);
-
-        // Fonts already cached were generated without the theme's characters. Clearing the cache
-        // before the theme's own FontCache files are copied in leaves those, and the reload below
-        // regenerates the rest with the widened ranges - the same thing the Project Properties
-        // window does when FontRanges changes.
-        if (diff.FontRangesChange != null)
-        {
-            TryClearFontCache();
-        }
+        ApplyRequirements(diff, project);
 
         SaveFilesToDestination(sourceDestinations);
 
@@ -112,6 +115,40 @@ public class FormsThemeImporter : IFormsThemeImporter
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Opens the Import from .gumx dialog on the theme's own project so the user picks items one by
+    /// one (and sees its Skip/Overwrite prompt). The theme's prerequisites apply only if that
+    /// import goes through. A non-default theme never offers Standards: its look must live in its
+    /// Components, never in the project's shared Standards.
+    /// </summary>
+    private Task<bool> PickWhatToImportAsync(
+        string themeName, bool isIncludeDemoScreenGum, ThemeRequirementsDiff diff, GumProjectSave project)
+    {
+        bool includeStandards = string.Equals(themeName, _formsFileService.DefaultThemeName, StringComparison.OrdinalIgnoreCase);
+        FixedImportSource source = new FixedImportSource(
+            _formsFileService.GetFormsGumxPath(themeName),
+            $"Add Forms: {themeName}",
+            includeStandards,
+            BeforeProjectSave: () => ApplyRequirements(diff, project),
+            PreselectScreens: isIncludeDemoScreenGum);
+        return _importDialog.ShowAsync(source);
+    }
+
+    // Apply the prerequisite edits to the in-memory project before saving, so the gumx written
+    // afterwards already contains the new font generator and standard references.
+    private void ApplyRequirements(ThemeRequirementsDiff diff, GumProjectSave project)
+    {
+        diff.Apply(project, _skiaShapeStandards);
+
+        // Fonts already cached were generated without the theme's characters. Clearing the cache
+        // lets the reload that follows regenerate them with the widened ranges - the same thing the
+        // Project Properties window does when FontRanges changes.
+        if (diff.FontRangesChange != null)
+        {
+            TryClearFontCache();
+        }
     }
 
     private void TryClearFontCache()
@@ -222,7 +259,14 @@ public class FormsThemeImporter : IFormsThemeImporter
         }
     }
 
-    private bool GetIfShouldSave(Dictionary<string, FilePath> sourceDestinations)
+    private enum ImportDecision
+    {
+        Proceed,
+        Cancel,
+        PickWhatToImport,
+    }
+
+    private ImportDecision GetImportDecision(Dictionary<string, FilePath> sourceDestinations)
     {
         // A destination file that already exists but is byte-identical to the theme's own copy
         // (e.g. a bundled Fonts/*.ttf the plain "File > New Project" bundler already wrote - #4674)
@@ -243,9 +287,11 @@ public class FormsThemeImporter : IFormsThemeImporter
         bool shouldSave = false;
         if (nonStandardWhichBlockCopying.Count > 0)
         {
-            string message = "Cannot add Forms controls because the following file(s) would get overwritten:"
-                + "\n\n" + string.Join("\n", nonStandardFiles);
-            _dialogService.ShowMessage(message);
+            string message = "These files already exist in your project with different content:"
+                + "\n\n" + string.Join("\n", nonStandardWhichBlockCopying);
+            MessageDialogResult answer = _dialogService.ShowMessage(message, "Add Forms",
+                new MessageDialogStyle { AffirmativeText = "Pick what to import", NegativeText = "Cancel" });
+            return answer == MessageDialogResult.Affirmative ? ImportDecision.PickWhatToImport : ImportDecision.Cancel;
         }
         else if (doStandardsExist)
         {
@@ -294,7 +340,7 @@ public class FormsThemeImporter : IFormsThemeImporter
             shouldSave = true;
         }
 
-        return shouldSave;
+        return shouldSave ? ImportDecision.Proceed : ImportDecision.Cancel;
     }
 
     private static bool IsStandardFile(string relativePath) =>

@@ -31,6 +31,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     private readonly IProjectState _projectState;
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
+    private readonly IImportVersionGate _versionGate;
 
     private GumProjectSave? _sourceProject;
     private string _sourceBase = string.Empty;
@@ -48,7 +49,8 @@ public class ImportFromGumxViewModel : DialogViewModel
     private bool _recomputeQueued = false;
 
     /// <summary>The dialog's title.</summary>
-    public string Title => "Import from .gumx";
+    [DependsOn(nameof(FixedSource))]
+    public string Title => FixedSource?.Title ?? "Import from .gumx";
 
     public string SourcePath
     {
@@ -164,14 +166,54 @@ public class ImportFromGumxViewModel : DialogViewModel
     /// </summary>
     public AsyncRelayCommand BrowseCommand { get; }
 
+    private FixedImportSource? FixedSource
+    {
+        get => Get<FixedImportSource?>();
+        set => Set(value);
+    }
+
+    /// <summary>True when the user chooses the source; false when the caller fixed it with <see cref="UseFixedSourceAsync"/>.</summary>
+    [DependsOn(nameof(FixedSource))]
+    public bool IsSourceEditable => FixedSource == null;
+
+    /// <summary>
+    /// A line above the item list that explains the marks on rows the project already has; null when
+    /// there is nothing to explain.
+    /// </summary>
+    public string? StatusHint
+    {
+        get => Get<string?>();
+        private set => Set(value);
+    }
+
+    /// <summary>Whether <see cref="StatusHint"/> is shown.</summary>
+    [DependsOn(nameof(StatusHint))]
+    public bool IsStatusHintVisible => !string.IsNullOrEmpty(StatusHint);
+
+    /// <summary>True once an import has gone through.</summary>
+    public bool WasImported { get; private set; }
+
+    /// <summary>
+    /// Fixes the source to <paramref name="source"/> and loads its preview. Call before showing the dialog.
+    /// </summary>
+    public async Task UseFixedSourceAsync(FixedImportSource source)
+    {
+        FixedSource = source;
+        SourceType = SourceType.LocalFile;
+        SourcePath = source.GumxPath;
+        await LoadPreviewCommand.ExecuteAsync(null);
+    }
+
     public ImportFromGumxViewModel(
         IGumxSourceService sourceService,
         IGumxDependencyResolver dependencyResolver,
         IGumxImportService importService,
         IProjectState projectState,
         IDialogService dialogService,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IImportVersionGate versionGate)
     {
+        _versionGate = versionGate;
         _sourceService = sourceService;
         _dependencyResolver = dependencyResolver;
         _importService = importService;
@@ -238,8 +280,10 @@ public class ImportFromGumxViewModel : DialogViewModel
         try
         {
             var selections = BuildSelections();
+            Action? beforeProjectSave = FixedSource?.BeforeProjectSave;
             var result = await _importService.ImportAsync(
-                selections, _sourceProject, _sourceBase, DestinationSubfolder);
+                selections, _sourceProject, _sourceBase, DestinationSubfolder,
+                beforeProjectSave: beforeProjectSave);
 
             if (result.VersionRejection != null)
             {
@@ -262,10 +306,12 @@ public class ImportFromGumxViewModel : DialogViewModel
                 }
 
                 result = await _importService.ImportAsync(
-                    selections, _sourceProject, _sourceBase, DestinationSubfolder, resolution.Value);
+                    selections, _sourceProject, _sourceBase, DestinationSubfolder, resolution.Value,
+                    beforeProjectSave);
             }
 
             _isImportComplete = true;
+            WasImported = result.ConflictingElements.Count == 0;
 
             if (result.ConflictingElements.Count > 0)
             {
@@ -396,7 +442,7 @@ public class ImportFromGumxViewModel : DialogViewModel
 
             if (_projectState.GumProjectSave is { } destination)
             {
-                string? rejection = ImportVersionGate.GetRejection(
+                string? rejection = _versionGate.GetRejection(
                     project.Version, destination.Version, "The source project");
                 if (rejection != null)
                 {
@@ -408,13 +454,17 @@ public class ImportFromGumxViewModel : DialogViewModel
             _sourceProject = project;
             _sourceBase = _sourceService.GetSourceBase(pathOrUrl);
 
-            if (string.IsNullOrWhiteSpace(DestinationSubfolder))
+            if (FixedSource == null && string.IsNullOrWhiteSpace(DestinationSubfolder))
             {
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(pathOrUrl.TrimEnd('/'));
                 DestinationSubfolder = fileName;
             }
 
             PopulateItems(project);
+            if (FixedSource is { } fixedSource)
+            {
+                ApplyDestinationStatus(project, fixedSource);
+            }
             IsPreviewLoaded = true;
         }
         catch (Exception ex)
@@ -426,6 +476,41 @@ public class ImportFromGumxViewModel : DialogViewModel
             IsLoading = false;
             LoadingStatus = null;
         }
+    }
+
+    /// <summary>
+    /// Marks each row the project already has, and starts only the new ones checked, so the user
+    /// can see what is and is not already there instead of remembering it.
+    /// </summary>
+    private void ApplyDestinationStatus(GumProjectSave project, FixedImportSource fixedSource)
+    {
+        ImportDestinationStatus status = _importService.GetDestinationStatus(project, DestinationSubfolder);
+        bool anyDiffers = false;
+
+        foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
+        {
+            if (leaf.ElementType is not { } type || type == ElementItemType.Standard) { continue; }
+
+            ImportItemKey key = new ImportItemKey(type, leaf.FullName);
+            if (status.Differing.Contains(key))
+            {
+                leaf.StatusNote = "differs from the one in your project";
+                anyDiffers = true;
+            }
+            else if (status.Identical.Contains(key))
+            {
+                leaf.StatusNote = "already in your project";
+            }
+            else if (type != ElementItemType.Screen || fixedSource.PreselectScreens)
+            {
+                leaf.IsChecked = true;
+            }
+        }
+
+        StatusHint = anyDiffers
+            ? "Items marked \"differs\" already exist in your project with other content. " +
+              "Importing one asks whether to skip or overwrite it."
+            : null;
     }
 
     private bool IsSameFileAsCurrentProject(string path)
@@ -496,14 +581,17 @@ public class ImportFromGumxViewModel : DialogViewModel
         RootNodes.Add(_behaviorsGroupNode);
 
         // Standards group
-        _standardsGroupNode = new ImportTreeNodeViewModel("Standards", "Standards");
-        foreach (var standard in project.StandardElements.OrderBy(s => s.Name))
+        if (FixedSource is not { IncludeStandards: false })
         {
-            var leaf = new ImportTreeNodeViewModel(standard.Name, standard.Name, ElementItemType.Standard);
-            _allLeafItems.Add(leaf);
-            _standardsGroupNode.Children.Add(leaf);
+            _standardsGroupNode = new ImportTreeNodeViewModel("Standards", "Standards");
+            foreach (var standard in project.StandardElements.OrderBy(s => s.Name))
+            {
+                var leaf = new ImportTreeNodeViewModel(standard.Name, standard.Name, ElementItemType.Standard);
+                _allLeafItems.Add(leaf);
+                _standardsGroupNode.Children.Add(leaf);
+            }
+            RootNodes.Add(_standardsGroupNode);
         }
-        RootNodes.Add(_standardsGroupNode);
 
         foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
             leaf.PropertyChanged += OnItemPropertyChanged;

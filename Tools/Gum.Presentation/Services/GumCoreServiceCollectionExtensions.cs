@@ -16,6 +16,7 @@ using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Plugins.ImportPlugin.Services;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ProjectServices;
 using Gum.ProjectServices.FontGeneration;
@@ -109,6 +110,9 @@ public static class GumCoreServiceCollectionExtensions
         // Forms theme import is app-wide rather than GumFormsPlugin-owned: new-project creation
         // imports the default theme without going through the plugin's Add Forms dialog.
         services.AddSingleton<IFormsFileService, FormsFileService>();
+        services.AddSingleton<IImportVersionGate, ImportVersionGate>();
+        services.AddSingleton<ImportFromGumxPlugin.IImportFromGumxLogic, ImportFromGumxPlugin.ImportFromGumxLogic>();
+        services.AddSingleton<ImportFromGumxPlugin.IImportFromGumxDialog, ImportFromGumxPlugin.ImportFromGumxDialog>();
         services.AddSingleton<IFormsThemeImporter, FormsThemeImporter>();
         services.AddSingleton<IDefaultFontBundler, DefaultFontBundler>();
         services.AddSingleton<GumFormsLogic>();

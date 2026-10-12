@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Xml.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 
@@ -36,6 +37,33 @@ public class FormsThemeBehaviorStagingService : IFormsThemeBehaviorStagingServic
             stagedCount++;
         }
 
+        DropStagedProjectBehaviorSourcePaths(projectGumxPath, destinationBehaviorsDirectory);
+
         return stagedCount;
+    }
+
+    // The staged theme is a standalone project whose Behaviors folder now holds every behavior, so
+    // a BehaviorReference's SourcePath into the repo's shared folder would only dangle there.
+    private static void DropStagedProjectBehaviorSourcePaths(string projectGumxPath, string destinationBehaviorsDirectory)
+    {
+        string? stagedDirectory = Path.GetDirectoryName(Path.GetFullPath(destinationBehaviorsDirectory));
+        if (stagedDirectory == null)
+        {
+            return;
+        }
+
+        string stagedProjectPath = Path.Combine(stagedDirectory, Path.GetFileName(projectGumxPath));
+        if (!File.Exists(stagedProjectPath)
+            || string.Equals(Path.GetFullPath(stagedProjectPath), Path.GetFullPath(projectGumxPath), StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        XDocument document = XDocument.Load(stagedProjectPath);
+        foreach (XElement reference in document.Descendants("BehaviorReference"))
+        {
+            reference.Attribute("SourcePath")?.Remove();
+        }
+        document.Save(stagedProjectPath);
     }
 }
