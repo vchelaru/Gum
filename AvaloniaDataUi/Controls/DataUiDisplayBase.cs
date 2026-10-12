@@ -214,8 +214,9 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
                 firstLineEnd = firstLineEnd < 0 ? detailText.Length : firstLineEnd;
                 Control? icon = action.IconName == null ? null : DetailIconFactory?.Invoke(action.IconName);
                 string actionText = icon != null ? InlineControlPlaceholder : action.Text;
-                displayed = detailText.Insert(firstLineEnd, ActionSeparator + actionText);
-                links.Add(new HintLink(firstLineEnd + ActionSeparator.Length, actionText.Length, action, icon));
+                string separator = icon != null ? " " : ActionSeparator;
+                displayed = detailText.Insert(firstLineEnd, separator + actionText);
+                links.Add(new HintLink(firstLineEnd + separator.Length, actionText.Length, action, icon));
             }
 
             DetailTextLink? source = InstanceMember?.DetailLink;
@@ -246,7 +247,9 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
                 hint.Inlines.Add(new Run(displayed!.Substring(position, span.Start - position)));
                 if (span.Icon != null)
                 {
-                    hint.Inlines.Add(new InlineUIContainer(span.Icon));
+                    // Centered on the line it still reads high against the text; the top margin moves it down.
+                    span.Icon.Margin = new Thickness(0, 3, 0, 0);
+                    hint.Inlines.Add(new InlineUIContainer(span.Icon) { BaselineAlignment = BaselineAlignment.Center });
                 }
                 else
                 {
