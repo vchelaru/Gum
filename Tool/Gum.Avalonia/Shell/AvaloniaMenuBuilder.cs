@@ -39,6 +39,12 @@ public static class AvaloniaMenuBuilder
 
     private static MenuItem Create(MenuItemModel model, KeyModifiers commandModifiers)
     {
+        if (model.Stepper is { } stepper)
+        {
+            // A row with buttons, like Chrome's zoom row. It stays open so the buttons can be pressed again.
+            return new MenuItem { Header = new MenuStepperRow(stepper), StaysOpenOnClick = true };
+        }
+
         MenuItem menuItem = new MenuItem
         {
             Header = model.Header,

@@ -1,5 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -53,5 +55,49 @@ public class MenuBuilderTests
         KeyGesture gesture = undo.InputGesture.ShouldNotBeNull();
         gesture.Key.ShouldBe(Key.Z);
         gesture.KeyModifiers.ShouldBe(KeyModifiers.Control);
+    }
+
+    [AvaloniaFact]
+    public void Build_DrawsAStepperRow_WhoseButtonsRunTheActions_WithoutClosingTheMenu()
+    {
+        // A Chrome-style row: "Zoom  -  100%  +". Clicking a button must leave the menu open so it can be clicked again.
+        List<string> ran = new List<string>();
+        MenuStepper zoom = new MenuStepper(
+            "Zoom", "Zoom In", "Zoom Out", "Actual Size",
+            increase: () => ran.Add("in"), decrease: () => ran.Add("out"), reset: () => ran.Add("reset"));
+        zoom.ValueText = "100%";
+        MenuModel model = new MenuModel();
+        MenuItemModel view = new MenuItemModel("View");
+        view.Items.Add(new MenuItemModel("Zoom") { Stepper = zoom });
+        model.TopLevelItems.Add(view);
+        Menu menu = AvaloniaMenuBuilder.Build(model);
+        Window window = new Window { Content = menu, Width = 400, Height = 300 };
+        window.Show();
+        MenuItem viewItem = (MenuItem)menu.Items[0]!;
+        MenuStepperRow row = ((MenuItem)viewItem.Items[0]!).Header.ShouldBeOfType<MenuStepperRow>();
+        viewItem.Open();
+        Dispatcher.UIThread.RunJobs();
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+
+        Click(row.PlusButton);
+        Click(row.MinusButton);
+        Click(row.PlusButton);
+        Click(row.ValueButton);
+        Click(row.Children[0]); // the label is not a button: a click there must not close the menu either
+
+        ran.ShouldBe(new[] { "in", "out", "in", "reset" });
+        viewItem.IsSubMenuOpen.ShouldBeTrue("the menu stays open while the buttons are used");
+        zoom.ValueText = "108%";
+        row.ValueButton.Content.ShouldBe("108%");
+        window.Close();
+    }
+
+    private static void Click(Control control)
+    {
+        TopLevel topLevel = TopLevel.GetTopLevel(control)!;
+        Point point = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), topLevel)!.Value;
+        topLevel.MouseDown(point, MouseButton.Left);
+        topLevel.MouseUp(point, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
     }
 }

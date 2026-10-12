@@ -70,6 +70,33 @@ public class NativeMenuBuilderTests
     }
 
     [AvaloniaFact]
+    public void Build_ExpandsAStepperRow_IntoPlainItems_ThatRunItsActions()
+    {
+        // The macOS menu bar cannot draw a row with buttons, so a stepper becomes three ordinary items.
+        List<string> ran = new List<string>();
+        MenuStepper zoom = new MenuStepper(
+            "Zoom", "Zoom In", "Zoom Out", "Actual Size",
+            increase: () => ran.Add("in"), decrease: () => ran.Add("out"), reset: () => ran.Add("reset"));
+        MenuModel model = new MenuModel();
+        MenuItemModel view = new MenuItemModel("View");
+        view.Items.Add(new MenuItemModel("Theming"));
+        view.Items.Add(new MenuItemModel("Zoom") { Stepper = zoom });
+        view.Items.Add(new MenuItemModel("Focus on Selection"));
+        model.TopLevelItems.Add(view);
+
+        NativeMenu menu = AvaloniaNativeMenuBuilder.Build(model, KeyModifiers.Meta, invokeAfterClick: action => action());
+
+        IList<NativeMenuItemBase> items = ((NativeMenuItem)menu.Items[0]).Menu!.Items;
+        items.OfType<NativeMenuItem>().Select(item => item.Header).ToArray()
+            .ShouldBe(new[] { "Theming", "Zoom In", "Zoom Out", "Actual Size", "Focus on Selection" });
+        foreach (string header in new[] { "Zoom In", "Zoom Out", "Actual Size" })
+        {
+            ((INativeMenuItemExporterEventsImplBridge)items.OfType<NativeMenuItem>().Single(item => item.Header == header)).RaiseClicked();
+        }
+        ran.ShouldBe(new[] { "in", "out", "reset" });
+    }
+
+    [AvaloniaFact]
     public void LeafClick_RunsTheModel_ThroughTheSuppliedScheduler()
     {
         // The shell passes a scheduler that waits for AppKit's menu tracking to end (#4982).

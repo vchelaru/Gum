@@ -8,7 +8,7 @@ namespace Gum.Avalonia.Services;
 /// </summary>
 public class AvaloniaAppScaleProvider : IAppScaleProvider
 {
-    private const double DefaultBaseFontSize = 12;
+    private const double DefaultBaseFontSize = UiSettingsService.DefaultBaseFontSize;
     private double _baseFontSize;
 
     /// <summary>Creates the provider at the default size.</summary>

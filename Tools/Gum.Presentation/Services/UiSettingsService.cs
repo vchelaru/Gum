@@ -5,6 +5,9 @@ namespace Gum.Services;
 
 public class UiSettingsService : ViewModel, IUiSettingsService
 {
+    /// <summary>The UI font size the tool starts with, which Actual Size returns to.</summary>
+    public const double DefaultBaseFontSize = 12;
+
     private IMessenger Messenger { get; }
     private IAppScaleProvider AppScaleProvider { get; }
 
