@@ -647,26 +647,6 @@ def canvas_zoom_shortcuts(c: Ctx):
     c.check("zooming wrote nothing to the element file", file.read_bytes() == bytes_before)
 
 
-@scenario("view-menu-zoom")
-def view_menu_zoom(c: Ctx):
-    g = c.launch(args=["--select", RECT])
-    items = g.menu_items()
-    c.check("View > Zoom In and Zoom Out exist", "View>Zoom In" in items and "View>Zoom Out" in items,
-            str([p for p in items if p.startswith("View")]))
-    start = g.zoom()
-    g.menu("View", "Zoom In")
-    zoomed_in = g.zoom()
-    c.check("View > Zoom In zooms the canvas in one step", zoomed_in > start, f"{start}% -> {zoomed_in}%")
-    g.menu("View", "Zoom Out")
-    g.menu("View", "Zoom Out")
-    zoomed_out = g.zoom()
-    c.check("two Zoom Outs land below the start", zoomed_out < start, f"{start}% -> {zoomed_out}%")
-    # The menu works whatever has focus; the zoom hotkeys do not (with the tree focused they scale the app).
-    g.focus_tree()
-    g.menu("View", "Zoom In")
-    c.check("Zoom In works with the tree focused", g.zoom() > zoomed_out, f"{zoomed_out}% -> {g.zoom()}%")
-
-
 @scenario("focus-on-selection-hotkey")
 def focus_on_selection_hotkey(c: Ctx):
     file_bytes = None

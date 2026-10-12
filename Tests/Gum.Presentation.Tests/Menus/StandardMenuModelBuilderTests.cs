@@ -65,29 +65,6 @@ public class StandardMenuModelBuilderTests
         request.MaxZoomPercent.ShouldBeGreaterThan(100);
     }
 
-    [Theory]
-    [InlineData("Zoom In", true)]
-    [InlineData("Zoom Out", false)]
-    public void Build_ViewZoomItems_AskTheCanvasToStepItsZoom_WithoutAKeyEquivalent(string header, bool zoomsIn)
-    {
-        AutoMocker mocker = new AutoMocker();
-        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
-        mocker.Use<IMessenger>(messenger);
-        List<StepCanvasZoomMessage> requests = new List<StepCanvasZoomMessage>();
-        object recipient = new object();
-        messenger.Register<StepCanvasZoomMessage>(recipient, (_, message) => requests.Add(message));
-        StandardMenuModelBuilder builder = mocker.CreateInstance<StandardMenuModelBuilder>();
-
-        MenuItemModel item = builder.Build().GetItem("View")!.Items.Single(i => i.Header == header);
-        item.Invoke();
-
-        requests.Count.ShouldBe(1);
-        requests[0].ZoomIn.ShouldBe(zoomsIn);
-        // The zoom hotkeys zoom the whole app instead of the canvas when the tree has focus, and a menu
-        // key equivalent (macOS) would override that, so the items carry no gesture.
-        item.Gesture.ShouldBeNull();
-    }
-
     [Fact]
     public void Build_AddScreenAndComponent_GoThroughEditCommandsSaveGuard()
     {

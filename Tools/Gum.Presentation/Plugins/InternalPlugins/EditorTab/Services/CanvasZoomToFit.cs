@@ -49,12 +49,6 @@ public sealed class ZoomCanvasToFitSelectionMessage : RequestMessage<CanvasZoomT
 }
 
 /// <summary>
-/// Asks the Editor tab to move its camera zoom one step, the same as the toolbar's + and - buttons.
-/// Nothing replies, and nothing happens before the canvas is set up.
-/// </summary>
-public sealed record StepCanvasZoomMessage(bool ZoomIn);
-
-/// <summary>
 /// Frames an element in the wireframe canvas (#5142): the largest zoom step, up to 100%, at which
 /// the element and its visible descendants fit inside the view, centered.
 /// </summary>
