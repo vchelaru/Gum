@@ -214,6 +214,7 @@ internal sealed class VariableGridHarness : IDisposable
         iconHint.BringIntoView();
         Control icon = iconHint.Inlines!.OfType<InlineUIContainer>().First().Child
             ?? throw new InvalidOperationException("The action's icon is missing.");
+        icon.BringIntoView();
         return _driver.CenterOf(icon);
     }
 

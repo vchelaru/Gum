@@ -139,6 +139,35 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     /// </summary>
     public static Func<string, Control?>? DetailIconFactory { get; set; }
 
+    /// <summary>
+    /// Sizes an icon placed in the hint's text to that text's font size, so it follows the tool's zoom,
+    /// and sits it a little low in its line: centered on the line it reads high against the lettering.
+    /// </summary>
+    private sealed class InlineIconHost : Decorator
+    {
+        private const double DropFraction = 0.25;
+
+        static InlineIconHost()
+        {
+            AffectsMeasure<InlineIconHost>(TextElement.FontSizeProperty);
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            double size = TextElement.GetFontSize(this);
+            // The icon is drawn at its own size inside a Viewbox, which scales it to the text.
+            Child?.Measure(new Size(size, size));
+            return new Size(size, size * (1 + DropFraction));
+        }
+
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            double size = TextElement.GetFontSize(this);
+            Child?.Arrange(new Rect(0, size * DropFraction, size, size));
+            return finalSize;
+        }
+    }
+
     /// <summary>Where a link sits inside a hint's displayed text; <paramref name="Icon"/> replaces its text when set.</summary>
     private sealed record HintLink(int Start, int Length, DetailTextLink Link, Control? Icon = null);
 
@@ -247,9 +276,10 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
                 hint.Inlines.Add(new Run(displayed!.Substring(position, span.Start - position)));
                 if (span.Icon != null)
                 {
-                    // Centered on the line it still reads high against the text; the top margin moves it down.
-                    span.Icon.Margin = new Thickness(0, 3, 0, 0);
-                    hint.Inlines.Add(new InlineUIContainer(span.Icon) { BaselineAlignment = BaselineAlignment.Center });
+                    // The inline's visual parent chain does not inherit the hint's font size, so follow it explicitly.
+                    InlineIconHost iconHost = new InlineIconHost { Child = new Viewbox { Child = span.Icon } };
+                    iconHost.Bind(TextElement.FontSizeProperty, hint.GetObservable(TextBlock.FontSizeProperty));
+                    hint.Inlines.Add(new InlineUIContainer(iconHost) { BaselineAlignment = BaselineAlignment.Center });
                 }
                 else
                 {
