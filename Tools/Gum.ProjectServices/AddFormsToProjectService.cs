@@ -56,6 +56,14 @@ public class AddFormsToProjectService : IAddFormsToProjectService
 
             GumProjectSave template = templateLoadResult.Project;
 
+            string? rejection = new ImportVersionGate().GetRejection(
+                template.Version, target.Version, "The Forms template");
+            if (rejection != null)
+            {
+                result.ErrorMessage = rejection;
+                return result;
+            }
+
             List<ComponentSave> addedComponents = AddMissing(
                 template.Components, c => c.Name,
                 target.Components, target.ComponentReferences,
