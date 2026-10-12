@@ -157,6 +157,9 @@ public sealed class AvaloniaGumTreeView : UserControl
     /// <summary>Raised when the right button is released over the tree, after the selection updates.</summary>
     public event Action? ContextMenuRequested;
 
+    /// <summary>Raised when a row, other than its expander, is double-clicked.</summary>
+    public event Action<GumTreeNode>? NodeDoubleClicked;
+
     /// <summary>Raised for key presses the tree's own navigation did not handle.</summary>
     public event Action<GumKeyEventArgs>? KeyPressed;
 
@@ -416,6 +419,9 @@ public sealed class AvaloniaGumTreeView : UserControl
     /// and opens no menu, so the chevron only expands or collapses (#4694).
     /// </summary>
     internal void NotifyExpanderPressed() => _isReleaseFromExpander = true;
+
+    /// <summary>Called by a row when a double-click lands on it, outside its expander.</summary>
+    internal void NotifyNodeDoubleClicked(GumTreeNode node) => NodeDoubleClicked?.Invoke(node);
 
     /// <inheritdoc/>
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
@@ -909,6 +915,10 @@ internal sealed class TreeRowView : Border
             if (e.Source is Visual source && (source == _expander || _expander.IsVisualAncestorOf(source)))
             {
                 return;
+            }
+            if (_node is { } doubleClicked)
+            {
+                _owner.NotifyNodeDoubleClicked(doubleClicked);
             }
             if (_node is { HasChildren: true } node)
             {

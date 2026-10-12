@@ -1700,23 +1700,43 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     }
 
     void IRecipient<ZoomCanvasToFitSelectionMessage>.Receive(ZoomCanvasToFitSelectionMessage message) =>
-        message.Reply(ZoomToFitSelectedElement());
+        message.Reply(ZoomToFitSelection(message));
 
-    // Frames the selected element for an unattended screenshot (#5142). The camera's view size
-    // comes from the last drawn frame, so a caller draws one first.
-    private CanvasZoomToFitReport? ZoomToFitSelectedElement()
+    // Frames the selection: the element for an unattended screenshot (#5142), the selected
+    // instances for the focus hotkey (#5981). The camera's view size comes from the last drawn
+    // frame, so a caller draws one first.
+    private CanvasZoomToFitReport? ZoomToFitSelection(ZoomCanvasToFitSelectionMessage request)
     {
         if (!_isXnaInitialized || _selectedState.SelectedElement is not { } element ||
-            _wireframeObjectManager.GetRepresentation(element) is not { } representation ||
-            !CanvasZoomToFit.TryGetVisibleBounds(representation, element is ScreenSave, out CanvasWorldBounds bounds))
+            !TryGetSelectionBounds(element, request.FrameSelectedInstances, out CanvasWorldBounds bounds))
         {
             return null;
         }
 
         Camera camera = _canvas.SystemManagers.Renderer.Camera;
         ZoomToFitResult fit = CanvasZoomToFit.Calculate(bounds, camera.ClientWidth, camera.ClientHeight,
-            _editorViewModel.ZoomLevels.Select(level => level.Value).ToArray());
+            _editorViewModel.ZoomLevels.Select(level => level.Value).ToArray(), request.MaxZoomPercent);
         MoveCamera(camera, fit.ZoomPercent, fit.CameraX, fit.CameraY);
         return new CanvasZoomToFitReport(element.Name, bounds, fit.ZoomPercent, camera.X, camera.Y, camera.ClientWidth, camera.ClientHeight);
+    }
+
+    private bool TryGetSelectionBounds(ElementSave element, bool preferSelectedInstances, out CanvasWorldBounds bounds)
+    {
+        if (preferSelectedInstances && _selectedState.SelectedInstances.Any())
+        {
+            List<GraphicalUiElement> representations = _selectedState.SelectedInstances
+                .Select(instance => _wireframeObjectManager.GetRepresentation(instance))
+                .OfType<GraphicalUiElement>()
+                .ToList();
+            return CanvasZoomToFit.TryGetVisibleBounds(representations, out bounds);
+        }
+
+        if (_wireframeObjectManager.GetRepresentation(element) is { } representation)
+        {
+            return CanvasZoomToFit.TryGetVisibleBounds(representation, element is ScreenSave, out bounds);
+        }
+
+        bounds = default;
+        return false;
     }
 }

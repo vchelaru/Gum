@@ -144,21 +144,12 @@ public class ScrollBarControlLogic
             return;
         }
 
-        // This clamps the scroll bar, but we don't want to adjust the position of the camera when this is called
-        // because the user may manually move the camera beyond the bounds:
+        // A bar can clamp its value while its range is half updated (a head applies each range
+        // property as it is set), and the value change writes into the camera. We don't want to adjust
+        // the position of the camera when this is called because the user may manually move the camera
+        // beyond the bounds, so keep its position and put it back at the end:
         var x = _camera.X;
-        var horizontalValue = Math.Max(x, _horizontalScrollBar.Minimum);
-        horizontalValue = Math.Min(horizontalValue, _horizontalScrollBar.Maximum);
-        _horizontalScrollBar.Value = (int)horizontalValue;
-
         var y = _camera.Y;
-        var verticalValue = Math.Max(y, _verticalScrollBar.Minimum);
-        verticalValue = Math.Min(verticalValue, _verticalScrollBar.Maximum);
-        _verticalScrollBar.Value = (int)verticalValue;
-
-        // now preserve the values:
-        _camera.X = x;
-        _camera.Y = y;
 
         var effectiveAreaHeight = -_minimumY + _displayedAreaHeight;
 
@@ -177,5 +168,17 @@ public class ScrollBarControlLogic
         // are at the middle, meaning we can see half a screen width on either side
         _horizontalScrollBar.Maximum = _minimumX + (int)(effectiveAreaWidth + visibleAreaWidth);
         _horizontalScrollBar.LargeChange = (int)visibleAreaWidth; // the amount of visible area. It's called LargeChange but it really means how much the scrollbar can see
+
+        // This clamps the scroll bar to its new range:
+        var horizontalValue = Math.Max(x, _horizontalScrollBar.Minimum);
+        horizontalValue = Math.Min(horizontalValue, _horizontalScrollBar.Maximum);
+        _horizontalScrollBar.Value = (int)horizontalValue;
+
+        var verticalValue = Math.Max(y, _verticalScrollBar.Minimum);
+        verticalValue = Math.Min(verticalValue, _verticalScrollBar.Maximum);
+        _verticalScrollBar.Value = (int)verticalValue;
+
+        _camera.X = x;
+        _camera.Y = y;
     }
 }

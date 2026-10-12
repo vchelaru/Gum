@@ -1,7 +1,9 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -121,6 +123,56 @@ public class HotkeyManagerTests
         hotkeyManager.HandleKeyDownElementTreeView(new GumKeyEventArgs { Key = GumKey.Delete });
 
         mocker.GetMock<IEditCommands>().Verify(c => c.DeleteSelection(), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void F_InTheTreeOrCanvas_AsksTheCanvasToFocusOnTheSelection(bool inCanvas)
+    {
+        // #5981: one request in both places, framing the selected instances and allowed to zoom in.
+        AutoMocker mocker = new AutoMocker();
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        mocker.Use<IMessenger>(messenger);
+        List<ZoomCanvasToFitSelectionMessage> requests = new List<ZoomCanvasToFitSelectionMessage>();
+        object recipient = new object();
+        messenger.Register<ZoomCanvasToFitSelectionMessage>(recipient, (_, message) => requests.Add(message));
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+        GumKeyEventArgs e = new() { Key = GumKey.F };
+
+        if (inCanvas)
+        {
+            hotkeyManager.HandleEditorKeyDown(e);
+        }
+        else
+        {
+            hotkeyManager.HandleKeyDownElementTreeView(e);
+        }
+
+        requests.Count.ShouldBe(1);
+        requests[0].FrameSelectedInstances.ShouldBeTrue();
+        requests[0].MaxZoomPercent.ShouldBeGreaterThan(100);
+        e.Handled.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(false, false, true)]
+    public void F_WithAModifier_DoesNotFocusOnTheSelection(bool ctrl, bool shift, bool alt)
+    {
+        AutoMocker mocker = new AutoMocker();
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        mocker.Use<IMessenger>(messenger);
+        int requests = 0;
+        object recipient = new object();
+        messenger.Register<ZoomCanvasToFitSelectionMessage>(recipient, (_, _) => requests++);
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+
+        hotkeyManager.HandleKeyDownElementTreeView(new GumKeyEventArgs { Key = GumKey.F, IsCtrlDown = ctrl, IsShiftDown = shift, IsAltDown = alt });
+        hotkeyManager.HandleEditorKeyDown(new GumKeyEventArgs { Key = GumKey.F, IsCtrlDown = ctrl, IsShiftDown = shift, IsAltDown = alt });
+
+        requests.ShouldBe(0, "Ctrl+F is Search");
     }
 
     [Fact]

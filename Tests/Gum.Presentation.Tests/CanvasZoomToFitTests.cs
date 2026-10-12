@@ -42,6 +42,35 @@ public class CanvasZoomToFitTests
     }
 
     [Fact]
+    public void Calculate_SmallElementWithAHigherCap_ZoomsInToTheLargestStepThatFits()
+    {
+        // 100x50 world units in 920x520 inside the margins: 400% (400x200) fits, nothing larger exists.
+        CanvasWorldBounds bounds = new CanvasWorldBounds(Left: 3000, Top: 2000, Right: 3100, Bottom: 2050);
+
+        ZoomToFitResult result = CanvasZoomToFit.Calculate(bounds, viewportWidth: 1000, viewportHeight: 600, ZoomPercents, maxZoomPercent: int.MaxValue);
+
+        result.ZoomPercent.ShouldBe(400);
+        (3050 - result.CameraX).ShouldBe(500 / 4f, tolerance: 0.5);
+        (2025 - result.CameraY).ShouldBe(300 / 4f, tolerance: 0.5);
+    }
+
+    [Fact]
+    public void Calculate_CapBelowTheLargestFittingStep_StopsAtTheCap()
+    {
+        CanvasWorldBounds bounds = new CanvasWorldBounds(Left: 0, Top: 0, Right: 100, Bottom: 50);
+
+        CanvasZoomToFit.Calculate(bounds, viewportWidth: 1000, viewportHeight: 600, ZoomPercents, maxZoomPercent: 200).ZoomPercent.ShouldBe(200);
+    }
+
+    [Fact]
+    public void Calculate_ElementTooLargeToFitAtTheCap_StillPicksTheLargestStepThatFits()
+    {
+        CanvasWorldBounds bounds = new CanvasWorldBounds(Left: 0, Top: 0, Right: 2000, Bottom: 1000);
+
+        CanvasZoomToFit.Calculate(bounds, viewportWidth: 1000, viewportHeight: 600, ZoomPercents, maxZoomPercent: int.MaxValue).ZoomPercent.ShouldBe(33);
+    }
+
+    [Fact]
     public void Calculate_NothingFits_UsesTheSmallestZoom()
     {
         CanvasWorldBounds bounds = new CanvasWorldBounds(Left: 0, Top: 0, Right: 100_000, Bottom: 100);
@@ -62,6 +91,29 @@ public class CanvasZoomToFitTests
         CanvasZoomToFit.TryGetVisibleBounds(root, isScreen: false, out CanvasWorldBounds bounds).ShouldBeTrue();
 
         bounds.ShouldBe(new CanvasWorldBounds(Left: 0, Top: 0, Right: 520, Bottom: 430));
+    }
+
+    [Fact]
+    public void GetVisibleBounds_SeveralElements_IsTheirUnion_SkippingHiddenOnes()
+    {
+        GraphicalUiElement first = new GraphicalUiElement(new InvisibleRenderable()) { X = 100, Y = 100, Width = 50, Height = 50 };
+        GraphicalUiElement second = new GraphicalUiElement(new InvisibleRenderable()) { X = 400, Y = 300, Width = 20, Height = 10 };
+        GraphicalUiElement hidden = new GraphicalUiElement(new InvisibleRenderable()) { X = 9000, Y = 9000, Width = 10, Height = 10, Visible = false };
+        first.UpdateLayout();
+        second.UpdateLayout();
+        hidden.UpdateLayout();
+
+        CanvasZoomToFit.TryGetVisibleBounds(new[] { first, second, hidden }, out CanvasWorldBounds bounds).ShouldBeTrue();
+
+        bounds.ShouldBe(new CanvasWorldBounds(Left: 100, Top: 100, Right: 420, Bottom: 310));
+    }
+
+    [Fact]
+    public void GetVisibleBounds_OnlyHiddenElements_HasNothingToFit()
+    {
+        GraphicalUiElement hidden = new GraphicalUiElement(new InvisibleRenderable()) { Width = 10, Height = 10, Visible = false };
+
+        CanvasZoomToFit.TryGetVisibleBounds(new[] { hidden }, out _).ShouldBeFalse();
     }
 
     [Fact]

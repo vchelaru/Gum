@@ -272,6 +272,9 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     public event Action<GumTreeNode?>? PointerMoved;
 
     /// <inheritdoc/>
+    public event Action<GumTreeNode>? NodeDoubleClicked;
+
+    /// <inheritdoc/>
     public event Action<GumKeyEventArgs>? KeyDown;
 
     /// <inheritdoc/>
@@ -307,6 +310,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         _tree.KeyPressed += args => KeyDown?.Invoke(args);
         _tree.NodeExpansionChanged += () => NodeExpansionChangedByUser?.Invoke();
         _tree.PointerMovedOverNode += node => PointerMoved?.Invoke(node);
+        _tree.NodeDoubleClicked += node => NodeDoubleClicked?.Invoke(node);
         _tree.UnhandledException += ex => UnhandledException?.Invoke(ex);
         _tree.ValidateSortingDrop += (_, e) => ValidateSortingDrop?.Invoke(this, e);
         _tree.NodeSortingDropped += (_, e) => NodeSortingDropped?.Invoke(this, e);

@@ -9,6 +9,7 @@ using Gum.Logic;
 using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.TreeView;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
@@ -338,6 +339,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         View.ContextMenuProvider = BuildContextMenu;
         View.NodeExpansionChangedByUser += () => _collapseToggleService.OnNodeManuallyChanged();
         View.PointerMoved += HandleMouseOver;
+        View.NodeDoubleClicked += _ => _messenger.Send(ZoomCanvasToFitSelectionMessage.FocusOnSelection());
 
         View.ExternalDragOver += HandleTreeDragOver;
         View.ExternalDrop += HandleTreeDrop;

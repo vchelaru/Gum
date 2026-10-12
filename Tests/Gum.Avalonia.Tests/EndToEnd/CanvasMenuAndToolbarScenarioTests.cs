@@ -403,6 +403,51 @@ public class CanvasMenuAndToolbarScenarioTests
         });
     }
 
+    [SkippableFact]
+    [Trait("Feature", "CANV-040")]
+    public void FocusOnSelection_FHotkeyAndTreeDoubleClick_CenterTheSelectedInstance_ZoomingInPast100Percent()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave panel = canvas.Project.AddComponent("Panel");
+            InstanceSave far = canvas.AddInstance(panel, "Far", "Rectangle", x: 300, y: 200, width: 40, height: 20);
+            canvas.AddInstance(panel, "Near", "Rectangle", x: 0, y: 0, width: 100, height: 100);
+            try
+            {
+                canvas.Tree.Click(canvas.Tree.NodeFor(far));
+                canvas.ResetCamera();
+                canvas.Frame();
+                ProjectFileSnapshot start = canvas.Tree.SnapshotFiles();
+
+                canvas.Tree.Press(Key.F, PhysicalKey.F);
+                canvas.Frame();
+                AssertInstanceCentered(canvas, "after F in the tree");
+
+                canvas.ResetCamera();
+                canvas.Frame();
+                canvas.Tree.DoubleClick(canvas.Tree.NodeFor(far));
+                canvas.Frame();
+                AssertInstanceCentered(canvas, "after a double-click on the row");
+
+                canvas.Tree.SnapshotFiles().ShouldMatch(start, "view changes are not saved in element files");
+            }
+            finally
+            {
+                canvas.ResetCamera();
+            }
+
+            canvas.AssertOracles();
+        });
+
+        static void AssertInstanceCentered(CanvasHarness canvas, string when)
+        {
+            canvas.Camera.Zoom.ShouldBeGreaterThan(1f, when);
+            canvas.Camera.WorldToScreen(320, 210, out float screenX, out float screenY);
+            screenX.ShouldBe(canvas.Camera.ClientWidth / 2f, tolerance: 1.5f, when);
+            screenY.ShouldBe(canvas.Camera.ClientHeight / 2f, tolerance: 1.5f, when);
+        }
+    }
+
     private static float LabelWidth(CanvasHarness canvas) =>
         canvas.Wireframe.AllIpsos.Single(ipso => ipso.Name == "Label").AbsoluteWidth;
 

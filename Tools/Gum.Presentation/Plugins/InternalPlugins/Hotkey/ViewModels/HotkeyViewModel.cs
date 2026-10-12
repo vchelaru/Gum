@@ -69,6 +69,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             Add(_hotkeyManager.NavigateForward, "Navigate Forward");
 
             Add(_hotkeyManager.ShowHotkeys, "Show Hotkeys");
+            Add(_hotkeyManager.FocusSelection, "Focus on Selection");
         }
 
         private void Add(KeyCombination? keyCombination, string action)

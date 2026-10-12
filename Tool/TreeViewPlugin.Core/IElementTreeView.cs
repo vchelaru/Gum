@@ -102,6 +102,16 @@ public interface IElementTreeView
     /// </summary>
     event Action<GumKeyEventArgs>? KeyDown;
 
+    /// <summary>
+    /// Raised when a row is double-clicked, after the first click selected it. Not raised for the
+    /// expander, which toggles on every press. A head that never raises it keeps the default.
+    /// </summary>
+    event Action<GumTreeNode>? NodeDoubleClicked
+    {
+        add { }
+        remove { }
+    }
+
     /// <summary>Raised when the tree catches an exception while reacting to input.</summary>
     event Action<Exception>? UnhandledException;
 

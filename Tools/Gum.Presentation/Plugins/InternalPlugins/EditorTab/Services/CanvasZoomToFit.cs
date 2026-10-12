@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -31,9 +32,20 @@ public sealed record CanvasZoomToFitReport(
 /// <summary>
 /// Asks the Editor tab to frame the selected element (see <see cref="CanvasZoomToFit"/>). The reply
 /// is null when nothing is selected, the canvas isn't initialized, or nothing visible is selected.
+/// The defaults frame the whole element without zooming past 100%, which is what an unattended
+/// <c>--zoom-to-fit</c> run needs; <see cref="FocusOnSelection"/> is the interactive variant.
 /// </summary>
 public sealed class ZoomCanvasToFitSelectionMessage : RequestMessage<CanvasZoomToFitReport?>
 {
+    /// <summary>The largest zoom step the fit may use.</summary>
+    public int MaxZoomPercent { get; init; } = 100;
+
+    /// <summary>Frame the selected instances instead of their element, when any are selected.</summary>
+    public bool FrameSelectedInstances { get; init; }
+
+    /// <summary>The request behind the F hotkey and a tree double-click (#5981).</summary>
+    public static ZoomCanvasToFitSelectionMessage FocusOnSelection() =>
+        new ZoomCanvasToFitSelectionMessage { MaxZoomPercent = int.MaxValue, FrameSelectedInstances = true };
 }
 
 /// <summary>
@@ -51,23 +63,29 @@ public static class CanvasZoomToFit
     /// </summary>
     public static bool TryGetVisibleBounds(GraphicalUiElement element, bool isScreen, out CanvasWorldBounds bounds)
     {
+        if (!isScreen)
+        {
+            return TryGetVisibleBounds(new[] { element }, out bounds);
+        }
+
+        // Nested instances are reached through their parents, so a hidden parent hides them.
+        return TryGetVisibleBounds(
+            element.ContainedElements.Where(instance => instance.Parent == null || instance.Parent == element),
+            out bounds);
+    }
+
+    /// <summary>
+    /// The union of the world bounds of <paramref name="elements"/> and their visible descendants.
+    /// False when none of them is visible.
+    /// </summary>
+    public static bool TryGetVisibleBounds(IEnumerable<GraphicalUiElement> elements, out CanvasWorldBounds bounds)
+    {
         float left = float.PositiveInfinity;
         float top = float.PositiveInfinity;
         float right = float.NegativeInfinity;
         float bottom = float.NegativeInfinity;
 
-        if (isScreen)
-        {
-            foreach (GraphicalUiElement instance in element.ContainedElements)
-            {
-                // Nested instances are reached through their parents, so a hidden parent hides them.
-                if (instance.Parent == null || instance.Parent == element)
-                {
-                    Include(instance, ref left, ref top, ref right, ref bottom);
-                }
-            }
-        }
-        else
+        foreach (GraphicalUiElement element in elements)
         {
             Include(element, ref left, ref top, ref right, ref bottom);
         }
@@ -96,10 +114,11 @@ public static class CanvasZoomToFit
 
     /// <summary>
     /// The zoom step from <paramref name="zoomPercents"/> and the top-left camera position that
-    /// center <paramref name="bounds"/> in a view of the given pixel size. Never zooms past 100%;
-    /// uses the smallest step when nothing fits.
+    /// center <paramref name="bounds"/> in a view of the given pixel size. Never zooms past
+    /// <paramref name="maxZoomPercent"/> (100% by default); uses the smallest step when nothing fits.
     /// </summary>
-    public static ZoomToFitResult Calculate(CanvasWorldBounds bounds, int viewportWidth, int viewportHeight, IReadOnlyList<int> zoomPercents)
+    public static ZoomToFitResult Calculate(
+        CanvasWorldBounds bounds, int viewportWidth, int viewportHeight, IReadOnlyList<int> zoomPercents, int maxZoomPercent = 100)
     {
         float availableWidth = Math.Max(1, viewportWidth - 2 * MarginPixels);
         float availableHeight = Math.Max(1, viewportHeight - 2 * MarginPixels);
@@ -112,7 +131,7 @@ public static class CanvasZoomToFit
         {
             smallest = Math.Min(smallest, percent);
             float zoom = percent / 100f;
-            bool fits = percent <= 100 && boundsWidth * zoom <= availableWidth && boundsHeight * zoom <= availableHeight;
+            bool fits = percent <= maxZoomPercent &&boundsWidth * zoom <= availableWidth && boundsHeight * zoom <= availableHeight;
             if (fits && (best == null || percent > best))
             {
                 best = percent;

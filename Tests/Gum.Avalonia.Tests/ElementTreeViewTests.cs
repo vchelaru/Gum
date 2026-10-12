@@ -144,6 +144,46 @@ public class ElementTreeViewTests
     }
 
     [AvaloniaFact]
+    public void DoubleClickingARow_RaisesNodeDoubleClickedForThatNode_ButASingleClickDoesNot()
+    {
+        (Window window, AvaloniaGumTreeView tree, _, GumTreeNode first, GumTreeNode second) = CreateTree();
+        List<GumTreeNode> doubleClicked = new List<GumTreeNode>();
+        tree.NodeDoubleClicked += doubleClicked.Add;
+        // The rows exist once the parent is expanded.
+        tree.Nodes[0].IsExpanded = true;
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        Click(window, tree, first, RawInputModifiers.None);
+        doubleClicked.ShouldBeEmpty();
+
+        DoubleClick(window, tree, second);
+
+        doubleClicked.ShouldBe(new[] { second });
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void DoubleClickingTheExpander_DoesNotRaiseNodeDoubleClicked()
+    {
+        (Window window, AvaloniaGumTreeView tree, GumTreeNode screens, _, _) = CreateTree();
+        int raised = 0;
+        tree.NodeDoubleClicked += _ => raised++;
+        TreeRowView row = RowFor(tree, screens);
+        Point point = row.Expander.TranslatePoint(new Point(row.Expander.Bounds.Width / 2, row.Expander.Bounds.Height / 2), window)!.Value;
+
+        for (int i = 0; i < 2; i++)
+        {
+            window.MouseDown(point, MouseButton.Left, RawInputModifiers.None);
+            window.MouseUp(point, MouseButton.Left, RawInputModifiers.None);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        raised.ShouldBe(0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void RightClickingTheExpander_IsAClickOnTheRow()
     {
         (Window window, AvaloniaGumTreeView tree, GumTreeNode screens, _, _) = CreateTree();
@@ -334,6 +374,12 @@ public class ElementTreeViewTests
         Dispatcher.UIThread.RunJobs();
         window.UpdateLayout();
         return (window, tree, screens, first, second);
+    }
+
+    private static void DoubleClick(Window window, AvaloniaGumTreeView tree, GumTreeNode node)
+    {
+        Click(window, tree, node, RawInputModifiers.None);
+        Click(window, tree, node, RawInputModifiers.None);
     }
 
     private static void Click(Window window, AvaloniaGumTreeView tree, GumTreeNode node, RawInputModifiers modifiers)
