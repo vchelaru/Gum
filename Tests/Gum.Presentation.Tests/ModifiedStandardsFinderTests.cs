@@ -47,7 +47,6 @@ public class ModifiedStandardsFinderTests : BaseTestClass
             component.Instances.Add(new InstanceSave { Name = "Title", BaseType = standard.Name, ParentContainer = component });
             _project.Components.Add(component);
         }
-        ObjectFinder.Self.ForceResetCache();
     }
 
     [Fact]
