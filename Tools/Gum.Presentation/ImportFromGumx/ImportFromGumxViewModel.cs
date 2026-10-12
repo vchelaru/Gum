@@ -241,6 +241,12 @@ public class ImportFromGumxViewModel : DialogViewModel
             var result = await _importService.ImportAsync(
                 selections, _sourceProject, _sourceBase, DestinationSubfolder);
 
+            if (result.VersionRejection != null)
+            {
+                ErrorMessage = result.VersionRejection;
+                return;
+            }
+
             // If conflicts came back, ask the user once how to handle the whole batch and retry.
             if (result.ConflictingElements.Count > 0)
             {
@@ -386,6 +392,17 @@ public class ImportFromGumxViewModel : DialogViewModel
             {
                 ErrorMessage = "Could not load the .gumx file. Check the path or URL and try again.";
                 return;
+            }
+
+            if (_projectState.GumProjectSave is { } destination)
+            {
+                string? rejection = ImportVersionGate.GetRejection(
+                    project.Version, destination.Version, "The source project");
+                if (rejection != null)
+                {
+                    ErrorMessage = rejection;
+                    return;
+                }
             }
 
             _sourceProject = project;

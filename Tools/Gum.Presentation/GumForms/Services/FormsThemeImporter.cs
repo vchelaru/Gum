@@ -6,6 +6,7 @@ using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
@@ -61,6 +62,16 @@ public class FormsThemeImporter : IFormsThemeImporter
 
         ThemeRequirements requirements =
             ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(themeName));
+        if (requirements.ProjectVersion is { } themeVersion)
+        {
+            string? rejection = ImportVersionGate.GetRejection(themeVersion, project.Version, "The Forms theme");
+            if (rejection != null)
+            {
+                _dialogService.ShowMessage(rejection);
+                return false;
+            }
+        }
+
         ThemeRequirementsDiff diff = requirements.Diff(project);
 
         Dictionary<string, FilePath> sourceDestinations =

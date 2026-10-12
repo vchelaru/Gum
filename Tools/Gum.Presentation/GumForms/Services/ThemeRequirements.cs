@@ -56,35 +56,41 @@ public sealed class ThemeRequirements
     /// </summary>
     private const string SkiaShapeBundleSentinel = "Svg";
 
+    /// <summary>
+    /// The <c>.gumx</c> version the theme's own project was saved at, or null when it declares none.
+    /// </summary>
+    public int? ProjectVersion { get; init; }
+
     public static ThemeRequirements LoadFromThemeDirectory(string themeDirectory)
     {
         var path = Path.Combine(themeDirectory, ThemeRequirementsFileName);
         ThemeRequirements fromFile = File.Exists(path) ? Parse(File.ReadAllText(path)) : new ThemeRequirements();
+        XElement? themeProject = ReadThemeProjectRoot(themeDirectory);
+        string? ranges = themeProject?.Element("FontRanges")?.Value;
         return new ThemeRequirements
         {
             FontGenerator = fromFile.FontGenerator,
             RequiresSkiaShapes = fromFile.RequiresSkiaShapes,
-            FontRanges = ReadThemeProjectFontRanges(themeDirectory),
+            FontRanges = string.IsNullOrWhiteSpace(ranges) ? null : ranges.Trim(),
+            ProjectVersion = int.TryParse(themeProject?.Element("Version")?.Value, out int version) ? version : null,
         };
     }
 
-    // Read straight from the theme's .gumx rather than loading the whole project: only this one
-    // value is needed, and it is a plain top-level element. The Add Forms dialog reads this to
-    // describe a theme, so a theme project that can't be read means no requirement, not a crash.
-    private static string? ReadThemeProjectFontRanges(string themeDirectory)
+    // Read straight from the theme's .gumx rather than loading the whole project: only a couple of
+    // plain top-level values are needed. The Add Forms dialog reads this to describe a theme, so a
+    // theme project that can't be read means no requirement, not a crash.
+    private static XElement? ReadThemeProjectRoot(string themeDirectory)
     {
         string projectPath = Path.Combine(themeDirectory, ThemeProjectFileName);
         if (!File.Exists(projectPath)) return null;
-        string? ranges;
         try
         {
-            ranges = XDocument.Load(projectPath).Root?.Element("FontRanges")?.Value;
+            return XDocument.Load(projectPath).Root;
         }
         catch (System.Xml.XmlException)
         {
             return null;
         }
-        return string.IsNullOrWhiteSpace(ranges) ? null : ranges.Trim();
     }
 
     /// <summary>

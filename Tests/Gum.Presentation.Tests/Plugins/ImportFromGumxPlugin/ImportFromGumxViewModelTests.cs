@@ -402,6 +402,60 @@ public class ImportFromGumxViewModelTests
         _sut.ErrorMessage.ShouldNotBeNullOrEmpty();
     }
 
+    // ── version gate (#5977) ──────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(5, 3, true)]
+    [InlineData(3, 3, false)]
+    [InlineData(3, 5, false)]
+    public async Task LoadPreview_RefusesSourceNewerThanDestination_BeforeShowingItems(
+        int sourceVersion, int destinationVersion, bool shouldRefuse)
+    {
+        string sourceDir = Path.Combine(Path.GetTempPath(), "GumImportVersionGate_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sourceDir);
+        try
+        {
+            GumProjectSave source = new GumProjectSave { Version = sourceVersion };
+            source.Behaviors.Add(new BehaviorSave { Name = "MyBehavior" });
+            string sourcePath = Path.Combine(sourceDir, "Source.gumx");
+            source.Save(sourcePath, saveElements: true);
+            _projectState.GumProjectSave.Version = destinationVersion;
+            _sut.SourcePath = sourcePath;
+
+            await _sut.LoadPreviewCommand.ExecuteAsync(null);
+
+            _sut.IsPreviewLoaded.ShouldBe(!shouldRefuse);
+            if (shouldRefuse)
+            {
+                _sut.ErrorMessage.ShouldNotBeNull().ShouldContain("upgrading-file-gumx-version");
+                _sut.RootNodes.ShouldBeEmpty();
+            }
+            else
+            {
+                _sut.ErrorMessage.ShouldBeNull();
+            }
+        }
+        finally
+        {
+            Directory.Delete(sourceDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void OnAffirmative_ShowsTheVersionRejection_WhenTheServiceRefusesTheImport()
+    {
+        // The destination can change version between loading the preview and clicking Import.
+        GumProjectSave source = new GumProjectSave { Version = 5 };
+        source.Behaviors.Add(new BehaviorSave { Name = "MyBehavior" });
+        _sut.InitializeFromProjectForTesting(source);
+        FindLeaf("MyBehavior", ElementItemType.Behavior).InclusionState = InclusionState.Explicit;
+        _projectState.GumProjectSave.Version = 3;
+
+        _sut.OnAffirmative();
+
+        _sut.ErrorMessage.ShouldNotBeNull().ShouldContain("upgrading-file-gumx-version");
+    }
+
     // ── conflict-resolution dialog (#2644) ────────────────────────────────
 
     [Fact]

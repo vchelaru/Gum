@@ -51,10 +51,20 @@ public class GumxImportService : IGumxImportService
         string destinationSubfolder,
         ConflictResolution conflictResolution = ConflictResolution.Cancel)
     {
+        var result = new ImportResult();
+        if (_projectState.GumProjectSave is { } destination)
+        {
+            result.VersionRejection = ImportVersionGate.GetRejection(
+                source.Version, destination.Version, "The source project");
+            if (result.VersionRejection != null)
+            {
+                return result;
+            }
+        }
+
         string projectDir = _projectState.ProjectDirectory
             ?? throw new InvalidOperationException("No project is loaded");
 
-        var result = new ImportResult();
         var nameMap = BuildNameMap(selections, destinationSubfolder);
         var qualifiedNameMap = BuildQualifiedNameMap(selections, destinationSubfolder);
 

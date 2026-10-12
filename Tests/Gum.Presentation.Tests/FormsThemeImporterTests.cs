@@ -108,6 +108,40 @@ public class FormsThemeImporterTests
         }
     }
 
+    [Theory]
+    [InlineData(5, 3, false)]
+    [InlineData(5, 5, true)]
+    [InlineData(3, 5, true)]
+    public async Task ImportThemeAsync_RejectsAThemeNewerThanTheProject_WithoutCopying(
+        int themeVersion, int projectVersion, bool shouldImport)
+    {
+        string themeDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GumImporterVersion_" + System.Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(themeDirectory);
+        try
+        {
+            System.IO.File.WriteAllText(System.IO.Path.Combine(themeDirectory, "GumProject.gumx"),
+                $"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <Version>{themeVersion}</Version>\n</GumProjectSave>");
+            _projectState.Setup(x => x.GumProjectSave)
+                .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumx", Version = projectVersion });
+            _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns(themeDirectory);
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath>());
+            _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+
+            bool result = await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+            result.ShouldBe(shouldImport);
+            _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), shouldImport ? Times.Once() : Times.Never());
+            _dialogService.Verify(
+                x => x.ShowMessage(It.Is<string>(m => m.Contains("upgrading-file-gumx-version")), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+                shouldImport ? Times.Never() : Times.Once());
+        }
+        finally
+        {
+            System.IO.Directory.Delete(themeDirectory, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task ImportThemeAsync_SavesProjectAndReloadsIt_WhenNothingBlocksCopying()
     {
