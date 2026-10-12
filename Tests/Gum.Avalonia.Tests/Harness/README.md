@@ -38,7 +38,7 @@ public class ManagePluginsScreenshotTests
 }
 ```
 
-Take every screenshot at 100%, zoomed in and zoomed out. The tool zooms by changing the base font size (default 12), so anything sized in fixed pixels (an icon, a margin) does not follow the text and an alignment that is right at 100% can break at 9 or 24. Set `IAppScaleProvider.BaseFontSize` with `AppWideWindowInput.FollowBaseFontSize` on the window and save one image per size (9, 12, 16, 24); `ReferenceSubtextScreenshotTests.ReferenceDrivenRow_AtDifferentZoomLevels` is the example. The `--exit-after --screenshot` launch shows only the user's current zoom.
+Take every screenshot at 100%, zoomed in and zoomed out. The tool zooms by changing the base font size (default 12), so anything sized in fixed pixels (an icon, a margin) does not follow the text and an alignment that is right at 100% can break at 9 or 24. Call `PrScreenshot.SaveWindowAtZoomLevels(window, name)` instead of `SaveWindow`: it saves `name-zoom-9.png`, `-12`, `-16` and `-24` (`PrScreenshot.ZoomLevels`) and restores the zoom; `ReferenceSubtextScreenshotTests` is the example. Look at the smallest and largest. The `--exit-after --screenshot` launch shows only the user's current zoom.
 
 `PrScreenshot.Run` skips the test unless `GUM_SCREENSHOT_DIR` names an output folder, so CI and
 `Tools/verify.ps1` report it as skipped. A save fails when the window shows the user's profile
