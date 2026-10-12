@@ -31,7 +31,7 @@ namespace Gum.Avalonia.Plugins.VariableGrid;
 
 /// <summary>
 /// The Avalonia Variables tab over <see cref="MainControlViewModel"/>: the state banner, errors and
-/// category notice, the filter box (Ctrl+E focuses it, Escape clears it), the variables grid, the
+/// category notice, the filter box (the filter shortcut focuses it, Escape clears it), the variables grid, the
 /// behavior grid and behavior-variable list, and the Add Variable button. Twin of the WPF
 /// <c>MainPropertyGrid</c>.
 /// </summary>
@@ -41,10 +41,14 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
     private readonly DataUiGrid _behaviorGrid;
     private readonly TextBox _filterTextBox;
     private readonly ListBox _behaviorVariables;
+    private readonly TextBlock _filterShortcutHint;
     private MainControlViewModel? _viewModel;
 
-    /// <summary>Builds the view; its grids use <paramref name="displayers"/>.</summary>
-    public VariablesTabView(DisplayerRegistry displayers)
+    /// <summary>
+    /// Builds the view; its grids use <paramref name="displayers"/>. <paramref name="filterShortcut"/> is the
+    /// focus-the-filter shortcut as the platform writes it ("Ctrl+E" or "⌘E"), shown as the box's hint and tooltip.
+    /// </summary>
+    public VariablesTabView(DisplayerRegistry displayers, string filterShortcut)
     {
         _variablesGrid = new DataUiGrid(displayers);
         _behaviorGrid = new DataUiGrid(displayers);
@@ -69,18 +73,18 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
 
         _filterTextBox = new TextBox { Watermark = "Filter variables", Padding = new Thickness(4, 2, 44, 2) };
         _filterTextBox.Bind(TextBox.TextProperty, new Binding(nameof(MainControlViewModel.VariableFilterText)) { Mode = BindingMode.TwoWay });
-        ToolTip.SetTip(_filterTextBox, "Show only variables whose name contains this text. Press Ctrl+E to focus, Escape to clear.");
+        ToolTip.SetTip(_filterTextBox, $"Show only variables whose name contains this text. Press {filterShortcut} to focus, Escape to clear.");
         _filterTextBox.AddHandler(KeyDownEvent, HandleFilterKeyDown, RoutingStrategies.Tunnel);
-        TextBlock shortcutHint = new TextBlock
+        _filterShortcutHint = new TextBlock
         {
-            Text = "Ctrl+E",
+            Text = filterShortcut,
             Opacity = 0.6,
             IsHitTestVisible = false,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 6, 0),
         };
-        shortcutHint.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsFilterWatermarkVisible)));
+        _filterShortcutHint.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsFilterWatermarkVisible)));
         Button clearFilter = new Button
         {
             Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Dismiss, 12),
@@ -102,7 +106,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         // As in the WPF tab: a search icon, then the box with its hint and clear button in one cell.
         Grid filterBox = new Grid();
         filterBox.Children.Add(_filterTextBox);
-        filterBox.Children.Add(shortcutHint);
+        filterBox.Children.Add(_filterShortcutHint);
         filterBox.Children.Add(clearFilter);
         Grid.SetColumn(filterBox, 1);
         Grid filterRow = new Grid { Margin = new Thickness(2, 2, 2, 4), ColumnDefinitions = new ColumnDefinitions("Auto,*") };
@@ -189,6 +193,9 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
 
     /// <summary>The filter box, for tests.</summary>
     internal TextBox FilterTextBox => _filterTextBox;
+
+    /// <summary>The shortcut hint inside the filter box, for tests.</summary>
+    internal TextBlock FilterShortcutHint => _filterShortcutHint;
 
     /// <summary>The Add Variable button, for tests.</summary>
     internal Button AddVariableButton { get; }

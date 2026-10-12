@@ -15,7 +15,9 @@ using Gum.Avalonia.Shell;
 using Gum.Avalonia.Themes;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Input;
 using Gum.Managers;
+using Moq;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.VariableGrid;
@@ -108,6 +110,23 @@ public class VariablesTabTests
         }
     }
 
+    [AvaloniaTheory]
+    [InlineData(KeyDisplayStyle.Windows, "Ctrl+E")]
+    [InlineData(KeyDisplayStyle.MacOS, "⌘E")]
+    public void Head_FilterHintAndTooltip_ShowTheShortcutInThePlatformsNotation(KeyDisplayStyle style, string expected)
+    {
+        Mock<IHotkeyManager> hotkeyManager = new Mock<IHotkeyManager>();
+        hotkeyManager.SetupGet(manager => manager.FocusVariableFilter).Returns(KeyCombination.Ctrl(GumKey.E));
+        AvaloniaVariableGridHead head = new AvaloniaVariableGridHead(hotkeyManager.Object, new KeyCombinationFormatter(style));
+
+        VariablesTabView view = (VariablesTabView)head.CreateVariablesTabView(new MainControlViewModel(
+            Services.GetRequiredService<IDeleteVariableService>(),
+            Services.GetRequiredService<Gum.Services.IEditVariableService>()));
+
+        view.FilterShortcutHint.Text.ShouldBe(expected);
+        ToolTip.GetTip(view.FilterTextBox).ShouldBeOfType<string>().ShouldContain($"Press {expected} to focus");
+    }
+
     [AvaloniaFact]
     public void TabView_BindsFilterAndRaisesItsEvents()
     {
@@ -115,7 +134,7 @@ public class VariablesTabTests
             Services.GetRequiredService<IDeleteVariableService>(),
             Services.GetRequiredService<Gum.Services.IEditVariableService>());
         viewModel.ShowVariableGrid = true;
-        VariablesTabView view = new VariablesTabView(DataUiGrid.CreateStandardRegistry()) { DataContext = viewModel };
+        VariablesTabView view = new VariablesTabView(DataUiGrid.CreateStandardRegistry(), "Ctrl+E") { DataContext = viewModel };
         Window window = new Window { Content = view, Width = 400, Height = 600 };
         window.Show();
         int addClicks = 0;

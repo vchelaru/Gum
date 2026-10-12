@@ -5,6 +5,7 @@ using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Services;
 using Gum.Input;
+using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.VariableGrid;
 using WpfDataUi;
@@ -19,10 +20,14 @@ public class AvaloniaVariableGridHead : IVariableGridHead
 {
     // One key handler per reference editor, so a re-bound editor forwards to its current row only.
     private readonly ConditionalWeakTable<StringListTextBoxDisplay, EventHandler<KeyEventArgs>> _referenceHandlers;
+    private readonly IHotkeyManager _hotkeyManager;
+    private readonly IKeyCombinationFormatter _keyFormatter;
 
     /// <summary>Creates the head with the standard and Gum displayers registered.</summary>
-    public AvaloniaVariableGridHead()
+    public AvaloniaVariableGridHead(IHotkeyManager hotkeyManager, IKeyCombinationFormatter keyFormatter)
     {
+        _hotkeyManager = hotkeyManager;
+        _keyFormatter = keyFormatter;
         _referenceHandlers = new ConditionalWeakTable<StringListTextBoxDisplay, EventHandler<KeyEventArgs>>();
         Displayers = DataUiGrid.CreateStandardRegistry();
         RegisterDisplayers(Displayers);
@@ -34,7 +39,7 @@ public class AvaloniaVariableGridHead : IVariableGridHead
     /// <inheritdoc/>
     public IVariablesTabView CreateVariablesTabView(MainControlViewModel viewModel)
     {
-        return new VariablesTabView(Displayers) { DataContext = viewModel };
+        return new VariablesTabView(Displayers, _keyFormatter.Format(_hotkeyManager.FocusVariableFilter)) { DataContext = viewModel };
     }
 
     /// <summary>Registers this head's editors for the Gum-specific displayer keys.</summary>
