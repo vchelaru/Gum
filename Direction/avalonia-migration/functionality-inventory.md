@@ -254,7 +254,7 @@
 - DISP-012 MultiFile. tested: CompositeEditorTests
 - DISP-013 StringList. tested: CompositeEditorTests, VariableScenarioTests
 - DISP-015 ToggleButtonOption. tested: CompositeEditorTests
-- DISP-016 Color (picker and hex). tested: CompactColorPickerTests, VariableScenarioTests
+- DISP-016 Color (picker and hex). tested: ColorPickerScenarioTests, CompactColorPickerTests, VariableScenarioTests
 - DISP-017 CornerRadius (linked/unlinked). tested: VariablesTabTests
 - DISP-018 RemoveButton. tested: VariablesTabTests
 - DISP-019 ChildrenLayout toggles. tested: VariablesTabTests, VariableScenarioTests

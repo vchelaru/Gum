@@ -65,6 +65,18 @@ internal sealed class HeadlessWindowDriver : IDisposable
         Dispatcher.UIThread.RunJobs();
     }
 
+    /// <summary>
+    /// Renders what is on screen so far, so hit testing sees a popup or other visual added since the
+    /// last frame (hit testing reads the compositor's last rendered scene).
+    /// </summary>
+    public void RenderFrame()
+    {
+        Layout();
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        Dispatcher.UIThread.RunJobs();
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+    }
+
     public Point CenterOf(Control control)
     {
         Layout();
