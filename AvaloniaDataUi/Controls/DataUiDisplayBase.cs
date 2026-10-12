@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -87,7 +88,8 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     {
         if (e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.Value) ||
             e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailText) ||
-            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink))
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailLink) ||
+            e.PropertyName == nameof(WpfDataUi.DataTypes.InstanceMember.DetailAction))
         {
             Refresh();
         }
@@ -130,38 +132,43 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
 
     private static readonly Cursor HandCursor = new Cursor(StandardCursorType.Hand);
 
-    /// <summary>Where the link sits inside a hint's text.</summary>
+    /// <summary>Where a link sits inside a hint's displayed text.</summary>
     private sealed record HintLink(int Start, int Length, DetailTextLink Link);
 
+    private const string ActionSeparator = " · ";
+
     private TextBlock? _linkHint;
-    private HintLink? _hintLink;
+    private List<HintLink> _hintLinks = new List<HintLink>();
 
     /// <summary>
-    /// The link clicks are handled here, not on the hint: a read-only row disables its content (the
-    /// hint included), and a disabled control gets no pointer events, so they go to this enabled control.
+    /// The link under the pointer, if any. Clicks are handled on this control, not on the hint: a
+    /// read-only row disables its content (the hint included), and a disabled control gets no pointer
+    /// events, so they go to this enabled control.
     /// </summary>
-    private bool IsOverLink(PointerEventArgs e)
+    private HintLink? GetLinkUnder(PointerEventArgs e)
     {
-        if (_linkHint == null || _hintLink == null)
+        if (_linkHint == null || _hintLinks.Count == 0)
         {
-            return false;
+            return null;
         }
 
         TextHitTestResult hit = _linkHint.TextLayout.HitTestPoint(e.GetPosition(_linkHint));
-        return hit.IsInside && hit.TextPosition >= _hintLink.Start && hit.TextPosition < _hintLink.Start + _hintLink.Length;
+        return hit.IsInside
+            ? _hintLinks.FirstOrDefault(span => hit.TextPosition >= span.Start && hit.TextPosition < span.Start + span.Length)
+            : null;
     }
 
     private void HandleHintPointerMoved(object? sender, PointerEventArgs e)
     {
-        Cursor = IsOverLink(e) ? HandCursor : null;
+        Cursor = GetLinkUnder(e) != null ? HandCursor : null;
     }
 
     private void HandleHintPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && IsOverLink(e))
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && GetLinkUnder(e) is { } span)
         {
             e.Handled = true;
-            _hintLink!.Link.Navigate();
+            span.Link.Navigate();
         }
     }
 
@@ -180,29 +187,54 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     protected void RefreshHint(TextBlock hint)
     {
         string? detailText = InstanceMember?.DetailText;
-        DetailTextLink? link = InstanceMember?.DetailLink;
-        int linkStart = link == null || detailText == null ? -1 : detailText.IndexOf(link.Text, StringComparison.Ordinal);
+        string? displayed = detailText;
+        List<HintLink> links = new List<HintLink>();
+
+        if (detailText != null)
+        {
+            // The action (such as Unlink) closes the first line of the text, after the source it acts on.
+            DetailTextLink? action = InstanceMember?.DetailAction;
+            if (action != null)
+            {
+                int firstLineEnd = detailText.IndexOf('\n');
+                firstLineEnd = firstLineEnd < 0 ? detailText.Length : firstLineEnd;
+                displayed = detailText.Insert(firstLineEnd, ActionSeparator + action.Text);
+                links.Add(new HintLink(firstLineEnd + ActionSeparator.Length, action.Text.Length, action));
+            }
+
+            DetailTextLink? source = InstanceMember?.DetailLink;
+            int sourceStart = source == null ? -1 : displayed!.IndexOf(source.Text, StringComparison.Ordinal);
+            if (source != null && sourceStart >= 0)
+            {
+                links.Add(new HintLink(sourceStart, source.Text.Length, source));
+            }
+        }
+        links.Sort((a, b) => a.Start.CompareTo(b.Start));
 
         hint.Inlines?.Clear();
-        if (link == null || detailText == null || linkStart < 0)
+        _hintLinks = links;
+        if (links.Count == 0)
         {
             _linkHint = null;
-            _hintLink = null;
             Cursor = null;
-            hint.Text = detailText;
+            hint.Text = displayed;
         }
         else
         {
-            Run linkRun = new Run(link.Text) { TextDecorations = TextDecorations.Underline };
-            linkRun.Bind(TextElement.ForegroundProperty, hint.GetResourceObservable("Frb.Brushes.Link"));
             _linkHint = hint;
-            _hintLink = new HintLink(linkStart, link.Text.Length, link);
             hint.Inlines ??= new InlineCollection();
-            hint.Inlines.Add(new Run(detailText.Substring(0, linkStart)));
-            hint.Inlines.Add(linkRun);
-            hint.Inlines.Add(new Run(detailText.Substring(linkStart + link.Text.Length)));
+            int position = 0;
+            foreach (HintLink span in links)
+            {
+                hint.Inlines.Add(new Run(displayed!.Substring(position, span.Start - position)));
+                Run linkRun = new Run(span.Link.Text) { TextDecorations = TextDecorations.Underline };
+                linkRun.Bind(TextElement.ForegroundProperty, hint.GetResourceObservable("Frb.Brushes.Link"));
+                hint.Inlines.Add(linkRun);
+                position = span.Start + span.Length;
+            }
+            hint.Inlines.Add(new Run(displayed!.Substring(position)));
         }
-        hint.IsVisible = !string.IsNullOrEmpty(detailText);
+        hint.IsVisible = !string.IsNullOrEmpty(displayed);
     }
 
 }

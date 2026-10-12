@@ -123,11 +123,18 @@ public class ElementSaveDisplayerCompositeReferenceTests : BaseTestClass
             .Setup(x => x.GetLink("Other.Width", _screen))
             .Returns(link);
 
+        DetailTextLink unlink = new DetailTextLink("Unlink", () => { });
+        _mocker.GetMock<IVariableReferenceLinkLogic>()
+            .Setup(x => x.GetUnlinkAction("Width", instance, _screen, _screenDefaultState))
+            .Returns(unlink);
+
         List<VariableGridEntry> members = _displayer.GetCategories(_screen, instance, _screenDefaultState, null)
             .SelectMany(category => category.Members)
             .ToList();
 
         members.First(member => member.RootVariableName == "Width").DetailLink.ShouldBe(link);
+        members.First(member => member.RootVariableName == "Width").DetailAction.ShouldBe(unlink);
         members.First(member => member.RootVariableName == "Height").DetailLink.ShouldBeNull();
+        members.First(member => member.RootVariableName == "Height").DetailAction.ShouldBeNull();
     }
 }

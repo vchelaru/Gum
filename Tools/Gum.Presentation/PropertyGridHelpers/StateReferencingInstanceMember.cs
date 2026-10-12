@@ -75,6 +75,7 @@ public class StateReferencingInstanceMember : InstanceMember
         this.DisplayName = _entry.DisplayName;
         this.DetailText = _entry.DetailText;
         this.DetailLink = _entry.DetailLink;
+        this.DetailAction = _entry.DetailAction;
         this.ToolTipText = _entry.ToolTipText;
         this.SupportsMakeDefault = _entry.SupportsMakeDefault;
 
@@ -285,6 +286,7 @@ public class StateReferencingInstanceMember : InstanceMember
         this.DisplayName = _entry.DisplayName;
         this.DetailText = _entry.DetailText;
         this.DetailLink = _entry.DetailLink;
+        this.DetailAction = _entry.DetailAction;
         this.ToolTipText = _entry.ToolTipText;
         this.SupportsMakeDefault = _entry.SupportsMakeDefault;
 

@@ -837,6 +837,10 @@ public class ElementSaveDisplayer
         if (propertyData.ReferenceSource != null && instanceOwner != null)
         {
             entry.DetailLink = _referenceLinkLogic.GetLink(propertyData.ReferenceSource, instanceOwner);
+            if (stateSave != null)
+            {
+                entry.DetailAction = _referenceLinkLogic.GetUnlinkAction(propertyData.OriginalName, instance, instanceOwner, stateSave);
+            }
         }
 
         if(stateSave != null)

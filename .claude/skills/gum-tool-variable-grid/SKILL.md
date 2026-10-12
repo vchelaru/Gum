@@ -77,7 +77,7 @@ Landmine: the backing `_expansionStates` dictionary is **static** and keyed only
 
 ### Detail Text Links
 
-A reference-driven row's "Set by Other.X" names its source as a link: `VariableReferenceLinkLogic` (headless) builds an `InstanceMember.DetailLink` for plain variable paths only, and `DataUiDisplayBase.RefreshHint` draws it. Landmine: a read-only row disables its content, hint included, and a disabled control gets no pointer events, so the click is handled on the displayer itself (`HandleHintPointerPressed`), not on the hint's `TextBlock`.
+A reference-driven row's "Set by Other.X" names its source as a link: `VariableReferenceLinkLogic` (headless) builds an `InstanceMember.DetailLink` for plain variable paths only, and `DataUiDisplayBase.RefreshHint` draws it. The same class builds `InstanceMember.DetailAction` ("Unlink", only when the selected state's own list holds the line), which comments the line out through `ISetVariableLogic.PropertyValueChanged`; the view appends it to the first line of the text. Landmine: a read-only row disables its content, hint included, and a disabled control gets no pointer events, so the click is handled on the displayer itself (`HandleHintPointerPressed`), not on the hint's `TextBlock`.
 
 ### Hiding a Row
 

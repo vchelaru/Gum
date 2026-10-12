@@ -184,22 +184,35 @@ internal sealed class VariableGridHarness : IDisposable
             ?? throw new InvalidOperationException($"The {memberName} row has no live editor.");
     }
 
-    /// <summary>Clicks the link in <paramref name="memberName"/>'s detail text, at the middle of the link's own text.</summary>
+    /// <summary>Clicks the source link in <paramref name="memberName"/>'s detail text, at the middle of the link's own text.</summary>
     public void ClickDetailLink(string memberName)
     {
         DetailTextLink link = Member(memberName).DetailLink
             ?? throw new InvalidOperationException($"The {memberName} row has no detail link.");
+        ClickHintText(memberName, link.Text);
+    }
+
+    /// <summary>Clicks the action (such as Unlink) shown after <paramref name="memberName"/>'s detail text.</summary>
+    public void ClickDetailAction(string memberName)
+    {
+        DetailTextLink action = Member(memberName).DetailAction
+            ?? throw new InvalidOperationException($"The {memberName} row has no detail action.");
+        ClickHintText(memberName, action.Text);
+    }
+
+    private void ClickHintText(string memberName, string textToClick)
+    {
         // A hint with a link is built from inlines, so its text is the runs joined.
         static string TextOf(TextBlock text) => text.Inlines is { Count: > 0 }
             ? string.Concat(text.Inlines.OfType<global::Avalonia.Controls.Documents.Run>().Select(run => run.Text))
             : text.Text ?? "";
         TextBlock hint = Row(memberName).GetVisualDescendants().OfType<TextBlock>()
-            .First(text => text.IsVisible && TextOf(text).Contains(link.Text));
+            .First(text => text.IsVisible && TextOf(text).Contains(textToClick));
         hint.BringIntoView();
         _driver.Layout();
 
-        int linkStart = TextOf(hint).IndexOf(link.Text, StringComparison.Ordinal);
-        Rect middle = hint.TextLayout.HitTestTextPosition(linkStart + link.Text.Length / 2);
+        int start = TextOf(hint).IndexOf(textToClick, StringComparison.Ordinal);
+        Rect middle = hint.TextLayout.HitTestTextPosition(start + textToClick.Length / 2);
         Point point = hint.TranslatePoint(middle.Center, _driver.Window)
             ?? throw new InvalidOperationException("The detail text is not in the window.");
         _driver.ClickAt(point);

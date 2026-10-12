@@ -751,6 +751,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             {
                 var item = newValueAsList[i];
 
+                if (item.TrimStart().StartsWith("//"))
+                {
+                    continue;
+                }
+
                 var syntax = CSharpSyntaxTree.ParseText(item).GetCompilationUnitRoot();
                 var assignment = syntax.DescendantNodes().FirstOrDefault(item => item is AssignmentExpressionSyntax) as AssignmentExpressionSyntax;
 
