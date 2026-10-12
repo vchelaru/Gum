@@ -71,10 +71,9 @@ public class Arc : RenderableShapeBase
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
-        using (var path = new SKPath())
-        {
-            path.AddArc(boundingRect, -StartAngle, -SweepAngle);
-            canvas.DrawPath(path, paint);
-        }
+        using var builder = new SKPathBuilder();
+        builder.AddArc(boundingRect, -StartAngle, -SweepAngle);
+        using SKPath path = builder.Detach();
+        canvas.DrawPath(path, paint);
     }
 }

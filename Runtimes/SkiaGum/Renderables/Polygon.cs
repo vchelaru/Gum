@@ -129,28 +129,29 @@ public class Polygon : RenderableShapeBase
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
-        SKPath path = new SKPath();
+        using var builder = new SKPathBuilder();
 
         var thisPosition = new SKPoint(boundingRect.Left, boundingRect.Top);
 
         GetXY(boundingRect, Points[0], out float x, out float y);
 
-        path.MoveTo(new SKPoint(x, y) + thisPosition);
+        builder.MoveTo(new SKPoint(x, y) + thisPosition);
 
         for (int i = 1; i < Points.Count; i++)
         {
             var point = Points[i];
             GetXY(boundingRect, point, out x, out y);
 
-            path.LineTo(new SKPoint(x, y) + thisPosition);
+            builder.LineTo(new SKPoint(x, y) + thisPosition);
         }
 
         if (IsClosed)
         {
-            path.LineTo(Points[0] + thisPosition);
-            path.Close();
+            builder.LineTo(Points[0] + thisPosition);
+            builder.Close();
         }
 
+        using SKPath path = builder.Detach();
         canvas.DrawPath(path, paint);
     }
 

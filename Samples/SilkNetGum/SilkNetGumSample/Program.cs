@@ -51,7 +51,6 @@ unsafe class Program
     static StackPanel navStrip = null!;
     static SKPaint sKPaint;
     static SKCanvas canvas;
-    static SKPaint paintFromFile;
     static SKSurface? surface;
     static GRBackendRenderTarget? renderTarget;
 
@@ -500,15 +499,6 @@ unsafe class Program
             int frames = 0;
             int totalFramesRendered = 0;
 
-            using var fontFromFile = SKTypeface.FromFile("Super Morning.ttf");
-            paintFromFile = new SKPaint
-            {
-                Color = SKColors.Black,
-                IsAntialias = true,
-                Style = SKPaintStyle.Fill,
-                TextSize = 32,
-                Typeface = fontFromFile
-            };
             SKPath batchPath = new SKPath();
 
             Stopwatch sw = new Stopwatch();
@@ -606,7 +596,6 @@ unsafe class Program
         }
         finally
         {
-            paintFromFile?.Dispose();
             canvas?.Dispose();
             surface?.Dispose();
             renderTarget?.Dispose();

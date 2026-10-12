@@ -182,17 +182,13 @@
 		<!-- Pinned to SkiaGameRendering's SkiaSharp version (its eng/Versions.props): StrideGum's GPU path
 		     and the Unity package load SkiaGameRendering's SkiaSharp, so every Skia-family project
 		     moves with it. -->
-		<PackageReference Include="SkiaSharp" Version="3.119.4" />
+		<PackageReference Include="SkiaSharp" Version="4.153.1" />
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.4" />
-		<PackageReference Include="Svg.Skia" Version="5.1.1" />
-		<!-- RichTextKit asks for the SkiaSharp 2.88 build of SkiaSharp.HarfBuzz; lift it to the SkiaSharp 3 build
-		     so no 2.88-compiled assembly ships (Unity IL2CPP fails to compile those at Minimal stripping). -->
-		<PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.4" />
-		<!-- Gum's published fork of Topten.RichTextKit (see /ThirdParty/README.md), fixes halo
-		     stroke-join spiking at acute glyph corners, needed for per-run outline thickness.
-		     Switch back to Topten.RichTextKit once toptensoftware/RichTextKit#114 ships (#5499). -->
-		<PackageReference Include="Gum.Topten.RichTextKit" Version="0.4.167.1" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="4.153.1" />
+		<PackageReference Include="Svg.Skia" Version="5.2.3" />
+		<!-- Needs the halo stroke-join fix (#114) for per-run outline thickness. It requires SkiaSharp
+		     4.153.1, which brings SkiaSharp.HarfBuzz 4.153.1 with it. -->
+		<PackageReference Include="Topten.RichTextKit" Version="0.6.170" />
 	</ItemGroup>
 
 	<ItemGroup>

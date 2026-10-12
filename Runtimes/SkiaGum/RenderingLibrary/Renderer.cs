@@ -558,7 +558,7 @@ namespace RenderingLibrary.Graphics
             SKRuntimeEffect? effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
             if (effect == null)
             {
-                managers.Canvas.DrawImage(image, destination, paint);
+                managers.Canvas.DrawImage(image, destination, SKSamplingOptions.Default, paint);
                 return;
             }
 
