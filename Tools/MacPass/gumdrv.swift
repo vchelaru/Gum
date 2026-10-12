@@ -9,8 +9,10 @@ import ApplicationServices
 //   activate PID   active PID   title PID   windows PID   tree PID [maxDepth]
 //   setframe PID X Y W H             move and resize the first window
 //   menu PID Top [Sub ...] Leaf      press a menu item by its title path (no coordinates)
+//   find PID ROLE TITLE              centre of the first element with that role and title (or value): "x y"
 //   menuinfo PID                     every menu item: path|enabled|cmdChar|cmdModifiers
 //   flags   clearflags               the system's modifier state; release every modifier key
+//   scale                            the main display's backing scale factor
 //   where   listen SECONDS           the pointer position; mouse events seen, with the process that posted each
 
 func post(_ e: CGEvent?) { e?.post(tap: .cghidEventTap); usleep(15000) }
@@ -126,6 +128,21 @@ func dumpMenu(_ el: AXUIElement, _ path: String) {
     }
 }
 
+func findElement(_ el: AXUIElement, _ r: String, _ t: String, _ depth: Int) -> AXUIElement? {
+    if role(el) == r && (title(el) == t || (attr(el, kAXValueAttribute) as? String) == t) { return el }
+    if depth == 0 { return nil }
+    for k in kids(el) { if let f = findElement(k, r, t, depth - 1) { return f } }
+    return nil
+}
+
+func center(_ el: AXUIElement) -> CGPoint? {
+    var p = CGPoint.zero, s = CGSize.zero
+    guard let pv = attr(el, kAXPositionAttribute), CFGetTypeID(pv) == AXValueGetTypeID(),
+          let sv = attr(el, kAXSizeAttribute), CFGetTypeID(sv) == AXValueGetTypeID() else { return nil }
+    AXValueGetValue(pv as! AXValue, .cgPoint, &p); AXValueGetValue(sv as! AXValue, .cgSize, &s)
+    return CGPoint(x: p.x + s.width / 2, y: p.y + s.height / 2)
+}
+
 let a = CommandLine.arguments
 guard a.count >= 2 else { print("usage: see header"); exit(1) }
 switch a[1] {
@@ -205,6 +222,8 @@ case "flags":
     // The modifier state the system currently reports; a stuck Command turns a drag into a move.
     print(String(CGEventSource.flagsState(.hidSystemState).rawValue, radix: 16),
           String(CGEventSource.flagsState(.combinedSessionState).rawValue, radix: 16))
+case "scale":
+    print(NSScreen.main?.backingScaleFactor ?? 1)
 case "where":
     let loc = CGEvent(source: nil)?.location ?? .zero
     print("\(Int(loc.x)) \(Int(loc.y))")
@@ -239,6 +258,9 @@ case "menu":
     let r = AXUIElementPerformAction(cur, kAXPressAction as CFString)
     print(r == .success ? "pressed" : "press failed \(r.rawValue)")
     exit(r == .success ? 0 : 4)
+case "find":
+    guard let el = findElement(AXUIElementCreateApplication(pid_t(a[2])!), a[3], a[4], 40), let c = center(el) else { exit(3) }
+    print("\(Int(c.x)) \(Int(c.y))")
 case "menuinfo":
     let app = AXUIElementCreateApplication(pid_t(a[2])!)
     for top in menuBarItems(app) where !title(top).isEmpty && title(top) != "Apple" {

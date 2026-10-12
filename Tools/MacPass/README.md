@@ -41,7 +41,23 @@ Window content (tabs, buttons, tree rows) is in the Accessibility tree, nested a
 relative to the main window in the default 1280x720 layout (`TREE_ROW_SELECTED`, `CHIP_CIRCLE`,
 `CANVAS_DROP`). A moved control means updating one constant.
 
+Prefer finding a control through the tree to a window-relative constant: `Gum.click_title(role, title)` clicks the
+centre of the first match (tabs are `AXRadioButton`, buttons `AXButton`; tree rows and labels are `AXStaticText`
+matched by value). The canvas is one `AXImage` (`Gum.canvas()`), so what is drawn in it is found by colour:
+`Gum.find_color(rgb)` returns the bounding box of an element's rendered colour in screen points. Camera zoom
+is never saved, so read it from the toolbar (`Gum.zoom()`), and `Gum.scale()` is the Retina factor (a point of
+mouse travel is that many canvas pixels, divided by the zoom, in world units).
+
 ## Gotchas
+
+- The canvas image's frame is not where the selection is drawn (rulers and margins), and Focus on
+  Selection centres the element in the visible area, not in that frame. Locate edges with `find_color`.
+  Selection handles sit just outside the element's edge (about 6 points), and at the zoom Focus on
+  Selection picks the corner handles touch the view's edge; use a bottom-middle handle. Zooming out does
+  not keep the element centred, so a corner point computed afterwards lands on something else.
+- Camera hotkeys (Cmd+=, Cmd+-, arrows) need canvas focus; click the selected element's body for it.
+  With tree focus the same keys change the app's font size. `View > Focus on Selection` works from any focus.
+- Under load a native path sheet can swallow a Return; press Return until the expected file exists.
 
 - `--select Element` selects after load but leaves keyboard focus nowhere, so hotkeys do nothing until `Gum.focus_tree()` (Cmd+F, Escape). Clicking the tree instead can clear the selection.
 - A native panel's path field takes a typed path, then needs one Return to apply it and another to

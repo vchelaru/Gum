@@ -167,6 +167,84 @@ class Gum:
         drv("click", w["x"] + rx, w["y"] + ry, how)
         time.sleep(0.4)
 
+    def find(self, role, title):
+        """Screen centre (x, y) of the first accessibility element with this role and title or value, or None."""
+        out = drv("find", self.pid, role, title, check=False)
+        return tuple(int(v) for v in out.split()) if out else None
+
+    def has(self, role, title):
+        return self.find(role, title) is not None
+
+    def click_title(self, role, title, how="left"):
+        """Clicks the centre of a control found through the accessibility tree, so no layout constant is needed."""
+        pos = wait_until(lambda: self.find(role, title), 10) and self.find(role, title)
+        if not pos:
+            raise Failure(f"no {role} '{title}' in the accessibility tree")
+        drv("click", *pos, how)
+        time.sleep(0.5)
+
+    def tree(self):
+        return drv("tree", self.pid, 40, check=False).splitlines()
+
+    def canvas(self):
+        """Screen frame (x, y, w, h) in points of the canvas, the one large image in the editor tab."""
+        for line in self.tree():
+            if line.strip().startswith("AXImage"):
+                x, y, w, h = (int(v) for v in line[line.index("[") + 1:-1].split())
+                if w > 400 and h > 200:
+                    return x, y, w, h
+        raise Failure("the canvas is not in the accessibility tree")
+
+    def zoom(self):
+        """The toolbar's zoom percentage, read from the tree (camera zoom is never saved to disk)."""
+        win = self.main_window()
+        for line in self.tree():
+            if line.strip().startswith("AXStaticText") and 'value="' in line:
+                value = line.split('value="')[1].split('"')[0]
+                y = int(line[line.index("[") + 1:-1].split()[1])
+                if value.endswith("%") and value[:-1].isdigit() and y < win["y"] + 100:
+                    return int(value[:-1])
+        raise Failure("the zoom percentage is not in the accessibility tree")
+
+    def scale(self):
+        """Backing scale factor of the main display: a point of mouse travel is this many canvas pixels."""
+        return float(drv("scale"))
+
+    def find_color(self, rgb, tol=12):
+        """Bounding box (x0, y0, x1, y1), in screen points, of the pixels near this colour in the canvas, or None.
+        The canvas is a single image to Accessibility, so a selected element's rendered colour locates its
+        edges and handles."""
+        x, y, w, h = self.canvas()
+        bmp = Path(tempfile.mkdtemp(prefix="macpass-bmp-")) / "canvas.bmp"
+        subprocess.run(["screencapture", "-x", "-t", "bmp", f"-R{x},{y},{w},{h}", str(bmp)], check=True)
+        data = bmp.read_bytes()
+        offset = int.from_bytes(data[10:14], "little")
+        width = int.from_bytes(data[18:22], "little")
+        height = int.from_bytes(data[22:26], "little", signed=True)
+        bpp = int.from_bytes(data[28:30], "little")
+        if bpp not in (24, 32):
+            raise Failure(f"unexpected screenshot format: {bpp} bpp")
+        step = bpp // 8
+        stride = (width * step + 3) // 4 * 4
+        rows = abs(height)
+        scale = width / w
+        r, g, b = rgb
+        x0 = y0 = 1 << 30
+        x1 = y1 = -1
+        for row in range(0, rows, 2):
+            line = row * stride + offset
+            px_y = rows - 1 - row if height > 0 else row  # a positive height is stored bottom-up
+            seg = data[line:line + width * step]
+            for col in range(0, width, 2):
+                i = col * step
+                if abs(seg[i + 2] - r) <= tol and abs(seg[i + 1] - g) <= tol and abs(seg[i] - b) <= tol:
+                    x0, x1 = min(x0, col), max(x1, col)
+                    y0, y1 = min(y0, px_y), max(y1, px_y)
+        shutil.rmtree(bmp.parent, ignore_errors=True)
+        if x1 < 0:
+            return None
+        return x + x0 / scale, y + y0 / scale, x + x1 / scale, y + y1 / scale
+
     def drag(self, rx1, ry1, rx2, ry2):
         w = self.main_window()
         drv("drag", w["x"] + rx1, w["y"] + ry1, w["x"] + rx2, w["y"] + ry2)
@@ -339,7 +417,7 @@ def hotkeys_on_disk(c: Ctx):
     c.check("Delete then Y removed MacRenamed.gucx", wait_until(lambda: not g.gucx("MacRenamed").exists(), 8))
 
 
-@scenario("new-project-cancel", known_bug=5968)
+@scenario("new-project-cancel")
 def new_project_cancel(c: Ctx):
     g = c.launch()
     g.menu("File", "New Project")
@@ -373,9 +451,12 @@ def export_image_on_disk(c: Ctx):
     g.menu("File", "Export", "Export as Image")
     g.wait_for_sheet()
     g.type(str(out))
-    g.key("return")  # a typed path first sets the panel's folder and name
-    time.sleep(0.8)
-    g.key("return")  # Save
+    # A typed path first sets the panel's folder and name (one Return), then Save (another). Under load the
+    # path sheet can swallow a Return, so press again until the file exists instead of counting on two.
+    for _ in range(4):
+        g.key("return")
+        if wait_until(out.exists, 2.5):
+            break
     c.check("Export as Image wrote a PNG", wait_until(lambda: out.exists() and out.stat().st_size > 100, 15))
     if out.exists():
         c.check("PNG has the PNG signature", out.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n")
@@ -413,6 +494,269 @@ def drag_standard_chip(c: Ctx):
     c.check("Dragging the Circle chip onto the canvas added an instance",
             wait_until(lambda: g.instance_count(element) == before + 1, 8),
             f"instances {before} -> {g.instance_count(element)}; modifiers held: '{held_modifiers() or 'none'}'")
+
+
+@scenario("codegen-auto-setup-and-generate")
+def codegen_auto_setup_and_generate(c: Ctx):
+    # The sample ships a ProjectCodeSettings.codsj, which hides Auto. Start from a project with no setup,
+    # a csproj above the .gumx folder (what Auto walks up to find) and ComponentWithState set to GenerateManually.
+    proj = c.work / "proj"
+    shutil.copytree(SAMPLE, proj)
+    (proj / "ProjectCodeSettings.codsj").unlink()
+    (proj / "Components/ComponentWithState.codsj").write_text('{"GenerationBehavior":1}')
+    (c.work / "MonoGameGumFromFile.csproj").write_text('<Project Sdk="Microsoft.NET.Sdk" />')
+    g = c.launch(args=["--select", "ComponentWithState"])
+    g.click_title("AXRadioButton", "Code")
+    c.check("the Code tab offers Auto and Manual",
+            wait_until(lambda: g.has("AXButton", "Auto") and g.has("AXButton", "Manual"), 10))
+    c.check("Generate is hidden until setup", not g.has("AXButton", "Generate"))
+    g.click_title("AXButton", "Auto")
+    settings = proj / "ProjectCodeSettings.codsj"
+    c.check("Auto wrote ProjectCodeSettings.codsj", wait_until(settings.exists, 10))
+    text = settings.read_text() if settings.exists() else ""
+    squashed = text.replace(" ", "").replace("\\/", "/")
+    c.check("Auto found the csproj above the project", '"CodeProjectRoot":"../"' in squashed, text[:300])
+    c.check("Auto took the namespace from the csproj name", "MonoGameGumFromFile" in text, text[:300])
+    c.check("Generate appears once set up", wait_until(lambda: g.has("AXButton", "Generate"), 10))
+    g.click_title("AXButton", "Generate")
+    generated = c.work / "Components/ComponentWithState.Generated.cs"
+    custom = c.work / "Components/ComponentWithState.cs"
+    c.check("Generate wrote ComponentWithState.Generated.cs", wait_until(generated.exists, 15))
+    c.check("Generate wrote the ComponentWithState.cs stub", custom.exists())
+    if generated.exists():
+        code = generated.read_text()
+        c.check("generated code is in the csproj's namespace", "namespace MonoGameGumFromFile.Components" in code)
+        c.check("generated code is a partial ComponentWithState", "partial class ComponentWithState" in code)
+    if custom.exists():
+        c.check("the stub has the CustomInitialize hook", "partial void CustomInitialize()" in custom.read_text())
+    c.check("the project folder got no generated files", not list((proj / "Components").glob("*.cs")))
+    g.key("return")  # the "Generated code to ..." message
+
+
+# -- canvas and Variables tab depth. The target is StartScreen#ColoredRectangleInstance: pixel X/Y/Width/Height
+# (25, 39, 254, 106) with no parent, so every diff is an exact integer. Autosave writes the element on release.
+
+RECT = "StartScreen#ColoredRectangleInstance"
+RECT_RGB = (0, 20, 139)  # its Red, Green, Blue in StartScreen.gusx
+
+
+def rect_vars(g, names=("X", "Y", "Width", "Height")):
+    """The ColoredRectangleInstance variables in the saved StartScreen, as {name: float}."""
+    root = ET.parse(g.dir / "Screens/StartScreen.gusx").getroot()
+    out = {}
+    for v in root.iter("Variable"):
+        n, val = v.find("Name"), v.find("Value")
+        if n is not None and val is not None and n.text.startswith("ColoredRectangleInstance."):
+            out[n.text.split(".", 1)[1]] = float(val.text) if val.text.replace(".", "", 1).lstrip("-").isdigit() else val.text
+    return out if names is None else {k: out.get(k) for k in names}
+
+
+def frame_element(g):
+    """Centres the selection (View > Focus on Selection works from any focus) and returns (centre x, centre y, zoom)."""
+    g.menu("View", "Focus on Selection")
+    time.sleep(0.8)
+    cx, cy, w, h = g.canvas()
+    return cx + w // 2, cy + h // 2, g.zoom()
+
+
+@scenario("canvas-drag-move")
+def canvas_drag_move(c: Ctx):
+    g = c.launch(args=["--select", RECT])
+    x, y, zoom = frame_element(g)
+    s = g.scale()
+    before = rect_vars(g)
+    drv("drag", x, y, x + 40, y + 20)
+    expected = int(40 * s * 100 / zoom), int(20 * s * 100 / zoom)
+    c.check("the drag wrote X and Y (autosave on release)",
+            wait_until(lambda: rect_vars(g)["X"] != before["X"], 8), str(rect_vars(g)))
+    after = rect_vars(g)
+    c.check("X moved right by the drag distance in world units", abs(after["X"] - before["X"] - expected[0]) <= 2,
+            f"{before['X']} -> {after['X']}, expected +{expected[0]} (scale {s}, zoom {zoom}%)")
+    c.check("Y moved down by the drag distance in world units", abs(after["Y"] - before["Y"] - expected[1]) <= 2,
+            f"{before['Y']} -> {after['Y']}, expected +{expected[1]}")
+    c.check("Width and Height are unchanged by a move",
+            (after["Width"], after["Height"]) == (before["Width"], before["Height"]), str(after))
+
+
+@scenario("canvas-resize-handle")
+def canvas_resize_handle(c: Ctx):
+    g = c.launch(args=["--select", RECT])
+    frame_element(g)
+    s, zoom = g.scale(), g.zoom()
+    before = rect_vars(g)
+    box = g.find_color(RECT_RGB)
+    if not c.check("the selected rectangle is visible on the canvas", box is not None):
+        return
+    # Focus on Selection fills the view, so the corner handles sit on the view's edge. The bottom-middle
+    # handle is centred on the rectangle's bottom edge and clear of every edge.
+    hx, hy = int((box[0] + box[2]) / 2), int(box[3]) + 6  # the handle sits just outside the edge
+    drv("drag", hx, hy, hx, hy + 20)
+    expected = int(20 * s * 100 / zoom)
+    c.check("the drag wrote Height (autosave on release)",
+            wait_until(lambda: rect_vars(g)["Height"] != before["Height"], 8), str(rect_vars(g)))
+    after = rect_vars(g)
+    c.check("Height grew by the drag distance", abs(after["Height"] - before["Height"] - expected) <= 2,
+            f"{before['Height']} -> {after['Height']}, expected +{expected} (scale {s}, zoom {zoom}%)")
+    c.check("X, Y and Width are unchanged by a bottom-middle resize",
+            (after["X"], after["Y"], after["Width"]) == (before["X"], before["Y"], before["Width"]), str(after))
+
+
+@scenario("canvas-arrow-nudge")
+def canvas_arrow_nudge(c: Ctx):
+    g = c.launch(args=["--select", RECT])
+    x, y, _ = frame_element(g)
+    drv("click", x, y)  # a click on the selected rectangle focuses the canvas and keeps the selection
+    time.sleep(0.6)
+    before = rect_vars(g)
+    g.key("right")
+    g.key("down")
+    g.key("right", "shift")
+    g.key("up")
+    time.sleep(1.0)
+    after = rect_vars(g)
+    c.check("Right, Down, Shift+Right, Up nudged X by 1+5", after["X"] == before["X"] + 6, f"{before['X']} -> {after['X']}")
+    c.check("and Y by 1-1", after["Y"] == before["Y"], f"{before['Y']} -> {after['Y']}")
+    file = g.dir / "Screens/StartScreen.gusx"
+    bytes_before = file.read_bytes()
+    g.key("right", "cmd")  # Cmd+arrow pans the camera, it must not move the element
+    time.sleep(0.8)
+    c.check("Cmd+Right panned the camera and left the element file alone", file.read_bytes() == bytes_before)
+
+
+@scenario("canvas-zoom-shortcuts")
+def canvas_zoom_shortcuts(c: Ctx):
+    g = c.launch(args=["--select", RECT])
+    file = g.dir / "Screens/StartScreen.gusx"
+    bytes_before = file.read_bytes()
+    # With focus in the tree the same keys change the app font size, not the camera.
+    g.focus_tree()
+    start = g.zoom()
+    g.key("=", "cmd")
+    c.check("Cmd+= with tree focus leaves the camera zoom alone", g.zoom() == start, f"{start}% -> {g.zoom()}%")
+    g.key("-", "cmd")
+    x, y, _ = frame_element(g)  # centres the rectangle so a click lands on it and focuses the canvas
+    drv("click", x, y)
+    time.sleep(0.6)
+    focused = g.zoom()
+    g.key("=", "cmd")
+    zoomed_in = g.zoom()
+    g.key("-", "cmd")
+    zoomed_back = g.zoom()
+    c.check("Cmd+= with canvas focus zooms in", zoomed_in > focused, f"{focused}% -> {zoomed_in}%")
+    c.check("Cmd+- zooms back out", zoomed_back == focused, f"{zoomed_in}% -> {zoomed_back}%")
+    c.check("zooming wrote nothing to the element file", file.read_bytes() == bytes_before)
+
+
+@scenario("focus-on-selection-hotkey")
+def focus_on_selection_hotkey(c: Ctx):
+    file_bytes = None
+    g = c.launch(args=["--select", RECT])
+    file = g.dir / "Screens/StartScreen.gusx"
+    file_bytes = file.read_bytes()
+    items = g.menu_items()
+    c.check("View > Focus on Selection exists", "View>Focus on Selection" in items, str([p for p in items if p.startswith("View")]))
+    c.check("it shows a bare F", items.get("View>Focus on Selection", {}).get("cmd", "").upper() == "F", str(items.get("View>Focus on Selection")))
+    start = g.zoom()
+    # F from the tree (the focus the tool starts with after a selection)
+    g.focus_tree()
+    g.key("f")
+    c.check("F with tree focus zooms to the selection", g.zoom() > start, f"{start}% -> {g.zoom()}%")
+    g = c.launch(args=["--select", RECT])
+    start = g.zoom()
+    g.menu("View", "Focus on Selection")
+    c.check("the View menu item zooms to the selection", g.zoom() > start, f"{start}% -> {g.zoom()}%")
+    c.check("focusing wrote nothing to the element file", file.read_bytes() == file_bytes)
+
+
+def alpha_slider_in_view(g):
+    """Scrolls the Variables tab until the Alpha row's slider is inside the window; returns its centre and width."""
+    win = g.main_window()
+    for _ in range(20):
+        lines = g.tree()
+        for i, line in enumerate(lines):
+            if 'AXStaticText value="Alpha"' in line:
+                for nxt in lines[i + 1:i + 4]:
+                    if nxt.strip().startswith("AXSlider"):
+                        x, y, w, h = (int(v) for v in nxt[nxt.index("[") + 1:-1].split())
+                        if win["y"] + 150 < y + h // 2 < win["y"] + win["h"] - 20:
+                            return x + w // 2, y + h // 2, w
+        drv("scroll", win["x"] + 400, win["y"] + 500, -5)
+        time.sleep(0.4)
+    raise Failure("the Alpha slider never scrolled into view")
+
+
+@scenario("alpha-slider-right-click-then-click")
+def alpha_slider_right_click_then_click(c: Ctx):
+    g = c.launch(args=["--select", RECT])
+    file = g.dir / "Screens/StartScreen.gusx"
+    x, y, w = alpha_slider_in_view(g)
+    bytes_before = file.read_bytes()
+    drv("click", x, y, "right")
+    time.sleep(0.8)
+    g.key("escape")
+    time.sleep(0.8)
+    c.check("a right-click on the Alpha slider commits nothing", file.read_bytes() == bytes_before
+            and "ColoredRectangleInstance.Alpha" not in file.read_text())
+    x, y, w = alpha_slider_in_view(g)
+    drv("click", x, y)  # the middle of the track, away from the 255 thumb
+    c.check("a left click on the track commits Alpha to disk",
+            wait_until(lambda: "Alpha" in rect_vars(g, None), 8), str(rect_vars(g, None)))
+    alpha = rect_vars(g, None).get("Alpha")
+    c.check("the middle of the track is about half", isinstance(alpha, float) and 100 <= alpha <= 155, str(alpha))
+    x, y, w = alpha_slider_in_view(g)
+    drv("click", x + w // 2 - 4, y)  # the far right end of the track
+    c.check("a click at the right end commits a high Alpha",
+            wait_until(lambda: isinstance(rect_vars(g, None).get("Alpha"), float) and rect_vars(g, None)["Alpha"] >= 240, 8),
+            str(rect_vars(g, None).get("Alpha")))
+
+
+def preview_pids():
+    out = subprocess.run(["pgrep", "-x", "GumPreview"], capture_output=True, text=True).stdout
+    return {int(v) for v in out.split()}
+
+
+@scenario("preview-launches-and-exits")
+def preview_launches_and_exits(c: Ctx):
+    before = preview_pids()
+    started = set()
+    try:
+        g = c.launch(args=["--select", "ComponentWithState"])
+        g.click_title("AXButton", "Preview in runtime")
+        # Native AOT host, plus a first-time JSON copy of the project: allow a slow start.
+        c.check("Preview started a GumPreview process", wait_until(lambda: preview_pids() - before, 45))
+        started = preview_pids() - before
+        if not started:
+            return
+        pid = next(iter(started))
+        args = subprocess.run(["ps", "-o", "args=", "-p", str(pid)], capture_output=True, text=True).stdout
+        c.check("it was given the selected element", "--element ComponentWithState" in args, args[:200])
+        c.check("Gum is still running", g.alive())
+        c.check("the preview window is titled for the element",
+                wait_until(lambda: "Gum Preview - ComponentWithState" in drv("title", pid, check=False), 20),
+                drv("title", pid, check=False))
+        # A second press reuses the running preview instead of starting another.
+        g.activate()
+        g.click_title("AXButton", "Preview in runtime")
+        time.sleep(3)
+        c.check("pressing Preview again starts no second process", preview_pids() - before == started,
+                str(preview_pids() - before))
+        reports = Path.home() / "Library/Logs/DiagnosticReports"
+        crashes_before = set(reports.glob("GumPreview*"))
+        drv("activate", pid)
+        time.sleep(0.8)
+        g.key("q", "cmd")
+        c.check("Cmd+Q closes the preview", wait_until(lambda: pid not in preview_pids(), 10))
+        c.check("Gum survives the preview closing", g.alive())
+        c.check("the preview left no crash report", set(reports.glob("GumPreview*")) == crashes_before)
+        # After the preview exits, the next press launches a fresh one.
+        g.activate()
+        time.sleep(1.0)  # the toolbar notices the exit on a 500 ms timer
+        g.click_title("AXButton", "Preview in runtime")
+        c.check("Preview launches again after the first one closed",
+                wait_until(lambda: preview_pids() - before - {pid}, 45))
+    finally:
+        for pid in preview_pids() - before:
+            subprocess.run(["kill", str(pid)])
 
 
 @scenario("driver-releases-modifiers")
