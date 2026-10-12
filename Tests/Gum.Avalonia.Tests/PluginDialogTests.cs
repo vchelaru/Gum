@@ -131,6 +131,28 @@ public class PluginDialogTests
     }
 
     [AvaloniaFact]
+    public async Task ImportFromGumxView_WithAFixedSource_HidesTheSourceAndDestinationRows()
+    {
+        ImportFromGumxViewModel viewModel = CreateImportViewModel();
+        ImportFromGumxView view = (ImportFromGumxView)Registry.CreateView(viewModel);
+        Window window = new Window { Content = view };
+        window.Show();
+        window.UpdateLayout();
+        view.GetVisualDescendants().OfType<TextBox>().First().IsEffectivelyVisible.ShouldBeTrue();
+        view.GetVisualDescendants().OfType<RadioButton>().ShouldAllBe(button => button.IsEffectivelyVisible);
+
+        await viewModel.UseFixedSourceAsync(new FixedImportSource(
+            Path.Combine(Path.GetTempPath(), "GumNoSuchProject_" + Guid.NewGuid().ToString("N") + ".gumx"),
+            "Add Forms: Neon", IncludeStandards: false, BeforeProjectSave: null));
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        view.GetVisualDescendants().OfType<TextBox>().ShouldAllBe(box => !box.IsEffectivelyVisible);
+        view.GetVisualDescendants().OfType<RadioButton>().ShouldAllBe(button => !button.IsEffectivelyVisible);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void ImportFromGumxDialog_OnATallScreen_OpensAtItsFixedSize()
     {
         ImportFromGumxViewModel viewModel = CreateImportViewModel();

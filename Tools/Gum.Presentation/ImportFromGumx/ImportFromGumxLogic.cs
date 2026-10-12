@@ -10,10 +10,26 @@ using ImportFromGumxPlugin.ViewModels;
 namespace ImportFromGumxPlugin;
 
 /// <summary>
+/// Builds the view models behind the Import from .gumx dialog.
+/// </summary>
+public interface IImportFromGumxLogic
+{
+    /// <summary>
+    /// Whether an import dialog can be shown right now (the project has no unsaved changes).
+    /// </summary>
+    bool CanImport { get; }
+
+    /// <summary>
+    /// Builds a fully-wired view model for the dialog. Call only after checking <see cref="CanImport"/>.
+    /// </summary>
+    ImportFromGumxViewModel CreateImportViewModel();
+}
+
+/// <summary>
 /// Business logic behind the "Import from .gumx" menu item, relocated out of the WPF-hosted
 /// <c>MainImportFromGumxPlugin</c> (ADR-0005 Phase 3) so it can be unit tested headlessly.
 /// </summary>
-public class ImportFromGumxLogic
+public class ImportFromGumxLogic : IImportFromGumxLogic
 {
     private readonly IProjectState _projectState;
     private readonly IImportLogic _importLogic;
@@ -35,15 +51,10 @@ public class ImportFromGumxLogic
         _dispatcher = dispatcher;
     }
 
-    /// <summary>
-    /// Whether an import dialog can be shown right now (the project has no unsaved changes).
-    /// </summary>
+    /// <inheritdoc/>
     public bool CanImport => !_projectState.NeedsToSaveProject;
 
-    /// <summary>
-    /// Builds a fully-wired view model for the "Import from .gumx" dialog. Call only after
-    /// checking <see cref="CanImport"/>.
-    /// </summary>
+    /// <inheritdoc/>
     public ImportFromGumxViewModel CreateImportViewModel()
     {
         GumxSourceService sourceService = new();

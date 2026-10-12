@@ -60,6 +60,42 @@ public class FormsThemeBehaviorStagingServiceTests : IDisposable
     }
 
     [Fact]
+    public void Stage_ShouldMakeTheStagedProjectSelfContained_ByDroppingItsBehaviorSourcePaths()
+    {
+        // The staged theme is a standalone project (Add Forms and Import from .gumx read it): the
+        // behaviors now sit in its Behaviors folder, so a SourcePath into the repo's shared folder
+        // would dangle there and the import would silently skip those behaviors.
+        string sharedDir = Path.Combine(_tempDirectory, "FormsBehaviors");
+        Directory.CreateDirectory(sharedDir);
+        new BehaviorSave { Name = "ButtonBehavior" }.Save(Path.Combine(sharedDir, "ButtonBehavior.behx"), useCompactFormat: true);
+
+        string themeDir = Path.Combine(_tempDirectory, "Bubblegum");
+        Directory.CreateDirectory(themeDir);
+        GumProjectSave themeProject = new();
+        themeProject.BehaviorReferences.Add(new BehaviorReference
+        {
+            Name = "ButtonBehavior",
+            SourcePath = "../FormsBehaviors/ButtonBehavior.behx",
+            DefaultImplementationOverride = "Bubblegum/Controls/Button"
+        });
+        string themeGumxPath = Path.Combine(themeDir, "GumProject.gumx");
+        themeProject.Save(themeGumxPath, saveElements: false);
+
+        string stagedDir = Path.Combine(_tempDirectory, "Staged");
+        Directory.CreateDirectory(stagedDir);
+        string stagedGumxPath = Path.Combine(stagedDir, "GumProject.gumx");
+        File.Copy(themeGumxPath, stagedGumxPath);
+
+        _sut.Stage(themeGumxPath, Path.Combine(stagedDir, "Behaviors"));
+
+        GumProjectSave staged = GumProjectSave.Load(stagedGumxPath, out _)!;
+        staged.BehaviorReferences.Single().SourcePath.ShouldBeNullOrEmpty();
+        staged.BehaviorReferences.Single().DefaultImplementationOverride.ShouldBe("Bubblegum/Controls/Button");
+        staged.Behaviors.Single().IsSourceFileMissing.ShouldBeFalse("it resolves to the staged Behaviors folder");
+        GumProjectSave.Load(themeGumxPath, out _)!.BehaviorReferences.Single().SourcePath.ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
     public void Stage_ShouldWriteTheBehaviorsOwnPhysicalContent_WhenNotLinked()
     {
         string themeDir = Path.Combine(_tempDirectory, "Standard");

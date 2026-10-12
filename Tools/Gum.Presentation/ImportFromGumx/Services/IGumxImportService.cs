@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -68,10 +69,15 @@ public interface IGumxImportService
     /// Imports all selections from the source project into the destination.
     /// Import order: standards → transitive components (topological) → behaviors → direct components → screens → assets → save/reload.
     /// </summary>
+    /// <param name="beforeProjectSave">
+    /// Runs once the import has written everything, just before the project is saved and reloaded.
+    /// It does not run when the import is refused or stops at a conflict.
+    /// </param>
     Task<ImportResult> ImportAsync(
         ImportSelections selections,
         GumProjectSave source,
         string sourceBase,
         string destinationSubfolder,
-        ConflictResolution conflictResolution = ConflictResolution.Cancel);
+        ConflictResolution conflictResolution = ConflictResolution.Cancel,
+        Action? beforeProjectSave = null);
 }

@@ -49,7 +49,8 @@ public class ImportFromGumxViewModel : DialogViewModel
     private bool _recomputeQueued = false;
 
     /// <summary>The dialog's title.</summary>
-    public string Title => "Import from .gumx";
+    [DependsOn(nameof(FixedSource))]
+    public string Title => FixedSource?.Title ?? "Import from .gumx";
 
     public string SourcePath
     {
@@ -165,6 +166,30 @@ public class ImportFromGumxViewModel : DialogViewModel
     /// </summary>
     public AsyncRelayCommand BrowseCommand { get; }
 
+    private FixedImportSource? FixedSource
+    {
+        get => Get<FixedImportSource?>();
+        set => Set(value);
+    }
+
+    /// <summary>True when the user chooses the source; false when the caller fixed it with <see cref="UseFixedSourceAsync"/>.</summary>
+    [DependsOn(nameof(FixedSource))]
+    public bool IsSourceEditable => FixedSource == null;
+
+    /// <summary>True once an import has gone through.</summary>
+    public bool WasImported { get; private set; }
+
+    /// <summary>
+    /// Fixes the source to <paramref name="source"/> and loads its preview. Call before showing the dialog.
+    /// </summary>
+    public async Task UseFixedSourceAsync(FixedImportSource source)
+    {
+        FixedSource = source;
+        SourceType = SourceType.LocalFile;
+        SourcePath = source.GumxPath;
+        await LoadPreviewCommand.ExecuteAsync(null);
+    }
+
     public ImportFromGumxViewModel(
         IGumxSourceService sourceService,
         IGumxDependencyResolver dependencyResolver,
@@ -241,8 +266,10 @@ public class ImportFromGumxViewModel : DialogViewModel
         try
         {
             var selections = BuildSelections();
+            Action? beforeProjectSave = FixedSource?.BeforeProjectSave;
             var result = await _importService.ImportAsync(
-                selections, _sourceProject, _sourceBase, DestinationSubfolder);
+                selections, _sourceProject, _sourceBase, DestinationSubfolder,
+                beforeProjectSave: beforeProjectSave);
 
             if (result.VersionRejection != null)
             {
@@ -265,10 +292,12 @@ public class ImportFromGumxViewModel : DialogViewModel
                 }
 
                 result = await _importService.ImportAsync(
-                    selections, _sourceProject, _sourceBase, DestinationSubfolder, resolution.Value);
+                    selections, _sourceProject, _sourceBase, DestinationSubfolder, resolution.Value,
+                    beforeProjectSave);
             }
 
             _isImportComplete = true;
+            WasImported = result.ConflictingElements.Count == 0;
 
             if (result.ConflictingElements.Count > 0)
             {
@@ -411,7 +440,7 @@ public class ImportFromGumxViewModel : DialogViewModel
             _sourceProject = project;
             _sourceBase = _sourceService.GetSourceBase(pathOrUrl);
 
-            if (string.IsNullOrWhiteSpace(DestinationSubfolder))
+            if (FixedSource == null && string.IsNullOrWhiteSpace(DestinationSubfolder))
             {
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(pathOrUrl.TrimEnd('/'));
                 DestinationSubfolder = fileName;
@@ -499,14 +528,17 @@ public class ImportFromGumxViewModel : DialogViewModel
         RootNodes.Add(_behaviorsGroupNode);
 
         // Standards group
-        _standardsGroupNode = new ImportTreeNodeViewModel("Standards", "Standards");
-        foreach (var standard in project.StandardElements.OrderBy(s => s.Name))
+        if (FixedSource is not { IncludeStandards: false })
         {
-            var leaf = new ImportTreeNodeViewModel(standard.Name, standard.Name, ElementItemType.Standard);
-            _allLeafItems.Add(leaf);
-            _standardsGroupNode.Children.Add(leaf);
+            _standardsGroupNode = new ImportTreeNodeViewModel("Standards", "Standards");
+            foreach (var standard in project.StandardElements.OrderBy(s => s.Name))
+            {
+                var leaf = new ImportTreeNodeViewModel(standard.Name, standard.Name, ElementItemType.Standard);
+                _allLeafItems.Add(leaf);
+                _standardsGroupNode.Children.Add(leaf);
+            }
+            RootNodes.Add(_standardsGroupNode);
         }
-        RootNodes.Add(_standardsGroupNode);
 
         foreach (ImportTreeNodeViewModel leaf in _allLeafItems)
             leaf.PropertyChanged += OnItemPropertyChanged;

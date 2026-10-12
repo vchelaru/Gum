@@ -45,6 +45,7 @@ public sealed class ImportFromGumxView : Grid
         url.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(ImportFromGumxViewModel.IsUrl)) { Mode = BindingMode.TwoWay });
         sourceKind.Children.Add(localFile);
         sourceKind.Children.Add(url);
+        sourceKind.Bind(IsVisibleProperty, new Binding(nameof(ImportFromGumxViewModel.IsSourceEditable)));
         source.Children.Add(sourceKind);
 
         Grid pathRow = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 4) };
@@ -57,6 +58,7 @@ public sealed class ImportFromGumxView : Grid
         Grid.SetColumn(browse, 1);
         pathRow.Children.Add(_sourcePath);
         pathRow.Children.Add(browse);
+        pathRow.Bind(IsVisibleProperty, new Binding(nameof(ImportFromGumxViewModel.IsSourceEditable)));
         source.Children.Add(pathRow);
 
         TextBlock error = new TextBlock { Foreground = Brushes.OrangeRed, Margin = new Thickness(0, 0, 0, 2), TextWrapping = TextWrapping.Wrap };
@@ -91,6 +93,7 @@ public sealed class ImportFromGumxView : Grid
         subfolder.Bind(TextBox.TextProperty, new Binding(nameof(ImportFromGumxViewModel.DestinationSubfolder)) { Mode = BindingMode.TwoWay });
         Grid.SetColumn(subfolder, 1);
         destination.Children.Add(subfolder);
+        destination.Bind(IsVisibleProperty, new Binding(nameof(ImportFromGumxViewModel.IsSourceEditable)));
 
         Grid listArea = new Grid { RowDefinitions = new RowDefinitions("*,Auto,Auto") };
         Grid.SetRow(warning, 1);

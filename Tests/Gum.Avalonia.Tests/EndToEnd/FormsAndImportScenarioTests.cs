@@ -103,6 +103,70 @@ public class FormsAndImportScenarioTests
         tree.AssertOracles();
     }
 
+    [AvaloniaFact]
+    public void AddForms_WhenAComponentWouldBeOverwritten_PickWhatToImport_ImportsOnlyThePickedItems()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Neon/Controls/Button");
+        tree.SaveAll();
+        tree.Project.Project.FontRanges.Contains("10003").ShouldBeFalse();
+        tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
+        {
+            dialog.ThemeSelection.SelectedTheme = "Neon";
+            dialog.IsIncludeDemoScreenGum = false;
+            return true;
+        });
+        // "Pick what to import" on the prompt about the Button that already exists.
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        tree.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            dialog.IsSourceEditable.ShouldBeFalse();
+            dialog.RootNodes.Select(node => node.DisplayName).ShouldNotContain("Standards", "a non-default theme never touches the project's Standards");
+            Leaf(dialog, "Neon/Controls/CheckBox").IsChecked = true;
+            tree.WaitUntil(() => Leaf(dialog, "CheckBoxBehavior").IsChecked == true, AsyncWork, "the preview to include the check box's behavior");
+            return true;
+        });
+
+        tree.PickMainMenu("Content", "Add Forms Components");
+        GumProjectSave project = WaitForTheImportsReload(tree);
+
+        project.Components.Select(component => component.Name).ShouldContain("Neon/Controls/CheckBox");
+        ComponentNamed(project, "Neon/Controls/Button").Instances.ShouldBeEmpty("the Button the user already had was not picked");
+        project.Components.Select(component => component.Name).ShouldNotContain("Neon/Controls/ListBox", "only the picked item is imported");
+        project.FontRanges.Contains("10003").ShouldBeTrue("the theme's prerequisites apply once the picked import goes through");
+
+        tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    public void AddForms_WhenThePickedImportIsCancelled_ChangesNothing()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        tree.Project.AddComponent("Neon/Controls/Button");
+        tree.SaveAll();
+        GumProjectSave openProject = tree.Project.Project;
+        tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
+        {
+            dialog.ThemeSelection.SelectedTheme = "Neon";
+            dialog.IsIncludeDemoScreenGum = false;
+            return true;
+        });
+        tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        bool dialogShown = false;
+        tree.Dialogs.AnswerNext<ImportFromGumxViewModel>(dialog =>
+        {
+            dialogShown = true;
+            return false;
+        });
+
+        tree.PickMainMenu("Content", "Add Forms Components");
+        tree.WaitUntil(() => dialogShown, AsyncWork, "the import dialog to open");
+
+        Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldBeSameAs(openProject);
+        openProject.FontRanges.Contains("10003").ShouldBeFalse("cancelling must not leave the theme's font ranges behind");
+        openProject.Components.Select(component => component.Name).ShouldBe(new[] { "Neon/Controls/Button" });
+    }
+
     #endregion
 
     #region Import .gumx
@@ -382,10 +446,7 @@ public class FormsAndImportScenarioTests
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.Copy(file, target);
             }
-            // A theme's behavior references point into the repo's shared FormsBehaviors folder; staging
-            // already copied each behavior into Behaviors/, where a user's own project keeps them.
             ProjectFile = Path.Combine(_folder, "GumProject.gumx");
-            File.WriteAllText(ProjectFile, System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(ProjectFile), " SourcePath=\"[^\"]*\"", ""));
         }
 
         public string ProjectFile { get; }

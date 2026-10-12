@@ -21,6 +21,12 @@ public interface IFormsFileService
     IReadOnlyList<string> GetAvailableThemes();
 
     /// <summary>
+    /// Returns the path to the given theme's own <c>GumProject.gumx</c>, which loads as a normal
+    /// import source.
+    /// </summary>
+    string GetFormsGumxPath(string themeName);
+
+    /// <summary>
     /// Returns the base directory of the given theme's files (trailing slash, forward slashes).
     /// </summary>
     string GetThemeDirectory(string themeName);

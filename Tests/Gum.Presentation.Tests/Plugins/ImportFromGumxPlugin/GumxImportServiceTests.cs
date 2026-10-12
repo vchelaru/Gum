@@ -188,6 +188,48 @@ public class GumxImportServiceTests : IDisposable
         _importLogic.ImportedComponentPaths.ShouldBeEmpty();
     }
 
+    // ── beforeProjectSave hook ────────────────────────────────────────────
+
+    [Fact]
+    public async Task ImportAsync_RunsBeforeProjectSaveHookOnceAndBeforeTheProjectIsSaved()
+    {
+        ComponentSave component = ComponentWithWidth("MyButton", 100);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+        int hookCalls = 0;
+        int savesWhenHookRan = -1;
+
+        await _sut.ImportAsync(SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "",
+            beforeProjectSave: () =>
+            {
+                hookCalls++;
+                savesWhenHookRan = _fileCommands.SaveProjectCallCount;
+            });
+
+        hookCalls.ShouldBe(1);
+        savesWhenHookRan.ShouldBe(0);
+        _fileCommands.SaveProjectCallCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ImportAsync_DoesNotRunBeforeProjectSaveHook_WhenTheImportStopsAtAConflict()
+    {
+        string destPath = Path.Combine(_projectDir, "Components", "MyButton.gucx");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+        ComponentWithWidth("MyButton", 50).Save(destPath, useCompactFormat: true);
+        ComponentSave component = ComponentWithWidth("MyButton", 100);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+        int hookCalls = 0;
+
+        ImportResult result = await _sut.ImportAsync(
+            SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "",
+            beforeProjectSave: () => hookCalls++);
+
+        result.ConflictingElements.ShouldNotBeEmpty();
+        hookCalls.ShouldBe(0);
+    }
+
     // ── identical destination content is not a conflict ───────────────────
 
     private static ComponentSave ComponentWithWidth(string name, float width) =>
@@ -1383,7 +1425,13 @@ public class GumxImportServiceTests : IDisposable
 #pragma warning restore CS0067
         public FilePath? ProjectDirectory => null;
 
-        public bool TryAutoSaveProject(bool forceSaveContainedElements = false) => false;
+        public int SaveProjectCallCount { get; private set; }
+
+        public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
+        {
+            SaveProjectCallCount++;
+            return false;
+        }
         public Task LoadProjectAsync(string fileName) => Task.CompletedTask;
         public void DeleteDirectory(FilePath filePath) { }
         public void ClearDirectoryContents(FilePath filePath) { }

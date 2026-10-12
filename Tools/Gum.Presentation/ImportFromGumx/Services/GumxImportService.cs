@@ -52,7 +52,8 @@ public class GumxImportService : IGumxImportService
         GumProjectSave source,
         string sourceBase,
         string destinationSubfolder,
-        ConflictResolution conflictResolution = ConflictResolution.Cancel)
+        ConflictResolution conflictResolution = ConflictResolution.Cancel,
+        Action? beforeProjectSave = null)
     {
         var result = new ImportResult();
         if (_projectState.GumProjectSave is { } destination)
@@ -162,6 +163,7 @@ public class GumxImportService : IGumxImportService
             removeWhenSourceHasNone: true);
 
         // 8. Save project then reload (standards take effect only after reload)
+        beforeProjectSave?.Invoke();
         string? fileName = _projectState.GumProjectSave?.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
         if (wasSaved && fileName is not null)

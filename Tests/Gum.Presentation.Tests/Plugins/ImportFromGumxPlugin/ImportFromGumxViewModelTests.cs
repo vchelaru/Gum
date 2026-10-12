@@ -458,6 +458,80 @@ public class ImportFromGumxViewModelTests
         _sut.ErrorMessage.ShouldNotBeNull().ShouldContain("upgrading-file-gumx-version");
     }
 
+    // ── fixed source (Add Forms "Pick what to import") ────────────────────
+
+    private static string WriteSourceProject(string directory)
+    {
+        GumProjectSave source = new GumProjectSave { Version = 3 };
+        source.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+        source.Behaviors.Add(new BehaviorSave { Name = "ButtonBehavior" });
+        source.StandardElementReferences.Add(new ElementReference { Name = "Text", ElementType = ElementType.Standard });
+        source.StandardElements.Add(new StandardElementSave
+        {
+            Name = "Text",
+            States = new List<StateSave> { new StateSave { Name = "Default", Variables = new List<VariableSave>() } }
+        });
+        string path = Path.Combine(directory, "GumProject.gumx");
+        source.Save(path, saveElements: true);
+        return path;
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task UseFixedSourceAsync_LoadsThePreviewWithoutASubfolder_AndShowsStandardsOnlyWhenAsked(bool includeStandards)
+    {
+        string sourceDir = Path.Combine(Path.GetTempPath(), "GumImportFixed_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sourceDir);
+        try
+        {
+            string path = WriteSourceProject(sourceDir);
+            _projectState.GumProjectSave.Version = 5;
+
+            await _sut.UseFixedSourceAsync(new FixedImportSource(path, "Add Forms: Neon", includeStandards, BeforeProjectSave: null));
+
+            _sut.IsPreviewLoaded.ShouldBeTrue();
+            _sut.IsSourceEditable.ShouldBeFalse();
+            _sut.Title.ShouldBe("Add Forms: Neon");
+            _sut.DestinationSubfolder.ShouldBe("");
+            _sut.RootNodes.Any(n => n.DisplayName == "Behaviors").ShouldBeTrue();
+            _sut.RootNodes.Any(n => n.DisplayName == "Standards").ShouldBe(includeStandards);
+        }
+        finally
+        {
+            Directory.Delete(sourceDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task OnAffirmative_PassesTheFixedSourcesHookToTheImportAndMarksTheImportDone()
+    {
+        string sourceDir = Path.Combine(Path.GetTempPath(), "GumImportFixed_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sourceDir);
+        try
+        {
+            string path = WriteSourceProject(sourceDir);
+            _projectState.GumProjectSave.Version = 5;
+            RecordingImportService importService = new RecordingImportService();
+            ImportFromGumxViewModel viewModel = new ImportFromGumxViewModel(
+                new GumxSourceService(), new GumxDependencyResolver(), importService, _projectState,
+                _dialogService, new SynchronousDispatcher(), new ImportVersionGate());
+            Action hook = () => { };
+            await viewModel.UseFixedSourceAsync(new FixedImportSource(path, "Add Forms: Neon", false, hook));
+            viewModel.RootNodes.First(n => n.DisplayName == "Behaviors").Children[0].InclusionState = InclusionState.Explicit;
+
+            viewModel.WasImported.ShouldBeFalse();
+            viewModel.OnAffirmative();
+
+            importService.LastBeforeProjectSave.ShouldBeSameAs(hook);
+            viewModel.WasImported.ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(sourceDir, recursive: true);
+        }
+    }
+
     // ── conflict-resolution dialog (#2644) ────────────────────────────────
 
     [Fact]
@@ -584,6 +658,23 @@ public class ImportFromGumxViewModelTests
         }
         public string? SaveFile(SaveFileDialogOptions? options = null) => null;
         public string? OpenFolder(OpenFolderDialogOptions? options = null) => null;
+    }
+
+    private class RecordingImportService : IGumxImportService
+    {
+        public Action? LastBeforeProjectSave { get; private set; }
+
+        public Task<ImportResult> ImportAsync(
+            ImportSelections selections,
+            GumProjectSave source,
+            string sourceBase,
+            string destinationSubfolder,
+            ConflictResolution conflictResolution = ConflictResolution.Cancel,
+            Action? beforeProjectSave = null)
+        {
+            LastBeforeProjectSave = beforeProjectSave;
+            return Task.FromResult(new ImportResult());
+        }
     }
 
     private class FakeImportLogic : IImportLogic
