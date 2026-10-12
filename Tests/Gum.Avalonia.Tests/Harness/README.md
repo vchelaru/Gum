@@ -42,7 +42,14 @@ Take every screenshot at 100%, zoomed in and zoomed out. The tool zooms by chang
 
 `PrScreenshot.Run` skips the test unless `GUM_SCREENSHOT_DIR` names an output folder, so CI and
 `Tools/verify.ps1` report it as skipped. A save fails when the window shows the user's profile
-folder or user name in a path; feed the view made-up paths. Then:
+folder or user name in a path; feed the view made-up paths.
+
+**Take the "before" first.** Write the screenshot test before the first source edit, run it with
+`GUM_SCREENSHOT_DIR` pointing at a scratch folder, and keep those PNGs as the "before". After the
+change, run the same test into a second folder for the "after". Nothing has to compile against
+`main`, so the test may use any API in the branch. A brand-new UI has no "before".
+
+If the source was already edited when you remembered the "before", render both sides with:
 
 ```
 pwsh Tools/pr-screenshots.ps1 -Pr <num> -Filter ManagePluginsScreenshotTests -DryRun
