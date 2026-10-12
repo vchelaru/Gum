@@ -56,8 +56,6 @@ public class FormsThemeImporterTests
         _formsFileService.Setup(x => x.DefaultThemeName).Returns("Standard");
         _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns("C:/nonexistent-theme/");
         _formsFileService.Setup(x => x.GetFormsGumxPath(It.IsAny<string>())).Returns(ThemeProjectPath);
-        _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns(new Dictionary<string, FilePath>());
         _projectState.Setup(x => x.GumProjectSave)
             .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumx" });
         _sourceService.Setup(x => x.LoadProjectAsync(ThemeProjectPath, null)).ReturnsAsync(_theme);

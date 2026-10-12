@@ -177,7 +177,7 @@ public class FormsAndImportScenarioTests
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         ComponentSave card = tree.Project.AddComponent("Card");
         tree.Project.AddInstance(card, "Title", "Text");
-        tree.Project.Standard("Text").DefaultState.SetValue("FontSize", 99, "int");
+        tree.Project.Standard("Text").DefaultState!.SetValue("FontSize", 99, "int");
         tree.SaveAll();
         GumProjectSave openProject = tree.Project.Project;
         tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
@@ -212,7 +212,7 @@ public class FormsAndImportScenarioTests
         textHasDiffRows.ShouldBeTrue("the row shows how the theme's Text differs from the project's");
         textIsCheckable.ShouldBe(false, "the theme's components use it, so it comes with them");
         Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldBeSameAs(openProject);
-        tree.Project.Standard("Text").DefaultState.GetValue("FontSize").ShouldBe(99, "cancelling leaves the user's Standard alone");
+        tree.Project.Standard("Text").DefaultState!.GetValue("FontSize").ShouldBe(99, "cancelling leaves the user's Standard alone");
     }
 
     [AvaloniaFact]

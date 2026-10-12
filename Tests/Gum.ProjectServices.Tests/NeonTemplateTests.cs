@@ -305,12 +305,9 @@ public class NeonTemplateTests
     [Fact]
     public void AllPhysicalComponentFiles_ShouldBeNeonNamespaced()
     {
-        // FormsFileService.GetSourceDestinations copies every .gucx file it finds on disk
-        // under the theme folder, regardless of whether that file is registered as a
-        // ComponentReference in the theme's own GumProject.gumx. A file whose own <Name> tag
-        // was left unrenamed during the Neon/ namespacing pass still gets imported under
-        // its stale name, colliding with (or duplicating) content from every other theme's
-        // import.
+        // Add Forms imports only what the theme's own GumProject.gumx registers, but a file whose
+        // own <Name> tag was left unrenamed during the Neon/ namespacing pass would collide with
+        // (or duplicate) another theme's content as soon as someone registers it.
         string neonDir = Path.Combine(FindRepoRoot(),
             "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Neon");
 

@@ -32,10 +32,11 @@ public interface IFormsFileService
     string GetThemeDirectory(string themeName);
 
     /// <summary>
-    /// Returns a mapping of source file paths (in the selected theme's folder) to destination
-    /// file paths (in the user's Gum project directory).
+    /// Whether the open project already has any component or behavior file the theme ships, in
+    /// either project format. Only the theme's component and behavior files count: a project always
+    /// has Standards, and bundled fonts or images say nothing about Forms.
     /// </summary>
-    Dictionary<string, FilePath> GetSourceDestinations(string themeName, bool isIncludeDemoScreenGum);
+    bool ProjectHasElementsOf(string themeName);
 
     /// <summary>
     /// Returns the absolute path to the theme's preview image (<c>preview.png</c> in its folder),

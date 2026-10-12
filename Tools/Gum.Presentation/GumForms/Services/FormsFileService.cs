@@ -1,10 +1,10 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ToolsUtilities;
 
 namespace GumFormsPlugin.Services;
 
@@ -54,115 +54,44 @@ public class FormsFileService : IFormsFileService
         Path.Combine(GetThemesRoot(), themeName)
             .Replace('\\', '/') + "/";
 
-    // A theme's own content is always authored as XML. When the destination project is JSON, the
-    // destination path gets the project's own JSON extension instead, so FormsThemeImporter can
-    // convert the content at copy time rather than leaving a dead XML copy behind (#4710).
-    private static readonly Dictionary<string, string> ContentExtensionToJson = new()
-    {
-        [GumProjectSave.ComponentExtension] = GumProjectSave.ComponentJsonExtension,
-        [GumProjectSave.ScreenExtension] = GumProjectSave.ScreenJsonExtension,
-        [GumProjectSave.StandardExtension] = GumProjectSave.StandardJsonExtension,
-        [Gum.DataTypes.Behaviors.BehaviorReference.Extension] = Gum.DataTypes.Behaviors.BehaviorReference.JsonExtension,
-    };
-
-    /// <summary>
-    /// True for either format of a <see cref="GetSourceDestinations"/> Standards destination
-    /// (<c>.gutx</c> for a .gumx project, <c>.gutj</c> for a .gumj one - #4710). Shared so every
-    /// caller that needs to treat Standards as a special case (never proof a theme was imported,
-    /// never blocking on overwrite the way other content does) stays in sync with the extension this
-    /// class actually writes.
-    /// </summary>
-    public static bool IsStandardExtension(string extension) =>
-        extension == GumProjectSave.StandardExtension || extension == GumProjectSave.StandardJsonExtension;
-
     /// <inheritdoc/>
-    /// <remarks>
-    /// Extensions skipped: .gumx, .gumfcs, .ganx (animation files, deferred), .codsj.
-    /// .gutx (Standards) is skipped for every theme except <see cref="DefaultThemeName"/>.
-    /// </remarks>
-    public Dictionary<string, FilePath> GetSourceDestinations(string themeName, bool isIncludeDemoScreenGum)
+    public bool ProjectHasElementsOf(string themeName)
     {
-        var destinationFolder = _projectState.ProjectDirectory;
-
-        var sourceDestinations = new Dictionary<string, FilePath>();
-
-        if (string.IsNullOrEmpty(destinationFolder)) return sourceDestinations;
-
-        string themeDir = GetThemeDirectory(themeName);
-
-        if (!Directory.Exists(themeDir)) return sourceDestinations;
-
-        bool isDestinationJsonFormat = GumProjectSave.IsJsonFormat(_projectState.GumProjectSave?.FullFileName ?? string.Empty);
-
-        var allFiles = Directory.GetFiles(themeDir, "*.*", SearchOption.AllDirectories);
-
-        // Compute the canonical path of the root-level FontCache folder once, outside the loop
-        string fontCachePath = new DirectoryInfo(Path.Combine(themeDir, "FontCache")).FullName
-            + Path.DirectorySeparatorChar;
-
-        foreach (var sourceFile in allFiles)
+        string? projectDirectory = _projectState.ProjectDirectory;
+        string themeDirectory = GetThemeDirectory(themeName);
+        if (string.IsNullOrEmpty(projectDirectory) || !Directory.Exists(themeDirectory))
         {
-            var extension = FileManager.GetExtension(sourceFile);
-
-            // Skip font cache — fonts are regenerated locally and should not be copied
-            if (new FileInfo(sourceFile).FullName.StartsWith(fontCachePath, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            // Skip per-theme metadata files (the Standard theme's file-list manifest, prerequisite
-            // declarations, and the gallery preview image). They describe the theme but aren't part
-            // of the user's project.
-            var fileName = Path.GetFileName(sourceFile);
-            if (string.Equals(fileName, "manifest.txt", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(fileName, ThemeRequirements.ThemeRequirementsFileName, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(fileName, PreviewImageFileName, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            // Skip files that are not content or not relevant to import
-            if (extension is "gumx" or "gumfcs" or
-                "ganx" or "codsj" or "bmfc" or "fnt" or "exe" or "setj" or "json")
-            {
-                continue;
-            }
-
-            // Only the Standard theme may modify the destination project's Standard elements.
-            // Styling must live entirely in a theme's own Components, never in shared Standards,
-            // or importing one theme after another would stomp the earlier theme's look.
-            if (extension == "gutx" &&
-                !string.Equals(themeName, DefaultThemeName, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            // Only include the demo screen if requested
-            if (extension == "gusx")
-            {
-                bool isDemoScreen = sourceFile.Contains("DemoScreenGum.gusx");
-                if (!isDemoScreen || !isIncludeDemoScreenGum)
-                {
-                    continue;
-                }
-            }
-
-            // Compute the relative path from the theme directory
-            string relativePath = sourceFile
-                .Replace('\\', '/')
-                .Substring(themeDir.Length)
-                .TrimStart('/');
-
-            if (isDestinationJsonFormat && ContentExtensionToJson.TryGetValue(extension, out string? jsonExtension))
-            {
-                relativePath = relativePath.Substring(0, relativePath.Length - extension.Length) + jsonExtension;
-            }
-
-            string absoluteDestination = destinationFolder + relativePath;
-            sourceDestinations.Add(sourceFile, absoluteDestination);
+            return false;
         }
 
-        return sourceDestinations;
+        return ProjectHasFilesOf(projectDirectory, themeDirectory, "Components",
+            GumProjectSave.ComponentExtension, GumProjectSave.ComponentJsonExtension)
+            || ProjectHasFilesOf(projectDirectory, themeDirectory, "Behaviors",
+                BehaviorReference.Extension, BehaviorReference.JsonExtension);
+    }
+
+    // A theme's own files are always XML; the project may keep the same element in either format.
+    private static bool ProjectHasFilesOf(
+        string projectDirectory, string themeDirectory, string subfolder, string xmlExtension, string jsonExtension)
+    {
+        string themeSubfolder = Path.Combine(themeDirectory, subfolder);
+        if (!Directory.Exists(themeSubfolder))
+        {
+            return false;
+        }
+
+        foreach (string themeFile in Directory.GetFiles(themeSubfolder, "*." + xmlExtension, SearchOption.AllDirectories))
+        {
+            string relativeWithoutExtension = Path.ChangeExtension(Path.GetRelativePath(themeDirectory, themeFile), null);
+            string projectPathWithoutExtension = Path.Combine(projectDirectory, relativeWithoutExtension);
+            if (File.Exists(projectPathWithoutExtension + "." + xmlExtension)
+                || File.Exists(projectPathWithoutExtension + "." + jsonExtension))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc/>
