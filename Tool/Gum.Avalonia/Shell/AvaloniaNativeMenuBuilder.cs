@@ -73,7 +73,17 @@ public static class AvaloniaNativeMenuBuilder
         target.Clear();
         foreach (MenuItemModel item in items)
         {
-            target.Add(item.IsSeparator ? new NativeMenuItemSeparator() : Create(item, binding));
+            if (item.Stepper is { } stepper)
+            {
+                // The menu bar cannot draw a row with buttons, so the stepper becomes plain items.
+                target.Add(Create(new MenuItemModel(stepper.IncreaseHeader, stepper.Increase), binding));
+                target.Add(Create(new MenuItemModel(stepper.DecreaseHeader, stepper.Decrease), binding));
+                target.Add(Create(new MenuItemModel(stepper.ResetHeader, stepper.Reset), binding));
+            }
+            else
+            {
+                target.Add(item.IsSeparator ? new NativeMenuItemSeparator() : Create(item, binding));
+            }
         }
     }
 

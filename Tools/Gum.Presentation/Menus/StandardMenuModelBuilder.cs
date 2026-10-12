@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
@@ -32,6 +33,7 @@ public class StandardMenuModelBuilder
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IDispatcher _dispatcher;
     private readonly IHotkeyManager _hotkeyManager;
+    private readonly IUiSettingsService _uiSettingsService;
     private readonly MenuStripStateLogic _menuStripStateLogic;
 
     private MenuItemModel? _undoMenuItem;
@@ -40,6 +42,7 @@ public class StandardMenuModelBuilder
     private MenuItemModel? _removeStateMenuItem;
     private MenuItemModel? _removeVariableMenuItem;
     private MenuItemModel? _standardsPaletteMenuItem;
+    private MenuStepper? _zoomStepper;
 
     /// <summary>Creates the builder over the services the standard items act on.</summary>
     public StandardMenuModelBuilder(
@@ -52,7 +55,8 @@ public class StandardMenuModelBuilder
         IMessenger messenger,
         IFileSystemRevealService fileSystemRevealService,
         IDispatcher dispatcher,
-        IHotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager,
+        IUiSettingsService uiSettingsService)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -64,11 +68,23 @@ public class StandardMenuModelBuilder
         _fileSystemRevealService = fileSystemRevealService;
         _dispatcher = dispatcher;
         _hotkeyManager = hotkeyManager;
+        _uiSettingsService = uiSettingsService;
+        // The hotkeys and the Theming dialog change the same size, so the row follows the setting.
+        _messenger.Register<UiBaseFontSizeChangedMessage>(this, (_, _) => RefreshZoomText());
         _menuStripStateLogic = new MenuStripStateLogic(selectedState, projectManager);
     }
 
     /// <summary>The model built by <see cref="Build"/>.</summary>
     public MenuModel Model { get; } = new MenuModel();
+
+    private void RefreshZoomText()
+    {
+        if (_zoomStepper != null)
+        {
+            double percent = Math.Round(_uiSettingsService.BaseFontSize / UiSettingsService.DefaultBaseFontSize * 100);
+            _zoomStepper.ValueText = percent.ToString("0", CultureInfo.InvariantCulture) + "%";
+        }
+    }
 
     /// <summary>Populates <see cref="Model"/>. Load Recent is inserted by the recent-files plugin.</summary>
     public MenuModel Build()
@@ -156,6 +172,14 @@ public class StandardMenuModelBuilder
             _messenger.Send(new StandardsPaletteSettingChangedMessage(_projectManager.EffectiveUseStandardsPalette));
         };
         view.Items.Add(_standardsPaletteMenuItem);
+        // Zooms the whole app (the UI font size), not the canvas, which has its own zoom controls.
+        _zoomStepper = new MenuStepper(
+            "Zoom", "Zoom In", "Zoom Out", "Actual Size",
+            increase: () => _uiSettingsService.BaseFontSize += 1,
+            decrease: () => _uiSettingsService.BaseFontSize -= 1,
+            reset: () => _uiSettingsService.BaseFontSize = UiSettingsService.DefaultBaseFontSize);
+        RefreshZoomText();
+        view.Items.Add(new MenuItemModel("Zoom") { Stepper = _zoomStepper });
         view.Items.Add(new MenuItemModel("Focus on Selection",
             () => _messenger.Send(ZoomCanvasToFitSelectionMessage.FocusOnSelection()))
         {

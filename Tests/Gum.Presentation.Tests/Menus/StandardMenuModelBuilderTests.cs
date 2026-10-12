@@ -34,7 +34,8 @@ public class StandardMenuModelBuilderTests
             Mock.Of<IMessenger>(),
             Mock.Of<IFileSystemRevealService>(),
             Mock.Of<IDispatcher>(),
-            hotkeyManager.Object);
+            hotkeyManager.Object,
+            Mock.Of<IUiSettingsService>());
 
         MenuModel model = builder.Build();
 

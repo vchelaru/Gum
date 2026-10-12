@@ -793,6 +793,32 @@ def window_frame_persists(c: Ctx):
             and abs(got["x"] - 200) <= 2 and abs(got["y"] - 120) <= 2, str(got))
 
 
+@scenario("view-menu-app-zoom")
+def view_menu_app_zoom(c: Ctx):
+    g = c.launch()
+    items = g.menu_items()
+    names = ("Zoom In", "Zoom Out", "Actual Size")
+    c.check("the macOS View menu offers Zoom In, Zoom Out and Actual Size",
+            all(f"View>{n}" in items for n in names), str([p for p in items if p.startswith("View")]))
+
+    def text_center():
+        # The tree's text follows the app's font size (the rows keep their height), so the centre of a
+        # left-aligned label moves right as the text widens.
+        return g.find("AXStaticText", "Components")[0]
+
+    start = text_center()
+    for _ in range(4):
+        g.menu("View", "Zoom In")
+    zoomed_in = text_center()
+    c.check("Zoom In grows the whole app (tree text gets wider)", zoomed_in > start, f"{start} -> {zoomed_in}")
+    for _ in range(8):
+        g.menu("View", "Zoom Out")
+    zoomed_out = text_center()
+    c.check("Zoom Out shrinks it below where it started", zoomed_out < start, f"{start} -> {zoomed_out}")
+    g.menu("View", "Actual Size")
+    c.check("Actual Size returns to the original size", text_center() == start, f"{start} -> {text_center()}")
+
+
 @scenario("full-screen-toggle")
 def full_screen_toggle(c: Ctx):
     g = c.launch()

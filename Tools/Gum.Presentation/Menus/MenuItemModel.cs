@@ -49,6 +49,12 @@ public class MenuItemModel : ViewModel
     /// <summary>Optional hover text.</summary>
     public string? ToolTip { get => Get<string?>(); set => Set(value); }
 
+    /// <summary>
+    /// When set, this item is a stepper row (value with minus and plus buttons) rather than a
+    /// regular item; <see cref="Header"/> and <see cref="Click"/> are not used for it.
+    /// </summary>
+    public MenuStepper? Stepper { get; init; }
+
     /// <summary>True for a divider line.</summary>
     public bool IsSeparator { get => Get<bool>(); private set => Set(value); }
 
