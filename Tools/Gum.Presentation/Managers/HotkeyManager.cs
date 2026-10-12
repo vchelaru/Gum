@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Dialogs;
@@ -13,6 +14,7 @@ using Gum.Wireframe;
 using System;
 using Gum.SelectionHistory;
 using Gum.Undo;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers;
@@ -78,6 +80,8 @@ public class HotkeyManager : IHotkeyManager
 
     public KeyCombination ShowHotkeys { get; private set; } = KeyCombination.Ctrl(GumKey.OemQuestion);
 
+    public KeyCombination FocusSelection { get; private set; } = KeyCombination.Pressed(GumKey.F);
+
     // If adding any new keys here, modify HotkeyViewModel
 
 
@@ -96,6 +100,7 @@ public class HotkeyManager : IHotkeyManager
     private readonly ISelectionHistory _selectionHistory;
     private readonly IModifierKeyState _modifierKeyState;
     private readonly INameVerifier _nameVerifier;
+    private readonly IMessenger _messenger;
 
 
     public HotkeyManager(IGuiCommands guiCommands,
@@ -113,7 +118,8 @@ public class HotkeyManager : IHotkeyManager
         ISelectionHistory selectionHistory,
         IModifierKeyState modifierKeyState,
         IOperatingSystemInfo operatingSystemInfo,
-        INameVerifier nameVerifier)
+        INameVerifier nameVerifier,
+        IMessenger messenger)
     {
         KeyCombination ctrlY = KeyCombination.Ctrl(GumKey.Y);
         KeyCombination ctrlShiftZ = new KeyCombination { IsCtrlDown = true, IsShiftDown = true, Key = GumKey.Z };
@@ -137,6 +143,7 @@ public class HotkeyManager : IHotkeyManager
         _selectionHistory = selectionHistory;
         _modifierKeyState = modifierKeyState;
         _nameVerifier = nameVerifier;
+        _messenger = messenger;
     }
 
     public bool IsPressedInControl(KeyCombination combo)
@@ -210,6 +217,16 @@ public class HotkeyManager : IHotkeyManager
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);
         HandleRename(e);
+        HandleFocusSelection(e);
+    }
+
+    private void HandleFocusSelection(GumKeyEventArgs e)
+    {
+        if (FocusSelection.IsPressed(e))
+        {
+            _messenger.Send(ZoomCanvasToFitSelectionMessage.FocusOnSelection());
+            e.Handled = true;
+        }
     }
 
     private void HandleRename(GumKeyEventArgs e)
@@ -372,6 +389,7 @@ public class HotkeyManager : IHotkeyManager
         HandleReorder(e);
 
         HandleGoToDefinition(e);
+        HandleFocusSelection(e);
     }
 
     public void HandleKeyUpWireframe()

@@ -70,7 +70,8 @@ public class HotkeyManagerTests : BaseTestClass
             _selectionHistory.Object,
             _modifierKeyState.Object,
             Mock.Of<IOperatingSystemInfo>(),
-            _nameVerifier.Object
+            _nameVerifier.Object,
+            Mock.Of<CommunityToolkit.Mvvm.Messaging.IMessenger>()
         );
     }
 

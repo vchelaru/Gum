@@ -197,7 +197,7 @@
 - CANV-037 Right-click: Add child from Favorited Components
 - CANV-038 Right-click: Lock / Unlock. tested: RightClickViewModelTests
 - CANV-039 Right-click menu shows only with instance selected
-- CANV-040 Zoom to fit selected element. tested: CanvasZoomToFitTests
+- CANV-040 Zoom to fit selected element; the F key, View > Focus on Selection and a tree double-click frame the selected instances, zooming in past 100%. tested: CanvasZoomToFitTests, CanvasMenuAndToolbarScenarioTests
 - CANV-041 Canvas redraws on change. tested: CanvasRedrawTests
 - CANV-042 Custom renderables (Skia shapes, Lottie). tested: WireframeObjectManagerCustomRenderableTests
 - CANV-043 Switching elements restores the zoom and scroll left on each. tested: ElementCameraMemoryTests

@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Menus;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -40,6 +41,28 @@ public class StandardMenuModelBuilderTests
         MenuItemModel edit = model.GetItem("Edit").ShouldNotBeNull();
         edit.Items.Single(i => i.Header == "Undo").Gesture.ShouldBeSameAs(undo);
         edit.Items.Single(i => i.Header == "Redo").Gesture.ShouldBeSameAs(redo);
+    }
+
+    [Fact]
+    public void Build_ViewFocusOnSelection_AsksTheCanvasToFocus_AndShowsTheHotkey()
+    {
+        KeyCombination focus = KeyCombination.Pressed(GumKey.F);
+        AutoMocker mocker = new AutoMocker();
+        mocker.GetMock<IHotkeyManager>().Setup(h => h.FocusSelection).Returns(focus);
+        WeakReferenceMessenger messenger = new WeakReferenceMessenger();
+        mocker.Use<IMessenger>(messenger);
+        ZoomCanvasToFitSelectionMessage? request = null;
+        object recipient = new object();
+        messenger.Register<ZoomCanvasToFitSelectionMessage>(recipient, (_, message) => request = message);
+        StandardMenuModelBuilder builder = mocker.CreateInstance<StandardMenuModelBuilder>();
+
+        MenuItemModel item = builder.Build().GetItem("View")!.Items.Single(i => i.Header == "Focus on Selection");
+        item.Invoke();
+
+        item.Gesture.ShouldBeSameAs(focus);
+        request.ShouldNotBeNull();
+        request.FrameSelectedInstances.ShouldBeTrue();
+        request.MaxZoomPercent.ShouldBeGreaterThan(100);
     }
 
     [Fact]

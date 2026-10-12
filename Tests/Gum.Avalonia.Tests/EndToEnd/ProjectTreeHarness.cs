@@ -153,6 +153,13 @@ internal sealed class ProjectTreeHarness : IDisposable
         _exceptions.ThrowIfCrashed();
     }
 
+    /// <summary>Double-clicks <paramref name="node"/>'s row.</summary>
+    public void DoubleClick(GumTreeNode node)
+    {
+        Click(node);
+        Click(node);
+    }
+
     /// <summary>Clicks the expander arrow on <paramref name="node"/>'s row, which toggles it open or closed.</summary>
     public void ClickExpander(GumTreeNode node)
     {

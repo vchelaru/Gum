@@ -52,6 +52,9 @@ public interface IHotkeyManager
     KeyCombination NavigateForward { get; }
     KeyCombination ShowHotkeys { get; }
 
+    /// <summary>Pans and zooms the canvas onto the selection.</summary>
+    KeyCombination FocusSelection { get; }
+
     /// <summary>
     /// Handles application-wide hotkeys (search, undo/redo, zoom). Callers at the WinForms/WPF boundary
     /// translate their framework key event into a <see cref="Gum.Input.GumKeyEventArgs"/> and read

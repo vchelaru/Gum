@@ -6,6 +6,7 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Messages;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -155,6 +156,11 @@ public class StandardMenuModelBuilder
             _messenger.Send(new StandardsPaletteSettingChangedMessage(_projectManager.EffectiveUseStandardsPalette));
         };
         view.Items.Add(_standardsPaletteMenuItem);
+        view.Items.Add(new MenuItemModel("Focus on Selection",
+            () => _messenger.Send(ZoomCanvasToFitSelectionMessage.FocusOnSelection()))
+        {
+            Gesture = _hotkeyManager.FocusSelection,
+        });
 
         MenuItemModel content = new MenuItemModel("Content");
         content.Items.Add(new MenuItemModel("Find file references...", FindFileReferences));

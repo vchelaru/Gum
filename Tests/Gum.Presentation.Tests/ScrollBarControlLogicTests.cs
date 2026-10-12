@@ -79,7 +79,7 @@ public class ScrollBarControlLogicTests
     }
 
     [Fact]
-    public void UpdateScrollBars_ClampsBarValueToThePreviousRangeButLeavesTheCameraAlone()
+    public void UpdateScrollBars_ClampsBarValueToTheNewRangeButLeavesTheCameraAlone()
     {
         Camera camera = new Camera { Zoom = 1, X = 5000, Y = 5000 };
         _logic.Camera = camera;
@@ -90,8 +90,9 @@ public class ScrollBarControlLogicTests
 
         _logic.UpdateScrollBars();
 
-        _horizontal.Value.ShouldBe(100);
-        _vertical.Value.ShouldBe(100);
+        // The default 2048 area centered on the origin, plus the 800x600 view, at zoom 1.
+        _horizontal.Value.ShouldBe(2848);
+        _vertical.Value.ShouldBe(2648);
         // The user is allowed to pan past the scrollable area, so the camera keeps its position even
         // though the bars clamped.
         camera.X.ShouldBe(5000);
