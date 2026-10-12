@@ -55,18 +55,6 @@ public class HeadCompositionTests
     }
 
     [AvaloniaFact]
-    public void MainWindow_ConstructsAndShows_Headless()
-    {
-        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
-
-        window.Show();
-
-        window.IsVisible.ShouldBeTrue();
-        window.Title.ShouldNotBeNullOrEmpty();
-        window.Close();
-    }
-
-    [AvaloniaFact]
     public void MainWindow_ShownInBackground_OpensOffScreenUnactivated()
     {
         // An unattended run (--exit-after) must not take focus or cover the user's windows (#5133).

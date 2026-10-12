@@ -1,6 +1,8 @@
 using Avalonia.Automation.Peers;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -17,10 +19,22 @@ namespace Gum.Avalonia.Tests.Accessibility;
 public class MainWindowAutomationTreeTests
 {
     [AvaloniaFact]
-    public void MainWindow_ExposesNamedTabsButtonsAndTreeRows_ThroughItsPeerTree()
+    public void MainWindow_ConstructsAndShows_AndExposesNamedTabsButtonsAndTreeRows_ThroughItsPeerTree()
     {
+        // This is the only test that shows the container's one MainWindow: a closed window cannot be
+        // shown again, and one that stays open keeps the tab content parented to it, which breaks
+        // the harnesses that host that content themselves.
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
         window.Show();
+        window.IsVisible.ShouldBeTrue();
+        window.Title.ShouldNotBeNullOrEmpty();
+        // A shown canvas creates the process-wide KNI/SDL device on its first frame, and SDL on the
+        // headless UI thread aborts the whole test host on macOS ("setting the main menu on a
+        // non-main thread"). A hidden canvas skips its frames, and this walk does not need it.
+        foreach (AvaloniaGraphicsDeviceControl canvas in window.GetVisualDescendants().OfType<AvaloniaGraphicsDeviceControl>())
+        {
+            canvas.IsVisible = false;
+        }
         Dispatcher.UIThread.RunJobs();
         window.UpdateLayout();
 
