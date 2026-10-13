@@ -48,7 +48,7 @@ public sealed class FontsView : DockPanel
         characterFile.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(FontsViewModel.UseFontCharacterFile)) { Mode = BindingMode.TwoWay });
         TextBlock characterFileHint = new TextBlock
         {
-            Text = "Sets the default ranges to every character in the .gumfcs file next to your project, so you can list the text your game shows instead of typing ranges.",
+            Text = "If checked, the font ranges are extracted from the text in the .gumfcs file. If unchecked, your font ranges below are used.",
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(26, 0, 0, 0),
         }.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
