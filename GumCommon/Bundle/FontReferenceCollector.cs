@@ -74,7 +74,6 @@ public class FontReferenceCollector
     /// </summary>
     public Dictionary<string, BmfcSave> Collect(GumProjectSave project, IEnumerable<ElementSave> elements)
     {
-        string fontRanges = project.FontRanges;
         int spacingHorizontal = project.FontSpacingHorizontal;
         int spacingVertical = project.FontSpacingVertical;
 
@@ -97,7 +96,7 @@ public class FontReferenceCollector
                 try
                 {
                     element.ApplyVariableReferences(state, notifyChanges: false);
-                    CollectForState(element, state, bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
+                    CollectForState(element, state, bitmapFonts, project, spacingHorizontal, spacingVertical);
                 }
                 finally
                 {
@@ -116,7 +115,7 @@ public class FontReferenceCollector
     }
 
     private void CollectForState(ElementSave element, StateSave state, Dictionary<string, BmfcSave> bitmapFonts,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         // A non-default state that sets nothing for a given owner resolves that owner's
         // font properties identically to the default state, which is always collected -
@@ -127,7 +126,7 @@ public class FontReferenceCollector
 
         if (isDefaultState || StateSetsAnythingFor(state, ownerName: null))
         {
-            foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, fontRanges, spacingHorizontal, spacingVertical))
+            foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
             }
@@ -140,7 +139,7 @@ public class FontReferenceCollector
                 continue;
             }
 
-            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, fontRanges, spacingHorizontal, spacingVertical))
+            foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, project, spacingHorizontal, spacingVertical))
             {
                 bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
             }
@@ -150,7 +149,7 @@ public class FontReferenceCollector
             // live on inner Text instances and may be partially exposed. Use
             // RecursiveVariableFinder to resolve through the component hierarchy.
             CollectFontsFromNestedTextInstances(element, state, instance,
-                bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
+                bitmapFonts, project, spacingHorizontal, spacingVertical);
         }
     }
 
@@ -174,11 +173,11 @@ public class FontReferenceCollector
     }
 
     private static BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
         return BuildBmfcSave(name => stateSave.GetValueRecursive(prefix + name),
-            fontRanges, spacingHorizontal, spacingVertical);
+            project, spacingHorizontal, spacingVertical);
     }
 
     /// <summary>
@@ -191,7 +190,7 @@ public class FontReferenceCollector
     /// reference. See #4042.
     /// </summary>
     private static IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, StateSave stateSave,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         string prefix = instance != null ? instance.Name + "." : "";
         string? ownerName = instance?.Name;
@@ -233,7 +232,7 @@ public class FontReferenceCollector
 
         if (branchValuesByProperty.Count == 0)
         {
-            BmfcSave? baseline = TryGetBmfcSaveFor(instance, stateSave, fontRanges, spacingHorizontal, spacingVertical);
+            BmfcSave? baseline = TryGetBmfcSaveFor(instance, stateSave, project, spacingHorizontal, spacingVertical);
             if (baseline != null)
             {
                 yield return baseline;
@@ -247,7 +246,7 @@ public class FontReferenceCollector
                 ? overridden
                 : stateSave.GetValueRecursive(prefix + name);
 
-            BmfcSave? bmfcSave = BuildBmfcSave(Lookup, fontRanges, spacingHorizontal, spacingVertical);
+            BmfcSave? bmfcSave = BuildBmfcSave(Lookup, project, spacingHorizontal, spacingVertical);
             if (bmfcSave != null)
             {
                 yield return bmfcSave;
@@ -277,7 +276,7 @@ public class FontReferenceCollector
     }
 
     private static BmfcSave? BuildBmfcSave(Func<string, object?> getValue,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         // Font and FontSize gate the result, so read them first and stop on a miss. Every
         // non-Text instance misses on Font, and each recursive lookup walks the state, base
@@ -332,7 +331,6 @@ public class FontReferenceCollector
         bmfcSave.UseSmoothing = fontSmoothing;
         bmfcSave.IsItalic = isItalic;
         bmfcSave.IsBold = isBold;
-        bmfcSave.Ranges = fontRanges;
         bmfcSave.SpacingHorizontal = spacingHorizontal;
         bmfcSave.SpacingVertical = spacingVertical;
         bmfcSave.HasDropshadow = hasDropshadow;
@@ -358,12 +356,14 @@ public class FontReferenceCollector
             bmfcSave.FontName = fontValue;
         }
 
+        bmfcSave.Ranges = project.GetFontRanges(fontValue) ?? BmfcSave.GetEffectiveDefaultRanges();
+
         return bmfcSave;
     }
 
     private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
         InstanceSave componentInstance, Dictionary<string, BmfcSave> bitmapFonts,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         ElementSave? componentElement = _resolveInstanceElement(componentInstance);
         if (componentElement == null)
@@ -388,7 +388,7 @@ public class FontReferenceCollector
                     new ElementWithState(innerElement)
                 };
 
-                BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack, fontRanges, spacingHorizontal, spacingVertical);
+                BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack, project, spacingHorizontal, spacingVertical);
                 if (bmfcSave != null)
                 {
                     bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
@@ -397,7 +397,7 @@ public class FontReferenceCollector
             else
             {
                 CollectFontsFromNestedTextInstances(outerElement, outerState, componentInstance,
-                    componentElement, innerInstance, bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
+                    componentElement, innerInstance, bitmapFonts, project, spacingHorizontal, spacingVertical);
             }
         }
     }
@@ -405,7 +405,7 @@ public class FontReferenceCollector
     private void CollectFontsFromNestedTextInstances(ElementSave outerElement, StateSave outerState,
         InstanceSave outerInstance, ElementSave parentComponent, InstanceSave innerInstance,
         Dictionary<string, BmfcSave> bitmapFonts,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         ElementSave? innerElement = _resolveInstanceElement(innerInstance);
         if (innerElement == null)
@@ -422,7 +422,7 @@ public class FontReferenceCollector
                 new ElementWithState(innerElement)
             };
 
-            BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack, fontRanges, spacingHorizontal, spacingVertical);
+            BmfcSave? bmfcSave = TryGetBmfcSaveFromStack(elementStack, project, spacingHorizontal, spacingVertical);
             if (bmfcSave != null)
             {
                 bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
@@ -433,16 +433,16 @@ public class FontReferenceCollector
             foreach (InstanceSave deeperInstance in innerElement.Instances)
             {
                 CollectFontsFromNestedTextInstances(outerElement, outerState, outerInstance,
-                    innerElement, deeperInstance, bitmapFonts, fontRanges, spacingHorizontal, spacingVertical);
+                    innerElement, deeperInstance, bitmapFonts, project, spacingHorizontal, spacingVertical);
             }
         }
     }
 
     private static BmfcSave? TryGetBmfcSaveFromStack(List<ElementWithState> elementStack,
-        string fontRanges, int spacingHorizontal, int spacingVertical)
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
     {
         RecursiveVariableFinder rfv = new RecursiveVariableFinder(elementStack);
 
-        return BuildBmfcSave(name => rfv.GetValueByBottomName(name), fontRanges, spacingHorizontal, spacingVertical);
+        return BuildBmfcSave(name => rfv.GetValueByBottomName(name), project, spacingHorizontal, spacingVertical);
     }
 }

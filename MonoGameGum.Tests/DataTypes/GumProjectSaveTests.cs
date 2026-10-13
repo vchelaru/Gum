@@ -33,6 +33,178 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
+    public void GetFontRanges_PrefersTheFamilyEntry_ThenTheGlobalEntry()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRanges = "32-126";
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "57344-57400" });
+
+        project.GetFontRanges("IconFont").ShouldBe("57344-57400");
+        project.GetFontRanges("iconfont").ShouldBe("57344-57400");
+        project.GetFontRanges("Arial").ShouldBe("32-126");
+        project.GetFontRanges(null).ShouldBe("32-126");
+        project.GetFontRanges("").ShouldBe("32-126");
+    }
+
+    [Fact]
+    public void GetFontRanges_FontFilePaths_MatchIgnoringSlashDirection_ButNotCaseOrFileNameAlone()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRanges = "32-126";
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts\\Icons.ttf", Ranges = "57344-57400" });
+
+        project.GetFontRanges("Fonts/Icons.ttf").ShouldBe("57344-57400");
+        project.GetFontRanges("fonts/icons.ttf").ShouldBe("32-126");
+        project.GetFontRanges("Other/Icons.ttf").ShouldBe("32-126");
+        project.GetFontRanges("Icons").ShouldBe("32-126");
+    }
+
+    [Fact]
+    public void FontRangeEntries_FontFilesDifferingOnlyByCase_AreBothKeptOnSave_ButSystemFamiliesAreCollapsed()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts/Icons.ttf", Ranges = "1-2" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "fonts/icons.ttf", Ranges = "3-4" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Arial", Ranges = "5-6" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "ARIAL", Ranges = "7-8" });
+
+        GumProjectSave loaded = RoundTrip(project);
+
+        loaded.FontRangeEntries.Count.ShouldBe(4);
+        loaded.GetFontRanges("Fonts/Icons.ttf").ShouldBe("1-2");
+        loaded.GetFontRanges("fonts/icons.ttf").ShouldBe("3-4");
+        loaded.GetFontRanges("arial").ShouldBe("5-6");
+    }
+
+    [Fact]
+    public void FontRangeEntries_SameFontFileTypedWithDifferentSlashes_IsCollapsedOnSave()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts/Icons.ttf", Ranges = "1-2" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts\\Icons.ttf", Ranges = "3-4" });
+
+        GumProjectSave loaded = RoundTrip(project);
+
+        loaded.FontRangeEntries.Count.ShouldBe(2);
+        loaded.GetFontRanges("Fonts/Icons.ttf").ShouldBe("1-2");
+    }
+
+    [Fact]
+    public void GetFontRanges_NoGlobalEntry_ReturnsNull()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRangeEntries.Clear();
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "57344-57400" });
+
+        project.GetFontRanges("Arial").ShouldBeNull();
+    }
+
+    [Fact]
+    public void FontRanges_Setter_UpsertsTheGlobalEntryAndLeavesFamilyEntriesAlone()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "57344-57400" });
+
+        project.FontRanges = "32-126";
+        project.FontRanges = "32-200";
+
+        project.FontRanges.ShouldBe("32-200");
+        project.FontRangeEntries.Count.ShouldBe(2);
+        project.GetFontRanges("IconFont").ShouldBe("57344-57400");
+    }
+
+    [Fact]
+    public void FontRanges_DefaultsToTheDefaultRanges()
+    {
+        new GumProjectSave().FontRanges.ShouldBe("32-126,160-255");
+    }
+
+    [Fact]
+    public void FontRangeEntries_GlobalOnly_WritesOnlyTheLegacyElement()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRanges = "32-126";
+
+        FileManager.XmlSerialize(project, out string xml);
+
+        xml.ShouldContain("<FontRanges>32-126</FontRanges>");
+        xml.ShouldNotContain("FontRangeEntr");
+    }
+
+    [Fact]
+    public void FontRangeEntries_RoundTripWithFamilies_PreservesEveryEntry()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRanges = "32-126";
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "57344-57400" });
+
+        GumProjectSave loaded = RoundTrip(project);
+
+        loaded.FontRanges.ShouldBe("32-126");
+        loaded.FontRangeEntries.Count.ShouldBe(2);
+        loaded.GetFontRanges("IconFont").ShouldBe("57344-57400");
+        loaded.GetFontRanges("Arial").ShouldBe("32-126");
+    }
+
+    [Fact]
+    public void FontRangeEntries_LegacyElement_AppearsBeforeTheListInSerializedXml()
+    {
+        // Same ordering contract as LocalizationFile: the list-replacing setter must fire after the
+        // legacy setter, or a file with both elements would lose the list.
+        GumProjectSave project = new GumProjectSave();
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "57344-57400" });
+
+        FileManager.XmlSerialize(project, out string xml);
+
+        int legacyIndex = xml.IndexOf("<FontRanges>", StringComparison.Ordinal);
+        int listIndex = xml.IndexOf("<FontRangeEntries>", StringComparison.Ordinal);
+
+        legacyIndex.ShouldBeGreaterThan(-1);
+        listIndex.ShouldBeGreaterThan(-1);
+        legacyIndex.ShouldBeLessThan(listIndex);
+    }
+
+    [Fact]
+    public void FontRangeEntries_LegacyFileWithOnlyFontRanges_BecomesTheGlobalEntry()
+    {
+        GumProjectSave loaded = LoadFromXml(
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <FontRanges>32-126,9632-9727</FontRanges>\n</GumProjectSave>");
+
+        loaded.FontRanges.ShouldBe("32-126,9632-9727");
+        loaded.FontRangeEntries.Count.ShouldBe(1);
+        loaded.FontRangeEntries[0].FontFamily.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FontRangeEntries_HandEditedListWithoutAGlobalEntry_KeepsTheLegacyFontRangesAsTheGlobal()
+    {
+        GumProjectSave loaded = LoadFromXml(
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <FontRanges>65-70,100-105</FontRanges>\n" +
+            "  <FontRangeEntries>\n    <FontRangeEntry>\n      <FontFamily>Fonts/Icons.ttf</FontFamily>\n      <Ranges>1-2</Ranges>\n    </FontRangeEntry>\n  </FontRangeEntries>\n</GumProjectSave>");
+
+        loaded.FontRanges.ShouldBe("65-70,100-105");
+        loaded.GetFontRanges("Arial").ShouldBe("65-70,100-105");
+        loaded.GetFontRanges("Fonts/Icons.ttf").ShouldBe("1-2");
+    }
+
+    [Fact]
+    public void FontRangeEntries_DuplicateFamiliesAndDuplicateGlobals_AreCollapsedOnSave()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRangeEntries.Clear();
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = null, Ranges = "32-126" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "", Ranges = "32-200" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "1-2" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "ICONFONT", Ranges = "3-4" });
+
+        GumProjectSave loaded = RoundTrip(project);
+
+        loaded.FontRangeEntries.Count.ShouldBe(2);
+        loaded.GetFontRanges(null).ShouldBe("32-126");
+        loaded.GetFontRanges("IconFont").ShouldBe("1-2");
+    }
+
+    [Fact]
     public void LocalizationFile_LegacyElement_AppearsBeforeLocalizationFilesInSerializedXml()
     {
         // Guard against silent reordering of the LocalizationFile / LocalizationFilesArray

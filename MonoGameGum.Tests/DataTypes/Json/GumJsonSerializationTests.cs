@@ -188,6 +188,46 @@ public class GumJsonSerializationTests
     }
 
     [Fact]
+    public void SerializeDeserialize_GumProjectSave_PreservesPerFamilyFontRanges()
+    {
+        GumProjectSave original = new GumProjectSave { FontRanges = "32-126" };
+        original.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "57344-57400" });
+
+        string json = GumJsonFileSerializer.SerializeProject(original);
+        GumProjectSave result = GumJsonFileSerializer.DeserializeProject(json);
+
+        result.FontRanges.ShouldBe("32-126");
+        result.FontRangeEntries.Count.ShouldBe(2);
+        result.GetFontRanges("IconFont").ShouldBe("57344-57400");
+    }
+
+    [Fact]
+    public void DeserializeProject_HandEditedFontRangeEntriesWithoutAGlobalEntry_KeepsFontRangesAsTheGlobal()
+    {
+        const string json = "{ \"FontRanges\": \"65-70,100-105\", " +
+            "\"FontRangeEntries\": [ { \"FontFamily\": \"Fonts/Icons.ttf\", \"Ranges\": \"1-2\" } ] }";
+
+        GumProjectSave result = GumJsonFileSerializer.DeserializeProject(json);
+
+        result.FontRanges.ShouldBe("65-70,100-105");
+        result.GetFontRanges("Arial").ShouldBe("65-70,100-105");
+        result.GetFontRanges("Fonts/Icons.ttf").ShouldBe("1-2");
+    }
+
+    [Fact]
+    public void SerializeDeserialize_GumProjectSave_GlobalOnlyFontRangesStayOffTheList()
+    {
+        GumProjectSave original = new GumProjectSave { FontRanges = "32-126" };
+
+        string json = GumJsonFileSerializer.SerializeProject(original);
+        GumProjectSave result = GumJsonFileSerializer.DeserializeProject(json);
+
+        json.ShouldNotContain("FontRangeEntries");
+        result.FontRanges.ShouldBe("32-126");
+        result.FontRangeEntries.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void SerializeDeserialize_VariableSave_PreservesEachBoxedValueType()
     {
         // Covers every CLR type BoxedValueJson supports. long/double are real but rare in checked-in

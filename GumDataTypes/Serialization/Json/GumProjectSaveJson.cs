@@ -16,6 +16,9 @@ namespace Gum.DataTypes.Serialization.Json;
 internal sealed class GumProjectSaveJson
 {
     public string FontRanges { get; set; } = "";
+    /// <summary>Per-family ranges. Null (and so omitted) until a family has its own entry; <see cref="FontRanges"/> carries the global one.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public List<FontRangeEntry>? FontRangeEntries { get; set; }
     public int FontSpacingVertical { get; set; }
     public int FontSpacingHorizontal { get; set; }
     public bool UseFontCharacterFile { get; set; }
@@ -65,6 +68,7 @@ internal static class GumProjectSaveJsonMapper
         return new GumProjectSaveJson
         {
             FontRanges = source.FontRanges,
+            FontRangeEntries = source.ShouldSerializeFontRangeEntriesArray() ? source.FontRangeEntriesArray.ToList() : null,
             FontSpacingVertical = source.FontSpacingVertical,
             FontSpacingHorizontal = source.FontSpacingHorizontal,
             UseFontCharacterFile = source.UseFontCharacterFile,
@@ -138,6 +142,11 @@ internal static class GumProjectSaveJsonMapper
             SinglePixelTextureRight = dto.SinglePixelTextureRight,
             SinglePixelTextureBottom = dto.SinglePixelTextureBottom,
         };
+
+        if (dto.FontRangeEntries != null)
+        {
+            result.FontRangeEntriesArray = dto.FontRangeEntries.ToArray();
+        }
 
         result.LocalizationFiles = new List<string>(dto.LocalizationFiles);
         result.ScreenReferences = dto.ScreenReferences.Select(ElementReferenceJsonMapper.FromJson).ToList();
