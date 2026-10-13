@@ -122,35 +122,6 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
-    public string FontRanges
-    {
-        get => Get<string>();
-        set => Set(value);
-    }
-
-    public int FontSpacingHorizontal
-    {
-        get => Get<int>();
-        set => Set(value);
-    }
-    public int FontSpacingVertical
-    {
-        get => Get<int>();
-        set => Set(value);
-    }
-
-    public bool AutoSizeFontOutputs
-    {
-        get => Get<bool>();
-        set => Set(value);
-    }
-
-    public FontGeneratorType FontGenerator
-    {
-        get => Get<FontGeneratorType>();
-        set => Set(value);
-    }
-
     public string SinglePixelTextureFile
     {
         get => Get<string>();
@@ -180,20 +151,6 @@ public class ProjectPropertiesViewModel : ViewModel
         get => Get<int?>();
         set => Set(value);
     }
-    
-    public bool UseFontCharacterFile
-    {
-        get => Get<bool>();
-        set => Set(value);
-    }
-
-
-    /// <summary>
-    /// True while the font ranges come from the project's .gumfcs file, so they cannot be typed in.
-    /// View state, not a project setting: <see cref="ProjectPropertiesChangeLogic"/> ignores it.
-    /// </summary>
-    [DependsOn(nameof(UseFontCharacterFile))]
-    public bool IsFontRangesReadOnly => UseFontCharacterFile;
 
     /// <summary>
     /// The languages the loaded localization files define, for the Language choice; empty without
@@ -242,12 +199,6 @@ public class ProjectPropertiesViewModel : ViewModel
             }
             ShowCanvasOutline = gumProject.ShowCanvasOutline;
             ShowCheckerBackground = gumProject.ShowCheckerBackground;
-            FontRanges = gumProject.FontRanges;
-            FontSpacingHorizontal = gumProject.FontSpacingHorizontal;
-            FontSpacingVertical = gumProject.FontSpacingVertical;
-            UseFontCharacterFile = gumProject.UseFontCharacterFile;
-            AutoSizeFontOutputs = gumProject.AutoSizeFontOutputs;
-            FontGenerator = gumProject.FontGenerator;
 
             RestrictToUnitValues = gumProject.RestrictToUnitValues;
             CanvasHeight = gumProject.DefaultCanvasHeight;
@@ -294,13 +245,6 @@ public class ProjectPropertiesViewModel : ViewModel
         this.gumProject.LocalizationFiles = new List<string>(LocalizationFiles);
         this.gumProject.CurrentLanguageIndex = LanguageIndex;
         this.gumProject.ShowLocalizationInGum = ShowLocalization;
-        this.gumProject.FontRanges = FontRanges;
-        this.gumProject.UseFontCharacterFile = UseFontCharacterFile;
-
-        this.gumProject.FontSpacingHorizontal = FontSpacingHorizontal;
-        this.gumProject.FontSpacingVertical = FontSpacingVertical;
-        this.gumProject.AutoSizeFontOutputs = AutoSizeFontOutputs;
-        this.gumProject.FontGenerator = FontGenerator;
 
         this.gumProject.SinglePixelTextureFile = SinglePixelTextureFile;
         this.gumProject.SinglePixelTextureTop = SinglePixelTextureTop;

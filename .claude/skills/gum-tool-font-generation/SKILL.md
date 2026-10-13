@@ -67,8 +67,8 @@ The heuristic fallback (`EstimateBlocksNeeded`) uses a lookup table mapping effe
 ## Character Ranges
 
 - Default: `32-126,160-255` (ASCII + Latin-1 Supplement)
-- Project ranges live in `GumProjectSave.FontRangeEntries` (one entry per font family; a null/empty family is the project-wide default). Look up with `GumProjectSave.GetFontRanges(family)` (family entry, else global entry, else null so the caller uses `BmfcSave.GetEffectiveDefaultRanges()`). The scalar `FontRanges` is a legacy shim over the global entry and is still written on every save for older tools; the list is only written once a family has its own entry. The Project Properties UI still edits only the global entry.
-- Ranges are validated (no spaces, proper start < end), with automatic fallback to default. The global row validates on entry in Project Properties; a hand-edited family entry is only reported afterwards by `HeadlessErrorChecker` (GUM0010 unmatched entry, GUM0011 invalid range)
+- Project ranges live in `GumProjectSave.FontRangeEntries` (one entry per font family; a null/empty family is the project-wide default). Look up with `GumProjectSave.GetFontRanges(family)` (family entry, else global entry, else null so the caller uses `BmfcSave.GetEffectiveDefaultRanges()`). The scalar `FontRanges` is a legacy shim over the global entry and is still written on every save for older tools; the list is only written once a family has its own entry. The Fonts tab (`Edit > Fonts`, see Key Files) edits every entry, with the default row first.
+- Ranges are validated (no spaces, proper start < end), with automatic fallback to default. The Fonts tab flags an invalid range, a row with no font or a repeated font, and a font no Text uses, and bakes nothing while a range is invalid. A hand-edited project is reported by `HeadlessErrorChecker` (GUM0010 unmatched entry, GUM0011 invalid range); both read `FontRangeEntryChecker` for which entries match a used font
 - Space character (32) is always included via `EnsureRangesContainSpace`
 - Large range sets are split across multiple `chars=` lines (max 10 blocks per line) for bmfont.exe compatibility
 - `GenerateRangesFromFile` can derive ranges from a text file's unique characters
@@ -109,6 +109,7 @@ Both delegate to `HeadlessFontGenerationService`. Legacy `IRuntimeFontService`, 
 | `Tools/Gum.Presentation/Services/Fonts/ToolFontGenerationCallbacks.cs` | Tool-specific callback implementation |
 | `RenderingLibrary/Graphics/Fonts/BmfcSave.cs` | Font data model, .bmfc serialization, cache file naming, range utilities |
 | `GumCommon/Bundle/FontReferenceCollector.cs` | Builds every `BmfcSave` a project needs from its variables |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/FontsPlugin/` | The Fonts tab's `FontsViewModel` (ranges table plus generation settings), `FontsChangeLogic`, `FontsGridPresenter`; the plugin and `FontsView` are Avalonia-head only (`Tool/Gum.Avalonia/Plugins/Fonts/`, `Panels/FontsView.cs`), so the frozen WPF head has no Fonts tab |
 | `Gum/Content/BmfcTemplate.bmfc` | Template with placeholders for bmfont.exe config |
 | `GumProjectFontGenerator/Program.cs` | Standalone CLI for batch font generation |
 

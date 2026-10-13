@@ -13,9 +13,13 @@ The goal of font localization is to ship only the glyphs the player needs for th
 ## Today
 
 * **The tool bakes a single union FontCache.** When you edit a Gum project that contains text in multiple languages, the tool generates one `.fnt` per `(font, size, style)` combination, containing the union of every character used anywhere in the project. A Korean-only player downloads Japanese kanji glyphs in their atlas, and vice versa.
-* **There are no per-locale character ranges.** You can configure character ranges globally (in the font's bitmap font generator settings), but not per locale.
+* **Character ranges are per font, not per locale.** You can give each font its own range, so a CJK font can bake CJK characters while a Latin font keeps the default (see [Ranges for One Font](../../gum-tool/fonts.md#ranges-for-one-font)). A single font still bakes the same characters for every locale.
 * **KernSmith generation is per-`TextRuntime`.** A `TextRuntime` whose `Text` contains both Korean and Japanese glyphs causes KernSmith to generate an atlas covering whatever charset is currently configured for that font. There's no built-in concept of "this atlas is for Korean only."
 * **There is no opt-out for FontCache generation.** Even projects that intend to ship pure KernSmith get `.fnt` files baked by the tool.
+
+{% hint style="info" %}
+Per-font ranges in the tool are available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 The practical effect is that **today's projects pay full charset cost regardless of player locale**. For Latin-only games this is invisible. For CJK games it's significant — both in atlas memory and (on web) in download size.
 

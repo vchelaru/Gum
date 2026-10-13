@@ -36,19 +36,6 @@ public class ProjectPropertiesViewModelTests
     }
 
     [Fact]
-    public void IsFontRangesReadOnly_FollowsUseFontCharacterFile()
-    {
-        ProjectPropertiesViewModel viewModel = new();
-        List<string?> changed = new();
-        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
-        viewModel.UseFontCharacterFile = true;
-
-        viewModel.IsFontRangesReadOnly.ShouldBeTrue();
-        changed.ShouldContain(nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly));
-    }
-
-    [Fact]
     public void LocalizationFiles_ShouldReturnSameListInstance_WhenReadRepeatedly()
     {
         // Regression: getter used to `?? new List<string>()` which returned a fresh,

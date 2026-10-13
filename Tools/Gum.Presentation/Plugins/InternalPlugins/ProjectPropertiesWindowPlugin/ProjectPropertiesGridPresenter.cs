@@ -1,9 +1,6 @@
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using Gum.DataTypes;
-using Gum.ProjectServices.FontGeneration;
-using Gum.Services;
 using ToolsUtilities;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -13,21 +10,17 @@ namespace Gum.Plugins.PropertiesWindowPlugin;
 /// <summary>
 /// Drives the Project Properties tab's property grid over a <see cref="ProjectPropertiesViewModel"/>,
 /// for either head: builds the rows from the view model's members, groups and names them the way
-/// the tool always has, rebuilds on <see cref="ProjectPropertiesViewModel.Reloaded"/>, and keeps the
-/// font ranges read-only while a font character file is in use. Off Windows the font generator
-/// row is read-only too, since bmfont.exe cannot run there and KernSmith is used regardless.
+/// the tool always has, and rebuilds on <see cref="ProjectPropertiesViewModel.Reloaded"/>.
 /// </summary>
 public sealed class ProjectPropertiesGridPresenter
 {
     private readonly IDataUiGrid _grid;
-    private readonly IOperatingSystemInfo _operatingSystem;
     private ProjectPropertiesViewModel? _viewModel;
 
-    /// <summary>Creates a presenter over <paramref name="grid"/> for the current OS unless one is given.</summary>
-    public ProjectPropertiesGridPresenter(IDataUiGrid grid, IOperatingSystemInfo? operatingSystem = null)
+    /// <summary>Creates a presenter over <paramref name="grid"/>.</summary>
+    public ProjectPropertiesGridPresenter(IDataUiGrid grid)
     {
         _grid = grid;
-        _operatingSystem = operatingSystem ?? new OperatingSystemInfo();
     }
 
     /// <summary>The view model shown, or null.</summary>
@@ -39,13 +32,11 @@ public sealed class ProjectPropertiesGridPresenter
         if (_viewModel != null)
         {
             _viewModel.Reloaded -= Rebuild;
-            _viewModel.PropertyChanged -= HandleViewModelPropertyChanged;
         }
         _viewModel = viewModel;
         if (_viewModel != null)
         {
             _viewModel.Reloaded += Rebuild;
-            _viewModel.PropertyChanged += HandleViewModelPropertyChanged;
         }
         Rebuild();
     }
@@ -58,18 +49,16 @@ public sealed class ProjectPropertiesGridPresenter
         if (_viewModel != null)
         {
             _grid.Instance = _viewModel;
-            ApplyLayout(_grid.Model, _viewModel, _operatingSystem);
-            RefreshFontRangeEditability();
+            ApplyLayout(_grid.Model, _viewModel);
         }
     }
 
     /// <summary>
-    /// Shapes the auto-populated rows of <paramref name="grid"/>: the guide, single pixel texture
-    /// and font generation members in their own categories, spaced display names, the file editors
-    /// and option lists, and no rows for the view model's bookkeeping members. The font generator
-    /// row is read-only where bmfont.exe cannot run, saying which OS makes KernSmith the one used.
+    /// Shapes the auto-populated rows of <paramref name="grid"/>: the guide and single pixel texture
+    /// members in their own categories, spaced display names, the file editors and option lists,
+    /// and no rows for the view model's bookkeeping members.
     /// </summary>
-    public static void ApplyLayout(DataUiGridModel grid, ProjectPropertiesViewModel viewModel, IOperatingSystemInfo operatingSystem)
+    public static void ApplyLayout(DataUiGridModel grid, ProjectPropertiesViewModel viewModel)
     {
         foreach (InstanceMember member in grid.Categories.SelectMany(category => category.Members).ToArray())
         {
@@ -85,13 +74,6 @@ public sealed class ProjectPropertiesGridPresenter
         grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureTop), "Single Pixel Texture");
         grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureRight), "Single Pixel Texture");
         grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
-
-        grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontRanges), "Font Generation");
-        grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.UseFontCharacterFile), "Font Generation");
-        grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontSpacingHorizontal), "Font Generation");
-        grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontSpacingVertical), "Font Generation");
-        grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.AutoSizeFontOutputs), "Font Generation");
-        grid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontGenerator), "Font Generation");
 
         IReadOnlyList<string> languages = viewModel.AvailableLanguages;
         foreach (MemberCategory category in grid.Categories)
@@ -122,7 +104,6 @@ public sealed class ProjectPropertiesGridPresenter
             // Members that are view state or bookkeeping, not settings, get no row.
             RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.IsUpdatingFromModel));
             RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.LanguageIndex));
-            RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly));
             RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.AvailableLanguages));
 
             if (languages.Count == 0)
@@ -131,53 +112,11 @@ public sealed class ProjectPropertiesGridPresenter
             }
         }
 
-        // Named after the spacing pass, which would otherwise split "Auto-Size" at its capital.
-        InstanceMember? useFontCharacterFile = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.UseFontCharacterFile));
-        if (useFontCharacterFile != null)
-        {
-            useFontCharacterFile.DisplayName = useFontCharacterFile.DisplayName + " (.gumfcs)";
-        }
-
-        InstanceMember? fontGenerator = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontGenerator));
-        if (fontGenerator != null)
-        {
-            fontGenerator.CustomOptions = new List<object> { FontGeneratorType.BmFont, FontGeneratorType.KernSmith };
-            if (FontGeneratorResolver.IsSubstituted(FontGeneratorType.BmFont, operatingSystem.IsWindows))
-            {
-                fontGenerator.IsReadOnly = true;
-                fontGenerator.DetailText = $"KernSmith is used on {operatingSystem.DisplayName}";
-            }
-        }
-
-        InstanceMember? autoSize = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.AutoSizeFontOutputs));
-        if (autoSize != null)
-        {
-            autoSize.DisplayName = "Auto-Size Font Outputs";
-            autoSize.DetailText = "Fewer PNGs, but font generation can be much slower";
-        }
-
         InstanceMember? textureFilter = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.TextureFilter));
         if (textureFilter != null)
         {
             textureFilter.CustomOptions = new List<object> { TextureFilter.Point, TextureFilter.Linear };
         }
-    }
-
-    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly) or nameof(ProjectPropertiesViewModel.FontRanges))
-        {
-            RefreshFontRangeEditability();
-        }
-    }
-
-    private void RefreshFontRangeEditability()
-    {
-        if (_viewModel != null && _grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontRanges)) is { } member)
-        {
-            member.IsReadOnly = _viewModel.IsFontRangesReadOnly;
-        }
-        _grid.Refresh();
     }
 
     private static void RemoveMember(ICollection<InstanceMember> members, string name)

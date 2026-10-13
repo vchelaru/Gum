@@ -24,7 +24,7 @@ public class ProjectPropertiesViewTests
         window.Show();
         window.UpdateLayout();
 
-        view.Grid.Categories.Select(category => category.Name).ShouldContain("Font Generation");
+        view.Grid.Categories.Select(category => category.Name).ShouldNotContain("Font Generation");
         view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.IsUpdatingFromModel)).ShouldBeNull();
         view.GetVisualDescendants().OfType<CheckBox>().Count().ShouldBeGreaterThan(5);
 

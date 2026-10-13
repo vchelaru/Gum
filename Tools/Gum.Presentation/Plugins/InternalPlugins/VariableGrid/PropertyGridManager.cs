@@ -1191,7 +1191,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
             if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
             {
-                fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Project Properties.";
+                fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Edit > Fonts.";
             }
         }
 
@@ -1223,7 +1223,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
                 if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
                 {
-                    fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Project Properties.";
+                    fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Edit > Fonts.";
                 }
 
                 // Force container recreation by remove + reinsert

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Gum renders rasterized fonts using `.fnt` and `.png` files in the BMFont format. Gum bakes these files automatically using the project's configured **Font Generator** — either KernSmith (the default for new projects) or BMFont. See [Font Generator](project-properties.md#font-generator) for the differences between the two and how to switch.
+Gum renders rasterized fonts using `.fnt` and `.png` files in the BMFont format. Gum bakes these files automatically using the project's configured **Font Generator** — either KernSmith (the default for new projects) or BMFont. See [Font Generator](fonts.md#font-generator) for the differences between the two and how to switch.
 
 This page describes the `.fnt` file format itself and how to author one by hand. Manually creating `.fnt` files allows for customization beyond what either generator produces from the Gum tool.
 
