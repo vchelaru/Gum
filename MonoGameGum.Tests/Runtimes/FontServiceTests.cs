@@ -136,6 +136,51 @@ public class FontServiceTests : BaseTestClass
         _mockFontService.Verify(x => x.AbsoluteFontCacheFolder, Times.AtLeastOnce);
     }
 
+    [Fact]
+    public void CreateFontIfNecessary_ShouldUseTheRangesOfTheFontTheTextNames()
+    {
+        // Arrange - a project-wide range plus entries for a system family and for a font file typed as a path
+        const string globalRanges = "32-126";
+        const string familyRanges = "57344-57400";
+        const string fileRanges = "65-70";
+        GumProjectSave project = new GumProjectSave { FontRanges = globalRanges };
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = familyRanges });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts/Icons.ttf", Ranges = fileRanges });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        CustomSetPropertyOnRenderable.FontService = _mockFontService.Object;
+        List<BmfcSave> capturedCalls = new();
+        _mockFontService.Setup(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()))
+            .Callback<BmfcSave>(bmfc => capturedCalls.Add(bmfc));
+
+        // Act
+        TextRuntime plain = new();
+        plain.Font = "Arial";
+        plain.FontSize = 36;
+
+        TextRuntime family = new();
+        family.Font = "IconFont";
+        family.FontSize = 36;
+
+        TextRuntime file = new();
+        file.UseCustomFont = true;
+        file.CustomFontFile = "Fonts/Icons.ttf";
+        file.FontSize = 36;
+
+        // Assert
+        BmfcSave plainSave = capturedCalls.First(bmfc => bmfc.FontName == "Arial");
+        plainSave.Ranges.ShouldBe(globalRanges);
+        plainSave.RangesAreFontSpecific.ShouldBeFalse();
+
+        BmfcSave familySave = capturedCalls.First(bmfc => bmfc.FontName == "IconFont");
+        familySave.Ranges.ShouldBe(familyRanges);
+        familySave.RangesAreFontSpecific.ShouldBeTrue();
+
+        BmfcSave fileSave = capturedCalls.First(bmfc => bmfc.FontName == "Icons");
+        fileSave.Ranges.ShouldBe(fileRanges);
+        fileSave.RangesAreFontSpecific.ShouldBeTrue();
+    }
+
     #endregion
 
     #region UpdateToFontValues

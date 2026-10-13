@@ -6,6 +6,7 @@ using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -105,6 +106,36 @@ public class HeadlessFontGenerationRangeChangeTests : BaseTestClass
             generator.RangesBaked.ShouldBe(new[] { "65-70" });
 
             (await service.CreateAllMissingFontFiles(Project, _projectDirectory)).ShouldBe(0);
+        }
+        finally
+        {
+            Directory.Delete(_projectDirectory, recursive: true);
+        }
+    }
+
+    [SkippableFact]
+    public async Task CreateAllMissingFontFiles_WithTheRealBmFontExe_StampsTheRangesAndRebakesWhenTheyChange()
+    {
+        // bmfont.exe is the generator the stamp can't be added to by KernSmith, and its output is
+        // what existing projects carry, so the line has to survive being appended to its .fnt.
+        Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && BmFontExeFileGenerator.IsEmbeddedInThisAssembly,
+            "bmfont.exe only runs on Windows");
+        try
+        {
+            string toolsDirectory = Path.Combine(_projectDirectory, "Tools");
+            HeadlessFontGenerationService service = new(new BmFontExeFileGenerator(callbacks: null, toolsDirectory));
+            string fnt = Path.Combine(_projectDirectory, new BmfcSave { FontName = "Arial", FontSize = 18 }.FontCacheFileName);
+
+            Project.FontRanges = "65-70";
+            (await service.CreateAllMissingFontFiles(Project, _projectDirectory)).ShouldBe(1);
+            File.ReadAllText(fnt).ShouldContain("gum ranges=\"65-70\"");
+            new global::RenderingLibrary.Graphics.ParsedFontFile(File.ReadAllText(fnt)).Chars.Count.ShouldBeGreaterThan(0);
+
+            (await service.CreateAllMissingFontFiles(Project, _projectDirectory)).ShouldBe(0);
+
+            Project.FontRanges = "65-72";
+            (await service.CreateAllMissingFontFiles(Project, _projectDirectory)).ShouldBe(1);
+            File.ReadAllText(fnt).ShouldContain("gum ranges=\"65-72\"");
         }
         finally
         {

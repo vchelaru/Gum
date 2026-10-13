@@ -3,6 +3,7 @@ using Avalonia.Headless.XUnit;
 using ConvertToJsonPlugin;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.ProjectServices.FontGeneration;
@@ -106,6 +107,60 @@ public class ContentMenuScenarioTests
         Directory.EnumerateFileSystemEntries(fontCache).ShouldBeEmpty();
 
         tree.AssertOracles();
+    }
+
+    [AvaloniaFact]
+    [Trait("Feature", "CONT-003")]
+    [Trait("Feature", "FILE-013")]
+    public void AProjectFileEditedOutside_WithNewFontRanges_RequestsTheBakedFontsAgain_ButAnUnrelatedEditDoesNot()
+    {
+        // #6008: the tool clears the font cache itself when the ranges change in Project Properties,
+        // but an edit made in a text editor only shows up as a project reload.
+        const string newRanges = "65-70";
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave card = tree.Project.AddComponent("Card");
+        tree.Project.AddInstance(card, "Title", "Text");
+        tree.SaveAll();
+        NoOpFontFileGenerator fonts = (NoOpFontFileGenerator)Services.GetRequiredService<IFontFileGenerator>();
+        FileChangeReactionLogic fileChanges = Services.GetRequiredService<FileChangeReactionLogic>();
+        string projectFile = tree.Project.ProjectFilePath;
+        string bakedRanges = tree.Project.Project.FontRanges;
+        bakedRanges.ShouldNotBe(newRanges);
+        TryDeleteFolder(Path.Combine(tree.Project.ProjectFolder, "FontCache"));
+
+        // Learn which fonts the project needs, then leave each one baked with the project's ranges.
+        int requested = fonts.RequestedFntPaths().Count;
+        tree.PickMainMenu("Content", "Re-create missing font files");
+        tree.WaitUntil(() => fonts.RequestedFntPaths().Count > requested, AsyncWork, "the missing font to be requested");
+        Settle(tree);
+        List<string> bakedFonts = fonts.RequestedFntPaths().Skip(requested).Distinct().ToList();
+        foreach (string path in bakedFonts)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, $"info\ngum ranges=\"{bakedRanges}\"\n");
+        }
+
+        // An outside edit that leaves the ranges alone reloads the project and finds every font current.
+        GumProjectSave opened = ProjectManager.GumProjectSave!;
+        File.AppendAllText(projectFile, Environment.NewLine);
+        int requestedBefore = fonts.RequestedFntPaths().Count;
+        fileChanges.ReactToFileChanged(new FilePath(projectFile));
+        tree.WaitUntil(() => ProjectManager.GumProjectSave != opened, AsyncWork, "the project to reload");
+        tree.Project.FollowProjectFile(projectFile);
+        Settle(tree);
+        fonts.RequestedFntPaths().Count.ShouldBe(requestedBefore, "no font's ranges changed");
+
+        // Editing the ranges outside re-requests the fonts baked with the old ones.
+        opened = ProjectManager.GumProjectSave!;
+        string edited = File.ReadAllText(projectFile).Replace($"<FontRanges>{bakedRanges}</FontRanges>", $"<FontRanges>{newRanges}</FontRanges>");
+        edited.ShouldContain($"<FontRanges>{newRanges}</FontRanges>");
+        File.WriteAllText(projectFile, edited);
+        fileChanges.ReactToFileChanged(new FilePath(projectFile));
+        tree.WaitUntil(() => ProjectManager.GumProjectSave != opened, AsyncWork, "the project to reload");
+        tree.Project.FollowProjectFile(projectFile);
+        tree.WaitUntil(() => bakedFonts.All(font => fonts.RequestedFntPaths().Skip(requestedBefore).Contains(font)),
+            AsyncWork, "the baked fonts to be requested again");
+        tree.ThrowIfCrashed();
     }
 
     [AvaloniaFact]
