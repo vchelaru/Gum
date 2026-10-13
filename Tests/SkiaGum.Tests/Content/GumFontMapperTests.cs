@@ -1,3 +1,4 @@
+using GumTestSupport;
 using Shouldly;
 using SkiaGum.Content.Fonts;
 using SkiaSharp;
@@ -195,6 +196,102 @@ public class GumFontMapperTests
         {
             ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
         }
+    }
+
+    // Format parity with .ttf: .otf/.ttc are sniffed by content (the fixture's TrueType bytes under
+    // another extension exercise the path gate), and .woff is unwrapped to its sfnt first because
+    // SkiaSharp cannot read WOFF itself.
+
+    [Theory]
+    [InlineData(".otf")]
+    [InlineData(".ttc")]
+    [InlineData(".woff")]
+    public void ResolveFontFamily_FontAsPathOfAnyRasterizableFormat_ReturnsRegisteredKey(string extension)
+    {
+        string fontPath = CopyFixtureAs(extension);
+        try
+        {
+            string? resolved = GumFontMapper.ResolveFontFamily(
+                useCustomFont: false, customFontFile: null, font: fontPath);
+
+            resolved.ShouldBe(GumFontMapper.RegisterFontFile(fontPath));
+            resolved.ShouldNotBeNullOrEmpty();
+        }
+        finally
+        {
+            try { File.Delete(fontPath); } catch { /* best-effort */ }
+        }
+    }
+
+    [Theory]
+    [InlineData(".otf")]
+    [InlineData(".ttc")]
+    [InlineData(".woff")]
+    public void ResolveFontFamily_CustomFontFileOfAnyRasterizableFormat_ReturnsRegisteredKey(string extension)
+    {
+        string fontPath = CopyFixtureAs(extension);
+        try
+        {
+            string? resolved = GumFontMapper.ResolveFontFamily(
+                useCustomFont: true, customFontFile: fontPath, font: "Arial");
+
+            resolved.ShouldNotBeNullOrEmpty();
+            resolved.ShouldBe(GumFontMapper.RegisterFontFile(fontPath));
+        }
+        finally
+        {
+            try { File.Delete(fontPath); } catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public void RegisterFontFile_WithWoff_LoadsATypefaceThatDrawsGlyphs()
+    {
+        string woffPath = CopyFixtureAs(".woff");
+        try
+        {
+            string? familyKey = GumFontMapper.RegisterFontFile(woffPath);
+
+            GumFontMapper mapper = new();
+            SKTypeface resolved = mapper.TypefaceFromStyle(new Style { FontFamily = familyKey }, ignoreFontVariants: false);
+            using SKTypeface plain = SKTypeface.FromFile(FixtureTtfPath);
+            resolved.FamilyName.ShouldBe(plain.FamilyName);
+            resolved.GlyphCount.ShouldBe(plain.GlyphCount);
+        }
+        finally
+        {
+            try { File.Delete(woffPath); } catch { /* best-effort */ }
+        }
+    }
+
+    [Fact]
+    public void RegisterFont_WithWoffBytes_ReturnsNonNullTypeface()
+    {
+        byte[] woff = FontContainerTestWriter.ToWoff(File.ReadAllBytes(FixtureTtfPath));
+
+        SKTypeface? typeface = GumFontMapper.RegisterFont("RegisterFontWoffFamily", woff);
+
+        typeface.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RegisterFont_WithTruncatedWoffBytes_ReturnsNull()
+    {
+        byte[] woff = FontContainerTestWriter.ToWoff(File.ReadAllBytes(FixtureTtfPath));
+        byte[] truncated = woff.AsSpan(0, woff.Length / 2).ToArray();
+
+        SKTypeface? typeface = GumFontMapper.RegisterFont("RegisterFontTruncatedWoffFamily", truncated);
+
+        typeface.ShouldBeNull();
+    }
+
+    private static string CopyFixtureAs(string extension)
+    {
+        string path = Path.Combine(
+            AppContext.BaseDirectory, "Assets", "Fonts", "Format_" + Guid.NewGuid().ToString("N") + extension);
+        byte[] ttf = File.ReadAllBytes(FixtureTtfPath);
+        File.WriteAllBytes(path, extension == ".woff" ? FontContainerTestWriter.ToWoff(ttf) : ttf);
+        return path;
     }
 
     [Fact]

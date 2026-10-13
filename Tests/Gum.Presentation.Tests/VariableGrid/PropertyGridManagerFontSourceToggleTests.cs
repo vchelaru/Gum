@@ -61,4 +61,52 @@ public class PropertyGridManagerFontSourceToggleTests : BaseTestClass
         toggle.IsReadOnly.ShouldBeTrue();
         component.DefaultState.GetValueRecursive("Font").ShouldBe("Fonts/Some.ttf");
     }
+
+    [Theory]
+    [InlineData("Fonts/Some.ttf")]
+    [InlineData("Fonts/Some.otf")]
+    [InlineData("Fonts/Some.ttc")]
+    [InlineData("Fonts/Some.woff")]
+    public void FontSourceToggle_FontFileRow_OffersEveryRasterizableFontFormatInThePicker(string fontValue)
+    {
+        ComponentSave component = new ComponentSave { Name = "FontFilterComponent", BaseType = "Text" };
+        StateSave defaultState = new StateSave { ParentContainer = component };
+        component.States.Add(defaultState);
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        defaultState.SetValue("Font", fontValue);
+        StateReferencingInstanceMember fontMember = CreateFontMember(component, defaultState);
+        MemberCategory category = new MemberCategory("Font");
+        category.Members.Add(fontMember);
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+
+        sut.AdjustFontSourceToggle(new List<MemberCategory> { category }, defaultState, null);
+
+        string filter = (string)fontMember.PropertiesToSetOnDisplayer["Filter"];
+        foreach (string extension in new[] { "*.ttf", "*.otf", "*.ttc", "*.woff" })
+        {
+            filter.ShouldContain(extension);
+        }
+        filter.ShouldNotContain("*.woff2");
+    }
+
+    private StateReferencingInstanceMember CreateFontMember(ComponentSave component, StateSave state) =>
+        new StateReferencingInstanceMember(
+            Array.Empty<Attribute>(), null, typeof(string),
+            isReadOnly: false, isAssignedByReference: false, isVariable: true,
+            state, null, "Font", null, component,
+            _mocker.Get<ISelectedState>(),
+            _mocker.Get<IUndoManager>(),
+            _mocker.Get<IGuiCommands>(),
+            _mocker.Get<IFileCommands>(),
+            _mocker.Get<ISetVariableLogic>(),
+            _mocker.Get<IWireframeObjectManager>(),
+            _mocker.Get<IPluginManager>(),
+            _mocker.Get<IHotkeyManager>(),
+            _mocker.Get<IDeleteVariableService>(),
+            _mocker.Get<IExposeVariableService>(),
+            _mocker.Get<IEditVariableService>(),
+            _mocker.Get<ITypeManager>(),
+            _mocker.Get<IClipboardService>());
 }

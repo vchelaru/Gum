@@ -90,7 +90,10 @@ public class GumxImportService : IGumxImportService
     }
 
     private static readonly HashSet<string> _assetExtensions =
-        new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".achx", ".achj", ".ttf", ".otf", ".fnt" };
+        new(
+            new[] { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".achx", ".achj", ".fnt" }
+                .Concat(global::RenderingLibrary.Graphics.Fonts.BmfcSave.FontFileExtensions),
+            StringComparer.OrdinalIgnoreCase);
 
     /// <inheritdoc/>
     public async Task<ImportResult> ImportAsync(

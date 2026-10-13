@@ -1152,6 +1152,14 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _ => null
         };
 
+    private static readonly string FontFileFilter = BuildFontFileFilter();
+
+    private static string BuildFontFileFilter()
+    {
+        string patterns = string.Join(";", BmfcSave.FontFileExtensions.Select(extension => "*" + extension));
+        return $"Font Files ({patterns})|{patterns}";
+    }
+
     internal void AdjustFontSourceToggle(List<MemberCategory> categories, StateSave stateSave, InstanceSave? instance)
     {
         var fontCategory = categories.FirstOrDefault(c => c.Name == "Font");
@@ -1177,13 +1185,13 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         if (isTtfMode)
         {
             fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
-            fontMember.PropertiesToSetOnDisplayer["Filter"] = "TrueType Font|*.ttf";
+            fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
 
             // Warn if project uses bmfont.exe, which can't handle .ttf file fonts
             var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
             if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
             {
-                fontMember.DetailText = "bmfont cannot generate from .ttf files. Switch to KernSmith in Project Properties.";
+                fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Project Properties.";
             }
         }
 
@@ -1209,13 +1217,13 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 isTtfMode = true;
                 // Swap Font row to FileSelectionDisplay
                 fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
-                fontMember.PropertiesToSetOnDisplayer["Filter"] = "TrueType Font|*.ttf";
+                fontMember.PropertiesToSetOnDisplayer["Filter"] = FontFileFilter;
 
                 // Warn if project uses bmfont.exe
                 var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
                 if (fontGenerator == DataTypes.FontGeneratorType.BmFont)
                 {
-                    fontMember.DetailText = "bmfont cannot generate from .ttf files. Switch to KernSmith in Project Properties.";
+                    fontMember.DetailText = "bmfont cannot generate from font files. Switch to KernSmith in Project Properties.";
                 }
 
                 // Force container recreation by remove + reinsert

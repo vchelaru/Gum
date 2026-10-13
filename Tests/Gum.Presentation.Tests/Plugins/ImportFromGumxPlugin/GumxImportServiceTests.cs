@@ -906,6 +906,35 @@ public class GumxImportServiceTests : IDisposable
         _importLogic.ImportedComponentPaths.ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData("fonts/Hero.ttf")]
+    [InlineData("fonts/Hero.otf")]
+    [InlineData("fonts/Hero.ttc")]
+    [InlineData("fonts/Hero.woff")]
+    public async Task ImportAsync_FontAssetMissing_ElementIsSkippedForEveryFontFormat(string missingFont)
+    {
+        // A font file is an asset like a texture: when the source project lacks it, the element is
+        // skipped instead of being imported pointing at a file that is not there.
+        string componentName = "FontLabel";
+        WriteSourceComponent(componentName);
+        ComponentSave component = ComponentWithAsset(componentName, missingFont);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents     = new() { component },
+            TransitiveComponents = new(),
+            DirectScreens        = new(),
+            Behaviors            = new(),
+            Standards            = new(),
+        };
+
+        ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+
+        result.SkippedElements.ShouldContain(componentName);
+        _importLogic.ImportedComponentPaths.ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task ImportAsync_AssetPresent_ElementIsImportedAndNotSkipped()
     {
