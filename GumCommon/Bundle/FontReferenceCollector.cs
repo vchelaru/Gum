@@ -21,18 +21,15 @@ namespace Gum.Bundle;
 /// element resolver so callers that don't (or shouldn't) populate the singleton can still
 /// use the collector.
 /// <para>
-/// Known limitation: this collector does NOT yet resolve <c>StyleCategoryState</c>
-/// indirection (where a TextInstance's <c>StyleCategoryState</c> property points at a
-/// state in a Styles component whose <c>Strong.*</c> variables should be pulled in as
-/// the resolved font for the referencing TextInstance). That's a deeper runtime-resolution
-/// gap that affects both gumcli fonts and gumcli pack equally; tracking separately.
+/// A font set through a categorized state (for example <c>StyleCategoryState</c>) resolves the way
+/// the tool does: <c>GetValueRecursive</c> for direct instances, and
+/// <see cref="RecursiveVariableFinder.GetValueByBottomName"/> for Texts inside nested components,
+/// including a state assigned by the container through an exposed variable.
 /// </para>
 /// <para>
-/// Known limitation: a conditional (ternary) <c>VariableReferences</c> row on the element
-/// itself or a direct instance has every branch pregenerated (see #4042), but a conditional
-/// reference reached only through a nested component instance's inner Text instances
-/// (<c>CollectFontsFromNestedTextInstances</c>) still resolves a single value via
-/// <see cref="RecursiveVariableFinder"/> - only the currently-active branch is collected there.
+/// A conditional (ternary) <c>VariableReferences</c> row has every branch pregenerated (see #4042),
+/// including one on a component instance that drives a font variable inside the component
+/// (<c>CollectFontsFromNestedTextInstancesAllBranches</c>).
 /// </para>
 /// </remarks>
 public class FontReferenceCollector
@@ -148,9 +145,167 @@ public class FontReferenceCollector
             // (e.g., "MyComponentInstance.Font"). For component instances, font properties
             // live on inner Text instances and may be partially exposed. Use
             // RecursiveVariableFinder to resolve through the component hierarchy.
-            CollectFontsFromNestedTextInstances(element, state, instance,
+            CollectFontsFromNestedTextInstancesAllBranches(element, state, instance,
                 bitmapFonts, project, spacingHorizontal, spacingVertical);
         }
+    }
+
+    /// <summary>
+    /// Runs <see cref="CollectFontsFromNestedTextInstances(ElementSave, StateSave, InstanceSave, Dictionary{string, BmfcSave}, GumProjectSave, int, int)"/>
+    /// once per combination of branches of the conditional (ternary) <c>VariableReferences</c> rows
+    /// on <paramref name="instance"/> that reach a font-affecting variable inside the component, by
+    /// temporarily assigning each branch value on <paramref name="state"/>. Runs it once, as-is, when
+    /// there are no such rows. See #6018.
+    /// </summary>
+    private void CollectFontsFromNestedTextInstancesAllBranches(ElementSave element, StateSave state,
+        InstanceSave instance, Dictionary<string, BmfcSave> bitmapFonts,
+        GumProjectSave project, int spacingHorizontal, int spacingVertical)
+    {
+        Dictionary<string, List<object>> branchValuesByProperty = GetNestedFontBranches(instance, state);
+
+        if (branchValuesByProperty.Count == 0)
+        {
+            CollectFontsFromNestedTextInstances(element, state, instance,
+                bitmapFonts, project, spacingHorizontal, spacingVertical);
+            return;
+        }
+
+        foreach (Dictionary<string, object> combo in CrossProduct(branchValuesByProperty))
+        {
+            List<(VariableSave Variable, bool WasAdded, object? OriginalValue, bool OriginalSetsValue)> applied = new();
+
+            try
+            {
+                foreach (KeyValuePair<string, object> assignment in combo)
+                {
+                    string fullName = instance.Name + "." + assignment.Key;
+                    VariableSave? existing = state.Variables.FirstOrDefault(v => v.Name == fullName);
+
+                    if (existing != null)
+                    {
+                        applied.Add((existing, false, existing.Value, existing.SetsValue));
+                    }
+                    else
+                    {
+                        existing = new VariableSave { Name = fullName };
+                        state.Variables.Add(existing);
+                        applied.Add((existing, true, null, false));
+                    }
+
+                    existing.Value = assignment.Value;
+                    existing.SetsValue = true;
+                }
+
+                CollectFontsFromNestedTextInstances(element, state, instance,
+                    bitmapFonts, project, spacingHorizontal, spacingVertical);
+            }
+            finally
+            {
+                foreach ((VariableSave variable, bool wasAdded, object? originalValue, bool originalSetsValue) in applied)
+                {
+                    if (wasAdded)
+                    {
+                        state.Variables.Remove(variable);
+                    }
+                    else
+                    {
+                        variable.Value = originalValue;
+                        variable.SetsValue = originalSetsValue;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// The values each variable assigned by a conditional <c>VariableReferences</c> row on
+    /// <paramref name="instance"/> can take, for rows whose target is (or is exposed from) a
+    /// <see cref="FontAffectingVariableNames"/> entry on a Text inside the instance's component.
+    /// Keyed by the variable name as seen on the instance (for example an exposed alias).
+    /// </summary>
+    private Dictionary<string, List<object>> GetNestedFontBranches(InstanceSave instance, StateSave state)
+    {
+        Dictionary<string, List<object>> branchValuesByProperty = new();
+
+        VariableListSave? variableList = state.VariableLists
+            .FirstOrDefault(vl => vl.GetRootName() == "VariableReferences"
+                && vl.ValueAsIList.Count > 0
+                && string.Equals(vl.SourceObject, instance.Name, StringComparison.Ordinal));
+
+        ElementSave? componentElement = variableList == null ? null : _resolveInstanceElement(instance);
+        if (variableList == null || componentElement == null)
+        {
+            return branchValuesByProperty;
+        }
+
+        foreach (string referenceString in variableList.ValueAsIList.Cast<string>())
+        {
+            var parsed = ElementSaveExtensions.GetAllVariableReferenceBranches(instance, referenceString, state);
+            if (parsed == null)
+            {
+                continue;
+            }
+
+            (string variableName, IEnumerable<object> values) = parsed.Value;
+            string unqualified = variableName.Contains('.')
+                ? variableName.Substring(variableName.LastIndexOf('.') + 1)
+                : variableName;
+
+            if (!ReachesFontAffectingVariable(componentElement, unqualified))
+            {
+                continue;
+            }
+
+            List<object> distinctValues = values.Where(v => v != null).Distinct().ToList();
+            if (distinctValues.Count > 1)
+            {
+                branchValuesByProperty[unqualified] = distinctValues;
+            }
+        }
+
+        return branchValuesByProperty;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="variableName"/>, as seen on an instance of <paramref name="component"/>,
+    /// is a <see cref="FontAffectingVariableNames"/> entry or an exposed variable that forwards to one,
+    /// possibly through further nested components.
+    /// </summary>
+    private bool ReachesFontAffectingVariable(ElementSave component, string variableName, int depth = 0)
+    {
+        if (FontAffectingVariableNames.Contains(variableName))
+        {
+            return true;
+        }
+
+        // Exposure cycles are not valid, but a malformed project shouldn't hang collection.
+        if (depth > 16)
+        {
+            return false;
+        }
+
+        foreach (VariableSave variable in component.DefaultState!.Variables)
+        {
+            if (variable.ExposedAsName != variableName)
+            {
+                continue;
+            }
+
+            string rootName = variable.GetRootName();
+            if (FontAffectingVariableNames.Contains(rootName))
+            {
+                return true;
+            }
+
+            InstanceSave? innerInstance = component.GetInstance(variable.SourceObject);
+            ElementSave? innerElement = innerInstance == null ? null : _resolveInstanceElement(innerInstance);
+            if (innerElement != null && ReachesFontAffectingVariable(innerElement, rootName, depth + 1))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
