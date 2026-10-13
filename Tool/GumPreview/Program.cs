@@ -18,6 +18,12 @@ if (options.Error != null)
     return 1;
 }
 
+if (options.ParentProcessId is int parentProcessId)
+{
+    // Exit with the tool however it ended, so a killed or crashed tool can't orphan this window.
+    ParentProcessWatcher.Start(parentProcessId, () => Environment.Exit(0));
+}
+
 UnattendedPreviewRun? unattended = null;
 Timer? deadline = null;
 if (options.ExitAfterSeconds is double exitAfterSeconds)

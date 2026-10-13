@@ -22,6 +22,36 @@ public class PreviewOptionsTests
     }
 
     [Fact]
+    public void Parse_ParentPid_IsRead()
+    {
+        string[] args = { "--project", "a.gumj", "--element", "Main", "--parent-pid", "4321" };
+
+        PreviewOptions options = PreviewOptions.Parse(args);
+
+        options.Error.ShouldBeNull();
+        options.ParentProcessId.ShouldBe(4321);
+    }
+
+    [Fact]
+    public void Parse_NoParentPid_LeavesItUnset()
+    {
+        PreviewOptions options = PreviewOptions.Parse(new[] { "--project", "a.gumj", "--element", "Main" });
+
+        options.ParentProcessId.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("0")]
+    [InlineData("-5")]
+    public void Parse_ParentPidNotAPositiveInteger_IsAnError(string value)
+    {
+        PreviewOptions options = PreviewOptions.Parse(new[] { "--project", "a.gumj", "--element", "Main", "--parent-pid", value });
+
+        options.Error.ShouldNotBeNull();
+    }
+
+    [Fact]
     public void Parse_ExitAfterAndScreenshot_AreReadInvariantAndScreenshotMadeAbsolute()
     {
         string[] args = { "--project", "a.gumj", "--element", "Main", "--exit-after", "12.5", "--screenshot", "shot.png" };

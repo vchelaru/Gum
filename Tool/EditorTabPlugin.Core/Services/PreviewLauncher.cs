@@ -116,7 +116,7 @@ public class PreviewLauncher : IPreviewLauncher
         PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate: false).Serialize());
 
         ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
-            resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory);
+            resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory, Environment.ProcessId);
 
         try
         {
