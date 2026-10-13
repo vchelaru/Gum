@@ -92,15 +92,19 @@ public class FontRangesStampTests : IDisposable
         string path = WriteFnt(TextFnt);
         FontRangesStamp.Write(path, stamped);
 
-        FontRangesStamp.IsStale(path, expected).ShouldBe(shouldBeStale);
+        FontRangesStamp.IsStale(path, expected, rangesAreFontSpecific: false).ShouldBe(shouldBeStale);
     }
 
     [Fact]
-    public void IsStale_IsFalseForAFontWithNoStamp_OrNoFile()
+    public void IsStale_AFontWithNoStampIsCurrentUnlessItsRangesAreFontSpecific_AndNoFileIsNeverStale()
     {
         string path = WriteFnt(TextFnt);
 
-        FontRangesStamp.IsStale(path, "32-126").ShouldBeFalse();
-        FontRangesStamp.IsStale(Path.Combine(_directory, "Missing.fnt"), "32-126").ShouldBeFalse();
+        FontRangesStamp.IsStale(path, "32-126", rangesAreFontSpecific: false).ShouldBeFalse();
+        // A per-font entry is newer than any unstamped bake, so that bake can't have used it.
+        FontRangesStamp.IsStale(path, "32-126", rangesAreFontSpecific: true).ShouldBeTrue();
+
+        string missing = Path.Combine(_directory, "Missing.fnt");
+        FontRangesStamp.IsStale(missing, "32-126", rangesAreFontSpecific: true).ShouldBeFalse();
     }
 }

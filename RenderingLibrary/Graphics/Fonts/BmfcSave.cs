@@ -124,6 +124,14 @@ public class BmfcSave
     public string Ranges = GetEffectiveDefaultRanges();
 
     /// <summary>
+    /// True when <see cref="Ranges"/> came from this font's own entry in the project's
+    /// <c>FontRangeEntries</c> rather than the project-wide range. Lets font generation tell a
+    /// cached font file that recorded no ranges apart: an entry for this font is newer than any
+    /// such file, so the file can't have been baked with it.
+    /// </summary>
+    public bool RangesAreFontSpecific;
+
+    /// <summary>
     /// The width of the output font texture in pixels.
     /// </summary>
     public int OutputWidth = 512;

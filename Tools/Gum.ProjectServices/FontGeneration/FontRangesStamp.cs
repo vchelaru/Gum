@@ -45,14 +45,21 @@ internal static class FontRangesStamp
     /// <summary>
     /// True when <paramref name="fntPath"/> recorded ranges that cover different codepoints than
     /// <paramref name="expectedRanges"/>. Ranges are compared as sets of codepoints, so spelling and
-    /// order don't matter.
+    /// order don't matter. A file that recorded nothing is current, unless
+    /// <paramref name="rangesAreFontSpecific"/>: a per-font entry is newer than any such file, so
+    /// the file can't have been baked with it.
     /// </summary>
-    public static bool IsStale(string fntPath, string expectedRanges)
+    public static bool IsStale(string fntPath, string expectedRanges, bool rangesAreFontSpecific)
     {
+        if (!File.Exists(fntPath))
+        {
+            return false;
+        }
+
         string? recorded = Read(fntPath);
         if (recorded == null)
         {
-            return false;
+            return rangesAreFontSpecific;
         }
 
         return !new HashSet<int>(BmfcSave.ParseCharRanges(recorded))

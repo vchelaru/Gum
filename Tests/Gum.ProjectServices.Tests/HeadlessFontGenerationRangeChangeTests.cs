@@ -86,6 +86,32 @@ public class HeadlessFontGenerationRangeChangeTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public async Task CreateAllMissingFontFiles_RebakesAnUnstampedFontOnce_WhenItNowHasItsOwnRangeEntry()
+    {
+        // Per-font entries are newer than any unstamped bake, so an unstamped .fnt can't have used one.
+        try
+        {
+            BmfcSave arial = new BmfcSave { FontName = "Arial", FontSize = 18 };
+            string cachedPath = Path.Combine(_projectDirectory, arial.FontCacheFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(cachedPath)!);
+            File.WriteAllText(cachedPath, WritingFontFileGenerator.MinimalFnt);
+
+            Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Arial", Ranges = "65-70" });
+            WritingFontFileGenerator generator = new();
+            HeadlessFontGenerationService service = new(generator);
+
+            (await service.CreateAllMissingFontFiles(Project, _projectDirectory)).ShouldBe(1);
+            generator.RangesBaked.ShouldBe(new[] { "65-70" });
+
+            (await service.CreateAllMissingFontFiles(Project, _projectDirectory)).ShouldBe(0);
+        }
+        finally
+        {
+            Directory.Delete(_projectDirectory, recursive: true);
+        }
+    }
+
     /// <summary>Writes a minimal text .fnt like a real generator would and records the ranges it was asked for.</summary>
     private sealed class WritingFontFileGenerator : IFontFileGenerator
     {

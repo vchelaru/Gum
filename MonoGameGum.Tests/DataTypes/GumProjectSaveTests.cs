@@ -90,6 +90,22 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
+    public void GetFontRanges_ReportsWhetherTheRangesCameFromTheFontsOwnEntry()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRanges = "32-126";
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "IconFont", Ranges = "57344-57400" });
+
+        project.GetFontRanges("IconFont", out bool iconIsFontSpecific).ShouldBe("57344-57400");
+        project.GetFontRanges("Arial", out bool arialIsFontSpecific).ShouldBe("32-126");
+        project.GetFontRanges(null, out bool globalIsFontSpecific).ShouldBe("32-126");
+
+        iconIsFontSpecific.ShouldBeTrue();
+        arialIsFontSpecific.ShouldBeFalse();
+        globalIsFontSpecific.ShouldBeFalse();
+    }
+
+    [Fact]
     public void GetFontRanges_NoGlobalEntry_ReturnsNull()
     {
         GumProjectSave project = new GumProjectSave();

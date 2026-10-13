@@ -477,9 +477,10 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         // A font baked with different ranges than the project asks for now (the project file was edited
         // outside the tool, which is the one place that clears the font cache when ranges change) is
-        // stale. A .fnt with no recorded ranges is treated as current - see FontRangesStamp.
+        // stale. A .fnt with no recorded ranges is treated as current unless the font has a range
+        // entry of its own, which no unstamped bake can have used - see FontRangesStamp.
         bool rangesChanged = desiredFntFile.Exists()
-            && FontRangesStamp.IsStale(desiredFntFile.FullPath, bmfcSave.Ranges);
+            && FontRangesStamp.IsStale(desiredFntFile.FullPath, bmfcSave.Ranges, bmfcSave.RangesAreFontSpecific);
 
         try
         {

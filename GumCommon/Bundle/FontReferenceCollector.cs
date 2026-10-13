@@ -356,7 +356,8 @@ public class FontReferenceCollector
             bmfcSave.FontName = fontValue;
         }
 
-        bmfcSave.Ranges = project.GetFontRanges(fontValue) ?? BmfcSave.GetEffectiveDefaultRanges();
+        bmfcSave.Ranges = project.GetFontRanges(fontValue, out bool rangesAreFontSpecific) ?? BmfcSave.GetEffectiveDefaultRanges();
+        bmfcSave.RangesAreFontSpecific = rangesAreFontSpecific;
 
         return bmfcSave;
     }
