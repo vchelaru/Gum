@@ -251,9 +251,22 @@ public class GumProjectSave
     public FontRangeEntry[] FontRangeEntriesArray
     {
         get => DeduplicateFontRangeEntries(FontRangeEntries);
-        set => FontRangeEntries = value == null
-            ? new List<FontRangeEntry>()
-            : DeduplicateFontRangeEntries(value).ToList();
+        set
+        {
+            List<FontRangeEntry> entries = value == null
+                ? new List<FontRangeEntry>()
+                : DeduplicateFontRangeEntries(value).ToList();
+
+            // A list with only family entries (a hand edit, or an older file that has just
+            // <FontRanges>) must not discard the project-wide range the legacy element already set.
+            FontRangeEntry? legacyGlobal = FontRangeEntries.FirstOrDefault(entry => IsGlobalFontRangeEntry(entry));
+            if (legacyGlobal != null && !entries.Any(entry => IsGlobalFontRangeEntry(entry)))
+            {
+                entries.Insert(0, legacyGlobal);
+            }
+
+            FontRangeEntries = entries;
+        }
     }
 
     /// <summary>

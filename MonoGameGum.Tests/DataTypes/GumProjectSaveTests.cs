@@ -176,6 +176,18 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
+    public void FontRangeEntries_HandEditedListWithoutAGlobalEntry_KeepsTheLegacyFontRangesAsTheGlobal()
+    {
+        GumProjectSave loaded = LoadFromXml(
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<GumProjectSave>\n  <FontRanges>65-70,100-105</FontRanges>\n" +
+            "  <FontRangeEntries>\n    <FontRangeEntry>\n      <FontFamily>Fonts/Icons.ttf</FontFamily>\n      <Ranges>1-2</Ranges>\n    </FontRangeEntry>\n  </FontRangeEntries>\n</GumProjectSave>");
+
+        loaded.FontRanges.ShouldBe("65-70,100-105");
+        loaded.GetFontRanges("Arial").ShouldBe("65-70,100-105");
+        loaded.GetFontRanges("Fonts/Icons.ttf").ShouldBe("1-2");
+    }
+
+    [Fact]
     public void FontRangeEntries_DuplicateFamiliesAndDuplicateGlobals_AreCollapsedOnSave()
     {
         GumProjectSave project = new GumProjectSave();

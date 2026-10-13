@@ -202,6 +202,19 @@ public class GumJsonSerializationTests
     }
 
     [Fact]
+    public void DeserializeProject_HandEditedFontRangeEntriesWithoutAGlobalEntry_KeepsFontRangesAsTheGlobal()
+    {
+        const string json = "{ \"FontRanges\": \"65-70,100-105\", " +
+            "\"FontRangeEntries\": [ { \"FontFamily\": \"Fonts/Icons.ttf\", \"Ranges\": \"1-2\" } ] }";
+
+        GumProjectSave result = GumJsonFileSerializer.DeserializeProject(json);
+
+        result.FontRanges.ShouldBe("65-70,100-105");
+        result.GetFontRanges("Arial").ShouldBe("65-70,100-105");
+        result.GetFontRanges("Fonts/Icons.ttf").ShouldBe("1-2");
+    }
+
+    [Fact]
     public void SerializeDeserialize_GumProjectSave_GlobalOnlyFontRangesStayOffTheList()
     {
         GumProjectSave original = new GumProjectSave { FontRanges = "32-126" };
