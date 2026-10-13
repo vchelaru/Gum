@@ -281,7 +281,15 @@ public class GumProjectSave
     /// project-relative path, as a Text names it): its own entry, else the global entry. Null when
     /// neither exists, in which case callers fall back to the default ranges.
     /// </summary>
-    public string? GetFontRanges(string? fontFamily)
+    public string? GetFontRanges(string? fontFamily) => GetFontRanges(fontFamily, out _);
+
+    /// <summary>
+    /// Same lookup as <see cref="GetFontRanges(string?)"/>, also reporting whether the result is the
+    /// font's own entry (<paramref name="isFontSpecific"/> true) or the global one. A font's own
+    /// entry is newer than any font file baked before it existed, which is what lets a font file
+    /// with no recorded ranges be told apart from one baked with the global range.
+    /// </summary>
+    public string? GetFontRanges(string? fontFamily, out bool isFontSpecific)
     {
         if (!string.IsNullOrWhiteSpace(fontFamily))
         {
@@ -290,11 +298,13 @@ public class GumProjectSave
             {
                 if (!IsGlobalFontRangeEntry(entry) && string.Equals(NormalizeFontRangeKey(entry.FontFamily!), key, StringComparison.Ordinal))
                 {
+                    isFontSpecific = true;
                     return entry.Ranges;
                 }
             }
         }
 
+        isFontSpecific = false;
         return FontRangeEntries.FirstOrDefault(entry => IsGlobalFontRangeEntry(entry))?.Ranges;
     }
 

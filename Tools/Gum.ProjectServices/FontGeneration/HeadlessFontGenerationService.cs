@@ -475,9 +475,16 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         bool shadowSiblingMissing = bmfcSave.HasDropshadow
             && !new FilePath(desiredFntFile.RemoveExtension() + "-shadow.fnt").Exists();
 
+        // A font baked with different ranges than the project asks for now (the project file was edited
+        // outside the tool, which is the one place that clears the font cache when ranges change) is
+        // stale. A .fnt with no recorded ranges is treated as current unless the font has a range
+        // entry of its own, which no unstamped bake can have used - see FontRangesStamp.
+        bool rangesChanged = desiredFntFile.Exists()
+            && FontRangesStamp.IsStale(desiredFntFile.FullPath, bmfcSave.Ranges, bmfcSave.RangesAreFontSpecific);
+
         try
         {
-            if (!desiredFntFile.Exists() || shadowSiblingMissing || force)
+            if (!desiredFntFile.Exists() || shadowSiblingMissing || rangesChanged || force)
             {
                 using var _ = Gum.Diagnostics.StartupTiming.Time($"    generate {desiredFntFile.FileNameNoPath}");
 
@@ -505,6 +512,11 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
                 toReturn.DidAttempt = true;
                 toReturn.Succeeded = generateResponse.Succeeded;
                 toReturn.Message = generateResponse.Message;
+
+                if (generateResponse.Succeeded)
+                {
+                    StampRanges(desiredFntFile, bmfcSave.Ranges);
+                }
             }
             else
             {
@@ -517,6 +529,27 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         }
 
         return toReturn;
+    }
+
+    private void StampRanges(FilePath fntFile, string ranges)
+    {
+        // The ignore registered before generation only lasts a few seconds, and a large font can take
+        // longer than that to bake, so cover this second write to the same file as well.
+        _callbacks.OnIgnoreFileChange(fntFile);
+
+        try
+        {
+            FontRangesStamp.Write(fntFile.FullPath, ranges);
+        }
+        catch (IOException ex)
+        {
+            // Without a stamp the font is just treated as current; generation itself succeeded.
+            _callbacks.OnOutput($"Could not record font ranges in {fntFile.FileNameNoPath}: {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _callbacks.OnOutput($"Could not record font ranges in {fntFile.FileNameNoPath}: {ex.Message}");
+        }
     }
 
     private FilePath GetFilePath(BmfcSave bmfcSave, FilePath? destinationDirectory, string? projectDirectory)

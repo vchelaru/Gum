@@ -71,6 +71,10 @@ The heuristic fallback (`EstimateBlocksNeeded`) uses a lookup table mapping effe
 - Large range sets are split across multiple `chars=` lines (max 10 blocks per line) for bmfont.exe compatibility
 - `GenerateRangesFromFile` can derive ranges from a text file's unique characters
 
+## Re-baking When Ranges Change
+
+The cache file name does not encode ranges, so existence alone can't say a `.fnt` is current. After either generator succeeds, `HeadlessFontGenerationService` appends one line to the text `.fnt` recording the requested ranges (`gum ranges="32-126,160-255"`, `FontRangesStamp`). `CreateBitmapFontFilesIfNecessaryAsync` re-bakes an existing file when the recorded codepoints differ from the ranges asked for now (compared as sets, so spelling doesn't matter). A `.fnt` with no line (older bakes, bmfont.exe output, XML/binary format) is treated as current, unless the font's ranges came from its own `FontRangeEntries` entry (`BmfcSave.RangesAreFontSpecific`, set from `GumProjectSave.GetFontRanges(font, out isFontSpecific)`): a per-font entry is newer than any unstamped bake, so that file can't have used it and re-bakes once. `ParsedFontFile` skips the unknown `gum` tag, as it does KernSmith's own trailing `kernsmith` line; the page scan matches the text `page id=` anywhere in the file, so never put that in a stamped value. The glyph ids in the file can't stand in for the requested ranges, since a font that lacks a glyph omits it.
+
 ## Embedded Resources
 
 `bmfont.exe` and `BmfcTemplate.bmfc` are embedded in the `Gum.ProjectServices` assembly and extracted on first use by `EnsureToolsExtracted` into `FileManager.UserApplicationDataForThisApplication/FontTools`, never the install folder (it may be read-only). The template uses placeholder tokens like `FontNameVariable`, `FontSizeVariable`, `{UseSmoothing}`, etc.

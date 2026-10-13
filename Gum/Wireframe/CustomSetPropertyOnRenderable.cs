@@ -1596,7 +1596,7 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         var gumProject = ObjectFinder.Self.GumProjectSave;
-        bmfcSave.Ranges = gumProject?.GetFontRanges(fontFilePath ?? fontName) ?? BmfcSave.GetEffectiveDefaultRanges();
+        ApplyProjectFontRanges(bmfcSave, gumProject, fontFilePath ?? fontName);
         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 
@@ -1628,7 +1628,7 @@ public partial class CustomSetPropertyOnRenderable
             bmfcSave, fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
 
         var gumProject = ObjectFinder.Self.GumProjectSave;
-        bmfcSave.Ranges = gumProject?.GetFontRanges(fontFilePath ?? bmfcSave.FontName) ?? BmfcSave.GetEffectiveDefaultRanges();
+        ApplyProjectFontRanges(bmfcSave, gumProject, fontFilePath ?? bmfcSave.FontName);
         bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
         bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 
@@ -2198,7 +2198,7 @@ public partial class CustomSetPropertyOnRenderable
                             // that doesn't exist, create it on demand. This parallels the font creation in
                             // UpdateToFontValues — both use FontService.CreateFontIfNecessary with the same pattern.
                             var gumProject = ObjectFinder.Self.GumProjectSave;
-                            bmfcSave.Ranges = gumProject?.GetFontRanges(bbFontFileForDisk ?? currentFontName) ?? BmfcSave.GetEffectiveDefaultRanges();
+                            ApplyProjectFontRanges(bmfcSave, gumProject, bbFontFileForDisk ?? currentFontName);
                             bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
                             bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 #endif
@@ -2350,6 +2350,18 @@ public partial class CustomSetPropertyOnRenderable
             return fullFileName;
         }
 #endif
+    }
+
+    /// <summary>
+    /// Sets <paramref name="bmfcSave"/>'s ranges from the project: the entry for <paramref name="fontIdentity"/>
+    /// (a system family name, or the font file path as typed), else the project-wide range, else the
+    /// default ranges when no project is loaded.
+    /// </summary>
+    private static void ApplyProjectFontRanges(BmfcSave bmfcSave, GumProjectSave? gumProject, string? fontIdentity)
+    {
+        bool isFontSpecific = false;
+        bmfcSave.Ranges = gumProject?.GetFontRanges(fontIdentity, out isFontSpecific) ?? BmfcSave.GetEffectiveDefaultRanges();
+        bmfcSave.RangesAreFontSpecific = isFontSpecific;
     }
 
     /// <summary>

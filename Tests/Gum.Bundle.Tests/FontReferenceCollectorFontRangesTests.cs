@@ -44,8 +44,13 @@ public class FontReferenceCollectorFontRangesTests : IDisposable
             instance => ObjectFinder.Self.GetElementSave(instance));
         Dictionary<string, BmfcSave> fonts = collector.Collect(project, new[] { textStandard, iconStandard });
 
-        fonts.Values.Single(f => f.FontName == "Arial").Ranges.ShouldBe(globalRanges);
-        fonts.Values.Single(f => f.FontName == "IconFont").Ranges.ShouldBe(iconRanges);
+        BmfcSave arial = fonts.Values.Single(f => f.FontName == "Arial");
+        BmfcSave icon = fonts.Values.Single(f => f.FontName == "IconFont");
+
+        arial.Ranges.ShouldBe(globalRanges);
+        arial.RangesAreFontSpecific.ShouldBeFalse();
+        icon.Ranges.ShouldBe(iconRanges);
+        icon.RangesAreFontSpecific.ShouldBeTrue();
     }
 
     [Fact]
