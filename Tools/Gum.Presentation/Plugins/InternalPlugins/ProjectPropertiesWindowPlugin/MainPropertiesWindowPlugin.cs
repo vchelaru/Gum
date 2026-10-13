@@ -4,11 +4,8 @@ using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
-using Gum.Services.Dialogs;
-using Gum.Services.Fonts;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
@@ -27,10 +24,7 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
 {
     #region Fields/Properties
 
-    private readonly IFontManager _fontManager;
     private readonly IWireframeCommands _wireframeCommands;
-    private readonly IDialogService _dialogServiceForChanges;
-    private readonly IDispatcher _dispatcher;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
@@ -40,26 +34,19 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
     private ProjectPropertiesViewModel _viewModel = null!;
     private ProjectPropertiesChangeLogic _changeLogic = null!;
     private IPluginTab? _pluginTab;
-    private FilePath? _fontCharacterFileAbsolute;
 
     #endregion
 
     [ImportingConstructor]
     public MainPropertiesWindowPlugin(
-        IFontManager fontManager,
         IWireframeCommands wireframeCommands,
-        IDialogService dialogService,
-        IDispatcher dispatcher,
         IWireframeObjectManager wireframeObjectManager,
         IProjectState projectState,
         IPluginManager pluginManager,
         IProjectManager projectManager,
         LocalizationService localizationService)
     {
-        _fontManager = fontManager;
         _wireframeCommands = wireframeCommands;
-        _dialogServiceForChanges = dialogService;
-        _dispatcher = dispatcher;
         _wireframeObjectManager = wireframeObjectManager;
         _projectState = projectState;
         _pluginManager = pluginManager;
@@ -73,13 +60,10 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
 
         _changeLogic = new ProjectPropertiesChangeLogic(
             _projectManager,
-            _fontManager,
-            _dialogServiceForChanges,
             _projectState,
             _wireframeObjectManager,
             _fileCommands,
             _wireframeCommands,
-            _guiCommands,
             _pluginManager,
             _localizationService);
 
@@ -88,7 +72,6 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         _viewModel.CloseRequested += () => _pluginTab?.Hide();
 
         this.ProjectLoad += HandleProjectLoad;
-        this.ReactToFileChanged += HandleFileChanged;
         _fileCommands.LocalizationLoaded += HandleLocalizationLoaded;
 
         // Each head resolves the view model to its own view (TabViewRegistry).
@@ -109,25 +92,6 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         {
             _viewModel.SetFrom(_projectManager.AutoSave, project);
             RefreshLanguagesAndReload();
-        }
-
-        using (Gum.Diagnostics.StartupTiming.Time("  font character file ranges"))
-        {
-            if (_viewModel.UseFontCharacterFile)
-            {
-                var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
-                _fontCharacterFileAbsolute = absolute;
-
-                if (System.IO.File.Exists(absolute.FullPath))
-                {
-                    var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
-                    _viewModel.FontRanges = ranges;
-                }
-            }
-            else
-            {
-                _fontCharacterFileAbsolute = null;
-            }
         }
     }
 
@@ -161,40 +125,8 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         _viewModel.NotifyReloaded();
     }
 
-    private async void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        var result = await _changeLogic.HandlePropertyChanged(_viewModel, e.PropertyName);
-
-        if (result.FontCharacterFileChanged)
-        {
-            _fontCharacterFileAbsolute = result.FontCharacterFileAbsolute;
-        }
-    }
-
-    private async void HandleFileChanged(FilePath file)
-    {
-        if (_fontCharacterFileAbsolute != null && file == _fontCharacterFileAbsolute)
-        {
-            if (System.IO.File.Exists(_fontCharacterFileAbsolute.FullPath))
-            {
-                var ranges = BmfcSave.GenerateRangesFromFile(_fontCharacterFileAbsolute.FullPath);
-
-                _dispatcher.Invoke(() => _viewModel.FontRanges = ranges);
-
-                try
-                {
-                    _fontManager.DeleteFontCacheFolder();
-                }
-                catch (System.IO.IOException)
-                {
-                    // ignore, if the folder is locked fonts will be recreated on next change
-                }
-
-                if (_projectState.GumProjectSave is { } project)
-                {
-                    await _fontManager.CreateAllMissingFontFiles(project);
-                }
-            }
-        }
+        _changeLogic.HandlePropertyChanged(_viewModel, e.PropertyName);
     }
 }

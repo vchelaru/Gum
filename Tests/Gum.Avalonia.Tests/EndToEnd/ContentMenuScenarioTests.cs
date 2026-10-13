@@ -114,7 +114,7 @@ public class ContentMenuScenarioTests
     [Trait("Feature", "FILE-013")]
     public void AProjectFileEditedOutside_WithNewFontRanges_RequestsTheBakedFontsAgain_ButAnUnrelatedEditDoesNot()
     {
-        // #6008: the tool clears the font cache itself when the ranges change in Project Properties,
+        // #6008: the tool clears the font cache itself when the ranges change on the Font Settings tab,
         // but an edit made in a text editor only shows up as a project reload.
         const string newRanges = "65-70";
         using ProjectTreeHarness tree = new ProjectTreeHarness();

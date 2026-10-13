@@ -6,13 +6,13 @@ gumcli fonts <project.gumj>
 
 Scans all elements and states for font references and generates any missing bitmap font files (`.fnt` + `.png`) in the project's `FontCache/` folder.
 
-The backend used to bake fonts is chosen by the project's **Font Generator** setting (see [Project Properties](../gum-tool/project-properties.md#font-generator)):
+The backend used to bake fonts is chosen by the project's **Font Generator** setting (see [Font Settings](../gum-tool/fonts.md#font-generator)):
 
 * **KernSmith** — cross-platform. Runs on Windows, Linux, and macOS. This is the default for new projects.
 * **BMFont** — runs `bmfont.exe`, which only exists on Windows. On Linux and macOS, `gumcli fonts` generates a BMFont project's fonts with KernSmith instead.
 
 {% hint style="info" %}
-The two generators are different programs, so a BMFont project's `FontCache` built on Linux or macOS may not match one built on Windows. To get the same files everywhere, switch the project's Font Generator to **KernSmith**. Switching wipes and re-creates the FontCache, so review the [Font Generator section of Project Properties](../gum-tool/project-properties.md#font-generator) first.
+The two generators are different programs, so a BMFont project's `FontCache` built on Linux or macOS may not match one built on Windows. To get the same files everywhere, switch the project's Font Generator to **KernSmith**. Switching wipes and re-creates the FontCache, so review the [Font Generator section of the Font Settings page](../gum-tool/fonts.md#font-generator) first.
 {% endhint %}
 
 ## Options

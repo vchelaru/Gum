@@ -526,14 +526,13 @@ public class DialogScenarioTests
         properties.RestrictToUnitValues = true;
         properties.ShowLocalization = !properties.ShowLocalization;
         bool showLocalization = properties.ShowLocalization;
-        properties.FontSpacingHorizontal = 2;
-        properties.FontSpacingVertical = 3;
-        tree.WaitUntil(() => SavedProject(tree).FontSpacingVertical == 3, AsyncWork, "the font spacing to save");
+        properties.RestrictFileNamesForAndroid = true;
+        tree.WaitUntil(() => SavedProject(tree).RestrictFileNamesForAndroid, AsyncWork, "the Android file name setting to save");
 
         GumProjectSave saved = SavedProject(tree);
         saved.RestrictToUnitValues.ShouldBeTrue();
         saved.ShowLocalizationInGum.ShouldBe(showLocalization);
-        (saved.FontSpacingHorizontal, saved.FontSpacingVertical).ShouldBe((2, 3));
+        saved.RestrictFileNamesForAndroid.ShouldBeTrue();
 
         // What the tab's Close button calls (ProjectPropertiesViewTests).
         properties.RequestClose();
@@ -541,7 +540,7 @@ public class DialogScenarioTests
 
         tree.AssertOracles();
         // The reload refilled the tab from the saved file.
-        (properties.RestrictToUnitValues, properties.FontSpacingHorizontal, properties.FontSpacingVertical).ShouldBe((true, 2, 3));
+        (properties.RestrictToUnitValues, properties.RestrictFileNamesForAndroid).ShouldBe((true, true));
     }
 
     #endregion

@@ -334,25 +334,12 @@ public class DisplayPropertiesScenarioTests
         properties.TypeAndEnter("CanvasHeight", "600");
         properties.PickComboItem("TextureFilter", nameof(TextureFilter.Linear));
         properties.ClickCheckBox("RestrictFileNamesForAndroid");
-        properties.ClickCheckBox("AutoSizeFontOutputs");
-        if (OperatingSystem.IsWindows())
-        {
-            FontGeneratorType generator = properties.ViewModel.FontGenerator == FontGeneratorType.KernSmith ? FontGeneratorType.BmFont : FontGeneratorType.KernSmith;
-            properties.PickComboItem("FontGenerator", generator.ToString());
-            tree.WaitUntil(() => SavedProject(tree).FontGenerator == generator, AsyncWork, "the font generator to save");
-        }
-        else
-        {
-            // bmfont.exe runs only on Windows, so elsewhere the row is read-only and KernSmith is used.
-            properties.Row("FontGenerator").GetVisualDescendants().OfType<ComboBox>().Single().IsEffectivelyEnabled.ShouldBeFalse();
-            tree.WaitUntil(() => SavedProject(tree).AutoSizeFontOutputs != new GumProjectSave().AutoSizeFontOutputs, AsyncWork, "the font outputs setting to save");
-        }
+        tree.WaitUntil(() => SavedProject(tree).RestrictFileNamesForAndroid, AsyncWork, "the Android file name setting to save");
 
         GumProjectSave saved = SavedProject(tree);
         (saved.DefaultCanvasWidth, saved.DefaultCanvasHeight).ShouldBe((1024, 600));
         saved.TextureFilter.ShouldBe(nameof(TextureFilter.Linear));
         saved.RestrictFileNamesForAndroid.ShouldBeTrue();
-        saved.AutoSizeFontOutputs.ShouldNotBe(new GumProjectSave().AutoSizeFontOutputs);
         (GraphicalUiElement.CanvasWidth, GraphicalUiElement.CanvasHeight).ShouldBe((1024f, 600f), "the canvas size applies at once");
     }
 
@@ -504,42 +491,6 @@ public class DisplayPropertiesScenarioTests
         finally
         {
             localization.CurrentLanguage = originalLanguage;
-        }
-
-        tree.AssertOracles();
-    }
-
-    [AvaloniaFact]
-    [Trait("Feature", "PROP-013")]
-    [Trait("Feature", "PROP-014")]
-    public void FontRanges_TypedAreSaved_AndAFontCharacterFileReplacesThemAndLocksTheRow()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        using ProjectPropertiesTab properties = new ProjectPropertiesTab(tree);
-
-        properties.TypeAndEnter("FontRanges", "32-126,160-255");
-        tree.WaitUntil(() => SavedProject(tree).FontRanges == "32-126,160-255", AsyncWork, "the font ranges to save");
-
-        // The project's character file, which saving the project writes with the default characters.
-        string characterFile = Path.Combine(tree.Project.ProjectFolder, ".gumfcs");
-        string defaultCharacters = File.ReadAllText(characterFile);
-        File.WriteAllText(characterFile, "AB");
-        try
-        {
-            properties.ClickCheckBox("UseFontCharacterFile");
-            tree.WaitUntil(() => SavedProject(tree).UseFontCharacterFile, AsyncWork, "the character file setting to save");
-
-            properties.ViewModel.FontRanges.ShouldBe(global::RenderingLibrary.Graphics.Fonts.BmfcSave.GenerateRangesFromFile(characterFile));
-            properties.Member("FontRanges").IsReadOnly.ShouldBeTrue("the ranges come from the file while it is used");
-
-            properties.ClickCheckBox("UseFontCharacterFile");
-            tree.WaitUntil(() => !SavedProject(tree).UseFontCharacterFile, AsyncWork, "the character file setting to clear");
-            properties.ViewModel.FontRanges.ShouldBe(global::RenderingLibrary.Graphics.Fonts.BmfcSave.DefaultRanges);
-            properties.Member("FontRanges").IsReadOnly.ShouldBeFalse();
-        }
-        finally
-        {
-            File.WriteAllText(characterFile, defaultCharacters);
         }
 
         tree.AssertOracles();

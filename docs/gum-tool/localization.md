@@ -72,4 +72,4 @@ Localized text appears in Gum based on the selected ID. You can change the Langu
 
 ## Localization and Font Ranges
 
-Localized games may need an extended font range. If using the Gum tool, see the [Project Properties](project-properties.md#font-ranges) page for information on font ranges.
+Localized games may need an extended font range. If using the Gum tool, see the [Font Settings](fonts.md#character-ranges) page for information on font ranges.

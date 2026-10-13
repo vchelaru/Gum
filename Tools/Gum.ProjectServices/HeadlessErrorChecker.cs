@@ -1018,26 +1018,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             }
         }
 
-        List<FontRangeEntry> fontEntries = project.FontRangeEntries
-            .Where(entry => !string.IsNullOrWhiteSpace(entry.FontFamily))
-            .ToList();
-        if (fontEntries.Count == 0)
-        {
-            return errors;
-        }
-
-        var collector = new FontReferenceCollector(instance => ObjectFinder.Self.GetElementSave(instance));
-        var reachedEntries = new HashSet<FontRangeEntry>();
-        foreach (BmfcSave font in collector.Collect(project, project.AllElements).Values)
-        {
-            FontRangeEntry? reached = project.FindFontSpecificRangeEntry(font.FontFile ?? font.FontName);
-            if (reached != null)
-            {
-                reachedEntries.Add(reached);
-            }
-        }
-
-        foreach (FontRangeEntry entry in fontEntries.Where(entry => !reachedEntries.Contains(entry)))
+        foreach (FontRangeEntry entry in FontRangeEntryChecker.FindUnmatchedEntries(project))
         {
             errors.Add(new ErrorResult
             {
@@ -1046,8 +1027,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 Severity = ErrorSeverity.Warning,
                 Message = $"The font range entry for \"{entry.FontFamily}\" matches no font in the project, so it " +
                     "never applies. A system font matches by family name ignoring case, and a font file matches by its " +
-                    "project-relative path exactly as a Text names it. Fonts reached only through a style category " +
-                    "state are not checked."
+                    "project-relative path exactly as a Text names it."
             });
         }
 

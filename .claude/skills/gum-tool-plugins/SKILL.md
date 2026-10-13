@@ -63,6 +63,7 @@ Each internal plugin has a `Main[FeatureName]Plugin.cs` entry point in `[Feature
 | Undo/History | `Undos/` | shared |
 | Delete dialog | `Delete/` | shared |
 | Errors, Hotkeys, File Watch, Load Recent, Project Properties | per feature | shared |
+| Font Settings (`Edit > Font Settings`) | `FontsPlugin/` (view model, logic); plugin in `Tool/Gum.Avalonia/Plugins/Fonts/` | Avalonia head only |
 
 ## Common Events
 

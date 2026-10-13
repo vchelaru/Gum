@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Plugins.Behaviors;
 using Gum.Plugins.Errors;
 using Gum.Plugins.FileWatchPlugin;
+using Gum.Plugins.FontsPlugin;
 using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Plugins.Undos;
@@ -39,6 +40,7 @@ public class TabViewRegistry
         Register<AlignmentViewModel>(() => new AlignmentView());
         Register<BehaviorsViewModel>(() => new BehaviorsView());
         Register<ProjectPropertiesViewModel>(() => new ProjectPropertiesView());
+        Register<FontsViewModel>(() => new FontsView());
 
         // Plugins in their own projects that ship no views.
         Register<PerformanceViewModel>(() => new PerformanceView());

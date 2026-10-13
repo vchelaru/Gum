@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Plugins.PropertiesWindowPlugin;
-using Gum.Services;
-using Moq;
 using Shouldly;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -31,13 +29,10 @@ public class ProjectPropertiesGridPresenterTests
         string[] categories = grid.Categories.Select(category => category.Name).ToArray();
         categories.ShouldContain("Guides");
         categories.ShouldContain("Single Pixel Texture");
-        categories.ShouldContain("Font Generation");
+        categories.ShouldNotContain("Font Generation");
         InstanceMember Member(string name) => grid.GetInstanceMember(name).ShouldNotBeNull();
         Member(nameof(ProjectPropertiesViewModel.ShowOutlines)).Category.ShouldNotBeNull().Name.ShouldBe("Guides");
-        Member(nameof(ProjectPropertiesViewModel.FontGenerator)).CustomOptions.ShouldBe(new object[] { FontGeneratorType.BmFont, FontGeneratorType.KernSmith });
         Member(nameof(ProjectPropertiesViewModel.TextureFilter)).CustomOptions.ShouldBe(new object[] { TextureFilter.Point, TextureFilter.Linear });
-        Member(nameof(ProjectPropertiesViewModel.UseFontCharacterFile)).DisplayName.ShouldBe("Use Font Character File (.gumfcs)");
-        Member(nameof(ProjectPropertiesViewModel.AutoSizeFontOutputs)).DisplayName.ShouldBe("Auto-Size Font Outputs");
         Member(nameof(ProjectPropertiesViewModel.RestrictFileNamesForAndroid)).DisplayName.ShouldBe("Restrict File Names For Android");
         Member(nameof(ProjectPropertiesViewModel.LocalizationFiles)).PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.MultiFile));
         Member(nameof(ProjectPropertiesViewModel.LocalizationFiles)).PropertiesToSetOnDisplayer["Filter"].ShouldBe("Localization Files|*.csv;*.resx|All Files|*.*");
@@ -47,7 +42,6 @@ public class ProjectPropertiesGridPresenterTests
                  {
                      nameof(ProjectPropertiesViewModel.IsUpdatingFromModel),
                      nameof(ProjectPropertiesViewModel.LanguageIndex),
-                     nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly),
                      nameof(ProjectPropertiesViewModel.AvailableLanguages),
                      // No languages are loaded, so there is no language to pick.
                      nameof(ProjectPropertiesViewModel.LanguageName),
@@ -57,41 +51,6 @@ public class ProjectPropertiesGridPresenterTests
         {
             grid.GetInstanceMember(hidden).ShouldBeNull(hidden);
         }
-    }
-
-    [Fact]
-    public void FontRanges_IsReadOnly_WhileAFontCharacterFileIsUsed()
-    {
-        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
-        viewModel.SetFrom(autoSave: true, new GumProjectSave());
-        ModelBackedGrid grid = new ModelBackedGrid();
-        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid);
-        presenter.Bind(viewModel);
-        grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontRanges))!.IsReadOnly.ShouldBeFalse();
-
-        viewModel.UseFontCharacterFile = true;
-
-        grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontRanges))!.IsReadOnly.ShouldBeTrue();
-        grid.RefreshCount.ShouldBeGreaterThan(0);
-    }
-
-    [Theory]
-    [InlineData(true, "Windows", false, null)]
-    [InlineData(false, "macOS", true, "KernSmith is used on macOS")]
-    [InlineData(false, "Linux", true, "KernSmith is used on Linux")]
-    public void FontGenerator_IsReadOnlyAndNamesTheOs_WhereBmFontCannotRun(bool isWindows, string osName, bool expectedReadOnly, string? expectedDetail)
-    {
-        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
-        viewModel.SetFrom(autoSave: true, new GumProjectSave());
-        ModelBackedGrid grid = new ModelBackedGrid();
-        IOperatingSystemInfo os = Mock.Of<IOperatingSystemInfo>(o => o.IsWindows == isWindows && o.DisplayName == osName);
-        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid, os);
-
-        presenter.Bind(viewModel);
-
-        InstanceMember member = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontGenerator))!;
-        member.IsReadOnly.ShouldBe(expectedReadOnly);
-        member.DetailText.ShouldBe(expectedDetail);
     }
 
     [Fact]
@@ -109,26 +68,5 @@ public class ProjectPropertiesGridPresenterTests
         InstanceMember after = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.CanvasWidth))!;
         after.ShouldNotBeSameAs(before);
         after.Category.ShouldNotBeNull().Name.ShouldBe(before.Category.ShouldNotBeNull().Name);
-    }
-
-    /// <summary>An <see cref="IDataUiGrid"/> over a bare model, as either head's grid is.</summary>
-    private sealed class ModelBackedGrid : IDataUiGrid
-    {
-        public DataUiGridModel Model { get; } = new DataUiGridModel();
-        public int RefreshCount { get; private set; }
-        public object? Instance { get => Model.Instance; set => Model.Instance = value; }
-        public bool IsEnabled { get; set; } = true;
-        public BulkObservableCollection<MemberCategory> Categories => Model.Categories;
-        public event Action<string, PropertyChangedArgs>? PropertyChange
-        {
-            add => Model.PropertyChange += value;
-            remove => Model.PropertyChange -= value;
-        }
-        public void SetCategories(IList<MemberCategory> newCategories) => Model.SetCategories(newCategories);
-        public void SetMultipleCategoryLists(List<List<MemberCategory>> listOfCategoryLists) => Model.SetMultipleCategoryLists(listOfCategoryLists);
-        public void ApplyMemberFilter(Func<InstanceMember, bool>? isMatch) => Model.ApplyMemberFilter(isMatch);
-        public InstanceMember? GetInstanceMember(string memberName) => Model.GetInstanceMember(memberName);
-        public void InsertSpacesInCamelCaseMemberNames() => Model.InsertSpacesInCamelCaseMemberNames();
-        public void Refresh() => RefreshCount++;
     }
 }

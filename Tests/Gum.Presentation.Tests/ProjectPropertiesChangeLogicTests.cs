@@ -1,18 +1,14 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.PropertiesWindowPlugin;
-using Gum.Services.Dialogs;
-using Gum.Services.Fonts;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
-using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 
 namespace Gum.Presentation.Tests;
@@ -25,13 +21,10 @@ namespace Gum.Presentation.Tests;
 public class ProjectPropertiesChangeLogicTests
 {
     private readonly Mock<IProjectManager> _projectManager = new();
-    private readonly Mock<IFontManager> _fontManager = new();
-    private readonly Mock<IDialogService> _dialogService = new();
     private readonly Mock<IProjectState> _projectState = new();
     private readonly Mock<IWireframeObjectManager> _wireframeObjectManager = new();
     private readonly Mock<IFileCommands> _fileCommands = new();
     private readonly Mock<IWireframeCommands> _wireframeCommands = new();
-    private readonly Mock<IGuiCommands> _guiCommands = new();
     private readonly Mock<IPluginManager> _pluginManager = new();
     private readonly Mock<ILocalizationService> _localizationService = new();
     private readonly ProjectPropertiesChangeLogic _logic;
@@ -40,32 +33,27 @@ public class ProjectPropertiesChangeLogicTests
     {
         _logic = new ProjectPropertiesChangeLogic(
             _projectManager.Object,
-            _fontManager.Object,
-            _dialogService.Object,
             _projectState.Object,
             _wireframeObjectManager.Object,
             _fileCommands.Object,
             _wireframeCommands.Object,
-            _guiCommands.Object,
             _pluginManager.Object,
             _localizationService.Object);
     }
 
-    [Theory]
-    [InlineData(nameof(ProjectPropertiesViewModel.AvailableLanguages))]
-    [InlineData(nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly))]
-    public async Task HandlePropertyChanged_DoesNothing_ForViewOnlyProperties(string propertyName)
+    [Fact]
+    public void HandlePropertyChanged_DoesNothing_ForViewOnlyProperties()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
 
-        await _logic.HandlePropertyChanged(viewModel, propertyName);
+        _logic.HandlePropertyChanged(viewModel, nameof(ProjectPropertiesViewModel.AvailableLanguages));
 
         _fileCommands.Verify(f => f.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
         _wireframeCommands.Verify(w => w.Refresh(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
-    public async Task HandlePropertyChanged_DoesNothing_WhenViewModelIsUpdatingFromModel()
+    public void HandlePropertyChanged_DoesNothing_WhenViewModelIsUpdatingFromModel()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
         // SetFrom leaves IsUpdatingFromModel false when it completes, so force it back on to
@@ -74,39 +62,25 @@ public class ProjectPropertiesChangeLogicTests
             .GetProperty(nameof(ProjectPropertiesViewModel.IsUpdatingFromModel))!
             .SetValue(viewModel, true);
 
-        ProjectPropertyChangeResult result = await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.ShowCheckerBackground));
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.ShowCheckerBackground));
 
-        result.FontCharacterFileChanged.ShouldBeFalse();
         _fileCommands.Verify(f => f.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
         _wireframeCommands.Verify(w => w.Refresh(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
-    public async Task HandlePropertyChanged_ShowCheckerBackground_AutoSavesWithoutRefreshingWireframe()
+    public void HandlePropertyChanged_ShowCheckerBackground_AutoSavesWithoutRefreshingWireframe()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
 
-        await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.ShowCheckerBackground));
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.ShowCheckerBackground));
 
         _fileCommands.Verify(f => f.TryAutoSaveProject(It.IsAny<bool>()), Times.Once);
         _wireframeCommands.Verify(w => w.Refresh(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
-    public async Task HandlePropertyChanged_InvalidFontRange_ShowsMessageAndDoesNotTouchFontCache()
-    {
-        ProjectPropertiesViewModel viewModel = MakeViewModel();
-        // No spaces (so TryFixRange can't "fix" it) but start >= end, which GetIfIsValidRange rejects.
-        viewModel.FontRanges = "50-40";
-
-        await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.FontRanges));
-
-        _dialogService.Verify(d => d.ShowMessage("The entered Font Range is not valid.", null, null), Times.Once);
-        _fontManager.Verify(f => f.DeleteFontCacheFolder(), Times.Never);
-    }
-
-    [Fact]
-    public async Task HandlePropertyChanged_LocalizationFiles_NormalizesAbsolutePathsToRelative()
+    public void HandlePropertyChanged_LocalizationFiles_NormalizesAbsolutePathsToRelative()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
         // Leading-slash literal, not "C:\...": rooted on both Windows and Unix, unlike a
@@ -114,7 +88,7 @@ public class ProjectPropertiesChangeLogicTests
         _projectState.Setup(p => p.ProjectDirectory).Returns("/MyProject/");
         viewModel.LocalizationFiles = new List<string> { "/MyProject/Localization/en.csv" };
 
-        await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LocalizationFiles));
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LocalizationFiles));
 
         // FileManager.Standardize normalizes to the OS-native separator, so the expected
         // relative path must too.
@@ -123,40 +97,27 @@ public class ProjectPropertiesChangeLogicTests
     }
 
     [Fact]
-    public async Task HandlePropertyChanged_LocalizationFiles_KeepsAbsolutePath_WhenProjectIsUnsaved()
+    public void HandlePropertyChanged_LocalizationFiles_KeepsAbsolutePath_WhenProjectIsUnsaved()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
         _projectState.Setup(p => p.ProjectDirectory).Returns((string?)null);
         viewModel.LocalizationFiles = new List<string> { "/Elsewhere/Localization/en.csv" };
 
-        await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LocalizationFiles));
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LocalizationFiles));
 
         viewModel.LocalizationFiles.ShouldBe(new List<string> { "/Elsewhere/Localization/en.csv" });
     }
 
     [Fact]
-    public async Task HandlePropertyChanged_SinglePixelTextureFile_KeepsAbsolutePath_WhenProjectIsUnsaved()
+    public void HandlePropertyChanged_SinglePixelTextureFile_KeepsAbsolutePath_WhenProjectIsUnsaved()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
         _projectState.Setup(p => p.ProjectDirectory).Returns((string?)null);
         viewModel.SinglePixelTextureFile = "/Elsewhere/pixel.png";
 
-        await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.SinglePixelTextureFile));
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.SinglePixelTextureFile));
 
         viewModel.SinglePixelTextureFile.ShouldBe("/Elsewhere/pixel.png");
-    }
-
-    [Fact]
-    public async Task HandlePropertyChanged_UseFontCharacterFileTurnedOff_ResetsFontRangesAndReportsPathCleared()
-    {
-        ProjectPropertiesViewModel viewModel = MakeViewModel();
-        viewModel.UseFontCharacterFile = false;
-
-        ProjectPropertyChangeResult result = await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.UseFontCharacterFile));
-
-        result.FontCharacterFileChanged.ShouldBeTrue();
-        result.FontCharacterFileAbsolute.ShouldBeNull();
-        viewModel.FontRanges.ShouldBe(BmfcSave.DefaultRanges);
     }
 
     private static ProjectPropertiesViewModel MakeViewModel()
