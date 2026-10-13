@@ -174,6 +174,36 @@ When this happens the Gum tool reports a **GUM0008** entry in the [Errors tab](.
 
 `gumcli check` reports GUM0008 for every file the project loads at runtime. Besides element files and the files elements reference, this covers behavior files, localization files, element animation files, and the textures that a `.fnt` or `.achx` file names. These belong to the whole project rather than one element, so the Errors tab does not list them. A mismatched animation file is always an error, because the game never connects its animations to the element, on any file system.
 
+## Font Range Entry That Matches No Font (GUM0010)
+
+A project file can hold a character range for one specific font, in the `FontRangeEntries` list next to the project-wide `FontRanges` value. Each entry names a font in its `FontFamily` and the characters to include in its `Ranges`. For a font file, `FontFamily` is the project-relative path exactly as a Text names it. For an installed font, it is the family name.
+
+```json
+"FontRangeEntries": [
+  { "FontFamily": "Fonts/Icons.ttf", "Ranges": "57344-57400" }
+]
+```
+
+An entry applies only when a Text uses the font it names. A font file matches by its whole path, so `Fonts/Icon.ttf` does not match a Text that uses `Fonts/Icons.ttf`, and an absolute path does not match a relative one. The direction of the slashes does not matter. An installed font matches by family name, ignoring letter case.
+
+When no Text uses the font an entry names, the Gum tool reports a **GUM0010** warning in the [Errors tab](../editor-tab.md), naming the entry. The entry has no effect until it matches a font, so a typo looks the same as the setting doing nothing. To resolve it, correct the `FontFamily` to match the name or path the Text uses, or remove the entry.
+
+GUM0010 does not look at fonts that a Text receives only through a style category state or through a conditional variable reference inside a nested component. An entry for such a font can be reported even though it applies. `gumcli check` reports GUM0010 too.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+## Invalid Font Range (GUM0011)
+
+A font range is a comma separated list of characters and ranges, such as `32-126,160-255`. Each item is either a single character code or a `start-end` pair, written as numbers with no spaces. A value like `50-40`, where the end comes before the start, `abc`, or `32-126, 160-255` with a space is not valid.
+
+When a range is not valid, the font is still created but without the characters you asked for. The BMFont font generator uses the default range instead, and the KernSmith font generator skips each part it cannot read, which can leave the font with no characters from that entry. The Gum tool reports a **GUM0011** warning in the [Errors tab](../editor-tab.md), naming the font and the range it found. The project-wide range is checked as well as each font's own entry. To resolve it, correct the range in the project file, or in [Project Properties](../project-properties.md#font-ranges) for the project-wide range. `gumcli check` reports GUM0011 too.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

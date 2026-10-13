@@ -1436,6 +1436,96 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
     #endregion
 
+    #region GUM0010 / GUM0011 — Font range entries that match no font or hold an invalid range
+
+    [Fact]
+    public void GetProjectErrors_ShouldWarnAboutAFontRangeEntry_WhenNoTextUsesThatFont()
+    {
+        AddComponentWithTextFont("Label", "Fonts/Icons.ttf");
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts/Icon.ttf", Ranges = "57344-57400" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0010");
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.Message.ShouldContain("\"Fonts/Icon.ttf\"");
+    }
+
+    [Theory]
+    [InlineData("Fonts/Icons.ttf", "Fonts/Icons.ttf")]
+    [InlineData("Fonts/Icons.ttf", "Fonts\\Icons.ttf")]
+    [InlineData("Arial", "arial")]
+    public void GetProjectErrors_ShouldNotWarn_WhenAFontRangeEntryMatchesAFontATextUses(string fontUsed, string entryFamily)
+    {
+        AddComponentWithTextFont("Label", fontUsed);
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = entryFamily, Ranges = "57344-57400" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldWarnAboutAnInvalidRange_OnAFamilyEntry()
+    {
+        AddComponentWithTextFont("Label", "Arial");
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Arial", Ranges = "50-40" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0011");
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+        error.Message.ShouldContain("\"Arial\"");
+        error.Message.ShouldContain("\"50-40\"");
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldWarnAboutAnInvalidRange_OnTheProjectWideEntry()
+    {
+        Project.FontRangeEntries.Single().Ranges = "32-126, 160-255";
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0011");
+        error.Message.ShouldContain("\"32-126, 160-255\"");
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldReportBothProblems_WhenAnEntryMatchesNoFontAndHasAnInvalidRange()
+    {
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Ghost", Ranges = "abc" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project);
+
+        errors.Select(e => e.Code).OrderBy(code => code).ShouldBe(new[] { "GUM0010", "GUM0011" });
+    }
+
+    [Fact]
+    public void GetAllErrors_ShouldIncludeTheFontRangeEntryWarnings()
+    {
+        Project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Ghost", Ranges = "57344-57400" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+        errors.ShouldContain(e => e.Code == "GUM0010");
+    }
+
+    private void AddComponentWithTextFont(string componentName, string font)
+    {
+        ComponentSave component = new ComponentSave { Name = componentName };
+        component.Instances.Add(new InstanceSave { Name = "MyText", BaseType = "Text" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave { Name = "MyText.Font", Value = font, Type = "string", SetsValue = true, IsFont = true });
+        defaultState.Variables.Add(new VariableSave { Name = "MyText.FontSize", Value = 18, Type = "int", SetsValue = true });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+    }
+
+    #endregion
+
     #region GUM0007 — Enum variable value is not defined
 
     [Theory]

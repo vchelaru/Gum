@@ -66,7 +66,7 @@ The heuristic fallback (`EstimateBlocksNeeded`) uses a lookup table mapping effe
 
 - Default: `32-126,160-255` (ASCII + Latin-1 Supplement)
 - Project ranges live in `GumProjectSave.FontRangeEntries` (one entry per font family; a null/empty family is the project-wide default). Look up with `GumProjectSave.GetFontRanges(family)` (family entry, else global entry, else null so the caller uses `BmfcSave.GetEffectiveDefaultRanges()`). The scalar `FontRanges` is a legacy shim over the global entry and is still written on every save for older tools; the list is only written once a family has its own entry. The Project Properties UI still edits only the global entry.
-- Ranges are validated (no spaces, proper start < end), with automatic fallback to default
+- Ranges are validated (no spaces, proper start < end), with automatic fallback to default. The global row validates on entry in Project Properties; a hand-edited family entry is only reported afterwards by `HeadlessErrorChecker` (GUM0010 unmatched entry, GUM0011 invalid range)
 - Space character (32) is always included via `EnsureRangesContainSpace`
 - Large range sets are split across multiple `chars=` lines (max 10 blocks per line) for bmfont.exe compatibility
 - `GenerateRangesFromFile` can derive ranges from a text file's unique characters

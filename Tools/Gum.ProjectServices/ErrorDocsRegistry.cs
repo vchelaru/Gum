@@ -22,6 +22,8 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0007"] = "gum-tool/project-files#invalid-enum-variable-value-gum0007",
             ["GUM0008"] = "gum-tool/project-files#file-name-case-mismatch-gum0008",
             ["GUM0009"] = "gum-tool/gum-elements/general-properties/variable-references#missing-reference-target-gum0009",
+            ["GUM0010"] = "gum-tool/project-files#font-range-entry-that-matches-no-font-gum0010",
+            ["GUM0011"] = "gum-tool/project-files#invalid-font-range-gum0011",
         };
     }
 
