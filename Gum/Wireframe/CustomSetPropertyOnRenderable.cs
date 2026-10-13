@@ -1584,6 +1584,7 @@ public partial class CustomSetPropertyOnRenderable
         bmfcSave.IsItalic = isItalic;
         bmfcSave.IsBold = isBold;
         ApplyCurrentDropshadowTo(bmfcSave);
+        ApplyFontCacheNaming(bmfcSave, fontFilePath);
 
         if (fontFilePath != null)
         {
@@ -1626,6 +1627,7 @@ public partial class CustomSetPropertyOnRenderable
         BmfcSave bmfcSave = new BmfcSave();
         textRuntime.CopyFontGenerationFieldsTo(
             bmfcSave, fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
+        ApplyFontCacheNaming(bmfcSave, fontFilePath);
 
         var gumProject = ObjectFinder.Self.GumProjectSave;
         ApplyProjectFontRanges(bmfcSave, gumProject, fontFilePath ?? bmfcSave.FontName);
@@ -2183,6 +2185,7 @@ public partial class CustomSetPropertyOnRenderable
                             bmfcSave.IsItalic = isItalicStack.Peek();
                             bmfcSave.IsBold = isBoldStack.Peek();
                             ApplyCurrentDropshadowTo(bmfcSave);
+                            ApplyFontCacheNaming(bmfcSave, bbFontFileForDisk);
 
                             if (bbFontFileForDisk != null)
                             {
@@ -2277,7 +2280,8 @@ public partial class CustomSetPropertyOnRenderable
                     currentDropshadowRed,
                     currentDropshadowGreen,
                     currentDropshadowBlue,
-                    currentDropshadowAlpha);
+                    currentDropshadowAlpha,
+                    ProjectHashesFontCacheNames);
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontCacheName, preserveCase: true, makeAbsolute: true);
 
                 // Reuse an already-generated font (its Raylib_cs.Font wraps an unmanaged GPU texture, so
@@ -2342,7 +2346,8 @@ public partial class CustomSetPropertyOnRenderable
                     currentDropshadowRed,
                     currentDropshadowGreen,
                     currentDropshadowBlue,
-                    currentDropshadowAlpha);
+                    currentDropshadowAlpha,
+                    ProjectHashesFontCacheNames);
 
             }
 
@@ -2357,6 +2362,22 @@ public partial class CustomSetPropertyOnRenderable
     /// (a system family name, or the font file path as typed), else the project-wide range, else the
     /// default ranges when no project is loaded.
     /// </summary>
+    internal static bool ProjectHashesFontCacheNames =>
+        ObjectFinder.Self.GumProjectSave?.UsesPathHashedFontCacheNames == true;
+
+    /// <summary>
+    /// Names <paramref name="bmfcSave"/>'s cache file the way the loaded project does (#6007): with a
+    /// hash of the font file's path from <c>GumxVersions.FontCachePathHash</c> on, without it below
+    /// that. <paramref name="fontFilePathAsReferenced"/> is the path as the Text typed it, because
+    /// <see cref="BmfcSave.FontFile"/> is usually already resolved to an absolute path by then and the
+    /// lookup of the baked .fnt uses the typed one.
+    /// </summary>
+    internal static void ApplyFontCacheNaming(BmfcSave bmfcSave, string? fontFilePathAsReferenced)
+    {
+        bmfcSave.IncludePathHashInCacheName = ProjectHashesFontCacheNames;
+        bmfcSave.FontFileAsReferenced = fontFilePathAsReferenced;
+    }
+
     private static void ApplyProjectFontRanges(BmfcSave bmfcSave, GumProjectSave? gumProject, string? fontIdentity)
     {
         bool isFontSpecific = false;
@@ -3835,7 +3856,8 @@ internal static class FrbGraphicalUiElementFontExtensions
             textRuntime.UseFontSmoothing,
             textRuntime.IsItalic,
             textRuntime.IsBold,
-            fontFilePath);
+            fontFilePath,
+            includePathHash: CustomSetPropertyOnRenderable.ProjectHashesFontCacheNames);
     }
 
     internal static void CopyFontGenerationFieldsTo(this GraphicalUiElement textRuntime,

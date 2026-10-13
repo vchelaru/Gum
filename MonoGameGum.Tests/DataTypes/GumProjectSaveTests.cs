@@ -614,13 +614,15 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
-    public void NativeVersion_MatchesColorOperationExpansion()
+    public void NativeVersion_MatchesFontCachePathHash()
     {
         // The v5 slot is reserved for the Sprite/NineSlice ColorOperation variable (#4880). Files
         // saved at v5 use the same XML format as v4; the bump only changes the rejection ceiling and
         // the back-fill gate so older runtimes that lack the property are not handed the variable.
-        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.ColorOperationExpansion);
+        // The v6 slot (#6007) changes a font file's cache name, which is how the runtime finds its .fnt.
         ((int)GumProjectSave.GumxVersions.ColorOperationExpansion).ShouldBe(5);
+        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.FontCachePathHash);
+        ((int)GumProjectSave.GumxVersions.FontCachePathHash).ShouldBe(6);
     }
 
     [Fact]

@@ -121,3 +121,19 @@ Version 5 uses the **same XML format** as Version 4. There is **no format conver
 {% hint style="info" %}
 New projects created with the 2026 October tool (or later) are stamped Version 5 automatically.
 {% endhint %}
+
+## Version 6
+
+**Required Gum Tool Version**: 2026 November (or later)
+
+This version changes the name of the generated font files for fonts loaded from a font file, such as `Fonts/Icons.ttf`. At Version 5 and below, the name only used the file's name, so `Fonts/Icons.ttf` and `Other/Icons.ttf` shared one `.fnt` and only one of them was ever generated. At Version 6, the name also includes a short code made from the file's path, for example `FontCache/Font18Icons_ttf_3fa91c2b.fnt`, so each file gets its own. Fonts that are installed on the system, such as `Arial`, keep their names.
+
+⚠️Changing the version number is not enough if your game ships generated font files. After the upgrade, Gum looks for the new names and no longer finds the old ones, so text using a font file falls back to the default font until the new files exist. Open the project in the Gum tool so it generates the new files, copy them into your game's `FontCache` folder, and delete the old font file entries. A project that only uses system fonts, or that generates its fonts at runtime, needs nothing else.
+
+Version 6 uses the **same XML format** as Version 5. There is **no format conversion or Save All step**, you only change the `<Version>` number.
+
+❗Be sure that your entire team is using the new version of Gum (2026 November or later) before making this upgrade.
+
+{% hint style="info" %}
+New projects created with the 2026 November tool (or later) are stamped Version 6 automatically.
+{% endhint %}

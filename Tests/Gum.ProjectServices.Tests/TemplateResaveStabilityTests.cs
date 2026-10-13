@@ -74,7 +74,6 @@ public class TemplateResaveStabilityTests : IDisposable
         ProjectLoadResult result = new ProjectLoader().Load(projectPath);
         result.Success.ShouldBeTrue(result.ErrorMessage);
         result.Project!.Save(projectPath, saveElements: true);
-
         return Directory.GetFiles(projectDir, "*", SearchOption.AllDirectories)
             .Where(path => !before.TryGetValue(path, out byte[]? original) || !original.AsSpan().SequenceEqual(File.ReadAllBytes(path)))
             .Select(path => Path.GetRelativePath(projectDir, path))

@@ -334,6 +334,7 @@ public class FontReferenceCollector
         bmfcSave.SpacingHorizontal = spacingHorizontal;
         bmfcSave.SpacingVertical = spacingVertical;
         bmfcSave.HasDropshadow = hasDropshadow;
+        bmfcSave.IncludePathHashInCacheName = project.UsesPathHashedFontCacheNames;
 
         if (hasDropshadow)
         {

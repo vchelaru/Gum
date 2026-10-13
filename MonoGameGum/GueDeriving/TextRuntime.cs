@@ -653,6 +653,10 @@ public class TextRuntime : InteractiveGue
         bmfcSave.DropshadowGreen = dropshadowGreen;
         bmfcSave.DropshadowBlue = dropshadowBlue;
         bmfcSave.DropshadowAlpha = dropshadowAlpha;
+        // The path hash in the cache name comes from the path as typed (#6007); callers that resolve
+        // the path to an absolute one before the generator sees it override FontFileAsReferenced.
+        bmfcSave.IncludePathHashInCacheName = Gum.Managers.ObjectFinder.Self.GumProjectSave?.UsesPathHashedFontCacheNames == true;
+        bmfcSave.FontFileAsReferenced = resolvedFontFilePath;
 
         if (resolvedFontFilePath != null)
         {
@@ -691,7 +695,8 @@ public class TextRuntime : InteractiveGue
             dropshadowRed,
             dropshadowGreen,
             dropshadowBlue,
-            dropshadowAlpha);
+            dropshadowAlpha,
+            includePathHash: Gum.Managers.ObjectFinder.Self.GumProjectSave?.UsesPathHashedFontCacheNames == true);
     }
 
 #if XNALIKE || RAYLIB

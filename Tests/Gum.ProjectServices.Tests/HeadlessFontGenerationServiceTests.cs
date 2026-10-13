@@ -922,6 +922,36 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldNameAFontFileFromThePathAsTyped_NotFromWhereTheProjectLives()
+    {
+        // The service resolves the font file to an absolute path for the generator. The cache name's
+        // path hash must still come from the path the Text typed (#6007), or the same project generates
+        // different file names on every machine and the runtime never finds them.
+        Project.Version = GumProjectSave.NativeVersion;
+        ControllableFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Fonts\\Custom.ttf");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        string firstDirectory = Path.Combine(Path.GetTempPath(), "GumFontHashA_" + Guid.NewGuid().ToString("N"));
+        string secondDirectory = Path.Combine(Path.GetTempPath(), "GumFontHashB_" + Guid.NewGuid().ToString("N"));
+        await service.CreateAllMissingFontFiles(Project, firstDirectory);
+        await service.CreateAllMissingFontFiles(Project, secondDirectory, forceRecreate: true);
+
+        string expectedFileName = Path.GetFileName(BmfcSave.GetFontCacheFileNameFor(
+            14, "Custom", 0, useFontSmoothing: true, fontFilePath: "Fonts\\Custom.ttf", includePathHash: true));
+        generator.GeneratedFntPaths
+            .Select(path => Path.GetFileName(path)!)
+            .Where(name => name.Contains("Custom_ttf"))
+            .Distinct()
+            .ShouldBe(new[] { expectedFileName });
+    }
+
+    [Fact]
     public async Task CreateAllMissingFontFiles_ShouldReturnNumberOfFontsGenerated()
     {
         ControllableFontFileGenerator generator = new();

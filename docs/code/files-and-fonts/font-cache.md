@@ -28,6 +28,10 @@ The generated file name follows the pattern `FontCache/Font{FontSize}{Font}.fnt`
 * `IsItalic` — if `true`, then `_Italic` is appended. For example, `FontCache/Font24Arial_Italic.fnt`.
 * `IsBold` — if `true`, then `_Bold` is appended. For example, `FontCache/Font24Arial_Bold.fnt`.
 
+A font loaded from a font file, such as `Fonts/Icons.ttf`, uses the file's name and adds `_ttf` before the other suffixes. For example, `FontCache/Font24Icons_ttf.fnt`.
+
+Projects at [Version 6](../../gum-tool/upgrading/upgrading-file-gumx-version.md#version-6) or later also add a short code made from the file's path, so two font files with the same name in different folders get separate files. For example, `FontCache/Font24Icons_ttf_3fa91c2b.fnt`. The code comes from the path exactly as the `Font` value is written, with `/` and `\` treated the same. Projects below Version 6, and code that runs without a loaded project, keep the name without the code.
+
 For example:
 
 ```csharp

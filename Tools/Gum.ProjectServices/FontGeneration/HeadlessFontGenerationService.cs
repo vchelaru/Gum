@@ -281,6 +281,9 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             if (!string.IsNullOrEmpty(bmfc.FontFile) && !Path.IsPathRooted(bmfc.FontFile))
             {
+                // The cache name's path hash comes from the path as typed (#6007); the absolute path
+                // below depends on where this machine keeps the project.
+                bmfc.FontFileAsReferenced ??= bmfc.FontFile;
                 // A project saved on Windows stores backslashes, which are file-name characters on
                 // macOS/Linux.
                 bmfc.FontFile = Path.GetFullPath(Path.Combine(projectDirectory,

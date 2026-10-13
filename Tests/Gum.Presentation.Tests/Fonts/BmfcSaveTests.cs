@@ -57,6 +57,83 @@ public class BmfcSaveTests
     }
 
     [Fact]
+    public void GetFontCacheFileNameFor_ShouldSeparateSameNamedFiles_WhenIncludingThePathHash()
+    {
+        string icons = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, fontFilePath: "Fonts/Icons.ttf", includePathHash: true);
+        string otherIcons = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, fontFilePath: "Other/Icons.ttf", includePathHash: true);
+
+        icons.ShouldNotBe(otherIcons);
+        icons.ShouldContain("Icons_ttf_");
+        otherIcons.ShouldContain("Icons_ttf_");
+    }
+
+    [Fact]
+    public void GetFontCacheFileNameFor_ShouldIgnoreSlashDirection_WhenIncludingThePathHash()
+    {
+        string forward = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, fontFilePath: "Fonts/Icons.ttf", includePathHash: true);
+        string backward = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, fontFilePath: "Fonts\\Icons.ttf", includePathHash: true);
+
+        forward.ShouldBe(backward);
+    }
+
+    [Fact]
+    public void GetFontCacheFileNameFor_ShouldKeepTheLegacyName_WhenNotIncludingThePathHash()
+    {
+        string legacy = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, fontFilePath: "Fonts/Icons.ttf");
+
+        legacy.Replace('\\', '/').ShouldBe("FontCache/Font18Icons_ttf.fnt");
+    }
+
+    [Fact]
+    public void GetFontCacheFileNameFor_ShouldUseTheFileNameOnly_ForABackslashPathOnEveryOs()
+    {
+        // A backslash is a file-name character on macOS/Linux, so Path.GetFileNameWithoutExtension alone
+        // would have kept "Fonts\Icons" as the stem there.
+        string result = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, fontFilePath: "Fonts\\Icons.ttf");
+
+        result.Replace('\\', '/').ShouldBe("FontCache/Font18Icons_ttf.fnt");
+    }
+
+    [Fact]
+    public void GetFontCacheFileNameFor_ShouldNotChangeSystemFontNames_WhenIncludingThePathHash()
+    {
+        string withHash = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, includePathHash: true);
+        string without = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true);
+
+        withHash.ShouldBe(without);
+    }
+
+    [Fact]
+    public void GetFontCacheFileNameFor_ShouldPutThePathHashBeforeTheStyleSuffixes()
+    {
+        string result = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", outline: 2, useFontSmoothing: false, isItalic: true, isBold: true,
+            fontFilePath: "Fonts/Icons.ttf", includePathHash: true);
+
+        System.Text.RegularExpressions.Regex.IsMatch(
+            result.Replace('\\', '/'), @"^FontCache/Font18Icons_ttf_[0-9a-f]{8}_o2_noSmooth_Italic_Bold\.fnt$").ShouldBeTrue(result);
+    }
+
+    [Fact]
+    public void FontCacheFileName_ShouldIncludeThePathHash_OnlyWhenTheBmfcSaveAsksForIt()
+    {
+        BmfcSave legacy = new BmfcSave { FontFile = "Fonts/Icons.ttf", FontName = "Icons", FontSize = 18 };
+        BmfcSave hashed = new BmfcSave { FontFile = "Fonts/Icons.ttf", FontName = "Icons", FontSize = 18, IncludePathHashInCacheName = true };
+
+        legacy.FontCacheFileName.Replace('\\', '/').ShouldBe("FontCache/Font18Icons_ttf.fnt");
+        hashed.FontCacheFileName.ShouldNotBe(legacy.FontCacheFileName);
+        hashed.FontCacheFileName.Replace('\\', '/').ShouldStartWith("FontCache/Font18Icons_ttf_");
+    }
+
+    [Fact]
     public void IsFontFilePath_ShouldReturnFalse_WhenValueIsEmpty()
     {
         BmfcSave.IsFontFilePath("").ShouldBeFalse();
