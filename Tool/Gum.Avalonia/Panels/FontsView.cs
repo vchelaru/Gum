@@ -44,16 +44,15 @@ public sealed class FontsView : DockPanel
     {
         StackPanel body = new StackPanel { Margin = new Thickness(8, 6, 8, 8), Spacing = 6 };
 
-        TextBlock description = new TextBlock
-        {
-            Text = "The characters baked into each font's atlas. A font with no row of its own uses the default row.",
-            TextWrapping = TextWrapping.Wrap,
-        }.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
-        body.Children.Add(description);
-
         CheckBox characterFile = new CheckBox { Content = "Use Font Character File (.gumfcs)" };
         characterFile.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(FontsViewModel.UseFontCharacterFile)) { Mode = BindingMode.TwoWay });
-        body.Children.Add(characterFile);
+        TextBlock characterFileHint = new TextBlock
+        {
+            Text = "Sets the default ranges to every character in the .gumfcs file next to your project, so you can list the text your game shows instead of typing ranges.",
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(26, 0, 0, 0),
+        }.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
+        body.Children.Add(new StackPanel { Children = { characterFile, characterFileHint } });
 
         body.Children.Add(BuildTableHeader());
 
