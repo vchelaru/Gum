@@ -28,12 +28,12 @@ public class FontReferenceCollectorFontRangesTests : IDisposable
         const string iconRanges = "57344-57400";
 
         StandardElementSave textStandard = TestProjectBuilder.BuildStandard("Text");
-        textStandard.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "Arial", IsFont = true });
-        textStandard.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "FontSize", Value = 18 });
+        textStandard.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "Arial", IsFont = true });
+        textStandard.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "FontSize", Value = 18 });
 
         StandardElementSave iconStandard = TestProjectBuilder.BuildStandard("Sprite");
-        iconStandard.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "IconFont", IsFont = true });
-        iconStandard.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "FontSize", Value = 18 });
+        iconStandard.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "IconFont", IsFont = true });
+        iconStandard.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "FontSize", Value = 18 });
 
         GumProjectSave project = TestProjectBuilder.BuildProject(standards: new[] { textStandard, iconStandard });
         project.FontRanges = globalRanges;
@@ -46,6 +46,42 @@ public class FontReferenceCollectorFontRangesTests : IDisposable
 
         fonts.Values.Single(f => f.FontName == "Arial").Ranges.ShouldBe(globalRanges);
         fonts.Values.Single(f => f.FontName == "IconFont").Ranges.ShouldBe(iconRanges);
+    }
+
+    [Fact]
+    public void Collect_keysAFontFileByItsTypedPath_notByItsFileNameOrASystemFamilyOfTheSameName()
+    {
+        const string globalRanges = "32-126";
+        const string iconRanges = "57344-57400";
+
+        StandardElementSave systemText = BuildTextStandard("Text", "Icons");
+        StandardElementSave fileText = BuildTextStandard("Sprite", "Fonts/Icons.ttf");
+        StandardElementSave otherFileText = BuildTextStandard("NineSlice", "Other/Glyphs.ttf");
+        StandardElementSave backslashText = BuildTextStandard("Container", "Fonts\\Icons.ttf");
+
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            standards: new[] { systemText, fileText, otherFileText, backslashText });
+        project.FontRanges = globalRanges;
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "fonts/icons.TTF", Ranges = iconRanges });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        FontReferenceCollector collector = new FontReferenceCollector(
+            instance => ObjectFinder.Self.GetElementSave(instance));
+        Dictionary<string, BmfcSave> fonts = collector.Collect(
+            project, new[] { systemText, fileText, otherFileText, backslashText });
+
+        fonts.Values.Single(f => f.FontName == "Icons" && f.FontFile == null).Ranges.ShouldBe(globalRanges);
+        fonts.Values.Single(f => f.FontFile == "Other/Glyphs.ttf").Ranges.ShouldBe(globalRanges);
+        fonts.Values.Where(f => f.FontFile == "Fonts/Icons.ttf" || f.FontFile == "Fonts\\Icons.ttf")
+            .ShouldAllBe(f => f.Ranges == iconRanges);
+    }
+
+    private static StandardElementSave BuildTextStandard(string elementName, string font)
+    {
+        StandardElementSave standard = TestProjectBuilder.BuildStandard(elementName);
+        standard.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = font, IsFont = true });
+        standard.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "FontSize", Value = 18 });
+        return standard;
     }
 
     public void Dispose()

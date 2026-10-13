@@ -47,6 +47,31 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
+    public void GetFontRanges_FontFilePaths_MatchIgnoringSlashDirectionAndCase_ButNotByFileNameAlone()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRanges = "32-126";
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts\\Icons.ttf", Ranges = "57344-57400" });
+
+        project.GetFontRanges("fonts/icons.TTF").ShouldBe("57344-57400");
+        project.GetFontRanges("Other/Icons.ttf").ShouldBe("32-126");
+        project.GetFontRanges("Icons").ShouldBe("32-126");
+    }
+
+    [Fact]
+    public void FontRangeEntries_SameFontFileTypedWithDifferentSlashes_IsCollapsedOnSave()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts/Icons.ttf", Ranges = "1-2" });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts\\Icons.ttf", Ranges = "3-4" });
+
+        GumProjectSave loaded = RoundTrip(project);
+
+        loaded.FontRangeEntries.Count.ShouldBe(2);
+        loaded.GetFontRanges("Fonts/Icons.ttf").ShouldBe("1-2");
+    }
+
+    [Fact]
     public void GetFontRanges_NoGlobalEntry_ReturnsNull()
     {
         GumProjectSave project = new GumProjectSave();

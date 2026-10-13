@@ -86,7 +86,12 @@ public class CustomCanvasSize
 /// </summary>
 public class FontRangeEntry
 {
-    /// <summary>The font family this entry applies to. Null or empty is the project-wide default.</summary>
+    /// <summary>
+    /// The font this entry applies to, written the way a Text names it: a system family name
+    /// (<c>Arial</c>) or the font file's project-relative path (<c>Fonts/Icons.ttf</c>). The two never
+    /// share an entry, and a file is identified by its whole path, not its file name. Null or empty is
+    /// the project-wide default.
+    /// </summary>
     public string? FontFamily { get; set; }
 
     /// <summary>Comma-separated codepoints or "start-end" pairs, e.g. "32-126,160-255".</summary>
@@ -258,16 +263,18 @@ public class GumProjectSave
         FontRangeEntries.Any(entry => !IsGlobalFontRangeEntry(entry));
 
     /// <summary>
-    /// The ranges to bake for <paramref name="fontFamily"/>: its own entry, else the global entry.
-    /// Null when neither exists, in which case callers fall back to the default ranges.
+    /// The ranges to bake for <paramref name="fontFamily"/> (a system family name or a font file's
+    /// project-relative path, as a Text names it): its own entry, else the global entry. Null when
+    /// neither exists, in which case callers fall back to the default ranges.
     /// </summary>
     public string? GetFontRanges(string? fontFamily)
     {
         if (!string.IsNullOrWhiteSpace(fontFamily))
         {
+            string key = NormalizeFontRangeKey(fontFamily!);
             foreach (FontRangeEntry entry in FontRangeEntries)
             {
-                if (string.Equals(entry.FontFamily, fontFamily, StringComparison.OrdinalIgnoreCase))
+                if (!IsGlobalFontRangeEntry(entry) && string.Equals(NormalizeFontRangeKey(entry.FontFamily!), key, StringComparison.OrdinalIgnoreCase))
                 {
                     return entry.Ranges;
                 }
@@ -276,6 +283,9 @@ public class GumProjectSave
 
         return FontRangeEntries.FirstOrDefault(entry => IsGlobalFontRangeEntry(entry))?.Ranges;
     }
+
+    // Font file paths are typed with either slash on Windows; both name the same file.
+    private static string NormalizeFontRangeKey(string fontFamily) => fontFamily.Trim().Replace('\\', '/');
 
     private static bool IsGlobalFontRangeEntry(FontRangeEntry entry) => string.IsNullOrWhiteSpace(entry.FontFamily);
 
@@ -287,7 +297,7 @@ public class GumProjectSave
         foreach (FontRangeEntry entry in entries)
         {
             bool isGlobal = IsGlobalFontRangeEntry(entry);
-            if (seenFamilies.Add(isGlobal ? string.Empty : entry.FontFamily!))
+            if (seenFamilies.Add(isGlobal ? string.Empty : NormalizeFontRangeKey(entry.FontFamily!)))
             {
                 result.Add(isGlobal ? new FontRangeEntry { Ranges = entry.Ranges } : entry);
             }
