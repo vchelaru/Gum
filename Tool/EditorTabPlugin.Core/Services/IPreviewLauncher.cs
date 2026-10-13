@@ -55,6 +55,12 @@ public interface IPreviewLauncher
     bool Pin();
 
     /// <summary>
+    /// Closes the running preview and removes its selection file, so the preview doesn't outlive the
+    /// tool. Does nothing when no preview is running.
+    /// </summary>
+    void Close();
+
+    /// <summary>
     /// Releases the pin and sends the tool's current selection to the preview. Does nothing when
     /// the preview isn't pinned.
     /// </summary>

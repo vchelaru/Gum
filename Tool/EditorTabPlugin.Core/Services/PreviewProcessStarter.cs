@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
@@ -20,6 +21,9 @@ public interface IPreviewProcess
 {
     /// <summary>Whether the preview has closed.</summary>
     bool HasExited { get; }
+
+    /// <summary>Closes the preview. Does nothing if it has already exited.</summary>
+    void Close();
 }
 
 /// <inheritdoc cref="IPreviewProcessStarter"/>
@@ -53,5 +57,26 @@ public class PreviewProcessStarter : IPreviewProcessStarter
         }
 
         public bool HasExited => _process.HasExited;
+
+        // Killed rather than asked to close: macOS and Linux have no main window handle to ask, and
+        // the preview holds nothing worth saving.
+        public void Close()
+        {
+            try
+            {
+                if (!_process.HasExited)
+                {
+                    _process.Kill();
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // It exited between the check and the kill.
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // Already closing, or not ours to kill; either way the tool is exiting.
+            }
+        }
     }
 }

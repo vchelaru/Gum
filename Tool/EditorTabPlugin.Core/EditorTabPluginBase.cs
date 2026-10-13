@@ -56,7 +56,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab;
 /// </summary>
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable - This is never disposed so suppressing this
 public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>, IRecipient<SiblingOrderingChangedMessage>,
-    IRecipient<ZoomCanvasToFitSelectionMessage>
+    IRecipient<ZoomCanvasToFitSelectionMessage>, IRecipient<ApplicationTeardownMessage>
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     #region Fields/Properties
@@ -1694,6 +1694,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     // selection is all it takes to make it follow a Performance-tab toggle (issue #4860).
     void IRecipient<SiblingOrderingChangedMessage>.Receive(SiblingOrderingChangedMessage message) =>
         _previewLauncher.PushSelection(_previewLauncher.PinnedElement ?? _selectedState.SelectedElement);
+
+    // The preview is its own process, so it would outlive the tool without this.
+    void IRecipient<ApplicationTeardownMessage>.Receive(ApplicationTeardownMessage message) =>
+        message.OnTearDown(_previewLauncher.Close);
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {

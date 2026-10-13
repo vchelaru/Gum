@@ -134,6 +134,23 @@ public class PreviewLauncher : IPreviewLauncher
     }
 
     /// <inheritdoc/>
+    public void Close()
+    {
+        if (_process == null)
+        {
+            return;
+        }
+
+        if (!_process.HasExited)
+        {
+            _process.Close();
+        }
+        DeleteSelectionFileQuietly();
+        _process = null;
+        SetPinned(null);
+    }
+
+    /// <inheritdoc/>
     public bool Pin()
     {
         if (!IsRunning || _shownElement == null)
