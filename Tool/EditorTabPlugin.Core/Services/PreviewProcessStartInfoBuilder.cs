@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
@@ -17,7 +18,11 @@ public static class PreviewProcessStartInfoBuilder
     /// the original project's own directory, even when <paramref name="projectPath"/> is a temporary
     /// converted copy elsewhere (a .gumx project served by the Native AOT build).
     /// </param>
-    public static ProcessStartInfo Build(string executablePath, string projectPath, string elementName, string selectionFilePath, string contentRootDirectory)
+    /// <param name="parentProcessId">
+    /// The launching tool's process id. GumPreview exits when that process does, so a killed or
+    /// crashed tool doesn't leave the preview open (issue #6011).
+    /// </param>
+    public static ProcessStartInfo Build(string executablePath, string projectPath, string elementName, string selectionFilePath, string contentRootDirectory, int parentProcessId)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo(executablePath)
         {
@@ -31,6 +36,8 @@ public static class PreviewProcessStartInfoBuilder
         startInfo.ArgumentList.Add(selectionFilePath);
         startInfo.ArgumentList.Add("--content-root");
         startInfo.ArgumentList.Add(contentRootDirectory);
+        startInfo.ArgumentList.Add("--parent-pid");
+        startInfo.ArgumentList.Add(parentProcessId.ToString(CultureInfo.InvariantCulture));
         return startInfo;
     }
 }

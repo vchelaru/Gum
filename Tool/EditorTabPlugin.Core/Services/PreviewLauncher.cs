@@ -116,7 +116,7 @@ public class PreviewLauncher : IPreviewLauncher
         PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate: false).Serialize());
 
         ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
-            resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory);
+            resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory, Environment.ProcessId);
 
         try
         {
@@ -131,6 +131,23 @@ public class PreviewLauncher : IPreviewLauncher
 
         _shownElement = element;
         _outputManager.AddOutput($"Launched preview for {element.Name}.");
+    }
+
+    /// <inheritdoc/>
+    public void Close()
+    {
+        if (_process == null)
+        {
+            return;
+        }
+
+        if (!_process.HasExited)
+        {
+            _process.Close();
+        }
+        DeleteSelectionFileQuietly();
+        _process = null;
+        SetPinned(null);
     }
 
     /// <inheritdoc/>

@@ -15,7 +15,8 @@ public class PreviewProcessStartInfoBuilderTests
             projectPath: "/MyGame/GumProject.gumx",
             elementName: "Screens/MainMenu",
             selectionFilePath: "/Temp/GumPreviewSelection_abc.txt",
-            contentRootDirectory: "/MyGame/");
+            contentRootDirectory: "/MyGame/",
+            parentProcessId: 4321);
 
         startInfo.FileName.ShouldBe("/Gum/Preview/GumPreview");
         startInfo.UseShellExecute.ShouldBeFalse();
@@ -25,6 +26,7 @@ public class PreviewProcessStartInfoBuilderTests
             "--element", "Screens/MainMenu",
             "--selection-file", "/Temp/GumPreviewSelection_abc.txt",
             "--content-root", "/MyGame/",
+            "--parent-pid", "4321",
         });
     }
 
@@ -36,7 +38,8 @@ public class PreviewProcessStartInfoBuilderTests
             projectPath: "/My Game Folder/GumProject.gumx",
             elementName: "MainMenu",
             selectionFilePath: "/Temp/sel.txt",
-            contentRootDirectory: "/My Game Folder/");
+            contentRootDirectory: "/My Game Folder/",
+            parentProcessId: 1);
 
         startInfo.ArgumentList[1].ShouldBe("/My Game Folder/GumProject.gumx");
     }
@@ -51,7 +54,8 @@ public class PreviewProcessStartInfoBuilderTests
             projectPath: "/Temp/GumPreviewJson/abc123/GumProject.gumj",
             elementName: "MainMenu",
             selectionFilePath: "/Temp/sel.txt",
-            contentRootDirectory: "/MyGame/");
+            contentRootDirectory: "/MyGame/",
+            parentProcessId: 1);
 
         startInfo.ArgumentList[7].ShouldBe("/MyGame/");
     }

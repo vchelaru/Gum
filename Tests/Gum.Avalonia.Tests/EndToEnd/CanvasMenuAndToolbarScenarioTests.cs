@@ -718,6 +718,42 @@ public class CanvasMenuAndToolbarScenarioTests
     }
 
     [SkippableFact]
+    [Trait("Feature", "CANV-026")]
+    public void ClosingTheTool_ClosesTheRunningPreview()
+    {
+        OnCanvas(canvas =>
+        {
+            canvas.Project.AddScreen("MainMenu");
+            canvas.Tree.Click(canvas.Tree.NodeFor(canvas.Project.AddComponent("Button")));
+            PreviewLauncher launcher = canvas.Plugin.PreviewLauncher;
+            IPreviewProcessStarter originalStarter = launcher.ProcessStarter;
+            StandInPreview preview = new StandInPreview();
+            launcher.ProcessStarter = preview;
+            try
+            {
+                canvas.Input.Click(canvas.PreviewButton);
+                preview.HasExited.ShouldBeFalse();
+
+                List<Action> teardown = new List<Action>();
+                ((IRecipient<ApplicationTeardownMessage>)canvas.Plugin).Receive(new ApplicationTeardownMessage(teardown));
+                foreach (Action action in teardown)
+                {
+                    action();
+                }
+
+                preview.CloseCount.ShouldBe(1);
+                launcher.IsRunning.ShouldBeFalse();
+            }
+            finally
+            {
+                preview.HasExited = true;
+                launcher.ProcessStarter = originalStarter;
+                preview.DeleteSelectionFiles();
+            }
+        });
+    }
+
+    [SkippableFact]
     [Trait("Feature", "CANV-044")]
     public void PinButton_KeepsThePreviewOnItsElement_UntilUnpinned()
     {
@@ -760,6 +796,14 @@ public class CanvasMenuAndToolbarScenarioTests
         public List<ProcessStartInfo> Started { get; } = new List<ProcessStartInfo>();
 
         public bool HasExited { get; set; }
+
+        public int CloseCount { get; private set; }
+
+        public void Close()
+        {
+            CloseCount++;
+            HasExited = true;
+        }
 
         public ResolvedPreviewExecutable? Resolve() => new ResolvedPreviewExecutable("/Preview/GumPreview", IsNativeAot: false);
 

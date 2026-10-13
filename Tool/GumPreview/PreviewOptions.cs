@@ -6,7 +6,7 @@ namespace GumPreview;
 
 /// <summary>
 /// GumPreview's command line. The tool's launcher passes <c>--project</c>, <c>--element</c>,
-/// <c>--selection-file</c> and <c>--content-root</c> (PreviewProcessStartInfoBuilder in
+/// <c>--selection-file</c>, <c>--content-root</c> and <c>--parent-pid</c> (PreviewProcessStartInfoBuilder in
 /// Tool/EditorTabPlugin.Core); <c>--exit-after</c> and <c>--screenshot</c> are for unattended runs
 /// such as the release package smoke test (#5471), and <c>--focus</c>/<c>--type</c> put a control
 /// into a runtime-only state before that capture.
@@ -15,7 +15,7 @@ public sealed class PreviewOptions
 {
     /// <summary>Usage text printed with <see cref="Error"/>.</summary>
     public const string Usage =
-        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>]]";
+        "Usage: GumPreview --project <path to .gumx/.gumj> --element <ScreenOrComponentName> [--selection-file <path>] [--content-root <path>] [--parent-pid <process id>] [--exit-after <seconds> [--screenshot <path.png>]] [--focus <InstanceName> [--type <text>]]";
 
     private PreviewOptions()
     {
@@ -32,6 +32,9 @@ public sealed class PreviewOptions
 
     /// <summary>Where relative content resolves from, when the project is a converted copy elsewhere.</summary>
     public string? ContentRootDirectory { get; private set; }
+
+    /// <summary>The launching tool's process id; the preview exits when that process does.</summary>
+    public int? ParentProcessId { get; private set; }
 
     /// <summary>
     /// When set, the run is unattended: it exits once the project has loaded and a frame has been
@@ -56,6 +59,7 @@ public sealed class PreviewOptions
     {
         PreviewOptions options = new PreviewOptions();
         string? exitAfterText = null;
+        string? parentPidText = null;
         for (int i = 0; i < args.Count; i++)
         {
             bool hasValue = i + 1 < args.Count;
@@ -74,6 +78,10 @@ public sealed class PreviewOptions
             else if (args[i] == "--content-root" && hasValue)
             {
                 options.ContentRootDirectory = args[++i];
+            }
+            else if (args[i] == "--parent-pid" && hasValue)
+            {
+                parentPidText = args[++i];
             }
             else if (args[i] == "--exit-after" && hasValue)
             {
@@ -101,7 +109,24 @@ public sealed class PreviewOptions
         {
             options.Error = "--type needs --focus to name the text box to type into.";
         }
-        else if (exitAfterText != null)
+        else if (parentPidText != null)
+        {
+            if (int.TryParse(parentPidText, NumberStyles.None, CultureInfo.InvariantCulture, out int parentPid) && parentPid > 0)
+            {
+                options.ParentProcessId = parentPid;
+            }
+            else
+            {
+                options.Error = $"--parent-pid needs a process id, not '{parentPidText}'.";
+            }
+        }
+
+        if (options.Error != null)
+        {
+            return options;
+        }
+
+        if (exitAfterText != null)
         {
             if (double.TryParse(exitAfterText, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds) && seconds > 0)
             {

@@ -376,6 +376,52 @@ public class PreviewLauncherTests : IDisposable
         DeleteSelectionFile(starter);
     }
 
+    [Fact]
+    public void Close_WhenAPreviewIsRunning_ClosesItAndDeletesItsSelectionFile()
+    {
+        PreviewLauncher launcher = LaunchShowing(new ScreenSave { Name = "Dialogue" }, out RecordingPreviewStarter starter);
+        List<string> arguments = starter.Started[0].ArgumentList.ToList();
+        string selectionFile = arguments[arguments.IndexOf("--selection-file") + 1];
+
+        launcher.Close();
+
+        starter.CloseCount.ShouldBe(1);
+        launcher.IsRunning.ShouldBeFalse();
+        File.Exists(selectionFile).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Close_WhenAPreviewIsPinned_Unpins()
+    {
+        PreviewLauncher launcher = LaunchShowing(new ScreenSave { Name = "Dialogue" }, out RecordingPreviewStarter starter);
+        launcher.Pin();
+
+        launcher.Close();
+
+        launcher.PinnedElement.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Close_WhenNoPreviewWasLaunched_DoesNothing()
+    {
+        PreviewLauncher launcher = CreateLauncher();
+
+        Should.NotThrow(() => launcher.Close());
+
+        launcher.IsRunning.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Close_WhenThePreviewAlreadyExited_DoesNotCloseItAgain()
+    {
+        PreviewLauncher launcher = LaunchShowing(new ScreenSave { Name = "Dialogue" }, out RecordingPreviewStarter starter);
+        starter.HasExited = true;
+
+        launcher.Close();
+
+        starter.CloseCount.ShouldBe(0);
+    }
+
     private sealed class RecordingPreviewStarter : IPreviewProcessStarter, IPreviewProcess
     {
         private readonly string _executablePath;
@@ -387,7 +433,15 @@ public class PreviewLauncherTests : IDisposable
 
         public List<ProcessStartInfo> Started { get; } = new List<ProcessStartInfo>();
 
-        public bool HasExited => false;
+        public bool HasExited { get; set; }
+
+        public int CloseCount { get; private set; }
+
+        public void Close()
+        {
+            CloseCount++;
+            HasExited = true;
+        }
 
         public ResolvedPreviewExecutable? Resolve() => new ResolvedPreviewExecutable(_executablePath, IsNativeAot: false);
 
