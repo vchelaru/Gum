@@ -9,7 +9,7 @@ public interface IDragDropManager
     IEnumerable<string> ValidTextureExtensions { get; }
 
     /// <summary>
-    /// Valid font file extensions for drag-and-drop operations (e.g., "ttf").
+    /// Valid font file extensions for drag-and-drop operations (e.g., "ttf", "otf", "ttc", "woff"), without the dot.
     /// </summary>
     IEnumerable<string> ValidFontExtensions { get; }
 

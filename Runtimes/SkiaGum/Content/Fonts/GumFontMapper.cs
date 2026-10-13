@@ -11,7 +11,7 @@ namespace SkiaGum.Content.Fonts;
 
 /// <summary>
 /// Resolves <see cref="Style.FontFamily"/> to an <see cref="SKTypeface"/>, consulting a registry
-/// of typefaces loaded from custom .ttf font files before falling back to RichTextKit's
+/// of typefaces loaded from custom font files (.ttf, .otf, .ttc, .woff) before falling back to RichTextKit's
 /// default system-font resolution (<see cref="Topten.RichTextKit.FontMapper.TypefaceFromStyle"/>
 /// -&gt; <see cref="SKTypeface.FromFamilyName(string?)"/>).
 /// <para>
@@ -96,7 +96,7 @@ public class GumFontMapper : FontMapper
             return null;
         }
 
-        SKTypeface? typeface = SKTypeface.FromStream(new MemoryStream(fontData));
+        SKTypeface? typeface = LoadTypeface(fontData);
         if (typeface == null)
         {
             return null;
@@ -106,6 +106,27 @@ public class GumFontMapper : FontMapper
         return fullPath;
     }
 
+    /// <summary>
+    /// Loads <paramref name="fontData"/> as a typeface. SkiaSharp reads TrueType, OpenType and
+    /// collections by content but not WOFF, so a WOFF 1.0 file is unwrapped to its sfnt first and a
+    /// malformed one yields null like any other unreadable font.
+    /// </summary>
+    private static SKTypeface? LoadTypeface(byte[] fontData)
+    {
+        if (WoffConverter.IsWoff(fontData))
+        {
+            try
+            {
+                fontData = WoffConverter.ToSfnt(fontData);
+            }
+            catch (InvalidDataException)
+            {
+                return null;
+            }
+        }
+
+        return SKTypeface.FromStream(new MemoryStream(fontData));
+    }
     /// <summary>
     /// Reads <paramref name="fullPath"/> through <see cref="ToolsUtilities.FileManager.GetStreamForFile"/>,
     /// which asks the stream hook first and falls back to disk, the same order every other Skia
@@ -127,7 +148,7 @@ public class GumFontMapper : FontMapper
     }
 
     /// <summary>
-    /// Registers an in-memory TTF/OTF (<paramref name="fontData"/>) under <paramref name="familyName"/>
+    /// Registers an in-memory TTF/OTF/TTC/WOFF (<paramref name="fontData"/>) under <paramref name="familyName"/>
     /// plus an optional style slot ("Bold"/"Italic"/"BoldItalic", or null for the default cut) and
     /// returns the loaded <see cref="SKTypeface"/>, or null if the data doesn't parse as a font. Mirrors
     /// the KernSmith <c>RegisterFont(familyName, fontData, style)</c> surface XNA-like/raylib themes call
@@ -140,7 +161,7 @@ public class GumFontMapper : FontMapper
     /// </summary>
     public static SKTypeface? RegisterFont(string familyName, byte[] fontData, string? style = null)
     {
-        SKTypeface? typeface = SKTypeface.FromStream(new MemoryStream(fontData));
+        SKTypeface? typeface = LoadTypeface(fontData);
         if (typeface == null)
         {
             return null;
@@ -155,8 +176,8 @@ public class GumFontMapper : FontMapper
     /// properties. <see cref="BmfcSave.ResolveTtfSourcePath"/> is the single backend-agnostic
     /// "which property is a font file" decision (also used by XNA-like/raylib's bake path), so
     /// Skia's and XNA-like's font-file detection can't drift out of sync (#3670/#3703). When it
-    /// resolves a .ttf path, that file is registered here and its key returned. When
-    /// <paramref name="useCustomFont"/> is set but <paramref name="customFontFile"/> isn't a .ttf
+    /// resolves a font-file path, that file is registered here and its key returned. When
+    /// <paramref name="useCustomFont"/> is set but <paramref name="customFontFile"/> isn't a font file
     /// (e.g. the XNA-like/raylib .fnt baked-atlas format, which Skia has no renderer for), returns
     /// null -- unsupported, not silently wrong. Otherwise returns <paramref name="font"/> unchanged
     /// (a plain system family name).

@@ -121,7 +121,10 @@ public class DragDropManager : IDragDropManager
     {
         get
         {
-            yield return "ttf";
+            foreach (string extension in global::RenderingLibrary.Graphics.Fonts.BmfcSave.FontFileExtensions)
+            {
+                yield return extension.TrimStart('.');
+            }
         }
     }
 

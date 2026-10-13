@@ -60,6 +60,48 @@ public class FontReferenceCollectorCustomFontTests : IDisposable
         only.FontName.ShouldBe("dogica");
     }
 
+    [Theory]
+    [InlineData("Fonts/dogica.otf", "dogica")]
+    [InlineData("Fonts/dogica.ttc", "dogica")]
+    [InlineData("Fonts/dogica.woff", "dogica")]
+    public void Collect_generates_the_custom_font_file_for_every_rasterizable_format(string customFontFile, string expectedName)
+    {
+        StandardElementSave textStandard = BuildTextStandard(
+            useCustomFont: true,
+            customFontFile: customFontFile,
+            font: "Dogica Pixel",
+            fontSize: 8);
+
+        GumProjectSave project = TestProjectBuilder.BuildProject(standards: new[] { textStandard });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Dictionary<string, BmfcSave> fonts = Collect(project, textStandard);
+
+        BmfcSave only = fonts.Values.ShouldHaveSingleItem();
+        only.FontFile.ShouldBe(customFontFile);
+        only.FontName.ShouldBe(expectedName);
+    }
+
+    [Theory]
+    [InlineData("Fonts/dogica.otf")]
+    [InlineData("Fonts/dogica.ttc")]
+    [InlineData("Fonts/dogica.woff")]
+    public void Collect_generates_a_Font_value_that_is_a_font_file_path_for_every_rasterizable_format(string fontFile)
+    {
+        StandardElementSave textStandard = BuildTextStandard(
+            useCustomFont: false,
+            customFontFile: "",
+            font: fontFile,
+            fontSize: 8);
+
+        GumProjectSave project = TestProjectBuilder.BuildProject(standards: new[] { textStandard });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        Dictionary<string, BmfcSave> fonts = Collect(project, textStandard);
+
+        fonts.Values.ShouldHaveSingleItem().FontFile.ShouldBe(fontFile);
+    }
+
     [Fact]
     public void Collect_generates_the_system_font_for_a_state_that_turns_UseCustomFont_back_off()
     {

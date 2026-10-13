@@ -1279,6 +1279,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         return true;
     }
 
+    // One predicate for every font-vs-texture decision a drop makes, so no format is handled by only some of them.
+    private static bool IsFontFile(string fileName) => global::RenderingLibrary.Graphics.Fonts.BmfcSave.IsFontFilePath(fileName);
+
     private string? GetBaseTypeForExtension(string fileName)
     {
         string extension = FileManager.GetExtension(fileName);
@@ -1292,7 +1295,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return null;
         }
 
-        if (extension == "ttf")
+        if (IsFontFile(fileName))
         {
             return "Text";
         }
@@ -1363,8 +1366,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // see if it's over the component:
         IPositionedSizedObject? ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
 
-        string extension = FileManager.GetExtension(files[0]);
-        bool isFontFile = extension == "ttf";
+        bool isFontFile = IsFontFile(files[0]);
 
         if (ipsoOver?.Tag is ComponentSave component)
         {
@@ -1469,8 +1471,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        string extension = FileManager.GetExtension(files[0]);
-        bool isFontFile = extension == "ttf";
+        bool isFontFile = IsFontFile(files[0]);
 
         InstanceSave? instance = isFontFile
             ? FindDropTargetInstance(worldX, worldY, _fileDropTargetFilter.CanReceiveFont)

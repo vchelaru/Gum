@@ -85,4 +85,34 @@ public class BmfcSaveTests
     {
         BmfcSave.IsFontFilePath("fonts/MyFont.ttf").ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData("fonts/MyFont.otf")]
+    [InlineData("fonts/MyFont.OTF")]
+    [InlineData("fonts/MyFont.ttc")]
+    [InlineData("fonts/MyFont.woff")]
+    [InlineData("fonts/MyFont.WOFF")]
+    public void IsFontFilePath_ShouldReturnTrue_WhenValueIsOtherSupportedFontFormat(string value)
+    {
+        BmfcSave.IsFontFilePath(value).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("fonts/MyFont.fnt")]
+    [InlineData("fonts/MyFont.woff2")]
+    [InlineData("fonts/MyFont.png")]
+    [InlineData("fonts/ttf")]
+    public void IsFontFilePath_ShouldReturnFalse_WhenValueIsNotARasterizableFontFile(string value)
+    {
+        BmfcSave.IsFontFilePath(value).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("fonts/MyFont.otf")]
+    [InlineData("fonts/MyFont.woff")]
+    public void ResolveTtfSourcePath_ShouldReturnPath_WhenCustomFontFileIsOtherSupportedFormat(string customFontFile)
+    {
+        BmfcSave.ResolveTtfSourcePath(useCustomFont: true, customFontFile, font: "Arial")
+            .ShouldBe(customFontFile);
+    }
 }

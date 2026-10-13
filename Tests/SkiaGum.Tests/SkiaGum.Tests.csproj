@@ -30,6 +30,10 @@
 		<Using Include="Xunit" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
+	</ItemGroup>
+
 	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->
 	<ItemGroup>
 		<None Include="GoldenImages\Baselines\**\*.png">

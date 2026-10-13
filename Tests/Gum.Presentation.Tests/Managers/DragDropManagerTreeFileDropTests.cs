@@ -11,6 +11,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using Moq;
+using Shouldly;
 using ToolsUtilities;
 using Xunit;
 
@@ -37,6 +38,29 @@ public class DragDropManagerTreeFileDropTests
         manager.OnFilesDroppedInTreeView(files, screensNode.Object);
 
         importLogic.Verify(logic => logic.ImportScreen(It.IsAny<FilePath>(), null, true), Times.Exactly(expectedImports));
+    }
+
+    [Theory]
+    [InlineData("fonts/MyFont.ttf")]
+    [InlineData("fonts/MyFont.otf")]
+    [InlineData("fonts/MyFont.OTF")]
+    [InlineData("fonts/MyFont.ttc")]
+    [InlineData("fonts/MyFont.woff")]
+    public void IsValidExtensionForFileDrop_AcceptsEveryRasterizableFontFormat(string file)
+    {
+        DragDropManager manager = CreateManager(Mock.Of<IPluginManager>(), Mock.Of<IImportLogic>());
+
+        manager.IsValidExtensionForFileDrop(file).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("fonts/MyFont.woff2")]
+    [InlineData("fonts/MyFont.txt")]
+    public void IsValidExtensionForFileDrop_RejectsFontFormatsKernSmithCannotRead(string file)
+    {
+        DragDropManager manager = CreateManager(Mock.Of<IPluginManager>(), Mock.Of<IImportLogic>());
+
+        manager.IsValidExtensionForFileDrop(file).ShouldBeFalse();
     }
 
     private static DragDropManager CreateManager(IPluginManager pluginManager, IImportLogic importLogic) =>

@@ -227,7 +227,7 @@ public class VariableSave
     /// <summary>
     /// Transient, runtime-only display hint shown in the variable grid for this variable's
     /// row. Populated by tool/plugin code based on the current project state — e.g.
-    /// <c>"bmfont cannot generate from .ttf files. Switch to KernSmith in Project Properties."</c>
+    /// <c>"bmfont cannot generate from font files. Switch to KernSmith in Project Properties."</c>
     /// shown when the active font configuration is incompatible. Not serialized.
     /// </summary>
     /// <remarks>

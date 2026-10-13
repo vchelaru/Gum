@@ -368,6 +368,31 @@ public class DragDropScenarioTests
         });
     }
 
+    [SkippableTheory]
+    [InlineData("Hero.ttf")]
+    [InlineData("Hero.otf")]
+    [InlineData("Hero.ttc")]
+    [InlineData("Hero.woff")]
+    public void FontFileDroppedOnTheCanvas_AddsATextShowingThatFont_ForEveryFontFormat(string fontFileName)
+    {
+        // Every font format the generator can rasterize drops the same way a .ttf does.
+        Skip.IfNot(CanvasHarness.CanRun, CanvasHarness.SkipReason);
+        CanvasHarness.OnUiThread(() =>
+        {
+            using CanvasHarness canvas = new CanvasHarness();
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            string fontFile = Path.Combine(canvas.Project.ProjectFolder, fontFileName);
+            File.WriteAllBytes(fontFile, new byte[] { 0, 1, 0, 0 });
+
+            canvas.DropOnCanvas(canvas.WindowPointOf(120, 80), FileDrop(fontFile)).ShouldBe(DragDropEffects.Copy);
+
+            InstanceSave text = button.Instances.SingleOrDefault(instance => instance.BaseType == "Text")
+                ?? throw new InvalidOperationException($"The drop added no text. Output: {canvas.Tree.OutputWritten}; {canvas.Describe()}");
+            canvas.SavedValue(button, $"{text.Name}.Font").ShouldBe(fontFileName);
+        });
+    }
+
     #endregion
 
     // What a file manager puts in its drag.

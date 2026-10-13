@@ -39,4 +39,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
+  </ItemGroup>
+
 </Project>

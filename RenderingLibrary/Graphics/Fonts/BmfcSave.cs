@@ -209,17 +209,27 @@ public class BmfcSave
         _additionalRanges.Clear();
     }
 
+    private static readonly string[] fontFileExtensions = { ".ttf", ".otf", ".ttc", ".woff" };
+
     /// <summary>
-    /// Returns whether the given font value represents a .ttf font file path
-    /// rather than a system font family name.
+    /// The extensions (lowercase, with the leading dot) <see cref="IsFontFilePath"/> accepts. The
+    /// tool's file pickers, drag-drop and import read this list so that every font format behaves like .ttf.
+    /// </summary>
+    public static IReadOnlyList<string> FontFileExtensions => fontFileExtensions;
+
+    /// <summary>
+    /// Returns whether the given font value represents a rasterizable font file path
+    /// (.ttf, .otf, .ttc or .woff) rather than a system font family name.
     /// </summary>
     /// <remarks>
     /// This is a pure suffix check, not a path-shape check -- a bare filename with no directory
     /// (e.g. "MyFont.ttf") counts as a file path just as much as "fonts/MyFont.ttf" does. There is
-    /// no slash/path-separator detection involved.
+    /// no slash/path-separator detection involved. A pre-baked ".fnt" is deliberately not a match.
+    /// The tool and KernSmith read all four formats; a runtime whose rasterizer cannot read one
+    /// (SkiaSharp 4.x loads .ttf/.otf/.ttc but not .woff) falls back to the default font.
     /// </remarks>
     /// <param name="fontValue">The font value to check (e.g., "Arial" or "fonts/MyFont.ttf").</param>
-    /// <returns>True if the value ends with ".ttf" (case-insensitive); false if null, empty, or not a .ttf path.</returns>
+    /// <returns>True if the value ends with a supported font extension (case-insensitive); false if null, empty, or anything else.</returns>
     public static bool IsFontFilePath(string? fontValue)
     {
         if(string.IsNullOrEmpty(fontValue))
@@ -227,7 +237,15 @@ public class BmfcSave
             return false;
         }
 
-        return fontValue.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase);
+        foreach (string extension in fontFileExtensions)
+        {
+            if (fontValue.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
