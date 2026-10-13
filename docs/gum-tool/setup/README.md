@@ -106,7 +106,7 @@ Available in October 2026, or now if building Gum from source.
 
 ## Fonts on macOS and Linux
 
-Gum generates bitmap fonts with KernSmith on every operating system. A project whose **Font Generator** is set to **BMFont** still opens and generates fonts on macOS and Linux, but Gum uses KernSmith there, because BMFont only runs on Windows. The Font Generator property is read-only in the **Fonts** tab on those systems. See [Font Generator](../fonts.md#font-generator) for how the two generators differ.
+Gum generates bitmap fonts with KernSmith on every operating system. A project whose **Font Generator** is set to **BMFont** still opens and generates fonts on macOS and Linux, but Gum uses KernSmith there, because BMFont only runs on Windows. The Font Generator property is read-only in the **Font Settings** tab on those systems. See [Font Generator](../fonts.md#font-generator) for how the two generators differ.
 
 ## Settings
 

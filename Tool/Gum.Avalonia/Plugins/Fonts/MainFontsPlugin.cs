@@ -17,7 +17,7 @@ using ToolsUtilities;
 namespace Gum.Avalonia.Plugins.Fonts;
 
 /// <summary>
-/// The Fonts tab (Edit > Fonts): the character ranges per font and the font generation settings.
+/// The Font Settings tab (Edit > Font Settings): the character ranges per font and the font generation settings.
 /// Keeps <see cref="FontsViewModel"/> in step with the loaded project and hands each change to
 /// <see cref="FontsChangeLogic"/>, and keeps the project-wide ranges in step with the project's
 /// .gumfcs font character file while one is in use.
@@ -53,7 +53,7 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
     }
 
     /// <inheritdoc/>
-    public override string FriendlyName => "Fonts";
+    public override string FriendlyName => "Font Settings";
 
     /// <inheritdoc/>
     public override Version Version => new Version();
@@ -61,7 +61,7 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
     /// <inheritdoc/>
     public override void StartUp()
     {
-        AddMenuEntry(HandleFontsClicked, "Edit", "Fonts");
+        AddMenuEntry(HandleFontsClicked, "Edit", "Font Settings");
 
         _changeLogic = new FontsChangeLogic(
             _fontManager,
@@ -79,7 +79,7 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
         this.ReactToFileChanged += HandleFileChanged;
 
         // The head resolves the view model to its view (TabViewRegistry).
-        _pluginTab = _tabManager.AddControl(_viewModel, "Fonts");
+        _pluginTab = _tabManager.AddControl(_viewModel, "Font Settings");
         _pluginTab.Hide();
     }
 
@@ -115,7 +115,7 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
         }
         catch (Exception ex)
         {
-            _guiCommands.PrintOutput($"Error showing the Fonts tab:\n{ex}");
+            _guiCommands.PrintOutput($"Error showing the Font Settings tab:\n{ex}");
         }
     }
 

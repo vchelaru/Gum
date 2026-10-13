@@ -60,7 +60,7 @@ protected override void Initialize()
 
 ## Localization and Font Ranges
 
-Localized games may need an extended font range. If using the Gum tool, see the [Fonts](../gum-tool/fonts.md#character-ranges) page for information on font ranges.
+Localized games may need an extended font range. If using the Gum tool, see the [Font Settings](../gum-tool/fonts.md#character-ranges) page for information on font ranges.
 
 ## Localization in a Code-Only Project
 

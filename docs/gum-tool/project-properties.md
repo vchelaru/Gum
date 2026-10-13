@@ -37,8 +37,8 @@ Localization can be added to a Gum project through the Localization File file pi
 
 ## Fonts
 
-Character ranges, the font generator, and font spacing are set in the Fonts tab, which you open with Edit -> Fonts. See the [Fonts page](fonts.md).
+Character ranges, the font generator, and font spacing are set in the Font Settings tab, which you open with Edit -> Font Settings. See the [Font Settings page](fonts.md).
 
 {% hint style="info" %}
-These settings moved from the Project Properties tab to the Fonts tab in November 2026, or now if building Gum from source.
+These settings moved from the Project Properties tab to the Font Settings tab in November 2026, or now if building Gum from source.
 {% endhint %}

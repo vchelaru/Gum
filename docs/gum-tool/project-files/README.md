@@ -186,7 +186,7 @@ A project file can hold a character range for one specific font, in the `FontRan
 
 An entry applies only when a Text uses the font it names. A font file matches by its whole path, so `Fonts/Icon.ttf` does not match a Text that uses `Fonts/Icons.ttf`, and an absolute path does not match a relative one. The direction of the slashes does not matter. An installed font matches by family name, ignoring letter case.
 
-When no Text uses the font an entry names, the Gum tool reports a **GUM0010** warning in the [Errors tab](../editor-tab.md), naming the entry. The entry has no effect until it matches a font, so a typo looks the same as the setting doing nothing. To resolve it, correct the `FontFamily` to match the name or path the Text uses, or remove the entry. The [Fonts](../fonts.md#ranges-for-one-font) tab edits these entries and shows the same warning on the row. `gumcli check` reports GUM0010 too.
+When no Text uses the font an entry names, the Gum tool reports a **GUM0010** warning in the [Errors tab](../editor-tab.md), naming the entry. The entry has no effect until it matches a font, so a typo looks the same as the setting doing nothing. To resolve it, correct the `FontFamily` to match the name or path the Text uses, or remove the entry. The [Font Settings](../fonts.md#ranges-for-one-font) tab edits these entries and shows the same warning on the row. `gumcli check` reports GUM0010 too.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.
@@ -196,7 +196,7 @@ Available in November 2026, or now if building Gum from source.
 
 A font range is a comma separated list of characters and ranges, such as `32-126,160-255`. Each item is either a single character code or a `start-end` pair, written as numbers with no spaces. A value like `50-40`, where the end comes before the start, `abc`, or `32-126, 160-255` with a space is not valid.
 
-When a range is not valid, the font is still created but without the characters you asked for. The BMFont font generator uses the default range instead, and the KernSmith font generator skips each part it cannot read, which can leave the font with no characters from that entry. The Gum tool reports a **GUM0011** warning in the [Errors tab](../editor-tab.md), naming the font and the range it found. The project-wide range is checked as well as each font's own entry. To resolve it, correct the range in the [Fonts](../fonts.md#character-ranges) tab or in the project file. `gumcli check` reports GUM0011 too.
+When a range is not valid, the font is still created but without the characters you asked for. The BMFont font generator uses the default range instead, and the KernSmith font generator skips each part it cannot read, which can leave the font with no characters from that entry. The Gum tool reports a **GUM0011** warning in the [Errors tab](../editor-tab.md), naming the font and the range it found. The project-wide range is checked as well as each font's own entry. To resolve it, correct the range in the [Font Settings](../fonts.md#character-ranges) tab or in the project file. `gumcli check` reports GUM0011 too.
 
 {% hint style="info" %}
 Available in November 2026, or now if building Gum from source.

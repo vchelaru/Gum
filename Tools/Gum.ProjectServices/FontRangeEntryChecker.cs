@@ -11,7 +11,7 @@ namespace Gum.ProjectServices;
 /// <summary>
 /// Which fonts a project's Texts use, and which per-font range entries
 /// (<see cref="GumProjectSave.FontRangeEntries"/>) match none of them. Shared by the Errors checks
-/// (GUM0010) and the Fonts tab. Reads <see cref="ObjectFinder.Self"/>, so the project must be set on it.
+/// (GUM0010) and the Font Settings tab. Reads <see cref="ObjectFinder.Self"/>, so the project must be set on it.
 /// </summary>
 public static class FontRangeEntryChecker
 {

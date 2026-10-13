@@ -200,7 +200,7 @@ public class FormsThemeImporter : IFormsThemeImporter
 
         // Fonts already cached were generated without the theme's characters. Clearing the cache
         // lets the reload that follows regenerate them with the widened ranges - the same thing the
-        // Fonts tab does when a font range changes.
+        // Font Settings tab does when a font range changes.
         if (diff.FontRangesChange != null)
         {
             TryClearFontCache();

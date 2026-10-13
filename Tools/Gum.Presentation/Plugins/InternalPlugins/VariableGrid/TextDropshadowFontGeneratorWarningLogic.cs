@@ -15,7 +15,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class TextDropshadowFontGeneratorWarningLogic
 {
     private const string WarningText =
-        "bmfont cannot bake dropshadows into the font atlas. Switch to KernSmith in Edit > Fonts.";
+        "bmfont cannot bake dropshadows into the font atlas. Switch to KernSmith in Edit > Font Settings.";
 
     /// <summary>
     /// Returns the warning text to show under Text's HasDropshadow variable when the project's

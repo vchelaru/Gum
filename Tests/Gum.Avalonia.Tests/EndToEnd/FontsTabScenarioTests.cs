@@ -18,7 +18,7 @@ using WpfDataUi.DataTypes;
 namespace Gum.Avalonia.Tests.EndToEnd;
 
 /// <summary>
-/// The Fonts tab (Edit > Fonts) driven with simulated input over a real project: the ranges table, the
+/// The Font Settings tab (Edit > Font Settings) driven with simulated input over a real project: the ranges table, the
 /// font character file, and the generation settings each save into the project file.
 /// </summary>
 public class FontsTabScenarioTests
@@ -27,7 +27,7 @@ public class FontsTabScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "EDIT-013")]
-    public void EditFonts_OpensTheFontsTab_ShowingTheProjectsRanges()
+    public void EditFontSettings_OpensTheTab_ShowingTheProjectsRanges()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         using FontsTab fonts = new FontsTab(tree);
@@ -162,7 +162,7 @@ public class FontsTabScenarioTests
     private static GumProjectSave SavedProject(ProjectTreeHarness tree) =>
         GumProjectSave.Load(tree.Project.ProjectFilePath, out _) ?? throw new InvalidOperationException("The project file did not load.");
 
-    /// <summary>The head's Fonts tab, opened with Edit > Fonts and hosted in a window of its own.</summary>
+    /// <summary>The head's Font Settings tab, opened with Edit > Font Settings and hosted in a window of its own.</summary>
     private sealed class FontsTab : IDisposable
     {
         private readonly ProjectTreeHarness _tree;
@@ -170,8 +170,8 @@ public class FontsTabScenarioTests
         public FontsTab(ProjectTreeHarness tree)
         {
             _tree = tree;
-            tree.PickMainMenu("Edit", "Fonts");
-            Tab = ((AvaloniaTabManager)TestAppBuilder.Services.GetRequiredService<ITabManager>()).AllTabs.Single(candidate => candidate.Title == "Fonts");
+            tree.PickMainMenu("Edit", "Font Settings");
+            Tab = ((AvaloniaTabManager)TestAppBuilder.Services.GetRequiredService<ITabManager>()).AllTabs.Single(candidate => candidate.Title == "Font Settings");
             Tab.IsVisible.ShouldBeTrue();
             View = (FontsView)Tab.Content;
             ViewModel = (FontsViewModel)View.DataContext!;
@@ -221,7 +221,7 @@ public class FontsTabScenarioTests
         {
             Settle();
             InstanceMember member = View.SettingsGrid.Categories.SelectMany(category => category.Members).FirstOrDefault(candidate => candidate.Name == name)
-                ?? throw new InvalidOperationException($"The Fonts grid has no {name} row.");
+                ?? throw new InvalidOperationException($"The Font Settings grid has no {name} row.");
             SingleDataUiContainer row = View.SettingsGrid.LiveContainers.FirstOrDefault(candidate => candidate.Member == member)
                 ?? throw new InvalidOperationException($"The {name} row has no live editor.");
             row.BringIntoView();

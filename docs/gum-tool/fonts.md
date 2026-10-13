@@ -1,17 +1,17 @@
-# Fonts
+# Font Settings
 
 ## Introduction
 
-The Fonts tab controls how Gum bakes bitmap fonts for the whole project: which characters each font includes, which program generates the font files, and how the letters are spaced. These settings used to sit in the Project Properties tab.
+The Font Settings tab controls how Gum bakes bitmap fonts for the whole project: which characters each font includes, which program generates the font files, and how the letters are spaced. These settings used to sit in the Project Properties tab.
 
-To open the Fonts tab, select Edit -> Fonts.
+To open the Font Settings tab, select Edit -> Font Settings.
 
 {% hint style="warning" %}
-Screenshot needed: the Fonts tab showing the Character Ranges table and the Generation settings.
+Screenshot needed: the Font Settings tab showing the Character Ranges table and the Generation settings.
 {% endhint %}
 
 {% hint style="info" %}
-The Fonts tab is available in November 2026, or now if building Gum from source. Before then, these settings are in the Project Properties tab and a project can hold only one Font Ranges value.
+The Font Settings tab is available in November 2026, or now if building Gum from source. Before then, these settings are in the Project Properties tab and a project can hold only one Font Ranges value.
 {% endhint %}
 
 ## Character Ranges
@@ -90,7 +90,7 @@ The Font Generator property controls which tool Gum uses to bake `.fnt` files an
 * **KernSmith**: a standalone font generator that Gum integrates with. This is the default for new projects.
 * **BMFont**: [Bitmap Font Generator](https://www.angelcode.com/products/bmfont/), a separate external tool.
 
-You can change the setting at any time in the **Fonts** tab. The next FontCache rebuild uses the chosen generator.
+You can change the setting at any time in the **Font Settings** tab. The next FontCache rebuild uses the chosen generator.
 
 BMFont runs only on Windows. On macOS and Linux, Gum generates fonts with KernSmith even when a project is set to BMFont, and the Font Generator property is read-only. The project keeps its BMFont setting, so fonts generated on Windows still use BMFont.
 

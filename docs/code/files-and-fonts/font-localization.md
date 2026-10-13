@@ -13,7 +13,7 @@ The goal of font localization is to ship only the glyphs the player needs for th
 ## Today
 
 * **The tool bakes a single union FontCache.** When you edit a Gum project that contains text in multiple languages, the tool generates one `.fnt` per `(font, size, style)` combination, containing the union of every character used anywhere in the project. A Korean-only player downloads Japanese kanji glyphs in their atlas, and vice versa.
-* **Character ranges are per font, not per locale.** You can give each font its own range, so a CJK font can bake CJK characters while a Latin font keeps the default (see [Ranges for One Font](../../gum-tool/fonts.md#ranges-for-one-font)). A single font still bakes the same characters for every locale.
+* **Character ranges are per font, not per locale.** You can give each font its own range, so a CJK font can bake CJK characters while a Latin font keeps the default (see [Ranges for One Font](../../gum-tool/fonts.md#ranges-for-one-font) in Font Settings). A single font still bakes the same characters for every locale.
 * **KernSmith generation is per-`TextRuntime`.** A `TextRuntime` whose `Text` contains both Korean and Japanese glyphs causes KernSmith to generate an atlas covering whatever charset is currently configured for that font. There's no built-in concept of "this atlas is for Korean only."
 * **There is no opt-out for FontCache generation.** Even projects that intend to ship pure KernSmith get `.fnt` files baked by the tool.
 
