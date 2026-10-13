@@ -291,21 +291,40 @@ public class GumProjectSave
     /// </summary>
     public string? GetFontRanges(string? fontFamily, out bool isFontSpecific)
     {
-        if (!string.IsNullOrWhiteSpace(fontFamily))
+        FontRangeEntry? fontEntry = FindFontSpecificRangeEntry(fontFamily);
+        if (fontEntry != null)
         {
-            string key = NormalizeFontRangeKey(fontFamily!);
-            foreach (FontRangeEntry entry in FontRangeEntries)
-            {
-                if (!IsGlobalFontRangeEntry(entry) && string.Equals(NormalizeFontRangeKey(entry.FontFamily!), key, StringComparison.Ordinal))
-                {
-                    isFontSpecific = true;
-                    return entry.Ranges;
-                }
-            }
+            isFontSpecific = true;
+            return fontEntry.Ranges;
         }
 
         isFontSpecific = false;
         return FontRangeEntries.FirstOrDefault(entry => IsGlobalFontRangeEntry(entry))?.Ranges;
+    }
+
+    /// <summary>
+    /// The non-global entry that applies to <paramref name="fontFamily"/> (a system family name or a
+    /// font file's project-relative path, as a Text names it), or null when the font has no entry of
+    /// its own. The same match <see cref="GetFontRanges(string?, out bool)"/> uses, exposed so a check
+    /// can tell which entries a project's fonts actually reach.
+    /// </summary>
+    public FontRangeEntry? FindFontSpecificRangeEntry(string? fontFamily)
+    {
+        if (string.IsNullOrWhiteSpace(fontFamily))
+        {
+            return null;
+        }
+
+        string key = NormalizeFontRangeKey(fontFamily!);
+        foreach (FontRangeEntry entry in FontRangeEntries)
+        {
+            if (!IsGlobalFontRangeEntry(entry) && string.Equals(NormalizeFontRangeKey(entry.FontFamily!), key, StringComparison.Ordinal))
+            {
+                return entry;
+            }
+        }
+
+        return null;
     }
 
     // Canonical form for comparing entries with an ordinal comparison. Slash direction never matters.

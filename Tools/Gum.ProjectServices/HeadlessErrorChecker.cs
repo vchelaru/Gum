@@ -7,6 +7,7 @@ using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
 using GumRuntime;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -92,6 +93,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 errors.AddRange(GetErrorsForInternal(standard, project, caseMismatchPaths));
             }
             errors.AddRange(GetProjectFileCaseMismatchErrors(project, caseMismatchPaths));
+            errors.AddRange(GetFontRangeEntryErrors(project));
         }
         finally
         {
@@ -117,7 +119,9 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 GetMissingSourceFileErrorsFor(element, project, caseMismatchPaths);
                 GetMissingExternalFileErrorsFor(element, project, caseMismatchPaths);
             }
-            return GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
+            List<ErrorResult> errors = GetProjectFileCaseMismatchErrors(project, caseMismatchPaths);
+            errors.AddRange(GetFontRangeEntryErrors(project));
+            return errors;
         }
         finally
         {
@@ -975,6 +979,76 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             {
                 errors.Add(caseMismatch);
             }
+        }
+
+        return errors;
+    }
+
+    #endregion
+
+    #region GUM0010 / GUM0011 — Font range entries that match no font or hold an invalid range
+
+    /// <summary>
+    /// Flags <see cref="GumProjectSave.FontRangeEntries"/> that do nothing. An entry that matches no
+    /// font a Text uses (GUM0010) and an entry whose range the font generators reject and replace with
+    /// the default (GUM0011) are otherwise silent, so a typo in a hand-edited project looks like the
+    /// setting having no effect. The font collection behind GUM0010 only runs when a font-specific
+    /// entry exists.
+    /// </summary>
+    private static List<ErrorResult> GetFontRangeEntryErrors(GumProjectSave project)
+    {
+        var errors = new List<ErrorResult>();
+
+        foreach (FontRangeEntry entry in project.FontRangeEntries)
+        {
+            if (!BmfcSave.GetIfIsValidRange(entry.Ranges))
+            {
+                string owner = string.IsNullOrWhiteSpace(entry.FontFamily)
+                    ? "The project-wide font range"
+                    : $"The font range for \"{entry.FontFamily}\"";
+                errors.Add(new ErrorResult
+                {
+                    ElementName = "(project)",
+                    Code = "GUM0011",
+                    Severity = ErrorSeverity.Warning,
+                    Message = $"{owner} is \"{entry.Ranges}\", which is not a valid range, so the default " +
+                        $"{BmfcSave.GetEffectiveDefaultRanges()} is baked instead. Use comma-separated codepoints " +
+                        "or start-end pairs with no spaces, such as 32-126,160-255."
+                });
+            }
+        }
+
+        List<FontRangeEntry> fontEntries = project.FontRangeEntries
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.FontFamily))
+            .ToList();
+        if (fontEntries.Count == 0)
+        {
+            return errors;
+        }
+
+        var collector = new FontReferenceCollector(instance => ObjectFinder.Self.GetElementSave(instance));
+        var reachedEntries = new HashSet<FontRangeEntry>();
+        foreach (BmfcSave font in collector.Collect(project, project.AllElements).Values)
+        {
+            FontRangeEntry? reached = project.FindFontSpecificRangeEntry(font.FontFile ?? font.FontName);
+            if (reached != null)
+            {
+                reachedEntries.Add(reached);
+            }
+        }
+
+        foreach (FontRangeEntry entry in fontEntries.Where(entry => !reachedEntries.Contains(entry)))
+        {
+            errors.Add(new ErrorResult
+            {
+                ElementName = "(project)",
+                Code = "GUM0010",
+                Severity = ErrorSeverity.Warning,
+                Message = $"The font range entry for \"{entry.FontFamily}\" matches no font in the project, so it " +
+                    "never applies. A system font matches by family name ignoring case, and a font file matches by its " +
+                    "project-relative path exactly as a Text names it. Fonts reached only through a style category " +
+                    "state are not checked."
+            });
         }
 
         return errors;
