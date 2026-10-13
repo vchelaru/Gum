@@ -1012,26 +1012,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         }
         catch (Exception e)
         {
-            string error = "Error loading plugins\n";
-            if (e is ReflectionTypeLoadException typeLoadException)
-            {
-                error += "Error is a reflection type load exception\n";
-                var loaderExceptions = typeLoadException.LoaderExceptions;
-
-                foreach (var loaderException in loaderExceptions)
-                {
-                    error += "\n" + loaderException?.ToString();
-                }
-            }
-            else
-            {
-                error += "\n" + e.Message;
-
-                if (e.InnerException != null)
-                {
-                    error += "\n Inner Exception:\n" + e.InnerException.Message;
-                }
-            }
+            string error = PluginLoadErrorMessage.Build(
+                e,
+                Environment.ProcessPath ?? "(unknown)",
+                PluginFolder,
+                typeof(PluginManager).Assembly.Location);
             _dialogService.ShowMessage(error);
 
             instance.Plugins = new List<PluginBase>();
