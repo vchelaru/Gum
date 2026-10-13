@@ -396,6 +396,15 @@ public class RecursiveVariableFinder : IVariableFinder
         }
         else
         {
+            if (itemBefore != null)
+            {
+                object? fromAssignedState = GetValueFromStateAssignedAbove(variableName, stackIndex);
+                if (fromAssignedState != null)
+                {
+                    return fromAssignedState;
+                }
+            }
+
             // This doesn't seem to consider states being assigned throughout the stack, but using
             // GetValueRecursive does work that way:
             //return ElementStack[stackIndex].StateSave.GetValue(variableName);
@@ -403,5 +412,58 @@ public class RecursiveVariableFinder : IVariableFinder
 
         }
 
+    }
+
+    /// <summary>
+    /// Resolves an instance-qualified <paramref name="variableName"/> through a categorized state that
+    /// an element higher in the stack assigns via an exposed variable (for example
+    /// <c>Label.StyleCategoryState</c> exposed as <c>Style</c> and set to "Strong" by the container).
+    /// <c>GetValueRecursive</c> only sees states set on the element's own state, so without this the
+    /// state chosen from above is ignored. Returns null when no state applies or the element sets the
+    /// variable itself, so the caller falls back to its normal lookup.
+    /// </summary>
+    private object? GetValueFromStateAssignedAbove(string variableName, int stackIndex)
+    {
+        if (!variableName.Contains(".") || VariableSave.GetRootName(variableName).EndsWith("State", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        ElementWithState current = ElementStack[stackIndex];
+
+        // An explicit value on the element beats the one a state provides, as in GetValueRecursive.
+        if (current.StateSave.GetValue(variableName) != null)
+        {
+            return null;
+        }
+
+        string? instanceName = VariableSave.GetSourceObject(variableName);
+        string nameInInstance = VariableSave.GetRootName(variableName);
+
+        foreach (VariableSave variable in current.Element.DefaultState!.Variables)
+        {
+            if (variable.SourceObject != instanceName ||
+                string.IsNullOrEmpty(variable.ExposedAsName) ||
+                !variable.GetRootName().EndsWith("State", StringComparison.Ordinal) ||
+                !variable.IsState(current.Element, out _, out StateSaveCategory? category) ||
+                category == null)
+            {
+                continue;
+            }
+
+            string? stateName = GetValueByBottomName(variable.Name, stackIndex) as string;
+            if (string.IsNullOrEmpty(stateName))
+            {
+                continue;
+            }
+
+            object? value = category.States.FirstOrDefault(item => item.Name == stateName)?.GetValue(nameInInstance);
+            if (value != null)
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 }
