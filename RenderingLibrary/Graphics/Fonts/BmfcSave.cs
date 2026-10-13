@@ -48,6 +48,14 @@ public class BmfcSave
     public bool IsBold = false;
 
     /// <summary>
+    /// When true, a font file's <see cref="FontCacheFileName"/> carries a hash of <see cref="FontFile"/>,
+    /// so same-named files in different folders get separate atlases (#6007). Set from the project's
+    /// version (<c>GumProjectSave.UsesPathHashedFontCacheNames</c>): a project below that version keeps
+    /// the legacy name because its shipped .fnt files use it.
+    /// </summary>
+    public bool IncludePathHashInCacheName = false;
+
+    /// <summary>
     /// When true, KernSmith bakes a drop shadow into the font atlas using the dropshadow fields below.
     /// When false, dropshadow fields are ignored and do not affect <see cref="FontCacheFileName"/>.
     /// </summary>
@@ -92,6 +100,14 @@ public class BmfcSave
     /// The .ttf font file path when using a file-based font, or null/empty for system fonts.
     /// </summary>
     public string? FontFile = null;
+
+    /// <summary>
+    /// The font file path exactly as a Text names it (<c>Fonts/Icons.ttf</c>), when <see cref="FontFile"/>
+    /// has been resolved to an absolute path for the generator. The path hash in
+    /// <see cref="FontCacheFileName"/> comes from this one, because the runtime looks the .fnt up by the
+    /// path as typed; null means <see cref="FontFile"/> is already that path.
+    /// </summary>
+    public string? FontFileAsReferenced = null;
 
     /// <summary>
     /// Horizontal spacing between characters in pixels.
@@ -685,7 +701,7 @@ public class BmfcSave
                 UseSmoothing,
                 IsItalic,
                 IsBold,
-                FontFile,
+                FontFileAsReferenced ?? FontFile,
                 HasDropshadow,
                 DropshadowOffsetX,
                 DropshadowOffsetY,
@@ -693,7 +709,8 @@ public class BmfcSave
                 DropshadowRed,
                 DropshadowGreen,
                 DropshadowBlue,
-                DropshadowAlpha);
+                DropshadowAlpha,
+                IncludePathHashInCacheName);
         }
 
     }
@@ -721,12 +738,14 @@ public class BmfcSave
     /// <param name="dropshadowGreen">The dropshadow color's green component.</param>
     /// <param name="dropshadowBlue">The dropshadow color's blue component.</param>
     /// <param name="dropshadowAlpha">The dropshadow color's alpha component.</param>
+    /// <param name="includePathHash">Whether a font file's name carries a hash of <paramref name="fontFilePath"/>
+    /// (#6007). Ignored for system fonts. Left false for projects below <c>GumxVersions.FontCachePathHash</c>.</param>
     /// <returns>A relative file path under "FontCache/" suitable for caching this font.</returns>
     public static string GetFontCacheFileNameFor(float fontSize, string fontName, int outline, bool useFontSmoothing,
         bool isItalic = false, bool isBold = false, string? fontFilePath = null,
         bool hasDropshadow = false, float dropshadowOffsetX = 0f, float dropshadowOffsetY = 0f,
         float dropshadowBlur = 0f, byte dropshadowRed = 0, byte dropshadowGreen = 0, byte dropshadowBlue = 0,
-        byte dropshadowAlpha = 0)
+        byte dropshadowAlpha = 0, bool includePathHash = false)
     {
         string fileName;
 
@@ -750,6 +769,11 @@ public class BmfcSave
         if(isFromFile)
         {
             fileName += "_ttf";
+
+            if (includePathHash)
+            {
+                fileName += "_" + GetPathHash(fontFilePath!);
+            }
         }
         if (outline != 0)
         {
@@ -785,6 +809,27 @@ public class BmfcSave
         fileName = System.IO.Path.Combine("FontCache", fileName);
 
         return fileName;
+    }
+
+    /// <summary>
+    /// Eight hex digits that identify a font file by the path it was referenced with, so two files
+    /// with the same name in different folders get different cache names (#6007). The slash direction
+    /// is ignored but case is not, matching how a per-font range entry finds its font. FNV-1a, not
+    /// <see cref="string.GetHashCode()"/>, because the tool and the game must compute the same value
+    /// and string hashing is randomized per process.
+    /// </summary>
+    private static string GetPathHash(string fontFilePath)
+    {
+        string normalized = fontFilePath.Trim().Replace('\\', '/');
+
+        uint hash = 2166136261;
+        foreach (byte value in System.Text.Encoding.UTF8.GetBytes(normalized))
+        {
+            hash ^= value;
+            hash = unchecked(hash * 16777619);
+        }
+
+        return hash.ToString("x8", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static string FormatCacheKeyFloat(float value)

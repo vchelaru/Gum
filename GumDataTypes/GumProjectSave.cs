@@ -154,6 +154,16 @@ public class GumProjectSave
         /// the older one, whose pinned runtime (notably FRB1's generated one) lacks the property.
         /// </summary>
         ColorOperationExpansion = 5,
+
+        /// <summary>
+        /// A font file's cache name includes a hash of the path it was referenced by (#6007), so two
+        /// font files with the same name in different folders get separate atlases. Files saved at
+        /// this version use the same XML format as <see cref="ColorOperationExpansion"/>; the bump
+        /// exists because the cache name is how the runtime finds an already-baked .fnt, and a project
+        /// at an older version ships .fnt files under the legacy name (no hash), which must keep being
+        /// the name looked up. See <see cref="GumProjectSave.UsesPathHashedFontCacheNames"/>.
+        /// </summary>
+        FontCachePathHash = 6,
     }
 
     /// <summary>
@@ -170,9 +180,16 @@ public class GumProjectSave
     /// explicitly stamp this version. Marking them at the native version is honest — the project
     /// genuinely uses those features — and lets the gate show those variables immediately.
     /// </remarks>
-    public const int NativeVersion = (int)GumxVersions.ColorOperationExpansion;
+    public const int NativeVersion = (int)GumxVersions.FontCachePathHash;
 
     #region Fields
+
+    /// <summary>
+    /// Whether a font file's cache name carries a hash of its path (#6007). Projects below
+    /// <see cref="GumxVersions.FontCachePathHash"/> keep the legacy name, because that is the name
+    /// their already-baked .fnt files were shipped under.
+    /// </summary>
+    public bool UsesPathHashedFontCacheNames => Version >= (int)GumxVersions.FontCachePathHash;
 
     public const string ScreenExtension = "gusx";
     public const string ComponentExtension = "gucx";
