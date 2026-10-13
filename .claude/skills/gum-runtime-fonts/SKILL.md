@@ -43,7 +43,7 @@ Six properties combine into a deterministic filename in `FontCache/`:
 
 **Naming formula:** `FontCache/Font{size}{name}[_o{N}][_noSmooth][_Italic][_Bold].fnt`
 
-Examples: `FontCache/Font18Arial.fnt`, `FontCache/Font24Times_New_Roman_o1_Bold.fnt`
+Examples: `FontCache/Font18Arial.fnt`, `FontCache/Font24Times_New_Roman_o1_Bold.fnt`. A font file adds `_ttf` and, in a project at `Version` 6 or later, a path hash after it; see `gum-tool-font-generation`.
 
 `BmfcSave.GetFontCacheFileNameFor()` produces this name. Every property setter on TextRuntime (Font, FontSize, etc.) calls `UpdateToFontValues()`, which regenerates the filename and attempts to load.
 

@@ -51,6 +51,8 @@ FontManager (tool facade)
 
 This means two elements with identical font settings share one cached file.
 
+A font *file* adds `_ttf`, then, only when `GumProjectSave.UsesPathHashedFontCacheNames` (project `Version` 6 or later), an 8-digit FNV-1a hash of the path as the Text typed it (`BmfcSave.GetPathHash`, slashes normalized), so same-named files in different folders get separate atlases. Older projects keep the unhashed name because their shipped `.fnt` files use it, so the runtime never checks two names. Every place that builds a name or a `BmfcSave` must pass the project's flag (`BmfcSave.IncludePathHashInCacheName`; `CustomSetPropertyOnRenderable.ApplyFontCacheNaming` does it for the runtime paths). `BmfcSave.FontFile` is often already resolved to an absolute path by then, so the hash comes from `FontFileAsReferenced`, the typed path; hashing the absolute path makes the tool bake a name the runtime never looks up. The Forms theme templates ship pre-baked file fonts in `FontCache`, named with the hash.
+
 ## Channel Behavior (Outline vs No-Outline)
 
 When OutlineThickness is 0: alpha=0, RGB channels=4 (glyph in alpha channel).
