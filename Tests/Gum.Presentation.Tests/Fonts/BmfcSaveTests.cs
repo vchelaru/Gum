@@ -90,6 +90,17 @@ public class BmfcSaveTests
     }
 
     [Fact]
+    public void GetFontCacheFileNameFor_ShouldUseTheFileNameOnly_ForABackslashPathOnEveryOs()
+    {
+        // A backslash is a file-name character on macOS/Linux, so Path.GetFileNameWithoutExtension alone
+        // would have kept "Fonts\Icons" as the stem there.
+        string result = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", 0, useFontSmoothing: true, fontFilePath: "Fonts\\Icons.ttf");
+
+        result.Replace('\\', '/').ShouldBe("FontCache/Font18Icons_ttf.fnt");
+    }
+
+    [Fact]
     public void GetFontCacheFileNameFor_ShouldNotChangeSystemFontNames_WhenIncludingThePathHash()
     {
         string withHash = BmfcSave.GetFontCacheFileNameFor(

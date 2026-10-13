@@ -754,7 +754,9 @@ public class BmfcSave
 
         if(isFromFile)
         {
-            effectiveFontName = Path.GetFileNameWithoutExtension(fontFilePath)!;
+            // A project saved on Windows stores backslashes, which are file-name characters on
+            // macOS/Linux, so the stem is taken from the path with the slashes normalized.
+            effectiveFontName = Path.GetFileNameWithoutExtension(fontFilePath!.Replace('\\', '/'))!;
         }
         else
         {
