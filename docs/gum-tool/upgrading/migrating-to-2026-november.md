@@ -51,6 +51,20 @@ child.Y = -25;
 stackPanel.AddChild(child);
 ```
 
+If the overlap was how you placed children side by side, the stack points the wrong way, and a negative value is not the fix. For example, a `Top to Bottom Stack` holds two children that both have a `Y Units` of `Pixels From Bottom` and a `Y Origin` of `Bottom`. Before this version they shared a row, because the second child's origin pulled it back over the first. Now the second child sits below the first, which can move it off screen. Set the stack to the direction you want instead. In the Gum tool, set the stack's `Children Layout` to `Left to Right Stack`. In code, set `Orientation` on a `StackPanel`, or `ChildrenLayout` on a container.
+
+✅ New (children sit side by side, and each keeps its bottom origin):
+
+```csharp
+// Initialize
+stackPanel.Orientation = Gum.Forms.Controls.Orientation.Horizontal;
+```
+
+```csharp
+// Initialize
+container.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+```
+
 For more information see the [Children Layout](../gum-elements/container/children-layout.md#stacking-and-children-origin) page.
 
 ### Stacks Without Wrapping Grow to Their Max
