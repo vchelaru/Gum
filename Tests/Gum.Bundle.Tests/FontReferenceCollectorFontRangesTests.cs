@@ -62,7 +62,7 @@ public class FontReferenceCollectorFontRangesTests : IDisposable
         GumProjectSave project = TestProjectBuilder.BuildProject(
             standards: new[] { systemText, fileText, otherFileText, backslashText });
         project.FontRanges = globalRanges;
-        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "fonts/icons.TTF", Ranges = iconRanges });
+        project.FontRangeEntries.Add(new FontRangeEntry { FontFamily = "Fonts/Icons.ttf", Ranges = iconRanges });
         ObjectFinder.Self.GumProjectSave = project;
 
         FontReferenceCollector collector = new FontReferenceCollector(

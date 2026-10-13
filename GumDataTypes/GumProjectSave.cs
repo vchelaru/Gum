@@ -230,8 +230,9 @@ public class GumProjectSave
 
     /// <summary>
     /// Character ranges per font family. An entry with a null or empty <see cref="FontRangeEntry.FontFamily"/>
-    /// is the project-wide default. At most one entry per family is meaningful (the first wins, matched
-    /// ignoring case), and duplicates are dropped on save.
+    /// is the project-wide default. At most one entry per font is meaningful (the first wins), and
+    /// duplicates are dropped on save. System family names match ignoring case; font file paths match
+    /// exactly apart from slash direction.
     /// </summary>
     [XmlIgnore]
     public List<FontRangeEntry> FontRangeEntries { get; set; } = new List<FontRangeEntry>
@@ -274,7 +275,7 @@ public class GumProjectSave
             string key = NormalizeFontRangeKey(fontFamily!);
             foreach (FontRangeEntry entry in FontRangeEntries)
             {
-                if (!IsGlobalFontRangeEntry(entry) && string.Equals(NormalizeFontRangeKey(entry.FontFamily!), key, StringComparison.OrdinalIgnoreCase))
+                if (!IsGlobalFontRangeEntry(entry) && string.Equals(NormalizeFontRangeKey(entry.FontFamily!), key, StringComparison.Ordinal))
                 {
                     return entry.Ranges;
                 }
@@ -284,14 +285,21 @@ public class GumProjectSave
         return FontRangeEntries.FirstOrDefault(entry => IsGlobalFontRangeEntry(entry))?.Ranges;
     }
 
-    // Font file paths are typed with either slash on Windows; both name the same file.
-    private static string NormalizeFontRangeKey(string fontFamily) => fontFamily.Trim().Replace('\\', '/');
+    // Canonical form for comparing entries with an ordinal comparison. Slash direction never matters.
+    // A font file is a path, which is case-sensitive on Linux and macOS, so it keeps its case; a system
+    // family name is matched ignoring case. A ".ttf" suffix is what makes a name a file here, the same
+    // test as BmfcSave.IsFontFilePath (RenderingLibrary, which this assembly can't reference).
+    private static string NormalizeFontRangeKey(string fontFamily)
+    {
+        string key = fontFamily.Trim().Replace('\\', '/');
+        return key.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) ? key : key.ToLowerInvariant();
+    }
 
     private static bool IsGlobalFontRangeEntry(FontRangeEntry entry) => string.IsNullOrWhiteSpace(entry.FontFamily);
 
     private static FontRangeEntry[] DeduplicateFontRangeEntries(IEnumerable<FontRangeEntry> entries)
     {
-        HashSet<string> seenFamilies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> seenFamilies = new HashSet<string>(StringComparer.Ordinal);
         List<FontRangeEntry> result = new List<FontRangeEntry>();
 
         foreach (FontRangeEntry entry in entries)
