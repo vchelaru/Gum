@@ -990,8 +990,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     /// <summary>
     /// Flags <see cref="GumProjectSave.FontRangeEntries"/> that do nothing. An entry that matches no
-    /// font a Text uses (GUM0010) and an entry whose range the font generators reject and replace with
-    /// the default (GUM0011) are otherwise silent, so a typo in a hand-edited project looks like the
+    /// font a Text uses (GUM0010) and an entry whose range the font generators cannot read (GUM0011; BMFont
+    /// bakes the default instead, KernSmith drops the unreadable parts) are otherwise silent, so a typo in a hand-edited project looks like the
     /// setting having no effect. The font collection behind GUM0010 only runs when a font-specific
     /// entry exists.
     /// </summary>
@@ -1011,9 +1011,9 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     ElementName = "(project)",
                     Code = "GUM0011",
                     Severity = ErrorSeverity.Warning,
-                    Message = $"{owner} is \"{entry.Ranges}\", which is not a valid range, so the default " +
-                        $"{BmfcSave.GetEffectiveDefaultRanges()} is baked instead. Use comma-separated codepoints " +
-                        "or start-end pairs with no spaces, such as 32-126,160-255."
+                    Message = $"{owner} is \"{entry.Ranges}\", which is not a valid range. The BMFont generator " +
+                        $"bakes the default {BmfcSave.GetEffectiveDefaultRanges()} instead, and the KernSmith generator skips the parts it " +
+                        "cannot read. Use comma-separated codepoints or start-end pairs with no spaces, such as 32-126,160-255."
                 });
             }
         }
