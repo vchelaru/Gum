@@ -441,7 +441,7 @@ The `global::` prefix is required, and the name is case sensitive. Because the v
 Changing the **Language** in the project properties updates the preview in the tool. See [Localization](../../localization.md) for adding a localization file and selecting a language.
 
 {% hint style="info" %}
-At runtime, a reference which reads the current language needs `Gum.Expressions`, and it does not update by itself when the language changes. See [Runtime Variable References](../../../code/styling/runtime-variable-references.md).
+At runtime, a reference which reads the current language needs `Gum.Expressions`. It updates when the language changes. See [Runtime Variable References](../../../code/styling/runtime-variable-references.md).
 {% endhint %}
 
 ### Color Expansion
