@@ -171,6 +171,12 @@ The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, whic
 
 The same `Gum.Expressions` package also enables runtime evaluation of arithmetic (including modulo `%`), conditional (ternary), comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), and logical (`&&`, `||`, `!`) operators, plus math functions such as `Sin`, `Max`, and `Clamp`, in variable references. See the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page for the full list of supported syntax.
 
+A reference which reads `global::Localization.CurrentLanguage` re-evaluates on live visuals when `CurrentLanguage` changes, so a row such as `Width = global::Localization.CurrentLanguage == 2 ? 220 : 160` follows a language switch without extra code. See [Localization](../localization.md) for switching languages.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
 If you are linking to Gum source instead of NuGet, see the setup page for your platform for instructions on adding GumExpressions as a project reference:
 
 * [MonoGame/KNI/FNA Setup](../getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md)

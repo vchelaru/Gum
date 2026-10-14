@@ -401,6 +401,49 @@ If a component defines its own custom variable named `Index`, that variable is u
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
+### Computed Size and Position with Absolute Values
+
+Some values only exist after Gum lays out an element, such as the width of a `Text` that sizes itself to its content. Variable references can read these final values in pixels through the `Absolute` variables:
+
+* `AbsoluteX`, `AbsoluteY`
+* `AbsoluteLeft`, `AbsoluteTop`, `AbsoluteRight`, `AbsoluteBottom`
+* `AbsoluteWidth`, `AbsoluteHeight`
+
+For example, a background can be 20 pixels wider than a label no matter how long the label's text is:
+
+```csharp
+Width = TitleText.AbsoluteWidth + 20
+```
+
+Absolute variables follow the same rules as other variables on the right side. A name qualified with an instance reads that instance, `@AbsoluteWidth` reads the instance which owns the row, and an unqualified name on an instance row reads the containing component or screen:
+
+```csharp
+Height = Background.AbsoluteHeight / 2
+Width = Max(@AbsoluteHeight, 100)
+```
+
+Absolute variables are read-only, so they can appear only on the right side. They also read only instances inside the same component or screen as the row. A fully qualified path such as `Components/Other.Instance.AbsoluteWidth` is not supported.
+
+{% hint style="info" %}
+At runtime, Absolute variables in a reference require the `Gum.Expressions` package. See [Runtime Variable References](../../../code/styling/runtime-variable-references.md#expression-support-optional).
+{% endhint %}
+
+### Current Language
+
+The reserved name `global::Localization.CurrentLanguage` is the index of the language the project is currently using, which is useful for adjusting a layout to text that is longer in some languages. Index `0` is the string ID, `1` is the first language, `2` is the second, and so on, matching the `CurrentLanguage` property used in code (see [Localization](../../../code/localization.md)).
+
+```csharp
+Width = global::Localization.CurrentLanguage == 2 ? 220 : 160
+```
+
+The `global::` prefix is required, and the name is case sensitive. Because the value is a number, it is most often compared in a ternary expression as shown above.
+
+Changing the **Language** in the project properties updates the preview in the tool. See [Localization](../../localization.md) for adding a localization file and selecting a language.
+
+{% hint style="info" %}
+At runtime, a reference which reads the current language needs `Gum.Expressions`. It updates when the language changes. See [Runtime Variable References](../../../code/styling/runtime-variable-references.md).
+{% endhint %}
+
 ### Color Expansion
 
 Assigning color values is a common part of styling, so to help with this situation, Gum also expands the "Color" variable into all three components when the Variable References text box loses focus. For example, the following text can be used to assign all three values at once:
@@ -432,6 +475,24 @@ Renaming an element in Gum updates the references to it, so this usually happens
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.
 
 <figure><img src="../../../.gitbook/assets/image (20).png" alt=""><figcaption><p>Left-side variables become read-only</p></figcaption></figure>
+
+### Set by
+
+The text under a read-only variable starts with **Set by** and shows the right side of the reference. For example, `X = Leader.X` displays `Set by Leader.X` under `X`.
+
+When the right side is a plain variable such as `Leader.X` or `Components/Styles.PrimaryColor.Red`, the text is a link. Clicking it selects the instance or component which provides the value, so you can follow a chain of references without searching the Project tab.
+
+An expression, an `@` reference, or a `global::Localization.CurrentLanguage` lookup shows the same **Set by** text, but it is not a link because it has no single source to select.
+
+An **Unlink** button (the delete icon) appears next to the text when the selected state's own Variable References list assigns the variable. Clicking it comments out that line with `//`. The variable keeps its current value and becomes editable again. **Unlink** supports undo, which restores the line and makes the variable read-only again.
+
+{% hint style="warning" %}
+Add a screenshot of the Variables tab showing the **Set by** link and the **Unlink** button under a read-only variable.
+{% endhint %}
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
 
 ## Obtaining a Qualified Variable Name
 
