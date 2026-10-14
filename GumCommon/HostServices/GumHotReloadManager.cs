@@ -413,13 +413,16 @@ public class GumHotReloadManager : IGumHotReloadManager
             return;
         }
 
+        // Only a variable that applies a value counts. The tool saves a detached instance's Parent
+        // as a variable that is still marked as set but has no value, and applying a state skips
+        // a variable with no value, so it changes nothing on the visual.
         HashSet<string> stillSet = new HashSet<string>(
-            newState.Variables.Where(v => v.SetsValue).Select(v => v.Name),
+            newState.Variables.Where(AppliesAValue).Select(v => v.Name),
             StringComparer.Ordinal);
 
         foreach (VariableSave variable in oldState.Variables)
         {
-            if (!variable.SetsValue || variable.Value == null || stillSet.Contains(variable.Name))
+            if (!AppliesAValue(variable) || stillSet.Contains(variable.Name))
             {
                 continue;
             }
@@ -451,6 +454,17 @@ public class GumHotReloadManager : IGumHotReloadManager
                 element.SetProperty(variable.Name, defaultValue);
             }
         }
+    }
+
+    // Whether applying a state would set this variable. An empty Parent sets nothing either, since
+    // GraphicalUiElement ignores it.
+    private static bool AppliesAValue(VariableSave variable)
+    {
+        if (!variable.SetsValue || variable.Value == null)
+        {
+            return false;
+        }
+        return !(variable.GetRootName() == "Parent" && variable.Value is string { Length: 0 });
     }
 
     /// <summary>

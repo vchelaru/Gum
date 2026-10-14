@@ -62,7 +62,7 @@ public class HotReloadRemovedVariableTests : BaseTestClass
         return (project, screen);
     }
 
-    private static void SetVariable(StateSave state, string name, object value, string type)
+    private static void SetVariable(StateSave state, string name, object? value, string type)
     {
         state.Variables.Add(new VariableSave { Name = name, Value = value, Type = type, SetsValue = true });
     }
@@ -80,9 +80,10 @@ public class HotReloadRemovedVariableTests : BaseTestClass
     }
 
     [Fact]
-    public void PerformReload_FromFilesOnDisk_DetachesAnInstanceWhoseParentLineWasDeleted()
+    public void PerformReload_FromFilesOnDisk_DetachesAnInstanceTheToolSavedWithAnEmptyParent()
     {
-        // The real path the preview takes: the tool saves, the reload reads the files back.
+        // The real path the preview takes: the tool saves, the reload reads the files back. Detaching
+        // in the tool does not delete the Parent line, it saves it with no value.
         string sourceDirectory = Path.Combine(
             Path.GetTempPath(), "HotReloadRemovedVariableTests_" + Path.GetRandomFileName());
         Directory.CreateDirectory(sourceDirectory);
@@ -100,7 +101,7 @@ public class HotReloadRemovedVariableTests : BaseTestClass
             GraphicalUiElement box1 = Find(screenGue, "Box1");
             box1.Parent.ShouldBe(holder, "sanity: the file attaches Box1 under Holder1");
 
-            SaveToDisk(BuildProject(configure: null).project, gumxPath);
+            SaveToDisk(BuildProject(state => SetVariable(state, "Box1.Parent", null, "string")).project, gumxPath);
             GumHotReloadManager manager = new GumHotReloadManager(
                 Gum.GumService.ApplyProjectTextureFilter, GumAnimationLoader.LoadAnimationsFromProvider,
                 path => RenderingLibrary.Content.LoaderManager.Self.Dispose(path));
@@ -129,6 +130,26 @@ public class HotReloadRemovedVariableTests : BaseTestClass
             project.StandardElementReferences.Add(new ElementReference { Name = standard.Name, ElementType = ElementType.Standard });
         }
         project.Save(gumxPath, saveElements: true);
+    }
+
+    [Fact]
+    public void EmptyParentVariable_DetachesTheInstanceFromItsParent()
+    {
+        // What the tool saves when an instance is dragged back out: Parent is still there, still
+        // marked as set, with no value.
+        (GumProjectSave before, ScreenSave beforeScreen) =
+            BuildProject(state => SetVariable(state, "Box1.Parent", "Holder1", "string"));
+        ObjectFinder.Self.GumProjectSave = before;
+        GraphicalUiElement screenGue = beforeScreen.ToGraphicalUiElement();
+        GraphicalUiElement holder = Find(screenGue, "Holder1");
+        GraphicalUiElement box1 = Find(screenGue, "Box1");
+        box1.Parent.ShouldBe(holder, "sanity: the first load attaches Box1 under Holder1");
+
+        (GumProjectSave after, _) = BuildProject(state => SetVariable(state, "Box1.Parent", null, "string"));
+        Reload(screenGue, after);
+
+        box1.Parent.ShouldBe(screenGue);
+        holder.Children.ShouldNotContain(box1);
     }
 
     [Fact]
