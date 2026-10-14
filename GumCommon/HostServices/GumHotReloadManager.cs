@@ -2,6 +2,7 @@
 #define XNALIKE
 #endif
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -340,6 +341,7 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         if (name != null && byName.TryGetValue(name, out ElementSave? newEs))
         {
+            ElementSave? oldEs = element.ElementSave;
             element.ElementSave = newEs;
 
             DiffDesignTimeChildren(element, newEs, systemManagers);
@@ -358,6 +360,10 @@ public class GumHotReloadManager : IGumHotReloadManager
 
             if (newEs.DefaultState != null)
             {
+                if (oldEs != null)
+                {
+                    ResetRemovedVariables(element, oldEs, newEs);
+                }
                 element.SetVariablesRecursively(newEs, newEs.DefaultState);
             }
 
@@ -386,6 +392,79 @@ public class GumHotReloadManager : IGumHotReloadManager
             }
             ApplyDiffRecursive(child, byName, systemManagers);
         }
+    }
+
+    /// <summary>
+    /// Puts back the default of every variable the previous default state set and the new one no
+    /// longer does. A reload only applies the variables the new file has, so without this a
+    /// variable the file dropped (an instance detached from its parent, a width set back to its
+    /// default) keeps its old value on the live visual. It compares the two save objects rather
+    /// than the visuals, so a value assigned in code, which is in neither, is never touched.
+    /// Runs before the new state is applied, so the new file's values win.
+    /// </summary>
+    private static void ResetRemovedVariables(GraphicalUiElement element, ElementSave oldEs, ElementSave newEs)
+    {
+        StateSave? oldState = oldEs.DefaultState;
+        StateSave? newState = newEs.DefaultState;
+
+        // The same state object means the project was edited in place, so the old values are gone.
+        if (oldState == null || newState == null || ReferenceEquals(oldState, newState))
+        {
+            return;
+        }
+
+        // Only a variable that applies a value counts. The tool saves a detached instance's Parent
+        // as a variable that is still marked as set but has no value, and applying a state skips
+        // a variable with no value, so it changes nothing on the visual.
+        HashSet<string> stillSet = new HashSet<string>(
+            newState.Variables.Where(AppliesAValue).Select(v => v.Name),
+            StringComparer.Ordinal);
+
+        foreach (VariableSave variable in oldState.Variables)
+        {
+            if (!AppliesAValue(variable) || stillSet.Contains(variable.Name))
+            {
+                continue;
+            }
+
+            if (variable.GetRootName() == "Parent")
+            {
+                // An empty Parent value is a no-op, so detaching has to be done directly: an
+                // instance with no Parent variable belongs to the element that contains it.
+                if (!string.IsNullOrEmpty(variable.SourceObject))
+                {
+                    GraphicalUiElement? instance = element.GetGraphicalUiElementByName(variable.SourceObject);
+                    if (instance != null)
+                    {
+                        instance.Parent = element;
+                    }
+                }
+                continue;
+            }
+
+            // Un-applying a categorized state would mean undoing everything it set.
+            if (variable.IsState(oldEs))
+            {
+                continue;
+            }
+
+            object? defaultValue = newState.GetValueRecursive(variable.Name);
+            if (defaultValue != null)
+            {
+                element.SetProperty(variable.Name, defaultValue);
+            }
+        }
+    }
+
+    // Whether applying a state would set this variable. An empty Parent sets nothing either, since
+    // GraphicalUiElement ignores it.
+    private static bool AppliesAValue(VariableSave variable)
+    {
+        if (!variable.SetsValue || variable.Value == null)
+        {
+            return false;
+        }
+        return !(variable.GetRootName() == "Parent" && variable.Value is string { Length: 0 });
     }
 
     /// <summary>

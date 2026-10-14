@@ -63,7 +63,9 @@ public static class ShapeSvgLoader
             return cached.Svg;
         }
 
-        var loaded = LoadFromFile(key);
+        // The key has its slashes flipped to the OS separator, which breaks a URL, so download
+        // from the original string.
+        var loaded = LoadFromFile(FileManager.IsUrl(fileName) ? fileName : key);
 
         if (loaded != null && LoaderManager.Self.CacheTextures)
         {
@@ -85,7 +87,9 @@ public static class ShapeSvgLoader
         // assignment rather than per wireframe rebuild, so it isn't on a hot path.
         try
         {
-            using var stream = FileManager.GetStreamForFile(standardizedFileName);
+            using var stream = FileManager.IsUrl(standardizedFileName)
+                ? DownloadUrl(standardizedFileName)
+                : FileManager.GetStreamForFile(standardizedFileName);
 
             return ShapeSvg.TryLoad(stream, out var svg) ? svg : null;
         }
@@ -93,5 +97,16 @@ public static class ShapeSvgLoader
         {
             return null;
         }
+    }
+
+    // Blocking, like the texture loader's URL path. The URL needs no .svg extension; the content
+    // is what gets parsed. Some hosts (Wikimedia) refuse a request with no User-Agent.
+    private static Stream DownloadUrl(string url)
+    {
+        using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("GumUI (https://github.com/vchelaru/Gum)");
+        byte[] data = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
+
+        return new MemoryStream(data);
     }
 }
