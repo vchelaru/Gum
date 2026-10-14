@@ -136,7 +136,7 @@ protected override void Update(GameTime gameTime)
 {
     GumUI.Update(gameTime);
 
-    if(GumUI.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
     {
         var label = new Label();
         stackPanel.AddChild(label);
@@ -175,7 +175,7 @@ protected override void Update(GameTime gameTime)
 {
     GumUI.Update(gameTime);
 
-    if(GumUI.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
     {
         var label = new Label();
         stackPanel.AddChild(label);
@@ -219,7 +219,7 @@ protected override void Initialize()
 protected override void Update(GameTime gameTime)
 {
     GumUI.Update(gameTime);
-    if(GumUI.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
     {
         var button = new Button();
         stackPanel.AddChild(button);

@@ -80,7 +80,7 @@ assign `AdvancePageInputPredicate`:
 
 ```csharp
 dialogBox.AdvancePageInputPredicate = () =>
-    GumService.Default.Keyboard.KeyPushed(Keys.Z);
+    GumService.Default.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Z);
 ```
 
 ## Async Usage

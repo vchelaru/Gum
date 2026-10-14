@@ -1,7 +1,6 @@
 using GameUiSamples.Data;
 using Gum.Forms.Controls;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using Gum;
 using MonoGameGum.ExtensionMethods;
 using System;
@@ -58,15 +57,15 @@ namespace GameUiSamples.Components
         {
             var keyboard = GumService.Default.Keyboard;
             int? indexToSelect = null;
-            if (keyboard.KeyPushed(Keys.D1)) indexToSelect = 0;
-            if (keyboard.KeyPushed(Keys.D2)) indexToSelect = 1;
-            if (keyboard.KeyPushed(Keys.D3)) indexToSelect = 2;
-            if (keyboard.KeyPushed(Keys.D4)) indexToSelect = 3;
-            if (keyboard.KeyPushed(Keys.D5)) indexToSelect = 4;
-            if (keyboard.KeyPushed(Keys.D6)) indexToSelect = 5;
-            if (keyboard.KeyPushed(Keys.D7)) indexToSelect = 6;
-            if (keyboard.KeyPushed(Keys.D8)) indexToSelect = 7;
-            if (keyboard.KeyPushed(Keys.D9)) indexToSelect = 8;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D1)) indexToSelect = 0;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D2)) indexToSelect = 1;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D3)) indexToSelect = 2;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D4)) indexToSelect = 3;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D5)) indexToSelect = 4;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D6)) indexToSelect = 5;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D7)) indexToSelect = 6;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D8)) indexToSelect = 7;
+            if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D9)) indexToSelect = 8;
 
             if (indexToSelect != null)
             {

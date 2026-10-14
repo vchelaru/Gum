@@ -66,11 +66,11 @@ public class Game1 : Game
         GumUI.Update(gameTime);
 
 <strong>        var keyboard = GumUI.Keyboard;
-</strong><strong>        if(keyboard.KeyPushed(Keys.Space))
+</strong><strong>        if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
 </strong><strong>        {
 </strong><strong>            _animatedScreen.Visual.PlayAnimation("SlideOnAndOff");
 </strong><strong>        }
-</strong><strong>        if(keyboard.KeyPushed(Keys.Escape))
+</strong><strong>        if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape))
 </strong><strong>        {
 </strong><strong>            var popup = _animatedScreen
 </strong><strong>                .PleaseWaitPopupInstance.Visual;
@@ -134,11 +134,11 @@ public class Game1 : Game
         GumUI.Update(gameTime);
 
 <strong>        var keyboard = GumUI.Keyboard;
-</strong><strong>        if(keyboard.KeyPushed(Keys.Space))
+</strong><strong>        if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
 </strong><strong>        {
 </strong><strong>            _animatedScreen.PlayAnimation("SlideOnAndOff");
 </strong><strong>        }
-</strong><strong>        if(keyboard.KeyPushed(Keys.Escape))
+</strong><strong>        if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Escape))
 </strong><strong>        {
 </strong><strong>            var popup = _animatedScreen
 </strong><strong>                .GetGraphicalUiElementByName("PleaseWaitPopupInstance");
@@ -402,7 +402,7 @@ protected override void Update(GameTime gameTime)
     animation1Time += gameTime.ElapsedGameTime.TotalSeconds;
     animation2Time += gameTime.ElapsedGameTime.TotalSeconds;
 
-    if(keyboard.KeyPushed(Keys.Space))
+    if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
     {
         // Restart both animations when space is pressed
         animation1Time = 0;

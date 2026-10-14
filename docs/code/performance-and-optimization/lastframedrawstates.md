@@ -65,7 +65,7 @@ protected override void Draw(GameTime gameTime)
 
     GumUI.Draw();
 
-    if(GumUI.Keyboard.KeyPushed(Keys.Space))
+    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
     {
 
         var spriteRenderer = GumUI.SystemManagers.Renderer.SpriteRenderer;

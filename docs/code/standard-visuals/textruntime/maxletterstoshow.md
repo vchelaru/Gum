@@ -39,7 +39,7 @@ protected override void Update(GameTime gameTime)
 {
     GumUI.Update(gameTime);
 
-    if(GumUI.Keyboard.KeyPushed(Keys.Space))
+    if(GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Space))
     {
         isPrinting = true;
         numberOfCharacters = 0;

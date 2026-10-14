@@ -434,21 +434,19 @@ namespace GumFormsSample.Screens
 
         public void Update(GameTime gameTime)
         {
-            // FormsUtilities.Keyboard is typed as the platform-neutral IInputReceiverKeyboard now;
-            // cast to the concrete MonoGame Keyboard to use its XNA-Keys KeyPushed(Keys) overload.
-            var keyboard = (Gum.Input.Keyboard)FormsUtilities.Keyboard;
+            var keyboard = FormsUtilities.Keyboard;
 
             if(keyboard.IsAltDown)
             {
-                if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.F))
+                if(keyboard.KeyPushed(Gum.Forms.Input.Keys.F))
                 {
                     FileMenuItem.IsSelected = true;
                 }
-                else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.E))
+                else if(keyboard.KeyPushed(Gum.Forms.Input.Keys.E))
                 {
                     EditMenuItem.IsSelected = true;
                 }
-                else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.C))
+                else if(keyboard.KeyPushed(Gum.Forms.Input.Keys.C))
                 {
                     CustomMenuItem.IsSelected = true;
                 }

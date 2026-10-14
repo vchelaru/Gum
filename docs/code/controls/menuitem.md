@@ -54,11 +54,11 @@ var keyboard = GumService.Default.Keyboard;
 
 if(keyboard.IsAltDown)
 {
-    if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.F))
+    if(keyboard.KeyPushed(Gum.Forms.Input.Keys.F))
     {
         FileMenuItem.IsSelected = true;
     }
-    else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.E))
+    else if(keyboard.KeyPushed(Gum.Forms.Input.Keys.E))
     {
         EditMenuItem.IsSelected = true;
     }
