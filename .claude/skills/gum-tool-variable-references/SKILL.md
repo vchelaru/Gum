@@ -88,7 +88,7 @@ Both apply paths supply `liveRoot` when a live tree is available: the tool passe
 
 ### `global::Localization.CurrentLanguage`
 
-Reserved identifier resolving the current language index — see the **gum-runtime-variable-references** skill for the resolution mechanism. Tool preview works because every property change already triggers a full wireframe rebuild (`WireframeObjectManager.RefreshAll(forceLayout: true, ...)`), which re-applies variable references; `MainEditorTabPlugin.StartUp()` wires `CustomSetPropertyOnRenderable.LocalizationService` to the DI `ILocalizationService` singleton so that re-apply sees the tool's actual current language.
+Reserved identifier resolving the current language index — see the **gum-runtime-variable-references** skill for the resolution mechanism. Tool preview works because a language change (`ProjectPropertiesChangeLogic`, pinned by `ProjectPropertiesChangeLogicTests`) and every property change already trigger a full wireframe rebuild (`WireframeObjectManager.RefreshAll(forceLayout: true, ...)`), which re-applies variable references; `MainEditorTabPlugin.StartUp()` wires `CustomSetPropertyOnRenderable.LocalizationService` to the DI `ILocalizationService` singleton so that re-apply sees the tool's actual current language.
 
 ### Left-Side Type Coercion
 
