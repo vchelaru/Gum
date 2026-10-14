@@ -86,4 +86,15 @@ Gum's runtimes are published to NuGet. Install the package for your platform. Al
 
 > **Sokol** is no longer published. `Gum.sokol` versions up to `2026.9.2.1` remain on NuGet and still work, but receive no further updates: the backend depends on [Sokol.NET](https://github.com/wiredmatt/Sokol.NET), which is not actively maintained and whose submodule tree broke `git pull` for the Gum repo. The source still lives at `Runtimes/SokolGum/` and builds against a hand-cloned Sokol.NET — see [its README](Runtimes/SokolGum/README.md).
 
-Gum produces general-purpose XML, so it can be used in virtually any C# environment. Beyond the packaged runtimes listed above, integrations also exist for environments such as FlatRedBall, Meadow, Silk.NET, WPF, and Avalonia. For integration details — or for using GumCore to integrate with your own runtime — see the main documentation: https://docs.flatredball.com/gum/
+### Core libraries and other hosts
+
+`FlatRedBall.GumCommon` is the core library every runtime builds on: layout, `GraphicalUiElement`, and Forms logic, with no rendering or input of its own. Reference it directly to integrate Gum into your own runtime. The Skia-based hosts below are built on it.
+
+| Package | NuGet / install | Docs |
+|---|---|---|
+| GumCommon (core) | [![NuGet](https://img.shields.io/nuget/v/FlatRedBall.GumCommon?label=FlatRedBall.GumCommon)](https://www.nuget.org/packages/FlatRedBall.GumCommon) | [Docs](https://docs.flatredball.com/gum/) |
+| Silk.NET | [![NuGet](https://img.shields.io/nuget/v/Gum.SilkNet?label=Gum.SilkNet)](https://www.nuget.org/packages/Gum.SilkNet) | [Setup](https://docs.flatredball.com/gum/code/getting-started/setup/adding-initializing-gum/silk.net) |
+| Stride | [![NuGet](https://img.shields.io/nuget/v/Gum.Stride?label=Gum.Stride)](https://www.nuget.org/packages/Gum.Stride) | [Setup](https://docs.flatredball.com/gum/code/getting-started/setup/adding-initializing-gum/stride) |
+| Unity *(experimental)* | Unity Package Manager git URL: `https://github.com/vchelaru/Gum.git#upm` (also needs SkiaGameRendering, see setup) | [Setup](https://docs.flatredball.com/gum/code/getting-started/setup/adding-initializing-gum/unity) |
+
+Gum produces general-purpose XML, so it can be used in virtually any C# environment. Beyond the packages listed above, integrations also exist for environments such as FlatRedBall, Meadow, WPF, and Avalonia. For integration details, see the main documentation: https://docs.flatredball.com/gum/
