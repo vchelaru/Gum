@@ -10,7 +10,6 @@ using System.Linq;
 using MonoGameGum.GueDeriving;
 using System;
 using Gum;
-using Microsoft.Xna.Framework.Input;
 using Gum.Forms.Controls;
 using MonoGameGum.ExtensionMethods;
 namespace GameUiSamples.Components;
@@ -48,15 +47,15 @@ partial class Hotbar
     {
         var keyboard = GumService.Default.Keyboard;
         int? indexToSelect = null;
-        if (keyboard.KeyPushed(Keys.D1)) indexToSelect = 0;
-        if (keyboard.KeyPushed(Keys.D2)) indexToSelect = 1;
-        if (keyboard.KeyPushed(Keys.D3)) indexToSelect = 2;
-        if (keyboard.KeyPushed(Keys.D4)) indexToSelect = 3;
-        if (keyboard.KeyPushed(Keys.D5)) indexToSelect = 4;
-        if (keyboard.KeyPushed(Keys.D6)) indexToSelect = 5;
-        if (keyboard.KeyPushed(Keys.D7)) indexToSelect = 6;
-        if (keyboard.KeyPushed(Keys.D8)) indexToSelect = 7;
-        if (keyboard.KeyPushed(Keys.D9)) indexToSelect = 8;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D1)) indexToSelect = 0;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D2)) indexToSelect = 1;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D3)) indexToSelect = 2;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D4)) indexToSelect = 3;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D5)) indexToSelect = 4;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D6)) indexToSelect = 5;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D7)) indexToSelect = 6;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D8)) indexToSelect = 7;
+        if (keyboard.KeyPushed(Gum.Forms.Input.Keys.D9)) indexToSelect = 8;
 
         if (indexToSelect != null)
         {

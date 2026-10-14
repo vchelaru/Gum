@@ -85,7 +85,7 @@ void HandleClick(object sender, EventArgs args)
 ```csharp
 // Update
 var keyboard = GumService.Default.Keyboard;
-if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 {
     button.PerformClick();
 }
@@ -117,7 +117,7 @@ void HandleClick(object sender, EventArgs args)
 ```csharp
 // Update
 var keyboard = GumService.Default.Keyboard;
-if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+if(keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 {
     button.PerformClick(keyboard);
 }
