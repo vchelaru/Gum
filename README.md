@@ -51,12 +51,10 @@ saying why. `GumRenderer.Texture` holds the result either way; turn off `DrawToS
 
 ## IL2CPP
 
-`link.xml` can't live in a package, so add these to your project:
+`link.xml` can't live in a package, so add an `Assets/link.xml` to your project that preserves
+`netstandard` (stripped SkiaSharp still references the facade, and IL2CPP fails to resolve it
+otherwise):
 
-- An `Assets/link.xml` that preserves `netstandard` (stripped SkiaSharp still references the facade,
-  and IL2CPP fails to resolve it otherwise):
-  `<linker><assembly fullname="netstandard" preserve="all" /></linker>`
-- Managed Stripping Level of at least Low. RichTextKit is still built against SkiaSharp 2.88, and
-  IL2CPP at Minimal is not verified with it yet.
+`<linker><assembly fullname="netstandard" preserve="all" /></linker>`
 
-`Samples/UnityGum` in the Gum repo has both.
+`Samples/UnityGum` in the Gum repo has one.
