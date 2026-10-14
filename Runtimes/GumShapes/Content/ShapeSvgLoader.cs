@@ -100,10 +100,11 @@ public static class ShapeSvgLoader
     }
 
     // Blocking, like the texture loader's URL path. The URL needs no .svg extension; the content
-    // is what gets parsed.
+    // is what gets parsed. Some hosts (Wikimedia) refuse a request with no User-Agent.
     private static Stream DownloadUrl(string url)
     {
         using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("GumUI (https://github.com/vchelaru/Gum)");
         byte[] data = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
 
         return new MemoryStream(data);

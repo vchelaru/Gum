@@ -146,10 +146,12 @@ namespace SkiaGum.Renderables
             return skiaSvg;
         }
 
-        // Blocking, like the texture loader's URL path.
+        // Blocking, like the texture loader's URL path. Some hosts (Wikimedia) refuse a request
+        // with no User-Agent.
         private static System.IO.Stream DownloadUrl(string url)
         {
             using var client = new System.Net.Http.HttpClient { Timeout = System.TimeSpan.FromSeconds(30) };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("GumUI (https://github.com/vchelaru/Gum)");
             byte[] data = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
 
             return new System.IO.MemoryStream(data);

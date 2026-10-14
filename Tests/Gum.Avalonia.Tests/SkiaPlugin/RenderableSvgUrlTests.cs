@@ -71,6 +71,15 @@ public class RenderableSvgUrlTests
     private static async Task ServeOnceAsync(HttpListener listener, string body)
     {
         HttpListenerContext context = await listener.GetContextAsync();
+
+        // Wikimedia answers 403 to a request with no User-Agent.
+        if (string.IsNullOrEmpty(context.Request.UserAgent))
+        {
+            context.Response.StatusCode = 403;
+            context.Response.Close();
+            return;
+        }
+
         byte[] bytes = Encoding.UTF8.GetBytes(body);
         context.Response.ContentType = "image/svg+xml";
         context.Response.ContentLength64 = bytes.Length;
