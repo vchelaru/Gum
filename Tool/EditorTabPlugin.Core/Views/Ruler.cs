@@ -10,6 +10,7 @@ using RenderingLibrary.Math.Geometry;
 using InputLibrary;
 using Sprite = RenderingLibrary.Graphics.Sprite;
 using Camera = RenderingLibrary.Camera;
+using Cursor = InputLibrary.Cursor;
 using RenderingLibrary.Math;
 using Gum.ToolStates;
 using Gum.Input;

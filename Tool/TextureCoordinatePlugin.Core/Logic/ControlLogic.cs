@@ -16,6 +16,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using InputLibrary;
+using Cursor = InputLibrary.Cursor;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
