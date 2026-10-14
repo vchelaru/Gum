@@ -5,11 +5,7 @@
 using Gum.Forms.Controls;
 using Gum.Wireframe;
 
-#if XNALIKE
-namespace MonoGameGum.Input;
-#else
 namespace Gum.Input;
-#endif
 
 public partial class Cursor
 {

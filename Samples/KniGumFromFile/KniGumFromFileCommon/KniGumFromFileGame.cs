@@ -14,7 +14,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 using Microsoft.Xna.Framework.Media;
 using Gum.GueDeriving;
-using MonoGameGum.Input;
+using Gum.Input;
 using MonoGameGum.Renderables;
 using KniGumFromFile.ComponentRuntimes;
 using RenderingLibrary;

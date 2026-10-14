@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework.Input.Touch;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 #endif
 
 /// <summary>

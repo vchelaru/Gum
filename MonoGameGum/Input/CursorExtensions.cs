@@ -41,10 +41,6 @@ using GumServiceType = Gum.GumService;
 
 #if FRB
 namespace FlatRedBall.Gui;
-#elif XNALIKE
-namespace MonoGameGum.Input;
-#elif RAYLIB
-namespace Gum.Input;
 #else
 namespace Gum.Input;
 #endif

@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Input.Touch;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 
 /// <summary>
 /// A cursor implementation providing mouse and touch input functionality.
@@ -52,8 +52,8 @@ public partial class Cursor
     }
 
     private int? GetViewportLeft() => 
-        RenderingLibrary.SystemManagers.Default.Renderer.GraphicsDevice?.Viewport.Bounds.Left;
+        global::RenderingLibrary.SystemManagers.Default.Renderer.GraphicsDevice?.Viewport.Bounds.Left;
 
     private int? GetViewportTop() =>
-        RenderingLibrary.SystemManagers.Default.Renderer.GraphicsDevice?.Viewport.Bounds.Top;
+        global::RenderingLibrary.SystemManagers.Default.Renderer.GraphicsDevice?.Viewport.Bounds.Top;
 }

@@ -6,7 +6,7 @@ namespace Gum.Input;
 
 public static class CursorExtensionMethods
 {
-    public static float GetWorldX(this Cursor cursor, SystemManagers? managers = null)
+    public static float GetWorldX(this InputLibrary.Cursor cursor, SystemManagers? managers = null)
     {
         Renderer? renderer = null;
         if (managers == null)
@@ -28,7 +28,7 @@ public static class CursorExtensionMethods
         return worldX;
     }
 
-    public static float GetWorldY(this Cursor cursor, SystemManagers? managers = null)
+    public static float GetWorldY(this InputLibrary.Cursor cursor, SystemManagers? managers = null)
     {
         Renderer? renderer = null;
         if (managers == null)

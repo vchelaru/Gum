@@ -62,18 +62,11 @@ public sealed class NamespaceMigrationCodeFixProvider : CodeFixProvider
             // All migrations from the same old namespace go to the same new namespace
             // (they should — if not, we take the first one)
             var newNamespace = migrations[0].NewNamespace;
-            // When the old namespace still holds non-migrated types, keep its using and add
-            // the new one; otherwise replace the old using outright.
-            var oldNamespaceRetained = migrations[0].OldNamespaceRetained;
-
-            var title = oldNamespaceRetained
-                ? $"Add 'using {newNamespace}'"
-                : $"Change to 'using {newNamespace}'";
 
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    title: title,
-                    createChangedDocument: ct => RewriteUsings(context.Document, usingDirective, newNamespace, oldNamespaceRetained, ct),
+                    title: $"Change to 'using {newNamespace}'",
+                    createChangedDocument: ct => RewriteUsings(context.Document, usingDirective, newNamespace, ct),
                     equivalenceKey: $"GUM001_{oldNamespace}_{newNamespace}"),
                 diagnostic);
         }
@@ -83,7 +76,6 @@ public sealed class NamespaceMigrationCodeFixProvider : CodeFixProvider
         Document document,
         UsingDirectiveSyntax usingDirective,
         string newNamespace,
-        bool oldNamespaceRetained,
         CancellationToken cancellationToken)
     {
         var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
@@ -103,24 +95,7 @@ public sealed class NamespaceMigrationCodeFixProvider : CodeFixProvider
             .WithTriviaFrom(usingDirective.Name!);
 
         SyntaxNode newRoot;
-        if (oldNamespaceRetained)
-        {
-            // Partial move: keep the old using (other types still live there) and add the new
-            // one alongside it, unless it is already imported.
-            if (existingUsings.Contains(newNamespace))
-            {
-                newRoot = root;
-            }
-            else
-            {
-                // Clone the old using with the new name, but drop the leading trivia so the added
-                // line sits flush under the original (the original keeps its own leading newline,
-                // and its trailing newline separates the two) instead of leaving a blank line.
-                var newUsing = usingDirective.WithName(newName).WithLeadingTrivia();
-                newRoot = root.InsertNodesAfter(usingDirective, new[] { newUsing });
-            }
-        }
-        else if (existingUsings.Contains(newNamespace))
+        if (existingUsings.Contains(newNamespace))
         {
             // Full move and new namespace already imported — just remove the old using.
             newRoot = root.RemoveNode(usingDirective, SyntaxRemoveOptions.KeepNoTrivia)!;

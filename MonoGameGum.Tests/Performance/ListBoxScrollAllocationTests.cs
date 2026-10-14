@@ -52,7 +52,7 @@ public class ListBoxScrollAllocationTests : BaseTestClass
         // setter reads MainCursor.WindowPushed twice per change, and each read through a Moq proxy
         // allocates (~296 bytes), which would pollute the measurement with a pure test artifact.
         // Production always uses a real Cursor, so this measures the real per-frame cost.
-        FrameworkElement.MainCursor = new MonoGameGum.Input.Cursor(null);
+        FrameworkElement.MainCursor = new Gum.Input.Cursor(null);
 
         ListBox listBox = BuildScrollableListBox(itemCount);
 

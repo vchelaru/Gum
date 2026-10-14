@@ -2,7 +2,6 @@
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using Gum.GueDeriving;
-using MonoGameGum.Input;
 using MonoGameGum.Tests.Input;
 using Gum.Input;
 using GamePad = Gum.Input.GamePad;

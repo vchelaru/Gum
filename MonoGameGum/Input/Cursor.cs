@@ -13,12 +13,12 @@ using Microsoft.Xna.Framework.Input.Touch;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
-namespace MonoGameGum.Input;
 #else
 using System.Numerics;
 using Matrix = System.Numerics.Matrix3x2;
-namespace Gum.Input;
 #endif
+
+namespace Gum.Input;
 
 /// <summary>
 /// A cursor implementation providing mouse and touch input functionality.

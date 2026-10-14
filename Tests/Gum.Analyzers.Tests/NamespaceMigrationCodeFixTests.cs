@@ -134,10 +134,8 @@ namespace MonoGameGum.Input
     }
 
     [Fact]
-    public async Task CodeFix_AddsGumInputUsing_KeepsMonoGameGumInput_ForPartialMove()
+    public async Task CodeFix_RewritesMonoGameGumInputUsing()
     {
-        // MonoGameGum.Input is a PARTIAL move (Cursor stays, Keyboard moved to Gum.Input),
-        // so the fix must ADD `using Gum.Input;` while keeping `using MonoGameGum.Input;`.
         string testCode = @"
 {|GUM001:using MonoGameGum.Input;|}
 
@@ -158,7 +156,6 @@ namespace Gum.Input
 ";
 
         string fixedCode = @"
-using MonoGameGum.Input;
 using Gum.Input;
 
 namespace TestProject
@@ -178,6 +175,62 @@ namespace Gum.Input
 ";
 
         await CodeFixVerifier.VerifyCodeFixAsync(testCode, fixedCode);
+    }
+
+    [Fact]
+    public async Task CodeFix_RemovesMonoGameGumInputUsing_WhenGumInputAlreadyImported()
+    {
+        // The earlier GUM001 fix left both usings in place; with Cursor now in Gum.Input the
+        // stale one makes `Cursor` ambiguous, so it is flagged and removed.
+        string testCode = @"
+{|GUM001:using MonoGameGum.Input;|}
+using Gum.Input;
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum.Input
+{
+    public class Cursor { }
+}
+
+namespace Gum.Input
+{
+    public class Keyboard { }
+}
+";
+
+        string fixedCode = @"using Gum.Input;
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum.Input
+{
+    public class Cursor { }
+}
+
+namespace Gum.Input
+{
+    public class Keyboard { }
+}
+";
+
+        await CodeFixVerifier.VerifyCodeFixAsync(testCode, fixedCode);
+    }
+
+    [Theory]
+    [InlineData("Cursor")]
+    [InlineData("CursorExtensions")]
+    public void MappingTable_MapsCursorTypesToGumInput(string typeName)
+    {
+        Assert.Contains(
+            NamespaceMigrationMapping.ByOldNamespace["MonoGameGum.Input"],
+            m => m.TypeName == typeName && m.NewNamespace == "Gum.Input");
     }
 
     [Fact]

@@ -6,9 +6,40 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime. It also changes `Dragging` on visuals so that it is raised every frame the primary button is held, whether or not the cursor moves. It also adds an `AnimationChainFinished` event to sprites and nine slices playing an animation chain, which replaces `AnimationChainCycled` as the way to detect the end of a chain that does not loop. It also adds project [Version 6](upgrading-file-gumx-version.md#version-6), which gives fonts loaded from a font file separate generated files when two files share a name in different folders. Projects keep working at Version 5, and the generated font files only change names when you upgrade.
+`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime. It also changes `Dragging` on visuals so that it is raised every frame the primary button is held, whether or not the cursor moves. It also adds an `AnimationChainFinished` event to sprites and nine slices playing an animation chain, which replaces `AnimationChainCycled` as the way to detect the end of a chain that does not loop. It also adds project [Version 6](upgrading-file-gumx-version.md#version-6), which gives fonts loaded from a font file separate generated files when two files share a name in different folders. Projects keep working at Version 5, and the generated font files only change names when you upgrade. It also finishes the move of the MonoGame, KNI and FNA input types into `Gum.Input` by moving `Cursor` and `CursorExtensions`.
 
 ## Breaking Changes and Migrations
+
+### Cursor and CursorExtensions Moved to Gum.Input
+
+`Cursor` and `CursorExtensions` moved from `MonoGameGum.Input` to `Gum.Input` in MonoGame, KNI and FNA projects. This finishes the move that started in `2026 June`, so `Gum.Input` now holds every input type, matching raylib and the other runtimes.
+
+`MonoGameGum.Input.Cursor` remains as an obsolete shim that derives from `Gum.Input.Cursor`. Code that creates a `Cursor` or derives from it keeps compiling, with a `CS0618` warning. The shim cannot cover everything, so these cases break:
+
+* A variable declared with the old type no longer accepts a cursor that Gum returns. `GumService.Default.Cursor` and `FrameworkElement.MainCursor` are `Gum.Input.Cursor`, and C# cannot assign a base class value to a derived class variable (`CS0266`).
+* A method that overrides a Gum method taking a `Cursor`, such as `UpdateThumbPositionToCursorDrag(Cursor cursor)` on a custom `Slider` or `ScrollBar`, no longer matches the base signature (`CS0115`).
+* `CursorExtensions` has no shim, so calls such as `cursor.GetEventFailureReason(...)` fail to compile until `Gum.Input` is imported. A second copy of the extension methods would make every call ambiguous in files that import both namespaces.
+* A file that imports both `MonoGameGum.Input` and `Gum.Input` reports `CS0104` on `Cursor`, because both namespaces now contain one. This is the state the `2026 June` code fix left behind.
+
+To migrate, replace `using MonoGameGum.Input;` with `using Gum.Input;`, or remove the old directive if `using Gum.Input;` is already there. The `GUM001` analyzer flags the old directive, and its code fix makes this change. In code that names the type with a full path, change `MonoGameGum.Input.Cursor` to `Gum.Input.Cursor`.
+
+❌ Old:
+
+```csharp
+using MonoGameGum.Input;
+
+// Initialize
+Cursor cursor = GumService.Default.Cursor;
+```
+
+✅ New:
+
+```csharp
+using Gum.Input;
+
+// Initialize
+Cursor cursor = GumService.Default.Cursor;
+```
 
 ### Stacked Children Ignore Their Origin on the Stacking Axis
 

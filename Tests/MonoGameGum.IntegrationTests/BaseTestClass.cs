@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MonoGameGum.Input;
+using Gum.Input;
 
 namespace MonoGameGum.IntegrationTests;
 public class BaseTestClass : IDisposable

@@ -4,7 +4,6 @@ using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
 using MonoGameGum.Tests.Input;
 using Gum.Input;
 using Moq;

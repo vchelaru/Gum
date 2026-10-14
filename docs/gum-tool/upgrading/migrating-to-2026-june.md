@@ -225,7 +225,7 @@ if (gamepad.ButtonDown(Gum.Input.GamepadButton.A))
 
 #### Input types moved to `Gum.Input` (namespace change)
 
-`Keyboard`, `KeyboardStateProcessor`, `AnalogButton`, `DeadzoneType`, `DeadzoneInterpolationType`, and `IInputReceiverKeyboardMonoGame` now live in `Gum.Input`. Code that referenced them through `using MonoGameGum.Input;` needs `using Gum.Input;` added. This is a **partial** move: `Cursor`, `CursorExtensions`, and `KeyCombo` stay in `MonoGameGum.Input`, so if your file uses those too, keep both `using` directives — there is no name collision between the two namespaces.
+`Keyboard`, `KeyboardStateProcessor`, `AnalogButton`, `DeadzoneType`, `DeadzoneInterpolationType`, and `IInputReceiverKeyboardMonoGame` now live in `Gum.Input`. Code that referenced them through `using MonoGameGum.Input;` needs `using Gum.Input;` added. `Cursor` and `CursorExtensions` stayed in `MonoGameGum.Input` in this version, so a file that used them kept both `using` directives. They moved in `2026 November`; see [Migrating to 2026 November](migrating-to-2026-november.md).
 
 ❌ Old:
 
@@ -246,5 +246,5 @@ Keyboard keyboard;
 ```
 
 {% hint style="info" %}
-**Analyzer `GUM001`** flags a `using MonoGameGum.Input;` directive whose types have moved and offers a fix that **adds** `using Gum.Input;` (keeping the old `using` for `Cursor` and `KeyCombo`). The warning clears once `Gum.Input` is imported.
+**Analyzer `GUM001`** flags a `using MonoGameGum.Input;` directive whose types have moved and offers a fix that adds `using Gum.Input;` and keeps the old `using` for `Cursor`. From `2026 November` the fix replaces the old `using` instead.
 {% endhint %}
