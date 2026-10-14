@@ -25,9 +25,9 @@ This container to stack needs the following variables set:
 
     <figure><img src="../../../.gitbook/assets/image (4) (1) (1) (1) (1).png" alt=""><figcaption><p><code>Stack Spacing</code> set to <code>2</code></p></figcaption></figure>
 
-Now children of the Container stack vertically. This concept works for any type of child, but we'll use ColoredRectangles for this example. Add a few instances to the Container and they stack vertically.
+Now children of the Container stack vertically. This concept works for any type of child, but we'll use Rectangles for this example. Add a few instances to the Container and they stack vertically.
 
-<figure><img src="../../../.gitbook/assets/image (5) (1) (1).png" alt=""><figcaption><p>ColoredRectangle instances stacking vertically in a container</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/14_13_18_56.png" alt=""><figcaption><p>Rectangle instances stacking vertically in a container</p></figcaption></figure>
 
 Finally we can have the stack grow up instead of down. To do this, change the following variables on the parent container:
 
@@ -40,4 +40,4 @@ Finally we can have the stack grow up instead of down. To do this, change the fo
 
 Now as new children are added, the parent stack grows and all items shift up.
 
-<figure><img src="../../../.gitbook/assets/08_21_40_58.gif" alt=""><figcaption><p>Stack grows upward as more children are added</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/14_13_24_37.gif" alt=""><figcaption><p>Stack grows upward as more children are added</p></figcaption></figure>
