@@ -6,6 +6,10 @@ Render targets and blend modes can be combined to create a silhouette of any sha
 
 <figure><img src="../../../.gitbook/assets/Bear.png" alt=""><figcaption></figcaption></figure>
 
+{% hint style="info" %}
+As of October 2026 Gum supports `Sprite` `Color Operations` for creating silhouettes. This page is kept as an alternate way to creat esilhouettes, but the easiest is to use the [Silhouette Color Operation](../../gum-elements/general-properties/color.md#silhouette-color--texture-alpha).
+{% endhint %}
+
 ## Creating a Silhouette Component
 
 To create a Component that can display a Silhouette, first create a new component named SilhouetteSprite.
