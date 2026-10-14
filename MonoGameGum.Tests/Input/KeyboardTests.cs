@@ -1,5 +1,4 @@
-﻿using MonoGameGum.Input;
-using Gum.Input;
+﻿using Gum.Input;
 using Moq;
 using System;
 using System.Collections.Generic;

@@ -110,7 +110,7 @@ Every `StateSave` must have `ParentContainer` set — `GetValueRecursive` traver
 
 ## Headless Forms allocation tests: install a real Cursor
 
-`BaseTestClass` installs a Moq mock as `FrameworkElement.MainCursor`, and each proxied member access allocates (~296 B). Any control that reads `MainCursor` (e.g. a `ScrollBar` value setter) then pollutes an `AllocationMeasurer` result with a pure test artifact. Assign a real `MonoGameGum.Input.Cursor(null)` before measuring — production always uses a real cursor. See `ListBoxScrollAllocationTests`.
+`BaseTestClass` installs a Moq mock as `FrameworkElement.MainCursor`, and each proxied member access allocates (~296 B). Any control that reads `MainCursor` (e.g. a `ScrollBar` value setter) then pollutes an `AllocationMeasurer` result with a pure test artifact. Assign a real `Gum.Input.Cursor(null)` before measuring — production always uses a real cursor. See `ListBoxScrollAllocationTests`.
 
 ## WPF-touching tool code (GumToolUnitTests, frozen WPF head) needs an STA thread
 

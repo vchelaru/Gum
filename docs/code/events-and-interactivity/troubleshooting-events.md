@@ -16,10 +16,10 @@ Rather than walking the visual tree by hand, Gum exposes a diagnostic extension 
 
 If a control is not responding, paste one of the following into your update loop, put a breakpoint on the line, and hover the control while the game runs. Inspect `reason`: if it is `null`, events should be working; otherwise the string tells you exactly what is blocking them.
 
-The `GetEventFailureReason` extension methods live in the `MonoGameGum.Input` namespace, so add this `using` directive:
+The `GetEventFailureReason` extension methods live in the `Gum.Input` namespace, so add this `using` directive:
 
 ```csharp
-using MonoGameGum.Input;
+using Gum.Input;
 ```
 
 When you have a single control of a given type, look it up by type — no field or name required:

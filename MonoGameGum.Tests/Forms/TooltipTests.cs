@@ -5,7 +5,7 @@ using Gum.Forms.DefaultFromFileVisuals;
 using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using MonoGameGum.Input;
+using Gum.Input;
 using Moq;
 using Shouldly;
 using System;

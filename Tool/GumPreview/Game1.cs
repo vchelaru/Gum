@@ -8,7 +8,7 @@ using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.Input;
+using Gum.Input;
 using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;

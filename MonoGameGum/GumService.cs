@@ -23,16 +23,13 @@ using Gum.Localization;
 using Gum.GueDeriving;
 using Gum.Input;
 
-// A few types this shared file references live in different namespaces per backend — Cursor
-// (MonoGameGum.Input on XNALIKE vs Gum.Input on Raylib/Silk) and CustomSetPropertyOnRenderable
-// (Gum.Wireframe on XNALIKE, RaylibGum.Renderables on Raylib, SkiaGum on Silk). Only the using set
-// switches per platform; the method bodies stay backend-agnostic. This mirrors the per-platform using
+// A few types this shared file references live in different namespaces per backend —
+// CustomSetPropertyOnRenderable (Gum.Wireframe on XNALIKE, RaylibGum.Renderables on Raylib,
+// SkiaGum on Silk). Only the using set switches per platform; the method bodies stay backend-agnostic. This mirrors the per-platform using
 // aliasing used across the unified GueDeriving runtimes (issue #3608). The renderable Sprite type also
 // diverges, but its only use (CreateSpriteRenderable) lives in the per-platform partials, so no Sprite
 // using is needed here.
-#if MONOGAME || KNI || FNA
-using MonoGameGum.Input;
-#elif RAYLIB
+#if RAYLIB
 using Gum.Renderables;
 using RaylibGum.Renderables;
 #elif SILK

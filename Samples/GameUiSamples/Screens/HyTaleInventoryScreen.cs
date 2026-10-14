@@ -9,7 +9,7 @@ using System.Linq;
 using GameUiSamples.Data;
 
 // for the troubleshooting
-using MonoGameGum.Input;
+using Gum.Input;
 
 namespace GameUiSamples.Screens
 {

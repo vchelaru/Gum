@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
+using Gum.Input;
 using Shouldly;
 using Xunit;
 using GamePad = Gum.Input.GamePad;

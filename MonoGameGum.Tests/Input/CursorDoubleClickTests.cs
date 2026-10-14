@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 using Shouldly;
 using Xunit;
-using Cursor = MonoGameGum.Input.Cursor;
+using Cursor = Gum.Input.Cursor;
 
 namespace MonoGameGum.Tests.Input;
 

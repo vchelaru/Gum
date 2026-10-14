@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using GamepadButton = Gum.Input.GamepadButton;
 
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 
 /// <summary>
 /// Reads a MonoGame/XNA <see cref="GamePadState"/> and pushes it into the platform-neutral
@@ -30,9 +30,9 @@ internal static class GamePadDriver
     static GamePadState GetState(int index)
     {
 #if FNA
-        return GamePad.GetState((PlayerIndex)index);
+        return Microsoft.Xna.Framework.Input.GamePad.GetState((PlayerIndex)index);
 #else
-        return GamePad.GetState(index);
+        return Microsoft.Xna.Framework.Input.GamePad.GetState(index);
 #endif
     }
 
