@@ -46,7 +46,7 @@ dive into how this works end-to-end, see the **gum-variable-deep-dive** skill.
 
 ### `global::Localization.CurrentLanguage`
 
-Reserved identifier (int, mirrors `ILocalizationService.CurrentLanguage`) resolved in `EvaluatedSyntax` against `Gum.Localization.LocalizationRuntimeState.Current` — a GumCommon-level static so `Gum.Expressions` can read it without depending on any platform runtime. `CustomSetPropertyOnRenderable.LocalizationService` (per-platform-compiled) forwards to it. A `CurrentLanguage`-dependent reference needs an explicit `ApplyAllVariableReferences()` + `RefreshStyles()` after a language switch, same as any other reference — `CurrentLanguageChanged` does not trigger re-evaluation on its own.
+Reserved identifier (int, mirrors `ILocalizationService.CurrentLanguage`) resolved in `EvaluatedSyntax` against `Gum.Localization.LocalizationRuntimeState.Current` — a GumCommon-level static so `Gum.Expressions` can read it without depending on any platform runtime. `CustomSetPropertyOnRenderable.LocalizationService` (per-platform-compiled) forwards to it. `VariableReferenceGraph.ScanReads` lists it as the read `VariableReferenceGraph.CurrentLanguageReadName`, and `GraphicalUiElement.RefreshLocalization` (run by `GumService` on `CurrentLanguageChanged`) reports that name to each element with an `ElementSave`, so same-component rows reading the language re-evaluate on a switch with no explicit call. Cross-element rows still need `ApplyAllVariableReferences()` + `RefreshStyles()`. Tests: `CurrentLanguageReferenceTests`.
 
 ## Live re-evaluation within a component
 

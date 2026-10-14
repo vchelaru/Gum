@@ -120,6 +120,37 @@ public class ProjectPropertiesChangeLogicTests
         viewModel.SinglePixelTextureFile.ShouldBe("/Elsewhere/pixel.png");
     }
 
+    [Fact]
+    public void HandlePropertyChanged_LanguageName_SetsTheLanguageThenRefreshesTheWireframe()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _localizationService.Setup(l => l.Languages).Returns(new List<string> { "English", "Spanish" });
+        List<string> calls = new();
+        _localizationService.SetupSet(l => l.CurrentLanguage = It.IsAny<int>()).Callback<int>(language => calls.Add("language " + language));
+        _wireframeCommands.Setup(w => w.Refresh(It.IsAny<bool>(), It.IsAny<bool>())).Callback<bool, bool>((forceLayout, _) => calls.Add("refresh " + forceLayout));
+        viewModel.LanguageName = "Spanish";
+        calls.Clear();
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LanguageName));
+
+        // References that read the language are re-evaluated by the refresh, so it must come second.
+        calls.ShouldBe(new[] { "language 2", "refresh True" });
+    }
+
+    [Fact]
+    public void HandlePropertyChanged_LanguageName_ForTheCurrentLanguage_DoesNotRefreshTheWireframe()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _localizationService.Setup(l => l.Languages).Returns(new List<string> { "English", "Spanish" });
+        viewModel.LanguageIndex = 2;
+        viewModel.LanguageName = "Spanish";
+        _wireframeCommands.Invocations.Clear();
+
+        _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LanguageName));
+
+        _wireframeCommands.Verify(w => w.Refresh(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+    }
+
     private static ProjectPropertiesViewModel MakeViewModel()
     {
         ProjectPropertiesViewModel viewModel = new();

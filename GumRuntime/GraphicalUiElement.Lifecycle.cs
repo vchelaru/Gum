@@ -202,6 +202,11 @@ public partial class GraphicalUiElement
     public void RefreshLocalization()
     {
         RefreshLocalizationOnElementAction?.Invoke(this);
+        if (ElementSave != null)
+        {
+            // Only the name selects the rows; the evaluator reads the language from the service itself.
+            NotifyVariableChanged(VariableReferenceGraph.CurrentLanguageReadName, null);
+        }
         for (int i = 0; i < Children.Count; i++)
         {
             Children[i].RefreshLocalization();

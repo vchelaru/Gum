@@ -159,6 +159,7 @@ public class VariableReferenceGraphTests : BaseTestClass
     [InlineData("Components/my-item.X", "Components/my-item")]
     [InlineData("Components/Other + 1", "")]
     [InlineData("Width / 2", "")]
+    [InlineData("global::Localization.CurrentLanguage + 1", "")]
     public void ScanReads_ListsTheElementsAnExpressionReads(string expression, string expectedCsv)
     {
         List<string> elementReads = new List<string>();
@@ -175,6 +176,8 @@ public class VariableReferenceGraphTests : BaseTestClass
     [InlineData("IsOn ? Left.Width : Right.Width", "IsOn,Left.Width,Right.Width")]
     [InlineData("Components/Other.Width + 1", "")]
     [InlineData("true && Enabled", "Enabled")]
+    [InlineData("global::Localization.CurrentLanguage == 2 ? 220 : 160", "global::Localization.CurrentLanguage")]
+    [InlineData("global::Localization.CurrentLanguage + Offset", "global::Localization.CurrentLanguage,Offset")]
     public void ScanReads_ListsTheVariablePathsAnExpressionReads(string expression, string expectedCsv)
     {
         List<string> reads = new List<string>();

@@ -90,6 +90,12 @@ public sealed class VariableReferenceGraph
 
     private static readonly ReferenceRow[] NoRows = new ReferenceRow[0];
 
+    /// <summary>
+    /// The name a row reading <c>global::Localization.CurrentLanguage</c> lists in <see cref="ReferenceRow.Reads"/>.
+    /// Report it as changed to re-evaluate those rows when the language switches.
+    /// </summary>
+    public const string CurrentLanguageReadName = "global::Localization.CurrentLanguage";
+
     [ThreadStatic]
     private static int _suppressionDepth;
 
@@ -683,6 +689,13 @@ public sealed class VariableReferenceGraph
 
                 if (path == "global" && i + 1 < expression.Length && expression[i] == ':' && expression[i + 1] == ':')
                 {
+                    if (IsCurrentLanguagePath(expression, i + 2))
+                    {
+                        reads.Add(CurrentLanguageReadName);
+                        i += 2 + CurrentLanguagePath.Length;
+                        continue;
+                    }
+
                     i = ReadElementReference(expression, i + 2, elementReads);
                     continue;
                 }
@@ -717,6 +730,16 @@ public sealed class VariableReferenceGraph
             }
         }
         return readsLiveLayout;
+    }
+
+    private const string CurrentLanguagePath = "Localization.CurrentLanguage";
+
+    // The text after "global::" is the reserved language identifier and not a longer name that starts with it.
+    private static bool IsCurrentLanguagePath(string expression, int index)
+    {
+        int end = index + CurrentLanguagePath.Length;
+        return string.CompareOrdinal(expression, index, CurrentLanguagePath, 0, CurrentLanguagePath.Length) == 0
+            && (end >= expression.Length || !IsIdentifierChar(expression[end]));
     }
 
     private static bool IsElementFolder(string path)
