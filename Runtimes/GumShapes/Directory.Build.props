@@ -53,8 +53,11 @@
       drivers under the pinned 0.7.10 shader). 0.7.11's DrawRing second-radius semantics change
       (rings would render 2x thicker) is compensated for in Arc.cs's DrawRing call — see
       AposShapeGeometryTests for the pixel-level regression guard.
+
+      Bumped from 0.8.1 to 0.8.6 for issue #5168 (0.8.6 applies SVG `style` element rules, so
+      Illustrator exports that color paths through classes no longer draw black).
     -->
-    <AposShapesVersion>0.8.1</AposShapesVersion>
+    <AposShapesVersion>0.8.6</AposShapesVersion>
   </PropertyGroup>
 
   <!--
