@@ -91,4 +91,50 @@ public class SpriteDiagonalFlipTests : BaseTestClass
         // so this must match the baseline (non-diagonal) rectangle's center exactly.
         ShouldBeApproximately(diagonalPosition, baselineCenter);
     }
+
+    [Fact]
+    public void GetDiagonalFlipComposite_SquareSourceInSquareFootprint_KeepsTheScaleAndCenterPivot()
+    {
+        var scale = new Vector2(2f, 2f);
+
+        var composite = Sprite.GetDiagonalFlipComposite(10f, 10f, scale, 0f);
+
+        composite.Scale.ShouldBe(scale);
+        composite.Origin.ShouldBe(new Vector2(5f, 5f));
+        composite.PositionOffset.ShouldBe(new Vector2(10f, 10f));
+        composite.RotationRadians.ShouldBe(-MathF.PI / 2, tolerance: 0.0001f);
+    }
+
+    [Fact]
+    public void GetDiagonalFlipComposite_NonSquareSource_LandsTransposedOnTheOriginalFootprint()
+    {
+        // A 4x2 source drawn into a 20x40 footprint is a scale of (5, 20).
+        const float sourceWidth = 4f;
+        const float sourceHeight = 2f;
+        var scale = new Vector2(5f, 20f);
+        var position = new Vector2(100f, 50f);
+
+        var composite = Sprite.GetDiagonalFlipComposite(sourceWidth, sourceHeight, scale, 0f);
+        var diagonalPosition = position + composite.PositionOffset;
+
+        // SpriteEffects.FlipHorizontally makes the vertex at each local corner carry the texel of
+        // the corner mirrored across the vertical axis, before the rotation.
+        var flippedTL = new Vector2(sourceWidth, 0);
+        var flippedTR = new Vector2(0, 0);
+        var flippedBL = new Vector2(sourceWidth, sourceHeight);
+        var flippedBR = new Vector2(0, sourceHeight);
+
+        var diagTL = ScreenCornerFor(flippedTL, diagonalPosition, composite.Origin, composite.Scale, composite.RotationRadians);
+        var diagTR = ScreenCornerFor(flippedTR, diagonalPosition, composite.Origin, composite.Scale, composite.RotationRadians);
+        var diagBL = ScreenCornerFor(flippedBL, diagonalPosition, composite.Origin, composite.Scale, composite.RotationRadians);
+        var diagBR = ScreenCornerFor(flippedBR, diagonalPosition, composite.Origin, composite.Scale, composite.RotationRadians);
+
+        // The texel for the source's top-left and bottom-right stay at the footprint's top-left and
+        // bottom-right; the top-right and bottom-left texels swap places. The footprint is
+        // x 100..120, y 50..90.
+        ShouldBeApproximately(diagTL, new Vector2(100f, 50f));
+        ShouldBeApproximately(diagBR, new Vector2(120f, 90f));
+        ShouldBeApproximately(diagTR, new Vector2(100f, 90f));
+        ShouldBeApproximately(diagBL, new Vector2(120f, 50f));
+    }
 }
