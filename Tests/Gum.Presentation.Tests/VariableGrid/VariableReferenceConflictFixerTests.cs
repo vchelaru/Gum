@@ -110,6 +110,27 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
     }
 
     [Fact]
+    public void Fix_FormatsValuesLikeTheErrorRow()
+    {
+        System.Globalization.CultureInfo original = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+        try
+        {
+            ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 12.5f);
+            ErrorResult row = _checker.GetErrorsFor(component, _project).Single(error => error.Code == "GUM0002");
+
+            _sut.Fix(row.ReferenceConflict!);
+
+            row.Message.ShouldContain("12,5");
+            _shownMessage.ShouldNotBeNull().ShouldContain("12,5");
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = original;
+        }
+    }
+
+    [Fact]
     public void Fix_ShowsOldAndNewValue_BeforeChangingAnything()
     {
         ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 6f);

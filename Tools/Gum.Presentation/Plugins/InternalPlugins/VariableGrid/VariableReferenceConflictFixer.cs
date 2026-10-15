@@ -11,7 +11,6 @@ using GumRuntime;
 using Gum.Services;
 using System;
 using System.Linq;
-using System.Globalization;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -100,6 +99,6 @@ public class VariableReferenceConflictFixer : IVariableReferenceConflictFixer
         _messenger.Send(new RequestErrorRefreshMessage());
     }
 
-    private static string FormatValue(object? value) =>
-        Convert.ToString(value, CultureInfo.InvariantCulture) ?? "(null)";
+    // The same text the error row shows, so the dialog and the row never disagree.
+    private static string FormatValue(object? value) => value?.ToString() ?? "(null)";
 }
