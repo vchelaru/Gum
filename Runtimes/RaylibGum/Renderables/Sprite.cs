@@ -459,7 +459,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     public override InvisibleRenderable Clone()
     {
         Sprite clone = (Sprite)base.Clone();
-        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame, clone.ApplyKeyframeColor);
         return clone;
     }
 
@@ -498,6 +498,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     {
         this.Texture = texture;
         AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+        AnimationLogic.ApplyKeyframeColor = ApplyKeyframeColor;
     }
 
     void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
@@ -521,25 +522,38 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical = frame.FlipVertical;
 
-        if (frame.Alpha.HasValue)
+        // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
+        // ignores a skipped frame's own channels.
+        if (!AnimationLogic.IsColorDrivenByKeyframes)
         {
-            Alpha = frame.Alpha.Value;
+            ApplyColor(frame.Alpha, frame.Red, frame.Green, frame.Blue, frame.ColorOperation);
+        }
+    }
+
+    void ApplyKeyframeColor(Gum.Graphics.Animation.KeyframeColor color) =>
+        ApplyColor(color.Alpha, color.Red, color.Green, color.Blue, color.Operation);
+
+    void ApplyColor(int? alpha, int? red, int? green, int? blue, AnimationFrameColorOperation? colorOperation)
+    {
+        if (alpha.HasValue)
+        {
+            Alpha = alpha.Value;
         }
 
-        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        if (colorOperation == AnimationFrameColorOperation.Multiply)
         {
-            Red = frame.Red ?? 255;
-            Green = frame.Green ?? 255;
-            Blue = frame.Blue ?? 255;
+            Red = red ?? 255;
+            Green = green ?? 255;
+            Blue = blue ?? 255;
             ColorOperation = ColorOperation.Modulate;
         }
-        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        else if (colorOperation == AnimationFrameColorOperation.Add)
         {
             // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
             // Multiply's 255 identity above.
-            Red = frame.Red ?? 0;
-            Green = frame.Green ?? 0;
-            Blue = frame.Blue ?? 0;
+            Red = red ?? 0;
+            Green = green ?? 0;
+            Blue = blue ?? 0;
             ColorOperation = ColorOperation.Add;
         }
         else if (ColorOperation == ColorOperation.Add)

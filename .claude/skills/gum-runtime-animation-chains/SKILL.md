@@ -32,7 +32,7 @@ State lives entirely on `AnimationChainLogic`:
 Sprite handles each frame in **two phases**:
 
 1. **On frame change** (`Sprite.ApplyAnimationFrame`, wired into `AnimationLogic.ApplyFrame`): copies `Texture`, computes pixel `SourceRectangle` from UV coords × texture size, and copies `FlipHorizontal`/`FlipVertical`. Persistent state.
-2. **At every render** (`Sprite.Render`, when `CurrentFrameIndex < CurrentChain.Count`): re-reads `CurrentChain[CurrentFrameIndex].RelativeX/RelativeY`, mutates `this.X/Y`, calls the static draw, then restores the originals.
+2. **At every render** (`Sprite.Render`, when `CurrentFrameIndex < CurrentChain.Count`): reads `AnimationLogic.CurrentOffset` (the frame's live `RelativeX/RelativeY`, or the keyframe-evaluated offset), mutates `this.X/Y`, calls the static draw, then restores the originals.
 
 This split matters: changing `RelativeX/Y` on a live frame takes effect on the next render without needing `UpdateToCurrentAnimationFrame`. But it also means rotation handling for the offset lives at the render call site, not in `ApplyFrame`.
 
@@ -68,12 +68,21 @@ A separate nullable field, `AnimationFrame.RenderColorOperation`/`AnimationFrame
 
 Note for tool work: exposing `ColorOperation` as a tool-editable variable means codegen emits `X.ColorOperation = ...`, which older runtimes' `NineSliceRuntime` does not have. That needs a syntax-version bump and gate — see `gum-runtime-syntax-version`.
 
+## Keyframe interpolation (offset and color glides)
+
+Every frame is a keyframe; a keyframe's curve runs to the next keyframe of the same group (Offset: `RelativeX/Y`, Color: Red/Green/Blue/Alpha). The six per-frame fields (`SkipOffsetKeyframe`, `OffsetInterpolation`, ...) are stored as raw strings so unknown names round-trip. The math is `KeyframeEvaluator`/`KeyframeCurve` (ported from FlatRedBall2's `AnimationChain.Common`, using the `FlatRedBall.InterpolationCore` tweener GumCommon already references).
+
+- A chain without keyframe data (`KeyframeEvaluator.HasOffsetKeyframes`/`HasColorKeyframes`) takes the old path, byte for byte. Only a chain with color keyframes sets `AnimationChainLogic.IsColorDrivenByKeyframes`; each `ApplyAnimationFrame` must then skip its own color step, because `ApplyKeyframeColor` (called right after `ApplyFrame` and on every `AnimateSelf` tick) already applied the inherited color, and a skipped frame's own channels must not leak.
+- Only the MonoGame-family, Skia and raylib Sprites wire `ApplyKeyframeColor`. Sokol's Sprite applies no color or offset, and `NineSlice` applies raw frame colors with no glide. Skia, raylib and Sokol ignore `RelativeX/Y` entirely, so offset glides show only on the MonoGame-family Sprite.
+- In keyframe mode, channels inherit from the last keyframe that set them and the operation inherits through skipped frames. Red/Green/Blue still reach the sprite only under a Multiply or Add operation, matching FlatRedBall2 (`SpriteFrameColor.Apply`); Alpha applies on its own.
+
 ## Key Files
 
 | File | Purpose |
 |------|---------|
 | `RenderingLibrary/Graphics/Animation/AnimationChainLogic.cs` | Platform-agnostic playback state and tick |
 | `RenderingLibrary/Graphics/Animation/SpriteAnimationLogic.cs` | `[Obsolete]` back-compat subclass of `AnimationChainLogic` |
+| `RenderingLibrary/Graphics/Animation/KeyframeEvaluator.cs`, `KeyframeCurve.cs` | Pure glide math and curve-name parsing (new files must be added to `GumCoreShared.projitems` and each runtime csproj that links `AnimationChainLogic.cs`) |
 | `RenderingLibrary/Graphics/Animation/AnimationFrame.cs` | Runtime frame; `ToAnimationFrame` extension converts from save with `TextureCoordinateType` |
 | `RenderingLibrary/Graphics/Animation/AnimationChain.cs` | `List<AnimationFrame>`; `ToAnimationChain` extension |
 | `RenderingLibrary/Graphics/Animation/AnimationChainList.cs` | `List<AnimationChain>`; `.achx` deserialization entry point |

@@ -380,6 +380,7 @@ public class Sprite : SpriteBatchRenderableBase,
 
         Texture = texture;
         AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+        AnimationLogic.ApplyKeyframeColor = ApplyKeyframeColor;
     }
 
     void ApplyAnimationFrame(AnimationFrame frame)
@@ -399,11 +400,6 @@ public class Sprite : SpriteBatchRenderableBase,
         FlipVertical = frame.FlipVertical;
         FlipDiagonal = frame.FlipDiagonal;
 
-        if (frame.Alpha.HasValue)
-        {
-            Alpha = frame.Alpha.Value;
-        }
-
         // Modulate/ColorTextureAlpha render-technique selector (#4822) - distinct from
         // AnimationFrameColorOperation below (FlatRedBall's Multiply/Add per-frame tint).
         if (frame.RenderColorOperation.HasValue)
@@ -411,20 +407,38 @@ public class Sprite : SpriteBatchRenderableBase,
             ColorOperation = frame.RenderColorOperation.Value;
         }
 
-        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
+        // ignores a skipped frame's own channels.
+        if (!AnimationLogic.IsColorDrivenByKeyframes)
         {
-            Red = frame.Red ?? 255;
-            Green = frame.Green ?? 255;
-            Blue = frame.Blue ?? 255;
+            ApplyColor(frame.Alpha, frame.Red, frame.Green, frame.Blue, frame.ColorOperation);
+        }
+    }
+
+    void ApplyKeyframeColor(KeyframeColor color) =>
+        ApplyColor(color.Alpha, color.Red, color.Green, color.Blue, color.Operation);
+
+    void ApplyColor(int? alpha, int? red, int? green, int? blue, AnimationFrameColorOperation? colorOperation)
+    {
+        if (alpha.HasValue)
+        {
+            Alpha = alpha.Value;
+        }
+
+        if (colorOperation == AnimationFrameColorOperation.Multiply)
+        {
+            Red = red ?? 255;
+            Green = green ?? 255;
+            Blue = blue ?? 255;
             ColorOperation = ColorOperation.Modulate;
         }
-        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        else if (colorOperation == AnimationFrameColorOperation.Add)
         {
             // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
             // Multiply's 255 identity above.
-            Red = frame.Red ?? 0;
-            Green = frame.Green ?? 0;
-            Blue = frame.Blue ?? 0;
+            Red = red ?? 0;
+            Green = green ?? 0;
+            Blue = blue ?? 0;
             ColorOperation = ColorOperation.Add;
         }
         else if (ColorOperation == ColorOperation.Add)
@@ -474,9 +488,9 @@ public class Sprite : SpriteBatchRenderableBase,
 
                     var absoluteRotationRadians = MathHelper.ToRadians(absoluteRotationDegrees);
 
-                    var offsetVector = new System.Numerics.Vector2(
-                        CurrentChain[this.CurrentFrameIndex].RelativeX,
-                        CurrentChain[this.CurrentFrameIndex].RelativeY);
+                    // Evaluated every render so an offset glide moves the sprite between frame changes.
+                    var currentOffset = AnimationLogic.CurrentOffset;
+                    var offsetVector = new System.Numerics.Vector2(currentOffset.X, currentOffset.Y);
 
                     if(absoluteRotationDegrees != 0 && (offsetVector.X != 0 || offsetVector.Y != 0))
                     {
@@ -1068,7 +1082,7 @@ public class Sprite : SpriteBatchRenderableBase,
         var newInstance = (Sprite)this.MemberwiseClone();
         newInstance.mParent = null;
         newInstance.mChildren = new ();
-        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
+        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame, newInstance.ApplyKeyframeColor);
         // IAnimation has no clone contract: copy an implementation that opts in through
         // ICloneable, and share any other one, since it may hold state that cannot be copied safely.
         if (Animation is ICloneable cloneableAnimation)

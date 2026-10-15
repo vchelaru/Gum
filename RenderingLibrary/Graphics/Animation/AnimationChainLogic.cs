@@ -156,16 +156,82 @@ public class AnimationChainLogic
     public Action<AnimationFrame>? ApplyFrame;
 
     /// <summary>
+    /// Invoked with the keyframe-evaluated color on every update while the current chain has color
+    /// keyframes (<see cref="IsColorDrivenByKeyframes"/>), including right after
+    /// <see cref="ApplyFrame"/> on a frame change, so a glide changes the color mid-frame. Never
+    /// invoked for a chain without color keyframes, whose colors the <see cref="ApplyFrame"/>
+    /// subscriber applies from the frame itself.
+    /// </summary>
+    public Action<KeyframeColor>? ApplyKeyframeColor;
+
+    /// <summary>
+    /// Whether the current chain has color keyframes (a color curve, or a skipped color frame), so
+    /// its color comes from <see cref="ApplyKeyframeColor"/> instead of from each frame's own
+    /// Red/Green/Blue/Alpha. <see cref="ApplyFrame"/> subscribers skip their color step when true.
+    /// </summary>
+    public bool IsColorDrivenByKeyframes
+    {
+        get
+        {
+            AnimationChain? chain = CurrentChain;
+            return chain != null && KeyframeEvaluator.HasColorKeyframes(chain);
+        }
+    }
+
+    /// <summary>
+    /// The offset to draw the current frame at, with keyframe interpolation applied. Without offset
+    /// keyframes this is exactly the current frame's own RelativeX/RelativeY, read live. (0, 0) with
+    /// no chain.
+    /// </summary>
+    public (float X, float Y) CurrentOffset
+    {
+        get
+        {
+            AnimationChain? chain = CurrentChain;
+            if (chain == null || _currentFrameIndex < 0 || _currentFrameIndex >= chain.Count)
+            {
+                return (0f, 0f);
+            }
+            if (KeyframeEvaluator.HasOffsetKeyframes(chain))
+            {
+                return KeyframeEvaluator.EvaluateOffset(chain, _isLooping, _currentFrameIndex, ElapsedInCurrentFrame(chain));
+            }
+            AnimationFrame frame = chain[_currentFrameIndex];
+            return (frame.RelativeX, frame.RelativeY);
+        }
+    }
+
+    double ElapsedInCurrentFrame(AnimationChain chain)
+    {
+        double frameStart = 0;
+        for (int i = 0; i < _currentFrameIndex && i < chain.Count; i++)
+        {
+            frameStart += chain[i].FrameLength;
+        }
+        return System.Math.Max(0, _timeIntoAnimation - frameStart);
+    }
+
+    void InvokeApplyKeyframeColor(AnimationChain chain)
+    {
+        if (ApplyKeyframeColor != null && KeyframeEvaluator.HasColorKeyframes(chain))
+        {
+            ApplyKeyframeColor(KeyframeEvaluator.EvaluateColor(chain, _isLooping, _currentFrameIndex, ElapsedInCurrentFrame(chain)));
+        }
+    }
+
+    /// <summary>
     /// Returns a copy for a cloned renderable. The copy starts at this playback position (chain,
     /// frame, time, speed, looping, animate) and shares the chain list, but advances on its own.
-    /// Its frames go to <paramref name="applyFrame"/>. <see cref="AnimationChainCycled"/> and
+    /// Its frames go to <paramref name="applyFrame"/> and its keyframe colors to
+    /// <paramref name="applyKeyframeColor"/>. <see cref="AnimationChainCycled"/> and
     /// <see cref="AnimationChainFinished"/> subscribers on this instance are not carried over,
     /// since they belong to the source.
     /// </summary>
-    public AnimationChainLogic Clone(Action<AnimationFrame>? applyFrame)
+    public AnimationChainLogic Clone(Action<AnimationFrame>? applyFrame, Action<KeyframeColor>? applyKeyframeColor = null)
     {
         AnimationChainLogic clone = (AnimationChainLogic)MemberwiseClone();
         clone.ApplyFrame = applyFrame;
+        clone.ApplyKeyframeColor = applyKeyframeColor;
         clone.AnimationChainCycled = null;
         clone.AnimationChainFinished = null;
         return clone;
@@ -226,6 +292,11 @@ public class AnimationChainLogic
         }
 
         bool didApplyFrame = _currentFrameIndex != frameBefore && UpdateToCurrentAnimationFrame();
+        if (!didApplyFrame)
+        {
+            // A glide changes the color between frame changes; a frame change already applied it.
+            InvokeApplyKeyframeColor(animationChain);
+        }
 
         if (justFinished)
         {
@@ -253,6 +324,7 @@ public class AnimationChainLogic
             SeekToFrame(chain, _currentFrameIndex);
         }
         ApplyFrame?.Invoke(chain[_currentFrameIndex]);
+        InvokeApplyKeyframeColor(chain);
         return true;
     }
 

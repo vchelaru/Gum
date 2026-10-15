@@ -58,6 +58,8 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" Link="Animation\AnimationChainLogic.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\KeyframeCurve.cs" Link="Animation\KeyframeCurve.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\KeyframeEvaluator.cs" Link="Animation\KeyframeEvaluator.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
 		<!-- Shared markup model + run-splitter (InlineVariable, StyledSubstring, StyledSubstringSplitter)
 		     so Skia's Text can render BBCode inline styling without reimplementing the split (#3679). -->
