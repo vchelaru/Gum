@@ -15,24 +15,15 @@ public interface IHeadlessCodeGenerationService
         CodeOutputProjectSettings projectSettings, bool checkForMissing = true);
 
     /// <summary>
-    /// Generates code for all screens and components in the project.
+    /// The one place a batch of elements is generated, for both <c>gumcli codegen</c> and the tool's
+    /// Generate All. Skips elements set to never generate, runs the optional gate, generates the rest,
+    /// and, only when <see cref="CodeGenerationRunOptions.Elements"/> is null (the whole project),
+    /// writes the per-project Standard Elements fallback-registration file
+    /// (<c>StandardElements.Generated.cs</c>, issue #3505; see
+    /// <see cref="CodeGenerator.GenerateStandardElementsFallbackCode"/>). The file is skipped when
+    /// the output library doesn't use it or no
+    /// <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> is configured.
     /// </summary>
-    /// <returns>The number of elements for which code was generated.</returns>
-    int GenerateCodeForAllElements(GumProjectSave project, CodeOutputProjectSettings projectSettings);
-
-    /// <summary>
-    /// Writes the per-project Standard Elements fallback-registration file
-    /// (<c>StandardElements.Generated.cs</c>) so Standard-Element-owned category/state assignments
-    /// still work in code-only games (issue #3505). See
-    /// <see cref="Gum.ProjectServices.CodeGeneration.CodeGenerator.GenerateStandardElementsFallbackCode"/>
-    /// for what the file contains. Called automatically by <see cref="GenerateCodeForAllElements"/>;
-    /// exposed separately so callers that generate elements individually (e.g. the CLI's
-    /// <c>codegen</c> command) can still produce the fallback file for the whole project.
-    /// </summary>
-    /// <returns>
-    /// True if the file was written; false if generation was skipped (unsupported
-    /// <see cref="CodeOutputProjectSettings.OutputLibrary"/> or no
-    /// <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> configured).
-    /// </returns>
-    bool GenerateStandardElementsFallbackFile(GumProjectSave project, CodeOutputProjectSettings projectSettings);
+    CodeGenerationRunResult GenerateCodeForElements(GumProjectSave project,
+        CodeOutputProjectSettings projectSettings, CodeGenerationRunOptions? options = null);
 }

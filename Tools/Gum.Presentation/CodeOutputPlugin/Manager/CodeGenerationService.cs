@@ -21,6 +21,7 @@ public class CodeGenerationService
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
     private readonly IRetryService _retryService;
+    private readonly HeadlessCodeGenerationService _headlessCodeGenerationService;
 
     public CodeGenerationService(IGuiCommands guiCommands, CodeGenerator codeGenerator,
         IDialogService dialogService,
@@ -36,42 +37,52 @@ public class CodeGenerationService
         _guiCommands = guiCommands;
         _dialogService = dialogService;
         _retryService = retryService;
+
+        // The fallback file and the batch loop come from the same orchestrator gumcli uses; only the
+        // file writes (retried here) and the per-element step (this class's own) differ.
+        ICodeGenLogger logger = new GuiCommandsCodeGenLogger(guiCommands);
+        _headlessCodeGenerationService = new HeadlessCodeGenerationService(
+            codeGenerator, customCodeGenerator, _codeGenerationFileLocationsService, _elementSettingsManager,
+            logger, new RetryingCodeFileWriter(retryService, logger));
+    }
+
+    private class GuiCommandsCodeGenLogger : ICodeGenLogger
+    {
+        private readonly IGuiCommands _guiCommands;
+
+        public GuiCommandsCodeGenLogger(IGuiCommands guiCommands)
+        {
+            _guiCommands = guiCommands;
+        }
+
+        public void PrintOutput(string message) => _guiCommands.PrintOutput(message);
+
+        public void PrintError(string message) => _guiCommands.PrintOutput(message);
     }
 
 
     /// <summary>
-    /// Writes the per-project Standard Elements fallback-registration file
-    /// (<c>StandardElements.Generated.cs</c>) so Standard-Element-owned category/state assignments
-    /// still work in code-only games (issue #3505). Thin pass-through to
-    /// <see cref="CodeGenerator.GenerateStandardElementsFallbackCode"/> and
-    /// <see cref="CodeGenerationFileLocationsService.GetStandardElementsFallbackFileName"/> — no-op
-    /// when generation is skipped for <paramref name="codeOutputProjectSettings"/>'s OutputLibrary or
-    /// no CodeProjectRoot is configured.
+    /// Generates every Screen and Component through the headless orchestrator, the same one
+    /// <c>gumcli codegen</c> uses, so elements set to never generate are skipped and the per-project
+    /// Standard Elements fallback file (issue #3505) is written. Each element still goes through
+    /// <see cref="GenerateCodeForElement"/> for the tool's output and error handling.
     /// </summary>
-    public void GenerateStandardElementsFallbackFile(GumProjectSave project, CodeOutputProjectSettings codeOutputProjectSettings)
+    /// <returns>The number of elements generated.</returns>
+    public int GenerateCodeForAllElements(GumProjectSave project, CodeOutputProjectSettings codeOutputProjectSettings)
     {
-        string? contents = _codeGenerator.GenerateStandardElementsFallbackCode(project, codeOutputProjectSettings);
-        if (contents == null)
-        {
-            return;
-        }
+        CodeGenerationRunResult result = _headlessCodeGenerationService.GenerateCodeForElements(
+            project, codeOutputProjectSettings, new CodeGenerationRunOptions
+            {
+                ElementGenerator = (element, elementSettings, checkForMissing) =>
+                    GenerateCodeForElement(element, elementSettings, codeOutputProjectSettings,
+                        showPopups: false, checkForMissing: checkForMissing)
+            });
 
-        var generatedFileName = _codeGenerationFileLocationsService.GetStandardElementsFallbackFileName(codeOutputProjectSettings);
-        if (generatedFileName == null)
-        {
-            return;
-        }
-
-        var codeDirectory = generatedFileName.GetDirectoryContainingThis();
-        if (codeDirectory != null && !System.IO.Directory.Exists(codeDirectory.FullPath))
-        {
-            _retryService.TryMultipleTimes(() => System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
-        }
-
-        _retryService.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
+        return result.GeneratedCount;
     }
 
-    public void GenerateCodeForElement(ElementSave selectedElement, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups,
+    /// <returns>True if the element's code was written.</returns>
+    public bool GenerateCodeForElement(ElementSave selectedElement, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups,
         bool checkForMissing = true)
     {
         var visualApi = _codeGenerator.GetVisualApiForElement(selectedElement);
@@ -94,7 +105,7 @@ public class CodeGenerationService
             {
                 _dialogService.ShowMessage(errorMessage);
             }
-            return;
+            return false;
         }
 
         //////////////////////////////////////End Early Out//////////////////////////
@@ -112,7 +123,7 @@ public class CodeGenerationService
             {
                 _guiCommands.PrintOutput(baseTypeError);
             }
-            return;
+            return false;
         }
 
         if(checkForMissing)
@@ -236,6 +247,6 @@ public class CodeGenerationService
             }
         }
 
-
+        return hasDirectory;
     }
 }

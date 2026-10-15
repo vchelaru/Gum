@@ -402,11 +402,8 @@ public class CodegenCommandTests : IDisposable
     [Fact]
     public void Codegen_WritesStandardElementsFallbackFile()
     {
-        // Issue #3505: gumcli codegen doesn't call HeadlessCodeGenerationService.GenerateCodeForAllElements
-        // (it iterates elements individually so it can run per-element error checks first - see the
-        // gum-cli skill), so the fallback file must be written directly from CodegenCommand too, or
-        // CI's Codegen Drift Check regeneration (Tests/GenerateAllCodeGenProjects.bat, which shells out
-        // to this exact "gumcli codegen" path) would never actually produce the file.
+        // Issue #3505: CI's Codegen Drift Check regeneration (Tests/GenerateAllCodeGenProjects.bat,
+        // which shells out to this exact "gumcli codegen" path) needs the fallback file produced.
         string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
         new ProjectCreator().Create(gumxPath);
         File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),

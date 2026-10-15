@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ToolsUtilities;
 
@@ -17,19 +18,23 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
     private readonly CodeGenerationFileLocationsService _fileLocationsService;
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly ICodeGenLogger _logger;
+    private readonly ICodeFileWriter _fileWriter;
 
+    /// <param name="fileWriter">Writes the generated files; null writes each once through <see cref="DirectCodeFileWriter"/>.</param>
     public HeadlessCodeGenerationService(
         CodeGenerator codeGenerator,
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationFileLocationsService fileLocationsService,
         CodeOutputElementSettingsManager elementSettingsManager,
-        ICodeGenLogger logger)
+        ICodeGenLogger logger,
+        ICodeFileWriter? fileWriter = null)
     {
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
         _fileLocationsService = fileLocationsService;
         _elementSettingsManager = elementSettingsManager;
         _logger = logger;
+        _fileWriter = fileWriter ?? new DirectCodeFileWriter(logger);
     }
 
     /// <inheritdoc/>
@@ -62,7 +67,7 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         string contents = _codeGenerator.GetGeneratedCodeForElement(element, elementSettings, projectSettings);
         contents = $"//Code for {element}\r\n{contents}";
 
-        if (!TryWriteFile(generatedFileName.FullPath, contents))
+        if (!_fileWriter.TryWrite(generatedFileName.FullPath, contents))
         {
             return false;
         }
@@ -75,78 +80,66 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         {
             var customCodeContents = _customCodeGenerator.GetCustomCodeForElement(
                 element, elementSettings, projectSettings);
-            return TryWriteFile(customCodeFileName, customCodeContents);
+            return _fileWriter.TryWrite(customCodeFileName, customCodeContents);
         }
 
         return true;
     }
 
-    // Creates the file's folder and writes it, reporting a file-system failure (a read-only or
-    // unreachable CodeProjectRoot, such as another machine's absolute path) through the logger
-    // instead of throwing, so one bad path doesn't abort the whole run.
-    private bool TryWriteFile(string filePath, string contents)
-    {
-        try
-        {
-            string? directory = System.IO.Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
-            }
-            System.IO.File.WriteAllText(filePath, contents);
-            return true;
-        }
-        catch (Exception e) when (e is System.IO.IOException || e is UnauthorizedAccessException)
-        {
-            _logger.PrintError($"Error writing {filePath}: {e.Message}");
-            return false;
-        }
-    }
-
     /// <inheritdoc/>
-    public int GenerateCodeForAllElements(GumProjectSave project, CodeOutputProjectSettings projectSettings)
+    public CodeGenerationRunResult GenerateCodeForElements(GumProjectSave project,
+        CodeOutputProjectSettings projectSettings, CodeGenerationRunOptions? options = null)
     {
-        int count = 0;
+        IReadOnlyList<ElementSave>? subset = options?.Elements;
+        IReadOnlyList<ElementSave> elements = subset ??
+            project.Screens.Cast<ElementSave>().Concat(project.Components).ToList();
+
+        // A subset run generates referenced elements that have no code yet; a whole-project run
+        // reaches them anyway.
+        bool checkForMissing = subset != null;
+        ElementCodeGenerator generateElement = options?.ElementGenerator ??
+            ((element, settings, check) => GenerateCodeForElement(element, settings, projectSettings, check));
+
+        int generatedCount = 0;
+        int blockedCount = 0;
 
         ObjectFinder.Self.EnableCache();
         try
         {
-            foreach (var screen in project.Screens)
+            foreach (ElementSave element in elements)
             {
-                var settings = _elementSettingsManager.LoadOrCreateSettingsFor(screen);
-                if (settings.GenerationBehavior != GenerationBehavior.NeverGenerate)
+                CodeOutputElementSettings settings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
+                if (settings.GenerationBehavior == GenerationBehavior.NeverGenerate)
                 {
-                    if (GenerateCodeForElement(screen, settings, projectSettings, checkForMissing: false))
-                    {
-                        count++;
-                    }
+                    continue;
+                }
+
+                if (options?.Gate != null && !options.Gate(element))
+                {
+                    blockedCount++;
+                    continue;
+                }
+
+                if (generateElement(element, settings, checkForMissing))
+                {
+                    generatedCount++;
                 }
             }
 
-            foreach (var component in project.Components)
+            if (subset == null)
             {
-                var settings = _elementSettingsManager.LoadOrCreateSettingsFor(component);
-                if (settings.GenerationBehavior != GenerationBehavior.NeverGenerate)
-                {
-                    if (GenerateCodeForElement(component, settings, projectSettings, checkForMissing: false))
-                    {
-                        count++;
-                    }
-                }
+                GenerateStandardElementsFallbackFile(project, projectSettings);
             }
-
-            GenerateStandardElementsFallbackFile(project, projectSettings);
         }
         finally
         {
             ObjectFinder.Self.DisableCache();
         }
 
-        return count;
+        return new CodeGenerationRunResult { GeneratedCount = generatedCount, BlockedCount = blockedCount };
     }
 
-    /// <inheritdoc/>
-    public bool GenerateStandardElementsFallbackFile(GumProjectSave project, CodeOutputProjectSettings projectSettings)
+    private bool GenerateStandardElementsFallbackFile(GumProjectSave project, CodeOutputProjectSettings projectSettings)
     {
         string? contents = _codeGenerator.GenerateStandardElementsFallbackCode(project, projectSettings);
         if (contents == null)
@@ -160,7 +153,7 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
             return false;
         }
 
-        if (!TryWriteFile(generatedFileName.FullPath, contents))
+        if (!_fileWriter.TryWrite(generatedFileName.FullPath, contents))
         {
             return false;
         }

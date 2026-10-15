@@ -513,21 +513,10 @@ public abstract class CodeOutputPluginBase : PluginBase
             {
                 if(viewModel.IsAllInProjectGenerating)
                 {
-                    int numberOfElements = 0;
-                    foreach(var element in _projectState.GumProjectSave?.AllElements ?? Enumerable.Empty<ElementSave>())
-                    {
-                        if(element is StandardElementSave)
-                        {
-                            continue;
-                        }
-
-                        var elementOutputSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
-                        if(elementOutputSettings.GenerationBehavior != GenerationBehavior.NeverGenerate)
-                        {
-                            _codeGenerationService.GenerateCodeForElement(element, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
-                            numberOfElements++;
-                        }
-                    }
+                    GumProjectSave? gumProject = _projectState.GumProjectSave;
+                    int numberOfElements = gumProject == null
+                        ? 0
+                        : _codeGenerationService.GenerateCodeForAllElements(gumProject, codeOutputProjectSettings);
 
                     _dialogService.ShowMessage($"Generated code for {numberOfElements} element(s)");
                 }
@@ -551,20 +540,7 @@ public abstract class CodeOutputPluginBase : PluginBase
             // Nothing is loaded, so there is nothing to generate; the caller still completes.
             return;
         }
-        foreach (var screen in gumProject.Screens)
-        {
-            var screenOutputSettings = _elementSettingsManager.LoadOrCreateSettingsFor(screen);
-            _codeGenerationService.GenerateCodeForElement(
-                screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
-        }
-        foreach(var component in gumProject.Components)
-        {
-            var componentOutputSettings = _elementSettingsManager.LoadOrCreateSettingsFor(component);
-            _codeGenerationService.GenerateCodeForElement(
-                component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
-        }
-
-        _codeGenerationService.GenerateStandardElementsFallbackFile(gumProject, codeOutputProjectSettings);
+        _codeGenerationService.GenerateCodeForAllElements(gumProject, codeOutputProjectSettings);
 
         if(showPopups)
         {

@@ -69,7 +69,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 | `ProjectCreator` / `IProjectCreator` | Creates blank projects with subfolder structure |
 | `FormsTemplateCreator` / `IFormsTemplateCreator` | Extracts embedded Forms template resources |
 | `AddFormsToProjectService` / `IAddFormsToProjectService` | Merges Components/Standards/Behaviors/Fonts/UISpriteSheet.png from a `FormsTemplateCreator` extraction into an already-loaded project, skipping anything already referenced by name |
-| `HeadlessCodeGenerationService` | Orchestrates per-element code file generation |
+| `HeadlessCodeGenerationService` | The single orchestrator for per-element and batch code file generation (`GenerateCodeForElements`); shared by the CLI and the tool |
 | `CodeGenerationAutoSetupService` | Walks up to find `.csproj`, derives `CodeProjectRoot`, namespace, output library |
 | `CodeOutputProjectSettingsManager` | Loads/saves `ProjectCodeSettings.codsj` |
 | `ErrorResult` | POCO: `ElementName`, `Message`, `Severity` (`Warning`/`Error`), `Code` (e.g. `GUM0006`, may be null), `FilePath`. `check --json` emits `code`; scripts should match on it, not message text |
@@ -98,8 +98,8 @@ The checked-in `Templates/FormsTemplate/GumProject.gumx` carries `BehaviorRefere
 
 ## Codegen Flow (non-obvious details)
 
-- `codegen` iterates elements individually (not via `GenerateCodeForAllElements`) so it can run per-element error checks first; `GenerateCodeForAllElements` exists on `HeadlessCodeGenerationService` but the CLI does not call it
-- Only Screens and Components are generated; StandardElements are intentionally excluded (the per-project `StandardElements.Generated.cs` fallback registration is the exception: written on a full run, skipped when `--element` is given, matching the tool's per-element generation)
+- `codegen` and the tool's Generate All both go through `HeadlessCodeGenerationService.GenerateCodeForElements`, the one batch orchestrator: it skips `NeverGenerate` elements, runs an optional gate (the CLI's per-element error check), generates the rest, and writes the fallback file only when `Elements` is null (whole project). New batch-level steps belong there, not in `CodegenCommand` or the tool handler. The tool passes its own `ElementGenerator` (popups, missing-file prompt) and an `ICodeFileWriter` that retries.
+- Only Screens and Components are generated; StandardElements are intentionally excluded (the per-project `StandardElements.Generated.cs` fallback registration is the exception: written on a full run, skipped when `--element` is given)
 - Errors (`ErrorSeverity.Error`) block generation for that element; warnings print to stderr but do not block
 - A file `HeadlessCodeGenerationService` can't write (unreachable `CodeProjectRoot`) is logged, not thrown; `codegen` gives the service its own `ConsoleCodeGenLogger` and exits 1 when that logger's `ErrorCount` is non-zero
 - `codegen` warns on stderr (never blocks) when the csproj's `PackageReference` runtime version is newer than the CLI's own version: `StaleCliWarning.GetMessage` compares them, `SyntaxVersionDetectionService.FindRuntimePackageVersion` reads the package version. ProjectReference, HintPath, and unresolvable floating or range versions stay silent.

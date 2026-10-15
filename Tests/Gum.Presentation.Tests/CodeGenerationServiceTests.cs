@@ -92,6 +92,35 @@ public class CodeGenerationServiceTests : BaseTestClass
     };
 
     [Fact]
+    public void GenerateCodeForAllElements_WritesStandardElementsFallbackFileThroughRetryService()
+    {
+        GumProjectSave project = new();
+        project.StandardElements.Add(CreateSpriteStandard());
+        ObjectFinder.Self.GumProjectSave = project;
+        string fallbackPath = Path.Combine(
+            Path.GetTempPath(), "GumCodeGenerationServiceTests_NeverWritten", "StandardElements.Generated.cs");
+
+        int count = _codeGenerationService.GenerateCodeForAllElements(project, CreateFormsSettings());
+
+        count.ShouldBe(0);
+        _retryService.Verify(x => x.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()), Times.Once);
+        File.Exists(fallbackPath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GenerateCodeForAllElements_WhenAnElementCannotBeGenerated_DoesNotCountIt()
+    {
+        ComponentSave component = CreateBehaviorlessSpriteComponent();
+
+        int count = _codeGenerationService.GenerateCodeForAllElements(
+            ObjectFinder.Self.GumProjectSave!, CreateFormsSettings());
+
+        count.ShouldBe(0);
+        _guiCommands.Verify(
+            x => x.PrintOutput(It.Is<string>(m => m.Contains(component.Name))), Times.Once);
+    }
+
+    [Fact]
     public void GenerateCodeForElement_UnsupportedFormsBaseType_PrintsErrorAndWritesNothing()
     {
         ComponentSave component = CreateBehaviorlessSpriteComponent();

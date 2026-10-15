@@ -171,74 +171,21 @@ public static class CodegenCommand
         var codeGenService = new HeadlessCodeGenerationService(
             codeGenerator, customCodeGenerator, fileLocationsService, elementSettingsManager, generationLogger);
 
-        // Resolve which elements to generate
-        List<ElementSave> elements = ResolveElements(project, elementNames);
-
-        // Check errors and generate
         ITypeResolver typeResolver = new DefaultTypeResolver();
         IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(
             typeResolver, new IAdditionalErrorSource[] { new FormsCodegenBaseTypeErrorSource(projectSettings) });
 
-        int generatedCount = 0;
-        int blockedCount = 0;
-
-        ObjectFinder.Self.EnableCache();
-        try
-        {
-            foreach (var element in elements)
+        // --element narrows the run to those elements (which also leaves the project-wide
+        // Standard Elements fallback file alone, issue #6042); otherwise the whole project.
+        bool hasElementSubset = elementNames != null && elementNames.Length > 0;
+        CodeGenerationRunResult runResult = codeGenService.GenerateCodeForElements(
+            project, projectSettings, new CodeGenerationRunOptions
             {
-                var settings = elementSettingsManager.LoadOrCreateSettingsFor(element);
+                Elements = hasElementSubset ? ResolveElements(elementNames!) : null,
+                Gate = element => PassesErrorCheck(errorChecker, element, project)
+            });
 
-                if (settings.GenerationBehavior == GenerationBehavior.NeverGenerate)
-                {
-                    continue;
-                }
-
-                IReadOnlyList<ErrorResult> errors = errorChecker.GetErrorsFor(element, project);
-
-                foreach (var warning in errors.Where(e => e.Severity == ErrorSeverity.Warning))
-                {
-                    Console.Error.WriteLine($"warning: {element.Name}: {warning.Message}");
-                }
-
-                List<ErrorResult> blockingErrors = errors
-                    .Where(e => e.Severity == ErrorSeverity.Error)
-                    .ToList();
-
-                if (blockingErrors.Count > 0)
-                {
-                    foreach (var error in blockingErrors)
-                    {
-                        Console.Error.WriteLine($"error: {element.Name}: {error.Message}");
-                    }
-                    blockedCount++;
-                    continue;
-                }
-
-                bool checkForMissing = elementNames != null && elementNames.Length > 0;
-                if (codeGenService.GenerateCodeForElement(element, settings, projectSettings,
-                    checkForMissing: checkForMissing))
-                {
-                    generatedCount++;
-                }
-            }
-        }
-        finally
-        {
-            ObjectFinder.Self.DisableCache();
-        }
-
-        // codegen iterates elements individually rather than calling
-        // HeadlessCodeGenerationService.GenerateCodeForAllElements (so it can run per-element error
-        // checks first), so the per-project Standard Elements fallback file (issue #3505) is written
-        // directly here rather than picked up automatically. Like the tool's per-element generation,
-        // --element runs leave it alone (issue #6042).
-        if (elementNames == null || elementNames.Length == 0)
-        {
-            codeGenService.GenerateStandardElementsFallbackFile(project, projectSettings);
-        }
-
-        Console.WriteLine($"Generated code for {generatedCount} element(s).");
+        Console.WriteLine($"Generated code for {runResult.GeneratedCount} element(s).");
 
         if (prune)
         {
@@ -253,16 +200,38 @@ public static class CodegenCommand
             Prune(scanResult.Orphans);
         }
 
-        if (blockedCount > 0)
+        if (runResult.BlockedCount > 0)
         {
-            Console.Error.WriteLine($"{blockedCount} element(s) skipped due to errors.");
+            Console.Error.WriteLine($"{runResult.BlockedCount} element(s) skipped due to errors.");
         }
         if (generationLogger.ErrorCount > 0)
         {
             Console.Error.WriteLine($"{generationLogger.ErrorCount} code generation error(s).");
         }
 
-        return blockedCount > 0 || generationLogger.ErrorCount > 0 ? 1 : 0;
+        return runResult.BlockedCount > 0 || generationLogger.ErrorCount > 0 ? 1 : 0;
+    }
+
+    // Prints the element's warnings and errors; only errors stop it from being generated.
+    private static bool PassesErrorCheck(IHeadlessErrorChecker errorChecker, ElementSave element, GumProjectSave project)
+    {
+        IReadOnlyList<ErrorResult> errors = errorChecker.GetErrorsFor(element, project);
+
+        foreach (var warning in errors.Where(e => e.Severity == ErrorSeverity.Warning))
+        {
+            Console.Error.WriteLine($"warning: {element.Name}: {warning.Message}");
+        }
+
+        List<ErrorResult> blockingErrors = errors
+            .Where(e => e.Severity == ErrorSeverity.Error)
+            .ToList();
+
+        foreach (var error in blockingErrors)
+        {
+            Console.Error.WriteLine($"error: {element.Name}: {error.Message}");
+        }
+
+        return blockingErrors.Count == 0;
     }
 
     /// <summary>
@@ -304,15 +273,8 @@ public static class CodegenCommand
         }
     }
 
-    private static List<ElementSave> ResolveElements(GumProjectSave project, string[]? elementNames)
+    private static List<ElementSave> ResolveElements(string[] elementNames)
     {
-        if (elementNames == null || elementNames.Length == 0)
-        {
-            return project.Screens.Cast<ElementSave>()
-                .Concat(project.Components)
-                .ToList();
-        }
-
         var elements = new List<ElementSave>();
 
         foreach (string name in elementNames)
