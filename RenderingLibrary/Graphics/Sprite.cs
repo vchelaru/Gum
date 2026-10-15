@@ -765,30 +765,37 @@ public class Sprite : SpriteBatchRenderableBase,
 
     internal readonly struct DiagonalFlipComposite
     {
-        public DiagonalFlipComposite(Vector2 positionOffset, Vector2 origin, float rotationRadians)
+        public DiagonalFlipComposite(Vector2 positionOffset, Vector2 origin, float rotationRadians, Vector2 scale)
         {
             PositionOffset = positionOffset;
             Origin = origin;
             RotationRadians = rotationRadians;
+            Scale = scale;
         }
 
         public Vector2 PositionOffset { get; }
         public Vector2 Origin { get; }
         public float RotationRadians { get; }
+        public Vector2 Scale { get; }
     }
 
     /// <summary>
     /// Computes the draw-call adjustments needed to synthesize a diagonal (transpose) flip out of
     /// MonoGame's rotation + <see cref="SpriteEffects.FlipHorizontally"/> primitives, since
     /// SpriteEffects has no diagonal option. Re-pivots the draw around the sprite's own center
-    /// (rather than its top-left origin) and adds an extra 90 degree rotation, which permutes
-    /// texture corners in place - fixing the top-left/bottom-right corners and swapping
-    /// top-right/bottom-left, matching FlatRedBall's FlipDiagonal semantics - instead of rotating
-    /// the sprite's on-screen footprint. Only valid for square source rectangles; callers must
-    /// guard non-square cases themselves. <paramref name="baseRotationRadians"/> must already
-    /// include the caller's own rotation-sign conventions (the same value that would otherwise be
-    /// passed directly to SpriteRenderer.Draw) - callers are still responsible for XOR-ing their
-    /// own FlipHorizontal flag against this composite's implicit horizontal flip.
+    /// (rather than its top-left origin), adds an extra 90 degree rotation, and swaps the scale
+    /// axes so the turned source rectangle lands back on the sprite's own footprint. Together
+    /// these fix the top-left/bottom-right corners and swap the top-right/bottom-left ones,
+    /// matching FlatRedBall's FlipDiagonal semantics, and stretch the transposed source to the
+    /// footprint the way Skia and raylib do for a source rectangle of any shape.
+    /// <paramref name="scale"/> is the ordinary draw scale (footprint over source size) and
+    /// <paramref name="baseRotationRadians"/> must already include the caller's own
+    /// rotation-sign conventions (the same values that would otherwise be passed directly to
+    /// SpriteRenderer.Draw); the result's <see cref="DiagonalFlipComposite.Scale"/> replaces
+    /// <paramref name="scale"/>. Callers are still responsible for XOR-ing their own
+    /// FlipHorizontal flag against this composite's implicit horizontal flip, and for passing
+    /// their FlipVertical flag through unchanged (the turn leaves it flipping the source's rows
+    /// before the transpose, which is the order Skia and raylib use).
     /// </summary>
     internal static DiagonalFlipComposite GetDiagonalFlipComposite(float sourceWidth, float sourceHeight, Vector2 scale, float baseRotationRadians)
     {
@@ -802,7 +809,13 @@ public class Sprite : SpriteBatchRenderableBase,
         var origin = new Vector2(sourceWidth / 2f, sourceHeight / 2f);
         var rotationRadians = baseRotationRadians - (float)(System.Math.PI / 2);
 
-        return new DiagonalFlipComposite(positionOffset, origin, rotationRadians);
+        // Turned a quarter, the source's width runs along the footprint's height and its height
+        // along the footprint's width.
+        var diagonalScale = new Vector2(
+            scale.Y * sourceHeight / sourceWidth,
+            scale.X * sourceWidth / sourceHeight);
+
+        return new DiagonalFlipComposite(positionOffset, origin, rotationRadians, diagonalScale);
     }
 
     public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
@@ -842,14 +855,14 @@ public class Sprite : SpriteBatchRenderableBase,
         // "Transpose" orientation). Composing with the existing flipHorizontal via XOR keeps the
         // two flags independent (a diagonal flip on an already horizontally-flipped sprite should
         // cancel the horizontal component, not double it up).
-        // This only produces an undistorted result when the drawn rectangle is square - rotating
-        // a non-square rectangle 90 degrees about its center does not map it back onto its own
-        // footprint. Non-square frames with FlipDiagonal set render as if the flag weren't set.
-        // Combining FlipDiagonal with FlipVertical is not specifically handled and may not match
-        // FlatRedBall's exact three-flag composition.
+        // The turn swaps the scale axes (GetDiagonalFlipComposite) so a source rectangle of any
+        // shape lands back on the sprite's footprint, transposed and stretched to it. Skia and
+        // raylib do the same. FlipVertical passes straight through as SpriteEffects.FlipVertically:
+        // under the turn it flips the source's rows before the transpose, the order the other
+        // runtimes use, and FlipHorizontal flips the columns first.
         var sourceWidth = sourceRectangle?.Width ?? textureToUse.Width;
         var sourceHeight = sourceRectangle?.Height ?? textureToUse.Height;
-        var applyDiagonalComposite = flipDiagonal && sourceWidth > 0 && sourceWidth == sourceHeight;
+        var applyDiagonalComposite = flipDiagonal && sourceWidth > 0 && sourceHeight > 0;
 
         if (applyDiagonalComposite)
         {
@@ -945,6 +958,7 @@ public class Sprite : SpriteBatchRenderableBase,
             {
                 Vector2 drawPosition = new Vector2(leftAbsolute, topAbsolute);
                 Vector2 drawOrigin = origin;
+                Vector2 drawScale = scale;
                 float drawRotation = -rotationInRadians;
 
                 if (applyDiagonalComposite)
@@ -953,6 +967,7 @@ public class Sprite : SpriteBatchRenderableBase,
                     drawPosition += diagonal.PositionOffset;
                     drawOrigin = diagonal.Origin;
                     drawRotation = diagonal.RotationRadians;
+                    drawScale = diagonal.Scale;
                 }
 
                 spriteRenderer.Draw(textureToUse,
@@ -961,7 +976,7 @@ public class Sprite : SpriteBatchRenderableBase,
                     modifiedColor,
                     drawRotation,
                     drawOrigin,
-                    scale,
+                    drawScale,
                     effects,
                     0,
                     objectCausingRendering, renderer);
