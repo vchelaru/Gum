@@ -50,7 +50,11 @@ public class NineSliceAnimationFrameTests : BaseTestClass
     }
 
     private static Color[] RenderFrameSamples(GraphicsDevice graphicsDevice, AnimationFrame frame, float rotation, float x, float y,
-        params (int X, int Y)[] samples)
+        params (int X, int Y)[] samples) =>
+        RenderFrameSamples(graphicsDevice, frame, rotation, x, y, 30, 30, borderScale: 10, isTiling: false, samples);
+
+    private static Color[] RenderFrameSamples(GraphicsDevice graphicsDevice, AnimationFrame frame, float rotation, float x, float y,
+        float width, float height, float borderScale, bool isTiling, params (int X, int Y)[] samples)
     {
         SystemManagers managers = SystemManagers.Default;
 
@@ -59,9 +63,10 @@ public class NineSliceAnimationFrameTests : BaseTestClass
         nineSlice.Y = y;
         nineSlice.WidthUnits = DimensionUnitType.Absolute;
         nineSlice.HeightUnits = DimensionUnitType.Absolute;
-        nineSlice.Width = 30;
-        nineSlice.Height = 30;
-        nineSlice.BorderScale = 10;
+        nineSlice.Width = width;
+        nineSlice.Height = height;
+        nineSlice.BorderScale = borderScale;
+        nineSlice.IsTilingMiddleSections = isTiling;
         nineSlice.Rotation = rotation;
         nineSlice.AnimationChains = ChainOf(frame);
         nineSlice.CurrentChainName = "c";
@@ -151,6 +156,209 @@ public class NineSliceAnimationFrameTests : BaseTestClass
         ShouldBe(pixels[0], TexelColor(0, 0));
         ShouldBe(pixels[1], TexelColor(2, 2));
         ShouldBe(pixels[2], Color.Black);
+    }
+
+    private static AnimationFrame FlippedFrame(Texture2D texture, bool flipHorizontal = false, bool flipVertical = false,
+        bool flipDiagonal = false) => new()
+    {
+        FrameLength = 1f,
+        Texture = texture,
+        RightCoordinate = 1f,
+        BottomCoordinate = 1f,
+        FlipHorizontal = flipHorizontal,
+        FlipVertical = flipVertical,
+        FlipDiagonal = flipDiagonal,
+    };
+
+    // The center of the cell in column, row of the unrotated 30x30 nine-slice at (10, 10).
+    private static (int X, int Y) Cell(int column, int row) => (10 + column * 10 + 5, 10 + row * 10 + 5);
+
+    [Fact]
+    public void Render_FlipHorizontal_MirrorsTheNineSliceInsideItsOwnBounds()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipHorizontal: true),
+            rotation: 0, x: 10, y: 10, Cell(0, 0), Cell(2, 0), Cell(0, 2), Cell(1, 1), (45, 25));
+
+        ShouldBe(pixels[0], TexelColor(2, 0));
+        ShouldBe(pixels[1], TexelColor(0, 0));
+        ShouldBe(pixels[2], TexelColor(2, 2));
+        ShouldBe(pixels[3], TexelColor(1, 1));
+        ShouldBe(pixels[4], Color.Black);
+    }
+
+    [Fact]
+    public void Render_FlipVertical_MirrorsTheNineSliceInsideItsOwnBounds()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipVertical: true),
+            rotation: 0, x: 10, y: 10, Cell(0, 0), Cell(2, 0), Cell(0, 2), (25, 45));
+
+        ShouldBe(pixels[0], TexelColor(0, 2));
+        ShouldBe(pixels[1], TexelColor(2, 2));
+        ShouldBe(pixels[2], TexelColor(0, 0));
+        ShouldBe(pixels[3], Color.Black);
+    }
+
+    [Fact]
+    public void Render_FlipDiagonal_TransposesTheNineSlice()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipDiagonal: true),
+            rotation: 0, x: 10, y: 10, Cell(0, 0), Cell(2, 0), Cell(0, 2), Cell(2, 2), Cell(1, 0));
+
+        // A transpose fixes the top-left and bottom-right and swaps the other corners.
+        ShouldBe(pixels[0], TexelColor(0, 0));
+        ShouldBe(pixels[1], TexelColor(0, 2));
+        ShouldBe(pixels[2], TexelColor(2, 0));
+        ShouldBe(pixels[3], TexelColor(2, 2));
+        ShouldBe(pixels[4], TexelColor(0, 1));
+    }
+
+    [Fact]
+    public void Render_FlipDiagonalWithFlipHorizontal_FlipsBeforeTransposing()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipHorizontal: true, flipDiagonal: true),
+            rotation: 0, x: 10, y: 10, Cell(0, 0), Cell(1, 0), Cell(0, 1), Cell(2, 2));
+
+        // Screen cell (column, row) shows the flipped nine-slice's cell (row, column), which is
+        // texel (2 - row, column).
+        ShouldBe(pixels[0], TexelColor(2, 0));
+        ShouldBe(pixels[1], TexelColor(2, 1));
+        ShouldBe(pixels[2], TexelColor(1, 0));
+        ShouldBe(pixels[3], TexelColor(0, 2));
+    }
+
+    [Fact]
+    public void Render_FlipDiagonalWithFlipVertical_FlipsBeforeTransposing()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipVertical: true, flipDiagonal: true),
+            rotation: 0, x: 10, y: 10, Cell(0, 0), Cell(1, 0), Cell(0, 1), Cell(2, 2));
+
+        // Screen cell (column, row) shows the flipped nine-slice's cell (row, column), which is
+        // texel (row, 2 - column).
+        ShouldBe(pixels[0], TexelColor(0, 2));
+        ShouldBe(pixels[1], TexelColor(0, 1));
+        ShouldBe(pixels[2], TexelColor(1, 2));
+        ShouldBe(pixels[3], TexelColor(2, 0));
+    }
+
+    [Fact]
+    public void Render_FlipDiagonalOnRotatedNineSlice_TransposesInItsOwnAxes()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        // Rotated 90 degrees counter-clockwise about its top-left it covers x 30..60, y 20..50: its
+        // own +x points up and its own +y points right, so own cell (column, row) is centered at
+        // screen (35 + 10 * row, 45 - 10 * column). Transposed, it shows texel (row, column).
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipDiagonal: true),
+            rotation: 90, x: 30, y: 50, (35, 45), (35, 25), (55, 45));
+
+        ShouldBe(pixels[0], TexelColor(0, 0));
+        ShouldBe(pixels[1], TexelColor(0, 2));
+        ShouldBe(pixels[2], TexelColor(2, 0));
+    }
+
+    [Fact]
+    public void Render_FlipHorizontalOnRotatedNineSlice_MirrorsInItsOwnAxes()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        // Own cell (column, row) is centered at screen (35 + 10 * row, 45 - 10 * column), so
+        // mirroring swaps own columns 0 and 2.
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipHorizontal: true),
+            rotation: 90, x: 30, y: 50, (35, 45), (35, 25));
+
+        ShouldBe(pixels[0], TexelColor(2, 0));
+        ShouldBe(pixels[1], TexelColor(0, 0));
+    }
+
+    [Fact]
+    public void Render_FlipDiagonalOnNonSquareNineSlice_StretchesTheTransposedImageToTheFootprint()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateGridTexture(game.GraphicsDevice);
+
+        // A 60x30 nine-slice has columns 10, 40 and 10 wide and three 10 tall rows. Transposed
+        // into the same 60x30 footprint, its columns become three bands 5, 20 and 5 tall and its
+        // rows become three bands 20 wide.
+        Color[] pixels = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipDiagonal: true),
+            rotation: 0, x: 10, y: 10, width: 60, height: 30, borderScale: 10, isTiling: false,
+            (20, 12), (60, 12), (20, 36), (40, 25), (65, 45));
+
+        ShouldBe(pixels[0], TexelColor(0, 0));
+        ShouldBe(pixels[1], TexelColor(0, 2));
+        ShouldBe(pixels[2], TexelColor(2, 0));
+        ShouldBe(pixels[3], TexelColor(1, 1));
+        ShouldBe(pixels[4], Color.Black);
+    }
+
+    // A 9x3 texture whose columns each have their own red, so a 3 texel wide middle band reads
+    // as three distinct stripes.
+    private static Texture2D CreateStripTexture(GraphicsDevice graphicsDevice)
+    {
+        Texture2D texture = new(graphicsDevice, 9, 3);
+        Color[] data = new Color[27];
+        for (int y = 0; y < 3; y++)
+        {
+            for (int x = 0; x < 9; x++)
+            {
+                data[y * 9 + x] = new Color((byte)(20 + x * 25), (byte)(20 + y * 80), (byte)0, (byte)255);
+            }
+        }
+        texture.SetData(data);
+        return texture;
+    }
+
+    [Fact]
+    public void Render_FlipHorizontalWithTiledMiddleSections_MirrorsTheTiling()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        using Texture2D texture = CreateStripTexture(game.GraphicsDevice);
+
+        // At BorderScale 10 the 9x3 texture has 30 wide borders and a 3 texel (30 px) wide middle
+        // tile, so the 100 wide nine-slice's 40 wide top band is one full tile (texels 3, 4, 5)
+        // followed by a 10 wide partial one (texel 3). Mirrored, the partial tile comes first.
+        Color[] unflipped = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture),
+            rotation: 0, x: 10, y: 10, width: 100, height: 30, borderScale: 10, isTiling: true,
+            (45, 15), (55, 15), (65, 15), (75, 15));
+        Color[] flipped = RenderFrameSamples(game.GraphicsDevice, FlippedFrame(texture, flipHorizontal: true),
+            rotation: 0, x: 10, y: 10, width: 100, height: 30, borderScale: 10, isTiling: true,
+            (45, 15), (55, 15), (65, 15), (75, 15));
+
+        Color Stripe(int texelX) => new((byte)(20 + texelX * 25), (byte)20, (byte)0, (byte)255);
+
+        ShouldBe(unflipped[0], Stripe(3));
+        ShouldBe(unflipped[1], Stripe(4));
+        ShouldBe(unflipped[2], Stripe(5));
+        ShouldBe(unflipped[3], Stripe(3));
+        ShouldBe(flipped[0], Stripe(3));
+        ShouldBe(flipped[1], Stripe(5));
+        ShouldBe(flipped[2], Stripe(4));
+        ShouldBe(flipped[3], Stripe(3));
     }
 
     private static NineSlice CreateAnimated(Texture2D texture, params AnimationFrame[] frames)
