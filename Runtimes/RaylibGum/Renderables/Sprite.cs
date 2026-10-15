@@ -74,9 +74,10 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     /// bottom-right corners stay put while the top-right and bottom-left swap). Applied after
     /// <c>FlipHorizontal</c> and <see cref="FlipVertical"/>, so a horizontally flipped source
     /// is flipped first and then transposed. The sprite keeps its own footprint, so a non-square
-    /// sprite stretches the transposed image to fit. Honored when drawing the source rectangle
-    /// directly; a <see cref="ITextureCoordinate.Wrap"/>ping sprite, or one whose source rectangle
-    /// extends past the texture, is drawn without it.
+    /// sprite stretches the transposed image to fit. Honored on every draw path: the source
+    /// rectangle drawn directly, a <see cref="ITextureCoordinate.Wrap"/>ping sprite, and one
+    /// whose source rectangle extends past the texture, where the whole tiled or clamped image is
+    /// transposed.
     /// </summary>
     public bool FlipDiagonal { get; set; }
 
@@ -360,14 +361,8 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
                 ApplyFlip(ref tileSourceRect);
 
-                Vector3 tileOffset = matrix.Right() * offsetXFromTopLeft + matrix.Up() * offsetYFromTopLeft;
-                var tileDestinationRect = new Rectangle(
-                    destinationRectangle.X + tileOffset.X,
-                    destinationRectangle.Y + tileOffset.Y,
-                    destWidth,
-                    destHeight);
-
-                DrawTexturePro(texture, tileSourceRect, tileDestinationRect, Vector2.Zero, -absoluteRotationDegrees, Color);
+                DrawTile(texture, tileSourceRect, destinationRectangle, matrix, absoluteRotationDegrees,
+                    offsetXFromTopLeft, offsetYFromTopLeft, destWidth, destHeight);
 
                 offsetXFromTopLeft += destWidth;
                 x += texWidth;
@@ -376,6 +371,43 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             offsetYFromTopLeft += destHeight;
             y += texHeight;
         }
+    }
+
+    // Draws one tile of a tiled or clamped sprite. offsetX/offsetY/width/height place the tile
+    // inside the sprite in the sprite's own (unrotated) axes. With FlipDiagonal the sprite is the
+    // transpose of the image those tiles lay out, so each tile moves to its mirrored place across
+    // the sprite's diagonal - the layout is stretched to the sprite's footprint exactly as a
+    // single transposed draw is - and its own content is transposed to match.
+    private void DrawTile(Texture2D texture, Rectangle tileSourceRect, Rectangle spriteDestination,
+        Matrix4x4 matrix, float absoluteRotationDegrees,
+        float offsetX, float offsetY, float width, float height)
+    {
+        if (FlipDiagonal)
+        {
+            if (spriteDestination.Width <= 0 || spriteDestination.Height <= 0) return;
+
+            float turnedOffsetX = offsetY * spriteDestination.Width / spriteDestination.Height;
+            float turnedOffsetY = offsetX * spriteDestination.Height / spriteDestination.Width;
+            float turnedWidth = height * spriteDestination.Width / spriteDestination.Height;
+            float turnedHeight = width * spriteDestination.Height / spriteDestination.Width;
+            (offsetX, offsetY, width, height) = (turnedOffsetX, turnedOffsetY, turnedWidth, turnedHeight);
+        }
+
+        Vector3 tileOffset = matrix.Right() * offsetX + matrix.Up() * offsetY;
+        var tileDestinationRect = new Rectangle(
+            spriteDestination.X + tileOffset.X,
+            spriteDestination.Y + tileOffset.Y,
+            width,
+            height);
+
+        float drawRotation = -absoluteRotationDegrees;
+        if (FlipDiagonal)
+        {
+            (tileDestinationRect, drawRotation, tileSourceRect) =
+                GetDiagonalFlipDraw(tileDestinationRect, drawRotation, tileSourceRect);
+        }
+
+        DrawTexturePro(texture, tileSourceRect, tileDestinationRect, Vector2.Zero, drawRotation, Color);
     }
 
     private static bool IsOutOfTextureBounds(Rectangle sourceRectangle, Texture2D texture)
@@ -429,14 +461,8 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
                 ApplyFlip(ref tileSourceRect);
 
-                Vector3 tileOffset = matrix.Right() * offsetXFromTopLeft + matrix.Up() * offsetYFromTopLeft;
-                var tileDestinationRect = new Rectangle(
-                    destinationRectangle.X + tileOffset.X,
-                    destinationRectangle.Y + tileOffset.Y,
-                    destWidth,
-                    destHeight);
-
-                DrawTexturePro(texture, tileSourceRect, tileDestinationRect, Vector2.Zero, -absoluteRotationDegrees, Color);
+                DrawTile(texture, tileSourceRect, destinationRectangle, matrix, absoluteRotationDegrees,
+                    offsetXFromTopLeft, offsetYFromTopLeft, destWidth, destHeight);
 
                 offsetXFromTopLeft += destWidth;
             }
