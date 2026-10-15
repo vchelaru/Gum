@@ -69,5 +69,6 @@
     <Compile Include="..\SkiaGum\GueDeriving\ArcRuntime.cs" Link="GueDeriving\ArcRuntime.cs" />
     <Compile Include="..\SkiaGum\GueDeriving\LineRuntime.cs" Link="GueDeriving\LineRuntime.cs" />
     <Compile Include="..\SkiaGum\GueDeriving\RoundedRectangleRuntime.cs" Link="GueDeriving\RoundedRectangleRuntime.cs" />
+    <Compile Include="..\SkiaGum\GueDeriving\SvgRuntime.cs" Link="GueDeriving\SvgRuntime.cs" />
   </ItemGroup>
 </Project>

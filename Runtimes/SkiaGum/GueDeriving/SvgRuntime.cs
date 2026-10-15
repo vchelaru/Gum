@@ -1,30 +1,66 @@
-﻿using Gum.DataTypes;
+#nullable enable
+using Gum.DataTypes;
 using Gum.Wireframe;
-using SkiaGum;
+
+#if SKIA
 using SkiaSharp;
 using Svg.Skia;
+using ContainedRenderable = SkiaGum.VectorSprite;
+using SvgDocument = Svg.Skia.SKSvg;
+#else
+using MonoGameAndGum.Content;
+using ContainedRenderable = MonoGameAndGum.Renderables.Svg;
+using SvgDocument = Apos.Shapes.ShapeSvg;
+#endif
 
 #if FRB
+#if SKIA
 namespace SkiaGum.GueDeriving;
+#else
+namespace MonoGameGum.GueDeriving;
+#endif
 #else
 namespace Gum.GueDeriving;
 #endif
 
+/// <summary>
+/// Runtime that draws an SVG document. One source file for both backends: SkiaGum draws through a
+/// <c>VectorSprite</c> wrapping an <c>SKSvg</c>, and the XNA family (MonoGameGumShapes /
+/// KniGumShapes) draws through Apos.Shapes. SkiaGum is the canonical home, linked into the
+/// Apos csprojs from <c>Runtimes/GumShapes/Directory.Build.props</c>.
+/// </summary>
+/// <remarks>
+/// <see cref="Texture"/> is an <c>SKSvg</c> on Skia and an Apos.Shapes <c>ShapeSvg</c> on the XNA
+/// family, the same way <c>SpriteRuntime.Texture</c> differs by backend.
+///
+/// The color API (<c>Color</c>, <c>Red</c>, <c>Green</c>, <c>Blue</c>, <c>Alpha</c>) is Skia only.
+/// Skia modulates the drawing through an <c>SKColorFilter</c> color matrix. Apos's colored
+/// <c>DrawSvg</c> overload instead <i>replaces</i> every paint in the file, producing a
+/// silhouette. Exposing the same property names for a different result is worse than omitting
+/// them, so the Apos side draws the file's own colors. A silhouette override can be added later
+/// under a name that says so. Issue #4506.
+/// </remarks>
 public class SvgRuntime : InteractiveGue
 {
-    VectorSprite? mContainedSprite;
-    VectorSprite ContainedSprite
+    ContainedRenderable? mContainedSvg;
+    ContainedRenderable ContainedSvg
     {
         get
         {
-            mContainedSprite ??= this.RenderableComponent as VectorSprite
+            mContainedSvg ??= this.RenderableComponent as ContainedRenderable
                 ?? throw new System.InvalidOperationException(
-                    $"{nameof(SvgRuntime)} has no {nameof(VectorSprite)} renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
-            return mContainedSprite;
+                    $"{nameof(SvgRuntime)} has no {typeof(ContainedRenderable).Name} renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
+            return mContainedSvg;
         }
     }
 
     string? sourceFile;
+
+    /// <summary>
+    /// Path to the .svg file to draw. Assigning re-resolves the document, which is cached by
+    /// standardized path so the same file assigned to many runtimes parses once. A missing or
+    /// unreadable file clears <see cref="Texture"/> and draws nothing rather than throwing.
+    /// </summary>
     public string? SourceFile
     {
         // eventually we may want to store this off somehow
@@ -34,6 +70,7 @@ public class SvgRuntime : InteractiveGue
             if (sourceFile != value)
             {
                 sourceFile = value;
+#if SKIA
                 if (string.IsNullOrEmpty(value))
                 {
                     Texture = null;
@@ -41,55 +78,70 @@ public class SvgRuntime : InteractiveGue
                 else
                 {
                     var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    SKSvg? skiaSvg = loaderManager.LoadContent<SKSvg>(value);
-                    Texture = skiaSvg;
+                    SvgDocument? document = loaderManager.LoadContent<SvgDocument>(value);
+                    Texture = document;
                 }
+#else
+                Texture = ShapeSvgLoader.Load(value!);
+#endif
             }
         }
     }
 
-    public SKSvg? Texture
+    /// <summary>
+    /// The loaded document, or <c>null</c> when nothing is loaded. Settable directly for callers
+    /// that load or generate a document themselves instead of going through
+    /// <see cref="SourceFile"/>.
+    /// </summary>
+    public SvgDocument? Texture
     {
-        get => ContainedSprite.Texture;
-        set => ChangeRenderableAndUpdateLayout((sprite: ContainedSprite, value), static state => state.sprite.Texture = state.value);
+        get => ContainedSvg.Texture;
+        set => ChangeRenderableAndUpdateLayout((renderable: ContainedSvg, value), static state => state.renderable.Texture = state.value);
     }
 
+#if SKIA
     public int Alpha
     {
-        get => ContainedSprite.Alpha;
-        set => ContainedSprite.Alpha = value;
+        get => ContainedSvg.Alpha;
+        set => ContainedSvg.Alpha = value;
     }
 
     public int Red
     {
-        get => ContainedSprite.Red;
-        set => ContainedSprite.Red = value;
+        get => ContainedSvg.Red;
+        set => ContainedSvg.Red = value;
     }
 
     public int Green
     {
-        get => ContainedSprite.Green;
-        set => ContainedSprite.Green = value;
+        get => ContainedSvg.Green;
+        set => ContainedSvg.Green = value;
     }
 
     public int Blue
     {
-        get => ContainedSprite.Blue;
-        set => ContainedSprite.Blue = value;
+        get => ContainedSvg.Blue;
+        set => ContainedSvg.Blue = value;
     }
 
     public SKColor Color
     {
-        get => ContainedSprite.Color;
-        set => ContainedSprite.Color = value;
+        get => ContainedSvg.Color;
+        set => ContainedSvg.Color = value;
     }
+#endif
 
+    /// <summary>
+    /// Initializes a new SvgRuntime. When <paramref name="fullInstantiation"/> is true (the
+    /// default), the underlying renderable is created and default values applied (Width = 100 with
+    /// height following the file's aspect ratio). Pass false only when the runtime is being
+    /// constructed by deserialization, which sets up the renderable separately.
+    /// </summary>
     public SvgRuntime(bool fullInstantiation = true)
     {
         if (fullInstantiation)
         {
-            //SetGraphicalUiElement
-            SetContainedObject(new VectorSprite());
+            SetContainedObject(new ContainedRenderable());
 
             // Give it some good defaults:
             WidthUnits = DimensionUnitType.Absolute;
@@ -104,7 +156,7 @@ public class SvgRuntime : InteractiveGue
     {
         var toReturn = (SvgRuntime)base.Clone();
 
-        toReturn.mContainedSprite = null;
+        toReturn.mContainedSvg = null;
 
         return toReturn;
     }

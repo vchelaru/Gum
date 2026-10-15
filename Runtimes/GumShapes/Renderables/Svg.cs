@@ -26,7 +26,7 @@ internal class Svg : RenderableShapeBase, IAspectRatio
     /// <see cref="Content.ShapeSvgLoader.Load(string)"/> so it is shared and cached; one document
     /// can back any number of renderables and batches.
     /// </summary>
-    public ShapeSvg? Document { get; set; }
+    public ShapeSvg? Texture { get; set; }
 
     /// <summary>
     /// Width over height of the document's viewBox, or 1 when no document is loaded. Read by
@@ -37,11 +37,11 @@ internal class Svg : RenderableShapeBase, IAspectRatio
     {
         get
         {
-            if (Document == null || Document.Height == 0)
+            if (Texture == null || Texture.Height == 0)
             {
                 return 1;
             }
-            return Document.Width / Document.Height;
+            return Texture.Width / Texture.Height;
         }
     }
 
@@ -93,7 +93,7 @@ internal class Svg : RenderableShapeBase, IAspectRatio
 
     public override void Render(ISystemManagers managers)
     {
-        if (Document == null)
+        if (Texture == null)
         {
             return;
         }
@@ -125,7 +125,7 @@ internal class Svg : RenderableShapeBase, IAspectRatio
         // That is why this needs no AdjustPositionForCenterRotation, unlike the center-rotating
         // DrawRectangle/DrawCircle paths.
         sb.DrawSvg(
-            Document,
+            Texture,
             topLeft,
             Height,
             rotation: rotationRadians,
