@@ -20,7 +20,7 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
     private readonly ICodeGenLogger _logger;
     private readonly ICodeFileWriter _fileWriter;
 
-    /// <param name="fileWriter">Writes the generated files; null writes each once through <see cref="DirectCodeFileWriter"/>.</param>
+    // fileWriter writes the generated files; null writes each once through DirectCodeFileWriter.
     public HeadlessCodeGenerationService(
         CodeGenerator codeGenerator,
         CustomCodeGenerator customCodeGenerator,

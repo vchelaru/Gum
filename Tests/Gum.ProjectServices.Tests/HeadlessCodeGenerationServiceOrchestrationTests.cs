@@ -29,8 +29,8 @@ public class HeadlessCodeGenerationServiceOrchestrationTests : BaseTestClass
     private HeadlessCodeGenerationService CreateService(ICodeFileWriter? fileWriter = null)
     {
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
-        string whyNotValid;
-        CommonValidationError error;
+        string? whyNotValid = null;
+        CommonValidationError error = default;
         mockNameVerifier
             .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))
             .Returns(true);

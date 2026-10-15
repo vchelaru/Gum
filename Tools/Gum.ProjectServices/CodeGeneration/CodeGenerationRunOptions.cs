@@ -7,6 +7,8 @@ namespace Gum.ProjectServices.CodeGeneration;
 /// <summary>
 /// Generates the code files for one element.
 /// </summary>
+/// <param name="element">The element to generate.</param>
+/// <param name="elementSettings">The element's code generation settings.</param>
 /// <param name="checkForMissing">True when referenced elements that have no code files yet should be generated too.</param>
 /// <returns>True if the element's code was generated.</returns>
 public delegate bool ElementCodeGenerator(
