@@ -74,7 +74,7 @@ Every frame is a keyframe; a keyframe's curve runs to the next keyframe of the s
 
 - A chain without keyframe data (`KeyframeEvaluator.HasOffsetKeyframes`/`HasColorKeyframes`) takes the old path, byte for byte. Only a chain with color keyframes sets `AnimationChainLogic.IsColorDrivenByKeyframes`; each `ApplyAnimationFrame` must then skip its own color step, because `ApplyKeyframeColor` (called right after `ApplyFrame` and on every `AnimateSelf` tick) already applied the inherited color, and a skipped frame's own channels must not leak.
 - Only the MonoGame-family, Skia and raylib Sprites wire `ApplyKeyframeColor`. Sokol's Sprite applies no color or offset, and `NineSlice` applies raw frame colors with no glide. Skia, raylib and Sokol ignore `RelativeX/Y` entirely, so offset glides show only on the MonoGame-family Sprite.
-- Keyframe color does not follow the old rule where Red/Green/Blue apply only when a frame authors a `ColorOperation`: channels inherit from the last keyframe that set them, and the operation inherits through skipped frames. The sprite still only receives RGB when that inherited operation is Multiply or Add.
+- In keyframe mode, channels inherit from the last keyframe that set them and the operation inherits through skipped frames. Red/Green/Blue still reach the sprite only under a Multiply or Add operation, matching FlatRedBall2 (`SpriteFrameColor.Apply`); Alpha applies on its own.
 
 ## Key Files
 
