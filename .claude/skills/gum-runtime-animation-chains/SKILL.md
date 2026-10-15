@@ -36,7 +36,7 @@ Sprite handles each frame in **two phases**:
 
 This split matters: changing `RelativeX/Y` on a live frame takes effect on the next render without needing `UpdateToCurrentAnimationFrame`. The offset is applied at the render call site, not in `ApplyFrame`.
 
-`FlipDiagonal` is a transpose applied after the H/V flips (flip the source, then reflect across the main diagonal), keeping the sprite's own footprint. MonoGame synthesizes it as a 90 degree rotation plus a horizontal flip and honors it only for a square source rectangle. Skia concatenates a swap-axes matrix onto the canvas in `DrawBound`; raylib draws a swapped-size, 90-degree-turned rectangle with a mirrored source (`Sprite.GetDiagonalFlipDraw`). Both handle non-square sprites, and raylib skips it on its tiled (`Wrap`) and out-of-texture-bounds clamped paths. Skia and raylib `NineSlice` ignore all frame flips.
+`FlipDiagonal` is a transpose applied after the H/V flips (flip the source, then reflect across the main diagonal), keeping the sprite's own footprint. MonoGame synthesizes it as a 90 degree rotation plus a horizontal flip and honors it only for a square source rectangle. Skia concatenates a swap-axes matrix onto the canvas in `DrawBound`; raylib draws a swapped-size, 90-degree-turned rectangle with a mirrored source (`Sprite.GetDiagonalFlipDraw`). Both handle non-square sprites, and raylib skips it on its tiled (`Wrap`) and out-of-texture-bounds clamped paths.
 
 Skia and raylib `Sprite` apply the same `GetRenderOffset` at draw time: raylib shifts the destination rectangle, and Skia translates the canvas in `DrawBound`, which is already rotated with the sprite, so it passes `0` rotation.
 
@@ -48,11 +48,11 @@ Skia and raylib `Sprite` apply the same `GetRenderOffset` at draw time: raylib s
 
 To match FRB visuals on a height-tracking Sprite, the offset has to be applied around the sprite's center, not its top-left — or an extra `(referenceHeight - currentHeight) / 2` must be added to Y.
 
-## NineSlice: same playback, no RelativeX/Y
+## NineSlice: same playback as Sprite
 
-XNA `NineSlice` now composes `AnimationChainLogic` (same pattern as Sprite) — the inline tick loop is gone. Its `ApplyFrame` handler distributes the frame's texture to all 9 internal sprites via `SetSingleTexture`, derives the `SourceRectangle` from the frame's UV coords, and copies `FlipHorizontal`. It does **not** apply `RelativeX/Y`. If `RelativeX/Y` support is ever needed on NineSlice, add the offset application in NineSlice's render path the same way Sprite does.
+All backends' `NineSlice` compose `AnimationChainLogic` and apply the frame offset (`GetRenderOffset`) and keyframe color (`ApplyKeyframeColor`) like `Sprite`. XNA shifts the absolute origin in `Render`, raylib shifts the destination, Skia translates the canvas in `DrawBound`.
 
-Skia and Raylib `NineSlice` renderables also compose `AnimationLogic` and apply frames the same way as XNA — each has its own `ApplyAnimationFrame` in `Runtimes/{RaylibGum,SkiaGum}/Renderables/NineSlice.cs`.
+Skia and raylib flip the whole drawn nine-slice (canvas mirror/transpose on Skia; per-section destination mirror plus `Sprite.GetDiagonalFlipDraw` on raylib), with any flip forcing raylib's per-section path instead of `DrawTextureNPatch`. XNA stores `FlipHorizontal`/`FlipDiagonal` but does not draw them (#6060). XNA `ApplyAnimationFrame` distributes the frame texture to the 9 internal sprites via `SetSingleTexture`.
 
 ## Per-frame color (Alpha/Multiply/Add)
 
@@ -77,7 +77,7 @@ Note for tool work: exposing `ColorOperation` as a tool-editable variable means 
 Every frame is a keyframe; a keyframe's curve runs to the next keyframe of the same group (Offset: `RelativeX/Y`, Color: Red/Green/Blue/Alpha). The six per-frame fields (`SkipOffsetKeyframe`, `OffsetInterpolation`, ...) are stored as raw strings so unknown names round-trip. The math is `KeyframeEvaluator`/`KeyframeCurve` (ported from FlatRedBall2's `AnimationChain.Common`, using the `FlatRedBall.InterpolationCore` tweener GumCommon already references).
 
 - A chain without keyframe data (`KeyframeEvaluator.HasOffsetKeyframes`/`HasColorKeyframes`) takes the old path, byte for byte. Only a chain with color keyframes sets `AnimationChainLogic.IsColorDrivenByKeyframes`; each `ApplyAnimationFrame` must then skip its own color step, because `ApplyKeyframeColor` (called right after `ApplyFrame` and on every `AnimateSelf` tick) already applied the inherited color, and a skipped frame's own channels must not leak.
-- Only the MonoGame-family, Skia and raylib Sprites wire `ApplyKeyframeColor`. Sokol's Sprite applies no color or offset, and `NineSlice` applies raw frame colors with no glide. Sokol ignores `RelativeX/Y` entirely; the MonoGame-family, Skia and raylib Sprites apply offset glides.
+- Only the MonoGame-family, Skia and raylib Sprites and NineSlices wire `ApplyKeyframeColor`. Sokol's Sprite applies no color or offset and ignores `RelativeX/Y` entirely; the MonoGame-family, Skia and raylib Sprites and NineSlices apply offset and color glides.
 - In keyframe mode, channels inherit from the last keyframe that set them and the operation inherits through skipped frames. Red/Green/Blue still reach the sprite only under a Multiply or Add operation, matching FlatRedBall2 (`SpriteFrameColor.Apply`); Alpha applies on its own.
 
 ## Key Files
@@ -91,6 +91,6 @@ Every frame is a keyframe; a keyframe's curve runs to the next keyframe of the s
 | `RenderingLibrary/Graphics/Animation/AnimationChain.cs` | `List<AnimationFrame>`; `ToAnimationChain` extension |
 | `RenderingLibrary/Graphics/Animation/AnimationChainList.cs` | `List<AnimationChain>`; `.achx` deserialization entry point |
 | `RenderingLibrary/Graphics/Sprite.cs` | `ApplyAnimationFrame` (frame-change side) and `Render` (per-render `RelativeX/Y` application) |
-| `RenderingLibrary/Graphics/NineSlice.cs` | `ApplyAnimationFrame` distributes frame texture across 9 slices; no `RelativeX/Y` support |
+| `RenderingLibrary/Graphics/NineSlice.cs` | `ApplyAnimationFrame` distributes frame texture across 9 slices; applies the frame offset in `Render` |
 | `Gum/Graphics/Animation/Content/AnimationFrameSave.cs` | XML/JSON-serializable frame; pixel or UV coords per `AnimationChainListSave.CoordinateType`; per-frame color fields |
 | `Gum/Graphics/Animation/Content/AnimationChainListSave.cs` | `.achx` (XmlSerializer) and `.achj` (`ParseJson`/`ParseFrameJson`) parsing, dialect picked by extension in `FromFile` |

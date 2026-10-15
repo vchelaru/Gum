@@ -558,6 +558,11 @@ public class NineSlice : SpriteBatchRenderableBase,
             float y = this.GetAbsoluteY();
             var rotationInDegrees = this.GetAbsoluteRotation();
 
+            // Evaluated every render so an offset glide moves the nine-slice between frame changes.
+            var renderOffset = AnimationLogic.GetRenderOffset(rotationInDegrees);
+            x += renderOffset.X;
+            y += renderOffset.Y;
+
             if (IsOnlyRenderingCenterSprite)
             {
                 var centerSprite = mSprites[(int)NineSliceSections.Center];
@@ -1181,6 +1186,7 @@ public class NineSlice : SpriteBatchRenderableBase,
 
         AnimationLogic = new AnimationChainLogic();
         AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+        AnimationLogic.ApplyKeyframeColor = ApplyKeyframeColor;
     }
 
     void ApplyAnimationFrame(AnimationFrame frame)
@@ -1202,25 +1208,38 @@ public class NineSlice : SpriteBatchRenderableBase,
         FlipHorizontal = frame.FlipHorizontal;
         FlipDiagonal = frame.FlipDiagonal;
 
-        if (frame.Alpha.HasValue)
+        // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
+        // ignores a skipped frame's own channels.
+        if (!AnimationLogic.IsColorDrivenByKeyframes)
         {
-            Alpha = frame.Alpha.Value;
+            ApplyColor(frame.Alpha, frame.Red, frame.Green, frame.Blue, frame.ColorOperation);
+        }
+    }
+
+    void ApplyKeyframeColor(KeyframeColor color) =>
+        ApplyColor(color.Alpha, color.Red, color.Green, color.Blue, color.Operation);
+
+    void ApplyColor(int? alpha, int? red, int? green, int? blue, AnimationFrameColorOperation? colorOperation)
+    {
+        if (alpha.HasValue)
+        {
+            Alpha = alpha.Value;
         }
 
-        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        if (colorOperation == AnimationFrameColorOperation.Multiply)
         {
-            Red = frame.Red ?? 255;
-            Green = frame.Green ?? 255;
-            Blue = frame.Blue ?? 255;
+            Red = red ?? 255;
+            Green = green ?? 255;
+            Blue = blue ?? 255;
             ColorOperation = ColorOperation.Modulate;
         }
-        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        else if (colorOperation == AnimationFrameColorOperation.Add)
         {
             // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
             // Multiply's 255 identity above. Mirrors RenderingLibrary.Graphics.Sprite.
-            Red = frame.Red ?? 0;
-            Green = frame.Green ?? 0;
-            Blue = frame.Blue ?? 0;
+            Red = red ?? 0;
+            Green = green ?? 0;
+            Blue = blue ?? 0;
             ColorOperation = ColorOperation.Add;
         }
         else if (ColorOperation == ColorOperation.Add)
@@ -1287,7 +1306,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         {
             newInstance.mSprites[i] = mSprites[i].Clone();
         }
-        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
+        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame, newInstance.ApplyKeyframeColor);
         // IAnimation has no clone contract: copy an implementation that opts in through
         // ICloneable, and share any other one, since it may hold state that cannot be copied safely.
         if (Animation is ICloneable cloneableAnimation)
