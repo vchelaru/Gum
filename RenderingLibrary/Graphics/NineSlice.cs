@@ -186,11 +186,23 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     public float Rotation { get; set; }
 
+    /// <summary>
+    /// Whether the whole nine-slice is mirrored left to right inside its own bounds: the left and
+    /// right pieces swap places and each piece is drawn mirrored.
+    /// </summary>
     public bool FlipHorizontal { get; set; }
 
     /// <summary>
-    /// Whether the texture should be flipped diagonally (reflected across its main diagonal).
-    /// Only produces an undistorted result when the frame's source rectangle is square.
+    /// Whether the whole nine-slice is mirrored top to bottom inside its own bounds.
+    /// </summary>
+    public bool FlipVertical { get; set; }
+
+    /// <summary>
+    /// Whether the whole nine-slice is reflected across its main diagonal (a transpose: the
+    /// top-left and bottom-right corners stay put while the top-right and bottom-left swap).
+    /// Applied after <see cref="FlipHorizontal"/> and <see cref="FlipVertical"/>, so a flipped
+    /// nine-slice is flipped first and then transposed. The nine-slice keeps its own footprint, so
+    /// a non-square one stretches the transposed image to fit.
     /// </summary>
     public bool FlipDiagonal { get; set; }
 
@@ -567,20 +579,16 @@ public class NineSlice : SpriteBatchRenderableBase,
             {
                 var centerSprite = mSprites[(int)NineSliceSections.Center];
 
-                centerSprite.X = x;
-                centerSprite.Y = y;
-                centerSprite.Rotation = rotationInDegrees;
-
                 if (centerSprite.Height > 0 && centerSprite.Width > 0)
                 {
-                    Render(centerSprite, systemManagers, spriteRenderer);
+                    var centerLayout = new SliceLayout(
+                        x, y, Vector3Extensions.Right, Vector3Extensions.Up, rotationInDegrees,
+                        Width, Height, FlipHorizontal, FlipVertical, FlipDiagonal);
+                    RenderSection(centerSprite, centerLayout, systemManagers, spriteRenderer, 0, 0);
                 }
             }
             else 
             {
-                float offsetX = 0;
-                float offsetY = 0;
-
                 Vector3 right;
                 Vector3 up;
 
@@ -644,124 +652,87 @@ public class NineSlice : SpriteBatchRenderableBase,
                     up = matrix.Up();
                 }
 
-                mSprites[(int)NineSliceSections.TopLeft].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.TopLeft].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.TopLeft].Rotation = rotationInDegrees;
+                var layout = new SliceLayout(
+                    x, y, right, up, rotationInDegrees,
+                    Width, Height, FlipHorizontal, FlipVertical, FlipDiagonal);
 
-                offsetX = mSprites[(int)NineSliceSections.TopLeft].Width;
+                // Each piece's top-left corner in the nine-slice's own (unflipped) space. The
+                // layout turns that into the piece's final place once any flips are applied.
+                var topLeft = mSprites[(int)NineSliceSections.TopLeft];
+                var top = mSprites[(int)NineSliceSections.Top];
+                var left = mSprites[(int)NineSliceSections.Left];
+                var center = mSprites[(int)NineSliceSections.Center];
+                var bottomLeft = mSprites[(int)NineSliceSections.BottomLeft];
+                var bottom = mSprites[(int)NineSliceSections.Bottom];
 
-                mSprites[(int)NineSliceSections.Top].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.Top].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.Top].Rotation = rotationInDegrees;
+                float topX = topLeft.Width;
+                float topRightX = topLeft.Width + top.Width;
+                float middleY = topLeft.Height;
+                float centerX = left.Width;
+                float rightX = left.Width + center.Width;
+                float bottomY = topLeft.Height + left.Height;
+                float bottomX = bottomLeft.Width;
+                float bottomRightX = bottomLeft.Width + bottom.Width;
 
-                offsetX = mSprites[(int)NineSliceSections.TopLeft].Width + mSprites[(int)NineSliceSections.Top].Width;
-
-                mSprites[(int)NineSliceSections.TopRight].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.TopRight].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.TopRight].Rotation = rotationInDegrees;
-
-                offsetX = 0;
-                offsetY = mSprites[(int)NineSliceSections.TopLeft].Height;
-
-                mSprites[(int)NineSliceSections.Left].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.Left].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.Left].Rotation = rotationInDegrees;
-
-                offsetX = mSprites[(int)NineSliceSections.Left].Width;
-
-                mSprites[(int)NineSliceSections.Center].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.Center].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.Center].Rotation = rotationInDegrees;
-
-                offsetX = mSprites[(int)NineSliceSections.Left].Width + mSprites[(int)NineSliceSections.Center].Width;
-
-                mSprites[(int)NineSliceSections.Right].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.Right].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.Right].Rotation = rotationInDegrees;
-
-
-                offsetX = 0;
-                offsetY = mSprites[(int)NineSliceSections.TopLeft].Height + mSprites[(int)NineSliceSections.Left].Height;
-
-                mSprites[(int)NineSliceSections.BottomLeft].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.BottomLeft].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.BottomLeft].Rotation = rotationInDegrees;
-
-                offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width;
-
-                mSprites[(int)NineSliceSections.Bottom].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.Bottom].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.Bottom].Rotation = rotationInDegrees;
-
-                offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width + mSprites[(int)NineSliceSections.Bottom].Width;
-
-                mSprites[(int)NineSliceSections.BottomRight].X = x + offsetX * right.X + offsetY * up.X;
-                mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.BottomRight].Rotation = rotationInDegrees;
-            
-
-
-
-
-                Render(mSprites[(int)NineSliceSections.TopLeft], systemManagers, spriteRenderer);
-                if (mSprites[(int)NineSliceSections.Center].Width > 0)
+                RenderSection(topLeft, layout, systemManagers, spriteRenderer, 0, 0);
+                if (center.Width > 0)
                 {
                     if (_isTilingMiddleSections)
                     {
-                        RenderTiled(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer,
-                            mSprites[(int)NineSliceSections.Center].Width,
-                            mSprites[(int)NineSliceSections.Top].Height,
-                            tileHorizontally: true, tileVertically: false, right, up);
-                        RenderTiled(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer,
-                            mSprites[(int)NineSliceSections.Center].Width,
-                            mSprites[(int)NineSliceSections.Bottom].Height,
-                            tileHorizontally: true, tileVertically: false, right, up);
+                        RenderTiled(top, systemManagers, spriteRenderer, layout, topX, 0,
+                            center.Width,
+                            top.Height,
+                            tileHorizontally: true, tileVertically: false);
+                        RenderTiled(bottom, systemManagers, spriteRenderer, layout, bottomX, bottomY,
+                            center.Width,
+                            bottom.Height,
+                            tileHorizontally: true, tileVertically: false);
                     }
                     else
                     {
-                        Render(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer);
-                        Render(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer);
+                        RenderSection(top, layout, systemManagers, spriteRenderer, topX, 0);
+                        RenderSection(bottom, layout, systemManagers, spriteRenderer, bottomX, bottomY);
                     }
 
-                    if (mSprites[(int)NineSliceSections.Center].Height > 0)
+                    if (center.Height > 0)
                     {
                         if (_isTilingMiddleSections)
                         {
-                            RenderTiled(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer,
-                                mSprites[(int)NineSliceSections.Center].Width,
-                                mSprites[(int)NineSliceSections.Center].Height,
-                                tileHorizontally: true, tileVertically: true, right, up);
+                            RenderTiled(center, systemManagers, spriteRenderer, layout, centerX, middleY,
+                                center.Width,
+                                center.Height,
+                                tileHorizontally: true, tileVertically: true);
                         }
                         else
                         {
-                            Render(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer);
+                            RenderSection(center, layout, systemManagers, spriteRenderer, centerX, middleY);
                         }
                     }
 
                 }
-                if (mSprites[(int)NineSliceSections.Center].Height > 0)
+                if (center.Height > 0)
                 {
                     if (_isTilingMiddleSections)
                     {
-                        RenderTiled(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer,
-                            mSprites[(int)NineSliceSections.Left].Width,
-                            mSprites[(int)NineSliceSections.Center].Height,
-                            tileHorizontally: false, tileVertically: true, right, up);
-                        RenderTiled(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer,
+                        RenderTiled(left, systemManagers, spriteRenderer, layout, 0, middleY,
+                            left.Width,
+                            center.Height,
+                            tileHorizontally: false, tileVertically: true);
+                        RenderTiled(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer, layout, rightX, middleY,
                             mSprites[(int)NineSliceSections.Right].Width,
-                            mSprites[(int)NineSliceSections.Center].Height,
-                            tileHorizontally: false, tileVertically: true, right, up);
+                            center.Height,
+                            tileHorizontally: false, tileVertically: true);
                     }
                     else
                     {
-                        Render(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer);
-                        Render(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer);
+                        RenderSection(left, layout, systemManagers, spriteRenderer, 0, middleY);
+                        RenderSection(mSprites[(int)NineSliceSections.Right], layout, systemManagers, spriteRenderer, rightX, middleY);
                     }
                 }
 
-                Render(mSprites[(int)NineSliceSections.TopRight], systemManagers, spriteRenderer);
-                Render(mSprites[(int)NineSliceSections.BottomLeft], systemManagers, spriteRenderer);
-                Render(mSprites[(int)NineSliceSections.BottomRight], systemManagers, spriteRenderer);
+                RenderSection(mSprites[(int)NineSliceSections.TopRight], layout, systemManagers, spriteRenderer, topRightX, 0);
+                RenderSection(bottomLeft, layout, systemManagers, spriteRenderer, 0, bottomY);
+                RenderSection(mSprites[(int)NineSliceSections.BottomRight], layout, systemManagers, spriteRenderer, bottomRightX, bottomY);
             }
         }
     }
@@ -1044,16 +1015,118 @@ public class NineSlice : SpriteBatchRenderableBase,
         }
     }
 
+    /// <summary>
+    /// Where the pieces of one nine-slice draw: its top-left corner, its axes, its rotation, and
+    /// the flips applied to the whole nine-slice. Flips are applied before the transpose, matching
+    /// the Skia and raylib nine-slices.
+    /// </summary>
+    private readonly struct SliceLayout
+    {
+        private readonly float _originX;
+        private readonly float _originY;
+        private readonly Vector3 _right;
+        private readonly Vector3 _up;
+        private readonly float _rotation;
+        private readonly float _width;
+        private readonly float _height;
+        private readonly bool _flipHorizontal;
+        private readonly bool _flipVertical;
+        private readonly bool _flipDiagonal;
+
+        public SliceLayout(float originX, float originY, Vector3 right, Vector3 up, float rotation,
+            float width, float height, bool flipHorizontal, bool flipVertical, bool flipDiagonal)
+        {
+            _originX = originX;
+            _originY = originY;
+            _right = right;
+            _up = up;
+            _rotation = rotation;
+            _width = width;
+            _height = height;
+            _flipHorizontal = flipHorizontal;
+            _flipVertical = flipVertical;
+            _flipDiagonal = flipDiagonal && width > 0 && height > 0;
+        }
+
+        /// <summary>
+        /// Positions, sizes, rotates and flips <paramref name="sprite"/> so it draws the piece
+        /// whose unflipped rectangle inside the nine-slice is the given one. The sprite's width and
+        /// height are left swapped for a transposed piece; callers restore them.
+        /// </summary>
+        public void Place(Sprite sprite, float localX, float localY, float width, float height)
+        {
+            if (_flipHorizontal)
+            {
+                localX = _width - localX - width;
+            }
+
+            if (_flipVertical)
+            {
+                localY = _height - localY - height;
+            }
+
+            float rotation = _rotation;
+            bool spriteFlipHorizontal = _flipHorizontal;
+
+            if (_flipDiagonal)
+            {
+                // Transposing stretches the piece into the nine-slice's own footprint, so a
+                // non-square nine-slice scales each rectangle by the ratio of its sides.
+                float widthOverHeight = _width / _height;
+                float heightOverWidth = _height / _width;
+                (localX, localY, width, height) = (
+                    localY * widthOverHeight,
+                    localX * heightOverWidth,
+                    height * widthOverHeight,
+                    width * heightOverWidth);
+
+                // MonoGame has no diagonal SpriteEffects, but a transpose is a quarter turn plus a
+                // horizontal mirror. Turned about its bottom-left corner the sprite's own width runs
+                // up the screen and its height runs across it, so it is sized swapped.
+                sprite.Width = height;
+                sprite.Height = width;
+                localY += height;
+                rotation += 90;
+                spriteFlipHorizontal = !spriteFlipHorizontal;
+            }
+            else
+            {
+                sprite.Width = width;
+                sprite.Height = height;
+            }
+
+            sprite.X = _originX + localX * _right.X + localY * _up.X;
+            sprite.Y = _originY + localX * _right.Y + localY * _up.Y;
+            sprite.Rotation = rotation;
+            sprite.FlipHorizontal = spriteFlipHorizontal;
+            sprite.FlipVertical = _flipVertical;
+        }
+    }
+
+    void RenderSection(Sprite sprite, in SliceLayout layout, SystemManagers systemManagers,
+        SpriteRenderer spriteRenderer, float localX, float localY)
+    {
+        float originalWidth = sprite.Width;
+        float originalHeight = sprite.Height;
+
+        layout.Place(sprite, localX, localY, originalWidth, originalHeight);
+        Render(sprite, systemManagers, spriteRenderer);
+
+        sprite.Width = originalWidth;
+        sprite.Height = originalHeight;
+    }
+
     void RenderTiled(
         Sprite sprite,
         SystemManagers systemManagers,
         SpriteRenderer spriteRenderer,
+        in SliceLayout layout,
+        float localX,
+        float localY,
         float fillWidth,
         float fillHeight,
         bool tileHorizontally,
-        bool tileVertically,
-        Vector3 right,
-        Vector3 up)
+        bool tileVertically)
     {
         if (sprite.Texture == null || sprite.SourceRectangle == null)
         {
@@ -1108,10 +1181,7 @@ public class NineSlice : SpriteBatchRenderableBase,
                 {
                     sprite.SourceRectangle = new Rectangle(
                         originalSourceRect.X, originalSourceRect.Y, srcW, srcH);
-                    sprite.Width = thisWidth;
-                    sprite.Height = thisHeight;
-                    sprite.X = originalX + currentX * right.X + currentY * up.X;
-                    sprite.Y = originalY + currentX * right.Y + currentY * up.Y;
+                    layout.Place(sprite, localX + currentX, localY + currentY, thisWidth, thisHeight);
 
                     Render(sprite, systemManagers, spriteRenderer);
                 }
@@ -1206,6 +1276,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         SourceRectangle = new Rectangle(left, top, width, height);
 
         FlipHorizontal = frame.FlipHorizontal;
+        FlipVertical = frame.FlipVertical;
         FlipDiagonal = frame.FlipDiagonal;
 
         // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
@@ -1327,7 +1398,7 @@ public class NineSlice : SpriteBatchRenderableBase,
             SourceRectangle = Animation.SourceRectangle;
             SetSingleTexture(Animation.CurrentTexture);
             FlipHorizontal = Animation.FlipHorizontal;
-            //FlipVertical = Animation.FlipVertical;
+            FlipVertical = Animation.FlipVertical;
 
             // Right now we'll just default this to resize the Sprite, but eventually we may want more control over it
             if (SourceRectangle.HasValue)

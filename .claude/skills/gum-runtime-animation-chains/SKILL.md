@@ -52,7 +52,7 @@ To match FRB visuals on a height-tracking Sprite, the offset has to be applied a
 
 All backends' `NineSlice` compose `AnimationChainLogic` and apply the frame offset (`GetRenderOffset`) and keyframe color (`ApplyKeyframeColor`) like `Sprite`. XNA shifts the absolute origin in `Render`, raylib shifts the destination, Skia translates the canvas in `DrawBound`.
 
-Skia and raylib flip the whole drawn nine-slice (canvas mirror/transpose on Skia; per-section destination mirror plus `Sprite.GetDiagonalFlipDraw` on raylib), with any flip forcing raylib's per-section path instead of `DrawTextureNPatch`. XNA stores `FlipHorizontal`/`FlipDiagonal` but does not draw them (#6060). XNA `ApplyAnimationFrame` distributes the frame texture to the 9 internal sprites via `SetSingleTexture`.
+All backends flip the whole drawn nine-slice, flipping first and then transposing (a non-square one stretches the transposed image to its footprint): canvas mirror/transpose on Skia; per-section destination mirror plus `Sprite.GetDiagonalFlipDraw` on raylib, where any flip forces the per-section path instead of `DrawTextureNPatch`. XNA places each of the nine child sprites (and each tile) through `NineSlice.SliceLayout.Place`, which mirrors its rectangle, then draws a transposed piece as a quarter turn about its bottom-left corner plus a horizontal mirror, so it works for non-square pieces unlike the square-only `Sprite` composite. XNA `ApplyAnimationFrame` distributes the frame texture to the 9 internal sprites via `SetSingleTexture`.
 
 ## Per-frame color (Alpha/Multiply/Add)
 
