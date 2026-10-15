@@ -25,6 +25,24 @@ dotnet tool install -g GumCli
 
 Once installed, invoke it as `gumcli` from any terminal.
 
+## Version
+
+```
+gumcli --version
+```
+
+Every command also prints `gumcli v<version>` to stderr, so the version appears at the top of any run's output. Compare it to the latest on [NuGet](https://www.nuget.org/packages/GumCli).
+
+## Updating
+
+`gumcli` is not updated when you update the Gum NuGet packages in your game. Update it separately:
+
+```
+dotnet tool update -g GumCli
+```
+
+Update whenever you update the Gum runtime packages. Generated code can target APIs a stale `gumcli` doesn't know about.
+
 ## Commands
 
 | Command | Description |
