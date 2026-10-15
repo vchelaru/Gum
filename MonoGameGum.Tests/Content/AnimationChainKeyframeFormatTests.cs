@@ -16,7 +16,7 @@ public class AnimationChainKeyframeFormatTests
         XmlSerializer serializer = new(typeof(AnimationChainListSave));
         using StringWriter writer = new();
         serializer.Serialize(writer, save);
-        return writer.ToString();
+        return writer.ToString().Replace("\r\n", "\n");
     }
 
     private static AnimationChainListSave FromXml(string xml)
@@ -206,25 +206,25 @@ public class AnimationChainKeyframeFormatTests
         string xml = ToXml(save);
 
         xml.ShouldBe(
-            "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n" +
-            "<AnimationChainArraySave xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n" +
-            "  <FileRelativeTextures>true</FileRelativeTextures>\r\n" +
-            "  <TimeMeasurementUnit>Undefined</TimeMeasurementUnit>\r\n" +
-            "  <CoordinateType>UV</CoordinateType>\r\n" +
-            "  <AnimationChain>\r\n" +
-            "    <Name>c</Name>\r\n" +
-            "    <Frame>\r\n" +
-            "      <Alpha>128</Alpha>\r\n" +
-            "      <TextureName>a.png</TextureName>\r\n" +
-            "      <FrameLength>0.1</FrameLength>\r\n" +
-            "      <LeftCoordinate>0</LeftCoordinate>\r\n" +
-            "      <RightCoordinate>1</RightCoordinate>\r\n" +
-            "      <TopCoordinate>0</TopCoordinate>\r\n" +
-            "      <BottomCoordinate>1</BottomCoordinate>\r\n" +
-            "      <RelativeX>2</RelativeX>\r\n" +
-            "    </Frame>\r\n" +
-            "    <Loop>true</Loop>\r\n" +
-            "  </AnimationChain>\r\n" +
+            "<?xml version=\"1.0\" encoding=\"utf-16\"?>\n" +
+            "<AnimationChainArraySave xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n" +
+            "  <FileRelativeTextures>true</FileRelativeTextures>\n" +
+            "  <TimeMeasurementUnit>Undefined</TimeMeasurementUnit>\n" +
+            "  <CoordinateType>UV</CoordinateType>\n" +
+            "  <AnimationChain>\n" +
+            "    <Name>c</Name>\n" +
+            "    <Frame>\n" +
+            "      <Alpha>128</Alpha>\n" +
+            "      <TextureName>a.png</TextureName>\n" +
+            "      <FrameLength>0.1</FrameLength>\n" +
+            "      <LeftCoordinate>0</LeftCoordinate>\n" +
+            "      <RightCoordinate>1</RightCoordinate>\n" +
+            "      <TopCoordinate>0</TopCoordinate>\n" +
+            "      <BottomCoordinate>1</BottomCoordinate>\n" +
+            "      <RelativeX>2</RelativeX>\n" +
+            "    </Frame>\n" +
+            "    <Loop>true</Loop>\n" +
+            "  </AnimationChain>\n" +
             "</AnimationChainArraySave>");
     }
 }
