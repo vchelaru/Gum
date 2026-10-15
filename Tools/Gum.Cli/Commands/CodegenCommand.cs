@@ -231,8 +231,12 @@ public static class CodegenCommand
         // codegen iterates elements individually rather than calling
         // HeadlessCodeGenerationService.GenerateCodeForAllElements (so it can run per-element error
         // checks first), so the per-project Standard Elements fallback file (issue #3505) is written
-        // directly here rather than picked up automatically.
-        codeGenService.GenerateStandardElementsFallbackFile(project, projectSettings);
+        // directly here rather than picked up automatically. Like the tool's per-element generation,
+        // --element runs leave it alone (issue #6042).
+        if (elementNames == null || elementNames.Length == 0)
+        {
+            codeGenService.GenerateStandardElementsFallbackFile(project, projectSettings);
+        }
 
         Console.WriteLine($"Generated code for {generatedCount} element(s).");
 

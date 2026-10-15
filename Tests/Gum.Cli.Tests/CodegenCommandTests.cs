@@ -432,6 +432,20 @@ public class CodegenCommandTests : IDisposable
     }
 
     [Fact]
+    public void Codegen_WithElementOption_DoesNotWriteStandardElementsFallbackFile()
+    {
+        // Issue #6042: the tool's per-element generation never writes the fallback file, so
+        // --element must not either; only a full run does.
+        string gumxPath = CreateProjectWithScreen("TestScreen", "");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--element", "TestScreen");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(Path.Combine(_tempDirectory, "Screens", "TestScreen.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "StandardElements.Generated.cs")).ShouldBeFalse();
+    }
+
+    [Fact]
     public void Codegen_WhenCodeProjectRootCannotBeCreated_ReportsTheErrorAndReturnsExitCode1()
     {
         // A file where the output folder should be makes directory creation fail on every OS, the
