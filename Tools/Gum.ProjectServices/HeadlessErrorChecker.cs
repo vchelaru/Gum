@@ -193,7 +193,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 {
                     if (TryParseReference(expandedReferenceString, sourceObject, out string qualifiedLeft, out string right))
                     {
-                        EmitConflictIfPresent(element, state, state, qualifiedLeft, right, errors);
+                        EmitConflictIfPresent(element, state, state, qualifiedLeft, right, sourceObject, expandedReferenceString, errors);
                     }
                 }
             }
@@ -244,7 +244,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                         if (TryParseReference(expandedReferenceString, sourceObject: null, out string leftOnInstance, out string right))
                         {
                             string qualifiedLeft = $"{variable.SourceObject}.{leftOnInstance}";
-                            EmitConflictIfPresent(element, state, matchedState, qualifiedLeft, right, errors);
+                            EmitConflictIfPresent(element, state, matchedState, qualifiedLeft, right, variable.SourceObject, referenceLine: null, errors);
                         }
                     }
                 }
@@ -271,6 +271,8 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         StateSave referenceOwnerState,
         string qualifiedLeft,
         string right,
+        string? instanceName,
+        string? referenceLine,
         List<ErrorResult> errors)
     {
         VariableSave? materialized = localState.Variables.FirstOrDefault(v => v.Name == qualifiedLeft && v.SetsValue);
@@ -291,7 +293,9 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             Severity = ErrorSeverity.Warning,
             Message = $"{localState.Name}: \"{qualifiedLeft}\" is set explicitly to {FormatValue(materialized.Value)}, " +
                 $"but the active VariableReference would set it to {FormatValue(evaluated)}. " +
-                "The explicit value will win; remove the local override or change the reference to resolve the conflict."
+                "The explicit value will win; remove the local override or change the reference to resolve the conflict.",
+            ReferenceConflict = new VariableReferenceConflict(
+                element, localState, qualifiedLeft, instanceName, materialized.Value, evaluated, referenceLine)
         });
     }
 

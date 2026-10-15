@@ -705,6 +705,71 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldDescribeStaleValue_WhenLocalReferenceDisagreesWithScalar()
+    {
+        ComponentSave component = new ComponentSave { Name = "ConflictComponent", BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        state.Variables.Add(new VariableSave { Name = "SourceX", Type = "float", Value = 100f, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "X", Type = "float", Value = 14f, SetsValue = true });
+        VariableListSave<string> refs = new VariableListSave<string> { Name = "VariableReferences", Type = "string" };
+        refs.Value.Add("X = SourceX");
+        state.VariableLists.Add(refs);
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        VariableReferenceConflict conflict = errors.ShouldHaveSingleItem().ReferenceConflict.ShouldNotBeNull();
+        conflict.Element.ShouldBe(component);
+        conflict.State.ShouldBe(state);
+        conflict.VariableName.ShouldBe("X");
+        conflict.InstanceName.ShouldBeNull();
+        conflict.OldValue.ShouldBe(14f);
+        conflict.NewValue.ShouldBe(100f);
+        conflict.ReferenceLine.ShouldBe("X = SourceX");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldDescribeStaleValue_WhenInheritedCategorizedReferenceDisagreesWithLocalScalar()
+    {
+        ComponentSave label = new ComponentSave { Name = "LabelForConflict", BaseType = "Container" };
+        label.States.Add(new StateSave { Name = "Default", ParentContainer = label });
+        StateSaveCategory textCategory = new StateSaveCategory { Name = "TextCategory" };
+        StateSave titleState = new StateSave { Name = "Title", ParentContainer = label };
+        titleState.Variables.Add(new VariableSave { Name = "SourceFontSize", Type = "float", Value = 100f, SetsValue = true });
+        VariableListSave<string> titleRefs = new VariableListSave<string> { Name = "VariableReferences", Type = "string" };
+        titleRefs.Value.Add("FontSize = SourceFontSize");
+        titleState.VariableLists.Add(titleRefs);
+        textCategory.States.Add(titleState);
+        label.Categories.Add(textCategory);
+        Project.Components.Add(label);
+
+        ComponentSave button = new ComponentSave { Name = "ButtonForConflict", BaseType = "Container" };
+        StateSave buttonDefault = new StateSave { Name = "Default", ParentContainer = button };
+        button.States.Add(buttonDefault);
+        button.Instances.Add(new InstanceSave { Name = "TextInstance", BaseType = "LabelForConflict", ParentContainer = button });
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.TextCategoryState", Type = "TextCategory", Value = "Title", SetsValue = true
+        });
+        buttonDefault.Variables.Add(new VariableSave
+        {
+            Name = "TextInstance.FontSize", Type = "float", Value = 14f, SetsValue = true
+        });
+        Project.Components.Add(button);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(button, Project);
+
+        VariableReferenceConflict conflict = errors.ShouldHaveSingleItem().ReferenceConflict.ShouldNotBeNull();
+        conflict.State.ShouldBe(buttonDefault);
+        conflict.VariableName.ShouldBe("TextInstance.FontSize");
+        conflict.InstanceName.ShouldBe("TextInstance");
+        conflict.OldValue.ShouldBe(14f);
+        conflict.NewValue.ShouldBe(100f);
+        conflict.ReferenceLine.ShouldBeNull();
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldReportGum0002_WhenCollapsedColorReferenceChannelDisagreesWithMaterializedScalar()
     {
         // "Color = Source.Color" is a collapsed composite reference - Red/Green/Blue are the real

@@ -98,6 +98,9 @@ public sealed class ErrorsView : ListBox
 
         Button action = new Button { Margin = new Thickness(4, 0), Padding = new Thickness(6, 1), VerticalAlignment = VerticalAlignment.Center };
         action.Bind(ContentControl.ContentProperty, new Binding(nameof(ErrorViewModel.ActionName)));
+        // A label can run to two lines (Set Width to 120 / (match reference)); centre them under each other.
+        action.ContentTemplate = new FuncDataTemplate<string>((text, _) => new TextBlock { Text = text, TextAlignment = TextAlignment.Center });
+        action.HorizontalContentAlignment = HorizontalAlignment.Center;
         action.Bind(Button.CommandProperty, new Binding(nameof(ErrorViewModel.ActionCommand)));
         action.Bind(IsVisibleProperty, new Binding(nameof(ErrorViewModel.HasAction)));
         Grid.SetColumn(action, 2);

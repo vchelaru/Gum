@@ -252,7 +252,8 @@ public class MainErrorsPluginTests : BaseTestClass
         headlessErrorChecker.Setup(c => c.GetProjectErrors(It.IsAny<GumProjectSave>()))
             .Returns(new ErrorResult[0]);
         ErrorChecker errorChecker = new ErrorChecker(headlessErrorChecker.Object, pluginManager.Object,
-            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>());
+            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(),
+            Mock.Of<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceConflictFixer>());
         List<ErrorViewModel[]> elementChecks = new();
         errorChecker.ErrorsChecked += (_, errors) => elementChecks.Add(errors);
         AllErrorsViewModel viewModel = null!;

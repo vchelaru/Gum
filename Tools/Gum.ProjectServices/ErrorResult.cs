@@ -24,6 +24,12 @@ public class ErrorResult
     /// </summary>
     public string? FilePath { get; set; }
 
+    /// <summary>
+    /// For GUM0002, the stale value and what the reference would set instead. Lets a tool offer to
+    /// replace the value. Null for every other result.
+    /// </summary>
+    public VariableReferenceConflict? ReferenceConflict { get; set; }
+
     public ErrorResult()
     {
         ElementName = string.Empty;

@@ -1,7 +1,9 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ProjectServices;
 using Gum.Services;
 using Moq;
@@ -19,7 +21,7 @@ public class ErrorCheckerTests : BaseTestClass
         IHeadlessErrorChecker headlessErrorChecker = new HeadlessErrorChecker(typeResolver);
         Mock<IPluginManager> mockPluginManager = new Mock<IPluginManager>();
         IErrorDocsRegistry errorDocsRegistry = new ErrorDocsRegistry();
-        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry, Mock.Of<IFileSystemRevealService>());
+        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry, Mock.Of<IFileSystemRevealService>(), Mock.Of<IVariableReferenceConflictFixer>());
     }
 
     [Fact]
@@ -76,7 +78,7 @@ public class ErrorCheckerTests : BaseTestClass
             .Callback<List<ErrorViewModel>, object?>(
                 (list, _) => list.Add(new ErrorViewModel { Code = "GUM0005", Message = "plugin error" }));
         ErrorChecker sut = new ErrorChecker(Mock.Of<IHeadlessErrorChecker>(), mockPluginManager.Object,
-            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>());
+            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(), Mock.Of<IVariableReferenceConflictFixer>());
         int raisedCount = 0;
         sut.ErrorsChecked += (_, _) => raisedCount++;
 
@@ -117,7 +119,7 @@ public class ErrorCheckerTests : BaseTestClass
         });
         Mock<IFileSystemRevealService> revealService = new Mock<IFileSystemRevealService>();
         ErrorChecker sut = new ErrorChecker(headlessErrorChecker.Object, new Mock<IPluginManager>().Object,
-            new ErrorDocsRegistry(), revealService.Object);
+            new ErrorDocsRegistry(), revealService.Object, Mock.Of<IVariableReferenceConflictFixer>());
 
         ErrorViewModel[] errors = sut.GetProjectErrors(project);
 
@@ -126,5 +128,35 @@ public class ErrorCheckerTests : BaseTestClass
         errors[1].HasAction.ShouldBeFalse();
         errors[0].ActionCommand!.Execute(null);
         revealService.Verify(r => r.RevealFile(filePath), Times.Once);
+    }
+
+    [Fact]
+    public void GetErrorsFor_OffersToApplyTheReference_WhenTheErrorIsAStaleReferenceValue()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave component = new ComponentSave { Name = "Stale", BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        VariableReferenceConflict conflict = new VariableReferenceConflict(
+            component, state, "X", instanceName: null, oldValue: 255f, newValue: 6f, referenceLine: "X = SourceX");
+        Mock<IHeadlessErrorChecker> headlessErrorChecker = new Mock<IHeadlessErrorChecker>();
+        headlessErrorChecker.Setup(c => c.GetErrorsFor(component, project)).Returns(new[]
+        {
+            new ErrorResult { ElementName = "Stale", Code = "GUM0002", Message = "stale", ReferenceConflict = conflict },
+            new ErrorResult { ElementName = "Stale", Code = "GUM0009", Message = "other" },
+        });
+        Mock<IVariableReferenceConflictFixer> fixer = new Mock<IVariableReferenceConflictFixer>();
+        fixer.Setup(f => f.GetActionLabel(conflict)).Returns("Set X to 6");
+        ErrorChecker sut = new ErrorChecker(headlessErrorChecker.Object, new Mock<IPluginManager>().Object,
+            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(), fixer.Object);
+
+        ErrorViewModel[] errors = sut.GetErrorsFor(component, project);
+
+        errors[0].ActionName.ShouldBe("Set X to 6\n(match reference)");
+        errors[1].HasAction.ShouldBeFalse();
+        fixer.Verify(f => f.Fix(It.IsAny<VariableReferenceConflict>()), Times.Never);
+        errors[0].ActionCommand!.Execute(null);
+        fixer.Verify(f => f.Fix(conflict), Times.Once);
     }
 }
