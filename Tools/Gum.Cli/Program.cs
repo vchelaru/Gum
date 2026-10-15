@@ -9,12 +9,15 @@ namespace Gum.Cli;
 /// </summary>
 public class Program
 {
-    public static int Main(string[] args)
-    {
-        string version = Assembly.GetExecutingAssembly()
+    internal static string GetCliVersion() =>
+        Assembly.GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
             ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
             ?? "unknown";
+
+    public static int Main(string[] args)
+    {
+        string version = GetCliVersion();
 
         // Banner goes to stderr so stdout stays clean for machine-readable output
         // (e.g. `gumcli check foo.gumx --json | jq .`). This matches the convention

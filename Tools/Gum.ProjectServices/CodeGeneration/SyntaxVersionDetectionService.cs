@@ -180,6 +180,42 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         return CreateFallback("No Gum runtime with a legacy version found in the .csproj.");
     }
 
+    /// <summary>
+    /// Returns the version of the Gum runtime NuGet package the project's .csproj references, with a
+    /// floating version resolved from the NuGet cache, or null when no runtime is referenced that way
+    /// (a ProjectReference or HintPath carries no package version). The result may still be a
+    /// floating or range expression when it could not be resolved.
+    /// </summary>
+    public string? FindRuntimePackageVersion(CodeOutputProjectSettings settings, string? projectDirectory)
+    {
+        string? csprojPath = CodeProjectCsprojLocator.FindCsproj(settings, projectDirectory);
+        if (csprojPath == null || !File.Exists(csprojPath))
+        {
+            return null;
+        }
+
+        string csprojContents;
+        try
+        {
+            csprojContents = File.ReadAllText(csprojPath);
+        }
+        catch
+        {
+            return null;
+        }
+
+        foreach (string packageName in GumPackageNames)
+        {
+            string? packageVersion = ExtractPackageReferenceVersion(csprojContents, packageName);
+            if (packageVersion != null)
+            {
+                return ResolveFloatingVersion(packageName, packageVersion);
+            }
+        }
+
+        return null;
+    }
+
     private SyntaxVersionResult? TryDetectFromProjectReference(string csprojContents, string csprojPath)
     {
         // Look for a ProjectReference to a Gum runtime that stamps a GumSyntaxVersion.

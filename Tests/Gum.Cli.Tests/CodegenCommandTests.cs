@@ -115,6 +115,36 @@ public class CodegenCommandTests : IDisposable
         contents.ShouldNotContain("\"CodeProjectRoot\": \"\"");
     }
 
+    [Theory]
+    [InlineData("99999.1.1.1", true)]  // runtime newer than any CLI
+    [InlineData("2000.1.1.1", false)]  // runtime older than the CLI
+    public void Codegen_WarnsOnStderrOnlyWhenPackageReferenceIsNewerThanCli(string runtimeVersion, bool expectWarning)
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "MyGame.csproj"),
+            $"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <ItemGroup>
+                <PackageReference Include="Gum.MonoGame" Version="{runtimeVersion}" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0);
+        if (expectWarning)
+        {
+            result.StandardError.ShouldContain($"is older than the Gum runtime in this project (v{runtimeVersion})");
+            result.StandardOutput.ShouldNotContain("older than the Gum runtime");
+        }
+        else
+        {
+            result.StandardError.ShouldNotContain("older than the Gum runtime");
+        }
+    }
+
     [Fact]
     public void Codegen_PrintsResolvedCodeProjectRoot()
     {
