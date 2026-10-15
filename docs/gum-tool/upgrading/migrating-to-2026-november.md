@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime. It also changes `Dragging` on visuals so that it is raised every frame the primary button is held, whether or not the cursor moves. It also adds an `AnimationChainFinished` event to sprites and nine slices playing an animation chain, which replaces `AnimationChainCycled` as the way to detect the end of a chain that does not loop. It also adds project [Version 6](upgrading-file-gumx-version.md#version-6), which gives fonts loaded from a font file separate generated files when two files share a name in different folders. Projects keep working at Version 5, and the generated font files only change names when you upgrade. It also finishes the move of the MonoGame, KNI and FNA input types into `Gum.Input` by moving `Cursor` and `CursorExtensions`.
+`2026 November` changes how stacks position and size around their children. A child after the first in a stack now ignores its origin on the stacking axis, the same way it already ignored its units, so it no longer overlaps its previous sibling. A stack sized to its children that has a `Max Height` or `Max Width` and does not wrap now grows to its max when its children need more space, instead of stopping at the last child that fits. A stack with `Wraps Children` checked that is sized to its children and has a max now measures its widest row or column, not only its first. In a stack with `Wraps Children` checked, each row or column is now the parent of its children on the other axis, so a centered or bottom aligned child lines up within its row instead of within the whole stack. A container sized to its children now counts a `Relative to Max of Children or Parent` child at its `Min Width` or `Min Height`. All of these changes affect layouts in the Gum tool and the runtime. It also changes `Dragging` on visuals so that it is raised every frame the primary button is held, whether or not the cursor moves. It also adds an `AnimationChainFinished` event to sprites and nine slices playing an animation chain, which replaces `AnimationChainCycled` as the way to detect the end of a chain that does not loop. It also adds project [Version 6](upgrading-file-gumx-version.md#version-6), which gives fonts loaded from a font file separate generated files when two files share a name in different folders. Projects keep working at Version 5, and the generated font files only change names when you upgrade. It also finishes the move of the MonoGame, KNI and FNA input types into `Gum.Input` by moving `Cursor` and `CursorExtensions`. It also renames `SvgRuntime.Document` to `Texture` in MonoGame and KNI projects that use Apos.Shapes.
 
 ## Breaking Changes and Migrations
 
@@ -267,3 +267,26 @@ sprite.AnimationChainFinished += () => sprite.RemoveFromRoot();
 ```
 
 For more information see the [Animation Chains](../../code/files-and-fonts/animation-chains.md#looping-and-end-of-chain-events) page.
+
+
+### SvgRuntime.Document Renamed to Texture in MonoGame and KNI
+
+The `SvgRuntime` in MonoGame and KNI projects that use `Gum.Shapes.MonoGame` or `Gum.Shapes.KNI` now names its document property `Texture`, the same name SkiaGum's `SvgRuntime` has always used. The property was `Document` before this version. The type is still the Apos.Shapes `ShapeSvg`, and `SourceFile` is unchanged.
+
+This affects you only if your code reads or assigns `SvgRuntime.Document`, for example to draw a `ShapeSvg` you loaded yourself. The old name now fails to compile with `CS1061`.
+
+To migrate, rename `Document` to `Texture`.
+
+❌ Old:
+
+```csharp
+// Initialize
+svg.Document = shapeSvg;
+```
+
+✅ New:
+
+```csharp
+// Initialize
+svg.Texture = shapeSvg;
+```

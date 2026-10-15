@@ -160,7 +160,7 @@ public class SvgRuntimeTests
 
             svg.AspectRatio.ShouldBe(1f);
 
-            svg.Document = ShapeSvgLoader.Load(path);
+            svg.Texture = ShapeSvgLoader.Load(path);
 
             svg.AspectRatio.ShouldBe(2f, tolerance: 0.001f);
         }
@@ -181,7 +181,7 @@ public class SvgRuntimeTests
 
             runtime.SourceFile = path;
 
-            runtime.Document.ShouldNotBeNull();
+            runtime.Texture.ShouldNotBeNull();
         }
         finally
         {
