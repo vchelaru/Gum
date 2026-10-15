@@ -26,4 +26,18 @@ public class ReferenceSubtextScreenshotTests
 
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "reference-driven-row");
     });
+
+    [SkippableFact]
+    public void ReferenceDrivenColorRow() => PrScreenshot.Run(() =>
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        grid.Project.AddInstance(button, "Leader", "Text");
+        InstanceSave label = grid.Project.AddInstance(button, "Label", "Text");
+        grid.Select(label);
+        grid.TypeLinesAndApply("VariableReferences", "Color = Leader.Color");
+        grid.Input.TypeInto(grid.View.FilterTextBox, "Color");
+
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "reference-driven-color-row");
+    });
 }

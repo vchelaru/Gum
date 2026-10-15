@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.Commands;
@@ -181,6 +182,83 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     private static InstanceMember DisabledChannel(string name, string detailText)
     {
         return new InstanceMember(name, null!) { IsReadOnly = true, DetailText = detailText };
+    }
+
+    private static InstanceMember ReferencedChannel(string name, string source, Action? navigate = null, Action? unlink = null)
+    {
+        return new InstanceMember(name, null!)
+        {
+            IsReadOnly = true,
+            DetailText = "Set by " + source + "\nSet by ButtonCategory",
+            DetailLink = new DetailTextLink(source, navigate ?? (() => { })),
+            DetailAction = unlink == null ? null : new DetailTextLink("Unlink", unlink, IconName: "Delete")
+        };
+    }
+
+    private CompositeInstanceMember ApplyToColor(params InstanceMember[] channels)
+    {
+        ComponentSave component = MakeColorComponent();
+        MemberCategory category = CategoryWith(channels);
+        _logic.Apply(new List<MemberCategory> { category }, component, instance: null);
+        return (CompositeInstanceMember)category.Members.Single();
+    }
+
+    [Fact]
+    public void Apply_ShouldShowOneSourceLine_WhenChannelsComeFromOneCompositeSource()
+    {
+        // Color = Components/Styles.Primary.FillColor is stored as one line; the swatch should say so once,
+        // with the category line once, instead of one "Red:/Green:/Blue:" block per channel.
+        int navigated = 0;
+        CompositeInstanceMember composite = ApplyToColor(
+            ReferencedChannel("Red", "Components/Styles.Primary.FillRed", () => navigated++),
+            ReferencedChannel("Green", "Components/Styles.Primary.FillGreen"),
+            ReferencedChannel("Blue", "Components/Styles.Primary.FillBlue"));
+
+        composite.DetailText.ShouldBe("Set by Components/Styles.Primary.FillColor\nSet by ButtonCategory");
+        composite.DetailLink.ShouldNotBeNull();
+        composite.DetailLink.Text.ShouldBe("Components/Styles.Primary.FillColor");
+        composite.DetailLink.Navigate();
+        navigated.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Apply_ShouldKeepPerChannelLines_AndListSharedLinesOnce_WhenSourcesDiffer()
+    {
+        CompositeInstanceMember composite = ApplyToColor(
+            ReferencedChannel("Red", "A.Red"),
+            ReferencedChannel("Green", "B.Green"),
+            ReferencedChannel("Blue", "A.Blue"));
+
+        composite.DetailText.ShouldBe("Red: Set by A.Red\nGreen: Set by B.Green\nBlue: Set by A.Blue\nSet by ButtonCategory");
+        composite.DetailLink.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Apply_ShouldUnlinkEveryReferencedChannel_WhenCompositeUnlinkIsInvoked()
+    {
+        List<string> unlinked = new();
+        CompositeInstanceMember composite = ApplyToColor(
+            ReferencedChannel("Red", "A.FillRed", unlink: () => unlinked.Add("Red")),
+            ReferencedChannel("Green", "A.FillGreen", unlink: () => unlinked.Add("Green")),
+            ReferencedChannel("Blue", "A.FillBlue", unlink: () => unlinked.Add("Blue")));
+
+        composite.DetailAction.ShouldNotBeNull();
+        composite.DetailAction.Text.ShouldBe("Unlink");
+        composite.DetailAction.IconName.ShouldBe("Delete");
+        composite.DetailAction.Navigate();
+
+        unlinked.ShouldBe(new[] { "Red", "Green", "Blue" });
+    }
+
+    [Fact]
+    public void Apply_ShouldNotSetUnlink_WhenNoChannelHasOne()
+    {
+        CompositeInstanceMember composite = ApplyToColor(
+            DisabledChannel("Red", "Set by A.Red"),
+            DisabledChannel("Green", "Set by A.Green"),
+            DisabledChannel("Blue", "Set by A.Blue"));
+
+        composite.DetailAction.ShouldBeNull();
     }
 
     [Fact]

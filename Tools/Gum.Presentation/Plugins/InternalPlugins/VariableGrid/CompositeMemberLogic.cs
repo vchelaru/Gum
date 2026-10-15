@@ -166,15 +166,8 @@ public class CompositeMemberLogic
         // message on the swatch - otherwise the swatch is correctly disabled but with no explanation of why
         // (issue #3058). Prefixing with the channel root name reconstructs the per-channel assignment line
         // (e.g. "Red=A.Red") so the user sees every value being assigned individually.
-        List<string> detailSegments = new();
-        for (int i = 0; i < triple.ChannelMembers.Count; i++)
-        {
-            InstanceMember channelMember = triple.ChannelMembers[i];
-            if (channelMember.IsReadOnly && !string.IsNullOrEmpty(channelMember.DetailText))
-            {
-                detailSegments.Add(triple.ChannelRootNames[i] + ": " + channelMember.DetailText);
-            }
-        }
+        List<string> detailSegments = BuildChannelDetailSegments(descriptor, triple, composite);
+        composite.DetailAction = BuildUnlinkAction(triple.ChannelMembers);
 
         // When channels are exposed the swatch stays, but we surface the exposure as subtext so the user can
         // see it's exposed and under which names (the raw per-channel rows used to carry this).
@@ -417,6 +410,119 @@ public class CompositeMemberLogic
             : _objectFinder.GetRootVariable(member.Name, element);
 
         return rootVariable?.Name;
+    }
+
+    /// <summary>
+    /// Builds the swatch's detail lines from its disabled channels. A channel's text is a source line
+    /// ("Set by X") followed by shared lines (such as "Set by ButtonCategory"); shared lines are listed once.
+    /// When every channel links to the matching channel of one composite source (FillRed/FillGreen/FillBlue
+    /// for a stored <c>Color = ...FillColor</c>), the three source lines collapse into one and the composite
+    /// gets a <see cref="InstanceMember.DetailLink"/> to it.
+    /// </summary>
+    private static List<string> BuildChannelDetailSegments(CompositeMemberDescriptor descriptor, CompositeTriple triple,
+        CompositeInstanceMember composite)
+    {
+        List<string> sourceLines = new();
+        List<string> sharedLines = new();
+        for (int i = 0; i < triple.ChannelMembers.Count; i++)
+        {
+            InstanceMember channelMember = triple.ChannelMembers[i];
+            if (!channelMember.IsReadOnly || string.IsNullOrEmpty(channelMember.DetailText))
+            {
+                continue;
+            }
+
+            string[] lines = channelMember.DetailText.Split('\n');
+            sourceLines.Add(triple.ChannelRootNames[i] + ": " + lines[0]);
+            foreach (string line in lines.Skip(1))
+            {
+                if (!sharedLines.Contains(line))
+                {
+                    sharedLines.Add(line);
+                }
+            }
+        }
+
+        List<string> segments = new();
+        string? compositeSource = TryGetCompositeSource(descriptor, triple);
+        if (compositeSource != null)
+        {
+            segments.Add("Set by " + compositeSource);
+            composite.DetailLink = new DetailTextLink(compositeSource, triple.ChannelMembers[0].DetailLink!.Navigate);
+        }
+        else
+        {
+            segments.AddRange(sourceLines);
+        }
+
+        segments.AddRange(sharedLines);
+        return segments;
+    }
+
+    /// <summary>
+    /// Returns the composite's source (e.g. <c>Components/Styles.Primary.FillColor</c>) when every channel
+    /// links to the same-named channel of one source variable, or null.
+    /// </summary>
+    private static string? TryGetCompositeSource(CompositeMemberDescriptor descriptor, CompositeTriple triple)
+    {
+        string? path = null;
+        string? compositeName = null;
+        for (int i = 0; i < triple.ChannelMembers.Count; i++)
+        {
+            string? linkText = triple.ChannelMembers[i].DetailLink?.Text;
+            if (linkText == null)
+            {
+                return null;
+            }
+
+            int lastDot = linkText.LastIndexOf('.');
+            string channelPath = lastDot < 0 ? "" : linkText.Substring(0, lastDot + 1);
+            string sourceName = linkText.Substring(lastDot + 1);
+            if (!TrySplitAroundToken(sourceName, descriptor.ChannelRootNames[i], out string prefix, out string suffix))
+            {
+                return null;
+            }
+
+            string name = descriptor.CompositeNameFormat.Replace("{prefix}", prefix).Replace("{suffix}", suffix);
+            if ((path != null && path != channelPath) || (compositeName != null && compositeName != name))
+            {
+                return null;
+            }
+
+            path = channelPath;
+            compositeName = name;
+        }
+
+        return path + compositeName;
+    }
+
+    /// <summary>
+    /// One "Unlink" for the swatch that runs the Unlink of every channel that has one, as a single undo.
+    /// A stored <c>Color = ...</c> line is commented out by the first channel; the rest find nothing left to do.
+    /// </summary>
+    private DetailTextLink? BuildUnlinkAction(List<InstanceMember> channelMembers)
+    {
+        List<DetailTextLink> channelActions = channelMembers
+            .Select(channel => channel.DetailAction)
+            .OfType<DetailTextLink>()
+            .ToList();
+        if (channelActions.Count == 0)
+        {
+            return null;
+        }
+
+        DetailTextLink first = channelActions[0];
+        return first with
+        {
+            Navigate = () =>
+            {
+                using IDisposable undoLock = _undoManager.RequestLock();
+                foreach (DetailTextLink action in channelActions)
+                {
+                    action.Navigate();
+                }
+            }
+        };
     }
 
     private static bool TrySplitAroundToken(string rootName, string token, out string prefix, out string suffix)
