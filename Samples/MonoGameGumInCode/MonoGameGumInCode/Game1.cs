@@ -27,8 +27,8 @@ namespace MonoGameGumInCode
             // ArcRuntime) uses a Shader Model 4 effect, which requires the HiDef profile — Reach
             // cannot load it and shapes silently fail to draw.
             _graphics.GraphicsProfile = GraphicsProfile.HiDef;
-            _graphics.PreferredBackBufferWidth = 1024;
-            _graphics.PreferredBackBufferHeight = 1030;
+            _graphics.PreferredBackBufferWidth = 1400;
+            _graphics.PreferredBackBufferHeight = 900;
             // ContainerRuntime.IsRenderTarget=true cells (see SpriteScreen's
             // alpha-blend row) switch the active render target mid-frame. With
             // the default RenderTargetUsage.DiscardContents, everything drawn
