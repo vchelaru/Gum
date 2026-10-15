@@ -154,7 +154,7 @@ Then flag accordingly in a `{% hint style="info" %}` block (same pattern as date
 
 ## Monthly Migration Pages
 
-A `docs/gum-tool/upgrading/migrating-to-<year>-<month>.md` page opens its **What Changed at a Glance** section with prose naming the release and what it ships. `migrating-to-2026-july.md` is the model. Never use a stock lead-in over a bullet list ("Two changes need your attention:"); it is filler, and it reads worse the fewer changes there are.
+A `docs/gum-tool/upgrading/migrating-to-<year>-<month>.md` page needs **What Changed at a Glance** only when one point is critical and wide-reaching, such as a hard break most readers hit (`migrating-to-2026-october.md` is the model). Otherwise leave the section out: the `###` headings under **Breaking Changes and Migrations** already list each change, so a summary of them adds nothing. Never use a stock lead-in over a bullet list ("Two changes need your attention:").
 
 ## Prose Style: Clarity Beats Brevity
 
