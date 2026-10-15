@@ -33,7 +33,7 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
         return texture;
     }
 
-    private static RenderTexture2D RenderFrame(AnimationFrame frame, float width, float height, float rotation = 0, float x = 10, float y = 10)
+    private static RenderTexture2D RenderFrame(AnimationFrame frame, float width, float height, float rotation = 0, float x = 10, float y = 10, bool wrap = false)
     {
         AnimationChain chain = new() { Name = "c" };
         chain.Add(frame);
@@ -51,6 +51,7 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
         sprite.Width = width;
         sprite.Height = height;
         sprite.Rotation = rotation;
+        sprite.Wrap = wrap;
         sprite.AnimationChains = new AnimationChainList { chain };
         sprite.CurrentChainName = "c";
         sprite.Animate = true;
@@ -206,6 +207,58 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
         ShouldBe(ReadPixel(target, 45, 25), PureWhite);
         ShouldBe(ReadPixel(target, 35, 25), PureBlue);
         ShouldBe(ReadPixel(target, 45, 35), PureGreen);
+
+        ClearRoot();
+        UnloadTexture(texture);
+    }
+
+    [Fact]
+    public void Render_FlipDiagonalOnWrappedSprite_TransposesTheTiledImage()
+    {
+        Texture2D texture = CreateQuadrantTexture();
+
+        // A source rectangle twice as wide as the texture tiles it twice across the 40x20 sprite
+        // (x 10..50, y 10..30), so the transposed image reads its left-to-right tiles top-to-bottom.
+        RenderTexture2D target = RenderFrame(new AnimationFrame
+        {
+            FrameLength = 1f,
+            Texture = texture,
+            RightCoordinate = 2f,
+            BottomCoordinate = 1f,
+            FlipDiagonal = true,
+        }, width: 40, height: 20, wrap: true);
+
+        ShouldBe(ReadPixel(target, 15, 12), PureRed);
+        ShouldBe(ReadPixel(target, 35, 12), PureBlue);
+        ShouldBe(ReadPixel(target, 15, 26), PureGreen);
+        ShouldBe(ReadPixel(target, 35, 26), PureWhite);
+        ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
+
+        ClearRoot();
+        UnloadTexture(texture);
+    }
+
+    [Fact]
+    public void Render_FlipDiagonalOnClampedSprite_TransposesTheClampedImage()
+    {
+        Texture2D texture = CreateQuadrantTexture();
+
+        // A source rectangle twice as wide as the texture clamps its right half to the last
+        // column (green over white) across the 40x20 sprite (x 10..50, y 10..30).
+        RenderTexture2D target = RenderFrame(new AnimationFrame
+        {
+            FrameLength = 1f,
+            Texture = texture,
+            RightCoordinate = 2f,
+            BottomCoordinate = 1f,
+            FlipDiagonal = true,
+        }, width: 40, height: 20);
+
+        ShouldBe(ReadPixel(target, 15, 12), PureRed);
+        ShouldBe(ReadPixel(target, 35, 12), PureBlue);
+        ShouldBe(ReadPixel(target, 15, 26), PureGreen);
+        ShouldBe(ReadPixel(target, 35, 26), PureWhite);
+        ReadPixel(target, 25, 35).A.ShouldBe((byte)0);
 
         ClearRoot();
         UnloadTexture(texture);
