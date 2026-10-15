@@ -20,7 +20,7 @@
 
   <!-- #3640/#3988/#3998/#4024/#4029/#4330/#4367: TextScreen.cs, RenderTargetScreen.cs,
        RenderTargetShaderScreen.cs, CirclesScreen.cs, RectanglesScreen.cs, ZoomScreen.cs, and
-       LayerCameraSettingsScreen.cs are shared with Samples/MonoGameGumInCode (the canonical
+       LayerCameraSettingsScreen.cs, and SpriteScreen.cs (#6054) are shared with Samples/MonoGameGumInCode (the canonical
        copies), gated #if RAYLIB, to stop the mirrors drifting when only one got updated. -->
   <ItemGroup>
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\TextScreen.cs" Link="Screens\TextScreen.cs" />
@@ -30,6 +30,7 @@
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\ZoomScreen.cs" Link="Screens\ZoomScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\SpriteScreen.cs" Link="Screens\SpriteScreen.cs" />
   </ItemGroup>
 
   <ItemGroup>
