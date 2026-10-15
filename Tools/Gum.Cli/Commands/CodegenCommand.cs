@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Expressions;
 using Gum.ProjectServices;
 using Gum.ProjectServices.CodeGeneration;
 
@@ -171,6 +172,8 @@ public static class CodegenCommand
         var codeGenService = new HeadlessCodeGenerationService(
             codeGenerator, customCodeGenerator, fileLocationsService, elementSettingsManager, generationLogger);
 
+        // GUM0002 evaluates reference right-hand sides (including cross-element ones) with the Roslyn evaluator.
+        GumExpressionService.Initialize();
         ITypeResolver typeResolver = new DefaultTypeResolver();
         IHeadlessErrorChecker errorChecker = new HeadlessErrorChecker(
             typeResolver, new IAdditionalErrorSource[] { new FormsCodegenBaseTypeErrorSource(projectSettings) });
