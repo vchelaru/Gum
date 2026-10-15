@@ -61,15 +61,14 @@ public class VariableReferenceConflictFixer : IVariableReferenceConflictFixer
         }
         /////////////////End Early Out/////////////////
 
-        string message = $"{Describe(conflict)}\n\nThe reference stays.";
-        if (!_dialogService.ShowYesNoMessage(message, "Apply Reference?"))
+        string title = $"{GetActionLabel(conflict)}?";
+        string message = $"Currently {FormatValue(conflict.OldValue)}. The reference stays.";
+        if (!_dialogService.ShowYesNoMessage(message, title))
         {
             return;
         }
 
-        string unqualifiedName = conflict.InstanceName == null
-            ? conflict.VariableName
-            : conflict.VariableName.Substring(conflict.InstanceName.Length + 1);
+        string unqualifiedName = GetUnqualifiedName(conflict);
 
         // Requested before the change so the history entry covers it, and held through the plugin
         // reaction so what plugins change in response undoes with it.
@@ -96,11 +95,16 @@ public class VariableReferenceConflictFixer : IVariableReferenceConflictFixer
     }
 
     /// <inheritdoc/>
-    public string Describe(VariableReferenceConflict conflict)
+    public string GetActionLabel(VariableReferenceConflict conflict)
     {
-        string line = $"Apply Reference: sets {conflict.VariableName} to {FormatValue(conflict.NewValue)} (currently {FormatValue(conflict.OldValue)})";
-        return conflict.State.Name == "Default" ? line : $"{line} in {conflict.State.Name}";
+        string label = $"Set {GetUnqualifiedName(conflict)} to {FormatValue(conflict.NewValue)}";
+        return conflict.State.Name == "Default" ? label : $"{label} in {conflict.State.Name}";
     }
+
+    private static string GetUnqualifiedName(VariableReferenceConflict conflict) =>
+        conflict.InstanceName == null
+            ? conflict.VariableName
+            : conflict.VariableName.Substring(conflict.InstanceName.Length + 1);
 
     // The same text the error row shows, so the dialog and the row never disagree.
     private static string FormatValue(object? value) => value?.ToString() ?? "(null)";

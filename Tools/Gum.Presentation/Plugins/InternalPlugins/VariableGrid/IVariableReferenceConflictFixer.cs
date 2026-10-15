@@ -16,8 +16,8 @@ public interface IVariableReferenceConflictFixer
     void Fix(VariableReferenceConflict conflict);
 
     /// <summary>
-    /// One line saying what <see cref="Fix"/> does (variable, new value, current value), shown beside
-    /// the button and as the first line of its confirmation so the two agree.
+    /// The first line of the button for <paramref name="conflict"/> and the title of its confirmation:
+    /// the variable's own name and the value it will be set to, such as "Set Width to 120".
     /// </summary>
-    string Describe(VariableReferenceConflict conflict);
+    string GetActionLabel(VariableReferenceConflict conflict);
 }

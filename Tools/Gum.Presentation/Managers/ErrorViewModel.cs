@@ -73,17 +73,6 @@ public class ErrorViewModel : ViewModel
     public string? ActionName { get; set; }
 
     /// <summary>
-    /// A short line saying what the action button does, shown beside it. Null when the button's
-    /// label says enough.
-    /// </summary>
-    public string? ActionDescription { get; set; }
-
-    /// <summary>
-    /// Visibility helper for UI binding — true when <see cref="ActionDescription"/> is set.
-    /// </summary>
-    public bool HasActionDescription => !string.IsNullOrEmpty(ActionDescription);
-
-    /// <summary>
     /// Command the per-error action button runs. Errors that can only be fixed by editing the
     /// project leave this null; errors with a single obvious resolution (removing an orphaned file,
     /// for instance) set it so the Errors tab can offer a one-click fix.

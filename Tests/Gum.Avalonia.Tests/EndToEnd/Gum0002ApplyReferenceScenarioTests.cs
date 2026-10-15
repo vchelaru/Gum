@@ -36,14 +36,11 @@ public class Gum0002ApplyReferenceScenarioTests
 
         using HeadlessWindowDriver errorsWindow = HostErrorsTab();
         Button apply = ApplyButton(errorsWindow);
-        const string description = "Apply Reference: sets Label.Width to 120 (currently 50)";
-        errorsWindow.Window.GetVisualDescendants().OfType<TextBlock>()
-            .ShouldContain(text => text.IsEffectivelyVisible && text.Text == description, "the line beside the button says what it does");
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         errorsWindow.Click(apply);
         tree.ThrowIfCrashed();
 
-        tree.Dialogs.Messages.Last().ShouldContain(description);
+        tree.Dialogs.Messages.Last().ShouldBe("Currently 50. The reference stays.");
         VariableGridHarness.StoredValue(card, "Label.Width").ShouldBe(120f);
         card.GetDefaultStateOrThrow().GetVariableListSave("Label.VariableReferences")!.ValueAsIList.Cast<string>()
             .ShouldBe(new[] { "Width = Leader.Width" });
@@ -104,5 +101,5 @@ public class Gum0002ApplyReferenceScenarioTests
         new HeadlessWindowDriver((Control)ErrorsTab().Content, 700, 400, framesFolderName: "GumApplyReferenceScenarios");
 
     private static Button ApplyButton(HeadlessWindowDriver window) =>
-        window.Window.GetVisualDescendants().OfType<Button>().Single(button => button.IsEffectivelyVisible && button.Content as string == "Apply Reference");
+        window.Window.GetVisualDescendants().OfType<Button>().Single(button => button.IsEffectivelyVisible && button.Content as string == "Set Width to 120\n(match reference)");
 }

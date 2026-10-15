@@ -30,6 +30,7 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
     private bool _answer;
     private Action? _onAsked;
     private string? _shownMessage;
+    private string? _shownTitle;
     private int _undoLocksOpen;
     private int _refreshRequests;
 
@@ -39,9 +40,10 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
         _dialogService = new Mock<IDialogService>();
         _dialogService
             .Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
-            .Returns((string message, string? _, MessageDialogStyle? _) =>
+            .Returns((string message, string? title, MessageDialogStyle? _) =>
             {
                 _shownMessage = message;
+                _shownTitle = title;
                 _onAsked?.Invoke();
                 return _answer ? MessageDialogResult.Affirmative : MessageDialogResult.Negative;
             });
@@ -122,7 +124,7 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
             _sut.Fix(row.ReferenceConflict!);
 
             row.Message.ShouldContain("12,5");
-            _shownMessage.ShouldNotBeNull().ShouldContain("12,5");
+            _shownTitle.ShouldNotBeNull().ShouldContain("12,5");
         }
         finally
         {
@@ -131,20 +133,31 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
     }
 
     [Fact]
-    public void Describe_NamesTheVariableAndBothValues_AndTheDialogUsesTheSameWords()
+    public void GetActionLabel_NamesTheVariableAndTheNewValue_AndTheDialogTitleIsTheSameLine()
     {
         ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 6f);
         VariableReferenceConflict conflict = GetConflict(component, "X");
 
-        string description = _sut.Describe(conflict);
+        string label = _sut.GetActionLabel(conflict);
         _sut.Fix(conflict);
 
-        description.ShouldBe("Apply Reference: sets X to 6 (currently 255)");
-        _shownMessage.ShouldNotBeNull().ShouldContain(description);
+        label.ShouldBe("Set X to 6");
+        _shownTitle.ShouldBe("Set X to 6?");
+        _shownMessage.ShouldBe("Currently 255. The reference stays.");
     }
 
     [Fact]
-    public void Describe_NamesTheState_WhenItIsNotTheDefaultState()
+    public void GetActionLabel_UsesTheInstancesVariableNameOnly()
+    {
+        ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 6f);
+        VariableReferenceConflict conflict = new VariableReferenceConflict(
+            component, component.GetDefaultStateOrThrow(), "Label.Width", instanceName: "Label", oldValue: 50f, newValue: 120f, referenceLine: "Width = Leader.Width");
+
+        _sut.GetActionLabel(conflict).ShouldBe("Set Width to 120");
+    }
+
+    [Fact]
+    public void GetActionLabel_NamesTheState_WhenItIsNotTheDefaultState()
     {
         ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 6f);
         StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
@@ -154,7 +167,7 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
         VariableReferenceConflict conflict = new VariableReferenceConflict(
             component, other, "X", instanceName: null, oldValue: 255f, newValue: 6f, referenceLine: "X = SourceX");
 
-        _sut.Describe(conflict).ShouldBe("Apply Reference: sets X to 6 (currently 255) in Wide");
+        _sut.GetActionLabel(conflict).ShouldBe("Set X to 6 in Wide");
     }
 
     [Fact]
@@ -169,8 +182,8 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
 
         valueWhenAsked.ShouldBe(255f);
         _shownMessage.ShouldNotBeNull().ShouldContain("255");
-        _shownMessage.ShouldContain("6");
-        _shownMessage.ShouldContain("X");
+        _shownTitle.ShouldNotBeNull().ShouldContain("6");
+        _shownTitle.ShouldContain("X");
     }
 
     [Fact]

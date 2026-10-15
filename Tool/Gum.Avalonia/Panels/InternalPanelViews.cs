@@ -96,20 +96,15 @@ public sealed class ErrorsView : ListBox
         Grid.SetColumn(message, 1);
         row.Children.Add(message);
 
-        TextBlock actionDescription = new TextBlock { Margin = new Thickness(4, 0), MaxWidth = 360, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Right, Opacity = 0.7 };
-        actionDescription.Bind(TextBlock.TextProperty, new Binding(nameof(ErrorViewModel.ActionDescription)));
-        actionDescription.Bind(IsVisibleProperty, new Binding(nameof(ErrorViewModel.HasActionDescription)));
-
-        Button action = new Button { Margin = new Thickness(4, 0), Padding = new Thickness(6, 1), HorizontalAlignment = HorizontalAlignment.Right };
+        Button action = new Button { Margin = new Thickness(4, 0), Padding = new Thickness(6, 1), VerticalAlignment = VerticalAlignment.Center };
         action.Bind(ContentControl.ContentProperty, new Binding(nameof(ErrorViewModel.ActionName)));
+        // A label can run to two lines (Set Width to 120 / (match reference)); centre them under each other.
+        action.ContentTemplate = new FuncDataTemplate<string>((text, _) => new TextBlock { Text = text, TextAlignment = TextAlignment.Center });
+        action.HorizontalContentAlignment = HorizontalAlignment.Center;
         action.Bind(Button.CommandProperty, new Binding(nameof(ErrorViewModel.ActionCommand)));
         action.Bind(IsVisibleProperty, new Binding(nameof(ErrorViewModel.HasAction)));
-
-        StackPanel actionColumn = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
-        actionColumn.Children.Add(actionDescription);
-        actionColumn.Children.Add(action);
-        Grid.SetColumn(actionColumn, 2);
-        row.Children.Add(actionColumn);
+        Grid.SetColumn(action, 2);
+        row.Children.Add(action);
 
         return row;
     }
