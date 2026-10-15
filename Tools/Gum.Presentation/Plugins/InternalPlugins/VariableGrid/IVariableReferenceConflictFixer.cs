@@ -14,4 +14,10 @@ public interface IVariableReferenceConflictFixer
     /// conflict no longer exists in the project (the state was replaced by an undo, for example).
     /// </summary>
     void Fix(VariableReferenceConflict conflict);
+
+    /// <summary>
+    /// One line saying what <see cref="Fix"/> does (variable, new value, current value), shown beside
+    /// the button and as the first line of its confirmation so the two agree.
+    /// </summary>
+    string Describe(VariableReferenceConflict conflict);
 }

@@ -147,12 +147,15 @@ public class ErrorCheckerTests : BaseTestClass
             new ErrorResult { ElementName = "Stale", Code = "GUM0009", Message = "other" },
         });
         Mock<IVariableReferenceConflictFixer> fixer = new Mock<IVariableReferenceConflictFixer>();
+        fixer.Setup(f => f.Describe(conflict)).Returns("Apply Reference: sets X to 6 (currently 255)");
         ErrorChecker sut = new ErrorChecker(headlessErrorChecker.Object, new Mock<IPluginManager>().Object,
             new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(), fixer.Object);
 
         ErrorViewModel[] errors = sut.GetErrorsFor(component, project);
 
         errors[0].ActionName.ShouldBe("Apply Reference");
+        errors[0].ActionDescription.ShouldBe("Apply Reference: sets X to 6 (currently 255)");
+        errors[1].ActionDescription.ShouldBeNull();
         errors[1].HasAction.ShouldBeFalse();
         fixer.Verify(f => f.Fix(It.IsAny<VariableReferenceConflict>()), Times.Never);
         errors[0].ActionCommand!.Execute(null);

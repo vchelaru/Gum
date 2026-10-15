@@ -96,12 +96,20 @@ public sealed class ErrorsView : ListBox
         Grid.SetColumn(message, 1);
         row.Children.Add(message);
 
-        Button action = new Button { Margin = new Thickness(4, 0), Padding = new Thickness(6, 1), VerticalAlignment = VerticalAlignment.Center };
+        TextBlock actionDescription = new TextBlock { Margin = new Thickness(4, 0), MaxWidth = 360, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Right, Opacity = 0.7 };
+        actionDescription.Bind(TextBlock.TextProperty, new Binding(nameof(ErrorViewModel.ActionDescription)));
+        actionDescription.Bind(IsVisibleProperty, new Binding(nameof(ErrorViewModel.HasActionDescription)));
+
+        Button action = new Button { Margin = new Thickness(4, 0), Padding = new Thickness(6, 1), HorizontalAlignment = HorizontalAlignment.Right };
         action.Bind(ContentControl.ContentProperty, new Binding(nameof(ErrorViewModel.ActionName)));
         action.Bind(Button.CommandProperty, new Binding(nameof(ErrorViewModel.ActionCommand)));
         action.Bind(IsVisibleProperty, new Binding(nameof(ErrorViewModel.HasAction)));
-        Grid.SetColumn(action, 2);
-        row.Children.Add(action);
+
+        StackPanel actionColumn = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
+        actionColumn.Children.Add(actionDescription);
+        actionColumn.Children.Add(action);
+        Grid.SetColumn(actionColumn, 2);
+        row.Children.Add(actionColumn);
 
         return row;
     }

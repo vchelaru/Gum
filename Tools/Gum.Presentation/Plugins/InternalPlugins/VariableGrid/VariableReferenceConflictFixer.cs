@@ -61,11 +61,7 @@ public class VariableReferenceConflictFixer : IVariableReferenceConflictFixer
         }
         /////////////////End Early Out/////////////////
 
-        string oldText = FormatValue(conflict.OldValue);
-        string newText = FormatValue(conflict.NewValue);
-        string message =
-            $"{state.Name}: \"{conflict.VariableName}\" is {oldText}, but its reference sets it to {newText}.\n\n" +
-            $"{oldText} becomes {newText}. The reference stays.";
+        string message = $"{Describe(conflict)}\n\nThe reference stays.";
         if (!_dialogService.ShowYesNoMessage(message, "Apply Reference?"))
         {
             return;
@@ -97,6 +93,13 @@ public class VariableReferenceConflictFixer : IVariableReferenceConflictFixer
         _guiCommands.RefreshVariableValues();
         _fileCommands.TryAutoSaveElement(element);
         _messenger.Send(new RequestErrorRefreshMessage());
+    }
+
+    /// <inheritdoc/>
+    public string Describe(VariableReferenceConflict conflict)
+    {
+        string line = $"Apply Reference: sets {conflict.VariableName} to {FormatValue(conflict.NewValue)} (currently {FormatValue(conflict.OldValue)})";
+        return conflict.State.Name == "Default" ? line : $"{line} in {conflict.State.Name}";
     }
 
     // The same text the error row shows, so the dialog and the row never disagree.

@@ -115,6 +115,7 @@ public class ErrorChecker : IErrorChecker
         if (errorResult.ReferenceConflict is { } conflict)
         {
             vm.ActionName = "Apply Reference";
+            vm.ActionDescription = _variableReferenceConflictFixer.Describe(conflict);
             vm.ActionCommand = new RelayCommand(() => _variableReferenceConflictFixer.Fix(conflict));
         }
         return vm;

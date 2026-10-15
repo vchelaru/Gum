@@ -36,12 +36,14 @@ public class Gum0002ApplyReferenceScenarioTests
 
         using HeadlessWindowDriver errorsWindow = HostErrorsTab();
         Button apply = ApplyButton(errorsWindow);
+        const string description = "Apply Reference: sets Label.Width to 120 (currently 50)";
+        errorsWindow.Window.GetVisualDescendants().OfType<TextBlock>()
+            .ShouldContain(text => text.IsEffectivelyVisible && text.Text == description, "the line beside the button says what it does");
         tree.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
         errorsWindow.Click(apply);
         tree.ThrowIfCrashed();
 
-        tree.Dialogs.Messages.Last().ShouldContain("50");
-        tree.Dialogs.Messages.Last().ShouldContain("120");
+        tree.Dialogs.Messages.Last().ShouldContain(description);
         VariableGridHarness.StoredValue(card, "Label.Width").ShouldBe(120f);
         card.GetDefaultStateOrThrow().GetVariableListSave("Label.VariableReferences")!.ValueAsIList.Cast<string>()
             .ShouldBe(new[] { "Width = Leader.Width" });

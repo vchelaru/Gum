@@ -131,6 +131,33 @@ public class VariableReferenceConflictFixerTests : BaseTestClass
     }
 
     [Fact]
+    public void Describe_NamesTheVariableAndBothValues_AndTheDialogUsesTheSameWords()
+    {
+        ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 6f);
+        VariableReferenceConflict conflict = GetConflict(component, "X");
+
+        string description = _sut.Describe(conflict);
+        _sut.Fix(conflict);
+
+        description.ShouldBe("Apply Reference: sets X to 6 (currently 255)");
+        _shownMessage.ShouldNotBeNull().ShouldContain(description);
+    }
+
+    [Fact]
+    public void Describe_NamesTheState_WhenItIsNotTheDefaultState()
+    {
+        ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 6f);
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        StateSave other = new StateSave { Name = "Wide", ParentContainer = component };
+        category.States.Add(other);
+        component.Categories.Add(category);
+        VariableReferenceConflict conflict = new VariableReferenceConflict(
+            component, other, "X", instanceName: null, oldValue: 255f, newValue: 6f, referenceLine: "X = SourceX");
+
+        _sut.Describe(conflict).ShouldBe("Apply Reference: sets X to 6 (currently 255) in Wide");
+    }
+
+    [Fact]
     public void Fix_ShowsOldAndNewValue_BeforeChangingAnything()
     {
         ComponentSave component = CreateComponentWithStaleX(staleValue: 255f, referencedValue: 6f);
