@@ -145,6 +145,16 @@ public static class CodegenCommand
         IHeadlessLocalizationLoader localizationLoader = new HeadlessLocalizationLoader(logger);
         localizationLoader.LoadLocalizationFiles(project, projectDirectory!, localizationService);
         var syntaxVersionDetectionService = new SyntaxVersionDetectionService(logger);
+
+        // Warning only: a stale tool still generates, just for an older runtime than the project uses.
+        string? staleCliWarning = StaleCliWarning.GetMessage(
+            Program.GetCliVersion(),
+            syntaxVersionDetectionService.FindRuntimePackageVersion(projectSettings, projectDirectory));
+        if (staleCliWarning != null)
+        {
+            Console.Error.WriteLine($"warning: {staleCliWarning}");
+        }
+
         var codeGenerator = new CodeGenerator(
             codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,
             typeStringResolver: null,

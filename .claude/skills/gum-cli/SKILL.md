@@ -102,6 +102,7 @@ The checked-in `Templates/FormsTemplate/GumProject.gumx` carries `BehaviorRefere
 - Only Screens and Components are generated; StandardElements are intentionally excluded
 - Errors (`ErrorSeverity.Error`) block generation for that element; warnings print to stderr but do not block
 - A file `HeadlessCodeGenerationService` can't write (unreachable `CodeProjectRoot`) is logged, not thrown; `codegen` gives the service its own `ConsoleCodeGenLogger` and exits 1 when that logger's `ErrorCount` is non-zero
+- `codegen` warns on stderr (never blocks) when the csproj's `PackageReference` runtime version is newer than the CLI's own version: `StaleCliWarning.GetMessage` compares them, `SyntaxVersionDetectionService.FindRuntimePackageVersion` reads the package version. ProjectReference, HintPath, and unresolvable floating or range versions stay silent.
 - `ObjectFinder.Self` cache is managed at the CLI level (enabled before the loop, disabled in `finally`)
 - If `ProjectCodeSettings.codsj` is missing, `codegen` attempts `CodeGenerationAutoSetupService` auto-detection first and writes the settings file before continuing; exit code 2 only if auto-detection also fails
 - When `--element` is specified, `checkForMissing: true` is passed so `GenerateCodeForElement` auto-generates any referenced elements whose code files do not yet exist; full-run mode skips that check
