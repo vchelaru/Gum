@@ -99,7 +99,7 @@ The checked-in `Templates/FormsTemplate/GumProject.gumx` carries `BehaviorRefere
 ## Codegen Flow (non-obvious details)
 
 - `codegen` iterates elements individually (not via `GenerateCodeForAllElements`) so it can run per-element error checks first; `GenerateCodeForAllElements` exists on `HeadlessCodeGenerationService` but the CLI does not call it
-- Only Screens and Components are generated; StandardElements are intentionally excluded
+- Only Screens and Components are generated; StandardElements are intentionally excluded (the per-project `StandardElements.Generated.cs` fallback registration is the exception: written on a full run, skipped when `--element` is given, matching the tool's per-element generation)
 - Errors (`ErrorSeverity.Error`) block generation for that element; warnings print to stderr but do not block
 - A file `HeadlessCodeGenerationService` can't write (unreachable `CodeProjectRoot`) is logged, not thrown; `codegen` gives the service its own `ConsoleCodeGenLogger` and exits 1 when that logger's `ErrorCount` is non-zero
 - `ObjectFinder.Self` cache is managed at the CLI level (enabled before the loop, disabled in `finally`)
