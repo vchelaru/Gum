@@ -193,8 +193,11 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         int y = (int)this.GetAbsoluteTop();
 
         var absoluteRotation = this.GetAbsoluteRotation();
+
+        // Evaluated every render so an offset glide moves the sprite between frame changes.
+        (float X, float Y) animationOffset = AnimationLogic.GetRenderOffset(absoluteRotation);
         var destinationRectangle = new Rectangle(
-            x, y, this.Width, this.Height);
+            x + animationOffset.X, y + animationOffset.Y, this.Width, this.Height);
 
         // if we don't have a source rectangle, the source is the entire texture
         var srcRect = SourceRectangle ?? defaultSrcRect;

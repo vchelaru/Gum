@@ -196,6 +196,49 @@ internal class SpriteScreen : FrameworkElement
             addRow.AddChild(s);
         }
 
+        // Per-frame RelativeX glide (#6034) — a looping two-frame chain slides the bear right and back.
+        // A backend that ignores animation frame offsets plays it in place. Mirrors the raylib/SilkNetGum
+        // SpriteScreen's identical row.
+        AddLabel(container, "Animation frame offset (bear glides right and back):");
+        var offsetLane = new ContainerRuntime();
+        offsetLane.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetLane.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetLane.Width = 200;
+        offsetLane.Height = 64;
+        container.AddChild(offsetLane);
+
+        var offsetSprite = new SpriteRuntime();
+        offsetSprite.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetSprite.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetSprite.Width = 64;
+        offsetSprite.Height = 64;
+
+        var offsetChain = new AnimationChain { Name = "OffsetDemo" };
+        offsetChain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            Texture = bearTexture,
+            RightCoordinate = 1,
+            BottomCoordinate = 1,
+            RelativeX = 0,
+            OffsetInterpolation = "Linear",
+        });
+        offsetChain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            Texture = bearTexture,
+            RightCoordinate = 1,
+            BottomCoordinate = 1,
+            RelativeX = 136,
+            OffsetInterpolation = "Linear",
+        });
+        var offsetChainList = new AnimationChainList();
+        offsetChainList.Add(offsetChain);
+        offsetSprite.AnimationChains = offsetChainList;
+        offsetSprite.CurrentChainName = "OffsetDemo";
+        offsetSprite.Animate = true;
+        offsetLane.AddChild(offsetSprite);
+
 #if !RAYLIB && !SKIA
         // RenderColorOperation authored on an animation frame (#4822) — same Modulate/
         // ColorTextureAlpha technique as the property-driven row above, but driven by the

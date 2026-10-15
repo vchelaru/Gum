@@ -243,6 +243,25 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
+        // The canvas is already rotated with the sprite when it has a rotation, so the offset is
+        // applied in the sprite's own axes with no rotation here. Translating the canvas, rather
+        // than moving boundingRect, keeps the cached paint valid while an offset glides.
+        (float X, float Y) offset = AnimationLogic.GetRenderOffset(0);
+        if (offset.X == 0 && offset.Y == 0)
+        {
+            DrawBoundAtOrigin(boundingRect, canvas, absoluteRotation);
+            return;
+        }
+
+        using (new SKAutoCanvasRestore(canvas, true))
+        {
+            canvas.Translate(offset.X, offset.Y);
+            DrawBoundAtOrigin(boundingRect, canvas, absoluteRotation);
+        }
+    }
+
+    private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
+    {
         // Render-target pull (#3988): display the baked texture of the referenced container instead of
         // an assigned Texture/Image. A null bake (degenerate size, or off-screen) draws nothing rather
         // than stale content, matching the raylib/MonoGame pull model.

@@ -32,9 +32,11 @@ State lives entirely on `AnimationChainLogic`:
 Sprite handles each frame in **two phases**:
 
 1. **On frame change** (`Sprite.ApplyAnimationFrame`, wired into `AnimationLogic.ApplyFrame`): copies `Texture`, computes pixel `SourceRectangle` from UV coords × texture size, and copies `FlipHorizontal`/`FlipVertical`. Persistent state.
-2. **At every render** (`Sprite.Render`, when `CurrentFrameIndex < CurrentChain.Count`): reads `AnimationLogic.CurrentOffset` (the frame's live `RelativeX/RelativeY`, or the keyframe-evaluated offset), mutates `this.X/Y`, calls the static draw, then restores the originals.
+2. **At every render** (`Sprite.Render`, when `CurrentFrameIndex < CurrentChain.Count`): reads `AnimationLogic.GetRenderOffset(absoluteRotation)` (the frame's live `RelativeX/RelativeY`, or the keyframe-evaluated offset, rotated with the sprite and Y-negated for the Y-down screen), mutates `this.X/Y`, calls the static draw, then restores the originals.
 
-This split matters: changing `RelativeX/Y` on a live frame takes effect on the next render without needing `UpdateToCurrentAnimationFrame`. But it also means rotation handling for the offset lives at the render call site, not in `ApplyFrame`.
+This split matters: changing `RelativeX/Y` on a live frame takes effect on the next render without needing `UpdateToCurrentAnimationFrame`. The offset is applied at the render call site, not in `ApplyFrame`.
+
+Skia and raylib `Sprite` apply the same `GetRenderOffset` at draw time: raylib shifts the destination rectangle, and Skia translates the canvas in `DrawBound`, which is already rotated with the sprite, so it passes `0` rotation.
 
 ## The RelativeX/Y anchor mismatch (recurring gotcha)
 
@@ -73,7 +75,7 @@ Note for tool work: exposing `ColorOperation` as a tool-editable variable means 
 Every frame is a keyframe; a keyframe's curve runs to the next keyframe of the same group (Offset: `RelativeX/Y`, Color: Red/Green/Blue/Alpha). The six per-frame fields (`SkipOffsetKeyframe`, `OffsetInterpolation`, ...) are stored as raw strings so unknown names round-trip. The math is `KeyframeEvaluator`/`KeyframeCurve` (ported from FlatRedBall2's `AnimationChain.Common`, using the `FlatRedBall.InterpolationCore` tweener GumCommon already references).
 
 - A chain without keyframe data (`KeyframeEvaluator.HasOffsetKeyframes`/`HasColorKeyframes`) takes the old path, byte for byte. Only a chain with color keyframes sets `AnimationChainLogic.IsColorDrivenByKeyframes`; each `ApplyAnimationFrame` must then skip its own color step, because `ApplyKeyframeColor` (called right after `ApplyFrame` and on every `AnimateSelf` tick) already applied the inherited color, and a skipped frame's own channels must not leak.
-- Only the MonoGame-family, Skia and raylib Sprites wire `ApplyKeyframeColor`. Sokol's Sprite applies no color or offset, and `NineSlice` applies raw frame colors with no glide. Skia, raylib and Sokol ignore `RelativeX/Y` entirely, so offset glides show only on the MonoGame-family Sprite.
+- Only the MonoGame-family, Skia and raylib Sprites wire `ApplyKeyframeColor`. Sokol's Sprite applies no color or offset, and `NineSlice` applies raw frame colors with no glide. Sokol ignores `RelativeX/Y` entirely; the MonoGame-family, Skia and raylib Sprites apply offset glides.
 - In keyframe mode, channels inherit from the last keyframe that set them and the operation inherits through skipped frames. Red/Green/Blue still reach the sprite only under a Multiply or Add operation, matching FlatRedBall2 (`SpriteFrameColor.Apply`); Alpha applies on its own.
 
 ## Key Files

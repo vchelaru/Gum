@@ -169,6 +169,49 @@ internal class SpriteScreen : FrameworkElement
             addRow.Children.Add(s);
         }
 
+        // Per-frame RelativeX glide (#6034) — a looping two-frame chain slides the bear right and back.
+        // A backend that ignores animation frame offsets plays it in place. Mirrors the MG/raylib
+        // SpriteScreen's identical row.
+        AddLabel(container, "Animation frame offset (bear glides right and back):");
+        ContainerRuntime offsetLane = new ContainerRuntime();
+        offsetLane.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetLane.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetLane.Width = 200;
+        offsetLane.Height = 64;
+        container.Children.Add(offsetLane);
+
+        SpriteRuntime offsetSprite = new SpriteRuntime();
+        offsetSprite.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetSprite.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        offsetSprite.Width = 64;
+        offsetSprite.Height = 64;
+
+        AnimationChain offsetChain = new AnimationChain { Name = "OffsetDemo" };
+        offsetChain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            Texture = bearTexture,
+            RightCoordinate = 1,
+            BottomCoordinate = 1,
+            RelativeX = 0,
+            OffsetInterpolation = "Linear",
+        });
+        offsetChain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            Texture = bearTexture,
+            RightCoordinate = 1,
+            BottomCoordinate = 1,
+            RelativeX = 136,
+            OffsetInterpolation = "Linear",
+        });
+        AnimationChainList offsetChainList = new AnimationChainList();
+        offsetChainList.Add(offsetChain);
+        offsetSprite.AnimationChains = offsetChainList;
+        offsetSprite.CurrentChainName = "OffsetDemo";
+        offsetSprite.Animate = true;
+        offsetLane.Children.Add(offsetSprite);
+
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddLabel(container, "Alpha (64, 128, 192, 255):");
         ContainerRuntime alphaRow = AddRow(container);

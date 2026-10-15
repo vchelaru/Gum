@@ -486,25 +486,11 @@ public class Sprite : SpriteBatchRenderableBase,
                 if (this.CurrentFrameIndex < CurrentChain?.Count)
                 {
 
-                    var absoluteRotationRadians = MathHelper.ToRadians(absoluteRotationDegrees);
-
                     // Evaluated every render so an offset glide moves the sprite between frame changes.
-                    var currentOffset = AnimationLogic.CurrentOffset;
-                    var offsetVector = new System.Numerics.Vector2(currentOffset.X, currentOffset.Y);
+                    var renderOffset = AnimationLogic.GetRenderOffset(absoluteRotationDegrees);
 
-                    if(absoluteRotationDegrees != 0 && (offsetVector.X != 0 || offsetVector.Y != 0))
-                    {
-                        var length = offsetVector.Length();
-                        var offsetAngleRadians = System.Math.Atan2(offsetVector.Y, offsetVector.X);
-                        offsetAngleRadians += absoluteRotationRadians;
-
-                        offsetVector = new Vector2(
-                            (float)(length * System.Math.Cos(offsetAngleRadians)), 
-                            (float)(length * System.Math.Sin(offsetAngleRadians)));
-                    }
-
-                    this.X += offsetVector.X;
-                    this.Y -= offsetVector.Y;
+                    this.X += renderOffset.X;
+                    this.Y += renderOffset.Y;
                 }
 
                 // Add draws the texture untinted and then adds Color in a second pass, so Color

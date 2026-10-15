@@ -46,7 +46,7 @@ public class BasicShapes
         // Width matches the MonoGameGumInCode feature sample; height is tall enough to show each
         // shape screen's full content without scrolling (the Polygons bottom row in particular).
         // The window is resizable if a screen needs more room.
-        const int screenWidth = 1024;
+        const int screenWidth = 1400;
         const int screenHeight = 900;
 
         GumUI.CanvasWidth = screenWidth;
@@ -113,7 +113,7 @@ public class BasicShapes
             BeginDrawing();
             // Matches SilkNetGum's clear color so visual diffs across galleries
             // stay attributable to the shape code, not the page background.
-            ClearBackground(new Color(51, 76, 204, 255));
+            ClearBackground(new Color(100, 149, 237, 255));
 
             if (_useManualCamera)
             {

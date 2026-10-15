@@ -201,6 +201,27 @@ public class AnimationChainLogic
         }
     }
 
+    /// <summary>
+    /// <see cref="CurrentOffset"/> as a Sprite draws it: rotated by <paramref name="absoluteRotationDegrees"/>
+    /// so it follows the sprite's own axes, with Y negated because the animation file is Y-up and
+    /// the screen is Y-down.
+    /// </summary>
+    /// <param name="absoluteRotationDegrees">The sprite's absolute rotation, counter-clockwise.</param>
+    public (float X, float Y) GetRenderOffset(float absoluteRotationDegrees)
+    {
+        (float X, float Y) offset = CurrentOffset;
+
+        if (absoluteRotationDegrees != 0 && (offset.X != 0 || offset.Y != 0))
+        {
+            double radians = absoluteRotationDegrees * System.Math.PI / 180.0;
+            double cos = System.Math.Cos(radians);
+            double sin = System.Math.Sin(radians);
+            offset = ((float)(offset.X * cos - offset.Y * sin), (float)(offset.X * sin + offset.Y * cos));
+        }
+
+        return (offset.X, -offset.Y);
+    }
+
     double ElapsedInCurrentFrame(AnimationChain chain)
     {
         double frameStart = 0;
