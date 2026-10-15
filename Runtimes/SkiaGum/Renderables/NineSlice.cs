@@ -22,7 +22,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
     public override object Clone()
     {
         NineSlice clone = (NineSlice)base.Clone();
-        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame, clone.ApplyKeyframeColor);
         // Each side disposes its own section images, so the clone builds its own.
         clone._sectionImages = null;
         // An owned image would be disposed by whichever side changes texture first, so the clone
@@ -42,7 +42,19 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
         Color = SKColors.White;
 
         AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+        AnimationLogic.ApplyKeyframeColor = ApplyKeyframeColor;
     }
+
+    /// <summary>
+    /// Whether the nine-slice is drawn reflected across its main diagonal (a transpose: the
+    /// top-left and bottom-right corners stay put while the top-right and bottom-left swap).
+    /// Applied after the inherited <see cref="RenderableShapeBase.FlipHorizontal"/> and
+    /// <see cref="RenderableShapeBase.FlipVertical"/>, so a flipped
+    /// nine-slice is flipped first and then transposed. The nine-slice keeps its own footprint, so
+    /// a non-square one stretches the transposed image to fit. Set from the current animation
+    /// frame.
+    /// </summary>
+    public bool FlipDiagonal { get; set; }
 
     void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
     {
@@ -56,10 +68,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
             int top = MathFunctions.RoundToInt(frame.TopCoordinate * tex.Height);
             int bottom = MathFunctions.RoundToInt(frame.BottomCoordinate * tex.Height);
 
-            // NineSlice does not honour FlipHorizontal/FlipVertical per-slice at
-            // render time the way Sprite does — slices each draw with their own
-            // src rect math — so we always store the canonical (positive) rect.
-            // If flip support is added later, switch to Sprite's swap pattern.
+            // Flips mirror the drawn nine-slice (see DrawBound), so the rectangle stays canonical.
             SourceRectangle = new Rectangle(left, top, right - left, bottom - top);
         }
         else
@@ -67,25 +76,42 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
             SourceRectangle = null;
         }
 
-        if (frame.Alpha.HasValue)
+        FlipHorizontal = frame.FlipHorizontal;
+        FlipVertical = frame.FlipVertical;
+        FlipDiagonal = frame.FlipDiagonal;
+
+        // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
+        // ignores a skipped frame's own channels.
+        if (!AnimationLogic.IsColorDrivenByKeyframes)
         {
-            Alpha = frame.Alpha.Value;
+            ApplyColor(frame.Alpha, frame.Red, frame.Green, frame.Blue, frame.ColorOperation);
+        }
+    }
+
+    void ApplyKeyframeColor(Gum.Graphics.Animation.KeyframeColor color) =>
+        ApplyColor(color.Alpha, color.Red, color.Green, color.Blue, color.Operation);
+
+    void ApplyColor(int? alpha, int? red, int? green, int? blue, AnimationFrameColorOperation? colorOperation)
+    {
+        if (alpha.HasValue)
+        {
+            Alpha = alpha.Value;
         }
 
-        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        if (colorOperation == AnimationFrameColorOperation.Multiply)
         {
-            Red = frame.Red ?? 255;
-            Green = frame.Green ?? 255;
-            Blue = frame.Blue ?? 255;
+            Red = red ?? 255;
+            Green = green ?? 255;
+            Blue = blue ?? 255;
             ColorOperation = ColorOperation.Modulate;
         }
-        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        else if (colorOperation == AnimationFrameColorOperation.Add)
         {
             // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
             // Multiply's 255 identity above.
-            Red = frame.Red ?? 0;
-            Green = frame.Green ?? 0;
-            Blue = frame.Blue ?? 0;
+            Red = red ?? 0;
+            Green = green ?? 0;
+            Blue = blue ?? 0;
             ColorOperation = ColorOperation.Add;
         }
         else if (ColorOperation == ColorOperation.Add)
@@ -233,6 +259,48 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
             return;
         }
 
+        // Evaluated every render so an offset glide moves the nine-slice between frame changes.
+        // The offset is in the nine-slice's own axes, which the canvas is already rotated into.
+        // Translating the canvas, rather than moving boundingRect, keeps the cached paint valid.
+        (float X, float Y) offset = AnimationLogic.GetRenderOffset(0);
+        bool hasOffset = offset.X != 0 || offset.Y != 0;
+        bool canFlipDiagonal = FlipDiagonal && boundingRect.Width > 0 && boundingRect.Height > 0;
+        if (!hasOffset && !canFlipDiagonal && !FlipHorizontal && !FlipVertical)
+        {
+            DrawBoundAtOrigin(boundingRect, canvas, absoluteRotation);
+            return;
+        }
+
+        using (new SKAutoCanvasRestore(canvas, true))
+        {
+            if (hasOffset)
+            {
+                canvas.Translate(offset.X, offset.Y);
+            }
+
+            // Applied outermost, so the mirror below happens first and the transpose second.
+            if (canFlipDiagonal)
+            {
+                canvas.Concat(Sprite.GetDiagonalFlipMatrix(boundingRect));
+            }
+
+            if (FlipHorizontal || FlipVertical)
+            {
+                // Mirror about the center of the rectangle being drawn into, so the flipped
+                // nine-slice stays inside its own bounds.
+                canvas.Scale(
+                    FlipHorizontal ? -1 : 1,
+                    FlipVertical ? -1 : 1,
+                    boundingRect.MidX,
+                    boundingRect.MidY);
+            }
+
+            DrawBoundAtOrigin(boundingRect, canvas, absoluteRotation);
+        }
+    }
+
+    private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
+    {
         SKPaint paint = base.GetCachedPaint(boundingRect, absoluteRotation);
 
         int srcLeft;
@@ -250,7 +318,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
         {
             srcLeft = 0;
             srcTop = 0;
-            srcRight = Image.Width;
+            srcRight = Image!.Width;
             srcBottom = Image.Height;
         }
 

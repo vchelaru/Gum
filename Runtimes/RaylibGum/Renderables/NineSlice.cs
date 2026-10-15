@@ -40,7 +40,24 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
     public NineSlice()
     {
         AnimationLogic.ApplyFrame = ApplyAnimationFrame;
+        AnimationLogic.ApplyKeyframeColor = ApplyKeyframeColor;
     }
+
+    /// <summary>
+    /// Whether the nine-slice is drawn mirrored top to bottom inside its own bounds. Set from the
+    /// current animation frame.
+    /// </summary>
+    public bool FlipVertical { get; set; }
+
+    /// <summary>
+    /// Whether the nine-slice is drawn reflected across its main diagonal (a transpose: the
+    /// top-left and bottom-right corners stay put while the top-right and bottom-left swap).
+    /// Applied after <c>FlipHorizontal</c> and <see cref="FlipVertical"/>, so a flipped nine-slice
+    /// is flipped first and then transposed. The nine-slice keeps its own footprint, so
+    /// a non-square one stretches the transposed image to fit. Set from the current animation
+    /// frame.
+    /// </summary>
+    public bool FlipDiagonal { get; set; }
 
     void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
     {
@@ -60,30 +77,42 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
             SourceRectangle = null;
         }
 
-        // Raylib NineSlice does not currently honour FlipHorizontal/Vertical
-        // (no FlipHorizontal field on this renderable, and DrawTextureNPatch
-        // does not support negative src rects). If/when flip support is added,
-        // copy frame.FlipHorizontal / frame.FlipVertical here.
+        FlipHorizontal = frame.FlipHorizontal;
+        FlipVertical = frame.FlipVertical;
+        FlipDiagonal = frame.FlipDiagonal;
 
-        if (frame.Alpha.HasValue)
+        // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
+        // ignores a skipped frame's own channels.
+        if (!AnimationLogic.IsColorDrivenByKeyframes)
         {
-            Alpha = frame.Alpha.Value;
+            ApplyColor(frame.Alpha, frame.Red, frame.Green, frame.Blue, frame.ColorOperation);
+        }
+    }
+
+    void ApplyKeyframeColor(Gum.Graphics.Animation.KeyframeColor color) =>
+        ApplyColor(color.Alpha, color.Red, color.Green, color.Blue, color.Operation);
+
+    void ApplyColor(int? alpha, int? red, int? green, int? blue, AnimationFrameColorOperation? colorOperation)
+    {
+        if (alpha.HasValue)
+        {
+            Alpha = alpha.Value;
         }
 
-        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        if (colorOperation == AnimationFrameColorOperation.Multiply)
         {
-            Red = frame.Red ?? 255;
-            Green = frame.Green ?? 255;
-            Blue = frame.Blue ?? 255;
+            Red = red ?? 255;
+            Green = green ?? 255;
+            Blue = blue ?? 255;
             ColorOperation = ColorOperation.Modulate;
         }
-        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        else if (colorOperation == AnimationFrameColorOperation.Add)
         {
             // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
             // Multiply's 255 identity above.
-            Red = frame.Red ?? 0;
-            Green = frame.Green ?? 0;
-            Blue = frame.Blue ?? 0;
+            Red = red ?? 0;
+            Green = green ?? 0;
+            Blue = blue ?? 0;
             ColorOperation = ColorOperation.Add;
         }
         else if (ColorOperation == ColorOperation.Add)
@@ -107,7 +136,7 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
         var newInstance = (NineSlice)this.MemberwiseClone();
         ((IRenderableIpso)newInstance).SetParentDirect(null);
         newInstance._children = new();
-        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
+        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame, newInstance.ApplyKeyframeColor);
         return newInstance;
     }
 
@@ -270,19 +299,23 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
 
         var absoluteRotation = this.GetAbsoluteRotation();
 
+        // Evaluated every render so an offset glide moves the nine-slice between frame changes.
+        (float X, float Y) animationOffset = AnimationLogic.GetRenderOffset(absoluteRotation);
+
         // The default (non-tiling, BorderScale 1, no custom frame width) case is left on
         // raylib's built-in nine-patch draw — a single call that stretches the middle
-        // bands. Tiling, BorderScale, and CustomFrameTextureCoordinateWidth all require
+        // bands. Tiling, BorderScale, CustomFrameTextureCoordinateWidth and flips all require
         // drawing the nine sections individually, which raylib's NPatch cannot express.
+        bool isFlipped = FlipHorizontal || FlipVertical || FlipDiagonal;
         void DrawOnce()
         {
-            if (!IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null)
+            if (!IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null && !isFlipped)
             {
-                RenderNinePatch(nonNullText, absoluteRotation);
+                RenderNinePatch(nonNullText, absoluteRotation, animationOffset);
             }
             else
             {
-                RenderSections(nonNullText, absoluteRotation);
+                RenderSections(nonNullText, absoluteRotation, animationOffset);
             }
         }
 
@@ -311,13 +344,13 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
         }
     }
 
-    private void RenderNinePatch(Texture2D texture, float absoluteRotation)
+    private void RenderNinePatch(Texture2D texture, float absoluteRotation, (float X, float Y) animationOffset)
     {
         int x = (int)this.GetAbsoluteLeft();
         int y = (int)this.GetAbsoluteTop();
 
         var destinationRectangle = new Rectangle(
-            x, y, this.Width, this.Height);
+            x + animationOffset.X, y + animationOffset.Y, this.Width, this.Height);
 
         int leftSize, rightSize, topSize, bottomSize;
 
@@ -356,10 +389,10 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
             Color);
     }
 
-    private void RenderSections(Texture2D texture, float absoluteRotation)
+    private void RenderSections(Texture2D texture, float absoluteRotation, (float X, float Y) animationOffset)
     {
-        float x = this.GetAbsoluteLeft();
-        float y = this.GetAbsoluteTop();
+        float x = this.GetAbsoluteLeft() + animationOffset.X;
+        float y = this.GetAbsoluteTop() + animationOffset.Y;
 
         int srcLeft, srcTop, srcRight, srcBottom;
         if (SourceRectangle != null)
@@ -393,20 +426,62 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
 
         foreach (var section in sections)
         {
-            var localDest = section.Destination;
+            var (localDest, source) = GetFlippedSection(
+                section.Destination, section.Source, this.Width, this.Height,
+                FlipHorizontal, FlipVertical, FlipDiagonal);
+
             float worldX = x + localDest.X * cos - localDest.Y * sin;
             float worldY = y + localDest.X * sin + localDest.Y * cos;
 
             var worldDest = new Rectangle(worldX, worldY, localDest.Width, localDest.Height);
+            float drawRotation = -absoluteRotation;
+            if (FlipDiagonal)
+            {
+                (worldDest, drawRotation, source) = Sprite.GetDiagonalFlipDraw(worldDest, drawRotation, source);
+            }
 
             DrawTexturePro(
                 texture,
-                section.Source,
+                source,
                 worldDest,
                 Vector2.Zero,
-                -absoluteRotation,
+                drawRotation,
                 Color);
         }
+    }
+
+    // Moves one section to where it lands once the whole nine-slice is flipped. Horizontal and
+    // vertical flips mirror the destination within the nine-slice's footprint and mark the source
+    // with a negative dimension, which raylib reads as a flip. A diagonal flip then transposes the
+    // destination; the caller turns the source to match (Sprite.GetDiagonalFlipDraw).
+    internal static (Rectangle Destination, Rectangle Source) GetFlippedSection(
+        Rectangle destination, Rectangle source, float width, float height,
+        bool flipHorizontal, bool flipVertical, bool flipDiagonal)
+    {
+        if (flipHorizontal)
+        {
+            destination.X = width - destination.X - destination.Width;
+            source.Width = -source.Width;
+        }
+
+        if (flipVertical)
+        {
+            destination.Y = height - destination.Y - destination.Height;
+            source.Height = -source.Height;
+        }
+
+        if (flipDiagonal && width > 0 && height > 0)
+        {
+            float widthOverHeight = width / height;
+            float heightOverWidth = height / width;
+            destination = new Rectangle(
+                destination.Y * widthOverHeight,
+                destination.X * heightOverWidth,
+                destination.Height * widthOverHeight,
+                destination.Width * heightOverWidth);
+        }
+
+        return (destination, source);
     }
 
     /// <summary>
