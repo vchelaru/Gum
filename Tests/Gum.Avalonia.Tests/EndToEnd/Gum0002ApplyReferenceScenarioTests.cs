@@ -43,7 +43,7 @@ public class Gum0002ApplyReferenceScenarioTests
         tree.Dialogs.Messages.Last().ShouldContain("50");
         tree.Dialogs.Messages.Last().ShouldContain("120");
         VariableGridHarness.StoredValue(card, "Label.Width").ShouldBe(120f);
-        card.DefaultState.GetVariableListSave("Label.VariableReferences")!.ValueAsIList.Cast<string>()
+        card.GetDefaultStateOrThrow().GetVariableListSave("Label.VariableReferences")!.ValueAsIList.Cast<string>()
             .ShouldBe(new[] { "Width = Leader.Width" });
         errors.Errors.ShouldBeEmpty("the stale value no longer disagrees with its reference");
 
@@ -84,7 +84,7 @@ public class Gum0002ApplyReferenceScenarioTests
         tree.Grid.TypeAndEnter("Width", leaderWidth);
         tree.Click(tree.NodeFor(label));
         tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Leader.Width");
-        card.DefaultState.Variables.Single(variable => variable.Name == "Label.Width").Value = float.Parse(staleWidth);
+        card.GetDefaultStateOrThrow().Variables.Single(variable => variable.Name == "Label.Width").Value = float.Parse(staleWidth);
         tree.Project.SaveAndReload();
 
         ComponentSave reopened = tree.Project.Project.Components.Single(component => component.Name == "Card");

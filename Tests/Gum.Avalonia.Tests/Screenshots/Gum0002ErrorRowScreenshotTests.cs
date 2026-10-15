@@ -1,7 +1,9 @@
 using Avalonia.Controls;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Tests.EndToEnd;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +28,7 @@ public class Gum0002ErrorRowScreenshotTests
         tree.Click(tree.NodeFor(label));
         tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Leader.Width");
         // A stale value, as a hand-edited or older file holds it.
-        card.DefaultState.Variables.Single(variable => variable.Name == "Label.Width").Value = 50f;
+        card.GetDefaultStateOrThrow().Variables.Single(variable => variable.Name == "Label.Width").Value = 50f;
         tree.Project.SaveAndReload();
         ComponentSave reopened = tree.Project.Project.Components.Single(component => component.Name == "Card");
         tree.Click(tree.NodeFor(reopened));
