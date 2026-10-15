@@ -199,6 +199,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
         services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
+        services.AddSingleton<IVariableReferenceConflictFixer, VariableReferenceConflictFixer>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();
         services.AddSingleton<IMovedInstanceReferenceDropper, MovedInstanceReferenceDropper>();
         services.AddSingleton<RenameLogic>();

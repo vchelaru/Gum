@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using CommunityToolkit.Mvvm.Input;
 using Gum.ProjectServices;
 using Gum.Services;
@@ -19,17 +20,20 @@ public class ErrorChecker : IErrorChecker
     private readonly IPluginManager _pluginManager;
     private readonly IErrorDocsRegistry _errorDocsRegistry;
     private readonly IFileSystemRevealService _fileSystemRevealService;
+    private readonly IVariableReferenceConflictFixer _variableReferenceConflictFixer;
 
     public ErrorChecker(
         IHeadlessErrorChecker headlessErrorChecker,
         IPluginManager pluginManager,
         IErrorDocsRegistry errorDocsRegistry,
-        IFileSystemRevealService fileSystemRevealService)
+        IFileSystemRevealService fileSystemRevealService,
+        IVariableReferenceConflictFixer variableReferenceConflictFixer)
     {
         _headlessErrorChecker = headlessErrorChecker;
         _pluginManager = pluginManager;
         _errorDocsRegistry = errorDocsRegistry;
         _fileSystemRevealService = fileSystemRevealService;
+        _variableReferenceConflictFixer = variableReferenceConflictFixer;
     }
 
     /// <inheritdoc/>
@@ -107,6 +111,11 @@ public class ErrorChecker : IErrorChecker
         {
             vm.ActionName = "Show File";
             vm.ActionCommand = new RelayCommand(() => _fileSystemRevealService.RevealFile(filePath));
+        }
+        if (errorResult.ReferenceConflict is { } conflict)
+        {
+            vm.ActionName = "Apply Reference";
+            vm.ActionCommand = new RelayCommand(() => _variableReferenceConflictFixer.Fix(conflict));
         }
         return vm;
     }
