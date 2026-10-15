@@ -25,6 +25,12 @@ dotnet tool install -g GumCli
 
 Once installed, invoke it as `gumcli` from any terminal.
 
+To install a preview version, which includes changes that have not reached a stable release yet, add `--prerelease`:
+
+```
+dotnet tool install -g GumCli --prerelease
+```
+
 ## Version
 
 ```
@@ -41,7 +47,15 @@ Every command also prints `gumcli v<version>` to stderr, so the version appears 
 dotnet tool update -g GumCli
 ```
 
+To update to the latest preview version, add `--prerelease`:
+
+```
+dotnet tool update -g GumCli --prerelease
+```
+
 Update whenever you update the Gum runtime packages. Generated code can target APIs a stale `gumcli` doesn't know about.
+
+If you run a preview version of the **Gum** tool, use the `gumcli` that matches it. Each **Gum** tool release includes a `GumCli` folder built from the same commit, so its output matches the tool.
 
 ## Commands
 
