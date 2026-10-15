@@ -3,11 +3,29 @@ using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
+
+// One file shared by MonoGameGumInCode, Samples/raylib and SilkNetGumSample (linked into the
+// latter two), so the same screen can be opened side by side and a backend rendering bug is not
+// confused with sample drift. The only per-backend differences are the namespace, the content
+// path prefix, and rows for features a backend does not support yet. Colors are set through
+// Red/Green/Blue so no per-backend Color type is needed.
 internal class SpriteScreen : FrameworkElement
 {
+#if RAYLIB
+    // raylib loads loose files from the output folder.
+    private const string ContentPrefix = "resources\\";
+#else
+    private const string ContentPrefix = "";
+#endif
+
     public SpriteScreen() : base(new ContainerRuntime())
     {
         Dock(Gum.Wireframe.Dock.Fill);
@@ -30,12 +48,12 @@ internal class SpriteScreen : FrameworkElement
         // means "use the texture's own pixel dimensions".
         AddLabel(container, "Default sprite at native size (BearTexture.png):");
         var native = new SpriteRuntime();
-        native.SourceFileName = "BearTexture.png";
+        native.SourceFileName = ContentPrefix + "BearTexture.png";
         native.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         native.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         native.Width = 100;
         native.Height = 100;
-        container.AddChild(native);
+        container.Children.Add(native);
 
         // Same sprite at explicit absolute sizes — scaling behavior.
         AddLabel(container, "Explicit absolute sizes (32, 64, 128):");
@@ -43,16 +61,16 @@ internal class SpriteScreen : FrameworkElement
         foreach (var size in new[] { 32, 64, 128 })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = size;
             s.Height = size;
-            sizesRow.AddChild(s);
+            sizesRow.Children.Add(s);
         }
 
         // TextureAddress.Custom — carve a sub-rectangle out of FrameSheet.png.
         AddLabel(container, "TextureAddress.Custom (carving from FrameSheet.png):");
         var custom = new SpriteRuntime();
-        custom.SourceFileName = "FrameSheet.png";
+        custom.SourceFileName = ContentPrefix + "FrameSheet.png";
         custom.TextureAddress = Gum.Managers.TextureAddress.Custom;
         custom.TextureLeft = 438;
         custom.TextureTop = 231;
@@ -60,19 +78,18 @@ internal class SpriteScreen : FrameworkElement
         custom.TextureHeight = 42;
         custom.Width = 84;
         custom.Height = 84;
-        container.AddChild(custom);
+        container.Children.Add(custom);
 
         // Wrap / tiling (issue #3456) — TextureWidth/Height set to 2x the source file's pixel
         // dimensions (BearTexture.png is 39x40) so the source rectangle extends past the texture
         // bounds. With Wrap=false the area beyond the bounds clamps/stretches; with Wrap=true it
-        // repeats the bear 2x2 across the sprite. Compare against the raylib mirror of this screen,
-        // which now matches (issue #3459 — raylib's Wrap=false clamps via software edge-stretching).
+        // repeats the bear 2x2 across the sprite (raylib clamps via software edge-stretching, #3459).
         AddLabel(container, "Wrap (false = clamp/stretch, true = tile, BearTexture.png 2x2):");
         var wrapRow = AddRow(container);
         foreach (var wrap in new[] { false, true })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.TextureAddress = Gum.Managers.TextureAddress.Custom;
             s.TextureLeft = 0;
             s.TextureTop = 0;
@@ -81,48 +98,28 @@ internal class SpriteScreen : FrameworkElement
             s.Wrap = wrap;
             s.Width = 78;
             s.Height = 80;
-            wrapRow.AddChild(s);
+            wrapRow.Children.Add(s);
         }
 
         // Color tinting.
         AddLabel(container, "Color tinting:");
         var tintRow = AddRow(container);
-        foreach (var tint in new[] { Color.White, Color.Red, Color.LightGreen, Color.CornflowerBlue })
+        foreach (var (red, green, blue) in new[] { (255, 255, 255), (255, 0, 0), (144, 238, 144), (100, 149, 237) })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = 64;
             s.Height = 64;
-            s.Color = tint;
-            tintRow.AddChild(s);
+            s.Red = red;
+            s.Green = green;
+            s.Blue = blue;
+            tintRow.Children.Add(s);
         }
 
-        // ColorOperation (issue #3486) — Modulate (default) multiplies the texture by the red tint,
-        // so the bear's detail shows through red; ColorTextureAlpha uses the texture only as an alpha
-        // mask and fills with the tint, so the bear reads as a flat red silhouette. Set through
-        // RenderableComponent here to exercise that path too; the row below demoes the same thing via
-        // the public SpriteRuntime.ColorOperation property (#4792 Gap 1). Mirrors the raylib
-        // SpriteScreen's identical row.
-        AddLabel(container, "ColorOperation on a red-tinted bear (Modulate, ColorTextureAlpha):");
-        var colorOpRow = AddRow(container);
-        foreach (var colorOperation in new[]
-        {
-            RenderingLibrary.Graphics.ColorOperation.Modulate,
-            RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha,
-        })
-        {
-            var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
-            s.Width = 64;
-            s.Height = 64;
-            s.Color = Color.Red;
-            ((RenderingLibrary.Graphics.Sprite)s.RenderableComponent).ColorOperation = colorOperation;
-            colorOpRow.AddChild(s);
-        }
-
-        // SpriteRuntime.ColorOperation property (#4792 Gap 1, widened to every backend by #4821) —
-        // same Modulate/ColorTextureAlpha demo as the row above, but through the public property
-        // instead of casting to RenderableComponent.
+        // SpriteRuntime.ColorOperation (#4792 Gap 1, widened to every backend by #4821) — Modulate
+        // (default) multiplies the texture by the red tint, so the bear's detail shows through red;
+        // ColorTextureAlpha uses the texture only as an alpha mask and fills with the tint, so the
+        // bear reads as a flat red silhouette.
         AddLabel(container, "ColorOperation via SpriteRuntime.ColorOperation property:");
         var colorOpPropertyRow = AddRow(container);
         foreach (var colorOperation in new[]
@@ -132,32 +129,35 @@ internal class SpriteScreen : FrameworkElement
         })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = 64;
             s.Height = 64;
-            s.Color = Color.Red;
+            s.Red = 255;
+            s.Green = 0;
+            s.Blue = 0;
             s.ColorOperation = colorOperation;
-            colorOpPropertyRow.AddChild(s);
+            colorOpPropertyRow.Children.Add(s);
         }
 
         // ColorOperation.Add via property (#4892) — same white-silhouette effect as the
         // animation-frame row below, but ColorOperation.Add is set directly on
-        // SpriteRuntime.ColorOperation with no animation chain involved. Mirrors the
-        // raylib/SilkNetGum SpriteScreen's identical row.
+        // SpriteRuntime.ColorOperation with no animation chain involved.
         AddLabel(container, "ColorOperation.Add via property (normal bear, white-silhouette Add bear):");
         var addPropertyRow = AddRow(container);
         foreach (var useAdd in new[] { false, true })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = 64;
             s.Height = 64;
             if (useAdd)
             {
-                s.Color = Color.White;
+                s.Red = 255;
+                s.Green = 255;
+                s.Blue = 255;
                 s.ColorOperation = RenderingLibrary.Graphics.ColorOperation.Add;
             }
-            addPropertyRow.AddChild(s);
+            addPropertyRow.Children.Add(s);
         }
 
         // Add color operation (#4792 Gap 2 on MonoGame, widened to every backend by #4821) — an
@@ -165,11 +165,13 @@ internal class SpriteScreen : FrameworkElement
         // white silhouette (tex.rgb + white saturates to white wherever the texture has any alpha):
         // the MonsterProjectWeb "un-revealed monster" use case from #4792. Left sprite plays the
         // chain normally (no color op authored, so it looks like the plain bear); right sprite's
-        // chain frame carries the Add tint. Mirrors the raylib/SilkNetGum SpriteScreen's identical row.
+        // chain frame carries the Add tint.
         AddLabel(container, "Add color operation (normal bear, white-silhouette Add bear):");
         var addRow = AddRow(container);
-        var bearTexture = RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>("BearTexture.png");
-        foreach (var addTint in new Microsoft.Xna.Framework.Color?[] { null, Color.White })
+        var bearTextureSource = new SpriteRuntime();
+        bearTextureSource.SourceFileName = ContentPrefix + "BearTexture.png";
+        var bearTexture = bearTextureSource.Texture;
+        foreach (var useAddTint in new[] { false, true })
         {
             var s = new SpriteRuntime();
             s.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
@@ -179,12 +181,12 @@ internal class SpriteScreen : FrameworkElement
 
             var chain = new AnimationChain { Name = "AddDemo" };
             var frame = new AnimationFrame { FrameLength = 1.0f, Texture = bearTexture };
-            if (addTint.HasValue)
+            if (useAddTint)
             {
                 frame.ColorOperation = AnimationFrameColorOperation.Add;
-                frame.Red = addTint.Value.R;
-                frame.Green = addTint.Value.G;
-                frame.Blue = addTint.Value.B;
+                frame.Red = 255;
+                frame.Green = 255;
+                frame.Blue = 255;
             }
             chain.Add(frame);
 
@@ -193,19 +195,18 @@ internal class SpriteScreen : FrameworkElement
             s.AnimationChains = chainList;
             s.CurrentChainName = "AddDemo";
 
-            addRow.AddChild(s);
+            addRow.Children.Add(s);
         }
 
         // Per-frame RelativeX glide (#6034) — a looping two-frame chain slides the bear right and back.
-        // A backend that ignores animation frame offsets plays it in place. Mirrors the raylib/SilkNetGum
-        // SpriteScreen's identical row.
+        // A backend that ignores animation frame offsets plays it in place.
         AddLabel(container, "Animation frame offset (bear glides right and back):");
         var offsetLane = new ContainerRuntime();
         offsetLane.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         offsetLane.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         offsetLane.Width = 200;
         offsetLane.Height = 64;
-        container.AddChild(offsetLane);
+        container.Children.Add(offsetLane);
 
         var offsetSprite = new SpriteRuntime();
         offsetSprite.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
@@ -237,7 +238,7 @@ internal class SpriteScreen : FrameworkElement
         offsetSprite.AnimationChains = offsetChainList;
         offsetSprite.CurrentChainName = "OffsetDemo";
         offsetSprite.Animate = true;
-        offsetLane.AddChild(offsetSprite);
+        offsetLane.Children.Add(offsetSprite);
 
 #if !RAYLIB && !SKIA
         // RenderColorOperation authored on an animation frame (#4822) — same Modulate/
@@ -258,7 +259,9 @@ internal class SpriteScreen : FrameworkElement
             var s = new SpriteRuntime();
             s.Width = 64;
             s.Height = 64;
-            s.Color = Color.Red;
+            s.Red = 255;
+            s.Green = 0;
+            s.Blue = 0;
 
             var chain = new AnimationChain { Name = "RenderColorOperationDemo" };
             chain.Add(new AnimationFrame
@@ -273,7 +276,7 @@ internal class SpriteScreen : FrameworkElement
             s.AnimationChains = chainList;
             s.CurrentChainName = "RenderColorOperationDemo";
 
-            renderColorOpFrameRow.AddChild(s);
+            renderColorOpFrameRow.Children.Add(s);
         }
 #endif
 
@@ -283,11 +286,11 @@ internal class SpriteScreen : FrameworkElement
         foreach (var alpha in new[] { 64, 128, 192, 255 })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = 64;
             s.Height = 64;
             s.Alpha = alpha;
-            alphaRow.AddChild(s);
+            alphaRow.Children.Add(s);
         }
 
         // FlipHorizontal / FlipVertical.
@@ -296,12 +299,12 @@ internal class SpriteScreen : FrameworkElement
         foreach (var (h, v) in new[] { (false, false), (true, false), (false, true), (true, true) })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = 64;
             s.Height = 64;
             s.FlipHorizontal = h;
             s.FlipVertical = v;
-            flipRow.AddChild(s);
+            flipRow.Children.Add(s);
         }
 
         // Flipping an atlas cell (issue #4854) — a source rect that doesn't start at the texture
@@ -311,7 +314,7 @@ internal class SpriteScreen : FrameworkElement
         foreach (var (h, v) in new[] { (false, false), (true, false), (false, true), (true, true) })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "FrameSheet.png";
+            s.SourceFileName = ContentPrefix + "FrameSheet.png";
             s.TextureAddress = Gum.Managers.TextureAddress.Custom;
             s.TextureLeft = 438;
             s.TextureTop = 231;
@@ -321,7 +324,7 @@ internal class SpriteScreen : FrameworkElement
             s.Height = 64;
             s.FlipHorizontal = h;
             s.FlipVertical = v;
-            flipCellRow.AddChild(s);
+            flipCellRow.Children.Add(s);
         }
 
         // Rotation — center-pivot the sprites (YOrigin=Center, Y=row_height/2)
@@ -330,13 +333,13 @@ internal class SpriteScreen : FrameworkElement
         foreach (var angle in new[] { 0f, 25f, 90f, 180f })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = 40;
             s.Height = 40;
             s.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
             s.Y = 14;
             s.Rotation = angle;
-            rotRow.AddChild(s);
+            rotRow.Children.Add(s);
         }
 
         // Blend modes — Normal/Additive/Replace are the only blends safe in
@@ -354,11 +357,11 @@ internal class SpriteScreen : FrameworkElement
         })
         {
             var s = new SpriteRuntime();
-            s.SourceFileName = "BearTexture.png";
+            s.SourceFileName = ContentPrefix + "BearTexture.png";
             s.Width = 64;
             s.Height = 64;
             s.Blend = blend;
-            blendRow.AddChild(s);
+            blendRow.Children.Add(s);
         }
 
         // Alpha-only blends — each cell is a render-target Container holding a
@@ -389,11 +392,13 @@ internal class SpriteScreen : FrameworkElement
 #pragma warning restore CS0618
             redBackground.Width = 32;
             redBackground.Height = 32;
-            redBackground.Color = Color.Red;
-            cell.AddChild(redBackground);
+            redBackground.Red = 255;
+            redBackground.Green = 0;
+            redBackground.Blue = 0;
+            cell.Children.Add(redBackground);
 
             var alphaMasker = new SpriteRuntime();
-            alphaMasker.SourceFileName = "BearTexture.png";
+            alphaMasker.SourceFileName = ContentPrefix + "BearTexture.png";
             alphaMasker.Width = 64;
             alphaMasker.Height = 64;
             alphaMasker.Blend = blend;
@@ -411,9 +416,9 @@ internal class SpriteScreen : FrameworkElement
             {
                 alphaMasker.Alpha = 128;
             }
-            cell.AddChild(alphaMasker);
+            cell.Children.Add(alphaMasker);
 
-            alphaBlendRow.AddChild(cell);
+            alphaBlendRow.Children.Add(cell);
         }
 
         // AnimationChain-driven sprite — same .achx pipeline NineSliceScreen uses.
@@ -428,12 +433,12 @@ internal class SpriteScreen : FrameworkElement
         animated.AnimationChains = LoadAnimatedFrameChain();
         animated.CurrentChainName = "Animation1";
         animated.Animate = true;
-        container.AddChild(animated);
+        container.Children.Add(animated);
     }
 
     private static AnimationChainList LoadAnimatedFrameChain()
     {
-        AnimationChainListSave save = AnimationChainListSave.FromFile("AnimatedFrame1.achx");
+        AnimationChainListSave save = AnimationChainListSave.FromFile(ContentPrefix + "AnimatedFrame1.achx");
         return save.ToAnimationChainList();
     }
 
@@ -445,7 +450,7 @@ internal class SpriteScreen : FrameworkElement
         label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         label.Width = 20;
         label.Height = 0;
-        container.AddChild(label);
+        container.Children.Add(label);
     }
 
     private static ContainerRuntime AddRow(ContainerRuntime container)
@@ -457,7 +462,7 @@ internal class SpriteScreen : FrameworkElement
         row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         row.Width = 0;
         row.Height = 0;
-        container.AddChild(row);
+        container.Children.Add(row);
         return row;
     }
 }
