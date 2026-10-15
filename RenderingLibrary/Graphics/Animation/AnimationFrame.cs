@@ -101,8 +101,8 @@ namespace Gum.Graphics.Animation
         /// sprite's current technique unchanged. Distinct from <see cref="ColorOperation"/> above -
         /// that's FlatRedBall's Multiply/Add per-frame tint; this is Gum's own render-technique
         /// selector (#4822), which <c>SpriteRuntime.ColorOperation</c> (MonoGame/KNI/FNA, #4792 Gap 1)
-        /// exposes. Applied by <c>Sprite.ApplyAnimationFrame</c> on MonoGame/KNI/FNA only; raylib,
-        /// Skia, and NineSlice don't apply it yet.
+        /// exposes. Applied by <c>Sprite.ApplyAnimationFrame</c> on MonoGame/KNI/FNA, raylib and Skia;
+        /// NineSlice doesn't apply it yet.
         /// </summary>
         public global::RenderingLibrary.Graphics.ColorOperation? RenderColorOperation;
 

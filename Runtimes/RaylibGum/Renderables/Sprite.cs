@@ -69,6 +69,17 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
     public bool FlipVertical { get; set; }
 
+    /// <summary>
+    /// Whether the sprite is drawn reflected across its main diagonal (a transpose: the top-left and
+    /// bottom-right corners stay put while the top-right and bottom-left swap). Applied after
+    /// <c>FlipHorizontal</c> and <see cref="FlipVertical"/>, so a horizontally flipped source
+    /// is flipped first and then transposed. The sprite keeps its own footprint, so a non-square
+    /// sprite stretches the transposed image to fit. Honored when drawing the source rectangle
+    /// directly; a <see cref="ITextureCoordinate.Wrap"/>ping sprite, or one whose source rectangle
+    /// extends past the texture, is drawn without it.
+    /// </summary>
+    public bool FlipDiagonal { get; set; }
+
     public override int Alpha
     {
         get
@@ -236,11 +247,19 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         {
             ApplyFlip(ref srcRect);
 
+            var drawDestination = destinationRectangle;
+            var drawRotation = -absoluteRotation;
+            if (FlipDiagonal)
+            {
+                (drawDestination, drawRotation, srcRect) =
+                    GetDiagonalFlipDraw(destinationRectangle, drawRotation, srcRect);
+            }
+
             // Add draws the texture untinted and then adds Color in a second pass, so Color
             // contributes only once.
             bool isAdd = ColorOperation == ColorOperation.Add;
 
-            DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation,
+            DrawTexturePro(textureToDraw, srcRect, drawDestination, Vector2.Zero, drawRotation,
                 isAdd ? new Color((byte)255, (byte)255, (byte)255, Color.A) : Color);
 
             if (isAdd)
@@ -249,7 +268,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
                 counter.BeginShaderMode(global::RenderingLibrary.Graphics.Renderer.Self.AdditiveColorOverlayShader.Shader);
                 counter.BeginBlendModeAddColorPreserveDestinationAlpha();
 
-                DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
+                DrawTexturePro(textureToDraw, srcRect, drawDestination, Vector2.Zero, drawRotation, Color);
 
                 counter.EndBlendMode();
                 counter.EndShaderMode();
@@ -275,6 +294,31 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     {
         if (FlipHorizontal) sourceRect.Width = -sourceRect.Width;
         if (FlipVertical) sourceRect.Height = -sourceRect.Height;
+    }
+
+    // Turns a DrawTexturePro call into its diagonal (transpose) reflection. The source is drawn as
+    // a rectangle of swapped size, rotated 90 degrees clockwise on top of the sprite's own rotation
+    // and with its V axis mirrored: that sends source U down the sprite and source V across it,
+    // which is the transpose, and the result covers destination exactly. rotationDegrees is the
+    // sprite's rotation as DrawTexturePro takes it (about destination's top-left corner); source
+    // carries any horizontal/vertical flip as negative dimensions, which are kept and applied
+    // first.
+    internal static (Rectangle Destination, float RotationDegrees, Rectangle Source) GetDiagonalFlipDraw(
+        Rectangle destination, float rotationDegrees, Rectangle source)
+    {
+        float radians = rotationDegrees * (MathF.PI / 180f);
+
+        // The turned rectangle hangs down and to the left of its anchor, so the anchor is the
+        // destination's top-right corner, carried through the sprite's rotation.
+        var turnedDestination = new Rectangle(
+            destination.X + destination.Width * MathF.Cos(radians),
+            destination.Y + destination.Width * MathF.Sin(radians),
+            destination.Height,
+            destination.Width);
+
+        var mirroredSource = new Rectangle(source.X, source.Y, source.Width, -source.Height);
+
+        return (turnedDestination, rotationDegrees + 90f, mirroredSource);
     }
 
     // Repeats sourceRectangle's texture area across destinationRectangle instead of stretching it,
@@ -524,6 +568,14 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical = frame.FlipVertical;
+        FlipDiagonal = frame.FlipDiagonal;
+
+        // Modulate/ColorTextureAlpha render-technique selector - distinct from
+        // AnimationFrameColorOperation below, which wins when both are authored.
+        if (frame.RenderColorOperation.HasValue)
+        {
+            ColorOperation = frame.RenderColorOperation.Value;
+        }
 
         // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
         // ignores a skipped frame's own channels.
