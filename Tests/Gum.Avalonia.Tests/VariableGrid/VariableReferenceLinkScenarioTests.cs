@@ -68,6 +68,34 @@ public class VariableReferenceLinkScenarioTests
         grid.Member("X").IsReadOnly.ShouldBeTrue();
     }
 
+    [AvaloniaFact]
+    public void ColorSetByAReference_ShowsOneSourceLink_AndUnlinkCommentsOutTheStoredLine()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave leader = grid.Project.AddInstance(button, "Leader", "Text");
+        InstanceSave follower = grid.Project.AddInstance(button, "Follower", "Text");
+        grid.Select(follower);
+        grid.TypeLinesAndApply("VariableReferences", "Color = Leader.Color");
+
+        grid.Member("Color").DetailText.ShouldBe("Set by Leader.Color");
+        grid.Member("Color").DetailLink.ShouldNotBeNull();
+        grid.Member("Color").DetailAction.ShouldNotBeNull();
+
+        grid.ClickDetailLink("Color");
+        grid.SelectedState.SelectedInstance.ShouldBe(leader);
+
+        grid.Select(follower);
+        grid.ClickDetailAction("Color");
+
+        ReferenceLines(grid.SelectedState.SelectedElement!).ShouldBe(new[] { "//Color = Leader.Color" });
+        grid.Member("Color").IsReadOnly.ShouldBeFalse();
+
+        grid.Undo();
+
+        ReferenceLines(grid.SelectedState.SelectedElement!).ShouldBe(new[] { "Color = Leader.Color" });
+    }
+
     private static List<string> ReferenceLines(ElementSave element) =>
         ((VariableListSave<string>)element.DefaultState.VariableLists.Single(list => list.Name == "Follower.VariableReferences")).Value;
 }
