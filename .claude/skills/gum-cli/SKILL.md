@@ -78,6 +78,8 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 
 **Non-obvious:** `HeadlessErrorChecker` is not a duplicate of the tool's `ErrorChecker` — the tool's `ErrorChecker` **delegates to** `HeadlessErrorChecker`. Zero duplication by design.
 
+Any command that runs `HeadlessErrorChecker` must call `GumExpressionService.Initialize()` first (`check` and `codegen` do). GUM0002 evaluates cross-element reference right-hand sides through it and silently reports nothing when it is unwired. Tests that cover this reset `ElementSaveExtensions.CustomEvaluateExpression = null` first, because other commands in the same test process leave it wired.
+
 `HeadlessErrorChecker` accepts a second constructor overload taking `IEnumerable<IAdditionalErrorSource>` for extensibility; the CLI uses the single-argument overload.
 
 `HeadlessNameVerifier` only implements real logic in `IsValidCSharpName`; all other `INameVerifier` methods return `true` unconditionally. This is intentional — the CLI only needs C# name validation for codegen.

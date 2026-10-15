@@ -1,3 +1,4 @@
+using GumRuntime;
 using Gum.ProjectServices;
 using Shouldly;
 using System;
@@ -310,6 +311,77 @@ public class CodegenCommandTests : IDisposable
         generatedContents.ShouldContain("public void ApplyLocalization()",
             customMessage: "the project declares a localization CSV, so codegen must load it and emit ApplyLocalization");
         generatedContents.ShouldContain("Translate(\"T_OK\")");
+    }
+
+    [Fact]
+    public void Codegen_WhenExplicitValueDisagreesWithCrossElementReference_WarnsWithGum0002()
+    {
+        // Start from an unwired evaluator: the reference reads another element, and `codegen`
+        // must not depend on another command having initialized it.
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        AddComponent(gumxPath, "Styles",
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>Styles</Name>
+              <BaseType>Container</BaseType>
+              <State>
+                <Name>Default</Name>
+                <Variable Type="float" Name="Width" SetsValue="true">
+                  <Value xsi:type="xsd:float">100</Value>
+                </Variable>
+              </State>
+            </ComponentSave>
+            """);
+        AddComponent(gumxPath, "Button",
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>Button</Name>
+              <BaseType>Container</BaseType>
+              <State>
+                <Name>Default</Name>
+                <Variable Type="float" Name="Width" SetsValue="true">
+                  <Value xsi:type="xsd:float">255</Value>
+                </Variable>
+                <VariableList xsi:type="VariableListSaveOfString">
+                  <Type>string</Type>
+                  <Name>VariableReferences</Name>
+                  <IsFile>false</IsFile>
+                  <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+                  <Value>
+                    <string>Width = Components/Styles.Width</string>
+                  </Value>
+                </VariableList>
+              </State>
+            </ComponentSave>
+            """);
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        result.StandardError.ShouldContain("warning: Button:");
+        result.StandardError.ShouldContain("would set it to 100");
+    }
+
+    private static void AddComponent(string gumxPath, string name, string componentXml)
+    {
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(gumxPath)!, "Components", name + ".gucx"), componentXml);
+        string gumxContent = File.ReadAllText(gumxPath);
+        File.WriteAllText(gumxPath, gumxContent.Replace("</GumProjectSave>",
+            $"  <ComponentReference Name=\"{name}\" />\n</GumProjectSave>"));
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using GumRuntime;
 using Shouldly;
 using System.Text.Json;
 
@@ -111,6 +112,35 @@ public class CheckCommandTests : IDisposable
         result.StandardOutput.ShouldContain("1 error(s), 1 warning(s) found.");
     }
 
+    [Fact]
+    public void Check_ExplicitValueDisagreesWithCrossElementReference_ShouldReportGum0002()
+    {
+        // The reference reads another element, which only the Roslyn evaluator resolves. Other
+        // commands in the same process wire it up, so start from an unwired evaluator: `check`
+        // must not depend on anything having initialized it.
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        string filePath = CreateProjectWithButtonReferencingStyles("ConflictRef", buttonWidth: 255);
+
+        CliTestHelper result = CliTestHelper.Run("check", filePath, "--json");
+
+        using JsonDocument document = JsonDocument.Parse(result.StandardOutput);
+        JsonElement entry = document.RootElement.EnumerateArray()
+            .Single(e => e.GetProperty("code").GetString() == "GUM0002");
+        entry.GetProperty("element").GetString().ShouldBe("Button");
+        entry.GetProperty("message").GetString()!.ShouldContain("would set it to 100");
+    }
+
+    [Fact]
+    public void Check_ExplicitValueMatchesCrossElementReference_ShouldNotReportGum0002()
+    {
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        string filePath = CreateProjectWithButtonReferencingStyles("MatchingRef", buttonWidth: 100);
+
+        CliTestHelper result = CliTestHelper.Run("check", filePath, "--json");
+
+        result.StandardOutput.ShouldNotContain("GUM0002");
+    }
+
     /// <summary>
     /// Creates a clean project via the CLI and returns the .gumx path.
     /// </summary>
@@ -211,6 +241,71 @@ public class CheckCommandTests : IDisposable
         string gumxContent = File.ReadAllText(gumxFilePath);
         const string componentRef = """  <ComponentReference Name="SpriteWithMissingTexture" />""";
 
+        gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
+        File.WriteAllText(gumxFilePath, gumxContent);
+    }
+
+    /// <summary>
+    /// Creates a project where component "Button" sets Width explicitly to <paramref name="buttonWidth"/>
+    /// and also has a "Width = Components/Styles.Width" reference to a component whose Width is 100.
+    /// </summary>
+    private string CreateProjectWithButtonReferencingStyles(string name, float buttonWidth)
+    {
+        string filePath = CreateTestProject(name);
+
+        AddComponent(filePath, "Styles",
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+              <Name>Styles</Name>
+              <BaseType>Container</BaseType>
+              <State>
+                <Name>Default</Name>
+                <Variable Type="float" Name="Width" SetsValue="true">
+                  <Value xsi:type="xsd:float">100</Value>
+                </Variable>
+              </State>
+            </ComponentSave>
+            """);
+
+        AddComponent(filePath, "Button",
+            $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+              <Name>Button</Name>
+              <BaseType>Container</BaseType>
+              <State>
+                <Name>Default</Name>
+                <Variable Type="float" Name="Width" SetsValue="true">
+                  <Value xsi:type="xsd:float">{buttonWidth}</Value>
+                </Variable>
+                <VariableList xsi:type="VariableListSaveOfString">
+                  <Type>string</Type>
+                  <Name>VariableReferences</Name>
+                  <IsFile>false</IsFile>
+                  <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+                  <Value>
+                    <string>Width = Components/Styles.Width</string>
+                  </Value>
+                </VariableList>
+              </State>
+            </ComponentSave>
+            """);
+
+        return filePath;
+    }
+
+    /// <summary>
+    /// Writes <paramref name="componentXml"/> as Components/&lt;name&gt;.gucx and references it from the .gumx.
+    /// </summary>
+    private static void AddComponent(string gumxFilePath, string name, string componentXml)
+    {
+        string componentDir = Path.Combine(Path.GetDirectoryName(gumxFilePath)!, "Components");
+        Directory.CreateDirectory(componentDir);
+        File.WriteAllText(Path.Combine(componentDir, name + ".gucx"), componentXml);
+
+        string gumxContent = File.ReadAllText(gumxFilePath);
+        string componentRef = $"""  <ComponentReference Name="{name}" />""";
         gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
         File.WriteAllText(gumxFilePath, gumxContent);
     }
