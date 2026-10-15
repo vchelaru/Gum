@@ -211,6 +211,7 @@ public class CodeGenScenarioTests
         code.ClickGenerate();
 
         code.Project.Dialogs.Messages.Last().ShouldBe("Generated code for 2 element(s)");
+        File.Exists(code.CodeFile("StandardElements.Generated.cs")).ShouldBeTrue("generating every element also writes the project-wide fallback file");
         string toggleCode = File.ReadAllText(code.CodeFile("Components/Controls/Toggle.Generated.cs"));
         toggleCode.ShouldContain("using System.Text;");
         toggleCode.ShouldContain("namespace MyGame.Components.Controls");

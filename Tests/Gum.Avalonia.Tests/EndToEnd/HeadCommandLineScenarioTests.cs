@@ -201,6 +201,28 @@ public class HeadCommandLineScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "CLI-009")]
+    public void GenerateCodeOption_SkipsElementsSetToNeverGenerate()
+    {
+        using ToolProjectFixture fixture = new ToolProjectFixture("GumHeadCommandLine");
+        fixture.AddComponent("Card");
+        fixture.AddComponent("Skipped");
+        File.WriteAllText(Path.Combine(fixture.ProjectFolder, "ProjectCodeSettings.codsj"),
+            """{ "CodeProjectRoot": "Code/", "OutputLibrary": 5, "ObjectInstantiationType": 1 }""");
+        Services.GetRequiredService<IFileCommands>().ForceSaveProject(forceSaveContainedElements: true);
+        File.WriteAllText(Path.Combine(fixture.ProjectFolder, "Components", "Skipped.codsj"),
+            """{ "GenerationBehavior": "NeverGenerate" }""");
+        Pump(Services.GetRequiredService<IFileCommands>().LoadProjectAsync(fixture.ProjectFilePath));
+
+        Pump(Services.GetRequiredService<IMessenger>().SendAsync(new RequestCodeGenerationMessage()));
+
+        string code = Path.Combine(fixture.ProjectFolder, "Code");
+        File.Exists(Path.Combine(code, "Components", "Card.Generated.cs")).ShouldBeTrue();
+        File.Exists(Path.Combine(code, "Components", "Skipped.Generated.cs")).ShouldBeFalse();
+        File.Exists(Path.Combine(code, "StandardElements.Generated.cs")).ShouldBeTrue();
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "CLI-010")]
     public void FileActivation_BeforeStartupFinishes_OpensTheProjectOnceItDoes_AndAfterItOpensAtOnce()
     {
