@@ -167,6 +167,79 @@ namespace Gum.Graphics.Animation
         #endregion
         public float RelativeY;
 
+        /// <summary>
+        /// When true the frame is not an offset keyframe: its own <see cref="RelativeX"/>/
+        /// <see cref="RelativeY"/> and offset curve are ignored. See <see cref="KeyframeEvaluator"/>.
+        /// </summary>
+        public bool SkipOffsetKeyframe;
+
+        /// <summary>
+        /// When true the frame is not a color keyframe: its own color channels and color curve are
+        /// ignored. See <see cref="KeyframeEvaluator"/>.
+        /// </summary>
+        public bool SkipColorKeyframe;
+
+        /// <summary>The offset curve type name as read from the file; null, "Instant" or an unknown name snaps.</summary>
+        public string? OffsetInterpolation;
+
+        /// <summary>Easing (In, Out, InOut) for <see cref="OffsetInterpolation"/>; null or unknown means Out.</summary>
+        public string? OffsetEasing;
+
+        /// <summary>The color curve type name as read from the file; null, "Instant" or an unknown name snaps.</summary>
+        public string? ColorInterpolation;
+
+        /// <summary>Easing (In, Out, InOut) for <see cref="ColorInterpolation"/>; null or unknown means Out.</summary>
+        public string? ColorEasing;
+
+        // The names are parsed on demand and cached against the strings they came from, so a frame
+        // edited at runtime is re-parsed and an evaluation allocates nothing.
+        string? _parsedOffsetInterpolation;
+        string? _parsedOffsetEasing;
+        KeyframeCurve _offsetCurve;
+        bool _hasOffsetCurve;
+        string? _parsedColorInterpolation;
+        string? _parsedColorEasing;
+        KeyframeCurve _colorCurve;
+        bool _hasColorCurve;
+
+        /// <summary>The curve from this frame's offset to the next offset keyframe's.</summary>
+        [XmlIgnore]
+        public KeyframeCurve OffsetCurve
+        {
+            get
+            {
+                if (!_hasOffsetCurve
+                    || !ReferenceEquals(_parsedOffsetInterpolation, OffsetInterpolation)
+                    || !ReferenceEquals(_parsedOffsetEasing, OffsetEasing))
+                {
+                    _offsetCurve = KeyframeCurve.Parse(OffsetInterpolation, OffsetEasing);
+                    _parsedOffsetInterpolation = OffsetInterpolation;
+                    _parsedOffsetEasing = OffsetEasing;
+                    _hasOffsetCurve = true;
+                }
+                return _offsetCurve;
+            }
+        }
+
+        /// <summary>The curve from this frame's color to the next color keyframe's.</summary>
+        [XmlIgnore]
+        public KeyframeCurve ColorCurve
+        {
+            get
+            {
+                if (!_hasColorCurve
+                    || !ReferenceEquals(_parsedColorInterpolation, ColorInterpolation)
+                    || !ReferenceEquals(_parsedColorEasing, ColorEasing))
+                {
+                    _colorCurve = KeyframeCurve.Parse(ColorInterpolation, ColorEasing);
+                    _parsedColorInterpolation = ColorInterpolation;
+                    _parsedColorEasing = ColorEasing;
+                    _hasColorCurve = true;
+                }
+                return _colorCurve;
+            }
+        }
+
         #endregion
 
         #region Properties
@@ -366,6 +439,13 @@ namespace Gum.Graphics.Animation
 
             frame.RelativeX = animationFrameSave.RelativeX;
             frame.RelativeY = animationFrameSave.RelativeY;
+
+            frame.SkipOffsetKeyframe = animationFrameSave.SkipOffsetKeyframe;
+            frame.SkipColorKeyframe = animationFrameSave.SkipColorKeyframe;
+            frame.OffsetInterpolation = animationFrameSave.OffsetInterpolation;
+            frame.OffsetEasing = animationFrameSave.OffsetEasing;
+            frame.ColorInterpolation = animationFrameSave.ColorInterpolation;
+            frame.ColorEasing = animationFrameSave.ColorEasing;
 
             #endregion
 

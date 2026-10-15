@@ -187,6 +187,65 @@ namespace Gum.Content.AnimationChain
             return RelativeY != 0;
         }
 
+        // Keyframe interpolation (FlatRedBall2 #1478). Every frame is a keyframe; a keyframe's curve
+        // runs to the next keyframe of the same group (Offset: RelativeX/Y, Color: Red/Green/Blue/Alpha).
+        // The curve names are stored as the raw strings read from the file, never as the library enums
+        // (their zero values are Back and In), so a value Gum does not understand is written back as read.
+        // Written only when set, so files without them stay byte-identical.
+
+        /// <summary>
+        /// When true the frame is not an offset keyframe: its own <see cref="RelativeX"/>/
+        /// <see cref="RelativeY"/> and offset curve are ignored. The first frame is always a keyframe.
+        /// </summary>
+        public bool SkipOffsetKeyframe;
+        public bool ShouldSerializeSkipOffsetKeyframe()
+        {
+            return SkipOffsetKeyframe;
+        }
+
+        /// <summary>
+        /// When true the frame is not a color keyframe: its own color channels and color curve are
+        /// ignored. The first frame is always a keyframe.
+        /// </summary>
+        public bool SkipColorKeyframe;
+        public bool ShouldSerializeSkipColorKeyframe()
+        {
+            return SkipColorKeyframe;
+        }
+
+        /// <summary>
+        /// The curve family from this frame's offset to the next offset keyframe's, as a
+        /// <c>FlatRedBall.InterpolationCore</c> type name (Back, Bounce, Circular, Cubic, Elastic,
+        /// Exponential, Instant, Linear, Quadratic, Quartic, Quintic, Sinusoidal). Null, empty,
+        /// "Instant" or an unrecognized name means the offset snaps.
+        /// </summary>
+        public string? OffsetInterpolation;
+        public bool ShouldSerializeOffsetInterpolation()
+        {
+            return OffsetInterpolation != null;
+        }
+
+        /// <summary>In, Out or InOut for <see cref="OffsetInterpolation"/>; null or unrecognized means Out.</summary>
+        public string? OffsetEasing;
+        public bool ShouldSerializeOffsetEasing()
+        {
+            return OffsetEasing != null;
+        }
+
+        /// <summary>The curve from this frame's color to the next color keyframe's. Same rules as <see cref="OffsetInterpolation"/>.</summary>
+        public string? ColorInterpolation;
+        public bool ShouldSerializeColorInterpolation()
+        {
+            return ColorInterpolation != null;
+        }
+
+        /// <summary>Easing for <see cref="ColorInterpolation"/>. Same rules as <see cref="OffsetEasing"/>.</summary>
+        public string? ColorEasing;
+        public bool ShouldSerializeColorEasing()
+        {
+            return ColorEasing != null;
+        }
+
 
 
         public AnimationFrameSave() { }

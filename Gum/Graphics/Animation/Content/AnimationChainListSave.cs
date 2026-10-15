@@ -267,8 +267,19 @@ namespace Gum.Content.AnimationChain
                 // Modulate/ColorTextureAlpha render-technique selector (#4822), not a key FRB2's
                 // Animation Editor writes. Present only in Gum-authored/hand-edited .achj files.
                 RenderColorOperation = RenderColorOperationProperty(frameObj, "renderColorOperation"),
+                // Keyframe interpolation (FlatRedBall2 #1478). The curve names are kept as the raw
+                // strings so a name this version does not know survives a load/save cycle.
+                SkipOffsetKeyframe = BoolProperty(frameObj, "skipOffsetKeyframe"),
+                SkipColorKeyframe = BoolProperty(frameObj, "skipColorKeyframe"),
+                OffsetInterpolation = StringProperty(frameObj, "offsetInterpolation"),
+                OffsetEasing = StringProperty(frameObj, "offsetEasing"),
+                ColorInterpolation = StringProperty(frameObj, "colorInterpolation"),
+                ColorEasing = StringProperty(frameObj, "colorEasing"),
             };
         }
+
+        private static string? StringProperty(JsonObject parent, string name) =>
+            parent[name] is JsonValue value ? value.GetValue<string>() : null;
 
         private static float FloatProperty(JsonObject parent, string name, float defaultValue = 0f) =>
             parent[name] is JsonValue value ? value.GetValue<float>() : defaultValue;
