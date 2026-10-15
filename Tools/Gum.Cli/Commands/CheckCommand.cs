@@ -5,6 +5,7 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Gum.Expressions;
 using Gum.ProjectServices;
 
 namespace Gum.Cli.Commands;
@@ -61,6 +62,9 @@ public static class CheckCommand
             Console.Error.WriteLine(loadResult.ErrorMessage);
             return 2;
         }
+
+        // GUM0002 evaluates reference right-hand sides (including cross-element ones) with the Roslyn evaluator.
+        GumExpressionService.Initialize();
 
         ITypeResolver typeResolver = new DefaultTypeResolver();
         IHeadlessErrorChecker checker = new HeadlessErrorChecker(
