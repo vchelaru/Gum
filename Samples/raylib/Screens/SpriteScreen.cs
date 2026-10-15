@@ -206,6 +206,49 @@ internal class SpriteScreen : FrameworkElement
             addRow.AddChild(s);
         }
 
+        // Per-frame RelativeX glide (#6034) — a looping two-frame chain slides the bear right and back.
+        // A backend that ignores animation frame offsets plays it in place. Mirrors the MG/SilkNetGum
+        // SpriteScreen's identical row.
+        AddSectionLabel(page, "Animation frame offset (bear glides right and back):");
+        var offsetLane = new ContainerRuntime();
+        offsetLane.WidthUnits = DimensionUnitType.Absolute;
+        offsetLane.HeightUnits = DimensionUnitType.Absolute;
+        offsetLane.Width = 200;
+        offsetLane.Height = 64;
+        page.AddChild(offsetLane);
+
+        var offsetSprite = new SpriteRuntime();
+        offsetSprite.WidthUnits = DimensionUnitType.Absolute;
+        offsetSprite.HeightUnits = DimensionUnitType.Absolute;
+        offsetSprite.Width = 64;
+        offsetSprite.Height = 64;
+
+        var offsetChain = new AnimationChain { Name = "OffsetDemo" };
+        offsetChain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            Texture = bearTexture,
+            RightCoordinate = 1,
+            BottomCoordinate = 1,
+            RelativeX = 0,
+            OffsetInterpolation = "Linear",
+        });
+        offsetChain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            Texture = bearTexture,
+            RightCoordinate = 1,
+            BottomCoordinate = 1,
+            RelativeX = 136,
+            OffsetInterpolation = "Linear",
+        });
+        var offsetChainList = new AnimationChainList();
+        offsetChainList.Add(offsetChain);
+        offsetSprite.AnimationChains = offsetChainList;
+        offsetSprite.CurrentChainName = "OffsetDemo";
+        offsetSprite.Animate = true;
+        offsetLane.AddChild(offsetSprite);
+
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddSectionLabel(page, "Alpha (64, 128, 192, 255):");
         var alphaRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
