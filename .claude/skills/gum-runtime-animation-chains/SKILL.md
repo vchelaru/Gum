@@ -36,6 +36,8 @@ Sprite handles each frame in **two phases**:
 
 This split matters: changing `RelativeX/Y` on a live frame takes effect on the next render without needing `UpdateToCurrentAnimationFrame`. The offset is applied at the render call site, not in `ApplyFrame`.
 
+`FlipDiagonal` is a transpose applied after the H/V flips (flip the source, then reflect across the main diagonal), keeping the sprite's own footprint. MonoGame synthesizes it as a 90 degree rotation plus a horizontal flip and honors it only for a square source rectangle. Skia concatenates a swap-axes matrix onto the canvas in `DrawBound`; raylib draws a swapped-size, 90-degree-turned rectangle with a mirrored source (`Sprite.GetDiagonalFlipDraw`). Both handle non-square sprites, and raylib skips it on its tiled (`Wrap`) and out-of-texture-bounds clamped paths. Skia and raylib `NineSlice` ignore all frame flips.
+
 Skia and raylib `Sprite` apply the same `GetRenderOffset` at draw time: raylib shifts the destination rectangle, and Skia translates the canvas in `DrawBound`, which is already rotated with the sprite, so it passes `0` rotation.
 
 ## The RelativeX/Y anchor mismatch (recurring gotcha)
@@ -66,7 +68,7 @@ Skia and Raylib `NineSlice` renderables also compose `AnimationLogic` and apply 
 
 `Add` draws the texture untinted and adds `Color` on top: a second additive pass on XNA/raylib (`Renderer.DrawAdditiveColorOverlay`, raylib's `AdditiveColorOverlayShader`), and a single-pass `SKColorFilter.CreateColorMatrix` offset on Skia. It works on both `Sprite` and `NineSlice` across XNA/raylib/Skia. There is **no** separate additive color field — an earlier `AdditiveTintColor` was folded into `Color` + `ColorOperation.Add`.
 
-A separate nullable field, `AnimationFrame.RenderColorOperation`/`AnimationFrameSave.RenderColorOperation`, also picks the renderable's `ColorOperation` (its original purpose was the `Modulate`/`ColorTextureAlpha` technique selector). It writes the **same field** as the table above, so when a frame authors both, the `AnimationFrameColorOperation` wins — it is applied second. Applied in `Sprite.ApplyAnimationFrame` only.
+A separate nullable field, `AnimationFrame.RenderColorOperation`/`AnimationFrameSave.RenderColorOperation`, also picks the renderable's `ColorOperation` (its original purpose was the `Modulate`/`ColorTextureAlpha` technique selector). It writes the **same field** as the table above, so when a frame authors both, the `AnimationFrameColorOperation` wins — it is applied second. Applied in `Sprite.ApplyAnimationFrame` only, on every backend's Sprite.
 
 Note for tool work: exposing `ColorOperation` as a tool-editable variable means codegen emits `X.ColorOperation = ...`, which older runtimes' `NineSliceRuntime` does not have. That needs a syntax-version bump and gate — see `gum-runtime-syntax-version`.
 

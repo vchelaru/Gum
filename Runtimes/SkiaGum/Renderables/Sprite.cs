@@ -74,6 +74,15 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     public Rectangle? SourceRectangle;
     private SKBitmap? _texture;
 
+    /// <summary>
+    /// Whether the sprite is drawn reflected across its main diagonal (a transpose: the top-left and
+    /// bottom-right corners stay put while the top-right and bottom-left swap). Applied after
+    /// <see cref="SourceRectangle"/> flips, so a horizontally flipped source is flipped first and then
+    /// transposed. The sprite keeps its own footprint, so a non-square sprite stretches the transposed
+    /// image to fit.
+    /// </summary>
+    public bool FlipDiagonal { get; set; }
+
     public Rectangle? EffectiveRectangle => SourceRectangle;
 
     Rectangle? ITextureCoordinate.SourceRectangle
@@ -134,6 +143,7 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     void ApplyAnimationFrame(Gum.Graphics.Animation.AnimationFrame frame)
     {
         Texture = frame.Texture;
+        FlipDiagonal = frame.FlipDiagonal;
 
         if (frame.Texture != null)
         {
@@ -152,6 +162,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         else
         {
             SourceRectangle = null;
+        }
+
+        // Modulate/ColorTextureAlpha render-technique selector - distinct from
+        // AnimationFrameColorOperation below, which wins when both are authored.
+        if (frame.RenderColorOperation.HasValue)
+        {
+            ColorOperation = frame.RenderColorOperation.Value;
         }
 
         // A chain with color keyframes gets its color from ApplyKeyframeColor instead, which also
@@ -247,7 +264,9 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // applied in the sprite's own axes with no rotation here. Translating the canvas, rather
         // than moving boundingRect, keeps the cached paint valid while an offset glides.
         (float X, float Y) offset = AnimationLogic.GetRenderOffset(0);
-        if (offset.X == 0 && offset.Y == 0)
+        bool hasOffset = offset.X != 0 || offset.Y != 0;
+        bool canFlipDiagonal = FlipDiagonal && boundingRect.Width > 0 && boundingRect.Height > 0;
+        if (!hasOffset && !canFlipDiagonal)
         {
             DrawBoundAtOrigin(boundingRect, canvas, absoluteRotation);
             return;
@@ -255,9 +274,34 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
         using (new SKAutoCanvasRestore(canvas, true))
         {
-            canvas.Translate(offset.X, offset.Y);
+            if (hasOffset)
+            {
+                canvas.Translate(offset.X, offset.Y);
+            }
+
+            if (canFlipDiagonal)
+            {
+                canvas.Concat(GetDiagonalFlipMatrix(boundingRect));
+            }
+
             DrawBoundAtOrigin(boundingRect, canvas, absoluteRotation);
         }
+    }
+
+    /// <summary>
+    /// A matrix mapping <paramref name="boundingRect"/> onto itself with its x and y axes swapped, so
+    /// whatever is drawn into the rectangle comes out transposed across its main diagonal.
+    /// </summary>
+    internal static SKMatrix GetDiagonalFlipMatrix(SKRect boundingRect)
+    {
+        float widthOverHeight = boundingRect.Width / boundingRect.Height;
+        float heightOverWidth = boundingRect.Height / boundingRect.Width;
+
+        // x' = Left + (y - Top) * width / height, y' = Top + (x - Left) * height / width
+        return new SKMatrix(
+            scaleX: 0, skewX: widthOverHeight, transX: boundingRect.Left - boundingRect.Top * widthOverHeight,
+            skewY: heightOverWidth, scaleY: 0, transY: boundingRect.Top - boundingRect.Left * heightOverWidth,
+            persp0: 0, persp1: 0, persp2: 1);
     }
 
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
@@ -308,13 +352,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             {
                 using (new SKAutoCanvasRestore(canvas, true))
                 {
-                    var imageWidth = System.Math.Abs(sourceRectangle.Left - sourceRectangle.Right);
-                    var imageHeight = System.Math.Abs(sourceRectangle.Top - sourceRectangle.Bottom);
+                    // Mirror about the center of the rectangle being drawn into, so the flipped
+                    // sprite stays inside its own bounds.
                     canvas.Scale(
-                        isFlippedHorizontal ? -1 : 1, 
-                        isFlippedVertical ? -1 : 1, 
-                        isFlippedHorizontal ? 0 : 0, 
-                        isFlippedVertical ? imageHeight/2f : 0);
+                        isFlippedHorizontal ? -1 : 1,
+                        isFlippedVertical ? -1 : 1,
+                        boundingRect.MidX,
+                        boundingRect.MidY);
 
                     var left = Math.Min(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
                     var right = Math.Max(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
