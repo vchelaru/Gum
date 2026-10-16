@@ -1,5 +1,6 @@
 #nullable enable
 using Gum.Managers;
+using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using ToolsUtilities;
@@ -47,6 +48,12 @@ public sealed partial class GumContext
 
     // This service's project lookup. Null for the context that adopts the process-wide ObjectFinder.
     internal ObjectFinder? ObjectFinder { get; set; }
+
+    // This service's value of ISystemManagers.Default and of the XNA-like SystemManagers.Default. Null until
+    // set; the adopting context uses the statics those properties always had instead.
+    internal ISystemManagers? Managers { get; set; }
+
+    internal object? ConcreteManagers { get; set; }
 
     // This service's FileManager.RelativeDirectory. Null until set, and unused by the adopting context,
     // which keeps using the FileManager static.

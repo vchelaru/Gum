@@ -735,7 +735,11 @@ public partial class GumService : IGumService
 
         _systemManagers = null;
 
-        _default = null;
+        // Only the default instance clears itself; another service's Uninitialize must not orphan it.
+        if (ReferenceEquals(_default, this))
+        {
+            _default = null;
+        }
     }
 
     #endregion

@@ -1,3 +1,4 @@
+using Gum;
 using Gum.Forms.Controls;
 using Gum.Threading;
 using Gum.Wireframe;
@@ -157,6 +158,31 @@ namespace RenderingLibrary
         /// concrete runtime's <c>GumService.Initialize</c> and cleared by
         /// <c>Uninitialize</c>. May be null before initialization.
         /// </summary>
-        public static IGumService? Default { get; set; }
+        public static IGumService? Default
+        {
+            get
+            {
+                GumContext? context = GumContext.Current;
+                if (context == null || context.AdoptsProcessStatics)
+                {
+                    return _processWideDefault;
+                }
+                return context.Service ?? _processWideDefault;
+            }
+            set
+            {
+                GumContext? context = GumContext.Current;
+                if (context == null || context.AdoptsProcessStatics)
+                {
+                    _processWideDefault = value;
+                }
+                else
+                {
+                    context.Service = value;
+                }
+            }
+        }
+
+        private static IGumService? _processWideDefault;
     }
 }
