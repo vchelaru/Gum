@@ -178,6 +178,14 @@ public class TextBox : TextBoxBase
     /// </summary>
     public TextBox() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new TextBox using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public TextBox(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     /// <summary>
     /// Creates a new TextBox instance using the specified visual.
     /// </summary>

@@ -71,6 +71,14 @@ public class Button : ButtonBase
 
     public Button() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new Button using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public Button(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     public Button(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

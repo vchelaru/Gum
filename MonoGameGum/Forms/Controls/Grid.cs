@@ -78,6 +78,16 @@ public class Grid :
         Visual.ChildrenLayout = global::Gum.Managers.ChildrenLayout.TopToBottomStack;
     }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new Grid. Its visual does not depend on a service, so this is the same as the
+    /// parameterless constructor; it exists so every control can be constructed the same way.
+    /// </summary>
+    public Grid(global::RenderingLibrary.IGumService service) : this()
+    {
+    }
+#endif
+
     /// <summary>
     /// Creates a new Grid using the specified visual.
     /// </summary>

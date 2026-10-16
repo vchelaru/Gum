@@ -133,6 +133,14 @@ public class PasswordBox : TextBoxBase
 
     public PasswordBox() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new PasswordBox using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public PasswordBox(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     public PasswordBox(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

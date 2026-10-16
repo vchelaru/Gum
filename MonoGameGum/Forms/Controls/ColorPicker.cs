@@ -115,6 +115,16 @@ public class ColorPicker : FrameworkElement
     {
     }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new ColorPicker using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public ColorPicker(global::RenderingLibrary.IGumService service) : base(service)
+    {
+    }
+#endif
+
     /// <summary>
     /// Creates a new ColorPicker using the provided visual.
     /// </summary>

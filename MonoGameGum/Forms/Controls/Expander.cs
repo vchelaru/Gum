@@ -84,6 +84,14 @@ public class Expander : FrameworkElement
 
     public Expander() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new Expander using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public Expander(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     public Expander(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

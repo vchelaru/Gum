@@ -279,6 +279,14 @@ public class ComboBox :
 
     public ComboBox() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new ComboBox using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public ComboBox(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     public ComboBox(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

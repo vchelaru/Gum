@@ -78,6 +78,14 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
     /// </summary>
     public Splitter() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new Splitter using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public Splitter(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     /// <summary>
     /// Creates a new Splitter using the specified visual.
     /// </summary>

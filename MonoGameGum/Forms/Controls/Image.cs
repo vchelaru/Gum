@@ -39,6 +39,23 @@ public class Image : Gum.Forms.Controls.FrameworkElement
         IsVisible = true;
     }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new Image whose sprite renderable comes from <paramref name="service"/>, without having
+    /// to make that service current first.
+    /// </summary>
+    public Image(global::RenderingLibrary.IGumService service) :
+        base(new Gum.Wireframe.InteractiveGue(service.CreateSpriteRenderable()))
+    {
+        Visual.Width = 100;
+        Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        Visual.Height = 100;
+        Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+
+        IsVisible = true;
+    }
+#endif
+
     // Resolved through IGumService so Image stays platform-agnostic — each runtime's
     // GumService returns its own Sprite type. GumService.Initialize must have run before
     // an Image is constructed; the InvalidOperationException replaces an obscure null-ref

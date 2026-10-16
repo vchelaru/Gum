@@ -20,5 +20,13 @@ public class UserControl :
 {
     public UserControl() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new UserControl using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public UserControl(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     public UserControl(InteractiveGue visual) : base(visual) { }
 }

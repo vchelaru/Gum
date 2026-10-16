@@ -389,6 +389,14 @@ public class ScrollViewer :
 
     public ScrollViewer() : base() { }
 
+#if !FRB
+    /// <summary>
+    /// Creates a new ScrollViewer using the default visual registered for <paramref name="service"/>, without
+    /// having to make that service current first. The service that was current is restored afterward.
+    /// </summary>
+    public ScrollViewer(global::RenderingLibrary.IGumService service) : base(service) { }
+#endif
+
     public ScrollViewer(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()
