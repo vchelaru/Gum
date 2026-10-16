@@ -74,10 +74,11 @@ public class StaticFacadeBenchmarks
             return;
         }
 
-        object first = Activator.CreateInstance(contextType)!;
-        object second = Activator.CreateInstance(contextType)!;
-        contextType.GetMethod("Register")!.Invoke(first, null);
-        contextType.GetMethod("Register")!.Invoke(second, null);
+        object first = Activator.CreateInstance(contextType, nonPublic: true)!;
+        object second = Activator.CreateInstance(contextType, nonPublic: true)!;
+        System.Reflection.BindingFlags any = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        contextType.GetMethod("Register", any)!.Invoke(first, null);
+        contextType.GetMethod("Register", any)!.Invoke(second, null);
         try
         {
             report.AppendLine("-- first (adopting) context live, no scope");
@@ -96,8 +97,8 @@ public class StaticFacadeBenchmarks
         }
         finally
         {
-            contextType.GetMethod("Release")!.Invoke(second, null);
-            contextType.GetMethod("Release")!.Invoke(first, null);
+            contextType.GetMethod("Release", any)!.Invoke(second, null);
+            contextType.GetMethod("Release", any)!.Invoke(first, null);
         }
     }
 

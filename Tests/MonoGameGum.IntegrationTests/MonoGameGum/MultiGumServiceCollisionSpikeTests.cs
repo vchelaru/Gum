@@ -472,8 +472,11 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         GraphicalUiElement detachedA = game.ProjectA!.Screens.First(s => s.Name == "BothScreen")
             .ToGraphicalUiElement(game.ServiceA.SystemManagers, addToManagers: false);
 
-        detachedA.EffectiveManagers.ShouldBeSameAs(game.ServiceA.SystemManagers,
-            "an element built for service A but not yet added anywhere has no record of A, so adding or changing it later falls back to the active statics");
+        // By design EffectiveManagers stays null until the element is attached: several controls read
+        // "EffectiveManagers != null" as "attached". The building service is remembered separately.
+        detachedA.EffectiveManagers.ShouldBeNull();
+        Gum.GumContext.OwnerOf(detachedA).ShouldBeSameAs(game.ServiceA.Context,
+            "an element built for service A but not yet added anywhere should still know A built it");
     }
 
     // The font is resolved again when a font property changes after construction. It is resolved

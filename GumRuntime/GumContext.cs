@@ -195,8 +195,16 @@ public sealed partial class GumContext
     /// </summary>
     public bool AdoptsProcessStatics { get; private set; }
 
+    /// <summary>
+    /// Contexts are created and made live by the runtime's service (<c>GumService.Initialize</c>), not by
+    /// user code.
+    /// </summary>
+    internal GumContext()
+    {
+    }
+
     /// <summary>Makes this context live. The first live context adopts the process statics.</summary>
-    public void Register()
+    internal void Register()
     {
         lock (_liveLock)
         {
@@ -212,7 +220,7 @@ public sealed partial class GumContext
     }
 
     /// <summary>Removes this context from the live set. Safe to call twice.</summary>
-    public void Release()
+    internal void Release()
     {
         lock (_liveLock)
         {
@@ -229,6 +237,14 @@ public sealed partial class GumContext
     /// Makes this the calling thread's current context until the returned scope is disposed, which
     /// restores the previous one. Use it with <c>using</c>.
     /// </summary>
+    /// <remarks>
+    /// <b>The scope is per thread, not per async flow.</b> The active context is thread-static, so it does
+    /// not follow work across an <c>await</c> that resumes on another thread, nor into <c>Task.Run</c>,
+    /// thread-pool callbacks or other threads: code there sees the first live service. Keep the work
+    /// inside a scope synchronous, or open a new scope after the await. (Using <c>AsyncLocal</c> instead is
+    /// an open owner decision; it would make scopes follow awaits but also leak into every task started
+    /// inside one.)
+    /// </remarks>
     public ActivationScope Activate() => new ActivationScope(this);
 
     /// <summary>
@@ -237,7 +253,10 @@ public sealed partial class GumContext
     /// </summary>
     public static ActivationScope Activate(GumContext? context) => new ActivationScope(context);
 
-    /// <summary>Restores the previously active context when disposed.</summary>
+    /// <summary>
+    /// Restores the previously active context when disposed. It must be disposed on the thread that
+    /// created it; see the threading remarks on <see cref="Activate()"/>.
+    /// </summary>
     public readonly struct ActivationScope : IDisposable
     {
         private readonly GumContext? _previous;

@@ -323,7 +323,8 @@ Use `Tests/MonoGameGum.IntegrationTests` (real `GraphicsDevice`, headless host `
 6. **Same device only in v1?** Recommendation: yes; document two devices as unsupported.
 7. **Ambient thread model:** thread-static with Home fallback (recommended) versus plain static (matches today's statics, but a background build under `Activate()` would stomp the main thread).
 8. **Where this doc lives.** Placed under `Direction/` (the repo's strategy/plan convention, listed in `Direction/README.md`), not under the tests folder.
-9. **ADR.** A decision this size likely wants an ADR once Q1-Q7 are settled (`Direction/decisions/`), superseding nothing; ADR-0006 is its closest relative.
+9. **`ThreadStatic` versus `AsyncLocal` for the active context (prototype, branch `6066-proto-context`).** The prototype keeps the active context `[ThreadStatic]`, as section 4.2 recommends. **An `Activate()` scope therefore does not survive an `await` that resumes on another thread, and does not flow into `Task.Run` or thread-pool callbacks; that code sees the first live service.** `GumContextTests.Activate_ShouldNotFlowToWorkRunOnAnotherThread` pins this. `AsyncLocal<GumContext?>` would make scopes follow awaits but would also carry the scope into every task started inside it, and it costs more per read on the facade hot paths. Undecided; the model was deliberately not changed.
+10. **ADR.** A decision this size likely wants an ADR once Q1-Q7 are settled (`Direction/decisions/`), superseding nothing; ADR-0006 is its closest relative.
 
 ---
 

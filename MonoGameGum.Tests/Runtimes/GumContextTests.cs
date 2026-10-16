@@ -10,6 +10,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ToolsUtilities;
 using Xunit;
 
@@ -109,6 +110,24 @@ public class GumContextTests : BaseTestClass
 
             GumContext.Current.ShouldBeSameAs(second);
         }
+    }
+
+    // Pins the current threading model: the active context is thread-static, so a scope does not follow
+    // work onto another thread (Task.Run, thread-pool continuations). AsyncLocal is an open owner decision.
+    [Fact]
+    public async Task Activate_ShouldNotFlowToWorkRunOnAnotherThread()
+    {
+        GumContext first = CreateLiveContext();
+        GumContext second = CreateLiveContext();
+
+        GumContext? seenOnAnotherThread;
+        using (second.Activate())
+        {
+            GumContext.Current.ShouldBeSameAs(second);
+            seenOnAnotherThread = await Task.Run(() => GumContext.Current);
+        }
+
+        seenOnAnotherThread.ShouldBeSameAs(first, "the pool thread never activated second, so it sees the first live context");
     }
 
     [Fact]

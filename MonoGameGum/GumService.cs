@@ -67,10 +67,18 @@ public partial class GumService : IGumService
     // ICursor/IInputReceiverKeyboard via FormsUtilities.SetCursor, and this forwarder returned null for
     // a non-Cursor before FormsUtilities.Cursor changed from 'Cursor?' to 'ICursor'. The '!' only
     // suppresses the nullable-return warning (runtime no-op) and does not reintroduce a throw.
+    // True when this service has no context while another service is live: the ambient state then belongs
+    // to that other service, so the per-service getters below answer as an uninitialized service would.
+    private bool HasNoStateOfItsOwnWhileOthersLive => _context == null && GumContext.Home != null;
+
     public Cursor Cursor
     {
         get
         {
+            if (HasNoStateOfItsOwnWhileOthersLive)
+            {
+                return null!;
+            }
             using GumContext.ActivationScope scope = Activate();
             return (FormsUtilities.Cursor as Cursor)!;
         }
@@ -89,6 +97,10 @@ public partial class GumService : IGumService
     {
         get
         {
+            if (HasNoStateOfItsOwnWhileOthersLive)
+            {
+                return null!;
+            }
             using GumContext.ActivationScope scope = Activate();
             return (FormsUtilities.Keyboard as Keyboard)!;
         }
@@ -106,6 +118,10 @@ public partial class GumService : IGumService
     {
         get
         {
+            if (HasNoStateOfItsOwnWhileOthersLive)
+            {
+                return Array.Empty<Gum.Input.GamePad>();
+            }
             using GumContext.ActivationScope scope = Activate();
             return Gum.Forms.FormsUtilities.Gamepads;
         }
@@ -289,6 +305,10 @@ public partial class GumService : IGumService
     {
         get
         {
+            if (HasNoStateOfItsOwnWhileOthersLive)
+            {
+                return null!;
+            }
             using GumContext.ActivationScope scope = Activate();
             return FrameworkElement.PopupRoot;
         }
@@ -299,6 +319,10 @@ public partial class GumService : IGumService
     {
         get
         {
+            if (HasNoStateOfItsOwnWhileOthersLive)
+            {
+                return null!;
+            }
             using GumContext.ActivationScope scope = Activate();
             return FrameworkElement.ModalRoot;
         }
@@ -682,6 +706,15 @@ public partial class GumService : IGumService
     public void Uninitialize()
     {
         GumContext? context = _context;
+        if (context == null && GumContext.Home != null)
+        {
+            // This service owns no context (never initialized, or already uninitialized) while another
+            // service is live. Everything it would reset is that other service's, so only its own
+            // instance state is touched.
+            UninitializeInstanceOnly();
+            return;
+        }
+
         try
         {
             UninitializeCore();
@@ -692,6 +725,18 @@ public partial class GumService : IGumService
             context?.Release();
             _context = null;
         }
+    }
+
+    private void UninitializeInstanceOnly()
+    {
+#if !IOS && !ANDROID
+        _hotReloadManager?.Stop();
+        _hotReloadManager = null;
+#endif
+        DeferredQueue.Clear();
+        _windowFit?.Reset();
+        IsInitialized = false;
+        _systemManagers = null;
     }
 
     private void UninitializeCore()

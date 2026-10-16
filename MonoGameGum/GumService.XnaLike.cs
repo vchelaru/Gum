@@ -86,7 +86,8 @@ public partial class GumService
     /// <inheritdoc/>
     IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
 
-    public ContentLoader? ContentLoader => LoaderManager.Of(_context).ContentLoader as ContentLoader;
+    public ContentLoader? ContentLoader =>
+        HasNoStateOfItsOwnWhileOthersLive ? null : LoaderManager.Of(_context).ContentLoader as ContentLoader;
 
     private Game? _game;
     public Game Game
@@ -177,6 +178,49 @@ public partial class GumService
         }
         IsInitialized = true;
 
+        try
+        {
+            return InitializeCore(game, graphicsDevice, gumProjectFile, systemManagers, defaultVisualsVersion);
+        }
+        catch
+        {
+            // Roll back so a failed Initialize (for example a missing .gumx) leaves no live context, no
+            // Game.Disposed handler and IsInitialized false, and Initialize can be called again.
+            if (_context != null)
+            {
+                try
+                {
+                    Uninitialize();
+                }
+                catch
+                {
+                    // Best effort; the original exception is the one that matters.
+                }
+            }
+            DetachGameDisposedHandler();
+            IsInitialized = false;
+            _game = null;
+            throw;
+        }
+    }
+
+    private EventHandler<EventArgs>? _gameDisposedHandler;
+
+    private void DetachGameDisposedHandler()
+    {
+        if (_game != null && _gameDisposedHandler != null)
+        {
+            _game.Disposed -= _gameDisposedHandler;
+        }
+        _gameDisposedHandler = null;
+    }
+
+    private GumProjectSave? InitializeCore(
+        Game? game, GraphicsDevice graphicsDevice,
+        string? gumProjectFile,
+        SystemManagers? systemManagers,
+        DefaultVisualsVersion defaultVisualsVersion)
+    {
         _game = game;
 
         // Optional packages register their runtime types into the process-wide base layer (this runs
@@ -195,7 +239,8 @@ public partial class GumService
         if (game != null)
         {
             GumContext liveContext = _context;
-            game.Disposed += (_, _) => liveContext.Release();
+            _gameDisposedHandler = (_, _) => liveContext.Release();
+            game.Disposed += _gameDisposedHandler;
         }
 
         this.SystemManagers = systemManagers ?? new SystemManagers();
@@ -454,6 +499,8 @@ public partial class GumService
 
         // Declared non-null but null! until Initialize sets it; teardown restores that state.
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
+
+        DetachGameDisposedHandler();
 
         // Folded from the end of the pre-split Uninitialize (was a trailing #if XNALIKE _game = null).
         // Nothing between this seam's call site and that point reads _game, so the move is inert.
