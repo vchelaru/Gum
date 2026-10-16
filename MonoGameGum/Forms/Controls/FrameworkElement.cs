@@ -769,9 +769,6 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             Visual = possibleVisual;
             Visual.FormsControlAsObject = this;
-#if !FRB
-            GumContext.StampIfMultipleLive(Visual);
-#endif
         }
     }
 

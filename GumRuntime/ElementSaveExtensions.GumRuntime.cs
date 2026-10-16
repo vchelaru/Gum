@@ -328,22 +328,13 @@ namespace GumRuntime
             ISystemManagers systemManagers,
             bool addToManagers, string? genericType = null)
         {
-            // Build under the service that owns these managers, so the element-type table and content
-            // cache are that service's, whichever service happens to be current on this thread (#6066).
-            GumContext? owner = systemManagers?.Context;
+            // With two or more services, set IGumService.Default to the service these managers belong to before
+            // calling this: the build resolves its registrations and project through the default.
             bool isOutermostBuild = _buildDepth == 0;
             _buildDepth++;
             try
             {
-                GraphicalUiElement built = ToGraphicalUiElementInContext(elementSave, systemManagers!, addToManagers, genericType, owner);
-
-                // An element that is built but not attached has no managers to find its service through, so
-                // remember which service built it (GumContext.OwnerOf) for property changes made later.
-                if (!addToManagers && isOutermostBuild && owner != null)
-                {
-                    GumContext.StampBuiltBy(built, owner);
-                }
-                return built;
+                return ToGraphicalUiElementCore(elementSave, systemManagers, addToManagers, genericType, isOutermostBuild);
             }
             finally
             {
@@ -355,11 +346,9 @@ namespace GumRuntime
         // all UI work runs on one thread.
         private static int _buildDepth;
 
-        private static GraphicalUiElement ToGraphicalUiElementInContext(ElementSave elementSave,
-            ISystemManagers systemManagers, bool addToManagers, string? genericType, GumContext? owner)
+        private static GraphicalUiElement ToGraphicalUiElementCore(ElementSave elementSave,
+            ISystemManagers systemManagers, bool addToManagers, string? genericType, bool isOutermostBuild)
         {
-            using GumContext.DefaultScope defaultScope = GumContext.EnterDefault(owner);
-
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
 
             toReturn.Name = elementSave.Name;
@@ -373,6 +362,12 @@ namespace GumRuntime
             if (addToManagers)
             {
                 toReturn.AddToManagers(systemManagers, null);
+            }
+            else if (isOutermostBuild && systemManagers?.Context is GumContext owner)
+            {
+                // Not attached, so there are no managers to find its service through later: remember it
+                // (GumContext.OwnerOf) for font and source-file changes made afterward.
+                GumContext.StampBuiltBy(toReturn, owner);
             }
 
             return toReturn;

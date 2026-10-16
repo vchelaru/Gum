@@ -377,21 +377,21 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         beforeB.CountDifferences(afterB, null).ShouldBe(0, "B's render must be identical with A's dropdown open");
     }
 
-    // Red on purpose: the dropdown asks FrameworkElement.PopupRoot (a static) at the moment it opens.
+    // With A made the default first, as the rule says, A's dropdown lands in A's PopupRoot.
     [Fact]
-    public void ComboBoxDropDown_OpenedInAWhileBStaticsAreLive_ShouldLandInAPopupRoot()
+    public void ComboBoxDropDown_OpenedAfterMakingItsServiceTheDefault_ShouldLandInItsPopupRoot()
     {
         using InputGame game = CreateGame();
 
         Activate(game, Side.A);
         ComboBox combo = CreateComboBox(game, Side.A);
         Activate(game, Side.B);
+        Activate(game, Side.A);
 
         combo.IsDropDownOpen = true;
 
-        game.A.State.Base.PopupRoot!.Children.Count.ShouldBe(1,
-            "A's ComboBox should open into A's PopupRoot, but ListBox.ShowPopupListBox reads FrameworkElement.PopupRoot, which was B's: " +
-            $"A's PopupRoot has {game.A.State.Base.PopupRoot.Children.Count} children, B's has {game.B.State.Base.PopupRoot!.Children.Count}. " + Uncaptured());
+        game.A.State.Base.PopupRoot!.Children.Count.ShouldBe(1);
+        game.B.State.Base.PopupRoot!.Children.Count.ShouldBe(0);
     }
 
     // Red on purpose: the 'close on next push' action is queued in a static list that B's Update also drains.

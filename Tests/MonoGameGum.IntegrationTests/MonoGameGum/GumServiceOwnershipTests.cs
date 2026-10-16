@@ -112,6 +112,38 @@ public class GumServiceOwnershipTests : BaseTestClass
         Should.Throw<InvalidOperationException>(() => game.ServiceA.Root.Children.Add(detachedForB));
     }
 
+    // A real code-generated component (Samples/GumFormsSample ButtonStandardRuntime, a ContainerRuntime), not a
+    // control built from a template: the owner stamp has to cover runtime types the framework did not create.
+    [Fact]
+    public void AddingARealGeneratedRuntimeBuiltUnderAnotherService_ShouldThrow()
+    {
+        using CollisionGame game = CreateGame();
+        game.InitializeA(WriteProject("A"));
+        game.InitializeB(WriteProject("B"));
+        IGumService.Default = game.ServiceB;
+        GumFormsSample.Components.ButtonStandardRuntime generated = new GumFormsSample.Components.ButtonStandardRuntime();
+        Button formsChild = new Button();
+        generated.Children.Add(formsChild.Visual);
+
+        InvalidOperationException exception = Should.Throw<InvalidOperationException>(
+            () => game.ServiceA.Root.Children.Add(generated));
+
+        exception.Message.ShouldContain(game.ServiceB.Context!.Describe());
+        exception.Message.ShouldContain(game.ServiceA.Context!.Describe());
+    }
+
+    [Fact]
+    public void AddingARealGeneratedRuntimeToTheServiceThatBuiltIt_ShouldNotThrow()
+    {
+        using CollisionGame game = CreateGame();
+        game.InitializeA(WriteProject("A"));
+        game.InitializeB(WriteProject("B"));
+        IGumService.Default = game.ServiceB;
+        GumFormsSample.Components.ButtonStandardRuntime generated = new GumFormsSample.Components.ButtonStandardRuntime();
+
+        Should.NotThrow(() => game.ServiceB.Root.Children.Add(generated));
+    }
+
     [Fact]
     public void ParentAssignment_ShouldThrowForTheWrongService_AsWellAsChildrenAdd()
     {

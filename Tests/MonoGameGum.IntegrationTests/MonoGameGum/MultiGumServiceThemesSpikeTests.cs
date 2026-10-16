@@ -403,6 +403,8 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     {
         string screenName = theme + "/DemoScreenGum";
         ScreenSave screenSave = project.Screens.First(item => item.Name == screenName);
+        // Building for a service means making it the default first; nothing switches implicitly.
+        global::RenderingLibrary.IGumService.Default = service;
         GraphicalUiElement screen = screenSave.ToGraphicalUiElement(service.SystemManagers, addToManagers: true);
         screen.X += offset.X;
         screen.Y += offset.Y;

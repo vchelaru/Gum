@@ -203,6 +203,8 @@ public class MultiGumServiceSpikeTests : BaseTestClass
     private static GraphicalUiElement BuildScreen(Gum.GumService service, GumProjectSave project, string screenName)
     {
         ScreenSave screenSave = project.Screens.First(item => item.Name == screenName);
+        // Building for a service means making it the default first; nothing switches implicitly.
+        global::RenderingLibrary.IGumService.Default = service;
         GraphicalUiElement screen = screenSave.ToGraphicalUiElement(service.SystemManagers, addToManagers: true);
         screen.UpdateLayout();
         return screen;

@@ -609,9 +609,6 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers)
     {
-        // Draw as the service these managers belong to (texture filter, content cache); the previous default comes back afterward.
-        using global::Gum.GumContext.DefaultScope defaultScope = global::Gum.GumContext.EnterDefault((managers ?? OwningManagers)?.Context);
-
         ClearPerformanceRecordingVariables();
 
         if (managers == null)
@@ -652,8 +649,6 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers, Layer layer)
     {
-        // Draw as the service these managers belong to (texture filter, content cache); the previous default comes back afterward.
-        using global::Gum.GumContext.DefaultScope defaultScope = global::Gum.GumContext.EnterDefault((managers ?? OwningManagers)?.Context);
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {
@@ -686,8 +681,6 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers, List<Layer> layers)
     {
-        // Draw as the service these managers belong to (texture filter, content cache); the previous default comes back afterward.
-        using global::Gum.GumContext.DefaultScope defaultScope = global::Gum.GumContext.EnterDefault((managers ?? OwningManagers)?.Context);
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {
