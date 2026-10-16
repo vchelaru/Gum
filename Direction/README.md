@@ -41,6 +41,10 @@ at most once.
 - **`multi-gum-service-audit.md`** — state audit and refined design for running several `GumService`
   instances in one process (#6066): inventory of process-wide state, activation-context design,
   milestones, test strategy, open decisions. Living until the epic's ADR is written.
+- **`multi-gum-service-ambient-state-scan.md`** — companion to the audit above: scan of shared state
+  that is not a Gum static (thread, process, third-party, events), ranked by whether two services
+  collide. Source for the unfixed items on #6066; written before #6077 merged, so check a row
+  against the code before acting on it.
 - **`treeview-wpf-port.md`** — design and progress record for the element tree view's WinForms → WPF
   port (#4228).
 - **`texture-edge-bleed.md`** — history and open problems of the load-time texture edge bleed
