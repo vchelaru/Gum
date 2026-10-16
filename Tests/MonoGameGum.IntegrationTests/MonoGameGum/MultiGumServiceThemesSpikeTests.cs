@@ -204,7 +204,8 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         using ThemedGame game = CreateGame();
 
         StaticSnapshot afterA = game.StateA;
-        StaticSnapshot now = StaticSnapshot.Capture();
+        // Initializing B made B the current service (the last one entered); look at A's view by activating A.
+        StaticSnapshot now = StaticSnapshot.Capture(game.ServiceA);
 
         List<string> changed = new List<string>();
         void Check(string name, object? before, object? after)
@@ -656,11 +657,11 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 
             ProjectA = ServiceA.Initialize(this, _pathA)!;
-            StateA = StaticSnapshot.Capture();
+            StateA = StaticSnapshot.Capture(ServiceA);
             if (_pathB != null)
             {
                 ProjectB = ServiceB.Initialize(this, _pathB)!;
-                StateB = StaticSnapshot.Capture();
+                StateB = StaticSnapshot.Capture(ServiceB);
             }
         }
 

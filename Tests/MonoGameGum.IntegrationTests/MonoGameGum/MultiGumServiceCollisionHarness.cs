@@ -54,9 +54,9 @@ internal sealed class CollisionSnapshot
     /// </summary>
     public static CollisionSnapshot Capture(Gum.GumService service)
     {
-        using (service.Activate())
+        service.Activate();
         {
-            return new CollisionSnapshot { Statics = StaticSnapshot.Capture(), _service = service };
+            return new CollisionSnapshot { Statics = StaticSnapshot.Capture(service), _service = service };
         }
     }
 
@@ -67,7 +67,7 @@ internal sealed class CollisionSnapshot
     /// </summary>
     public void Restore(bool includeElementTypeTable = false)
     {
-        using (_service.Activate())
+        _service.Activate();
         {
             Statics.Restore();
         }

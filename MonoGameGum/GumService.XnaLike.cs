@@ -224,7 +224,8 @@ public partial class GumService
         _game = game;
 
         // Optional packages register their runtime types into the process-wide base layer (this runs
-        // before this service's scope opens), where every service sees them.
+        // while no service is active), where every service sees them.
+        GumContext.ClearActive();
         RegisterRuntimeTypesThroughReflection();
 
         // Everything below runs in this service's scope, so the writes Initialize makes (registrations,
@@ -232,7 +233,7 @@ public partial class GumService
         // process-wide statics; later ones get their own state.
         _context = new GumContext();
         _context.Register();
-        using GumContext.ActivationScope scope = _context.Activate();
+        _context.Activate();
 
         // A service whose Game was disposed without Uninitialize is dead; stop counting it as live so
         // it cannot keep owning the process statics.
@@ -542,7 +543,7 @@ public partial class GumService
 
     public void Update(GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
-        using GumContext.ActivationScope scope = GumContext.Activate(_context);
+        GumContext.Activate(_context);
 
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 

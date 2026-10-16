@@ -46,7 +46,7 @@ public class GumServiceContextLifecycleTests : BaseTestClass
 
     private static GumProjectSave? ProjectOf(Gum.GumService service)
     {
-        using (service.Activate())
+        service.Activate();
         {
             return ObjectFinder.Self.GumProjectSave;
         }
@@ -173,7 +173,7 @@ public class GumServiceContextLifecycleTests : BaseTestClass
         ScreenSave screen = projectB.Screens.First(item => item.Name == "MainScreen");
 
         GraphicalUiElement detached;
-        using (game.ServiceB.Activate())
+        game.ServiceB.Activate();
         {
             detached = screen.ToGraphicalUiElement(game.ServiceB.SystemManagers, addToManagers: false);
         }

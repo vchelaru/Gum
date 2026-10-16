@@ -357,7 +357,7 @@ namespace GumRuntime
         private static GraphicalUiElement ToGraphicalUiElementInContext(ElementSave elementSave,
             ISystemManagers systemManagers, bool addToManagers, string? genericType, GumContext? owner)
         {
-            using GumContext.ActivationScope scope = GumContext.Activate(owner);
+            GumContext.Activate(owner);
 
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
 

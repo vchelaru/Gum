@@ -66,10 +66,16 @@ internal sealed class StaticSnapshot
     public Dictionary<Type, VisualTemplate> FormsTemplates { get; private set; } = new();
     public Dictionary<Type, Type> FormsComponents { get; private set; } = new();
 
-    public static StaticSnapshot Capture()
+    // The service this snapshot describes. Per-service statics are read and written with it current, because
+    // "current" is whichever service was entered last.
+    private Gum.GumService? _service;
+
+    public static StaticSnapshot Capture(Gum.GumService? service = null)
     {
+        service?.Activate();
         return new StaticSnapshot
         {
+            _service = service,
             Managers = SystemManagers.Default,
             InterfaceManagers = ISystemManagers.Default,
             Service = IGumService.Default,
@@ -102,6 +108,7 @@ internal sealed class StaticSnapshot
 
     public void Restore()
     {
+        _service?.Activate();
         SystemManagers.Default = Managers!;
         ISystemManagers.Default = InterfaceManagers!;
         IGumService.Default = Service;

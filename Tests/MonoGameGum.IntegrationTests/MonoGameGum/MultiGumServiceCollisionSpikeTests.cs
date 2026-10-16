@@ -298,9 +298,9 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         Texture2D textureA;
         Texture2D textureB;
         Texture2D textureAAgain;
-        using (game.ServiceA.Activate()) { textureA = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
-        using (game.ServiceB.Activate()) { textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
-        using (game.ServiceA.Activate()) { textureAAgain = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
+        game.ServiceA.Activate(); { textureA = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
+        game.ServiceB.Activate(); { textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
+        game.ServiceA.Activate(); { textureAAgain = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
 
         List<string> failures = new();
         if (ReferenceEquals(textureA, textureB)) { failures.Add("A and B got the same Texture2D instance for 'Tex.png'"); }
@@ -401,7 +401,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         // B is the active service for both draws (no restore at draw time).
         XnaColor[] pixels;
-        using (game.ServiceB.Activate())
+        game.ServiceB.Activate();
         {
             pixels = DrawBoth(game, restore: false);
         }
@@ -495,7 +495,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         // B is the active service; A's text switches to FontCache/Font32Bogus.fnt (A yellow, B green).
         XnaColor[] pixels;
-        using (game.ServiceB.Activate())
+        game.ServiceB.Activate();
         {
             GraphicalUiElement labelA = screenA.GetGraphicalUiElementByName("Label")!;
             labelA.SetProperty("FontSize", 32);
@@ -525,7 +525,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         detached.EffectiveManagers.ShouldBeNull("setup: the element is not attached to any managers");
 
         string fontFile;
-        using (game.ServiceB.Activate())
+        game.ServiceB.Activate();
         {
             GraphicalUiElement label = detached.GetGraphicalUiElementByName("Label")!;
             label.SetProperty("FontSize", 32);
@@ -549,7 +549,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         Build(game, false, "SpriteScreen");
 
         XnaColor[] pixels;
-        using (game.ServiceB.Activate())
+        game.ServiceB.Activate();
         {
             GraphicalUiElement picA = screenA.GetGraphicalUiElementByName("Pic")!;
             try
@@ -634,7 +634,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         // B's own resources: its loaded texture and font page, its default font, its invalid-texture.
         Texture2D textureB;
-        using (game.ServiceB.Activate())
+        game.ServiceB.Activate();
         {
             textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!;
         }
@@ -845,8 +845,8 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         TextureFilter underA;
         TextureFilter underB;
-        using (game.ServiceA.Activate()) { underA = RenderingLibrary.Graphics.Renderer.TextureFilter; }
-        using (game.ServiceB.Activate()) { underB = RenderingLibrary.Graphics.Renderer.TextureFilter; }
+        game.ServiceA.Activate(); { underA = RenderingLibrary.Graphics.Renderer.TextureFilter; }
+        game.ServiceB.Activate(); { underB = RenderingLibrary.Graphics.Renderer.TextureFilter; }
 
         List<string> failures = new();
         if (underA != TextureFilter.Linear) { failures.Add($"with A restored Renderer.TextureFilter is {underA}, A's project says Linear"); }

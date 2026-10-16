@@ -160,7 +160,9 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         // The snapshot captured right after A's Initialize is the reference; any static the second
         // Initialize changed is listed.
         StaticSnapshot afterA = game.StateA;
-        StaticSnapshot now = StaticSnapshot.Capture();
+        // Initializing B made B the current service (the last one entered). Rule 3 of the overwrite
+        // semantics: look at A's view by activating A first.
+        StaticSnapshot now = StaticSnapshot.Capture(game.ServiceA);
 
         List<string> changed = new List<string>();
         void Check(string name, object? before, object? after)
@@ -400,11 +402,11 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         {
             base.Initialize();
             ProjectA = ServiceA.Initialize(this, _pathA)!;
-            StateA = StaticSnapshot.Capture();
+            StateA = StaticSnapshot.Capture(ServiceA);
             if (_pathB != null)
             {
                 ProjectB = ServiceB.Initialize(this, _pathB)!;
-                StateB = StaticSnapshot.Capture();
+                StateB = StaticSnapshot.Capture(ServiceB);
             }
         }
 

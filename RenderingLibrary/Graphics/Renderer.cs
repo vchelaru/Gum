@@ -609,8 +609,8 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers)
     {
-        // Draw in the context of the service these managers belong to (texture filter, content cache).
-        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
+        // Draw as the service these managers belong to (texture filter, content cache); it stays current afterward.
+        global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
 
         ClearPerformanceRecordingVariables();
 
@@ -652,8 +652,8 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers, Layer layer)
     {
-        // Draw in the context of the service these managers belong to (texture filter, content cache).
-        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
+        // Draw as the service these managers belong to (texture filter, content cache); it stays current afterward.
+        global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {
@@ -686,8 +686,8 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers, List<Layer> layers)
     {
-        // Draw in the context of the service these managers belong to (texture filter, content cache).
-        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
+        // Draw as the service these managers belong to (texture filter, content cache); it stays current afterward.
+        global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {

@@ -21,8 +21,8 @@ namespace Gum;
 /// Later contexts get their own instances.
 /// </para>
 /// <para>
-/// Statics that became per-context read <see cref="Current"/>: the context last activated with
-/// <see cref="Activate()"/>, else the first live context (the "home" context), else none, in which case
+/// Statics that became per-context read <see cref="Current"/>: the context last activated or entered (see
+/// <see cref="Activate()"/> for the overwrite rules), else the first live context (the "home" context), else none, in which case
 /// they fall back to the old process-wide object. Code that runs no service (the Gum tool, FlatRedBall,
 /// most unit tests) never has a context and sees no change.
 /// </para>
@@ -119,12 +119,12 @@ public sealed partial class GumContext
     }
 
     /// <summary>
-    /// The context most recently activated, else the first live context, else null.
+    /// The context last activated or entered (and not released since), else the first live context, else null.
     /// </summary>
     public static GumContext? Current => _active ?? Home;
 
     /// <summary>
-    /// The context that went live first and is still live. Code that has no activation scope resolves
+    /// The context that went live first and is still live. Code that runs while nothing is active resolves
     /// to it, which is what keeps a lone service behaving like the old statics.
     /// </summary>
     public static GumContext? Home => _home;
@@ -181,8 +181,8 @@ public sealed partial class GumContext
     }
 
     /// <summary>
-    /// The context explicitly activated, ignoring the home fallback. Registrations
-    /// made outside any scope go to the process-wide base layer instead of a service.
+    /// The context last activated or entered, ignoring the home fallback. Registrations made while none is
+    /// active go to the process-wide base layer instead of a service.
     /// </summary>
     internal static GumContext? Active => _active;
 
@@ -229,60 +229,69 @@ public sealed partial class GumContext
                 _live.Remove(this);
                 IsLive = false;
                 _home = _live.Count > 0 ? _live[0] : null;
+                if (ReferenceEquals(_active, this))
+                {
+                    // Rule 1: a released context is never current; fall back to Home.
+                    _active = null;
+                }
             }
         }
     }
 
     /// <summary>
-    /// Makes this the current context until the returned scope is disposed, which restores the previous
-    /// one. Use it with <c>using</c>.
+    /// Makes this the current context. It stays current until something else is activated or entered, or
+    /// until this context is released. There is no scope and nothing is restored.
     /// </summary>
     /// <remarks>
-    /// <b>The active context is one plain static, shared by every thread.</b> All UI work for all services
-    /// is expected to run on one thread (the game's). Building or touching a service's UI from a
-    /// background thread is unsupported unless that work runs on the UI thread, and a scope opened on one
-    /// thread is visible to every other thread while it lasts. A scope does persist across an
-    /// <c>await</c> that resumes on the same synchronization context.
+    /// <para>
+    /// <b>Overwrite semantics.</b> "Current" is one plain static meaning the last service that was
+    /// activated or entered. Entering a service (<c>Initialize</c>, <c>Update</c>, <c>Draw</c>,
+    /// <c>Uninitialize</c>, building an element from its <c>SystemManagers</c>, drawing its renderer) sets
+    /// it and does not put the previous one back on exit. Outside any entry point, code therefore runs
+    /// against the last service entered, not the first.
+    /// </para>
+    /// <para>
+    /// Rules: (1) when the current context is released (its service is uninitialized or its game is
+    /// disposed), the pointer is cleared and <see cref="Current"/> falls back to <see cref="Home"/>;
+    /// (2) current means the last service activated or entered; (3) code running inside one service's
+    /// entry point (an event handler, a deferred action) that touches another service must call
+    /// <c>Activate()</c> for it, and again for the first service when it comes back.
+    /// </para>
+    /// <para>
+    /// All UI work for all services is expected to run on one thread. Building or touching a service's UI
+    /// from a background thread is unsupported unless that work runs on the UI thread.
+    /// </para>
     /// </remarks>
-    public ActivationScope Activate() => new ActivationScope(this);
+    public void Activate()
+    {
+        _active = this;
+    }
 
     /// <summary>
     /// Activates <paramref name="context"/>, or does nothing when it is null (an object that does not
-    /// belong to a service).
+    /// belong to a service). See <see cref="Activate()"/> for the overwrite semantics.
     /// </summary>
-    public static ActivationScope Activate(GumContext? context) => new ActivationScope(context);
-
-    /// <summary>
-    /// Restores the previously active context when disposed. Scopes must be disposed in reverse order of
-    /// creation; see the threading remarks on <see cref="Activate()"/>.
-    /// </summary>
-    public readonly struct ActivationScope : IDisposable
+    public static void Activate(GumContext? context)
     {
-        private readonly GumContext? _previous;
-        private readonly bool _changed;
-
-        internal ActivationScope(GumContext? context)
+        if (context != null)
         {
-            if (context == null)
-            {
-                _previous = null;
-                _changed = false;
-            }
-            else
-            {
-                _previous = _active;
-                _changed = true;
-                _active = context;
-            }
+            _active = context;
         }
+    }
 
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            if (_changed)
-            {
-                _active = _previous;
-            }
-        }
+    // Used where a read must look through another service's state and then leave "current" alone, such as a
+    // service's property getters. Returns what was active so the caller can put it back.
+    internal static GumContext? ReplaceActive(GumContext? context)
+    {
+        GumContext? previous = _active;
+        _active = context;
+        return previous;
+    }
+
+    // Writes made with no active context go to the process-wide registration layer; an entry point that
+    // registers shared types (module initializers, the reflection hooks) clears the pointer first.
+    internal static void ClearActive()
+    {
+        _active = null;
     }
 }

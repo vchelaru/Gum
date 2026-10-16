@@ -58,11 +58,11 @@ internal sealed class InputStaticSnapshot
     /// </summary>
     public static InputStaticSnapshot Capture(Gum.GumService service)
     {
-        using var scope = service.Activate();
+        service.Activate();
         InputStaticSnapshot snapshot = new InputStaticSnapshot
         {
             _service = service,
-            Base = StaticSnapshot.Capture(),
+            Base = StaticSnapshot.Capture(service),
             LastVisualPushed = InteractiveGue.LastVisualPushed,
             ResolvePopupRoots = GraphicalUiElement.ResolvePopupRoots,
             AdditionalPopupRootPairs = new List<(InteractiveGue, InteractiveGue)>(FrameworkElement.AdditionalPopupRootPairs),
@@ -87,7 +87,7 @@ internal sealed class InputStaticSnapshot
 
     public void Restore(bool restoreInputReceiver = false)
     {
-        using var scope = _service.Activate();
+        _service.Activate();
         Base.Restore();
 
         InteractiveGue.LastVisualPushed = LastVisualPushed;

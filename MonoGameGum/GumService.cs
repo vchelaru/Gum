@@ -79,8 +79,15 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            using GumContext.ActivationScope scope = Activate();
-            return (FormsUtilities.Cursor as Cursor)!;
+            GumContext? previous = GumContext.ReplaceActive(_context);
+            try
+            {
+                return (FormsUtilities.Cursor as Cursor)!;
+            }
+            finally
+            {
+                GumContext.ReplaceActive(previous);
+            }
         }
     }
 
@@ -101,8 +108,15 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            using GumContext.ActivationScope scope = Activate();
-            return (FormsUtilities.Keyboard as Keyboard)!;
+            GumContext? previous = GumContext.ReplaceActive(_context);
+            try
+            {
+                return (FormsUtilities.Keyboard as Keyboard)!;
+            }
+            finally
+            {
+                GumContext.ReplaceActive(previous);
+            }
         }
     }
 
@@ -122,8 +136,15 @@ public partial class GumService : IGumService
             {
                 return Array.Empty<Gum.Input.GamePad>();
             }
-            using GumContext.ActivationScope scope = Activate();
-            return Gum.Forms.FormsUtilities.Gamepads;
+            GumContext? previous = GumContext.ReplaceActive(_context);
+            try
+            {
+                return Gum.Forms.FormsUtilities.Gamepads;
+            }
+            finally
+            {
+                GumContext.ReplaceActive(previous);
+            }
         }
     }
 
@@ -148,13 +169,15 @@ public partial class GumService : IGumService
     public GumContext? Context => _context;
 
     /// <summary>
-    /// Makes this service the current one on the calling thread until the returned scope is disposed.
-    /// Code that builds or loads UI for a service other than the first one initialized wraps it in
-    /// <c>using (service.Activate()) { ... }</c>. <c>Initialize</c>, <c>Update</c>, <c>Draw</c>,
-    /// <see cref="Uninitialize"/> and building an element with this service's
-    /// <see cref="SystemManagers"/> already do so.
+    /// Makes this service the current one. It stays current until another service is activated or entered,
+    /// or until this service is uninitialized (then the first live service is current again). There is no
+    /// scope to dispose and nothing is restored. <c>Initialize</c>, <c>Update</c>, <c>Draw</c>,
+    /// <see cref="Uninitialize"/> and building an element with this service's <see cref="SystemManagers"/>
+    /// already activate it. Code that runs inside one service's entry point and touches another service
+    /// must call this for the other, and again for the first when it returns to it. See
+    /// <see cref="GumContext.Activate()"/> for the rules.
     /// </summary>
-    public GumContext.ActivationScope Activate() => GumContext.Activate(_context);
+    public void Activate() => GumContext.Activate(_context);
 
     /// <inheritdoc/>
     public INativeTextInput? NativeTextInput { get; private set; }
@@ -309,8 +332,15 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            using GumContext.ActivationScope scope = Activate();
-            return FrameworkElement.PopupRoot;
+            GumContext? previous = GumContext.ReplaceActive(_context);
+            try
+            {
+                return FrameworkElement.PopupRoot;
+            }
+            finally
+            {
+                GumContext.ReplaceActive(previous);
+            }
         }
     }
 
@@ -323,8 +353,15 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            using GumContext.ActivationScope scope = Activate();
-            return FrameworkElement.ModalRoot;
+            GumContext? previous = GumContext.ReplaceActive(_context);
+            try
+            {
+                return FrameworkElement.ModalRoot;
+            }
+            finally
+            {
+                GumContext.ReplaceActive(previous);
+            }
         }
     }
 
@@ -743,7 +780,7 @@ public partial class GumService : IGumService
     {
         // Runs in this service's scope so per-service state (content cache, registrations) is the
         // one released. Shared state is torn down only when no other service is still live.
-        using GumContext.ActivationScope scope = GumContext.Activate(_context);
+        GumContext.Activate(_context);
         bool isLastService = !GumContext.HasLiveContextOtherThan(_context);
 
 #if !IOS && !ANDROID
@@ -874,7 +911,7 @@ public partial class GumService : IGumService
     public void Draw()
     {
         // This service's own managers, not whichever service initialized last.
-        using GumContext.ActivationScope scope = GumContext.Activate(_context);
+        GumContext.Activate(_context);
         (_systemManagers ?? SystemManagers.Default).Draw();
     }
 
