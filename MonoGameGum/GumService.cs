@@ -316,6 +316,24 @@ public partial class GumService : IGumService
 
     private readonly LanguageChangeSubscription _languageChangeSubscription;
 
+    // The subscription lives on process-wide statics (the LocalizationServiceChanged event and the
+    // localization service itself), so it must be dropped when this service is uninitialized or every
+    // service ever created stays alive, and re-translates the shared popup roots on each language change.
+    // Idempotent: constructor, Initialize and InitializeForTesting each call it.
+    private void SubscribeToLanguageChanges()
+    {
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged -= _languageChangeSubscription.Track;
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
+        // Pick up any LocalizationService that was assigned before this call.
+        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
+    }
+
+    private void UnsubscribeFromLanguageChanges()
+    {
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged -= _languageChangeSubscription.Track;
+        _languageChangeSubscription.Track(null, null);
+    }
+
     /// <summary>
     /// Re-applies all styles on the specified element and its children. Call after
     /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>
@@ -446,9 +464,7 @@ public partial class GumService : IGumService
         Root.HasEvents = false;
 
         _languageChangeSubscription = new LanguageChangeSubscription(RefreshLocalization);
-        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
-        // Pick up any LocalizationService that was assigned before this GumService was constructed.
-        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
+        SubscribeToLanguageChanges();
 
         GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
         {
@@ -480,6 +496,7 @@ public partial class GumService : IGumService
     /// </summary>
     public void InitializeForTesting()
     {
+        SubscribeToLanguageChanges();
         if (!IsInitialized)
         {
             IsInitialized = true;
@@ -524,6 +541,8 @@ public partial class GumService : IGumService
     // InitializeInternal in GumService.XnaLike.cs / GumService.Raylib.cs (issue #3608).
     private GumProjectSave? FinishInitialize(string? gumProjectFile)
     {
+        SubscribeToLanguageChanges();
+
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
 
@@ -733,6 +752,8 @@ public partial class GumService : IGumService
         IsInitialized = false;
 
         _systemManagers = null;
+
+        UnsubscribeFromLanguageChanges();
 
         if (ReferenceEquals(_default, this))
         {
