@@ -61,6 +61,11 @@ public partial class GumService : IGumService
     }
     #endregion
 
+    // True when this service's input state lives in the process-wide statics: it is the first service, or no
+    // service is live at all. A later service keeps its own in its context, and an uninitialized service
+    // beside a live one has none.
+    private bool UsesProcessStatics => _context?.AdoptsProcessStatics ?? !GumContext.HasLiveContextOtherThan(null);
+
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
     /// </summary>
@@ -73,29 +78,7 @@ public partial class GumService : IGumService
     // ICursor/IInputReceiverKeyboard via FormsUtilities.SetCursor, and this forwarder returned null for
     // a non-Cursor before FormsUtilities.Cursor changed from 'Cursor?' to 'ICursor'. The '!' only
     // suppresses the nullable-return warning (runtime no-op) and does not reintroduce a throw.
-    // True when this service has no context while another service is live: the ambient state then belongs
-    // to that other service, so the per-service getters below answer as an uninitialized service would.
-    private bool HasNoStateOfItsOwnWhileOthersLive => _context == null && GumContext.HasLiveContextOtherThan(null);
-
-    // Reads a per-service static as this service, then puts the previous default back (a read must not
-    // switch the current service).
-    private T ReadAsThisService<T>(Func<T> read)
-    {
-        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
-        return read();
-    }
-
-    public Cursor Cursor
-    {
-        get
-        {
-            if (HasNoStateOfItsOwnWhileOthersLive)
-            {
-                return null!;
-            }
-            return ReadAsThisService(() => (FormsUtilities.Cursor as Cursor)!);
-        }
-    }
+    public Cursor Cursor => ((UsesProcessStatics ? FrameworkElement._mainCursor : _context?.MainCursor) as Cursor)!;
 
     /// <summary>
     /// Gets the default keyboard.
@@ -106,17 +89,7 @@ public partial class GumService : IGumService
     /// whichever keyboard is active. This property switches to <see cref="IInputReceiverKeyboard"/> in a later
     /// breaking release (#5028).
     /// </remarks>
-    public Keyboard Keyboard
-    {
-        get
-        {
-            if (HasNoStateOfItsOwnWhileOthersLive)
-            {
-                return null!;
-            }
-            return ReadAsThisService(() => (FormsUtilities.Keyboard as Keyboard)!);
-        }
-    }
+    public Keyboard Keyboard => ((UsesProcessStatics ? FrameworkElement._mainKeyboard : _context?.MainKeyboard) as Keyboard)!;
 
     /// <summary>
     /// Gets the service used to provide localized strings and resources for the application.
@@ -126,17 +99,8 @@ public partial class GumService : IGumService
     /// <summary>
     /// Gets the collection of connected gamepads available to the application.
     /// </summary>
-    public Gum.Input.GamePad[] Gamepads
-    {
-        get
-        {
-            if (HasNoStateOfItsOwnWhileOthersLive)
-            {
-                return Array.Empty<Gum.Input.GamePad>();
-            }
-            return ReadAsThisService(() => Gum.Forms.FormsUtilities.Gamepads);
-        }
-    }
+    public Gum.Input.GamePad[] Gamepads =>
+        (UsesProcessStatics ? Gum.Forms.FormsUtilities._gamepads : _context?.Gamepads) ?? Array.Empty<Gum.Input.GamePad>();
 
     public Renderer Renderer => this.SystemManagers.Renderer;
 
@@ -304,30 +268,10 @@ public partial class GumService : IGumService
         Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
     /// <inheritdoc/>
-    public InteractiveGue PopupRoot
-    {
-        get
-        {
-            if (HasNoStateOfItsOwnWhileOthersLive)
-            {
-                return null!;
-            }
-            return ReadAsThisService(() => FrameworkElement.PopupRoot);
-        }
-    }
+    public InteractiveGue PopupRoot => (UsesProcessStatics ? FrameworkElement._popupRoot : _context?.PopupRoot)!;
 
     /// <inheritdoc/>
-    public InteractiveGue ModalRoot
-    {
-        get
-        {
-            if (HasNoStateOfItsOwnWhileOthersLive)
-            {
-                return null!;
-            }
-            return ReadAsThisService(() => FrameworkElement.ModalRoot);
-        }
-    }
+    public InteractiveGue ModalRoot => (UsesProcessStatics ? FrameworkElement._modalRoot : _context?.ModalRoot)!;
 
     /// <summary>
     /// Exports the live UI tree under <see cref="Root"/> to a Gum project at <paramref name="filePath"/>,

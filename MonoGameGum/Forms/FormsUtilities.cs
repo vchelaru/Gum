@@ -107,7 +107,7 @@ public class FormsUtilities
     // same type. Each platform is fed by its own same-named GamePadDriver.Apply(GamePad, int,
     // double), resolved unqualified via the per-platform `using` block at the top of this file
     // -- see UpdateGamepads below (issue #3559).
-    static Gum.Input.GamePad[] _gamepads = new Gum.Input.GamePad[4];
+    internal static Gum.Input.GamePad[] _gamepads = new Gum.Input.GamePad[4];
 
     public static Gum.Input.GamePad[] Gamepads
     {

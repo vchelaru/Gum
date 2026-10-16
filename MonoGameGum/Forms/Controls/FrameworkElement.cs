@@ -126,7 +126,8 @@ public class FrameworkElement : INotifyPropertyChanged
 #else
     // The static members below are facades over the current GumContext (#6066): the context that adopted
     // the process statics uses the fields, every other service uses its own.
-    static ICursor _mainCursor = null!;
+    // The process-wide slots (the first service adopts them), internal so a service can read its own.
+    internal static ICursor _mainCursor = null!;
 
     public static ICursor MainCursor
     {
@@ -134,7 +135,7 @@ public class FrameworkElement : INotifyPropertyChanged
         set { GumContext? own = GumContext.Own; if (own != null) { own.MainCursor = value; } else { _mainCursor = value; } }
     }
 
-    static IInputReceiverKeyboard _mainKeyboard = null!;
+    internal static IInputReceiverKeyboard _mainKeyboard = null!;
 
     public static IInputReceiverKeyboard MainKeyboard
     {
@@ -173,7 +174,7 @@ public class FrameworkElement : INotifyPropertyChanged
         set { GumContext? own = GumContext.Own; if (own != null) { own.PopupRoot = value; } else { _popupRoot = value; } }
     }
 
-    static InteractiveGue _popupRoot = null!;
+    internal static InteractiveGue _popupRoot = null!;
 
     /// <summary>
     /// Container used to hold modal objects. If any object is added to this container, then all other
@@ -185,7 +186,7 @@ public class FrameworkElement : INotifyPropertyChanged
         set { GumContext? own = GumContext.Own; if (own != null) { own.ModalRoot = value; } else { _modalRoot = value; } }
     }
 
-    static InteractiveGue _modalRoot = null!;
+    internal static InteractiveGue _modalRoot = null!;
 
     /// <summary>
     /// Additional popup/modal root pairs, beyond the global <see cref="PopupRoot"/>/<see cref="ModalRoot"/>,
