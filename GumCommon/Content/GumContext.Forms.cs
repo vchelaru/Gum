@@ -39,4 +39,17 @@ public sealed partial class GumContext
     internal GamePad[] Gamepads { get; set; } = new GamePad[4];
 
     internal VisualTemplate? DefaultTooltipTemplate { get; set; }
+
+    // InteractiveGue: the focus slot, the last pushed visual and the "on the next push/click" queues.
+    internal IInputReceiver? CurrentInputReceiver { get; set; }
+
+    internal InteractiveGue? LastVisualPushed { get; set; }
+
+    internal List<Action> NextPushActions { get; } = new List<Action>();
+
+    internal List<Action> NextClickActions { get; } = new List<Action>();
+
+    internal List<Action> NextPushActionHoldingList { get; } = new List<Action>();
+
+    internal List<Action> NextClickActionHoldingList { get; } = new List<Action>();
 }

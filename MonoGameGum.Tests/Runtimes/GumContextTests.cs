@@ -433,6 +433,32 @@ public class GumContextTests : BaseTestClass
 
     #endregion
 
+    #region Owner of an element
+
+    [Fact]
+    public void OwnerOf_ShouldBeNull_WhenElementWasNotBuiltByAService()
+    {
+        GraphicalUiElement element = new GraphicalUiElement(new InvisibleRenderable());
+
+        GumContext.OwnerOf(element).ShouldBeNull();
+    }
+
+    [Fact]
+    public void OwnerOf_ShouldBeBuildingContext_ForStampedElementAndItsDescendants()
+    {
+        GumContext first = CreateLiveContext();
+        GraphicalUiElement root = new GraphicalUiElement(new InvisibleRenderable());
+        GraphicalUiElement child = new GraphicalUiElement(new InvisibleRenderable());
+        child.Parent = root;
+
+        GumContext.StampBuiltBy(root, first);
+
+        GumContext.OwnerOf(root).ShouldBeSameAs(first);
+        GumContext.OwnerOf(child).ShouldBeSameAs(first);
+    }
+
+    #endregion
+
     private sealed class TestDisposable : System.IDisposable
     {
         public bool IsDisposed { get; private set; }

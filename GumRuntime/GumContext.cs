@@ -3,6 +3,8 @@ using Gum.Managers;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Gum.Wireframe;
 using ToolsUtilities;
 
 namespace Gum;
@@ -92,6 +94,9 @@ public sealed partial class GumContext
 
     internal object? ConcreteManagers { get; set; }
 
+    // This service's Renderer.TextureFilter (a TextureFilter value); null until set.
+    internal int? TextureFilterSetting { get; set; }
+
     // This service's FileManager.RelativeDirectory. Null until set, and unused by the adopting context,
     // which keeps using the FileManager static.
     internal string? RelativeDirectory { get; set; }
@@ -141,6 +146,38 @@ public sealed partial class GumContext
             }
             return false;
         }
+    }
+
+    // Which service built an element that is not (yet) attached to any managers. Only the outermost element of
+    // a build is stamped; OwnerOf walks up to it.
+    private static readonly ConditionalWeakTable<GraphicalUiElement, GumContext> _builtBy =
+        new ConditionalWeakTable<GraphicalUiElement, GumContext>();
+
+    internal static void StampBuiltBy(GraphicalUiElement element, GumContext context)
+    {
+        _builtBy.AddOrUpdate(element, context);
+    }
+
+    /// <summary>
+    /// The context an element belongs to: that of the managers it is attached to, else that of the service
+    /// that built it (itself or an ancestor), else null.
+    /// </summary>
+    public static GumContext? OwnerOf(GraphicalUiElement element)
+    {
+        GumContext? attached = element.EffectiveManagers?.Context;
+        if (attached != null)
+        {
+            return attached;
+        }
+
+        for (GraphicalUiElement? current = element; current != null; current = current.EffectiveParentGue as GraphicalUiElement)
+        {
+            if (_builtBy.TryGetValue(current, out GumContext? builder))
+            {
+                return builder;
+            }
+        }
+        return null;
     }
 
     /// <summary>

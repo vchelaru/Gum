@@ -329,9 +329,18 @@ namespace GumRuntime
         {
             // Build under the service that owns these managers, so the element-type table and content
             // cache are that service's, whichever service happens to be current on this thread (#6066).
-            using GumContext.ActivationScope scope = GumContext.Activate(systemManagers?.Context);
+            GumContext? owner = systemManagers?.Context;
+            bool isOutermostBuild = GumContext.Active != owner;
+            using GumContext.ActivationScope scope = GumContext.Activate(owner);
 
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
+
+            // An element that is built but not attached has no managers to find its service through, so
+            // remember which service built it (GumContext.OwnerOf) for property changes made later.
+            if (!addToManagers && isOutermostBuild && owner != null)
+            {
+                GumContext.StampBuiltBy(toReturn, owner);
+            }
 
             toReturn.Name = elementSave.Name;
 

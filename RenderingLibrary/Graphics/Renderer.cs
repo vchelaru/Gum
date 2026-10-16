@@ -347,7 +347,32 @@ public class Renderer : IRenderer
     // I'm going to add a bool here to control it.
     public static bool ApplyCameraZoomOnWorldTranslation { get; set; } = false;
 
-    public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
+    private static TextureFilter _processWideTextureFilter = TextureFilter.Point;
+
+    /// <summary>
+    /// The sampling filter applied when drawing. Each service has its own, because it comes from the
+    /// project that service loaded.
+    /// </summary>
+    public static TextureFilter TextureFilter
+    {
+        get
+        {
+            global::Gum.GumContext? own = global::Gum.GumContext.Own;
+            return own?.TextureFilterSetting is int stored ? (TextureFilter)stored : _processWideTextureFilter;
+        }
+        set
+        {
+            global::Gum.GumContext? own = global::Gum.GumContext.Own;
+            if (own != null)
+            {
+                own.TextureFilterSetting = (int)value;
+            }
+            else
+            {
+                _processWideTextureFilter = value;
+            }
+        }
+    }
 
     /// <summary>
     /// When true (the default), textures loaded from file bleed their edge color into
@@ -584,6 +609,9 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers)
     {
+        // Draw in the context of the service these managers belong to (texture filter, content cache).
+        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
+
         ClearPerformanceRecordingVariables();
 
         if (managers == null)
@@ -624,6 +652,8 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers, Layer layer)
     {
+        // Draw in the context of the service these managers belong to (texture filter, content cache).
+        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {
@@ -656,6 +686,8 @@ public class Renderer : IRenderer
 
     public void Draw(SystemManagers managers, List<Layer> layers)
     {
+        // Draw in the context of the service these managers belong to (texture filter, content cache).
+        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate((managers ?? OwningManagers)?.Context);
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {

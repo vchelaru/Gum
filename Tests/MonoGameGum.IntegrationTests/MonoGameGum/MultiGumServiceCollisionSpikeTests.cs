@@ -507,6 +507,32 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
             $"A's text should load A's Font32Bogus (yellow); it has {yellow} yellow and {green} green pixels, so the font was resolved in B's folder");
     }
 
+    // An element built for A and never attached to managers has no EffectiveManagers, but the service that
+    // built it is remembered (GumContext.OwnerOf), so a font change made while B is active still resolves in A.
+    [Fact]
+    public void FontSizeChangedOnDetachedElementBuiltForA_WhileOtherServiceActive_ShouldResolveAgainstTheBuildingServicesProject()
+    {
+        using CollisionGame game = CreateGame();
+        WriteAssetProjects(game);
+        game.InitializeA(PathA);
+        game.InitializeB(PathB);
+
+        ScreenSave screenSave = game.ProjectA!.Screens.First(item => item.Name == "CacheFontScreen");
+        GraphicalUiElement detached = screenSave.ToGraphicalUiElement(game.ServiceA.SystemManagers, addToManagers: false);
+        detached.EffectiveManagers.ShouldBeNull("setup: the element is not attached to any managers");
+
+        string fontFile;
+        using (game.ServiceB.Activate())
+        {
+            GraphicalUiElement label = detached.GetGraphicalUiElementByName("Label")!;
+            label.SetProperty("FontSize", 32);
+            fontFile = ((RenderingLibrary.Graphics.Text)label.RenderableComponent).BitmapFont!.FontFile!;
+        }
+
+        string folderA = Path.GetDirectoryName(PathA)!.Replace(Path.DirectorySeparatorChar, '/');
+        fontFile.Replace(Path.DirectorySeparatorChar, '/').ShouldStartWith(folderA, Case.Insensitive, "the font should come from A's project folder, not B's");
+    }
+
     // Same for a Sprite whose SourceFile is reassigned after construction.
     [Fact]
     public void SpriteSourceFileChangedAfterConstruction_WhileOtherServiceActive_ShouldResolveAgainstTheElementsOwnProject()
@@ -814,10 +840,10 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         game.InitializeA(PathA);
         game.InitializeB(PathB);
 
-        game.StateA!.Restore();
-        TextureFilter underA = RenderingLibrary.Graphics.Renderer.TextureFilter;
-        game.StateB!.Restore();
-        TextureFilter underB = RenderingLibrary.Graphics.Renderer.TextureFilter;
+        TextureFilter underA;
+        TextureFilter underB;
+        using (game.ServiceA.Activate()) { underA = RenderingLibrary.Graphics.Renderer.TextureFilter; }
+        using (game.ServiceB.Activate()) { underB = RenderingLibrary.Graphics.Renderer.TextureFilter; }
 
         List<string> failures = new();
         if (underA != TextureFilter.Linear) { failures.Add($"with A restored Renderer.TextureFilter is {underA}, A's project says Linear"); }

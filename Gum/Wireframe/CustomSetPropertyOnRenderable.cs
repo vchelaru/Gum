@@ -2699,7 +2699,7 @@ public partial class CustomSetPropertyOnRenderable
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
         // Resolve the font against the service the element belongs to, not whichever is current (#6066).
-        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate(graphicalUiElement.EffectiveManagers?.Context);
+        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate(global::Gum.GumContext.OwnerOf(graphicalUiElement));
         UpdateToFontValuesInContext(text, graphicalUiElement);
     }
 
@@ -3228,7 +3228,7 @@ public partial class CustomSetPropertyOnRenderable
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string? value)
     {
         // Resolve the file against the service the element belongs to, not whichever is current (#6066).
-        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate(graphicalUiElement.EffectiveManagers?.Context);
+        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate(global::Gum.GumContext.OwnerOf(graphicalUiElement));
         return AssignSourceFileOnSpriteInContext(sprite, graphicalUiElement, value);
     }
 
