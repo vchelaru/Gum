@@ -1690,8 +1690,14 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
 #else
-        var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
-            ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
+        // The default roots are the ones of the service the parent belongs to, not whichever is current.
+        InteractiveGue popupRoot;
+        InteractiveGue modalRoot;
+        using (GumContext.Activate(listBoxParent.EffectiveManagers?.Context))
+        {
+            (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
+                ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
+        }
 
         GraphicalUiElement targetRoot;
         if (listBoxParent.GetTopParent() == modalRoot)

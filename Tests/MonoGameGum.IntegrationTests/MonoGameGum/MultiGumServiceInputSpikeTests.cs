@@ -501,11 +501,17 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         service.ConfirmButton.Click += (_, _) => service.ConfirmClicks++;
     }
 
-    /// <summary>Makes the side's statics live: the manual swap under test. Optionally swaps the focus slot too.</summary>
+    /// <summary>
+    /// Makes the side's service current: its GumContext stays activated on this thread until the next call, and
+    /// the statics that are still shared (focus slot, last pushed visual, key combos) are swapped by hand.
+    /// Optionally swaps the focus slot too.
+    /// </summary>
     private static void Activate(InputGame game, Side side, bool restoreInputReceiver = false)
     {
         game.Current?.State.SaveDynamic();
         InputService next = game.Get(side);
+        game.Scope?.Dispose();
+        game.Scope = next.Service.Activate();
         next.State.Restore(restoreInputReceiver);
         game.Current = next;
     }
@@ -724,6 +730,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         public InputService A { get; } = new InputService();
         public InputService B { get; } = new InputService();
         public InputService? Current { get; set; }
+        public Gum.GumContext.ActivationScope? Scope { get; set; }
         public double Seconds { get; set; }
 
         public InputService Get(Side side) => side == Side.A ? A : B;
@@ -757,10 +764,13 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         {
             service.Project = service.Service.Initialize(this, path)!;
 
-            // The statics are this service's right now. Install its scripted input, then capture.
-            FormsUtilities.SetCursor(service.Cursor);
-            FormsUtilities.SetKeyboard(service.Keyboard);
-            service.State = InputStaticSnapshot.Capture();
+            // Install the scripted input in this service's own scope, then capture.
+            using (service.Service.Activate())
+            {
+                FormsUtilities.SetCursor(service.Cursor);
+                FormsUtilities.SetKeyboard(service.Keyboard);
+            }
+            service.State = InputStaticSnapshot.Capture(service.Service);
         }
 
         protected override void Update(GameTime gameTime) { }
@@ -768,6 +778,9 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         protected override void Dispose(bool disposing)
         {
+            Scope?.Dispose();
+            Scope = null;
+
             // Drop shared input state first so no control gets a focus callback after teardown.
             try { InteractiveGue.CurrentInputReceiver = null; } catch { /* teardown after a red test */ }
             InteractiveGue.LastVisualPushed = null;

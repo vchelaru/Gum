@@ -435,14 +435,16 @@ public partial class GumService
 
             Text.Customizations.Clear();
             Text.ContextCustomizations.Clear();
-            Text.DefaultBitmapFont = null;
-            Text.DefaultFont = null;
+        }
 
-            if (Sprite.InvalidTexture != null)
-            {
-                Sprite.InvalidTexture.Dispose();
-                Sprite.InvalidTexture = null;
-            }
+        // The default fonts, the invalid-texture and the style belong to this service.
+        Text.DefaultBitmapFont = null;
+        Text.DefaultFont = null;
+
+        if (Sprite.InvalidTexture != null)
+        {
+            Sprite.InvalidTexture.Dispose();
+            Sprite.InvalidTexture = null;
         }
 
         if (_systemManagers != null)
@@ -451,10 +453,7 @@ public partial class GumService
         }
 
         // Declared non-null but null! until Initialize sets it; teardown restores that state.
-        if (isLastService)
-        {
-            Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
-        }
+        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
 
         // Folded from the end of the pre-split Uninitialize (was a trailing #if XNALIKE _game = null).
         // Nothing between this seam's call site and that point reads _game, so the move is inert.

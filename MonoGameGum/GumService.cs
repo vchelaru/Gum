@@ -67,7 +67,14 @@ public partial class GumService : IGumService
     // ICursor/IInputReceiverKeyboard via FormsUtilities.SetCursor, and this forwarder returned null for
     // a non-Cursor before FormsUtilities.Cursor changed from 'Cursor?' to 'ICursor'. The '!' only
     // suppresses the nullable-return warning (runtime no-op) and does not reintroduce a throw.
-    public Cursor Cursor => (FormsUtilities.Cursor as Cursor)!;
+    public Cursor Cursor
+    {
+        get
+        {
+            using GumContext.ActivationScope scope = Activate();
+            return (FormsUtilities.Cursor as Cursor)!;
+        }
+    }
 
     /// <summary>
     /// Gets the default keyboard.
@@ -78,7 +85,14 @@ public partial class GumService : IGumService
     /// whichever keyboard is active. This property switches to <see cref="IInputReceiverKeyboard"/> in a later
     /// breaking release (#5028).
     /// </remarks>
-    public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
+    public Keyboard Keyboard
+    {
+        get
+        {
+            using GumContext.ActivationScope scope = Activate();
+            return (FormsUtilities.Keyboard as Keyboard)!;
+        }
+    }
 
     /// <summary>
     /// Gets the service used to provide localized strings and resources for the application.
@@ -88,7 +102,14 @@ public partial class GumService : IGumService
     /// <summary>
     /// Gets the collection of connected gamepads available to the application.
     /// </summary>
-    public Gum.Input.GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
+    public Gum.Input.GamePad[] Gamepads
+    {
+        get
+        {
+            using GumContext.ActivationScope scope = Activate();
+            return Gum.Forms.FormsUtilities.Gamepads;
+        }
+    }
 
     public Renderer Renderer => this.SystemManagers.Renderer;
 
@@ -264,9 +285,24 @@ public partial class GumService : IGumService
         Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
     /// <inheritdoc/>
-    public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+    public InteractiveGue PopupRoot
+    {
+        get
+        {
+            using GumContext.ActivationScope scope = Activate();
+            return FrameworkElement.PopupRoot;
+        }
+    }
+
     /// <inheritdoc/>
-    public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
+    public InteractiveGue ModalRoot
+    {
+        get
+        {
+            using GumContext.ActivationScope scope = Activate();
+            return FrameworkElement.ModalRoot;
+        }
+    }
 
     /// <summary>
     /// Exports the live UI tree under <see cref="Root"/> to a Gum project at <paramref name="filePath"/>,
@@ -686,20 +722,11 @@ public partial class GumService : IGumService
 
         // Forms roots, Forms input registrations and templates, the project, and the content cache.
         // Shared with GumServiceSkiaBase.
-        if (isLastService)
-        {
-            GumServiceTeardown.ReleaseFormsAndContent();
-        }
-        else
-        {
-            GumServiceTeardown.ReleaseContent();
-        }
+        // Forms state, the project and the content cache are per service, so each service releases its own.
+        GumServiceTeardown.ReleaseFormsAndContent();
         CurrentProjectResolution = null;
 
-        if (isLastService)
-        {
-            FormsUtilities.Uninitialize();
-        }
+        FormsUtilities.Uninitialize();
 
         ElementSaveExtensions.ClearRegistrations();
 

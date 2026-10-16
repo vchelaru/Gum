@@ -32,6 +32,8 @@ internal sealed class InputStaticSnapshot
 
     public StaticSnapshot Base { get; private set; } = null!;
 
+    private Gum.GumService _service = null!;
+
     // Public-setter statics the input path uses that StaticSnapshot does not carry.
     public InteractiveGue? LastVisualPushed { get; private set; }
     public System.Func<GraphicalUiElement, (InteractiveGue popup, InteractiveGue modal)>? ResolvePopupRoots { get; private set; }
@@ -50,10 +52,16 @@ internal sealed class InputStaticSnapshot
     /// </summary>
     public IInputReceiver? InputReceiver { get; private set; }
 
-    public static InputStaticSnapshot Capture()
+    /// <summary>
+    /// Captures the statics as seen from <paramref name="service"/>: the ones that now live in its
+    /// GumContext (Forms roots, cursor, keyboard, templates, defaults) are read inside its scope.
+    /// </summary>
+    public static InputStaticSnapshot Capture(Gum.GumService service)
     {
+        using var scope = service.Activate();
         InputStaticSnapshot snapshot = new InputStaticSnapshot
         {
+            _service = service,
             Base = StaticSnapshot.Capture(),
             LastVisualPushed = InteractiveGue.LastVisualPushed,
             ResolvePopupRoots = GraphicalUiElement.ResolvePopupRoots,
@@ -79,6 +87,7 @@ internal sealed class InputStaticSnapshot
 
     public void Restore(bool restoreInputReceiver = false)
     {
+        using var scope = _service.Activate();
         Base.Restore();
 
         InteractiveGue.LastVisualPushed = LastVisualPushed;

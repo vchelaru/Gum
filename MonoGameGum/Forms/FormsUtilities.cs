@@ -55,7 +55,15 @@ public enum DefaultVisualsVersion
 
 public class FormsUtilities
 {
-    static ICursor? cursor;
+    // These statics are facades over the current GumContext (#6066): the context that adopted the process
+    // statics uses the fields, every other service uses its own.
+    static ICursor? _cursor;
+
+    static ICursor? cursor
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.FormsCursor : _cursor; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.FormsCursor = value; } else { _cursor = value; } }
+    }
 
     /// <summary>
     /// The cursor Forms reads each frame. Null before InitializeDefaults and after Uninitialize.
@@ -68,7 +76,13 @@ public class FormsUtilities
         FrameworkElement.MainCursor = cursor;
     }
 
-    static IInputReceiverKeyboard? keyboard;
+    static IInputReceiverKeyboard? _keyboard;
+
+    static IInputReceiverKeyboard? keyboard
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.FormsKeyboard : _keyboard; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.FormsKeyboard = value; } else { _keyboard = value; } }
+    }
 
     /// <summary>
     /// The keyboard Forms reads each frame. Null before InitializeDefaults and after Uninitialize.
@@ -111,7 +125,13 @@ public class FormsUtilities
     // same type. Each platform is fed by its own same-named GamePadDriver.Apply(GamePad, int,
     // double), resolved unqualified via the per-platform `using` block at the top of this file
     // -- see UpdateGamepads below (issue #3559).
-    public static Gum.Input.GamePad[] Gamepads { get; private set; } = new Gum.Input.GamePad[4];
+    static Gum.Input.GamePad[] _gamepads = new Gum.Input.GamePad[4];
+
+    public static Gum.Input.GamePad[] Gamepads
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.Gamepads : _gamepads; }
+        private set { GumContext? own = GumContext.Own; if (own != null) { own.Gamepads = value; } else { _gamepads = value; } }
+    }
 
 
     /// <summary>
@@ -581,7 +601,13 @@ public class FormsUtilities
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
     }
 
-    private static VisualTemplate? _defaultTooltipTemplate;
+    private static VisualTemplate? _processWideDefaultTooltipTemplate;
+
+    private static VisualTemplate? _defaultTooltipTemplate
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.DefaultTooltipTemplate : _processWideDefaultTooltipTemplate; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.DefaultTooltipTemplate = value; } else { _processWideDefaultTooltipTemplate = value; } }
+    }
 
     // Distinguishes a template this class registered for a project's Tooltip component from one
     // user code registered, so loading another project can replace it.

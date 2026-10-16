@@ -33,8 +33,8 @@ public class Sprite : SpriteBatchRenderableBase,
     static Texture2D? mInvalidTexture;
     public static Texture2D? InvalidTexture
     {
-        get { return mInvalidTexture; }
-        set {  mInvalidTexture = value; }
+        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.GetState<Texture2D>() : mInvalidTexture; }
+        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.SetState(value); } else { mInvalidTexture = value; } }
     }
 
     public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();

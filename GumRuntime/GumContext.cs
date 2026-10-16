@@ -49,6 +49,43 @@ public sealed partial class GumContext
     // This service's project lookup. Null for the context that adopts the process-wide ObjectFinder.
     internal ObjectFinder? ObjectFinder { get; set; }
 
+    private readonly Dictionary<Type, object> _state = new Dictionary<Type, object>();
+
+    /// <summary>
+    /// The current context when it keeps its own state, or null when the process-wide statics apply
+    /// (no context is live, or the current one is the one that adopted them).
+    /// </summary>
+    public static GumContext? Own
+    {
+        get
+        {
+            GumContext? context = Current;
+            return context != null && !context.AdoptsProcessStatics ? context : null;
+        }
+    }
+
+    /// <summary>
+    /// A per-service value keyed by its type, for state whose type lives in a runtime assembly this one
+    /// cannot reference (Styling, the default fonts). Null when unset.
+    /// </summary>
+    public T? GetState<T>() where T : class
+    {
+        return _state.TryGetValue(typeof(T), out object? value) ? (T)value : null;
+    }
+
+    /// <summary>Stores, or with null removes, the per-service value for <typeparamref name="T"/>.</summary>
+    public void SetState<T>(T? value) where T : class
+    {
+        if (value == null)
+        {
+            _state.Remove(typeof(T));
+        }
+        else
+        {
+            _state[typeof(T)] = value;
+        }
+    }
+
     // This service's value of ISystemManagers.Default and of the XNA-like SystemManagers.Default. Null until
     // set; the adopting context uses the statics those properties always had instead.
     internal ISystemManagers? Managers { get; set; }

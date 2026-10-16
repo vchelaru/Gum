@@ -124,19 +124,37 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
-    public static ICursor MainCursor { get; set; } = null!;
+    // The static members below are facades over the current GumContext (#6066): the context that adopted
+    // the process statics uses the fields, every other service uses its own.
+    static ICursor _mainCursor = null!;
 
-    public static IInputReceiverKeyboard MainKeyboard { get; set; } = null!;
+    public static ICursor MainCursor
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.MainCursor! : _mainCursor; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.MainCursor = value; } else { _mainCursor = value; } }
+    }
+
+    static IInputReceiverKeyboard _mainKeyboard = null!;
+
+    public static IInputReceiverKeyboard MainKeyboard
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.MainKeyboard! : _mainKeyboard; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.MainKeyboard = value; } else { _mainKeyboard = value; } }
+    }
 
 #if !FRB
     public Cursors? CustomCursor { get; set; }
 #endif
 
-    public static List<IGamePad> GamePadsForUiControl { get; private set; } = new List<IGamePad>();
+    static readonly List<IGamePad> _gamePadsForUiControl = new List<IGamePad>();
+
+    public static List<IGamePad> GamePadsForUiControl => GumContext.Own?.GamePadsForUiControl ?? _gamePadsForUiControl;
 
 #if !FRB
 
-    public static List<IInputReceiverKeyboard> KeyboardsForUiControl { get; private set; } = new ();
+    static readonly List<IInputReceiverKeyboard> _keyboardsForUiControl = new ();
+
+    public static List<IInputReceiverKeyboard> KeyboardsForUiControl => GumContext.Own?.KeyboardsForUiControl ?? _keyboardsForUiControl;
 
 #endif
 
@@ -149,13 +167,25 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <summary>
     /// Container used to hold popups such as the ListBox which appears when clicking on a combo box.
     /// </summary>
-    public static InteractiveGue PopupRoot { get; set; } = null!;
+    public static InteractiveGue PopupRoot
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.PopupRoot! : _popupRoot; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.PopupRoot = value; } else { _popupRoot = value; } }
+    }
+
+    static InteractiveGue _popupRoot = null!;
 
     /// <summary>
     /// Container used to hold modal objects. If any object is added to this container, then all other
     /// UI does not receive events.
     /// </summary>
-    public static InteractiveGue ModalRoot { get; set; } = null!;
+    public static InteractiveGue ModalRoot
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.ModalRoot! : _modalRoot; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.ModalRoot = value; } else { _modalRoot = value; } }
+    }
+
+    static InteractiveGue _modalRoot = null!;
 
     /// <summary>
     /// Additional popup/modal root pairs, beyond the global <see cref="PopupRoot"/>/<see cref="ModalRoot"/>,
@@ -168,7 +198,9 @@ public class FrameworkElement : INotifyPropertyChanged
     /// that requirement should not register the pair here, and should instead manage its root's z-order
     /// and sizing itself while still adding its content to the list of roots passed into Update.
     /// </summary>
-    public static List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> AdditionalPopupRootPairs { get; } = new();
+    public static List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> AdditionalPopupRootPairs => GumContext.Own?.AdditionalPopupRootPairs ?? _additionalPopupRootPairs;
+
+    static readonly List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> _additionalPopupRootPairs = new();
 
 #endif
 
@@ -643,7 +675,9 @@ public class FrameworkElement : INotifyPropertyChanged
     ///     typeof(ProjectName.GumRuntimes.LargeMenuButtonRuntime);
     /// </example>
     [Obsolete("Use DefaultFormsTemplates")]
-    public static Dictionary<Type, Type> DefaultFormsComponents { get; private set; } = new Dictionary<Type, Type>();
+    public static Dictionary<Type, Type> DefaultFormsComponents => GumContext.Own?.DefaultFormsComponents ?? _defaultFormsComponents;
+
+    static readonly Dictionary<Type, Type> _defaultFormsComponents = new Dictionary<Type, Type>();
 
     /// <summary>
     /// Contains the default association from a Forms type (such as Button) to the visual template used
@@ -651,7 +685,9 @@ public class FrameworkElement : INotifyPropertyChanged
     /// This may contain standard Gum types such as Gum.Forms.Controls, as well as derived types, such as
     /// forms types created from components in generated code.
     /// </summary>
-    public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates { get; private set; } = new Dictionary<Type, VisualTemplate>();
+    public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates => GumContext.Own?.DefaultFormsTemplates ?? _defaultFormsTemplates;
+
+    static readonly Dictionary<Type, VisualTemplate> _defaultFormsTemplates = new Dictionary<Type, VisualTemplate>();
 
     protected static InteractiveGue? GetGraphicalUiElementFor(FrameworkElement element)
     {
