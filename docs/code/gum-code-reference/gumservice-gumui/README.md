@@ -56,3 +56,11 @@ If the Gum project is located outside of the Content folder, it can be loaded us
     // Initialize
     GumUI.Initialize(this, "c:/Gum/GumProject.gumj");
     ```
+
+## More Than One GumService
+
+Most games use one GumService. If you create a second one with `new GumService()`, `IGumService.Default` (and `GumService.Default`) is the service that code runs as. The first service to call `Initialize` becomes the default and a second `Initialize` leaves it alone. `Update` and `Draw` make their own service the default for the length of the call, so event handlers see the service that raised them.
+
+Assign the default yourself before you build or change another service's elements from outside its `Update`, for example `IGumService.Default = editorService;`. Changing a font or a source file on an element finds its own service, so those do not need the assignment.
+
+All services share one content cache. `LoaderManager.Self.DisposeAndClear()` unloads the content for every service, and a service's `Uninitialize` only does this when it is the last one left. If you installed your own `SynchronizationContext`, see [Async Programming](../../async-programming.md) for how to keep `await` continuations on the right service.
