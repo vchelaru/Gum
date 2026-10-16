@@ -24,6 +24,14 @@ public class Button : ButtonBase
 
     GraphicalUiElement? textComponent;
 
+    /// <summary>
+    /// Set on the thumb of a Slider or ScrollBar. A drag handle keeps its Pushed state until the
+    /// primary button is released, even if the cursor is dragged off it.
+    /// </summary>
+    internal bool IsDragHandle { get; set; }
+
+    internal override bool KeepsPushedStateWhenCursorLeaves => IsDragHandle;
+
     global::RenderingLibrary.Graphics.IText? coreTextObject;
 
     /// <summary>

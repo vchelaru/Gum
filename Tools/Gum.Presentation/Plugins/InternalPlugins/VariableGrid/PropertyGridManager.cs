@@ -298,34 +298,40 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
 
         isInRefresh = true;
-
-        bool showVariableGrid = 
-            (_selectedState.SelectedElement != null ||
-            _selectedState.SelectedInstance != null) && 
-            _selectedState.CustomCurrentStateSave == null;
-        VariableViewModel.ShowVariableGrid = showVariableGrid;
-
-        //if (_selectedState.SelectedInstances.GetCount() > 1)
-        //{
-            // I don't know if we want to eventually show these
-            // but for now we'll hide the PropertyGrid:
-        //    mainControl.Visibility = System.Windows.Visibility.Hidden;
-        //}
-        //else
+        try
         {
-            //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
-            //mPropertyGrid.Refresh();
 
-            var element = _selectedState.SelectedElement;
-            var state = _selectedState.SelectedStateSave;
-            var instance = _selectedState.SelectedInstances.ToList();
-            var behaviorSave = _selectedState.SelectedBehavior;
-            var category = _selectedState.SelectedStateCategorySave;
+            bool showVariableGrid = 
+                (_selectedState.SelectedElement != null ||
+                _selectedState.SelectedInstance != null) && 
+                _selectedState.CustomCurrentStateSave == null;
+            VariableViewModel.ShowVariableGrid = showVariableGrid;
 
-            RefreshDataGrid(element, state, category, instance, behaviorSave, force);
+            //if (_selectedState.SelectedInstances.GetCount() > 1)
+            //{
+                // I don't know if we want to eventually show these
+                // but for now we'll hide the PropertyGrid:
+            //    mainControl.Visibility = System.Windows.Visibility.Hidden;
+            //}
+            //else
+            {
+                //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
+                //mPropertyGrid.Refresh();
+
+                var element = _selectedState.SelectedElement;
+                var state = _selectedState.SelectedStateSave;
+                var instance = _selectedState.SelectedInstances.ToList();
+                var behaviorSave = _selectedState.SelectedBehavior;
+                var category = _selectedState.SelectedStateCategorySave;
+
+                RefreshDataGrid(element, state, category, instance, behaviorSave, force);
+            }
+
         }
-
-        isInRefresh = false;
+        finally
+        {
+            isInRefresh = false;
+        }
     }
 
 

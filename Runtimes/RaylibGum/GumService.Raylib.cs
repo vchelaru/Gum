@@ -120,25 +120,35 @@ public partial class GumService
         }
         IsInitialized = true;
 
-        this.SystemManagers = systemManagers ?? new SystemManagers();
-        if (systemManagers == null)
+        try
         {
-            SystemManagers.Default = this.SystemManagers;
-            ISystemManagers.Default = this.SystemManagers;
+            this.SystemManagers = systemManagers ?? new SystemManagers();
+            // A service handed its own managers leaves an existing default alone, but with no default at
+            // all it adopts them: Cursor, ScrollViewer and others read SystemManagers.Default.
+            if (systemManagers == null || SystemManagers.Default == null)
+            {
+                SystemManagers.Default = this.SystemManagers;
+                ISystemManagers.Default = this.SystemManagers;
+            }
+
+            IGumService.Default = this;
+
+            // SystemManagers.Initialize must come first because it assigns the
+            // GraphicalUiElement.AddRenderableToManagers delegate. InitializeDefaults
+            // creates PopupRoot/ModalRoot and calls AddToManagers on them — that call
+            // silently no-ops if the delegate is still null, so the roots would never
+            // be added to MainLayer.Renderables and would not draw.
+            this.SystemManagers.Initialize();
+            FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
+                defaultVisualsVersion: defaultVisualsVersion);
+
+            return FinishInitialize(gumProjectFile);
         }
-
-        IGumService.Default = this;
-
-        // SystemManagers.Initialize must come first because it assigns the
-        // GraphicalUiElement.AddRenderableToManagers delegate. InitializeDefaults
-        // creates PopupRoot/ModalRoot and calls AddToManagers on them — that call
-        // silently no-ops if the delegate is still null, so the roots would never
-        // be added to MainLayer.Renderables and would not draw.
-        this.SystemManagers.Initialize();
-        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
-            defaultVisualsVersion: defaultVisualsVersion);
-
-        return FinishInitialize(gumProjectFile);
+        catch
+        {
+            RollBackFailedInitialize();
+            throw;
+        }
     }
 
     private (int width, int height) GetWindowSize()

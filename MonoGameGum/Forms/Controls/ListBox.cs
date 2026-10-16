@@ -977,11 +977,15 @@ public class ListBox : ItemsControl, IInputReceiver
                     var item = Items[itemsOld];
 
                     _suppressCollectionChangedToBase = true;
-
-                    Items.RemoveAt(itemsOld);
-                    Items.Insert(itemsNew, item);
-
-                    _suppressCollectionChangedToBase = false;
+                    try
+                    {
+                        Items.RemoveAt(itemsOld);
+                        Items.Insert(itemsNew, item);
+                    }
+                    finally
+                    {
+                        _suppressCollectionChangedToBase = false;
+                    }
 
                     var isBound = this.PropertyRegistry.GetBindingExpression(nameof(Items)) != null;
                     if (Items is not INotifyCollectionChanged || !isBound)
@@ -1146,19 +1150,26 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     private void RebuildSelectedItemsCollectionFromRows()
     {
+        bool wasSuppressed = _suppressSelectionSync;
         _suppressSelectionSync = true;
-        selectedItemsCollection.Clear();
-        List<object?> seenValues = new List<object?>();
-        foreach (var row in _selectedRowsInternal)
+        try
         {
-            var value = row.DataObject;
-            if (!seenValues.Contains(value))
+            selectedItemsCollection.Clear();
+            List<object?> seenValues = new List<object?>();
+            foreach (var row in _selectedRowsInternal)
             {
-                seenValues.Add(value);
-                selectedItemsCollection.Add(value);
+                var value = row.DataObject;
+                if (!seenValues.Contains(value))
+                {
+                    seenValues.Add(value);
+                    selectedItemsCollection.Add(value);
+                }
             }
         }
-        _suppressSelectionSync = false;
+        finally
+        {
+            _suppressSelectionSync = wasSuppressed;
+        }
     }
 
     #endregion
@@ -1178,32 +1189,36 @@ public class ListBox : ItemsControl, IInputReceiver
         _suppressSelectionSync = true;
 
         var selectionChangedArgs = new SelectionChangedEventArgs();
-
-        for (int i = 0; i < ListBoxItemsInternal.Count; i++)
+        try
         {
-            var listBoxItem = ListBoxItemsInternal[i];
-            var item = listBoxItem.DataObject;
-
-            // Resolve selected-ness by row identity, not by data-object equality (issue #3509) -
-            // two rows can share a value without both showing as selected together.
-            bool shouldBeSelected = _selectedRowsInternal.Contains(listBoxItem);
-
-            if (listBoxItem.IsSelected != shouldBeSelected)
+            for (int i = 0; i < ListBoxItemsInternal.Count; i++)
             {
-                listBoxItem.IsSelected = shouldBeSelected;
+                var listBoxItem = ListBoxItemsInternal[i];
+                var item = listBoxItem.DataObject;
 
-                if (shouldBeSelected)
+                // Resolve selected-ness by row identity, not by data-object equality (issue #3509) -
+                // two rows can share a value without both showing as selected together.
+                bool shouldBeSelected = _selectedRowsInternal.Contains(listBoxItem);
+
+                if (listBoxItem.IsSelected != shouldBeSelected)
                 {
-                    selectionChangedArgs.AddedItems.Add(item);
-                }
-                else
-                {
-                    selectionChangedArgs.RemovedItems.Add(item);
+                    listBoxItem.IsSelected = shouldBeSelected;
+
+                    if (shouldBeSelected)
+                    {
+                        selectionChangedArgs.AddedItems.Add(item);
+                    }
+                    else
+                    {
+                        selectionChangedArgs.RemovedItems.Add(item);
+                    }
                 }
             }
         }
-
-        _suppressSelectionSync = false;
+        finally
+        {
+            _suppressSelectionSync = false;
+        }
 
         // Fire SelectionChanged event if there were changes
         if (raiseSelectionChanged &&
@@ -1226,89 +1241,93 @@ public class ListBox : ItemsControl, IInputReceiver
         _suppressSelectionSync = true;
 
         var selectionChangedArgs = new SelectionChangedEventArgs();
-
-        switch (e.Action)
+        try
         {
-            case NotifyCollectionChangedAction.Add:
-                if (e.NewItems != null)
-                {
-                    foreach (var item in e.NewItems)
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    if (e.NewItems != null)
                     {
-                        // A bare value can't disambiguate which of several duplicate-valued rows to
-                        // affect - resolve to a single (first-match) row, same inherent limitation as
-                        // SelectedObject (issue #3509).
-                        var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && !_selectedRowsInternal.Contains(listBoxItem))
+                        foreach (var item in e.NewItems)
                         {
-                            _selectedRowsInternal.Add(listBoxItem);
-                            listBoxItem.IsSelected = true;
-                            selectionChangedArgs.AddedItems.Add(item);
+                            // A bare value can't disambiguate which of several duplicate-valued rows to
+                            // affect - resolve to a single (first-match) row, same inherent limitation as
+                            // SelectedObject (issue #3509).
+                            var listBoxItem = GetListBoxItemForData(item);
+                            if (listBoxItem != null && !_selectedRowsInternal.Contains(listBoxItem))
+                            {
+                                _selectedRowsInternal.Add(listBoxItem);
+                                listBoxItem.IsSelected = true;
+                                selectionChangedArgs.AddedItems.Add(item);
+                            }
                         }
                     }
-                }
-                break;
+                    break;
 
-            case NotifyCollectionChangedAction.Remove:
-                if (e.OldItems != null)
-                {
-                    foreach (var item in e.OldItems)
+                case NotifyCollectionChangedAction.Remove:
+                    if (e.OldItems != null)
                     {
-                        var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && _selectedRowsInternal.Contains(listBoxItem))
+                        foreach (var item in e.OldItems)
                         {
-                            _selectedRowsInternal.Remove(listBoxItem);
+                            var listBoxItem = GetListBoxItemForData(item);
+                            if (listBoxItem != null && _selectedRowsInternal.Contains(listBoxItem))
+                            {
+                                _selectedRowsInternal.Remove(listBoxItem);
+                                listBoxItem.IsSelected = false;
+                                selectionChangedArgs.RemovedItems.Add(item);
+                            }
+                        }
+                    }
+                    break;
+
+                case NotifyCollectionChangedAction.Reset:
+                    // Deselect all items
+                    _selectedRowsInternal.Clear();
+                    for (int i = 0; i < ListBoxItemsInternal.Count; i++)
+                    {
+                        var listBoxItem = ListBoxItemsInternal[i];
+                        if (listBoxItem.IsSelected)
+                        {
                             listBoxItem.IsSelected = false;
-                            selectionChangedArgs.RemovedItems.Add(item);
+                            selectionChangedArgs.RemovedItems.Add(listBoxItem.DataObject);
                         }
                     }
-                }
-                break;
+                    break;
 
-            case NotifyCollectionChangedAction.Reset:
-                // Deselect all items
-                _selectedRowsInternal.Clear();
-                for (int i = 0; i < ListBoxItemsInternal.Count; i++)
-                {
-                    var listBoxItem = ListBoxItemsInternal[i];
-                    if (listBoxItem.IsSelected)
+                case NotifyCollectionChangedAction.Replace:
+                    if (e.OldItems != null)
                     {
-                        listBoxItem.IsSelected = false;
-                        selectionChangedArgs.RemovedItems.Add(listBoxItem.DataObject);
-                    }
-                }
-                break;
-
-            case NotifyCollectionChangedAction.Replace:
-                if (e.OldItems != null)
-                {
-                    foreach (var item in e.OldItems)
-                    {
-                        var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && _selectedRowsInternal.Contains(listBoxItem))
+                        foreach (var item in e.OldItems)
                         {
-                            _selectedRowsInternal.Remove(listBoxItem);
-                            listBoxItem.IsSelected = false;
-                            selectionChangedArgs.RemovedItems.Add(item);
+                            var listBoxItem = GetListBoxItemForData(item);
+                            if (listBoxItem != null && _selectedRowsInternal.Contains(listBoxItem))
+                            {
+                                _selectedRowsInternal.Remove(listBoxItem);
+                                listBoxItem.IsSelected = false;
+                                selectionChangedArgs.RemovedItems.Add(item);
+                            }
                         }
                     }
-                }
-                if (e.NewItems != null)
-                {
-                    foreach (var item in e.NewItems)
+                    if (e.NewItems != null)
                     {
-                        var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && !_selectedRowsInternal.Contains(listBoxItem))
+                        foreach (var item in e.NewItems)
                         {
-                            _selectedRowsInternal.Add(listBoxItem);
-                            listBoxItem.IsSelected = true;
-                            selectionChangedArgs.AddedItems.Add(item);
+                            var listBoxItem = GetListBoxItemForData(item);
+                            if (listBoxItem != null && !_selectedRowsInternal.Contains(listBoxItem))
+                            {
+                                _selectedRowsInternal.Add(listBoxItem);
+                                listBoxItem.IsSelected = true;
+                                selectionChangedArgs.AddedItems.Add(item);
+                            }
                         }
                     }
-                }
-                break;
+                    break;
+            }
         }
-
-        _suppressSelectionSync = false;
+        finally
+        {
+            _suppressSelectionSync = false;
+        }
 
         // Fire SelectionChanged event if there were changes
         if (selectionChangedArgs.AddedItems.Count > 0 || selectionChangedArgs.RemovedItems.Count > 0)
@@ -1357,9 +1376,16 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             // Clear all selections when Items is reset
             _selectedRowsInternal.Clear();
+            bool wasSuppressed = _suppressSelectionSync;
             _suppressSelectionSync = true;
-            selectedItemsCollection.Clear();
-            _suppressSelectionSync = false;
+            try
+            {
+                selectedItemsCollection.Clear();
+            }
+            finally
+            {
+                _suppressSelectionSync = wasSuppressed;
+            }
 
             PushValueToViewModel(nameof(SelectedObject));
             PushValueToViewModel(nameof(SelectedIndex));

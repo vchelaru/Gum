@@ -271,6 +271,7 @@ public abstract class RangeBase :
             }
             if (thumb != null)
             {
+                thumb.IsDragHandle = true;
                 thumb.Push += HandleThumbPush;
             }
         }

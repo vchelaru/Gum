@@ -53,7 +53,20 @@ public partial class GraphicalUiElement
             this.SuspendLayout();
         }
 
-        ApplyDock(dock);
+        try
+        {
+            ApplyDock(dock);
+        }
+        catch
+        {
+            // Lift the suspension without flushing: the element must not stay suspended, and a flush
+            // would run layout while the exception unwinds.
+            if (!wasSuspended)
+            {
+                mIsLayoutSuspended = false;
+            }
+            throw;
+        }
 
         if (!wasSuspended)
         {
@@ -318,6 +331,28 @@ public partial class GraphicalUiElement
             this.SuspendLayout();
         }
 
+        try
+        {
+            ApplyAnchor(anchor);
+        }
+        catch
+        {
+            // See Dock: lift the suspension without flushing.
+            if (!wasSuspended)
+            {
+                mIsLayoutSuspended = false;
+            }
+            throw;
+        }
+
+        if(!wasSuspended)
+        {
+            this.ResumeLayout();
+        }
+    }
+
+    private void ApplyAnchor(Anchor anchor)
+    {
         switch (anchor)
         {
             case Wireframe.Anchor.TopLeft:
@@ -458,11 +493,6 @@ public partial class GraphicalUiElement
                 break;
             default:
                 throw new NotImplementedException();
-        }
-
-        if(!wasSuspended)
-        {
-            this.ResumeLayout();
         }
     }
 

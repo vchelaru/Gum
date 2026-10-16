@@ -390,11 +390,20 @@ public class ComboBox :
         {
             GraphicalUiElement.IsAllLayoutSuspended = true;
         }
-        listBox.IsVisible = true;
+        try
+        {
+            listBox.IsVisible = true;
+        }
+        finally
+        {
+            if(!wasSuspenced)
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = false;
+            }
+        }
 
         if(!wasSuspenced)
         {
-            GraphicalUiElement.IsAllLayoutSuspended = false;
             listBox.Visual.UpdateLayout();
         }
 

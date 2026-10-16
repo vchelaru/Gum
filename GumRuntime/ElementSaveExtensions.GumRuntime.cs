@@ -1519,53 +1519,65 @@ namespace GumRuntime
                 GraphicalUiElement.IsAllLayoutSuspended = true;
             }
 
-            // We need to set categories and states first since those are used below;
-            toReturn.AddStatesAndCategoriesRecursivelyToGue(elementSave);
-
-            if (toReturn.RenderableComponent == null)
+            // The flag is thread-wide, so it must be cleared even when the build throws (a component
+            // constructor, a custom variable setter). Otherwise every later build on this thread
+            // skips its own layout flush and no layout is applied again (#6066).
+            try
             {
-                // This could have already been created by the type that is instantiated, so don't do this to double-create
-                toReturn.CreateGraphicalComponent(elementSave, systemManagers);
-            }
+                // We need to set categories and states first since those are used below;
+                toReturn.AddStatesAndCategoriesRecursivelyToGue(elementSave);
 
-            toReturn.AddExposedVariablesRecursively(elementSave);
-
-            toReturn.CreateChildrenRecursively(elementSave, systemManagers);
-
-
-            toReturn.Tag = elementSave;
-            toReturn.ElementSave = elementSave;
-
-            toReturn.SetInitialState();
-
-#if !FRB
-            if (ObjectFinder.Self.GumProjectSave?.ElementAnimations.Count > 0)
-            {
-                var elementAnimationsSave = ObjectFinder.Self.GumProjectSave.ElementAnimations.FirstOrDefault(item =>
-                    item.ElementName == elementSave.Name);
-                if (elementAnimationsSave != null)
+                if (toReturn.RenderableComponent == null)
                 {
-                    var animationRuntime = elementAnimationsSave.ToRuntime();
-                    toReturn.Animations = animationRuntime;
+                    // This could have already been created by the type that is instantiated, so don't do this to double-create
+                    toReturn.CreateGraphicalComponent(elementSave, systemManagers);
+                }
+
+                toReturn.AddExposedVariablesRecursively(elementSave);
+
+                toReturn.CreateChildrenRecursively(elementSave, systemManagers);
+
+
+                toReturn.Tag = elementSave;
+                toReturn.ElementSave = elementSave;
+
+                toReturn.SetInitialState();
+
+    #if !FRB
+                if (ObjectFinder.Self.GumProjectSave?.ElementAnimations.Count > 0)
+                {
+                    var elementAnimationsSave = ObjectFinder.Self.GumProjectSave.ElementAnimations.FirstOrDefault(item =>
+                        item.ElementName == elementSave.Name);
+                    if (elementAnimationsSave != null)
+                    {
+                        var animationRuntime = elementAnimationsSave.ToRuntime();
+                        toReturn.Animations = animationRuntime;
+                    }
+                }
+    #endif
+
+
+                    toReturn.AfterFullCreation();
+
+                // Forms controls (e.g. RadioButton, CheckBox) apply their default IsChecked visual
+                // inside AfterFullCreation, but a parent's SetInitialState can override that category
+                // state afterward. Notify the root and walk its subtree so Forms controls can
+                // re-assert their state. The root is included so a Forms-behavior component built
+                // directly (not as an instance in a parent) still gets its own FormsProperty
+                // defaults applied.
+                InitialStateAppliedNotifier?.Invoke(toReturn);
+                NotifyFormsControlsOfInitialStateApplied(toReturn);
+            }
+            finally
+            {
+                if (!wasSuspended)
+                {
+                    GraphicalUiElement.IsAllLayoutSuspended = false;
                 }
             }
-#endif
-
-
-                toReturn.AfterFullCreation();
-
-            // Forms controls (e.g. RadioButton, CheckBox) apply their default IsChecked visual
-            // inside AfterFullCreation, but a parent's SetInitialState can override that category
-            // state afterward. Notify the root and walk its subtree so Forms controls can
-            // re-assert their state. The root is included so a Forms-behavior component built
-            // directly (not as an instance in a parent) still gets its own FormsProperty
-            // defaults applied.
-            InitialStateAppliedNotifier?.Invoke(toReturn);
-            NotifyFormsControlsOfInitialStateApplied(toReturn);
 
             if (!wasSuspended)
             {
-                GraphicalUiElement.IsAllLayoutSuspended = false;
                 toReturn.UpdateFontRecursive();
                 toReturn.UpdateLayout();
             }

@@ -116,11 +116,17 @@ public static class FrameworkElementExt
         {
             GraphicalUiElement.IsAllLayoutSuspended = true;
         }
-        element.Visual.Parent = null;
-        element.Visual.RemoveFromManagers();
-        if (!wasSuspended)
+        try
         {
-            GraphicalUiElement.IsAllLayoutSuspended = false;
+            element.Visual.Parent = null;
+            element.Visual.RemoveFromManagers();
+        }
+        finally
+        {
+            if (!wasSuspended)
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = false;
+            }
         }
     }
 

@@ -964,6 +964,39 @@ public class ProjectManagerTests : BaseTestClass
         _fileSystemRevealService.Verify(r => r.RevealFile(It.IsAny<string>()), Times.Never);
     }
 
+    [Fact]
+    public async Task LoadProjectAsync_ShouldReleaseObjectFinderCache_WhenALoadTimeRepairPassThrows()
+    {
+        string tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string projectPath = Path.Combine(tempDirectory, "Project.gumx");
+            new GumProjectSave().Save(projectPath, saveElements: false);
+            _standardElementsManagerGumTool
+                .Setup(m => m.FixCustomTypeConverters(It.IsAny<GumProjectSave>()))
+                .Throws(new InvalidOperationException("repair failed"));
+
+            await Should.ThrowAsync<InvalidOperationException>(
+                () => _projectManager.LoadProjectAsync(new FilePath(projectPath)));
+
+            // ObjectFinder's cache is a snapshot taken on the first (ref-counted) enable, so a leaked
+            // enable keeps answering from it and misses anything added to the project afterward.
+            ComponentSave addedLater = new ComponentSave { Name = "AddedAfterTheFailedLoad" };
+            ObjectFinder.Self.GumProjectSave!.Components.Add(addedLater);
+            ObjectFinder.Self.GetComponent("AddedAfterTheFailedLoad").ShouldBeSameAs(addedLater);
+        }
+        finally
+        {
+            // Leave the ref-counted cache disabled even when the code under test leaked an enable.
+            ObjectFinder.Self.ForceResetCache();
+            ObjectFinder.Self.DisableCache();
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     // ProjectManager exposes no setter for its current project (it is assigned only by
     // CreateNewProject / LoadProject, which do heavy I/O and plugin work unsuitable for a
     // unit test), so the private field is set directly to drive the save-name flow.

@@ -638,8 +638,14 @@ public partial class GraphicalUiElement
                 if (!isInSizeChange)
                 {
                     isInSizeChange = true;
-                    SizeChanged?.Invoke(this, EventArgs.Empty);
-                    isInSizeChange = false;
+                    try
+                    {
+                        SizeChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                    finally
+                    {
+                        isInSizeChange = false;
+                    }
                 }
             }
 

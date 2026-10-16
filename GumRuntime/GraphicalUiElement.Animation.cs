@@ -187,23 +187,37 @@ public partial class GraphicalUiElement
         var isSuspended = this.IsLayoutSuspended;
         this.SuspendLayout();
 
-        // The AnimationChain (source file) could get set before the name desired name is set, so tolerate 
-        // if there's a missing source rectangle:
-        if (asSprite.SourceRectangle != null)
+        try
         {
-            this.TextureLeft = asSprite.SourceRectangle.Value.Left;
-            this.TextureWidth = asSprite.SourceRectangle.Value.Width;
+            // The AnimationChain (source file) could get set before the name desired name is set, so tolerate 
+            // if there's a missing source rectangle:
+            if (asSprite.SourceRectangle != null)
+            {
+                this.TextureLeft = asSprite.SourceRectangle.Value.Left;
+                this.TextureWidth = asSprite.SourceRectangle.Value.Width;
 
-            this.TextureTop = asSprite.SourceRectangle.Value.Top;
-            this.TextureHeight = asSprite.SourceRectangle.Value.Height;
+                this.TextureTop = asSprite.SourceRectangle.Value.Top;
+                this.TextureHeight = asSprite.SourceRectangle.Value.Height;
+            }
+
+            this.FlipHorizontal = asSprite.FlipHorizontal;
+
+            if (this.TextureAddress == TextureAddress.EntireTexture)
+            {
+                this.TextureAddress = TextureAddress.Custom; // If it's not custom, then the animation chain won't apply. I think we should force this.
+            }
+        }
+        catch
+        {
+            // Lift the suspension without flushing: the element must not stay suspended, and a flush
+            // would run layout while the exception unwinds.
+            if (isSuspended == false)
+            {
+                mIsLayoutSuspended = false;
+            }
+            throw;
         }
 
-        this.FlipHorizontal = asSprite.FlipHorizontal;
-
-        if (this.TextureAddress == TextureAddress.EntireTexture)
-        {
-            this.TextureAddress = TextureAddress.Custom; // If it's not custom, then the animation chain won't apply. I think we should force this.
-        }
         if (isSuspended == false)
         {
             this.ResumeLayout();

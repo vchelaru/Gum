@@ -297,7 +297,9 @@ public partial class GumService
 
         this.SystemManagers = systemManagers ?? new SystemManagers();
         this.SystemManagers.Context = _context;
-        if (systemManagers == null)
+        // A service handed its own managers leaves an existing default alone, but with no default at
+        // all it adopts them: Cursor, ScrollViewer and others read SystemManagers.Default.
+        if (systemManagers == null || SystemManagers.Default == null)
         {
             SystemManagers.Default = this.SystemManagers;
             ISystemManagers.Default = this.SystemManagers;

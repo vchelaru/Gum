@@ -394,6 +394,24 @@ public partial class GumService : IGumService
 
     private readonly LanguageChangeSubscription _languageChangeSubscription;
 
+    // The subscription lives on process-wide statics (the LocalizationServiceChanged event and the
+    // localization service itself), so it must be dropped when this service is uninitialized or every
+    // service ever created stays alive, and re-translates the shared popup roots on each language change.
+    // Idempotent: constructor, Initialize and InitializeForTesting each call it.
+    private void SubscribeToLanguageChanges()
+    {
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged -= _languageChangeSubscription.Track;
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
+        // Pick up any LocalizationService that was assigned before this call.
+        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
+    }
+
+    private void UnsubscribeFromLanguageChanges()
+    {
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged -= _languageChangeSubscription.Track;
+        _languageChangeSubscription.Track(null, null);
+    }
+
     /// <summary>
     /// Re-applies all styles on the specified element and its children. Call after
     /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>
@@ -445,7 +463,7 @@ public partial class GumService : IGumService
 
     public void UseGamepadDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
     }
 
     // Off by default; opt in via UseSingleThreadedAsync. Formerly #if !FRB-guarded, but GumService
@@ -535,6 +553,9 @@ public partial class GumService : IGumService
     /// </summary>
     public ProjectResolution? CurrentProjectResolution { get; private set; }
 
+    // The CustomGetStreamFromFile hook the current bundle load installed, or null for a loose project.
+    private Func<string, System.IO.Stream>? _installedBundleHook;
+
     // The XNA Game host (_game / Game) is XNALIKE-only and lives in GumService.XnaLike.cs (issue #3608).
 
     #region Initialize
@@ -556,9 +577,7 @@ public partial class GumService : IGumService
         Root.HasEvents = false;
 
         _languageChangeSubscription = new LanguageChangeSubscription(RefreshLocalization);
-        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
-        // Pick up any LocalizationService that was assigned before this GumService was constructed.
-        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
+        SubscribeToLanguageChanges();
 
         GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
         {
@@ -588,6 +607,7 @@ public partial class GumService : IGumService
     /// </summary>
     public void InitializeForTesting()
     {
+        SubscribeToLanguageChanges();
         if (!IsInitialized)
         {
             IsInitialized = true;
@@ -637,6 +657,7 @@ public partial class GumService : IGumService
         // Installed here rather than in the constructor: the last service's Uninitialize clears these hooks, so
         // a constructor install would not survive an Initialize, Uninitialize, Initialize cycle.
         FormsRefreshStylesHooks.Install();
+        SubscribeToLanguageChanges();
 
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
@@ -657,6 +678,7 @@ public partial class GumService : IGumService
             // (textures/fonts) also resolve from the bundle.
             ProjectResolution projectResolution = GumBundleLoader.Resolve(gumProjectFile);
             CurrentProjectResolution = projectResolution;
+            _installedBundleHook = projectResolution.UsedBundle ? FileManager.CustomGetStreamFromFile : null;
             gumProject = GumProjectSave.Load(projectResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
 
@@ -702,6 +724,22 @@ public partial class GumService : IGumService
         return gumProject;
     }
 
+    // Called when a platform InitializeInternal throws partway (a missing project file, for example).
+    // IsInitialized is already true and the statics already point at this service, so undo them: the
+    // caller can then fix the problem and call Initialize again instead of hitting "already called".
+    // An exception from the teardown itself is dropped; the one that failed Initialize is the useful one.
+    private void RollBackFailedInitialize()
+    {
+        try
+        {
+            Uninitialize();
+        }
+        catch (Exception)
+        {
+            IsInitialized = false;
+        }
+    }
+
     /// <summary>
     /// Applies the project's <see cref="GumProjectSave.TextureFilter"/> setting (configured in the
     /// editor's Project Properties) to the runtime so sprites render with the same filtering the
@@ -727,8 +765,6 @@ public partial class GumService : IGumService
         ColoredRectangleRuntime.DefaultHeight = GetFloat("Height");
 #pragma warning restore CS0618
 
-        current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
-
         float GetFloat(string variableName) => current?.DefaultState!.GetValueOrDefault<float>(variableName) ?? 0;
     }
 
@@ -745,6 +781,14 @@ public partial class GumService : IGumService
     /// </summary>
     public void Uninitialize()
     {
+        // A service that was never initialized, or was already uninitialized, owns none of the
+        // process-wide state below. Running the teardown anyway would reset that state for a
+        // different service that is live (#6066).
+        if (!IsInitialized)
+        {
+            return;
+        }
+
         GumContext? context = _context;
         IGumService? previousDefault = IGumService.Default;
         if (context == null && GumContext.HasLiveContextOtherThan(null))
@@ -826,6 +870,14 @@ public partial class GumService : IGumService
         {
             LoaderManager.Self.DisposeAndClear();
         }
+
+        // A bundle load replaced FileManager.CustomGetStreamFromFile; put back the hook it composed
+        // over. Skipped when something else (a later service or the host) has since installed its own.
+        if (_installedBundleHook != null && FileManager.CustomGetStreamFromFile == _installedBundleHook)
+        {
+            FileManager.CustomGetStreamFromFile = CurrentProjectResolution?.PreviousHook;
+        }
+        _installedBundleHook = null;
         CurrentProjectResolution = null;
 
         FormsUtilities.Uninitialize();
@@ -852,8 +904,26 @@ public partial class GumService : IGumService
 
         _windowFit?.Reset();
 
-        SystemManagers.Default = null!;
-        ISystemManagers.Default = null!;
+        // Clear each static default only if it belongs to this service, so tearing down one
+        // service does not strip the defaults from another service that is still live (#6066).
+        // The current default service (IGumService.Default) also owns SystemManagers.Default even when
+        // it has no managers of its own, e.g. InitializeForTesting with managers assigned by hand. A
+        // service that was handed its own managers does not: the host set any default it left in place.
+        bool isCurrentService = _systemManagers == null && ReferenceEquals(IGumService.Default, this);
+        if (isCurrentService || ReferenceEquals(SystemManagers.Default, _systemManagers))
+        {
+            SystemManagers.Default = null!;
+        }
+        if (isCurrentService || ReferenceEquals(ISystemManagers.Default, _systemManagers))
+        {
+            ISystemManagers.Default = null!;
+        }
+        // A service with a context is released by Uninitialize, which also decides what the default becomes.
+        // Clearing it here would send the remaining teardown to the process-level state.
+        if (_context == null && ReferenceEquals(IGumService.Default, this))
+        {
+            IGumService.Default = null;
+        }
 
         // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).
         // Reset to the default value expected before initialization.
@@ -875,6 +945,8 @@ public partial class GumService : IGumService
             _syncContext.Clear();
             _syncContext = null;
         }
+
+        UnsubscribeFromLanguageChanges();
 
         // Only the default instance clears itself; another service's Uninitialize must not orphan it.
         if (ReferenceEquals(_default, this))
@@ -942,9 +1014,13 @@ public partial class GumService : IGumService
 
     public void Draw()
     {
-        // This service's own managers, not whichever service initialized last.
+        // This service's own managers, not whichever service initialized last. A service that was never
+        // initialized (hosts that assign SystemManagers.Default by hand) draws the default.
         using ServiceCallScope scope = EnterServiceCall();
-        (_systemManagers ?? SystemManagers.Default).Draw();
+        SystemManagers managers = _systemManagers ?? SystemManagers.Default
+            ?? throw new InvalidOperationException(
+                "GumService has not been initialized. Call GumService.Initialize() first.");
+        managers.Draw();
     }
 
     // Draw(Camera2D) is raylib-only and lives in GumService.Raylib.cs (issue #3608).

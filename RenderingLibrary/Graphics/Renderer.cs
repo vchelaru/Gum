@@ -396,15 +396,14 @@ public class Renderer : IRenderer
 
     }
 
-    // The managers this renderer belongs to, used wherever a draw needs managers and none was passed,
-    // so a service's renderer never falls back to another service's SystemManagers.Default.
-    private SystemManagers? _owningManagers;
-
-    private SystemManagers OwningManagers => _owningManagers ?? SystemManagers.Default;
+    // The SystemManagers this renderer belongs to, set by Initialize. Falls back to
+    // SystemManagers.Default for a renderer that was never initialized.
+    private SystemManagers? _systemManagers;
+    private SystemManagers OwnManagers => _systemManagers ?? SystemManagers.Default;
 
     public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
     {
-        _owningManagers = managers;
+        _systemManagers = managers;
         renderTargetService = new RenderTargetService();
 
         mCamera.ClientWidth = graphicsDevice.Viewport.Width;
@@ -613,7 +612,7 @@ public class Renderer : IRenderer
 
         if (managers == null)
         {
-            managers = OwningManagers;
+            managers = OwnManagers;
         }
 
 #if !FNA
@@ -832,7 +831,7 @@ public class Renderer : IRenderer
         }
         else
         {
-            Draw(OwningManagers, _layers[0], renderable);
+            Draw(OwnManagers, _layers[0], renderable);
         }
     }
 
@@ -865,7 +864,7 @@ public class Renderer : IRenderer
                 Layer.SortByZ(_deferredImmediateModeRoots);
                 SiblingOrdering.BuildDrawList(
                     _deferredImmediateModeRoots, _deferredImmediateModeCommands, new ClipBoundsSource(mCamera, _layers[0]));
-                Submit(_deferredImmediateModeCommands, OwningManagers, _layers[0]);
+                Submit(_deferredImmediateModeCommands, OwnManagers, _layers[0]);
             }
             finally
             {
@@ -885,7 +884,7 @@ public class Renderer : IRenderer
         // to leak across cycles and flush at non-deterministic times. This matters most
         // for consumers that do many small Begin/End cycles (FRB2's GumRenderable, the
         // immediate-mode samples).
-        _batchOrchestrator.FlushAndReset(OwningManagers);
+        _batchOrchestrator.FlushAndReset(OwnManagers);
 
         spriteRenderer.EndSpriteBatch();
 
@@ -941,7 +940,7 @@ public class Renderer : IRenderer
                 }
                 if (shouldBakeRenderTarget)
                 {
-                    RenderToRenderTarget(renderable, OwningManagers);
+                    RenderToRenderTarget(renderable, OwnManagers);
                 }
             }
         }
@@ -1141,7 +1140,7 @@ public class Renderer : IRenderer
             Camera.Y = Math.MathFunctions.RoundToInt(Camera.Y * snapZoom) / snapZoom + effectivePixelOffsetY / snapZoom;
 
 
-            gumBatch = gumBatch ?? new GumBatch();
+            gumBatch = gumBatch ?? new GumBatch(OwnManagers);
 
 
             // todo  - rotations don't currently work:
@@ -1855,13 +1854,17 @@ public class GumBatch
     /// </summary>
     public SpriteBatch SpriteBatch => systemManagers.Renderer.SpriteRenderer.SpriteBatch;
 
-    public GumBatch()
+    public GumBatch() : this(SystemManagers.Default)
     {
-        if(SystemManagers .Default == null)
+    }
+
+    internal GumBatch(SystemManagers managers)
+    {
+        if(managers == null)
         {
             throw new InvalidOperationException("SystemManagers is null - did you remember to initialize Gum?");
         }
-        systemManagers = SystemManagers.Default;
+        systemManagers = managers;
         internalTextForRendering = new Text(systemManagers);
     }
 
