@@ -24,6 +24,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// The document is full-bleed (blue left half, red right half of a 2:1 viewBox) so the assertions
 /// read the drawing's own halves rather than depending on where a partial drawing anchors.
 /// </summary>
+[Collection(SharedShapeGame.CollectionName)]
 public class SvgNonUniformScaleRenderTests : BaseTestClass
 {
     private const string TwoByOneHalvesSvg =
@@ -95,8 +96,7 @@ public class SvgNonUniformScaleRenderTests : BaseTestClass
 
         try
         {
-            using MinimalGame game = new();
-            game.RunOneFrame();
+            using ShapeGameLease game = SharedShapeGame.Acquire();
 
             GraphicsDevice gd = game.GraphicsDevice;
             SystemManagers managers = SystemManagers.Default;
@@ -143,40 +143,5 @@ public class SvgNonUniformScaleRenderTests : BaseTestClass
         XnaColor[] pixels = new XnaColor[CaptureWidth * CaptureHeight];
         capture.GetData(pixels);
         return pixels;
-    }
-
-    private class MinimalGame : Game
-    {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes uses an SM4 effect the default Reach profile can't load - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-            };
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(BackgroundColor);
-
-        protected override void Dispose(bool disposing)
-        {
-            if (Gum.GumService.Default.IsInitialized)
-            {
-                Gum.GumService.Default.Uninitialize();
-            }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
-        }
     }
 }
