@@ -630,6 +630,14 @@ public partial class GumService : IGumService
     /// </summary>
     public void Uninitialize()
     {
+        // A service that was never initialized, or was already uninitialized, owns none of the
+        // process-wide state below. Running the teardown anyway would reset that state for a
+        // different service that is live (#6066).
+        if (!IsInitialized)
+        {
+            return;
+        }
+
 #if !IOS && !ANDROID
         _hotReloadManager?.Stop();
         _hotReloadManager = null;
