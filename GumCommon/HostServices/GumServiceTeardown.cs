@@ -42,18 +42,18 @@ public static class GumServiceTeardown
         FrameworkElement.DefaultFormsComponents.Clear();
 #pragma warning restore CS0618
 
-        ObjectFinder.Self.GumProjectSave = null;
-
         ReleaseContent();
     }
 
     /// <summary>
-    /// Disposes the cached content of the current service only. Used instead of
-    /// <see cref="ReleaseFormsAndContent"/> when another service is still live and the shared Forms and
-    /// project state must stay.
+    /// Unloads the current service's project and disposes its cached content, leaving the Forms state
+    /// that all services share alone. Used instead of <see cref="ReleaseFormsAndContent"/> when another
+    /// service is still live.
     /// </summary>
     public static void ReleaseContent()
     {
+        ObjectFinder.Self.GumProjectSave = null;
+
         LoaderManager.Self.DisposeAndClear();
     }
 }

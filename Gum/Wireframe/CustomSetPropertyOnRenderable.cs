@@ -2698,6 +2698,13 @@ public partial class CustomSetPropertyOnRenderable
 
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
+        // Resolve the font against the service the element belongs to, not whichever is current (#6066).
+        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate(graphicalUiElement.EffectiveManagers?.Context);
+        UpdateToFontValuesInContext(text, graphicalUiElement);
+    }
+
+    private static void UpdateToFontValuesInContext(IText text, GraphicalUiElement graphicalUiElement)
+    {
         // The XNA-like and raylib font loader, wired to GraphicalUiElement.UpdateFontFromProperties.
         // Both the direct setters and the string path reach it through
         // GraphicalUiElement.UpdateToFontValues, which defers while layout is suspended (#4567) and
@@ -3219,6 +3226,13 @@ public partial class CustomSetPropertyOnRenderable
 #endif
 
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string? value)
+    {
+        // Resolve the file against the service the element belongs to, not whichever is current (#6066).
+        using global::Gum.GumContext.ActivationScope scope = global::Gum.GumContext.Activate(graphicalUiElement.EffectiveManagers?.Context);
+        return AssignSourceFileOnSpriteInContext(sprite, graphicalUiElement, value);
+    }
+
+    private static bool AssignSourceFileOnSpriteInContext(Sprite sprite, GraphicalUiElement graphicalUiElement, string? value)
     {
         bool handled;
 
