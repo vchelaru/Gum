@@ -76,7 +76,10 @@ public partial class SystemManagers : ISystemManagers
     /// The context of the <c>GumService</c> these managers belong to, set when the service creates or
     /// adopts them. Null for managers created on their own (the Gum tool, unit tests).
     /// </summary>
-    public global::Gum.GumContext? Context { get; set; }
+    internal global::Gum.GumContext? Context { get; set; }
+
+    // Explicit for the same reason as GumService: see IGumService.Context.
+    global::Gum.GumContext? ISystemManagers.Context => Context;
 
 #if !RAYLIB
     // The managers below are created in Initialize.

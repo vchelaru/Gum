@@ -153,10 +153,9 @@ namespace RenderingLibrary
         /// <param name="time">The total elapsed game time, in seconds.</param>
         void ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) { }
 
-        /// <summary>
-        /// The <see cref="GumContext"/> this service owns while it is initialized, or null.
-        /// </summary>
-        GumContext? Context => null;
+        // The per-service state this service owns while it is initialized, or null. Internal: the runtimes
+        // reach it through InternalsVisibleTo; it is not part of the public API.
+        internal GumContext? Context => null;
 
         /// <summary>
         /// The current default <see cref="IGumService"/>, and the one "current service" pointer: every

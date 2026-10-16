@@ -40,7 +40,7 @@ namespace Gum;
 /// All UI work for all services is expected to run on one thread.
 /// </para>
 /// </remarks>
-public sealed partial class GumContext
+internal sealed partial class GumContext
 {
     private static readonly List<GumContext> _live = new List<GumContext>();
     private static readonly object _liveLock = new object();

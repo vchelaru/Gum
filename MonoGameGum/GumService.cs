@@ -152,11 +152,12 @@ public partial class GumService : IGumService
 
     private GumContext? _context;
 
-    /// <summary>
-    /// The state this service owns while it is initialized, or null before <c>Initialize</c> and after
-    /// <see cref="Uninitialize"/>. See <see cref="Activate"/>.
-    /// </summary>
-    public GumContext? Context => _context;
+    // The state this service owns while it is initialized, or null before Initialize and after Uninitialize.
+    internal GumContext? Context => _context;
+
+    // Explicit: an internal interface member is only implemented across the InternalsVisibleTo boundary by an
+    // explicit implementation. An implicit internal property compiles but the interface keeps its default (null).
+    GumContext? IGumService.Context => _context;
 
     /// <inheritdoc/>
     public INativeTextInput? NativeTextInput { get; private set; }

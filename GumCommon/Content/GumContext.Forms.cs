@@ -10,7 +10,7 @@ namespace Gum;
 // Forms state a service owns. FrameworkElement and FormsUtilities keep their static members as facades:
 // the context that adopts the process statics reads and writes the old static fields, and every other
 // context reads and writes the members below.
-public sealed partial class GumContext
+internal sealed partial class GumContext
 {
     internal InteractiveGue? PopupRoot { get; set; }
 
