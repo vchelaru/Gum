@@ -55,25 +55,22 @@ public enum DefaultVisualsVersion
 
 public class FormsUtilities
 {
-    static ICursor? cursor;
-
     /// <summary>
     /// The cursor Forms reads each frame. Null before InitializeDefaults and after Uninitialize.
+    /// This is <see cref="FrameworkElement.MainCursor"/>.
     /// </summary>
-    public static ICursor? Cursor => cursor;
+    public static ICursor? Cursor => FrameworkElement.MainCursor;
 
     public static void SetCursor(ICursor cursor)
     {
-        FormsUtilities.cursor = cursor;
         FrameworkElement.MainCursor = cursor;
     }
 
-    static IInputReceiverKeyboard? keyboard;
-
     /// <summary>
     /// The keyboard Forms reads each frame. Null before InitializeDefaults and after Uninitialize.
+    /// This is <see cref="FrameworkElement.MainKeyboard"/>.
     /// </summary>
-    public static IInputReceiverKeyboard? Keyboard => keyboard;
+    public static IInputReceiverKeyboard? Keyboard => FrameworkElement.MainKeyboard;
 
     /// <summary>
     /// Replaces the keyboard that Forms reads each frame, for example with a replay driver or a
@@ -96,13 +93,12 @@ public class FormsUtilities
         var keyboardsForUiControl = FrameworkElement.KeyboardsForUiControl;
         for (int i = 0; i < keyboardsForUiControl.Count; i++)
         {
-            if (keyboardsForUiControl[i] == FormsUtilities.keyboard)
+            if (keyboardsForUiControl[i] == FrameworkElement.MainKeyboard)
             {
                 keyboardsForUiControl[i] = keyboard;
             }
         }
 
-        FormsUtilities.keyboard = keyboard;
         FrameworkElement.MainKeyboard = keyboard;
     }
 
@@ -111,7 +107,13 @@ public class FormsUtilities
     // same type. Each platform is fed by its own same-named GamePadDriver.Apply(GamePad, int,
     // double), resolved unqualified via the per-platform `using` block at the top of this file
     // -- see UpdateGamepads below (issue #3559).
-    public static Gum.Input.GamePad[] Gamepads { get; private set; } = new Gum.Input.GamePad[4];
+    internal static Gum.Input.GamePad[] _gamepads = new Gum.Input.GamePad[4];
+
+    public static Gum.Input.GamePad[] Gamepads
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.Gamepads : _gamepads; }
+        private set { GumContext? own = GumContext.Own; if (own != null) { own.Gamepads = value; } else { _gamepads = value; } }
+    }
 
 
     /// <summary>
@@ -189,13 +191,13 @@ public class FormsUtilities
         // before this method runs -- see each runtime's Initialize (ordering is asserted there) --
         // and its input-capable runtimes return a non-null cursor/keyboard, hence the null-forgiveness.
         IGumService service = IGumService.Default!;
-        cursor = service.CreateCursor()!;
+        ICursor cursor = service.CreateCursor()!;
 
         // This was added to MonoGame/raylib on 1/22/2026 to support
         // simplified behavior.
         ICursor.VisualOverBehavior = VisualOverBehavior.IfHasEventsIsTrue;
 
-        keyboard = service.CreateKeyboard()!;
+        IInputReceiverKeyboard keyboard = service.CreateKeyboard()!;
 
         for (int i = 0; i < Gamepads.Length; i++)
         {
@@ -344,9 +346,9 @@ public class FormsUtilities
             return;
         }
 
-        ICursor cursor = FormsUtilities.cursor
+        ICursor cursor = FormsUtilities.Cursor
             ?? throw new InvalidOperationException("FormsUtilities.Update was called with no cursor. Initialize Gum before updating Forms.");
-        IInputReceiverKeyboard keyboard = FormsUtilities.keyboard
+        IInputReceiverKeyboard keyboard = FormsUtilities.Keyboard
             ?? throw new InvalidOperationException("FormsUtilities.Update was called with no keyboard. Initialize Gum before updating Forms.");
 
         var frameworkElementOverBefore =
@@ -556,8 +558,8 @@ public class FormsUtilities
 
     internal static void Uninitialize()
     {
-        cursor = null;
-        keyboard = null;
+        FrameworkElement.MainCursor = null!;
+        FrameworkElement.MainKeyboard = null!;
         Gamepads = new Gum.Input.GamePad[4];
 
         // Null the backing field (not just leave the instance) so ActiveStyle's lazy getter
@@ -581,7 +583,13 @@ public class FormsUtilities
         ElementSaveExtensions.InitialStateAppliedNotifier = null;
     }
 
-    private static VisualTemplate? _defaultTooltipTemplate;
+    private static VisualTemplate? _processWideDefaultTooltipTemplate;
+
+    private static VisualTemplate? _defaultTooltipTemplate
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.DefaultTooltipTemplate : _processWideDefaultTooltipTemplate; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.DefaultTooltipTemplate = value; } else { _processWideDefaultTooltipTemplate = value; } }
+    }
 
     // Distinguishes a template this class registered for a project's Tooltip component from one
     // user code registered, so loading another project can replace it.

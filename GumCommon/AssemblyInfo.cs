@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("RaylibGum.Tests")]
 [assembly: InternalsVisibleTo("SkiaGum.Tests")]
 [assembly: InternalsVisibleTo("Gum.Bundle.Tests")]
+[assembly: InternalsVisibleTo("MonoGameGum.IntegrationTests")]
+// Moq builds proxies for IGumService, whose internal Context member is overridden by the proxy.
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 // MonoGameGum, KniGum, and FnaGum each link in CustomSetPropertyOnRenderable.cs,
 // which writes to internal members on GraphicalUiElement (e.g., IsFontDirty.set).

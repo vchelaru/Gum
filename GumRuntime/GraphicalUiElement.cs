@@ -403,6 +403,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public GraphicalUiElement(IRenderable? containedObject, GraphicalUiElement? whatContainsThis = null)
     {
+        // Free with one service. With two or more, remembers which service the element was built under so
+        // adding it to another service's tree can be caught.
+        GumContext.StampIfMultipleLive(this);
+
         mIsLayoutSuspended = true;
         Width = 32;
         Height = 32;

@@ -435,6 +435,13 @@ public partial class GraphicalUiElement
 #endif
             if (_parent != value)
             {
+                if (value != null && GumContext.MultipleLive)
+                {
+                    // Two or more services are live: adding an element built under one service to
+                    // another service's tree is a mistake worth failing on.
+                    GumContext.CheckSameService(this, value);
+                }
+
                 var oldParent = _parent;
                 _isSettingParent = true;
                 try

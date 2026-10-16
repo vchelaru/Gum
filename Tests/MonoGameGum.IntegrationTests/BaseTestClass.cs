@@ -14,6 +14,21 @@ public class BaseTestClass : IDisposable
 {
     public virtual void Dispose()
     {
+        // GumService.Default follows IGumService.Default, the current service. A test that initialized a service
+        // and left it initialized would make the next test's GumService.Default.Initialize throw, so a service
+        // that is still the initialized default is uninitialized here.
+        if (global::RenderingLibrary.IGumService.Default is global::Gum.GumService leaked && leaked.IsInitialized)
+        {
+            try
+            {
+                leaked.Uninitialize();
+            }
+            catch
+            {
+                // The test's game may already be disposed; the next test starts from a fresh default anyway.
+            }
+        }
+
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.ClickCombos.Clear();
         FrameworkElement.ClickCombos.Add(new KeyCombo

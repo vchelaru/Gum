@@ -2698,6 +2698,13 @@ public partial class CustomSetPropertyOnRenderable
 
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
+        // Resolve the font against the service the element belongs to, not whichever is current (#6066).
+        using global::Gum.GumContext.DefaultScope defaultScope = global::Gum.GumContext.EnterDefault(global::Gum.GumContext.OwnerOf(graphicalUiElement));
+        UpdateToFontValuesInContext(text, graphicalUiElement);
+    }
+
+    private static void UpdateToFontValuesInContext(IText text, GraphicalUiElement graphicalUiElement)
+    {
         // The XNA-like and raylib font loader, wired to GraphicalUiElement.UpdateFontFromProperties.
         // Both the direct setters and the string path reach it through
         // GraphicalUiElement.UpdateToFontValues, which defers while layout is suspended (#4567) and
@@ -2779,7 +2786,11 @@ public partial class CustomSetPropertyOnRenderable
             }
             else if (!string.IsNullOrEmpty(textRuntime.CustomFontFile))
             {
-                font = loaderManager.GetDisposable(textRuntime.CustomFontFile) as BitmapFont;
+                // Keyed by the absolute path (which includes the project folder) so two projects that
+                // both use a relative name like Fonts/MyFont.fnt do not share one cache entry.
+                string customFontCacheKey = ToolsUtilities.FileManager.Standardize(
+                    textRuntime.CustomFontFile, preserveCase: true, makeAbsolute: true);
+                font = loaderManager.GetDisposable(customFontCacheKey) as BitmapFont;
                 if (font == null)
                 {
 #if KNI
@@ -2787,7 +2798,7 @@ public partial class CustomSetPropertyOnRenderable
                         {
                             // this could be running in browser where we don't have File.Exists, so JUST DO IT
                             font = new BitmapFont(textRuntime.CustomFontFile);
-                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+                            loaderManager.AddDisposable(customFontCacheKey, font);
                         }
                         catch
                         {
@@ -2801,7 +2812,7 @@ public partial class CustomSetPropertyOnRenderable
                         try
                         {
                             font = new BitmapFont(textRuntime.CustomFontFile);
-                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+                            loaderManager.AddDisposable(customFontCacheKey, font);
 
                         }
                         catch(System.Text.DecoderFallbackException exception)
@@ -3215,6 +3226,13 @@ public partial class CustomSetPropertyOnRenderable
 #endif
 
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string? value)
+    {
+        // Resolve the file against the service the element belongs to, not whichever is current (#6066).
+        using global::Gum.GumContext.DefaultScope defaultScope = global::Gum.GumContext.EnterDefault(global::Gum.GumContext.OwnerOf(graphicalUiElement));
+        return AssignSourceFileOnSpriteInContext(sprite, graphicalUiElement, value);
+    }
+
+    private static bool AssignSourceFileOnSpriteInContext(Sprite sprite, GraphicalUiElement graphicalUiElement, string? value)
     {
         bool handled;
 

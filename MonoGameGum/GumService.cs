@@ -53,7 +53,18 @@ public partial class GumService : IGumService
     // and lives in the per-platform partials, as do the GameTime property and the explicit
     // IGumService.Initialize / IGumService.GameTime members (issue #3608).
     static GumService? _default;
+
+    static GumService()
+    {
+        // Keeps the typed Default in step with IGumService.Default, the one current-service pointer.
+        IGumService.DefaultChanged += OnDefaultChanged;
+    }
     #endregion
+
+    // True when this service's input state lives in the process-wide statics: it is the first service, or no
+    // service is live at all. A later service keeps its own in its context, and an uninitialized service
+    // beside a live one has none.
+    private bool UsesProcessStatics => _context?.AdoptsProcessStatics ?? !GumContext.HasLiveContextOtherThan(null);
 
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
@@ -67,7 +78,7 @@ public partial class GumService : IGumService
     // ICursor/IInputReceiverKeyboard via FormsUtilities.SetCursor, and this forwarder returned null for
     // a non-Cursor before FormsUtilities.Cursor changed from 'Cursor?' to 'ICursor'. The '!' only
     // suppresses the nullable-return warning (runtime no-op) and does not reintroduce a throw.
-    public Cursor Cursor => (FormsUtilities.Cursor as Cursor)!;
+    public Cursor Cursor => ((UsesProcessStatics ? FrameworkElement._mainCursor : _context?.MainCursor) as Cursor)!;
 
     /// <summary>
     /// Gets the default keyboard.
@@ -78,7 +89,7 @@ public partial class GumService : IGumService
     /// whichever keyboard is active. This property switches to <see cref="IInputReceiverKeyboard"/> in a later
     /// breaking release (#5028).
     /// </remarks>
-    public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
+    public Keyboard Keyboard => ((UsesProcessStatics ? FrameworkElement._mainKeyboard : _context?.MainKeyboard) as Keyboard)!;
 
     /// <summary>
     /// Gets the service used to provide localized strings and resources for the application.
@@ -88,7 +99,8 @@ public partial class GumService : IGumService
     /// <summary>
     /// Gets the collection of connected gamepads available to the application.
     /// </summary>
-    public Gum.Input.GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
+    public Gum.Input.GamePad[] Gamepads =>
+        (UsesProcessStatics ? Gum.Forms.FormsUtilities._gamepads : _context?.Gamepads) ?? Array.Empty<Gum.Input.GamePad>();
 
     public Renderer Renderer => this.SystemManagers.Renderer;
 
@@ -101,6 +113,15 @@ public partial class GumService : IGumService
     }
 
     public DeferredActionQueue DeferredQueue { get; private set; }
+
+    private GumContext? _context;
+
+    // The state this service owns while it is initialized, or null before Initialize and after Uninitialize.
+    internal GumContext? Context => _context;
+
+    // Explicit: an internal interface member is only implemented across the InternalsVisibleTo boundary by an
+    // explicit implementation. An implicit internal property compiles but the interface keeps its default (null).
+    GumContext? IGumService.Context => _context;
 
     /// <inheritdoc/>
     public INativeTextInput? NativeTextInput { get; private set; }
@@ -247,9 +268,10 @@ public partial class GumService : IGumService
         Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
     /// <inheritdoc/>
-    public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+    public InteractiveGue PopupRoot => (UsesProcessStatics ? FrameworkElement._popupRoot : _context?.PopupRoot)!;
+
     /// <inheritdoc/>
-    public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
+    public InteractiveGue ModalRoot => (UsesProcessStatics ? FrameworkElement._modalRoot : _context?.ModalRoot)!;
 
     /// <summary>
     /// Exports the live UI tree under <see cref="Root"/> to a Gum project at <paramref name="filePath"/>,
@@ -416,6 +438,41 @@ public partial class GumService : IGumService
         _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
     }
 
+    // What a framework entry point (Update, Draw) sets for the length of the call and then puts back:
+    // this service as the default and, when it called UseSingleThreadedAsync, its own synchronization
+    // context. A continuation that starts inside a handler then captures this service's context, so it
+    // drains inside this service's Update under this service's default, even though the constructor of
+    // the last service's context installed itself on the thread. Internal to the framework; users never
+    // write a using.
+    private readonly struct ServiceCallScope : IDisposable
+    {
+        private readonly GumContext.DefaultScope _defaultScope;
+        private readonly System.Threading.SynchronizationContext? _previousSync;
+        private readonly bool _swappedSync;
+
+        internal ServiceCallScope(GumContext.DefaultScope defaultScope, Gum.Async.SingleThreadSynchronizationContext? serviceSync)
+        {
+            _defaultScope = defaultScope;
+            _previousSync = System.Threading.SynchronizationContext.Current;
+            _swappedSync = serviceSync != null;
+            if (serviceSync != null)
+            {
+                System.Threading.SynchronizationContext.SetSynchronizationContext(serviceSync);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_swappedSync)
+            {
+                System.Threading.SynchronizationContext.SetSynchronizationContext(_previousSync);
+            }
+            _defaultScope.Dispose();
+        }
+    }
+
+    private ServiceCallScope EnterServiceCall() => new ServiceCallScope(GumContext.EnterDefault(_context), _syncContext);
+
 
     /// <summary>
     /// Gets whether GumService has been initialized.
@@ -486,8 +543,6 @@ public partial class GumService : IGumService
         // SilkNetGum, so the assignment lives in the AssignClipboard seam (implemented on XNALIKE/Raylib,
         // elided on Silk) rather than a shared #if (issue #3608).
         AssignClipboard();
-
-        FormsRefreshStylesHooks.Install();
     }
 
     /// <summary>
@@ -501,6 +556,8 @@ public partial class GumService : IGumService
         {
             IsInitialized = true;
         }
+        FormsRefreshStylesHooks.Install();
+
         // Wire the platform-agnostic default too. Extensions in GumCommon (e.g.
         // FrameworkElementExt.AddToRoot) resolve the runtime via IGumService.Default,
         // so tests that bypass the full Initialize(Game, ...) path still need this set.
@@ -541,6 +598,9 @@ public partial class GumService : IGumService
     // InitializeInternal in GumService.XnaLike.cs / GumService.Raylib.cs (issue #3608).
     private GumProjectSave? FinishInitialize(string? gumProjectFile)
     {
+        // Installed here rather than in the constructor: the last service's Uninitialize clears these hooks, so
+        // a constructor install would not survive an Initialize, Uninitialize, Initialize cycle.
+        FormsRefreshStylesHooks.Install();
         SubscribeToLanguageChanges();
 
         Root.AddToManagers(SystemManagers);
@@ -673,6 +733,59 @@ public partial class GumService : IGumService
             return;
         }
 
+        GumContext? context = _context;
+        IGumService? previousDefault = IGumService.Default;
+        if (context == null && GumContext.HasLiveContextOtherThan(null))
+        {
+            // This service owns no context (never initialized, or already uninitialized) while another
+            // service is live. Everything it would reset is that other service's, so only its own
+            // instance state is touched.
+            UninitializeInstanceOnly();
+            return;
+        }
+
+        try
+        {
+            UninitializeCore();
+        }
+        finally
+        {
+            // Released even when teardown throws, so a failed Uninitialize cannot leave a dead service live.
+            // A service that was the default stops being it; another default stays as it was.
+            if (context != null)
+            {
+                IGumService.Default = previousDefault != null && !ReferenceEquals(previousDefault, this) && previousDefault.IsInitialized
+                    ? previousDefault
+                    : null;
+            }
+            context?.Release();
+            _context = null;
+        }
+    }
+
+    private void UninitializeInstanceOnly()
+    {
+#if !IOS && !ANDROID
+        _hotReloadManager?.Stop();
+        _hotReloadManager = null;
+#endif
+        DeferredQueue.Clear();
+        _windowFit?.Reset();
+        IsInitialized = false;
+        _systemManagers = null;
+    }
+
+    private void UninitializeCore()
+    {
+        // Runs in this service's scope so per-service state (content cache, registrations) is the
+        // one released. Shared state is torn down only when no other service is still live.
+        if (_context != null)
+        {
+            // The per-service statics below resolve this service through the default.
+            IGumService.Default = this;
+        }
+        bool isLastService = !GumContext.HasLiveContextOtherThan(_context);
+
 #if !IOS && !ANDROID
         _hotReloadManager?.Stop();
         _hotReloadManager = null;
@@ -694,7 +807,13 @@ public partial class GumService : IGumService
 
         // Forms roots, Forms input registrations and templates, the project, and the content cache.
         // Shared with GumServiceSkiaBase.
-        GumServiceTeardown.ReleaseFormsAndContent();
+        // Forms state and the project are per service, so each service releases its own. The content cache is
+        // one cache for all services, disposed when the last one leaves.
+        GumServiceTeardown.ReleaseFormsAndProject(isLastService);
+        if (isLastService)
+        {
+            LoaderManager.Self.DisposeAndClear();
+        }
 
         // A bundle load replaced FileManager.CustomGetStreamFromFile; put back the hook it composed
         // over. Skipped when something else (a later service or the host) has since installed its own.
@@ -714,15 +833,18 @@ public partial class GumService : IGumService
         // per-platform partials (issue #3608).
         UninitializePlatform();
 
-        GraphicalUiElement.SetPropertyOnRenderable = null!;
-        GraphicalUiElement.UpdateFontFromProperties = null;
-        GraphicalUiElement.SaveFormsRuntimePropertiesAction = null;
-        GraphicalUiElement.UpdateFormsStateAction = null;
-        GraphicalUiElement.AddRenderableToManagers = null;
-        GraphicalUiElement.RemoveRenderableFromManagers = null;
+        if (isLastService)
+        {
+            GraphicalUiElement.SetPropertyOnRenderable = null!;
+            GraphicalUiElement.UpdateFontFromProperties = null;
+            GraphicalUiElement.SaveFormsRuntimePropertiesAction = null;
+            GraphicalUiElement.UpdateFormsStateAction = null;
+            GraphicalUiElement.AddRenderableToManagers = null;
+            GraphicalUiElement.RemoveRenderableFromManagers = null;
 
-        GraphicalUiElement.CanvasWidth = 0;
-        GraphicalUiElement.CanvasHeight = 0;
+            GraphicalUiElement.CanvasWidth = 0;
+            GraphicalUiElement.CanvasHeight = 0;
+        }
 
         _windowFit?.Reset();
 
@@ -740,7 +862,9 @@ public partial class GumService : IGumService
         {
             ISystemManagers.Default = null!;
         }
-        if (ReferenceEquals(IGumService.Default, this))
+        // A service with a context is released by Uninitialize, which also decides what the default becomes.
+        // Clearing it here would send the remaining teardown to the process-level state.
+        if (_context == null && ReferenceEquals(IGumService.Default, this))
         {
             IGumService.Default = null;
         }
@@ -753,8 +877,22 @@ public partial class GumService : IGumService
 
         _systemManagers = null;
 
+        // The thread's synchronization context is cleared only when it is this service's own, so one
+        // service never removes another service's (or the host's) context. Dropping the field lets
+        // UseSingleThreadedAsync install a fresh context after the next Initialize.
+        if (_syncContext != null)
+        {
+            if (ReferenceEquals(System.Threading.SynchronizationContext.Current, _syncContext))
+            {
+                System.Threading.SynchronizationContext.SetSynchronizationContext(null);
+            }
+            _syncContext.Clear();
+            _syncContext = null;
+        }
+
         UnsubscribeFromLanguageChanges();
 
+        // Only the default instance clears itself; another service's Uninitialize must not orphan it.
         if (ReferenceEquals(_default, this))
         {
             _default = null;
@@ -820,7 +958,9 @@ public partial class GumService : IGumService
 
     public void Draw()
     {
-        // A service that was never initialized (hosts that assign SystemManagers.Default by hand) draws the default.
+        // This service's own managers, not whichever service initialized last. A service that was never
+        // initialized (hosts that assign SystemManagers.Default by hand) draws the default.
+        using ServiceCallScope scope = EnterServiceCall();
         SystemManagers managers = _systemManagers ?? SystemManagers.Default
             ?? throw new InvalidOperationException(
                 "GumService has not been initialized. Call GumService.Initialize() first.");

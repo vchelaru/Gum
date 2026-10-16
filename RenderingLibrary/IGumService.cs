@@ -1,3 +1,4 @@
+using Gum;
 using Gum.Forms.Controls;
 using Gum.Threading;
 using Gum.Wireframe;
@@ -152,11 +153,37 @@ namespace RenderingLibrary
         /// <param name="time">The total elapsed game time, in seconds.</param>
         void ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) { }
 
+        // The per-service state this service owns while it is initialized, or null. Internal: the runtimes
+        // reach it through InternalsVisibleTo; it is not part of the public API.
+        internal GumContext? Context => null;
+
         /// <summary>
-        /// The current default <see cref="IGumService"/>. Assigned by the
-        /// concrete runtime's <c>GumService.Initialize</c> and cleared by
-        /// <c>Uninitialize</c>. May be null before initialization.
+        /// The current default <see cref="IGumService"/>, and the one "current service" pointer: every
+        /// per-service static (<c>ObjectFinder.Self</c>, <c>LoaderManager.Self</c>, the Forms statics,
+        /// <c>SystemManagers.Default</c> and the rest) resolves the current service through it. Assigning it
+        /// switches all of them to that service. <c>Update</c> and <c>Draw</c> make their service the default for
+        /// the length of the call and put the previous default back. <c>Initialize</c> runs as the service being
+        /// initialized and makes it the default only when no default exists: <b>with two services, assign
+        /// <c>IGumService.Default</c> (or <c>GumService.Default</c>) explicitly to switch; a second
+        /// <c>Initialize</c> never changes it.</b> <c>Uninitialize</c> clears it when it is the default. May be
+        /// null before initialization.
         /// </summary>
-        public static IGumService? Default { get; set; }
+        public static IGumService? Default
+        {
+            get => _default;
+            set
+            {
+                _default = value;
+                DefaultChanged?.Invoke(value);
+            }
+        }
+
+        private static IGumService? _default;
+
+        /// <summary>
+        /// Raised after <see cref="Default"/> is assigned. The runtimes use it to keep their typed
+        /// <c>GumService.Default</c> in step without casting on every read.
+        /// </summary>
+        internal static event System.Action<IGumService?>? DefaultChanged;
     }
 }

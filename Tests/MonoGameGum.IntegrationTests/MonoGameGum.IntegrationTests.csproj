@@ -4,6 +4,8 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- The linked generated sample component uses the obsolete MonoGameGum.GueDeriving shims. -->
+		<NoWarn>$(NoWarn);CS0618</NoWarn>
 
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
@@ -39,6 +41,9 @@
 	<ItemGroup>
 		<!-- Linked rather than referencing MonoGameGum.TestsCommon, which pulls in xunit v2. -->
 		<Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="AllocationMeasurer.cs" />
+		<!-- A real code-generated runtime component (a ContainerRuntime), for the wrong-service ownership test. -->
+		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.cs" Link="GeneratedSample\ButtonStandardRuntime.cs" />
+		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.Generated.cs" Link="GeneratedSample\ButtonStandardRuntime.Generated.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

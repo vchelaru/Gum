@@ -41,8 +41,30 @@ public partial class GumService
     /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
     /// this instance when a custom configuration is not required. The declared and runtime type is the
     /// <see cref="MonoGameGum.GumService"/> back-compat subclass so legacy declarations keep compiling.</remarks>
-    public static MonoGameGum.GumService Default =>
-        (MonoGameGum.GumService)(_default ??= new MonoGameGum.GumService());
+    public static MonoGameGum.GumService Default
+    {
+        get => (MonoGameGum.GumService)(_default ??= (IGumService.Default as MonoGameGum.GumService) ?? new MonoGameGum.GumService());
+        set => IGumService.Default = value;
+    }
+
+    // Follows IGumService.Default when it is assigned a back-compat instance. A service of any other
+    // type (a plain Gum.GumService) is the current service but is not what this typed property returns, and
+    // clearing the default does not drop an initialized typed instance; Uninitialize clears it.
+    private static void OnDefaultChanged(IGumService? service)
+    {
+        if (service is MonoGameGum.GumService typed)
+        {
+            _default = typed;
+        }
+
+        // SystemManagers.Default and ISystemManagers.Default follow the default service. They stay plain
+        // statics, so a host that assigns them by hand still works until the default changes.
+        if (service is GumService gumService && gumService._systemManagers != null)
+        {
+            SystemManagers.Default = gumService._systemManagers;
+            ISystemManagers.Default = gumService._systemManagers;
+        }
+    }
 #pragma warning restore CS0618
 
     #endregion
@@ -101,6 +123,12 @@ public partial class GumService
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
+    /// <remarks>
+    /// Initialize runs as this service, so everything it registers and builds belongs to it. This service
+    /// becomes <see cref="IGumService.Default"/> only when no default exists; a second service's Initialize
+    /// leaves the existing default alone. To switch between services, assign
+    /// <c>GumService.Default</c> (or <c>IGumService.Default</c>) yourself.
+    /// </remarks>
     /// <param name="game">The game instance.</param>
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
@@ -177,39 +205,117 @@ public partial class GumService
         }
         IsInitialized = true;
 
+        IGumService? previousDefault = IGumService.Default;
         try
         {
-            _game = game;
-            RegisterRuntimeTypesThroughReflection();
-
-            this.SystemManagers = systemManagers ?? new SystemManagers();
-            // A service handed its own managers leaves an existing default alone, but with no default at
-            // all it adopts them: Cursor, ScrollViewer and others read SystemManagers.Default.
-            if (systemManagers == null || SystemManagers.Default == null)
+            // Initialize runs as this service, so its registrations and builds land in this service. When a
+            // default already exists it is put back afterward; a second Initialize never changes it. With no
+            // default, this service stays the default.
+            GumProjectSave? loaded = InitializeCore(game, graphicsDevice, gumProjectFile, systemManagers, defaultVisualsVersion);
+            if (previousDefault != null)
             {
-                SystemManagers.Default = this.SystemManagers;
-                ISystemManagers.Default = this.SystemManagers;
+                IGumService.Default = previousDefault;
             }
-
-            IGumService.Default = this;
-
-            this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-
-            if (game != null && ContentLoader != null && ContentLoader.XnaContentManager == null)
-            {
-                ContentLoader.XnaContentManager = game.Content;
-            }
-
-            FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
-                defaultVisualsVersion: defaultVisualsVersion);
-
-            return FinishInitialize(gumProjectFile);
+            return loaded;
         }
         catch
         {
-            RollBackFailedInitialize();
+            // Roll back so a failed Initialize (for example a missing .gumx) leaves no live context, no
+            // Game.Disposed handler and IsInitialized false, and Initialize can be called again.
+            if (_context != null)
+            {
+                try
+                {
+                    Uninitialize();
+                }
+                catch
+                {
+                    // Best effort; the original exception is the one that matters.
+                }
+            }
+            DetachGameDisposedHandler();
+            IsInitialized = false;
+            _game = null;
+
+            // The default goes back to whatever it was; this service never became usable.
+            if (IGumService.Default == null || ReferenceEquals(IGumService.Default, this))
+            {
+                IGumService.Default = previousDefault;
+            }
             throw;
         }
+    }
+
+    private EventHandler<EventArgs>? _gameDisposedHandler;
+
+    private void DetachGameDisposedHandler()
+    {
+        if (_game != null && _gameDisposedHandler != null)
+        {
+            _game.Disposed -= _gameDisposedHandler;
+        }
+        _gameDisposedHandler = null;
+    }
+
+    private GumProjectSave? InitializeCore(
+        Game? game, GraphicsDevice graphicsDevice,
+        string? gumProjectFile,
+        SystemManagers? systemManagers,
+        DefaultVisualsVersion defaultVisualsVersion)
+    {
+        _game = game;
+
+        // Optional packages register their runtime types into the process-wide base layer, where every
+        // service sees them, not into the current service's layer.
+        GumContext.RegisteringShared = true;
+        try
+        {
+            RegisterRuntimeTypesThroughReflection();
+        }
+        finally
+        {
+            GumContext.RegisteringShared = false;
+        }
+
+        // This service becomes the default first, so the writes Initialize makes (registrations, content
+        // loader, cache) land in its own context. The first service to initialize adopts the process-wide
+        // statics; later ones get their own state.
+        _context = new GumContext();
+        _context.ServiceTypeName = GetType().Name;
+        _context.Service = this;
+        _context.Register();
+        IGumService.Default = this;
+
+        // A service whose Game was disposed without Uninitialize is dead; stop counting it as live so
+        // it cannot keep owning the process statics.
+        if (game != null)
+        {
+            GumContext liveContext = _context;
+            _gameDisposedHandler = (_, _) => liveContext.Release();
+            game.Disposed += _gameDisposedHandler;
+        }
+
+        this.SystemManagers = systemManagers ?? new SystemManagers();
+        this.SystemManagers.Context = _context;
+        // A service handed its own managers leaves an existing default alone, but with no default at
+        // all it adopts them: Cursor, ScrollViewer and others read SystemManagers.Default.
+        if (systemManagers == null || SystemManagers.Default == null)
+        {
+            SystemManagers.Default = this.SystemManagers;
+            ISystemManagers.Default = this.SystemManagers;
+        }
+
+        this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
+
+        if (game != null && ContentLoader != null && ContentLoader.XnaContentManager == null)
+        {
+            ContentLoader.XnaContentManager = game.Content;
+        }
+
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
+            defaultVisualsVersion: defaultVisualsVersion);
+
+        return FinishInitialize(gumProjectFile);
     }
 
     // Framework/BCL assemblies never define a Gum "RegisterRuntimeType(s)" hook. Skipping them by
@@ -362,7 +468,18 @@ public partial class GumService
 
     static partial void ApplyTextureFilterPlatform(bool useLinearFiltering)
     {
-        Renderer.TextureFilter = useLinearFiltering ? TextureFilter.Linear : TextureFilter.Point;
+        TextureFilter filter = useLinearFiltering ? TextureFilter.Linear : TextureFilter.Point;
+
+        // A service that is not the first keeps its filter on its own renderer, so it never changes what the
+        // first one draws with.
+        if (GumContext.Own?.Service is GumService service)
+        {
+            service.SystemManagers.Renderer.TextureFilterOverride = filter;
+        }
+        else
+        {
+            Renderer.TextureFilter = filter;
+        }
     }
 
     // Extracts textures the serializer captured but could not resolve to a file path -- embedded or
@@ -412,22 +529,31 @@ public partial class GumService
         // reflection scan re-invokes it each cycle, so their registrations come
         // back. Packages that register only via [ModuleInitializer] won't, by
         // design — that's a known load-order contract gap tracked in issue #2761.
-        RenderableRegistry.Reset();
+        // Process-wide state shared by every service is reset only when the last service leaves.
+        bool isLastService = !GumContext.HasLiveContextOtherThan(_context);
 
-        // Issue #4416 — reset optional packages' own static state (e.g. ShapeRenderer.Self for
-        // Gum.Shapes.MonoGame/KNI) via the same reflection hook RegisterRuntimeTypesThroughReflection
-        // uses in the opposite direction.
-        UninitializeRuntimeTypesThroughReflection();
-
-        Text.Customizations.Clear();
-        Text.ContextCustomizations.Clear();
-        Text.DefaultBitmapFont = null;
-        Text.DefaultFont = null;
-
-        if (Sprite.InvalidTexture != null)
+        if (isLastService)
         {
-            Sprite.InvalidTexture.Dispose();
-            Sprite.InvalidTexture = null;
+            RenderableRegistry.Reset();
+
+            // Issue #4416 — reset optional packages' own static state (e.g. ShapeRenderer.Self for
+            // Gum.Shapes.MonoGame/KNI) via the same reflection hook RegisterRuntimeTypesThroughReflection
+            // uses in the opposite direction.
+            UninitializeRuntimeTypesThroughReflection();
+
+            Text.Customizations.Clear();
+            Text.ContextCustomizations.Clear();
+
+            // Fixed built-ins on the shared graphics device, not project data, so every service uses the
+            // same ones until the last leaves.
+            Text.DefaultBitmapFont = null;
+            Text.DefaultFont = null;
+
+            if (Sprite.InvalidTexture != null)
+            {
+                Sprite.InvalidTexture.Dispose();
+                Sprite.InvalidTexture = null;
+            }
         }
 
         if (_systemManagers != null)
@@ -437,6 +563,8 @@ public partial class GumService
 
         // Declared non-null but null! until Initialize sets it; teardown restores that state.
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
+
+        DetachGameDisposedHandler();
 
         // Folded from the end of the pre-split Uninitialize (was a trailing #if XNALIKE _game = null).
         // Nothing between this seam's call site and that point reads _game, so the move is inert.
@@ -461,6 +589,8 @@ public partial class GumService
     /// <param name="gameTime">The GameTime obtained from the Game class in the Update call.</param>
     public void Update(GameTime gameTime)
     {
+        using ServiceCallScope scope = EnterServiceCall();
+
         PollWindowSizeAndApplyFit();
 
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
@@ -478,6 +608,10 @@ public partial class GumService
 
     public void Update(GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
+        // Handlers and events fired below see this service as the default; the previous default comes back
+        // when Update returns, so a handler that assigns the default has that undone.
+        using ServiceCallScope scope = EnterServiceCall();
+
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 
         UpdatePreamble(roots);

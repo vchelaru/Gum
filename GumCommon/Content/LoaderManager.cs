@@ -204,6 +204,10 @@ public class LoaderManager
     /// <summary>
     /// Disposes every cached asset and empties the cache.
     /// </summary>
+    /// <remarks>
+    /// There is one cache for every <c>GumService</c> in the process, so this unloads content for all of them.
+    /// Gum calls it when the last service uninitializes, not when one of several does.
+    /// </remarks>
     public void DisposeAndClear()
     {
         foreach (var item in mCachedDisposables.Values)

@@ -71,8 +71,14 @@ public class SelectionChangedEventArgs
 public partial class InteractiveGue : GraphicalUiElement
 {
 
-    static List<Action> nextPushActions = new List<Action>();
-    static List<Action> nextClickActions = new List<Action>();
+    // The focus slot, the last pushed visual and the next push/click queues are facades over the current
+    // GumContext (#6066): the context that adopted the process statics uses the fields, every other
+    // service uses its own, so one service's focus change or queued action never reaches another's.
+    static readonly List<Action> _processWideNextPushActions = new List<Action>();
+    static readonly List<Action> _processWideNextClickActions = new List<Action>();
+
+    static List<Action> nextPushActions => GumContext.Own?.NextPushActions ?? _processWideNextPushActions;
+    static List<Action> nextClickActions => GumContext.Own?.NextClickActions ?? _processWideNextClickActions;
 
     /// <summary>
     /// The current game time in seconds, assigned internally when calling GumService.Update. 
@@ -82,8 +88,21 @@ public partial class InteractiveGue : GraphicalUiElement
     public static double CurrentGameTime { get; internal set; }
 
 
-    public static InteractiveGue? LastVisualPushed { get; set; }
-    static IInputReceiver? currentInputReceiver;
+    static InteractiveGue? _processWideLastVisualPushed;
+
+    public static InteractiveGue? LastVisualPushed
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.LastVisualPushed : _processWideLastVisualPushed; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.LastVisualPushed = value; } else { _processWideLastVisualPushed = value; } }
+    }
+
+    static IInputReceiver? _processWideInputReceiver;
+
+    static IInputReceiver? currentInputReceiver
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.CurrentInputReceiver : _processWideInputReceiver; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.CurrentInputReceiver = value; } else { _processWideInputReceiver = value; } }
+    }
 
     
     public static IInputReceiver? CurrentInputReceiver
@@ -897,7 +916,9 @@ public partial class InteractiveGue : GraphicalUiElement
     }
 
     // See DoNextClickAndPushActions for details on why this is needed
-    static List<Action> nextPushActionHoldingList = new();
+    static readonly List<Action> _processWideNextPushActionHoldingList = new();
+
+    static List<Action> nextPushActionHoldingList => GumContext.Own?.NextPushActionHoldingList ?? _processWideNextPushActionHoldingList;
 
     /// <summary>
     /// Adds an action to be called the next time the Cursor performs a push action 
@@ -924,7 +945,9 @@ public partial class InteractiveGue : GraphicalUiElement
     }
 
     // See DoNextClickAndPushActions for details on why this is needed
-    static List<Action> nextClickActionHoldingList = new();
+    static readonly List<Action> _processWideNextClickActionHoldingList = new();
+
+    static List<Action> nextClickActionHoldingList => GumContext.Own?.NextClickActionHoldingList ?? _processWideNextClickActionHoldingList;
 
     public static void ClearNextClickActions()
     {

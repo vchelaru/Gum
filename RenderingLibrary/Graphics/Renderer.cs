@@ -347,7 +347,16 @@ public class Renderer : IRenderer
     // I'm going to add a bool here to control it.
     public static bool ApplyCameraZoomOnWorldTranslation { get; set; } = false;
 
+    /// <summary>
+    /// The sampling filter applied when drawing. With several <c>GumService</c> instances this is the
+    /// filter of the first one; a later service keeps its project's filter on its own renderer instead.
+    /// </summary>
     public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
+
+    // This renderer's filter when it differs from the static one (a service that is not the first).
+    internal TextureFilter? TextureFilterOverride { get; set; }
+
+    internal TextureFilter EffectiveTextureFilter => TextureFilterOverride ?? TextureFilter;
 
     /// <summary>
     /// When true (the default), textures loaded from file bleed their edge color into
@@ -427,7 +436,11 @@ public class Renderer : IRenderer
         mDottedLineTexture?.Dispose();
         mDottedLineTexture = null!;
 
-        CustomEffectManager.Reset();
+        // The effect manager is device-bound and shared, so the last service out resets it.
+        if (!global::Gum.GumContext.HasLiveContextOtherThan(global::Gum.GumContext.Current))
+        {
+            CustomEffectManager.Reset();
+        }
     }
 
     #region Add/Remove Layers
@@ -573,7 +586,7 @@ public class Renderer : IRenderer
         }
         else
         {
-            mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+            mRenderStateVariables.Filtering = EffectiveTextureFilter == TextureFilter.Linear;
         }
     }
 

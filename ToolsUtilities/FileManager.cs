@@ -83,27 +83,42 @@ namespace ToolsUtilities
 
         #region Properties
 
+        // Installed by the Gum runtime (GumContext) so each running service can own its own relative
+        // directory. The reader returns the current service's value, or null to use the process-wide one; the
+        // writer stores the normalized value for the current service and returns true, or false to use the
+        // process-wide one. Unused in hosts that run no service.
+        internal static Func<string?>? RelativeDirectoryReader = null;
+
+        internal static Func<string, bool>? RelativeDirectoryWriter = null;
+
         public static string RelativeDirectory
         {
-            get { return mRelativeDirectory; }
+            get { return RelativeDirectoryReader?.Invoke() ?? mRelativeDirectory; }
             set
             {
+                string normalized;
                 if (IsRelative(value))
                 {
                     if (IsMobile)
                     {
-                        mRelativeDirectory = "./" + value;
+                        normalized = "./" + value;
                     }
                     else
                     {
-                        mRelativeDirectory = ExeLocation + value;
+                        normalized = ExeLocation + value;
                     }
                 }
                 else
                 {
-                    mRelativeDirectory = value.Replace('/', Path.DirectorySeparatorChar)
+                    normalized = value.Replace('/', Path.DirectorySeparatorChar)
                         .Replace('\\', Path.DirectorySeparatorChar);
                 }
+
+                if (RelativeDirectoryWriter?.Invoke(normalized) == true)
+                {
+                    return;
+                }
+                mRelativeDirectory = normalized;
             }
         }
 

@@ -19,7 +19,14 @@ namespace Gum.Forms.DefaultVisuals.V3;
 
 public class Styling
 {
-    private static Styling? _activeStyle;
+    private static Styling? _processWideActiveStyle;
+
+    // The current GumContext's style, or the process-wide one for the context that adopted the statics (#6066).
+    private static Styling? _activeStyle
+    {
+        get { GumContext? own = GumContext.Own; return own != null ? own.GetState<Styling>() : _processWideActiveStyle; }
+        set { GumContext? own = GumContext.Own; if (own != null) { own.SetState(value); } else { _processWideActiveStyle = value; } }
+    }
 
     /// <summary>
     /// This allows someone to get the active style from any instance they create, or from the class self like Styling.ActiveStyle.
