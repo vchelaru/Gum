@@ -419,62 +419,68 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             // freshly-loaded project, which is otherwise painful to track down.
             List<string> modifications = new List<string>();
             ObjectFinder.Self.EnableCache();
-            using (StartupTiming.Time("  load-time repair passes (total)"))
+            try
             {
+                using (StartupTiming.Time("  load-time repair passes (total)"))
+                {
 
-                // Initialize is the heaviest pass; have it report which specific elements it changed so a
-                // re-save's cause is identifiable rather than a bare "Initialize".
-                List<string> initializeModifications = new List<string>();
-                bool initializeChangedSomething;
-                using (StartupTiming.Time("    GumProjectSave.Initialize"))
-                {
-                    initializeChangedSomething = _gumProjectSave.Initialize(
-                        // tolerate this so we don't immediately crash the tool
-                        tolerateMissingDefaultStates: true, initializeModifications);
-                }
-                if (initializeChangedSomething)
-                {
-                    foreach (string reason in initializeModifications)
+                    // Initialize is the heaviest pass; have it report which specific elements it changed so a
+                    // re-save's cause is identifiable rather than a bare "Initialize".
+                    List<string> initializeModifications = new List<string>();
+                    bool initializeChangedSomething;
+                    using (StartupTiming.Time("    GumProjectSave.Initialize"))
                     {
-                        modifications.Add($"Initialize/{reason}");
+                        initializeChangedSomething = _gumProjectSave.Initialize(
+                            // tolerate this so we don't immediately crash the tool
+                            tolerateMissingDefaultStates: true, initializeModifications);
                     }
-                    if (initializeModifications.Count == 0)
+                    if (initializeChangedSomething)
                     {
-                        modifications.Add("Initialize");
+                        foreach (string reason in initializeModifications)
+                        {
+                            modifications.Add($"Initialize/{reason}");
+                        }
+                        if (initializeModifications.Count == 0)
+                        {
+                            modifications.Add("Initialize");
+                        }
                     }
-                }
-                _standardElementsManagerGumTool.FixCustomTypeConverters(_gumProjectSave);
-                RecreateMissingStandardElements(_gumProjectSave);
+                    _standardElementsManagerGumTool.FixCustomTypeConverters(_gumProjectSave);
+                    RecreateMissingStandardElements(_gumProjectSave);
 
-                if (RecreateMissingDefinedByBaseObjects())
-                {
-                    modifications.Add(nameof(RecreateMissingDefinedByBaseObjects));
-                }
+                    if (RecreateMissingDefinedByBaseObjects())
+                    {
+                        modifications.Add(nameof(RecreateMissingDefinedByBaseObjects));
+                    }
 
-                if (_gumProjectSave.AddNewStandardElementTypes())
-                {
-                    modifications.Add("AddNewStandardElementTypes");
-                }
-                if (_gumProjectRepairLogic.FixSlashesInNames(_gumProjectSave))
-                {
-                    modifications.Add("FixSlashesInNames");
-                }
-                if (_gumProjectRepairLogic.RemoveSpacesInVariables(_gumProjectSave))
-                {
-                    modifications.Add("RemoveSpacesInVariables");
-                }
-                if (_gumProjectSave.StripCircleRectangleGradientColor1())
-                {
-                    modifications.Add("StripCircleRectangleGradientColor1");
-                }
-                if (_gumProjectRepairLogic.RemoveDuplicateVariables(_gumProjectSave))
-                {
-                    modifications.Add("RemoveDuplicateVariables");
-                }
+                    if (_gumProjectSave.AddNewStandardElementTypes())
+                    {
+                        modifications.Add("AddNewStandardElementTypes");
+                    }
+                    if (_gumProjectRepairLogic.FixSlashesInNames(_gumProjectSave))
+                    {
+                        modifications.Add("FixSlashesInNames");
+                    }
+                    if (_gumProjectRepairLogic.RemoveSpacesInVariables(_gumProjectSave))
+                    {
+                        modifications.Add("RemoveSpacesInVariables");
+                    }
+                    if (_gumProjectSave.StripCircleRectangleGradientColor1())
+                    {
+                        modifications.Add("StripCircleRectangleGradientColor1");
+                    }
+                    if (_gumProjectRepairLogic.RemoveDuplicateVariables(_gumProjectSave))
+                    {
+                        modifications.Add("RemoveDuplicateVariables");
+                    }
 
-                _gumProjectSave.FixStandardVariables();
+                    _gumProjectSave.FixStandardVariables();
+                }
             }
-            ObjectFinder.Self.DisableCache();
+            finally
+            {
+                ObjectFinder.Self.DisableCache();
+            }
 
             FileManager.RelativeDirectory = fileName.GetDirectoryContainingThis()!.FullPath;
             _gumProjectSave.RemoveDuplicateVariables();

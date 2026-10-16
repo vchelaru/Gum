@@ -987,63 +987,83 @@ public partial class GraphicalUiElement
                     this.SuspendLayout(true);
                 }
 
-                var variablesWithoutStatesOnParent =
-                    state.Variables.Where(item =>
-                    {
-                        if (item.SetsValue)
+                // SuspendLayout(true) suspended this element and every descendant. If a variable throws
+                // (a custom setter, an event handler), none of them may stay suspended: every later
+                // UpdateLayout early-outs for a suspended element, so it would never lay out again.
+                bool appliedAllVariables = false;
+                try
+                {
+                    var variablesWithoutStatesOnParent =
+                        state.Variables.Where(item =>
                         {
-                            // We can set the variable if it's not setting a state (to prevent recursive setting).
-                            // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
-                            // element sets that state, then we want to allow it.  But should we just allow all states?
-                            // Or should we check if it's defined by the base...
-                            //return (item.IsState(state.ParentContainer) == false ||
-                            //    // If it is setting a state we'll allow it if it's on a child.
-                            //    !string.IsNullOrEmpty(item.SourceObject));
-                            // let's test this out:
-                            return true;
+                            if (item.SetsValue)
+                            {
+                                // We can set the variable if it's not setting a state (to prevent recursive setting).
+                                // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
+                                // element sets that state, then we want to allow it.  But should we just allow all states?
+                                // Or should we check if it's defined by the base...
+                                //return (item.IsState(state.ParentContainer) == false ||
+                                //    // If it is setting a state we'll allow it if it's on a child.
+                                //    !string.IsNullOrEmpty(item.SourceObject));
+                                // let's test this out:
+                                return true;
 
-                        }
-                        return false;
-                    }).ToArray();
+                            }
+                            return false;
+                        }).ToArray();
 
 
-                var parentSettingVariables =
-                    variablesWithoutStatesOnParent
-                        .Where(item => item.GetRootName() == "Parent")
-                        .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                    var parentSettingVariables =
+                        variablesWithoutStatesOnParent
+                            .Where(item => item.GetRootName() == "Parent")
+                            .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                            .ToArray();
+
+                    var nonParentSettingVariables =
+                        variablesWithoutStatesOnParent
+                            .Except(parentSettingVariables)
+                            // Even though we removed state-setting variables on the parent, we still allow setting
+                            // states on the contained objects
+                            .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
+                            .ToArray();
+
+                    var variablesToConsider =
+                        parentSettingVariables.Concat(nonParentSettingVariables)
                         .ToArray();
 
-                var nonParentSettingVariables =
-                    variablesWithoutStatesOnParent
-                        .Except(parentSettingVariables)
-                        // Even though we removed state-setting variables on the parent, we still allow setting
-                        // states on the contained objects
-                        .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
-                        .ToArray();
-
-                var variablesToConsider =
-                    parentSettingVariables.Concat(nonParentSettingVariables)
-                    .ToArray();
-
-                int variableCount = variablesToConsider.Length;
-                for (int i = 0; i < variableCount; i++)
-                {
-                    var variable = variablesToConsider[i];
-                    if (variable.SetsValue && variable.Value != null)
+                    int variableCount = variablesToConsider.Length;
+                    for (int i = 0; i < variableCount; i++)
                     {
-                        this.SetProperty(variable.Name, variable.Value);
+                        var variable = variablesToConsider[i];
+                        if (variable.SetsValue && variable.Value != null)
+                        {
+                            this.SetProperty(variable.Name, variable.Value);
+                        }
                     }
+
+                    foreach (var variableList in state.VariableLists)
+                    {
+                        this.SetProperty(variableList.Name, variableList.ValueAsIList);
+                    }
+
+                    appliedAllVariables = true;
                 }
-
-                foreach (var variableList in state.VariableLists)
+                finally
                 {
-                    this.SetProperty(variableList.Name, variableList.ValueAsIList);
-                }
-
-                if (didSuspend)
-                {
-                    this.ResumeLayout(true);
-
+                    if (didSuspend)
+                    {
+                        if (appliedAllVariables)
+                        {
+                            this.ResumeLayout(true);
+                        }
+                        else
+                        {
+                            // Lift the suspension without flushing: the flush would run layout (and the same
+                            // throwing setter) while the original exception is unwinding. The dirty state is
+                            // kept, so the next layout of these elements catches up.
+                            this.ClearLayoutSuspensionRecursive();
+                        }
+                    }
                 }
             }
 
@@ -1071,17 +1091,33 @@ public partial class GraphicalUiElement
             this.SuspendLayout(true);
         }
 
-        foreach (var variable in variableSaveValues)
+        bool appliedAllVariables = false;
+        try
         {
-            if (variable.Value != null)
+            foreach (var variable in variableSaveValues)
             {
-                this.SetProperty(variable.Name, variable.Value);
+                if (variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
             }
-        }
 
-        if (didSuspend)
+            appliedAllVariables = true;
+        }
+        finally
         {
-            this.ResumeLayout(true);
+            if (didSuspend)
+            {
+                if (appliedAllVariables)
+                {
+                    this.ResumeLayout(true);
+                }
+                else
+                {
+                    // See ApplyState(StateSave): lift the suspension without flushing while unwinding.
+                    this.ClearLayoutSuspensionRecursive();
+                }
+            }
         }
     }
 

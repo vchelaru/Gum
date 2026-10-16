@@ -214,13 +214,26 @@ public partial class GraphicalUiElement
                 {
                     SuspendLayout();
                 }
-                for (int i = 0; i < oldItems.Count; i++)
+                try
                 {
-                    var child = (GraphicalUiElement)oldItems[i]!;
-                    if (child.Parent == this && !child._isSettingParent)
+                    for (int i = 0; i < oldItems.Count; i++)
                     {
-                        child.Parent = null;
+                        var child = (GraphicalUiElement)oldItems[i]!;
+                        if (child.Parent == this && !child._isSettingParent)
+                        {
+                            child.Parent = null;
+                        }
                     }
+                }
+                catch
+                {
+                    // Lift the suspension without flushing: this element must not stay suspended, and
+                    // a flush would run layout while the exception unwinds.
+                    if (shouldSuspend)
+                    {
+                        mIsLayoutSuspended = false;
+                    }
+                    throw;
                 }
                 if (shouldSuspend)
                 {
