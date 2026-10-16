@@ -422,6 +422,9 @@ public partial class GumService : IGumService
     /// </summary>
     public ProjectResolution? CurrentProjectResolution { get; private set; }
 
+    // The CustomGetStreamFromFile hook the current bundle load installed, or null for a loose project.
+    private Func<string, System.IO.Stream>? _installedBundleHook;
+
     // The XNA Game host (_game / Game) is XNALIKE-only and lives in GumService.XnaLike.cs (issue #3608).
 
     #region Initialize
@@ -540,6 +543,7 @@ public partial class GumService : IGumService
             // (textures/fonts) also resolve from the bundle.
             ProjectResolution projectResolution = GumBundleLoader.Resolve(gumProjectFile);
             CurrentProjectResolution = projectResolution;
+            _installedBundleHook = projectResolution.UsedBundle ? FileManager.CustomGetStreamFromFile : null;
             gumProject = GumProjectSave.Load(projectResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
 
@@ -610,8 +614,6 @@ public partial class GumService : IGumService
         ColoredRectangleRuntime.DefaultHeight = GetFloat("Height");
 #pragma warning restore CS0618
 
-        current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
-
         float GetFloat(string variableName) => current?.DefaultState!.GetValueOrDefault<float>(variableName) ?? 0;
     }
 
@@ -650,6 +652,14 @@ public partial class GumService : IGumService
         // Forms roots, Forms input registrations and templates, the project, and the content cache.
         // Shared with GumServiceSkiaBase.
         GumServiceTeardown.ReleaseFormsAndContent();
+
+        // A bundle load replaced FileManager.CustomGetStreamFromFile; put back the hook it composed
+        // over. Skipped when something else (a later service or the host) has since installed its own.
+        if (_installedBundleHook != null && FileManager.CustomGetStreamFromFile == _installedBundleHook)
+        {
+            FileManager.CustomGetStreamFromFile = CurrentProjectResolution?.PreviousHook;
+        }
+        _installedBundleHook = null;
         CurrentProjectResolution = null;
 
         FormsUtilities.Uninitialize();
