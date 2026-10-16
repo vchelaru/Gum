@@ -111,6 +111,30 @@ public class GumServiceLifecycleTests : BaseTestClass
     }
 
     [Fact]
+    public void Initialize_WithExternalSystemManagers_WhenNoDefaultExists_AdoptsThemSoTheServiceWorks()
+    {
+        // Cursor, ScrollViewer, ListBox and others read SystemManagers.Default; a lone service that is
+        // handed its own managers must not be left with a null default and a NullReferenceException
+        // in Update.
+        using ServiceTestGame game = new();
+        game.Start();
+        GumService service = game.CreateService();
+        SystemManagers externalManagers = new();
+
+        service.Initialize(game, externalManagers);
+
+        SystemManagers.Default.ShouldBeSameAs(externalManagers);
+        ISystemManagers.Default.ShouldBeSameAs(externalManagers);
+        Should.NotThrow(() => service.Update(FrameTime));
+        Should.NotThrow(() => service.Draw());
+
+        service.Uninitialize();
+
+        SystemManagers.Default.ShouldBeNull();
+        ISystemManagers.Default.ShouldBeNull();
+    }
+
+    [Fact]
     public void Uninitialize_OfServiceWithExternalSystemManagers_LeavesSystemManagersDefaultAlone()
     {
         using ServiceTestGame game = new();
