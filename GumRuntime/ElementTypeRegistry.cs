@@ -3,52 +3,38 @@ using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 
 namespace Gum;
 
 /// <summary>
 /// One layer of the element-name to runtime-type table behind <c>ElementSaveExtensions</c>. There is a
-/// process-wide <see cref="Base"/> layer (what <c>[ModuleInitializer]</c>s and other registrations made
-/// outside any service write) and one layer per <see cref="GumContext"/>. Every entry carries a global
-/// sequence stamp, and a lookup takes the newest entry across the context layer and the base, which gives
-/// the same answer one merged table would (later registration wins, factories before types).
+/// process-wide <see cref="Base"/> layer (what <c>[ModuleInitializer]</c>s, the optional-package hooks and
+/// registrations made while no service exists write) and one layer per <see cref="GumContext"/>. A lookup
+/// checks the service's own layer first, then the base.
 /// </summary>
 internal sealed class ElementTypeRegistry
 {
-    private static long _nextStamp;
-
     /// <summary>The process-wide layer shared by every service.</summary>
     internal static ElementTypeRegistry Base { get; } = new ElementTypeRegistry();
 
-    private readonly Dictionary<string, (Type Type, long Stamp)> _types = new Dictionary<string, (Type, long)>();
-    private readonly Dictionary<string, (Func<GraphicalUiElement> Func, long Stamp)> _funcs =
-        new Dictionary<string, (Func<GraphicalUiElement>, long)>();
-    private (Func<GraphicalUiElement> Func, long Stamp)? _template;
+    private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>();
+    private readonly Dictionary<string, Func<GraphicalUiElement>> _funcs = new Dictionary<string, Func<GraphicalUiElement>>();
+    private Func<GraphicalUiElement>? _template;
 
-    internal void SetType(string elementName, Type type)
-    {
-        _types[elementName] = (type, Interlocked.Increment(ref _nextStamp));
-    }
+    internal void SetType(string elementName, Type type) => _types[elementName] = type;
 
-    internal void SetFunc(string elementName, Func<GraphicalUiElement> func)
-    {
-        _funcs[elementName] = (func, Interlocked.Increment(ref _nextStamp));
-    }
+    internal void SetFunc(string elementName, Func<GraphicalUiElement> func) => _funcs[elementName] = func;
 
-    internal void SetTemplate(Func<GraphicalUiElement> func)
-    {
-        _template = (func, Interlocked.Increment(ref _nextStamp));
-    }
+    internal void SetTemplate(Func<GraphicalUiElement> func) => _template = func;
 
     internal bool ContainsName(string elementName) => _types.ContainsKey(elementName) || _funcs.ContainsKey(elementName);
 
     internal void RemoveTypes(Func<Type, bool> shouldRemove)
     {
         List<string>? namesToRemove = null;
-        foreach (KeyValuePair<string, (Type Type, long Stamp)> pair in _types)
+        foreach (KeyValuePair<string, Type> pair in _types)
         {
-            if (shouldRemove(pair.Value.Type))
+            if (shouldRemove(pair.Value))
             {
                 namesToRemove ??= new List<string>();
                 namesToRemove.Add(pair.Key);
@@ -71,53 +57,26 @@ internal sealed class ElementTypeRegistry
         _template = null;
     }
 
-    /// <summary>Finds the newest factory registered under <paramref name="elementName"/> in either layer.</summary>
+    /// <summary>Finds a factory registered under <paramref name="elementName"/>: the service's layer, then the base.</summary>
     internal static bool TryGetFunc(ElementTypeRegistry? layer, string elementName, [NotNullWhen(true)] out Func<GraphicalUiElement>? func)
     {
-        long stamp = 0;
-        func = null;
-        if (layer != null && layer._funcs.TryGetValue(elementName, out (Func<GraphicalUiElement> Func, long Stamp) own))
+        if (layer != null && layer._funcs.TryGetValue(elementName, out func))
         {
-            func = own.Func;
-            stamp = own.Stamp;
+            return true;
         }
-        if (Base._funcs.TryGetValue(elementName, out (Func<GraphicalUiElement> Func, long Stamp) shared) && shared.Stamp > stamp)
-        {
-            func = shared.Func;
-        }
-        return func != null;
+        return Base._funcs.TryGetValue(elementName, out func);
     }
 
-    /// <summary>Finds the newest type registered under <paramref name="elementName"/> in either layer.</summary>
+    /// <summary>Finds a type registered under <paramref name="elementName"/>: the service's layer, then the base.</summary>
     internal static bool TryGetType(ElementTypeRegistry? layer, string elementName, [NotNullWhen(true)] out Type? type)
     {
-        long stamp = 0;
-        type = null;
-        if (layer != null && layer._types.TryGetValue(elementName, out (Type Type, long Stamp) own))
+        if (layer != null && layer._types.TryGetValue(elementName, out type))
         {
-            type = own.Type;
-            stamp = own.Stamp;
+            return true;
         }
-        if (Base._types.TryGetValue(elementName, out (Type Type, long Stamp) shared) && shared.Stamp > stamp)
-        {
-            type = shared.Type;
-        }
-        return type != null;
+        return Base._types.TryGetValue(elementName, out type);
     }
 
-    /// <summary>Returns the newest default instantiation function registered in either layer.</summary>
-    internal static Func<GraphicalUiElement>? GetTemplate(ElementTypeRegistry? layer)
-    {
-        (Func<GraphicalUiElement> Func, long Stamp)? own = layer?._template;
-        (Func<GraphicalUiElement> Func, long Stamp)? shared = Base._template;
-        if (own == null)
-        {
-            return shared?.Func;
-        }
-        if (shared == null)
-        {
-            return own.Value.Func;
-        }
-        return shared.Value.Stamp > own.Value.Stamp ? shared.Value.Func : own.Value.Func;
-    }
+    /// <summary>Returns the default instantiation function: the service's, else the base's.</summary>
+    internal static Func<GraphicalUiElement>? GetTemplate(ElementTypeRegistry? layer) => layer?._template ?? Base._template;
 }

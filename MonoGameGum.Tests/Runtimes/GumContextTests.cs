@@ -437,22 +437,25 @@ public class GumContextTests : BaseTestClass
     }
 
     [Fact]
-    public void RegisterGueInstantiation_ShouldPreferNewestRegistration_AcrossBaseAndContextLayers()
+    public void RegisterGueInstantiation_ShouldPreferTheServicesOwnLayer_OverTheBaseLayer()
     {
         GumContext first = CreateLiveContext();
         ComponentSave component = new ComponentSave { Name = "Widget" };
-
         MakeDefault(first);
-        {
-            ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "Older" });
-        }
-        // Registered later, with no service active, like user startup code that runs after Initialize.
-        ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "Newer" });
+        ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "Own" });
 
-        MakeDefault(first);
+        // Registered afterward into the shared base layer, like an optional-package hook.
+        GumContext.RegisteringShared = true;
+        try
         {
-            ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("Newer");
+            ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "Base" });
         }
+        finally
+        {
+            GumContext.RegisteringShared = false;
+        }
+
+        ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("Own", "the service's own layer is checked before the base");
     }
 
     [Fact]
