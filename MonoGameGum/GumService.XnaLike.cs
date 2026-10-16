@@ -41,8 +41,22 @@ public partial class GumService
     /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
     /// this instance when a custom configuration is not required. The declared and runtime type is the
     /// <see cref="MonoGameGum.GumService"/> back-compat subclass so legacy declarations keep compiling.</remarks>
-    public static MonoGameGum.GumService Default =>
-        (MonoGameGum.GumService)(_default ??= new MonoGameGum.GumService());
+    public static MonoGameGum.GumService Default
+    {
+        get => (MonoGameGum.GumService)(_default ??= (IGumService.Default as MonoGameGum.GumService) ?? new MonoGameGum.GumService());
+        set => IGumService.Default = value;
+    }
+
+    // Follows IGumService.Default when it is assigned a back-compat instance. A service of any other
+    // type (a plain Gum.GumService) is the current service but is not what this typed property returns, and
+    // clearing the default does not drop an initialized typed instance; Uninitialize clears it.
+    private static void OnDefaultChanged(IGumService? service)
+    {
+        if (service is MonoGameGum.GumService typed)
+        {
+            _default = typed;
+        }
+    }
 #pragma warning restore CS0618
 
     #endregion

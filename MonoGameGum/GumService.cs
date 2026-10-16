@@ -53,6 +53,12 @@ public partial class GumService : IGumService
     // and lives in the per-platform partials, as do the GameTime property and the explicit
     // IGumService.Initialize / IGumService.GameTime members (issue #3608).
     static GumService? _default;
+
+    static GumService()
+    {
+        // Keeps the typed Default in step with IGumService.Default, the one current-service pointer.
+        IGumService.DefaultChanged += OnDefaultChanged;
+    }
     #endregion
 
     /// <summary>

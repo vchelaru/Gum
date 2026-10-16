@@ -169,9 +169,19 @@ namespace RenderingLibrary
         public static IGumService? Default
         {
             get => _default;
-            set => _default = value;
+            set
+            {
+                _default = value;
+                DefaultChanged?.Invoke(value);
+            }
         }
 
         private static IGumService? _default;
+
+        /// <summary>
+        /// Raised after <see cref="Default"/> is assigned. The runtimes use it to keep their typed
+        /// <c>GumService.Default</c> in step without casting on every read.
+        /// </summary>
+        internal static event System.Action<IGumService?>? DefaultChanged;
     }
 }

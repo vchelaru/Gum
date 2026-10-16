@@ -36,8 +36,20 @@ public partial class GumService
     /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
     /// this instance when a custom configuration is not required. The declared and runtime type is the
     /// <see cref="RaylibGum.GumService"/> back-compat subclass so legacy declarations keep compiling.</remarks>
-    public static RaylibGum.GumService Default =>
-        (RaylibGum.GumService)(_default ??= new RaylibGum.GumService());
+    public static RaylibGum.GumService Default
+    {
+        get => (RaylibGum.GumService)(_default ??= (IGumService.Default as RaylibGum.GumService) ?? new RaylibGum.GumService());
+        set => IGumService.Default = value;
+    }
+
+    // Follows IGumService.Default when it is assigned a back-compat instance (see the XNA-like partial).
+    private static void OnDefaultChanged(IGumService? service)
+    {
+        if (service is RaylibGum.GumService typed)
+        {
+            _default = typed;
+        }
+    }
 #pragma warning restore CS0618
 
     #endregion
