@@ -367,7 +367,7 @@ public partial class GumService : IGumService
 
     public void UseGamepadDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
     }
 
     // Off by default; opt in via UseSingleThreadedAsync. Formerly #if !FRB-guarded, but GumService
