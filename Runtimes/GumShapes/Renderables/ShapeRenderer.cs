@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -247,8 +248,10 @@ public class ShapeRenderer
 
     public void Initialize()
     {
-        var gumService = Gum.GumService.Default;
-        if(gumService.IsInitialized == false)
+        // Resolve the device from the active SystemManagers rather than GumService.Default, so this
+        // works for a GumService created with "new GumService()" (and never creates a Default).
+        GraphicsDevice? graphicsDevice = SystemManagers.Default?.Renderer?.GraphicsDevice;
+        if(graphicsDevice == null)
         {
             throw new InvalidOperationException(
                 "ShapeRenderer cannot be initialized through the parameterless overload because GumService is not initialized. " +
@@ -256,13 +259,16 @@ public class ShapeRenderer
                 "(useful when rendering through GumBatch without GumService).");
         }
 
-        Initialize(gumService.Game.GraphicsDevice, gumService.Game.Content);
+        InitializeInternal(graphicsDevice);
     }
 
     // contentManager is unused as of Apos.Shapes 0.7.2+ — the shader is embedded in the
     // assembly, so ShapeBatch no longer loads it via the content pipeline. Kept as a parameter
     // for source/binary compatibility with existing callers.
-    public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager)
+    public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager) =>
+        InitializeInternal(graphicsDevice);
+
+    private void InitializeInternal(GraphicsDevice graphicsDevice)
     {
         if(IsInitialized)
         {
