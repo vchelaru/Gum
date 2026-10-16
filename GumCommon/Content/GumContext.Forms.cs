@@ -31,11 +31,6 @@ internal sealed partial class GumContext
     internal List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> AdditionalPopupRootPairs { get; } =
         new List<(InteractiveGue, InteractiveGue)>();
 
-    // FormsUtilities.Cursor / Keyboard / Gamepads, which are separate from MainCursor / MainKeyboard.
-    internal ICursor? FormsCursor { get; set; }
-
-    internal IInputReceiverKeyboard? FormsKeyboard { get; set; }
-
     internal GamePad[] Gamepads { get; set; } = new GamePad[4];
 
     internal VisualTemplate? DefaultTooltipTemplate { get; set; }

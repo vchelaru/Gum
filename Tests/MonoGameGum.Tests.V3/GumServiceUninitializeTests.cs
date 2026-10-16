@@ -213,6 +213,7 @@ public class GumServiceUninitializeTests
             FormsUtilities.Uninitialize();
 
             FormsUtilities.Cursor.ShouldBeNull();
+            FrameworkElement.MainCursor.ShouldBeNull();
         }
         finally
         {
@@ -235,6 +236,7 @@ public class GumServiceUninitializeTests
             FormsUtilities.Uninitialize();
 
             FormsUtilities.Keyboard.ShouldBeNull();
+            FrameworkElement.MainKeyboard.ShouldBeNull();
         }
         finally
         {
