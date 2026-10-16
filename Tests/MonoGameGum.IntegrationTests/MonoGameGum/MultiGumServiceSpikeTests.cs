@@ -73,14 +73,14 @@ public class MultiGumServiceSpikeTests : BaseTestClass
     }
 
     [Fact]
-    public void TwoServices_DrawnOnTopOfEachOther_WithoutAnySwap_ShouldShowBothProjects()
+    public void TwoServices_DrawnOnTopOfEachOther_ShouldShowBothProjects()
     {
         using TwoServiceGame game = CreateGame();
 
         GraphicalUiElement screenA = BuildScreen(game.ServiceA, game.ProjectA, "MainScreen");
         GraphicalUiElement screenB = BuildScreen(game.ServiceB, game.ProjectB, "EditorScreen");
 
-        XnaColor[] pixels = DrawBothInto(game, restoreStatics: false);
+        XnaColor[] pixels = DrawBothInto(game);
 
         IsRed(pixels[IndexOf(PointInsideA)]).ShouldBeTrue(Info(pixels) + " " + "project A's button should be red");
         IsBlue(pixels[IndexOf(PointInsideB)]).ShouldBeTrue(Info(pixels) + " " + "project B's button should be blue");
@@ -91,9 +91,7 @@ public class MultiGumServiceSpikeTests : BaseTestClass
     {
         using TwoServiceGame game = CreateGame();
 
-        game.StateA.Restore();
         BuildScreen(game.ServiceA, game.ProjectA, "MainScreen");
-        game.StateB.Restore();
         BuildScreen(game.ServiceB, game.ProjectB, "EditorScreen");
 
         GraphicsDevice gd = game.GraphicsDevice;
@@ -102,7 +100,7 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         gd.SetRenderTarget(capture);
         gd.Clear(XnaColor.CornflowerBlue);
 
-        // No restore: this is what a user calling service A's public Draw() gets today.
+        // B is the default here; A's public Draw() makes A the default for the call.
         game.ServiceA.Draw();
         gd.SetRenderTarget(null);
         XnaColor[] pixels = new XnaColor[CaptureWidth * CaptureHeight];
@@ -119,7 +117,6 @@ public class MultiGumServiceSpikeTests : BaseTestClass
 
         game.ServiceB.Uninitialize();
 
-        game.StateA.Restore();
         GraphicalUiElement screenA = BuildScreen(game.ServiceA, game.ProjectA, "MainScreen");
 
         GraphicsDevice gd = game.GraphicsDevice;
@@ -157,7 +154,8 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         return screen;
     }
 
-    private static XnaColor[] DrawBothInto(TwoServiceGame game, bool restoreStatics)
+    /// <summary>Draws A then B straight through their renderers, under whichever service is the default.</summary>
+    private static XnaColor[] DrawBothInto(TwoServiceGame game)
     {
         GraphicsDevice gd = game.GraphicsDevice;
         using RenderTarget2D capture = new RenderTarget2D(gd, CaptureWidth, CaptureHeight, false,
@@ -171,11 +169,9 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         {
             // Renderer.Draw leaves no render target bound, so rebind before each service's pass.
             gd.SetRenderTarget(capture);
-            if (restoreStatics) { game.StateA.Restore(); }
             game.ServiceA.SystemManagers.Renderer.Draw(game.ServiceA.SystemManagers);
 
             gd.SetRenderTarget(capture);
-            if (restoreStatics) { game.StateB.Restore(); }
             game.ServiceB.SystemManagers.Renderer.Draw(game.ServiceB.SystemManagers);
         }
 
@@ -333,8 +329,6 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         public Gum.GumService ServiceB { get; }
         public GumProjectSave ProjectA { get; private set; } = null!;
         public GumProjectSave ProjectB { get; private set; } = null!;
-        public StaticSnapshot StateA { get; private set; } = null!;
-        public StaticSnapshot StateB { get; private set; } = null!;
 
         public TwoServiceGame(string pathA, string? pathB)
         {
@@ -350,11 +344,9 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         {
             base.Initialize();
             ProjectA = ServiceA.Initialize(this, _pathA)!;
-            StateA = StaticSnapshot.Capture(ServiceA);
             if (_pathB != null)
             {
                 ProjectB = ServiceB.Initialize(this, _pathB)!;
-                StateB = StaticSnapshot.Capture(ServiceB);
             }
         }
 
@@ -367,7 +359,7 @@ public class MultiGumServiceSpikeTests : BaseTestClass
             if (ServiceA.IsInitialized) { ServiceA.Uninitialize(); }
             LoaderManager.Self?.DisposeAndClear();
 
-            // A restored snapshot can leave stale statics behind after both services are gone.
+            // A red test can leave stale statics behind after both services are gone.
             SystemManagers.Default = null!;
             ISystemManagers.Default = null!;
             IGumService.Default = null;

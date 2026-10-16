@@ -20,10 +20,9 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
 /// <summary>
 /// Third spike for the epic on running several GumService instances in one process (#6066): name,
-/// asset and lifecycle collisions between two services under the manual <see cref="StaticSnapshot"/>
-/// swap. Each test asserts the behavior we want, so a red test is a collision; the failure message says
-/// which one. Tests named "...WithSnapshotSwap..." restore a service's snapshot before touching it;
-/// the others deliberately do not.
+/// asset and lifecycle collisions between two services. Each test asserts the behavior we want, so a red
+/// test is a collision; the failure message says which one. A test makes a service the default
+/// (<c>IGumService.Default</c>) before building for it, as the service rule requires.
 /// </summary>
 public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 {
@@ -74,7 +73,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         GraphicalUiElement screen = Build(game, useA: true, screenName);
         using CollisionCapture capture = new CollisionCapture(game.GraphicsDevice);
-        capture.Draw(game.ServiceA, game.StateA);
+        capture.Draw(game.ServiceA, makeServiceDefault: true);
         XnaColor[] pixels = capture.Read();
 
         AssertOwnAssetPixels(pixels, OriginA, kind, expectRed: true, $"lone service, {screenName}");
@@ -86,22 +85,22 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
     // Both projects define Card, Derived (BaseType Card, a custom component), MainScreen and their own
     // ColoredRectangle Standard (red default in A, blue default in B). Everything is resolved through
-    // ObjectFinder, which the snapshot swaps, so this is expected to be green.
+    // ObjectFinder, which follows the default service.
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void SameNamedComponentsStandardsAndBaseTypes_WithSnapshotSwap_ShouldEachBuildTheirOwnDefinitions(bool aFirst)
+    public void SameNamedComponentsStandardsAndBaseTypes_ShouldEachBuildTheirOwnDefinitions(bool aFirst)
     {
         using CollisionGame game = CreateGame();
         string pathA = WriteNamesProject("A", OriginA, standardDefault: (255, 0, 0), dot: (255, 255, 0));
         string pathB = WriteNamesProject("B", OriginB, standardDefault: (0, 0, 255), dot: (0, 255, 0));
         InitializeBoth(game, pathA, pathB, aFirst);
 
-        // Build in the requested order, restoring each service's statics right before.
+        // Build in the requested order.
         if (aFirst) { Build(game, true, "MainScreen"); Build(game, false, "MainScreen"); }
         else { Build(game, false, "MainScreen"); Build(game, true, "MainScreen"); }
 
-        XnaColor[] pixels = DrawBoth(game, restore: true);
+        XnaColor[] pixels = DrawBoth(game, makeServiceDefault: true);
 
         AssertColors(pixels, new[]
         {
@@ -112,36 +111,13 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         });
     }
 
-    // Same two projects, no swap between building A and B: today's behavior of two plain services.
-    [Fact]
-    public void SameNamedComponentsAndStandards_WithoutSwap_ShouldEachBuildTheirOwnDefinitions()
-    {
-        using CollisionGame game = CreateGame();
-        string pathA = WriteNamesProject("A", OriginA, standardDefault: (255, 0, 0), dot: (255, 255, 0));
-        string pathB = WriteNamesProject("B", OriginB, standardDefault: (0, 0, 255), dot: (0, 255, 0));
-        InitializeBoth(game, pathA, pathB, aFirst: true);
-
-        // No Restore anywhere: ObjectFinder.Self holds B's project when A's screen is built.
-        BuildWithoutSwap(game, game.ServiceA, game.ProjectA!, "MainScreen");
-        BuildWithoutSwap(game, game.ServiceB, game.ProjectB!, "MainScreen");
-
-        XnaColor[] pixels = DrawBoth(game, restore: false);
-
-        AssertColors(pixels, new[]
-        {
-            ("A's Card.Fill should be A's red Standard default; A's screen was resolved against B's project (ObjectFinder.Self holds only the last project)", OriginA.X + 50, OriginA.Y + 30, (Func<XnaColor, bool>)CollisionCapture.IsRed),
-            ("A's Derived.Dot should be A's yellow", OriginA.X + 8, OriginA.Y + 8, CollisionCapture.IsYellow),
-            ("B's Card.Fill should be B's blue", OriginB.X + 50, OriginB.Y + 30, CollisionCapture.IsBlue),
-        });
-    }
-
     // Both projects define the behavior ButtonBehavior with a different FormsProperty default for
     // IsEnabled (A false, B true). BehaviorFormsPropertyApplier reads them from ObjectFinder.Self at
-    // construction time, so the swap should be enough.
+    // construction time, so making the service the default should be enough.
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void SameNamedBehaviors_WithSnapshotSwap_ShouldEachApplyTheirOwnFormsPropertyDefaults(bool aFirst)
+    public void SameNamedBehaviors_ShouldEachApplyTheirOwnFormsPropertyDefaults(bool aFirst)
     {
         using CollisionGame game = CreateGame();
         string pathA = WriteBehaviorProject("A", OriginA, isEnabledDefault: false);
@@ -161,13 +137,12 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         buttonB.IsEnabled.ShouldBeTrue("B's ButtonBehavior declares IsEnabled default true");
     }
 
-    // The element-type table is one process-wide table keyed by element name. A's Widget has
-    // ButtonBehavior and B's Widget has CheckBoxBehavior; Initialize registers a name only if it is
-    // not registered yet, so whichever service initializes first decides the runtime type for both.
+    // The element-type table is keyed by element name. A's Widget has ButtonBehavior and B's Widget has
+    // CheckBoxBehavior, so each service's table must give its own Widget its own runtime type.
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void SameNameDifferentFormsBehaviors_WithSnapshotSwap_ShouldEachCreateTheirOwnControlType(bool aFirst)
+    public void SameNameDifferentFormsBehaviors_ShouldEachCreateTheirOwnControlType(bool aFirst)
     {
         using CollisionGame game = CreateGame();
         string pathA = WriteWidgetProject("A", OriginA, behavior: "ButtonBehavior");
@@ -184,14 +159,13 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         object? controlB = FormsControlOf(screenB, "W");
         if (controlA is not Button) { failures.Add($"A's Widget (ButtonBehavior) became {controlA?.GetType().Name ?? "no Forms control"}"); }
         if (controlB is not CheckBox) { failures.Add($"B's Widget (CheckBoxBehavior) became {controlB?.GetType().Name ?? "no Forms control"}"); }
-        failures.ShouldBeEmpty("the element-type table (ElementSaveExtensions) is process-wide and keyed by element name, " +
-            "first registration wins, and the snapshot has no public setter for it: " + string.Join("; ", failures));
+        failures.ShouldBeEmpty("each service's element-type table (ElementSaveExtensions) is keyed by element name: " + string.Join("; ", failures));
     }
 
     // A's Widget has no behavior (a plain container) and B's has ButtonBehavior. B's registration of
-    // "Widget" turns A's plain Widget into a Forms Button too.
+    // "Widget" must not turn A's plain Widget into a Forms Button too.
     [Fact]
-    public void SameNamePlainVersusButton_WithSnapshotSwap_ShouldKeepPlainComponentPlain()
+    public void SameNamePlainVersusButton_ShouldKeepPlainComponentPlain()
     {
         using CollisionGame game = CreateGame();
         string pathA = WriteWidgetProject("A", OriginA, behavior: null);
@@ -203,17 +177,16 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         FormsControlOf(screenB, "W").ShouldBeOfType<Button>("B's Widget has ButtonBehavior");
         FormsControlOf(screenA, "W").ShouldBeNull(
-            "A's Widget has no behavior; it picked up B's registration of the same name in the process-wide element-type table");
+            "A's Widget has no behavior; it picked up B's registration of the same name in the element-type table");
     }
 
     #endregion
 
     #region 2. Assets: same relative file names, different content
 
-    // A's screen is built after B initialized and nothing is swapped, so the relative name resolves
-    // against B's folder.
+    // A's screen is built after B initialized, so the relative name must still resolve against A's folder.
     [Fact]
-    public void SameRelativeTextureName_WithoutSwap_ShouldLoadEachServicesOwnTexture()
+    public void SameRelativeTextureName_ShouldLoadEachServicesOwnTexture()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -223,24 +196,24 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         List<string> failures = new();
         try
         {
-            BuildWithoutSwap(game, game.ServiceA, game.ProjectA!, "SpriteScreen");
-            BuildWithoutSwap(game, game.ServiceB, game.ProjectB!, "SpriteScreen");
+            Build(game, useA: true, "SpriteScreen");
+            Build(game, useA: false, "SpriteScreen");
         }
         catch (Exception e)
         {
-            Assert.Fail($"Building without a swap throws {e.GetType().Name}: {e.Message}");
+            Assert.Fail($"Building throws {e.GetType().Name}: {e.Message}");
         }
-        XnaColor[] pixels = DrawBoth(game, restore: false);
+        XnaColor[] pixels = DrawBoth(game, makeServiceDefault: false);
 
         CollectOwnAssetFailures(failures, pixels, OriginA, "texture", expectRed: true, "A's Tex.png");
         CollectOwnAssetFailures(failures, pixels, OriginB, "texture", expectRed: false, "B's Tex.png");
-        failures.ShouldBeEmpty("FileManager.RelativeDirectory is process-wide, so A's sprite resolved Tex.png in B's folder: " + string.Join("; ", failures));
+        failures.ShouldBeEmpty("A's sprite must resolve Tex.png in A's folder, not B's: " + string.Join("; ", failures));
     }
 
-    // LoadContent after the other service swapped in, then A again: the cache must hand back A's own
-    // texture, not B's.
+    // LoadContent after the other service became the default, then A again: the cache must hand back A's
+    // own texture, not B's.
     [Fact]
-    public void LazyTextureLoad_AfterOtherServiceSwappedIn_ShouldReturnEachServicesOwnTexture()
+    public void LazyTextureLoad_AfterOtherServiceBecameDefault_ShouldReturnEachServicesOwnTexture()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -266,7 +239,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
     // Fonts resolved from Font + FontSize use the cache name FontCache/Font31Bogus.fnt, made absolute
     // against RelativeDirectory, so the cache key differs per project folder.
     [Fact]
-    public void SameRelativeFontCacheName_WithSnapshotSwap_ShouldLoadEachServicesOwnFont()
+    public void SameRelativeFontCacheName_ShouldLoadEachServicesOwnFont()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -275,7 +248,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         Build(game, true, "CacheFontScreen");
         Build(game, false, "CacheFontScreen");
-        XnaColor[] pixels = DrawBoth(game, restore: true);
+        XnaColor[] pixels = DrawBoth(game, makeServiceDefault: true);
 
         List<string> failures = new();
         CollectOwnAssetFailures(failures, pixels, OriginA, "font", expectRed: true, "A's FontCache/Font31Bogus.fnt");
@@ -284,10 +257,10 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
     }
 
     // CustomFontFile fonts are cached under the raw relative name ("Fonts/TestFont.fnt", see
-    // CustomSetPropertyOnRenderable.UpdateToFontValues), not the absolute path, so the second project
-    // gets the first project's font from the cache even with the swap.
+    // CustomSetPropertyOnRenderable.UpdateToFontValues), not the absolute path, so the cache must be
+    // per service or the second project gets the first project's font.
     [Fact]
-    public void SameRelativeCustomFontFile_WithSnapshotSwap_ShouldLoadEachServicesOwnFont()
+    public void SameRelativeCustomFontFile_ShouldLoadEachServicesOwnFont()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -296,12 +269,12 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         Build(game, true, "CustomFontScreen");
         Build(game, false, "CustomFontScreen");
-        XnaColor[] pixels = DrawBoth(game, restore: true);
+        XnaColor[] pixels = DrawBoth(game, makeServiceDefault: true);
 
         List<string> failures = new();
         CollectOwnAssetFailures(failures, pixels, OriginA, "font", expectRed: true, "A's Fonts/TestFont.fnt");
         CollectOwnAssetFailures(failures, pixels, OriginB, "font", expectRed: false, "B's Fonts/TestFont.fnt");
-        failures.ShouldBeEmpty("CustomFontFile fonts are cached under the raw relative name, so the cache is shared across projects: " + string.Join("; ", failures));
+        failures.ShouldBeEmpty("CustomFontFile fonts are cached under the raw relative name, so the cache must not be shared across projects: " + string.Join("; ", failures));
     }
 
     #endregion
@@ -311,7 +284,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
     // Everything is built lazily, after both services initialized: A's screen after B was the last to
     // initialize, then B's, then A's again from a second screen instance.
     [Fact]
-    public void ScreenBuiltInFirstService_AfterSecondServiceInitialized_WithSnapshotSwap_ShouldMatchAScreenBuiltBeforeIt()
+    public void ScreenBuiltInFirstService_AfterSecondServiceInitialized_ShouldMatchAScreenBuiltBeforeIt()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -326,7 +299,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         game.InitializeB(PathB);
         GraphicalUiElement lazyA = Build(game, true, "BothScreen");
         GraphicalUiElement lazyB = Build(game, false, "BothScreen");
-        XnaColor[] pixels = DrawBoth(game, restore: true);
+        XnaColor[] pixels = DrawBoth(game, makeServiceDefault: true);
 
         List<string> failures = new();
         if (CountNodes(lazyA) != loneCount) { failures.Add($"A's lazily built tree has {CountNodes(lazyA)} nodes, alone it has {loneCount}"); }
@@ -339,10 +312,10 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
     #region 4. Text, fonts and context after construction
 
-    // A's text is built while A is active; B's statics are active when A is drawn. The text holds its
-    // own BitmapFont, so drawing alone should not need the swap.
+    // A's text is built while A is the default; B is the default when A is drawn. The text holds its
+    // own BitmapFont, so drawing alone should not need A to be the default.
     [Fact]
-    public void TextBuiltUnderA_DrawnWhileBStaticsActive_ShouldStillUseAsFont()
+    public void TextBuiltUnderA_DrawnWhileBIsDefault_ShouldStillUseAsFont()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -352,37 +325,34 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         Build(game, true, "CacheFontScreen");
         Build(game, false, "CacheFontScreen");
 
-        // B is the active service for both draws (no restore at draw time).
+        // B is the default service for both draws.
         XnaColor[] pixels;
         global::RenderingLibrary.IGumService.Default = game.ServiceB;
         {
-            pixels = DrawBoth(game, restore: false);
+            pixels = DrawBoth(game, makeServiceDefault: false);
         }
 
         List<string> failures = new();
-        CollectOwnAssetFailures(failures, pixels, OriginA, "font", expectRed: true, "A's text drawn with B's statics active");
-        CollectOwnAssetFailures(failures, pixels, OriginB, "font", expectRed: false, "B's text drawn with B's statics active");
+        CollectOwnAssetFailures(failures, pixels, OriginA, "font", expectRed: true, "A's text drawn while B is the default");
+        CollectOwnAssetFailures(failures, pixels, OriginB, "font", expectRed: false, "B's text drawn while B is the default");
         failures.ShouldBeEmpty(string.Join("; ", failures));
     }
 
     // After construction each element should know which service it belongs to. EffectiveManagers
     // walks up to the root that AddToManagers set; the Text renderable keeps its own manager. The
     // Text, Polygon and Rectangle factories are registered by SystemManagers as closures over
-    // "this", and RegisterGueInstantiation overwrites, so without swapping the element-type table
-    // the last service to initialize owns them.
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ElementsBuiltUnderEachService_WhileTheOtherIsActive_ShouldRememberTheirOwnSystemManagers(bool swapElementTypeTable)
+    // "this", so each service's element-type table must hold its own.
+    [Fact]
+    public void ElementsBuiltUnderEachService_WhileTheOtherIsActive_ShouldRememberTheirOwnSystemManagers()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
         game.InitializeA(PathA);
         game.InitializeB(PathB);
 
-        GraphicalUiElement screenA = Build(game, true, "BothScreen", swapElementTypeTable);
-        GraphicalUiElement screenB = Build(game, false, "BothScreen", swapElementTypeTable);
-        game.StateB!.Restore(swapElementTypeTable); // B's statics are active from here on
+        GraphicalUiElement screenA = Build(game, true, "BothScreen");
+        GraphicalUiElement screenB = Build(game, false, "BothScreen");
+        IGumService.Default = game.ServiceB; // B is the default from here on
 
         List<string> failures = new();
         foreach ((string label, GraphicalUiElement screen, Gum.GumService service) in new[]
@@ -405,7 +375,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
             if (!ReferenceEquals(textManagers, service.SystemManagers))
             {
                 failures.Add($"{label}'s Text renderable keeps {(textManagers == null ? "no" : "another")} SystemManagers " +
-                    "(the Text factory in the process-wide element-type table closes over the SystemManagers of whichever service registered last)");
+                    "(the Text factory in the element-type table closes over the SystemManagers of whichever service registered last)");
             }
         }
         failures.ShouldBeEmpty(string.Join("; ", failures));
@@ -421,7 +391,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         game.InitializeA(PathA);
         game.InitializeB(PathB);
 
-        game.StateA!.Restore();
+        IGumService.Default = game.ServiceA;
         GraphicalUiElement detachedA = game.ProjectA!.Screens.First(s => s.Name == "BothScreen")
             .ToGraphicalUiElement(game.ServiceA.SystemManagers, addToManagers: false);
 
@@ -454,7 +424,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
             labelA.SetProperty("FontSize", 32);
             screenA.UpdateLayout();
 
-            pixels = DrawBoth(game, restore: false);
+            pixels = DrawBoth(game, makeServiceDefault: false);
         }
         Rectangle textArea = new Rectangle(OriginA.X, OriginA.Y + 50, 120, 30);
         int yellow = CollisionCapture.Count(pixels, textArea, CollisionCapture.IsYellow);
@@ -515,7 +485,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
             }
             screenA.UpdateLayout();
 
-            pixels = DrawBoth(game, restore: false);
+            pixels = DrawBoth(game, makeServiceDefault: false);
         }
         XnaColor center = CollisionCapture.At(pixels, OriginA.X + 20, OriginA.Y + 20);
         CollisionCapture.IsYellow(center).ShouldBeTrue(
@@ -526,14 +496,11 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
     #region 5. Initialize / Uninitialize cycles and shared resources
 
-    // A then B initialized, then one is uninitialized and the other must still draw. restoreBeforeUninit
-    // says whether the service being torn down gets its own statics back first (the careful way).
+    // A then B initialized, then one is uninitialized and the other must still draw.
     [Theory]
-    [InlineData(true, true)]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    [InlineData(false, false)]
-    public void UninitializingOneService_ShouldLeaveTheOtherAbleToDraw(bool uninitializeA, bool restoreBeforeUninit)
+    [InlineData(true)]
+    [InlineData(false)]
+    public void UninitializingOneService_ShouldLeaveTheOtherAbleToDraw(bool uninitializeA)
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -543,12 +510,9 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         Build(game, false, "BothScreen");
 
         Gum.GumService leaving = uninitializeA ? game.ServiceA : game.ServiceB;
-        CollisionSnapshot leavingState = uninitializeA ? game.StateA! : game.StateB!;
         Gum.GumService staying = uninitializeA ? game.ServiceB : game.ServiceA;
-        CollisionSnapshot stayingState = uninitializeA ? game.StateB! : game.StateA!;
         Point stayingOrigin = uninitializeA ? OriginB : OriginA;
 
-        if (restoreBeforeUninit) { leavingState.Restore(); }
         try { leaving.Uninitialize(); }
         catch (Exception e) { Assert.Fail($"Uninitialize throws {e.GetType().Name}: {e.Message}"); }
 
@@ -556,7 +520,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         try
         {
             using CollisionCapture capture = new CollisionCapture(game.GraphicsDevice);
-            capture.Draw(staying, stayingState);
+            capture.Draw(staying, makeServiceDefault: true);
             pixels = capture.Read();
         }
         catch (Exception e)
@@ -572,11 +536,9 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
     }
 
     // Resources that belong to the service that stays: nothing it owns should be disposed by the
-    // other service's Uninitialize, even when the leaving service restores its own statics first.
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void UninitializingFirstService_ShouldNotDisposeSecondServicesResources(bool restoreBeforeUninit)
+    // other service's Uninitialize.
+    [Fact]
+    public void UninitializingFirstService_ShouldNotDisposeSecondServicesResources()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -587,14 +549,15 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         // B's own resources: its loaded texture and font page, its default font, its invalid-texture.
         Texture2D textureB;
+        BitmapFontHandle defaultFontB;
+        Texture2D? invalidB;
         global::RenderingLibrary.IGumService.Default = game.ServiceB;
         {
             textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!;
+            defaultFontB = new(RenderingLibrary.Graphics.Text.DefaultBitmapFont);
+            invalidB = RenderingLibrary.Graphics.Sprite.InvalidTexture;
         }
-        BitmapFontHandle defaultFontB = new(game.StateB!.Statics.DefaultBitmap);
-        Texture2D? invalidB = game.StateB.Statics.InvalidTexture;
 
-        if (restoreBeforeUninit) { game.StateA!.Restore(); }
         game.ServiceA.Uninitialize();
 
         List<string> failures = new();
@@ -614,15 +577,14 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         game.InitializeB(PathB);
         Build(game, false, "BothScreen");
 
-        game.StateA!.Restore();
         game.ServiceA.Uninitialize();
 
         XnaColor[] pixels;
         try
         {
-            game.ReinitializeA(PathA);
+            game.InitializeA(PathA);
             Build(game, true, "BothScreen");
-            pixels = DrawBoth(game, restore: true);
+            pixels = DrawBoth(game, makeServiceDefault: true);
         }
         catch (Exception e)
         {
@@ -648,15 +610,14 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         game.InitializeB(PathB);
         Build(game, true, "BothScreen");
 
-        game.StateB!.Restore();
         game.ServiceB.Uninitialize();
 
         XnaColor[] pixels;
         try
         {
-            game.ReinitializeB(PathB);
+            game.InitializeB(PathB);
             Build(game, false, "BothScreen");
-            pixels = DrawBoth(game, restore: true);
+            pixels = DrawBoth(game, makeServiceDefault: true);
         }
         catch (Exception e)
         {
@@ -691,25 +652,23 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         {
             if (cycleA)
             {
-                game.StateA!.Restore();
                 game.ServiceA.Uninitialize();
-                game.ReinitializeA(PathA);
+                game.InitializeA(PathA);
             }
             else
             {
-                game.StateB!.Restore();
                 game.ServiceB.Uninitialize();
-                game.ReinitializeB(PathB);
+                game.InitializeB(PathB);
             }
 
             // Drop the trees built before the cycle (their textures were disposed), then build fresh ones.
-            game.StateA!.Restore();
+            IGumService.Default = game.ServiceA;
             oldA.RemoveFromManagers();
-            game.StateB!.Restore();
+            IGumService.Default = game.ServiceB;
             oldB.RemoveFromManagers();
             Build(game, true, "BothScreen");
             Build(game, false, "BothScreen");
-            pixels = DrawBoth(game, restore: true);
+            pixels = DrawBoth(game, makeServiceDefault: true);
         }
         catch (Exception e)
         {
@@ -725,17 +684,16 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         failures.ShouldBeEmpty(string.Join("; ", failures));
     }
 
-    // The same, without restoring the table (only what the public snapshot covers).
+    // Uninitializing the first service must not empty the element-type table the second registered into.
     [Fact]
-    public void BuildingFormsControlInSecondService_AfterFirstServiceUninitialized_WithSnapshotSwapOnly_ShouldStillCreateTheControl()
+    public void BuildingFormsControlInSecondService_AfterFirstServiceUninitialized_ShouldStillCreateTheControl()
     {
         using CollisionGame game = CreateGame();
         string pathA = WriteWidgetProject("A", OriginA, behavior: "ButtonBehavior");
         string pathB = WriteWidgetProject("B", OriginB, behavior: "CheckBoxBehavior");
-        game.InitializeA(pathA, freshElementTypeTable: true);
-        game.InitializeB(pathB, freshElementTypeTable: true);
+        game.InitializeA(pathA);
+        game.InitializeB(pathB);
 
-        game.StateA!.Restore();
         game.ServiceA.Uninitialize();
 
         GraphicalUiElement screenB;
@@ -751,7 +709,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         object? control = FormsControlOf(screenB, "W");
         (control is CheckBox).ShouldBeTrue(
-            $"B's Widget became {control?.GetType().Name ?? "no Forms control"}: A.Uninitialize called ElementSaveExtensions.ClearRegistrations, which empties the process-wide table B registered into");
+            $"B's Widget became {control?.GetType().Name ?? "no Forms control"}: A.Uninitialize called ElementSaveExtensions.ClearRegistrations, which emptied the table B registered into");
     }
 
     #endregion
@@ -781,15 +739,10 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         else { game.InitializeB(pathB); game.InitializeA(pathA); }
     }
 
-    private static GraphicalUiElement Build(CollisionGame game, bool useA, string screenName, bool includeElementTypeTable = false)
+    private static GraphicalUiElement Build(CollisionGame game, bool useA, string screenName)
     {
-        CollisionSnapshot state = useA ? game.StateA! : game.StateB!;
-        state.Restore(includeElementTypeTable);
-        return BuildWithoutSwap(game, useA ? game.ServiceA : game.ServiceB, useA ? game.ProjectA! : game.ProjectB!, screenName);
-    }
-
-    private static GraphicalUiElement BuildWithoutSwap(CollisionGame game, Gum.GumService service, GumProjectSave project, string screenName)
-    {
+        Gum.GumService service = useA ? game.ServiceA : game.ServiceB;
+        GumProjectSave project = useA ? game.ProjectA! : game.ProjectB!;
         ScreenSave screenSave = project.Screens.First(item => item.Name == screenName);
         // Building for a service means making it the default first; nothing switches implicitly.
         global::RenderingLibrary.IGumService.Default = service;
@@ -798,13 +751,13 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         return screen;
     }
 
-    private static XnaColor[] DrawBoth(CollisionGame game, bool restore)
+    private static XnaColor[] DrawBoth(CollisionGame game, bool makeServiceDefault)
     {
         using CollisionCapture capture = new CollisionCapture(game.GraphicsDevice);
         for (int pass = 0; pass < 2; pass++)
         {
-            capture.Draw(game.ServiceA, restore ? game.StateA : null);
-            capture.Draw(game.ServiceB, restore ? game.StateB : null);
+            capture.Draw(game.ServiceA, makeServiceDefault);
+            capture.Draw(game.ServiceB, makeServiceDefault);
         }
         return capture.Read();
     }

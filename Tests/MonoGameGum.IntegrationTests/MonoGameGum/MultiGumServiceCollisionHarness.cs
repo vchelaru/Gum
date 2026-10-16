@@ -18,50 +18,7 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
-// Harness for MultiGumServiceCollisionSpikeTests (#6066 spike). Kept separate from
-// MultiGumServiceStaticSnapshot.cs so the two spike branches do not conflict.
-
-/// <summary>
-/// <see cref=StaticSnapshot/> plus the element-type table. The table used to be one process-wide
-/// dictionary read here through reflection; it is now owned by each service's GumContext, so there is
-/// nothing left to capture or restore for it and the table members below do nothing. They stay so the
-/// tests that exercised the old per-service-table spike keep their shape.
-/// </summary>
-internal sealed class CollisionSnapshot
-{
-    public StaticSnapshot Statics { get; private set; } = null!;
-
-    private Gum.GumService _service = null!;
-
-    /// <summary>
-    /// Captures the statics as seen from <paramref name="service"/>. The ones that moved into the
-    /// service's context (project lookup, relative directory, content loader) are read through its own
-    /// scope, so the snapshot holds that service's values and not the first service's.
-    /// </summary>
-    public static CollisionSnapshot Capture(Gum.GumService service)
-    {
-        // StaticSnapshot.Capture reads as the service and puts the previous default back.
-        return new CollisionSnapshot { Statics = StaticSnapshot.Capture(service), _service = service };
-    }
-
-    /// <summary>
-    /// Restores every static the snapshot covers, in the owning service's scope so the per-service ones
-    /// are written back to that service. <paramref name="includeElementTypeTable"/> is ignored: the table
-    /// is per service now.
-    /// </summary>
-    public void Restore(bool includeElementTypeTable = false)
-    {
-        global::RenderingLibrary.IGumService.Default = _service;
-        {
-            Statics.Restore();
-        }
-    }
-
-    /// <summary>No longer needed: each service registers into its own element-type table.</summary>
-    public static void ClearElementTypeTable()
-    {
-    }
-}
+// Harness for MultiGumServiceCollisionSpikeTests (#6066 spike).
 
 /// <summary>A game holding two <see cref="Gum.GumService"/> instances, each initialized on demand.</summary>
 internal sealed class CollisionGame : Game
@@ -72,8 +29,6 @@ internal sealed class CollisionGame : Game
     public Gum.GumService ServiceB { get; }
     public GumProjectSave? ProjectA { get; private set; }
     public GumProjectSave? ProjectB { get; private set; }
-    public CollisionSnapshot? StateA { get; private set; }
-    public CollisionSnapshot? StateB { get; private set; }
 
     /// <summary>Free-form tag a test sets to say which service is mid-Update, for logging.</summary>
     public string? Updating { get; set; }
@@ -86,50 +41,34 @@ internal sealed class CollisionGame : Game
         ServiceB = new Gum.GumService();
     }
 
-    /// <summary>
-    /// Initializes service A. With <paramref name="freshElementTypeTable"/> the process-wide element-type
-    /// table is emptied first, so only this service's registrations land in it (spike of a per-service table).
-    /// </summary>
-    public GumProjectSave InitializeA(string gumxPath, bool freshElementTypeTable = false)
+    public GumProjectSave InitializeA(string gumxPath)
     {
-        if (freshElementTypeTable) { CollisionSnapshot.ClearElementTypeTable(); }
         ProjectA = ServiceA.Initialize(this, gumxPath)!;
-        StateA = CollisionSnapshot.Capture(ServiceA);
         return ProjectA;
     }
 
-    public GumProjectSave InitializeB(string gumxPath, bool freshElementTypeTable = false)
+    public GumProjectSave InitializeB(string gumxPath)
     {
-        if (freshElementTypeTable) { CollisionSnapshot.ClearElementTypeTable(); }
         ProjectB = ServiceB.Initialize(this, gumxPath)!;
-        StateB = CollisionSnapshot.Capture(ServiceB);
         return ProjectB;
     }
-
-    /// <summary>Re-initializes a service after Uninitialize and captures a new snapshot for it.</summary>
-    public GumProjectSave ReinitializeA(string gumxPath, bool freshElementTypeTable = false) =>
-        InitializeA(gumxPath, freshElementTypeTable);
-
-    public GumProjectSave ReinitializeB(string gumxPath, bool freshElementTypeTable = false) =>
-        InitializeB(gumxPath, freshElementTypeTable);
 
     protected override void Update(GameTime gameTime) { }
     protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
 
     protected override void Dispose(bool disposing)
     {
-        // Each service tears down against its own statics; failures here are teardown after a red test.
+        // Failures here are teardown after a red test.
         if (ServiceB.IsInitialized)
         {
-            try { StateB?.Restore(); ServiceB.Uninitialize(); } catch { }
+            try { ServiceB.Uninitialize(); } catch { }
         }
         if (ServiceA.IsInitialized)
         {
-            try { StateA?.Restore(); ServiceA.Uninitialize(); } catch { }
+            try { ServiceA.Uninitialize(); } catch { }
         }
         try { LoaderManager.Self?.DisposeAndClear(); } catch { }
 
-        CollisionSnapshot.ClearElementTypeTable();
         SystemManagers.Default = null!;
         ISystemManagers.Default = null!;
         IGumService.Default = null;
@@ -422,14 +361,14 @@ internal sealed class CollisionCapture : IDisposable
     }
 
     /// <summary>
-    /// Draws one service's tree. <paramref name="staticsToRestoreFirst"/> is applied right before the draw
-    /// (null means draw with whatever statics are active, which is what a bare Draw does today).
+    /// Draws one service's tree. With <paramref name="makeServiceDefault"/> the service becomes the default
+    /// right before the draw; without it the draw runs under whichever service is the default.
     /// </summary>
-    public void Draw(Gum.GumService service, CollisionSnapshot? staticsToRestoreFirst, bool includeElementTypeTable = false)
+    public void Draw(Gum.GumService service, bool makeServiceDefault)
     {
         // Renderer.Draw leaves no render target bound, so rebind before each service's pass.
         _device.SetRenderTarget(_target);
-        staticsToRestoreFirst?.Restore(includeElementTypeTable);
+        if (makeServiceDefault) { IGumService.Default = service; }
         service.SystemManagers.Renderer.Draw(service.SystemManagers);
     }
 

@@ -30,10 +30,10 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// <summary>
 /// Third spike for the epic on running several GumService instances in one process (#6066):
 /// input and interaction. Two services (Bubblegum = A, Hazard = B) are built the same way as in the
-/// themes spike and driven through <see cref="Gum.GumService.Update(GameTime)"/> under the manual
-/// <see cref="InputStaticSnapshot"/> swap, each with its own scripted cursor and keyboard. The tests
-/// assert the behavior we want, so a red test marks a collision between the two services (its message
-/// says which static or queue is shared). Each test names what it expects in its summary.
+/// themes spike and driven through <see cref="Gum.GumService.Update(GameTime)"/>, each with its own
+/// scripted cursor and keyboard. The tests assert the behavior we want, so a red test marks a collision
+/// between the two services (its message says which static or queue is shared). Each test names what it
+/// expects in its summary.
 /// </summary>
 public class MultiGumServiceInputSpikeTests : BaseTestClass
 {
@@ -59,9 +59,9 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
     #region Update drives each service's own cursor and keyboard
 
-    // Green: the swap restores FormsUtilities.Cursor/Keyboard (via SetCursor/SetKeyboard) before each Update.
+    // Each Update advances only its own service's cursor and polls only its own keyboard.
     [Fact]
-    public void Update_WithSwap_ShouldDriveOnlyThatServicesCursorAndKeyboard()
+    public void Update_ShouldDriveOnlyThatServicesCursorAndKeyboard()
     {
         using InputGame game = CreateGame();
 
@@ -86,26 +86,26 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         game.B.Keyboard.PollCount.ShouldBe(bPollsBefore + 1, "B's Update should poll B's keyboard once");
     }
 
-    // Red on purpose: with no swap, FormsUtilities.Cursor is whichever service initialized last.
+    // B is the default when A updates, so Update has to switch to A itself.
     [Fact]
-    public void Update_WithoutSwap_ShouldStillDriveTheUpdatedServicesOwnCursor()
+    public void Update_WhenAnotherServiceIsTheDefault_ShouldDriveTheUpdatedServicesOwnCursor()
     {
         using InputGame game = CreateGame();
 
-        // The statics are B's now (B initialized last, and CreateGame ended on B's setup).
+        // B is the default now (CreateGame ended on B's setup).
         game.A.Cursor.Place(100, 120, leftDown: false);
         game.B.Cursor.Place(500, 400, leftDown: false);
 
-        TickWithoutSwap(game, Side.A);
+        TickWithoutActivating(game, Side.A);
 
         game.A.Cursor.X.ShouldBe(100,
-            "serviceA.Update(...) should drive A's cursor, but FormsUtilities.Cursor is process-wide and still holds B's: " +
-            $"A's cursor X={game.A.Cursor.X}, B's cursor X={game.B.Cursor.X} (B's was driven instead). " + Uncaptured());
+            "serviceA.Update(...) should drive A's cursor even though B is the default: " +
+            $"A's cursor X={game.A.Cursor.X}, B's cursor X={game.B.Cursor.X} (B's was driven instead).");
     }
 
-    // Red on purpose: GumService.Cursor/Keyboard/PopupRoot/ModalRoot are forwarders to process statics.
+    // GumService.Cursor/Keyboard/PopupRoot/ModalRoot must answer for the instance they are called on.
     [Fact]
-    public void ServiceInstanceProperties_ShouldDescribeThatInstance_WhileAnotherServicesStaticsAreLive()
+    public void ServiceInstanceProperties_ShouldDescribeThatInstance_WhileAnotherServiceIsTheDefault()
     {
         using InputGame game = CreateGame();
         Activate(game, Side.B);
@@ -113,13 +113,13 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         List<string> leaks = new List<string>();
         if (!ReferenceEquals(game.A.Service.Cursor, game.A.Cursor)) { leaks.Add("serviceA.Cursor returned " + Describe(game.A.Service.Cursor, game)); }
         if (!ReferenceEquals(game.A.Service.Keyboard, null) && !ReferenceEquals(game.A.Service.Keyboard, game.A.Keyboard)) { leaks.Add("serviceA.Keyboard returned another keyboard"); }
-        if (!ReferenceEquals(game.A.Service.PopupRoot, game.A.State.Base.PopupRoot)) { leaks.Add("serviceA.PopupRoot returned B's popup root"); }
-        if (!ReferenceEquals(game.A.Service.ModalRoot, game.A.State.Base.ModalRoot)) { leaks.Add("serviceA.ModalRoot returned B's modal root"); }
+        if (!ReferenceEquals(game.A.Service.PopupRoot, game.A.PopupRoot)) { leaks.Add("serviceA.PopupRoot returned B's popup root"); }
+        if (!ReferenceEquals(game.A.Service.ModalRoot, game.A.ModalRoot)) { leaks.Add("serviceA.ModalRoot returned B's modal root"); }
 
-        leaks.ShouldBeEmpty("serviceA's per-instance properties answer for whichever service is current: " + string.Join("; ", leaks));
+        leaks.ShouldBeEmpty("serviceA's per-instance properties answer for whichever service is the default: " + string.Join("; ", leaks));
     }
 
-    // Red on purpose: one shared GamePad[4].
+    // One GamePad[4] per service.
     [Fact]
     public void Gamepads_ShouldBeSeparateArraysPerService()
     {
@@ -131,8 +131,8 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         Gum.Input.GamePad[] gamepadsSeenByB = FormsUtilities.Gamepads;
 
         gamepadsSeenByA.ShouldNotBeSameAs(gamepadsSeenByB,
-            "FormsUtilities.Gamepads has a private setter and is one array for the process, so both services advance the same GamePad objects " +
-            "(and B's InitializeDefaults replaced A's elements in place). The snapshot cannot swap it.");
+            "FormsUtilities.Gamepads is one array for the process, so both services advance the same GamePad objects " +
+            "(and B's InitializeDefaults replaced A's elements in place).");
     }
 
     #endregion
@@ -182,7 +182,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
             clicking.Cursor.Place(target.X, target.Y, leftDown: frame == 1);
             game.Get(Other(clicker)).Cursor.Place(-50, -50, leftDown: false);
             IGumService.Default = game.Get(Other(clicker)).Service;
-            TickWithoutSwap(game, clicker);
+            TickWithoutActivating(game, clicker);
             IGumService.Default.ShouldBeSameAs(game.Get(Other(clicker)).Service, "Update puts the previous default back");
         }
 
@@ -190,23 +190,23 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         seenByHandler[0].ShouldBeSameAs(clicking.Service);
     }
 
-    // Red on purpose: the same click, but A's Update runs without swapping A's statics back in.
+    // The same click, but B is the default when A updates.
     [Fact]
-    public void Click_InA_WhenAUpdatesWithoutRestoringItsStatics_ShouldStillFireA()
+    public void Click_InA_WhenBIsTheDefault_ShouldStillFireA()
     {
         using InputGame game = CreateGame(coincidentConfirmButtons: true);
         Point target = game.ConfirmCenter(Side.A);
 
-        // Statics are B's. A's cursor is at the button, B's is parked.
+        // B is the default. A's cursor is at the button, B's is parked.
         game.B.Cursor.Place(-50, -50, leftDown: false);
         for (int frame = 0; frame < 3; frame++)
         {
             game.A.Cursor.Place(target.X, target.Y, leftDown: frame == 1);
-            TickWithoutSwap(game, Side.A);
+            TickWithoutActivating(game, Side.A);
         }
 
         game.A.ConfirmClicks.ShouldBe(1,
-            "A's cursor clicked A's button, but A's Update used FormsUtilities.Cursor (B's, parked off screen) and so saw no click. " + Uncaptured());
+            "A's cursor clicked A's button, but A's Update used FormsUtilities.Cursor (B's, parked off screen) and so saw no click.");
     }
 
     // Green: VisualOver / WindowOver are per cursor instance, so each service's cursor reports a visual from its own tree.
@@ -282,8 +282,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         game.A.TextBox.Text.ShouldBe(textABefore, "A's TextBox must be untouched");
     }
 
-    // Red on purpose: InteractiveGue.CurrentInputReceiver is one process-wide slot, and every Update hands
-    // the updating service's keyboard to it.
+    // Keyboard text from B's Update must not reach a control focused in A (the focus slot is per service).
     [Fact]
     public void KeyboardOfB_ShouldNotTypeIntoTextBoxFocusedInA()
     {
@@ -297,10 +296,10 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         Tick(game, Side.B);
 
         game.A.TextBox.Text.ShouldBe(textBefore,
-            "B's Update dispatched B's keyboard to InteractiveGue.CurrentInputReceiver, which is A's focused TextBox (one focus slot for the process). " + Uncaptured());
+            "B's Update dispatched B's keyboard to InteractiveGue.CurrentInputReceiver, which is A's focused TextBox (one focus slot for the process).");
     }
 
-    // Red on purpose: focusing a control in B takes focus away from the focused control in A.
+    // Focusing a control in B must not take focus away from the focused control in A.
     [Fact]
     public void FocusingTextBoxInB_ShouldNotUnfocusTextBoxInA()
     {
@@ -313,11 +312,11 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         game.A.TextBox.IsFocused.ShouldBeTrue(
             "each service has its own ActiveInputReceiver, so B focusing its TextBox should leave A's focus alone; " +
-            "InteractiveGue.CurrentInputReceiver is one static, so setting it called OnLoseFocus on A's TextBox. " + Uncaptured());
+            "InteractiveGue.CurrentInputReceiver is one static, so setting it called OnLoseFocus on A's TextBox.");
         game.B.TextBox.IsFocused.ShouldBeTrue();
     }
 
-    // Red on purpose: the only way to swap the focus slot through public API is the setter, which fires focus events.
+    // Making another service the default is a context switch, not a user focus change.
     [Fact]
     public void SwitchingActiveService_ShouldNotRaiseFocusEventsOnTheOtherServicesControls()
     {
@@ -331,12 +330,11 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         game.A.TextBox.IsFocused = true;
         aGot.ShouldBe(1, "setup: focusing A's TextBox raises GotFocus once");
 
-        // A swap that also swaps the focus slot through the public setter:
-        Activate(game, Side.B, restoreInputReceiver: true);
-        Activate(game, Side.A, restoreInputReceiver: true);
+        Activate(game, Side.B);
+        Activate(game, Side.A);
 
-        aLost.ShouldBe(0, "switching which service is current is a context switch, not a user focus change, but assigning " +
-            "InteractiveGue.CurrentInputReceiver raised LostFocus on A's TextBox when B became current");
+        aLost.ShouldBe(0, "switching which service is the default is a context switch, not a user focus change, but it " +
+            "raised LostFocus on A's TextBox when B became the default");
         aGot.ShouldBe(1, "and GotFocus again when A became current");
     }
 
@@ -344,7 +342,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
     #region Popup root and modal root
 
-    // Green: with A's statics live, the ComboBox dropdown lands in A's PopupRoot and draws only in A's render.
+    // Green: with A the default, the ComboBox dropdown lands in A's PopupRoot and draws only in A's render.
     [Fact]
     public void ComboBoxDropDown_OpenedInA_ShouldLandInAPopupRootAndDrawOnlyInA()
     {
@@ -352,8 +350,8 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         Activate(game, Side.A);
         ComboBox combo = CreateComboBox(game, Side.A);
-        InteractiveGue popupRootA = game.A.State.Base.PopupRoot!;
-        InteractiveGue popupRootB = game.B.State.Base.PopupRoot!;
+        InteractiveGue popupRootA = game.A.PopupRoot!;
+        InteractiveGue popupRootB = game.B.PopupRoot!;
         popupRootA.ShouldNotBeSameAs(popupRootB, "setup: each service has its own PopupRoot");
         Tick(game, Side.A);
 
@@ -390,11 +388,11 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         combo.IsDropDownOpen = true;
 
-        game.A.State.Base.PopupRoot!.Children.Count.ShouldBe(1);
-        game.B.State.Base.PopupRoot!.Children.Count.ShouldBe(0);
+        game.A.PopupRoot!.Children.Count.ShouldBe(1);
+        game.B.PopupRoot!.Children.Count.ShouldBe(0);
     }
 
-    // Red on purpose: the 'close on next push' action is queued in a static list that B's Update also drains.
+    // The 'close on next push' action must not sit in a queue that B's Update also drains.
     [Fact]
     public void ClickInB_ShouldNotCloseDropDownOpenInA()
     {
@@ -428,7 +426,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         combo.IsDropDownOpen.ShouldBeTrue(
             "a click inside service B should not dismiss the dropdown of service A; ComboBox queued TryHideFromPush with " +
-            "InteractiveGue.AddNextPushAction (one process-wide queue) and B's push ran it with B's cursor. " + Uncaptured());
+            "InteractiveGue.AddNextPushAction (one process-wide queue) and B's push ran it with B's cursor.");
     }
 
     // Green: a Window put in A's ModalRoot is exclusive to A; B keeps receiving input and draws unchanged.
@@ -451,8 +449,8 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         window.Visual.Height = 100;
         FrameworkElement.ModalRoot.Children.Add(window.Visual);
 
-        InteractiveGue modalRootA = game.A.State.Base.ModalRoot!;
-        InteractiveGue modalRootB = game.B.State.Base.ModalRoot!;
+        InteractiveGue modalRootA = game.A.ModalRoot!;
+        InteractiveGue modalRootB = game.B.ModalRoot!;
         modalRootA.ShouldNotBeSameAs(modalRootB, "setup: each service has its own ModalRoot");
         modalRootA.Children.ShouldContain(window.Visual, "the window should be in A's ModalRoot");
         modalRootB.Children.Count.ShouldBe(0, "B's ModalRoot must stay empty");
@@ -527,27 +525,21 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         service.ConfirmButton.Click += (_, _) => service.ConfirmClicks++;
     }
 
-    /// <summary>
-    /// Makes the side's service current: its GumContext stays current until the next call, and
-    /// the statics that are still shared (focus slot, last pushed visual, key combos) are swapped by hand.
-    /// Optionally swaps the focus slot too.
-    /// </summary>
-    private static void Activate(InputGame game, Side side, bool restoreInputReceiver = false)
+    /// <summary>Makes the side's service the default; it stays the default until the next call.</summary>
+    private static void Activate(InputGame game, Side side)
     {
-        game.Current?.State.SaveDynamic();
-        InputService next = game.Get(side);
-        global::RenderingLibrary.IGumService.Default = next.Service;
-        next.State.Restore(restoreInputReceiver);
-        game.Current = next;
+        global::RenderingLibrary.IGumService.Default = game.Get(side).Service;
     }
 
+    /// <summary>Makes the side's service the default, then updates it.</summary>
     private static void Tick(InputGame game, Side side)
     {
         Activate(game, side);
-        TickWithoutSwap(game, side);
+        TickWithoutActivating(game, side);
     }
 
-    private static void TickWithoutSwap(InputGame game, Side side)
+    /// <summary>Updates the side's service and leaves the default alone, so Update has to switch itself.</summary>
+    private static void TickWithoutActivating(InputGame game, Side side)
     {
         game.Seconds += FrameSeconds;
         GameTime gameTime = new GameTime(TimeSpan.FromSeconds(game.Seconds), TimeSpan.FromSeconds(FrameSeconds));
@@ -622,9 +614,6 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         }
         return false;
     }
-
-    private static string Uncaptured() =>
-        "Statics the snapshot cannot capture or restore: " + string.Join(" | ", InputStaticSnapshot.UncapturedInputState.Select(item => item.Split(':')[0]));
 
     private static string Describe(object? cursor, InputGame game) =>
         ReferenceEquals(cursor, game.A.Cursor) ? "A's cursor" : ReferenceEquals(cursor, game.B.Cursor) ? "B's cursor" : "another cursor";
@@ -737,7 +726,10 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
     {
         public Gum.GumService Service { get; } = new Gum.GumService();
         public GumProjectSave Project { get; set; } = null!;
-        public InputStaticSnapshot State { get; set; } = null!;
+        /// <summary>This service's Forms popup root, read while it is the default.</summary>
+        public InteractiveGue? PopupRoot { get; set; }
+        /// <summary>This service's Forms modal root, read while it is the default.</summary>
+        public InteractiveGue? ModalRoot { get; set; }
         public ScriptedCursor Cursor { get; } = new ScriptedCursor();
         public ScriptedKeyboard Keyboard { get; } = new ScriptedKeyboard();
         public GraphicalUiElement Screen { get; set; } = null!;
@@ -754,7 +746,6 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         public InputService A { get; } = new InputService();
         public InputService B { get; } = new InputService();
-        public InputService? Current { get; set; }
         public double Seconds { get; set; }
 
         public InputService Get(Side side) => side == Side.A ? A : B;
@@ -781,20 +772,20 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
             Setup(A, _pathA);
             Setup(B, _pathB);
-            Current = B;
         }
 
         private void Setup(InputService service, string path)
         {
             service.Project = service.Service.Initialize(this, path)!;
 
-            // Install the scripted input in this service's own scope, then capture.
+            // Install the scripted input in this service's own scope and note its popup and modal roots.
             global::RenderingLibrary.IGumService.Default = service.Service;
             {
                 FormsUtilities.SetCursor(service.Cursor);
                 FormsUtilities.SetKeyboard(service.Keyboard);
+                service.PopupRoot = FrameworkElement.PopupRoot;
+                service.ModalRoot = FrameworkElement.ModalRoot;
             }
-            service.State = InputStaticSnapshot.Capture(service.Service);
         }
 
         protected override void Update(GameTime gameTime) { }
@@ -815,7 +806,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
             {
                 if (service.Service.IsInitialized)
                 {
-                    try { service.State.Restore(); service.Service.Uninitialize(); } catch { /* teardown after a red test */ }
+                    try { service.Service.Uninitialize(); } catch { /* teardown after a red test */ }
                 }
             }
             ShapeRenderer.Self.Uninitialize();

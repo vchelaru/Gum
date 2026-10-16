@@ -85,12 +85,11 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         using ThemedGame game = new ThemedGame(path, pathB: null);
         game.RunOneFrame();
 
-        game.StateA.Restore();
         DemoScreen screen = BuildDemoScreen(game.ServiceA, game.ProjectA, theme, offset: Point.Zero);
         Log($"{theme} solo: {screen.Describe()}");
         AssertScreenBuilt(screen, game.ProjectA);
 
-        Frame frame = DrawInto(game, new[] { (game.ServiceA, game.StateA) }, restoreStatics: true,
+        Frame frame = DrawInto(game, new[] { game.ServiceA }, makeServiceDefault: true,
             pngName: $"solo-{theme}.png");
 
         AssertOwnTheme(frame, otherSolo: null, theme, theme + " (solo)");
@@ -101,11 +100,11 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     #region Two services
 
     [Fact]
-    public void TwoThemedServices_WithoutAnySwap_ShouldRenderEachThemeInBothDrawOrders()
+    public void TwoThemedServices_ShouldRenderEachThemeInBothDrawOrders()
     {
         using ThemedGame game = CreateGame();
 
-        // No Restore() anywhere: this is what two services do today. Red on purpose; the message
+        // Draws go straight through each renderer under whichever service is the default. The message
         // says which collision hit first.
         DemoScreen screenA;
         DemoScreen screenB;
@@ -116,22 +115,22 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         }
         catch (Exception e)
         {
-            Log("no-swap build threw: " + e);
-            Assert.Fail($"Without a swap, building a demo screen throws. {e.GetType().Name}: {e.Message}");
+            Log("build threw: " + e);
+            Assert.Fail($"Building a demo screen throws. {e.GetType().Name}: {e.Message}");
             return;
         }
-        Log($"noswap A: {screenA.Describe()}");
-        Log($"noswap B: {screenB.Describe()}");
+        Log($"two services A: {screenA.Describe()}");
+        Log($"two services B: {screenB.Describe()}");
         SoftChecks soft = new SoftChecks();
         soft.Check(() => AssertScreenBuilt(screenA, game.ProjectA));
         soft.Check(() => AssertScreenBuilt(screenB, game.ProjectB));
 
-        Frame soloA = DrawInto(game, new[] { (game.ServiceA, game.StateA) }, restoreStatics: false, pngName: "noswap-solo-A-bubblegum.png");
-        Frame soloB = DrawInto(game, new[] { (game.ServiceB, game.StateB) }, restoreStatics: false, pngName: "noswap-solo-B-hazard.png");
-        Frame aThenB = DrawInto(game, new[] { (game.ServiceA, game.StateA), (game.ServiceB, game.StateB) },
-            restoreStatics: false, pngName: "noswap-1-A-then-B.png");
-        Frame bThenA = DrawInto(game, new[] { (game.ServiceB, game.StateB), (game.ServiceA, game.StateA) },
-            restoreStatics: false, pngName: "noswap-2-B-then-A.png");
+        Frame soloA = DrawInto(game, new[] { game.ServiceA }, makeServiceDefault: false, pngName: "twoservices-solo-A-bubblegum.png");
+        Frame soloB = DrawInto(game, new[] { game.ServiceB }, makeServiceDefault: false, pngName: "twoservices-solo-B-hazard.png");
+        Frame aThenB = DrawInto(game, new[] { game.ServiceA, game.ServiceB },
+            makeServiceDefault: false, pngName: "twoservices-1-A-then-B.png");
+        Frame bThenA = DrawInto(game, new[] { game.ServiceB, game.ServiceA },
+            makeServiceDefault: false, pngName: "twoservices-2-B-then-A.png");
 
         AssertBothCaptures(soft, soloA, soloB, aThenB, bThenA);
         soft.Verify();
@@ -145,16 +144,14 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     {
         using ThemedGame game = CreateGame();
 
-        game.StateA.Restore();
         BuildDemoScreen(game.ServiceA, game.ProjectA, "Bubblegum", offset: Point.Zero);
 
-        game.StateB.Restore();
         game.ServiceB.Uninitialize();
 
         Frame frame;
         try
         {
-            frame = DrawInto(game, new[] { (game.ServiceA, game.StateA) }, restoreStatics: true, pngName: "uninit-B-then-draw-A.png");
+            frame = DrawInto(game, new[] { game.ServiceA }, makeServiceDefault: true, pngName: "uninit-B-then-draw-A.png");
         }
         catch (Exception e)
         {
@@ -342,7 +339,11 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         return new DemoScreen(theme, screen);
     }
 
-    private Frame DrawInto(ThemedGame game, (Gum.GumService service, StaticSnapshot state)[] order, bool restoreStatics, string pngName)
+    /// <summary>
+    /// Draws the services in order into one capture. With <paramref name="makeServiceDefault"/> each becomes
+    /// the default right before its draw; without it every draw runs under the current default.
+    /// </summary>
+    private Frame DrawInto(ThemedGame game, Gum.GumService[] order, bool makeServiceDefault, string pngName)
     {
         GraphicsDevice gd = game.GraphicsDevice;
         using RenderTarget2D capture = new RenderTarget2D(gd, CaptureWidth, CaptureHeight, false,
@@ -353,11 +354,11 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         {
             gd.SetRenderTarget(capture);
             gd.Clear(ClearColor);
-            foreach ((Gum.GumService service, StaticSnapshot state) in order)
+            foreach (Gum.GumService service in order)
             {
                 // Renderer.Draw leaves no render target bound, so rebind before each service's pass.
                 gd.SetRenderTarget(capture);
-                if (restoreStatics) { state.Restore(); }
+                if (makeServiceDefault) { IGumService.Default = service; }
                 service.SystemManagers.Renderer.Draw(service.SystemManagers);
             }
         }
@@ -563,8 +564,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         public Gum.GumService ServiceB { get; }
         public GumProjectSave ProjectA { get; private set; } = null!;
         public GumProjectSave ProjectB { get; private set; } = null!;
-        public StaticSnapshot StateA { get; private set; } = null!;
-        public StaticSnapshot StateB { get; private set; } = null!;
 
         public ThemedGame(string pathA, string? pathB)
         {
@@ -588,11 +587,9 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 
             ProjectA = ServiceA.Initialize(this, _pathA)!;
-            StateA = StaticSnapshot.Capture(ServiceA);
             if (_pathB != null)
             {
                 ProjectB = ServiceB.Initialize(this, _pathB)!;
-                StateB = StaticSnapshot.Capture(ServiceB);
             }
         }
 
@@ -601,14 +598,13 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
         protected override void Dispose(bool disposing)
         {
-            // Each service tears down against its own statics.
             if (ServiceB.IsInitialized)
             {
-                try { StateB.Restore(); ServiceB.Uninitialize(); } catch { /* teardown after a red test */ }
+                try { ServiceB.Uninitialize(); } catch { /* teardown after a red test */ }
             }
             if (ServiceA.IsInitialized)
             {
-                try { StateA.Restore(); ServiceA.Uninitialize(); } catch { /* teardown after a red test */ }
+                try { ServiceA.Uninitialize(); } catch { /* teardown after a red test */ }
             }
             ShapeRenderer.Self.Uninitialize();
             LoaderManager.Self?.DisposeAndClear();
