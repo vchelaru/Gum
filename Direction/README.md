@@ -38,6 +38,9 @@ at most once.
   `foundation.md` (what is already done on `main`), `coverage-matrix.md` (every Windows-only
   dependency in the tool graph and the phase that removes it), and one `phase-NN-*.md` per
   conversion area. Living. **Start here for any Avalonia / cross-platform editor work.**
+- **`multi-gum-service-audit.md`** — state audit and refined design for running several `GumService`
+  instances in one process (#6066): inventory of process-wide state, activation-context design,
+  milestones, test strategy, open decisions. Living until the epic's ADR is written.
 - **`treeview-wpf-port.md`** — design and progress record for the element tree view's WinForms → WPF
   port (#4228).
 - **`texture-edge-bleed.md`** — history and open problems of the load-time texture edge bleed
