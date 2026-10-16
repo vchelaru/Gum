@@ -2298,11 +2298,23 @@ public class FrameworkElement : INotifyPropertyChanged
                 return EnabledStateName;
             }
         }
+        else if (KeepsPushedStateWhenCursorLeaves && cursor.WindowPushed == visual && primaryDown)
+        {
+            // Grabbed, then dragged off. The cursor still owns this visual until release.
+            return PushedStateName;
+        }
         else
         {
             return EnabledStateName;
         }
     }
+
+    /// <summary>
+    /// Whether this control keeps its Pushed state while it is the cursor's pushed window with the
+    /// primary button down, even after the cursor moves off it. False by default, so controls drop back
+    /// to Enabled when the cursor leaves. Drag handles (slider and scroll bar thumbs) opt in.
+    /// </summary>
+    internal virtual bool KeepsPushedStateWhenCursorLeaves => false;
 
     protected virtual bool GetIfPushInputIsHeld() =>
         GetIfGamepadOrKeyboardPrimaryPushInputIsHeld();

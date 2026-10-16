@@ -110,12 +110,14 @@ public class ButtonBase :
         Visual.Click += _=>this.HandleClick(this, EventArgs.Empty);
         Visual.Push += _ => this.HandlePush (this, EventArgs.Empty);
         Visual.LosePush += _ => this.HandleLosePush (this, EventArgs.Empty);
+        Visual.RemovedAsPushedWindow += _ => this.HandleRemovedAsPushed(this, EventArgs.Empty);
         Visual.RollOn += _ => this.HandleRollOn (this, EventArgs.Empty);
         Visual.RollOff += _ => this.HandleRollOff(this, EventArgs.Empty);
 #else
         Visual.Click += this.HandleClick;
         Visual.Push += this.HandlePush;
         Visual.LosePush += this.HandleLosePush;
+        Visual.RemovedAsPushed += this.HandleRemovedAsPushed;
         Visual.RollOn += this.HandleRollOn;
         Visual.RollOff += this.HandleRollOff;
 #endif
@@ -151,6 +153,13 @@ public class ButtonBase :
     }
 
     private void HandleLosePush(object? sender, EventArgs args)
+    {
+        UpdateState();
+    }
+
+    // A button that keeps Pushed while dragged off (see KeepsPushedStateWhenCursorLeaves) has no
+    // rollover, click or LosePush left to reset it when the primary button is released elsewhere.
+    private void HandleRemovedAsPushed(object? sender, EventArgs args)
     {
         UpdateState();
     }
