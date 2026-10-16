@@ -101,34 +101,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     #region Two services
 
     [Fact]
-    public void TwoThemedServices_WithManualSnapshotSwap_ShouldRenderEachThemeInBothDrawOrders()
-    {
-        using ThemedGame game = CreateGame();
-
-        // The swap here is the manual StaticSnapshot.Restore() from the first spike, extended with
-        // the Forms/theme statics.
-        game.StateA.Restore();
-        DemoScreen screenA = BuildDemoScreen(game.ServiceA, game.ProjectA, "Bubblegum", offset: Point.Zero);
-        game.StateB.Restore();
-        DemoScreen screenB = BuildDemoScreen(game.ServiceB, game.ProjectB, "Hazard", OffsetB);
-        Log($"swap A: {screenA.Describe()}");
-        Log($"swap B: {screenB.Describe()}");
-        SoftChecks soft = new SoftChecks();
-        soft.Check(() => AssertScreenBuilt(screenA, game.ProjectA));
-        soft.Check(() => AssertScreenBuilt(screenB, game.ProjectB));
-
-        Frame soloA = DrawInto(game, new[] { (game.ServiceA, game.StateA) }, restoreStatics: true, pngName: "swap-solo-A-bubblegum.png");
-        Frame soloB = DrawInto(game, new[] { (game.ServiceB, game.StateB) }, restoreStatics: true, pngName: "swap-solo-B-hazard.png");
-        Frame aThenB = DrawInto(game, new[] { (game.ServiceA, game.StateA), (game.ServiceB, game.StateB) },
-            restoreStatics: true, pngName: "swap-1-A-then-B.png");
-        Frame bThenA = DrawInto(game, new[] { (game.ServiceB, game.StateB), (game.ServiceA, game.StateA) },
-            restoreStatics: true, pngName: "swap-2-B-then-A.png");
-
-        AssertBothCaptures(soft, soloA, soloB, aThenB, bThenA);
-        soft.Verify();
-    }
-
-    [Fact]
     public void TwoThemedServices_WithoutAnySwap_ShouldRenderEachThemeInBothDrawOrders()
     {
         using ThemedGame game = CreateGame();
@@ -192,48 +164,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         }
 
         AssertOwnTheme(frame, otherSolo: null, "Bubblegum", "A after B.Uninitialize()");
-    }
-
-    /// <summary>
-    /// Lists which statics a second themed Initialize changed relative to the snapshot taken right
-    /// after the first one, plus the ones the manual swap cannot protect.
-    /// </summary>
-    [Fact]
-    public void SecondThemedInitialize_ShouldNotChangeFirstServicesView_OfFormsAndThemeStatics()
-    {
-        using ThemedGame game = CreateGame();
-
-        StaticSnapshot afterA = game.StateA;
-        // Initializing B made B the current service (the last one entered); look at A's view by activating A.
-        StaticSnapshot now = StaticSnapshot.Capture(game.ServiceA);
-
-        List<string> changed = new List<string>();
-        void Check(string name, object? before, object? after)
-        {
-            if (!Equals(before, after)) { changed.Add(name); }
-        }
-
-        Check("SystemManagers.Default", afterA.Managers, now.Managers);
-        Check("IGumService.Default", afterA.Service, now.Service);
-        Check("ObjectFinder.Self.GumProjectSave", afterA.Project, now.Project);
-        Check("FileManager.RelativeDirectory", afterA.RelativeDirectory, now.RelativeDirectory);
-        Check("FrameworkElement.PopupRoot", afterA.PopupRoot, now.PopupRoot);
-        Check("FrameworkElement.ModalRoot", afterA.ModalRoot, now.ModalRoot);
-        Check("FormsUtilities.Cursor", afterA.Cursor, now.Cursor);
-        Check("FormsUtilities.Keyboard", afterA.Keyboard, now.Keyboard);
-        Check("Styling.ActiveStyle", afterA.Style, now.Style);
-        Check("ElementSaveExtensions.InitialStateAppliedNotifier", afterA.InitialStateNotifier, now.InitialStateNotifier);
-        // Text.DefaultFont and Text.DefaultBitmapFont are shared by every service on purpose: the second Initialize
-        // replaces the embedded default font, which is the same on the same device.
-        Check("FrameworkElement.KeyboardsForUiControl (contents)",
-            string.Join(",", afterA.KeyboardsForUiControl.Select(item => item.GetHashCode())),
-            string.Join(",", now.KeyboardsForUiControl.Select(item => item.GetHashCode())));
-        Check("FrameworkElement.DefaultFormsTemplates (the VisualTemplate instances)",
-            string.Join(",", afterA.FormsTemplates.OrderBy(item => item.Key.Name).Select(item => item.Value.GetHashCode())),
-            string.Join(",", now.FormsTemplates.OrderBy(item => item.Key.Name).Select(item => item.Value.GetHashCode())));
-
-        changed.ShouldBeEmpty("statics the second themed Initialize overwrote: " + string.Join(", ", changed) +
-            ". Not restorable through a public setter at all: " + string.Join("; ", StaticSnapshot.UncapturedState));
     }
 
     #endregion

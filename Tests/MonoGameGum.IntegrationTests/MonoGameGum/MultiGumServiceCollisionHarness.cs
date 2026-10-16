@@ -29,20 +29,6 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// </summary>
 internal sealed class CollisionSnapshot
 {
-    /// <summary>
-    /// State found by the collision spike that neither <see cref="StaticSnapshot"/> nor this class restores
-    /// (in addition to <see cref="StaticSnapshot.UncapturedState"/>).
-    /// </summary>
-    public static readonly string[] AdditionalUncapturedState =
-    {
-        "Renderer.TextureFilter (public static; the first service's project sets it, a later service keeps its own on its renderer)",
-        "Sprite.InvalidTexture (in the snapshot, but the last service's UninitializePlatform disposes whatever instance is static at the time)",
-        "CustomSetPropertyOnRenderable statics: FontService, InMemoryFontCreator, LocalizationService, _knownUnresolvableFontKeys, the BBCode font stacks",
-        "ColoredRectangleRuntime.DefaultWidth/DefaultHeight (obsolete statics written from the loaded project's Standards)",
-        "BitmapFont._reportedPageLoadFailures (static dedupe set)",
-        "ObjectFinder.Self is read lazily after construction (BehaviorFormsPropertyApplier, TextRuntime font cache names, CustomSetPropertyOnRenderable.ResolveFontFilePath), as is FileManager.RelativeDirectory (font and SourceFile reloads on property change)",
-    };
-
     public StaticSnapshot Statics { get; private set; } = null!;
 
     private Gum.GumService _service = null!;

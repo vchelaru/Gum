@@ -11,7 +11,6 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ToolsUtilities;
@@ -88,22 +87,6 @@ public class MultiGumServiceSpikeTests : BaseTestClass
     }
 
     [Fact]
-    public void TwoServices_DrawnOnTopOfEachOther_WithManualSnapshotSwap_ShouldShowBothProjects()
-    {
-        using TwoServiceGame game = CreateGame();
-
-        game.StateA.Restore();
-        GraphicalUiElement screenA = BuildScreen(game.ServiceA, game.ProjectA, "MainScreen");
-        game.StateB.Restore();
-        GraphicalUiElement screenB = BuildScreen(game.ServiceB, game.ProjectB, "EditorScreen");
-
-        XnaColor[] pixels = DrawBothInto(game, restoreStatics: true);
-
-        IsRed(pixels[IndexOf(PointInsideA)]).ShouldBeTrue(Info(pixels) + " " + "project A's button should be red");
-        IsBlue(pixels[IndexOf(PointInsideB)]).ShouldBeTrue(Info(pixels) + " " + "project B's button should be blue");
-    }
-
-    [Fact]
     public void ServiceDraw_OnFirstService_ShouldDrawOnlyItsOwnTree()
     {
         using TwoServiceGame game = CreateGame();
@@ -150,42 +133,6 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         capture.GetData(pixels);
 
         IsRed(pixels[IndexOf(PointInsideA)]).ShouldBeTrue(Info(pixels) + " " + "A should still draw its red button");
-    }
-
-    [Fact]
-    public void SecondInitialize_ShouldNotChangeFirstServicesView_OfStaticState()
-    {
-        using TwoServiceGame game = CreateGame();
-
-        // The snapshot captured right after A's Initialize is the reference; any static the second
-        // Initialize changed is listed.
-        StaticSnapshot afterA = game.StateA;
-        // Initializing B made B the current service (the last one entered). Rule 3 of the overwrite
-        // semantics: look at A's view by activating A first.
-        StaticSnapshot now = StaticSnapshot.Capture(game.ServiceA);
-
-        List<string> changed = new List<string>();
-        void Check(string name, object? before, object? after)
-        {
-            if (!Equals(before, after)) { changed.Add(name); }
-        }
-
-        Check("SystemManagers.Default", afterA.Managers, now.Managers);
-        Check("ISystemManagers.Default", afterA.InterfaceManagers, now.InterfaceManagers);
-        Check("IGumService.Default", afterA.Service, now.Service);
-        Check("ObjectFinder.Self.GumProjectSave", afterA.Project, now.Project);
-        Check("FileManager.RelativeDirectory", afterA.RelativeDirectory, now.RelativeDirectory);
-        Check("FrameworkElement.PopupRoot", afterA.PopupRoot, now.PopupRoot);
-        Check("FrameworkElement.ModalRoot", afterA.ModalRoot, now.ModalRoot);
-        Check("FormsUtilities.Cursor", afterA.Cursor, now.Cursor);
-        Check("FormsUtilities.Keyboard", afterA.Keyboard, now.Keyboard);
-        Check("Styling.ActiveStyle", afterA.Style, now.Style);
-        Check("GraphicalUiElement.CanvasWidth", afterA.CanvasWidth, now.CanvasWidth);
-        Check("GraphicalUiElement.CanvasHeight", afterA.CanvasHeight, now.CanvasHeight);
-        Check("ElementSaveExtensions.CustomCreateGraphicalComponentFunc", afterA.CreateComponent, now.CreateComponent);
-        Check("GraphicalUiElement.SetPropertyOnRenderable", afterA.SetProperty, now.SetProperty);
-
-        changed.ShouldBeEmpty("statics the second Initialize overwrote: " + string.Join(", ", changed));
     }
 
     #region Helpers

@@ -17,25 +17,10 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
 /// <summary>
 /// A hand-rolled copy of the process-wide state a service writes during Initialize, restorable
-/// through today's public setters (spike for #6066). State with no setter is not captured; those
-/// gaps are findings and are listed in <see cref="UncapturedState"/>.
+/// through today's public setters (spike for #6066). State with no setter is not captured.
 /// </summary>
 internal sealed class StaticSnapshot
 {
-    /// <summary>
-    /// Statics a second service's Initialize touches (or that Forms/themes read) that cannot be
-    /// restored through a public setter, so the manual swap cannot protect them.
-    /// </summary>
-    public static readonly string[] UncapturedState =
-    {
-        "ElementSaveExtensions registrations (private mElementToGueTypes / mElementToGueTypeFuncs; one process-wide table keyed by element name)",
-        "FormsUtilities.Gamepads (private setter; the array is shared and rebuilt by every InitializeDefaults)",
-        "ShapeRenderer.Self (private singleton, one ShapeBatch for the whole process)",
-        "FrameworkElement.DefaultFormsTemplates / DefaultFormsComponents (private setters; only their contents are copied here)",
-        "Text.Customizations / Text.ContextCustomizations (private setters)",
-        "RenderableRegistry (static per-capability factories)",
-    };
-
     public SystemManagers? Managers { get; private set; }
     public ISystemManagers? InterfaceManagers { get; private set; }
     public IGumService? Service { get; private set; }

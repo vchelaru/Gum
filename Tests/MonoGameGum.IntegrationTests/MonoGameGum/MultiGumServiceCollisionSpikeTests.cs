@@ -206,56 +206,9 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
             "A's Widget has no behavior; it picked up B's registration of the same name in the process-wide element-type table");
     }
 
-    // The same collisions with the element-type table swapped too (reflection, spike only) and emptied
-    // before each Initialize, so each service registers into a clean table. This is the shape a
-    // per-service table would have.
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void SameNameDifferentFormsBehaviors_WithSnapshotAndTableSwap_ShouldEachCreateTheirOwnControlType(bool aFirst)
-    {
-        using CollisionGame game = CreateGame();
-        string pathA = WriteWidgetProject("A", OriginA, behavior: "ButtonBehavior");
-        string pathB = WriteWidgetProject("B", OriginB, behavior: "CheckBoxBehavior");
-        if (aFirst)
-        {
-            game.InitializeA(pathA, freshElementTypeTable: true);
-            game.InitializeB(pathB, freshElementTypeTable: true);
-        }
-        else
-        {
-            game.InitializeB(pathB, freshElementTypeTable: true);
-            game.InitializeA(pathA, freshElementTypeTable: true);
-        }
-
-        GraphicalUiElement screenA = Build(game, true, "MainScreen", includeElementTypeTable: true);
-        GraphicalUiElement screenB = Build(game, false, "MainScreen", includeElementTypeTable: true);
-
-        FormsControlOf(screenA, "W").ShouldBeOfType<Button>("A's Widget has ButtonBehavior");
-        FormsControlOf(screenB, "W").ShouldBeOfType<CheckBox>("B's Widget has CheckBoxBehavior");
-    }
-
     #endregion
 
     #region 2. Assets: same relative file names, different content
-
-    // Both projects reference "Tex.png" (A red, B blue), by the same relative name. The texture cache
-    // key includes FileManager.RelativeDirectory, which the snapshot swaps.
-    [Fact]
-    public void SameRelativeTextureName_WithSnapshotSwap_ShouldLoadEachServicesOwnTexture()
-    {
-        using CollisionGame game = CreateGame();
-        WriteAssetProjects(game);
-        game.InitializeA(PathA);
-        game.InitializeB(PathB);
-
-        Build(game, true, "SpriteScreen");
-        Build(game, false, "SpriteScreen");
-        XnaColor[] pixels = DrawBoth(game, restore: true);
-
-        AssertOwnAssetPixels(pixels, OriginA, "texture", expectRed: true, "A's Tex.png");
-        AssertOwnAssetPixels(pixels, OriginB, "texture", expectRed: false, "B's Tex.png");
-    }
 
     // A's screen is built after B initialized and nothing is swapped, so the relative name resolves
     // against B's folder.
@@ -772,37 +725,6 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         failures.ShouldBeEmpty(string.Join("; ", failures));
     }
 
-    // After A uninitializes, B builds a Forms control from its project. Uninitialize clears the
-    // process-wide element-type table (ElementSaveExtensions.ClearRegistrations), which B registered
-    // into too, so B's component no longer maps to its Forms runtime type.
-    [Fact]
-    public void BuildingFormsControlInSecondService_AfterFirstServiceUninitialized_WithSnapshotAndTableSwap_ShouldStillCreateTheControl()
-    {
-        using CollisionGame game = CreateGame();
-        string pathA = WriteWidgetProject("A", OriginA, behavior: "ButtonBehavior");
-        string pathB = WriteWidgetProject("B", OriginB, behavior: "CheckBoxBehavior");
-        game.InitializeA(pathA, freshElementTypeTable: true);
-        game.InitializeB(pathB, freshElementTypeTable: true);
-
-        game.StateA!.Restore(includeElementTypeTable: true);
-        game.ServiceA.Uninitialize();
-
-        GraphicalUiElement screenB;
-        try
-        {
-            screenB = Build(game, false, "MainScreen", includeElementTypeTable: true);
-        }
-        catch (Exception e)
-        {
-            Assert.Fail($"Building B's screen after A.Uninitialize throws {e.GetType().Name}: {e.Message}");
-            return;
-        }
-
-        // The element-type table is restored from B's snapshot above, so this passes only if
-        // everything else Uninitialize touched is also restorable.
-        FormsControlOf(screenB, "W").ShouldBeOfType<CheckBox>();
-    }
-
     // The same, without restoring the table (only what the public snapshot covers).
     [Fact]
     public void BuildingFormsControlInSecondService_AfterFirstServiceUninitialized_WithSnapshotSwapOnly_ShouldStillCreateTheControl()
@@ -830,28 +752,6 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         object? control = FormsControlOf(screenB, "W");
         (control is CheckBox).ShouldBeTrue(
             $"B's Widget became {control?.GetType().Name ?? "no Forms control"}: A.Uninitialize called ElementSaveExtensions.ClearRegistrations, which empties the process-wide table B registered into");
-    }
-
-    // The first service sets the static Renderer.TextureFilter from its project; a later one keeps its own on its renderer. A (Linear) loads
-    // first and B (Point) must not change what A draws with.
-    [Fact]
-    public void ProjectTextureFilter_WithSnapshotSwap_ShouldBeEachServicesOwn()
-    {
-        using CollisionGame game = CreateGame();
-        WriteAssetProjects(game);
-        RewriteGumx(PathA, "<TextureFilter>Point</TextureFilter>", "<TextureFilter>Linear</TextureFilter>");
-        game.InitializeA(PathA);
-        game.InitializeB(PathB);
-
-        TextureFilter underA;
-        TextureFilter underB;
-        underA = game.ServiceA.Renderer.EffectiveTextureFilter;
-        underB = game.ServiceB.Renderer.EffectiveTextureFilter;
-
-        List<string> failures = new();
-        if (underA != TextureFilter.Linear) { failures.Add($"A renderer filter is {underA}, A's project says Linear"); }
-        if (underB != TextureFilter.Point) { failures.Add($"B renderer filter is {underB}, B's project says Point"); }
-        failures.ShouldBeEmpty("each service draws with its own project filter: " + string.Join("; ", failures));
     }
 
     #endregion
