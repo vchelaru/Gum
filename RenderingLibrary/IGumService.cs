@@ -162,9 +162,12 @@ namespace RenderingLibrary
         /// The current default <see cref="IGumService"/>, and the one "current service" pointer: every
         /// per-service static (<c>ObjectFinder.Self</c>, <c>LoaderManager.Self</c>, the Forms statics,
         /// <c>SystemManagers.Default</c> and the rest) resolves the current service through it. Assigning it
-        /// switches all of them to that service. The concrete runtime's <c>Initialize</c>, <c>Update</c>,
-        /// <c>Draw</c> and <c>Uninitialize</c> assign it on entry and do not restore the previous value.
-        /// <c>Uninitialize</c> clears it when it is the default. May be null before initialization.
+        /// switches all of them to that service. <c>Update</c> and <c>Draw</c> make their service the default for
+        /// the length of the call and put the previous default back. <c>Initialize</c> runs as the service being
+        /// initialized and makes it the default only when no default exists: <b>with two services, assign
+        /// <c>IGumService.Default</c> (or <c>GumService.Default</c>) explicitly to switch; a second
+        /// <c>Initialize</c> never changes it.</b> <c>Uninitialize</c> clears it when it is the default. May be
+        /// null before initialization.
         /// </summary>
         public static IGumService? Default
         {

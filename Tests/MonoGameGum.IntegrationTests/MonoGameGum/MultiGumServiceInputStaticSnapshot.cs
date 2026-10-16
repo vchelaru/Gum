@@ -58,6 +58,8 @@ internal sealed class InputStaticSnapshot
     /// </summary>
     public static InputStaticSnapshot Capture(Gum.GumService service)
     {
+        // Reads as the service, then puts the previous default back: a capture does not change who is current.
+        global::RenderingLibrary.IGumService? previousDefault = global::RenderingLibrary.IGumService.Default;
         global::RenderingLibrary.IGumService.Default = service;
         InputStaticSnapshot snapshot = new InputStaticSnapshot
         {
@@ -75,6 +77,7 @@ internal sealed class InputStaticSnapshot
             RightKeyCombos = new List<KeyCombo>(FrameworkElement.RightKeyCombos),
             InputReceiver = InteractiveGue.CurrentInputReceiver,
         };
+        global::RenderingLibrary.IGumService.Default = previousDefault;
         return snapshot;
     }
 

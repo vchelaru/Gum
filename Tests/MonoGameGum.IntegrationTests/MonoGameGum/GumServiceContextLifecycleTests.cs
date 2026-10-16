@@ -129,6 +129,119 @@ public class GumServiceContextLifecycleTests : BaseTestClass
 
     #endregion
 
+    #region The Forms refresh hooks survive an Initialize, Uninitialize, Initialize cycle
+
+    [Fact]
+    public void Initialize_AfterAnUninitializeCycle_ShouldReinstallTheFormsRefreshHooks()
+    {
+        using CollisionGame game = CreateGame();
+        game.InitializeA(WriteProject("A"));
+        game.ServiceA.Uninitialize();
+
+        game.ServiceA.Initialize(game, WriteProject("A2"));
+
+        GraphicalUiElement.SaveFormsRuntimePropertiesAction.ShouldNotBeNull();
+        GraphicalUiElement.UpdateFormsStateAction.ShouldNotBeNull();
+    }
+
+    #endregion
+
+    #region Uninitialize only touches the thread synchronization context when it is its own
+
+    [Fact]
+    public void Uninitialize_ShouldClearTheThreadsSynchronizationContext_WhenItIsThisServicesOwn()
+    {
+        System.Threading.SynchronizationContext? original = System.Threading.SynchronizationContext.Current;
+        try
+        {
+            using CollisionGame game = CreateGame();
+            game.InitializeA(WriteProject("A"));
+            game.ServiceA.UseSingleThreadedAsync();
+            System.Threading.SynchronizationContext.Current.ShouldBeSameAs(game.ServiceA.SynchronizationContext);
+
+            game.ServiceA.Uninitialize();
+
+            System.Threading.SynchronizationContext.Current.ShouldBeNull();
+        }
+        finally
+        {
+            System.Threading.SynchronizationContext.SetSynchronizationContext(original);
+        }
+    }
+
+    [Fact]
+    public void Uninitialize_ShouldLeaveAnotherSynchronizationContextAlone()
+    {
+        System.Threading.SynchronizationContext? original = System.Threading.SynchronizationContext.Current;
+        try
+        {
+            using CollisionGame game = CreateGame();
+            game.InitializeA(WriteProject("A"));
+            game.InitializeB(WriteProject("B"));
+            game.ServiceA.UseSingleThreadedAsync();
+            game.ServiceB.UseSingleThreadedAsync();
+            System.Threading.SynchronizationContext.Current.ShouldBeSameAs(game.ServiceB.SynchronizationContext);
+
+            game.ServiceA.Uninitialize();
+
+            System.Threading.SynchronizationContext.Current.ShouldBeSameAs(game.ServiceB.SynchronizationContext,
+                "A's Uninitialize must not touch the context that is B's");
+        }
+        finally
+        {
+            System.Threading.SynchronizationContext.SetSynchronizationContext(original);
+        }
+    }
+
+    [Fact]
+    public void Uninitialize_ShouldLeaveACustomSynchronizationContextAlone()
+    {
+        System.Threading.SynchronizationContext? original = System.Threading.SynchronizationContext.Current;
+        try
+        {
+            using CollisionGame game = CreateGame();
+            game.InitializeA(WriteProject("A"));
+            game.ServiceA.UseSingleThreadedAsync();
+            System.Threading.SynchronizationContext custom = new System.Threading.SynchronizationContext();
+            System.Threading.SynchronizationContext.SetSynchronizationContext(custom);
+
+            game.ServiceA.Uninitialize();
+
+            System.Threading.SynchronizationContext.Current.ShouldBeSameAs(custom);
+        }
+        finally
+        {
+            System.Threading.SynchronizationContext.SetSynchronizationContext(original);
+        }
+    }
+
+    [Fact]
+    public void UseSingleThreadedAsync_AfterAnUninitializeCycle_ShouldInstallAFreshContext()
+    {
+        System.Threading.SynchronizationContext? original = System.Threading.SynchronizationContext.Current;
+        try
+        {
+            using CollisionGame game = CreateGame();
+            game.InitializeA(WriteProject("A"));
+            game.ServiceA.UseSingleThreadedAsync();
+            Gum.Async.SingleThreadSynchronizationContext first = game.ServiceA.SynchronizationContext!;
+            game.ServiceA.Uninitialize();
+            game.ServiceA.Initialize(game, WriteProject("A2"));
+
+            game.ServiceA.UseSingleThreadedAsync();
+
+            game.ServiceA.SynchronizationContext.ShouldNotBeNull();
+            game.ServiceA.SynchronizationContext.ShouldNotBeSameAs(first);
+            System.Threading.SynchronizationContext.Current.ShouldBeSameAs(game.ServiceA.SynchronizationContext);
+        }
+        finally
+        {
+            System.Threading.SynchronizationContext.SetSynchronizationContext(original);
+        }
+    }
+
+    #endregion
+
     #region A service without a context does not answer with another service's state
 
     [Fact]

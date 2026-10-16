@@ -24,10 +24,11 @@ namespace Gum;
 /// <b>There is one "current service" pointer: <c>IGumService.Default</c>.</b> Statics that became per-context
 /// read <see cref="Current"/>, which is the context of <c>IGumService.Default</c>. Assigning
 /// <c>IGumService.Default</c> switches every one of them (and <c>SystemManagers.Default</c> /
-/// <c>ISystemManagers.Default</c>) to that service. <c>Initialize</c>, <c>Update</c>, <c>Draw</c> and
-/// <c>Uninitialize</c> assign it on entry and never put the previous value back, so after
-/// <c>B.Update()</c> the default is B. Code that touches another service from inside an entry point
-/// assigns <c>IGumService.Default</c> again.
+/// <c>ISystemManagers.Default</c>) to that service. <c>Update</c>, <c>Draw</c> and the other framework entry
+/// points make their service the default for the length of the call and put the previous default back, so
+/// handlers fired inside see their own service. <c>Initialize</c> runs as the service being initialized and
+/// makes it the default only when no default exists. Code that touches another service from inside an entry
+/// point assigns <c>IGumService.Default</c> for it, and again for the first service when it comes back.
 /// </para>
 /// <para>
 /// With no default assigned, <see cref="Current"/> is the only live service, or none. With two or more live

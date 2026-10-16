@@ -40,6 +40,8 @@ public class GumServiceDefaultAssignmentTests : BaseTestClass
     {
         CollisionGame game = new CollisionGame();
         game.RunOneFrame();
+        // No default yet, so A's Initialize makes A the default and B's leaves it alone.
+        IGumService.Default = null;
         game.InitializeA(WriteProject("A"));
         game.InitializeB(WriteProject("B"));
         return game;
@@ -137,11 +139,64 @@ public class GumServiceDefaultAssignmentTests : BaseTestClass
     }
 
     [Fact]
-    public void Initialize_ShouldLeaveTheNewServiceAsTheDefault()
+    public void Initialize_WhenNoDefaultExists_ShouldMakeTheServiceTheDefault()
+    {
+        using CollisionGame game = new CollisionGame();
+        game.RunOneFrame();
+        IGumService.Default = null;
+
+        game.InitializeA(WriteProject("A"));
+
+        IGumService.Default.ShouldBeSameAs(game.ServiceA);
+    }
+
+    [Fact]
+    public void Initialize_WhenADefaultExists_ShouldLeaveItAlone()
     {
         using CollisionGame game = CreateTwoServices();
 
-        IGumService.Default.ShouldBeSameAs(game.ServiceB);
+        IGumService.Default.ShouldBeSameAs(game.ServiceA, "the second Initialize never changes the default");
+    }
+
+    [Fact]
+    public void Initialize_OfASecondService_ShouldRunAsThatService_NotAsTheDefault()
+    {
+        using CollisionGame game = new CollisionGame();
+        game.RunOneFrame();
+        game.InitializeA(WriteProject("A"));
+        int cachedByABefore = RenderingLibrary.Content.LoaderManager.Of(game.ServiceA.Context).CachedDisposables.Count;
+
+        game.InitializeB(WriteProject("B"));
+
+        // B's embedded fonts and project content were loaded while B was current, so they are in B's cache.
+        RenderingLibrary.Content.LoaderManager.Of(game.ServiceA.Context).CachedDisposables.Count.ShouldBe(cachedByABefore);
+        RenderingLibrary.Content.LoaderManager.Of(game.ServiceB.Context).CachedDisposables.Count.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void Initialize_ThatFails_ShouldKeepTheExistingDefault()
+    {
+        using CollisionGame game = new CollisionGame();
+        game.RunOneFrame();
+        game.InitializeA(WriteProject("A"));
+        string missing = Path.Combine(_root, "Missing", "Project.gumx");
+
+        Should.Throw<Exception>(() => game.ServiceB.Initialize(game, missing));
+
+        IGumService.Default.ShouldBeSameAs(game.ServiceA);
+    }
+
+    [Fact]
+    public void Initialize_ThatFails_ShouldLeaveANullDefaultNull()
+    {
+        using CollisionGame game = new CollisionGame();
+        game.RunOneFrame();
+        IGumService.Default = null;
+        string missing = Path.Combine(_root, "Missing", "Project.gumx");
+
+        Should.Throw<Exception>(() => game.ServiceA.Initialize(game, missing));
+
+        IGumService.Default.ShouldBeNull();
     }
 
     [Fact]

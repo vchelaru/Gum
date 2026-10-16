@@ -579,8 +579,6 @@ public partial class GumService : IGumService
         // SilkNetGum, so the assignment lives in the AssignClipboard seam (implemented on XNALIKE/Raylib,
         // elided on Silk) rather than a shared #if (issue #3608).
         AssignClipboard();
-
-        FormsRefreshStylesHooks.Install();
     }
 
     /// <summary>
@@ -593,6 +591,8 @@ public partial class GumService : IGumService
         {
             IsInitialized = true;
         }
+        FormsRefreshStylesHooks.Install();
+
         // Wire the platform-agnostic default too. Extensions in GumCommon (e.g.
         // FrameworkElementExt.AddToRoot) resolve the runtime via IGumService.Default,
         // so tests that bypass the full Initialize(Game, ...) path still need this set.
@@ -633,6 +633,10 @@ public partial class GumService : IGumService
     // InitializeInternal in GumService.XnaLike.cs / GumService.Raylib.cs (issue #3608).
     private GumProjectSave? FinishInitialize(string? gumProjectFile)
     {
+        // Installed here rather than in the constructor: the last service's Uninitialize clears these hooks, so
+        // a constructor install would not survive an Initialize, Uninitialize, Initialize cycle.
+        FormsRefreshStylesHooks.Install();
+
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
 
@@ -852,6 +856,19 @@ public partial class GumService : IGumService
         IsInitialized = false;
 
         _systemManagers = null;
+
+        // The thread's synchronization context is cleared only when it is this service's own, so one
+        // service never removes another service's (or the host's) context. Dropping the field lets
+        // UseSingleThreadedAsync install a fresh context after the next Initialize.
+        if (_syncContext != null)
+        {
+            if (ReferenceEquals(System.Threading.SynchronizationContext.Current, _syncContext))
+            {
+                System.Threading.SynchronizationContext.SetSynchronizationContext(null);
+            }
+            _syncContext.Clear();
+            _syncContext = null;
+        }
 
         // Only the default instance clears itself; another service's Uninitialize must not orphan it.
         if (ReferenceEquals(_default, this))

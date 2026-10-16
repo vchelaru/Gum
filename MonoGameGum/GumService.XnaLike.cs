@@ -116,6 +116,12 @@ public partial class GumService
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
+    /// <remarks>
+    /// Initialize runs as this service, so everything it registers and builds belongs to it. This service
+    /// becomes <see cref="IGumService.Default"/> only when no default exists; a second service's Initialize
+    /// leaves the existing default alone. To switch between services, assign
+    /// <c>GumService.Default</c> (or <c>IGumService.Default</c>) yourself.
+    /// </remarks>
     /// <param name="game">The game instance.</param>
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
@@ -195,7 +201,15 @@ public partial class GumService
         IGumService? previousDefault = IGumService.Default;
         try
         {
-            return InitializeCore(game, graphicsDevice, gumProjectFile, systemManagers, defaultVisualsVersion);
+            // Initialize runs as this service, so its registrations and builds land in this service. When a
+            // default already exists it is put back afterward; a second Initialize never changes it. With no
+            // default, this service stays the default.
+            GumProjectSave? loaded = InitializeCore(game, graphicsDevice, gumProjectFile, systemManagers, defaultVisualsVersion);
+            if (previousDefault != null)
+            {
+                IGumService.Default = previousDefault;
+            }
+            return loaded;
         }
         catch
         {

@@ -54,10 +54,8 @@ internal sealed class CollisionSnapshot
     /// </summary>
     public static CollisionSnapshot Capture(Gum.GumService service)
     {
-        global::RenderingLibrary.IGumService.Default = service;
-        {
-            return new CollisionSnapshot { Statics = StaticSnapshot.Capture(service), _service = service };
-        }
+        // StaticSnapshot.Capture reads as the service and puts the previous default back.
+        return new CollisionSnapshot { Statics = StaticSnapshot.Capture(service), _service = service };
     }
 
     /// <summary>

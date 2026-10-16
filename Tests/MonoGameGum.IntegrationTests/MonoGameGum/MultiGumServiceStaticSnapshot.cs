@@ -72,7 +72,22 @@ internal sealed class StaticSnapshot
 
     public static StaticSnapshot Capture(Gum.GumService? service = null)
     {
+        // Reads the service's statics with it as the default, then puts the previous default back: a capture
+        // must not change which service is current.
+        IGumService? previousDefault = IGumService.Default;
         if (service != null) { global::RenderingLibrary.IGumService.Default = service; }
+        try
+        {
+            return CaptureCurrent(service);
+        }
+        finally
+        {
+            if (service != null) { IGumService.Default = previousDefault; }
+        }
+    }
+
+    private static StaticSnapshot CaptureCurrent(Gum.GumService? service)
+    {
         return new StaticSnapshot
         {
             _service = service,
