@@ -69,7 +69,15 @@ public partial class GumService : IGumService
     // suppresses the nullable-return warning (runtime no-op) and does not reintroduce a throw.
     // True when this service has no context while another service is live: the ambient state then belongs
     // to that other service, so the per-service getters below answer as an uninitialized service would.
-    private bool HasNoStateOfItsOwnWhileOthersLive => _context == null && GumContext.Home != null;
+    private bool HasNoStateOfItsOwnWhileOthersLive => _context == null && GumContext.HasLiveContextOtherThan(null);
+
+    // Reads a per-service static as this service, then puts the previous default back (a read must not
+    // switch the current service).
+    private T ReadAsThisService<T>(Func<T> read)
+    {
+        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
+        return read();
+    }
 
     public Cursor Cursor
     {
@@ -79,15 +87,7 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            GumContext? previous = GumContext.ReplaceActive(_context);
-            try
-            {
-                return (FormsUtilities.Cursor as Cursor)!;
-            }
-            finally
-            {
-                GumContext.ReplaceActive(previous);
-            }
+            return ReadAsThisService(() => (FormsUtilities.Cursor as Cursor)!);
         }
     }
 
@@ -108,15 +108,7 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            GumContext? previous = GumContext.ReplaceActive(_context);
-            try
-            {
-                return (FormsUtilities.Keyboard as Keyboard)!;
-            }
-            finally
-            {
-                GumContext.ReplaceActive(previous);
-            }
+            return ReadAsThisService(() => (FormsUtilities.Keyboard as Keyboard)!);
         }
     }
 
@@ -136,15 +128,7 @@ public partial class GumService : IGumService
             {
                 return Array.Empty<Gum.Input.GamePad>();
             }
-            GumContext? previous = GumContext.ReplaceActive(_context);
-            try
-            {
-                return Gum.Forms.FormsUtilities.Gamepads;
-            }
-            finally
-            {
-                GumContext.ReplaceActive(previous);
-            }
+            return ReadAsThisService(() => Gum.Forms.FormsUtilities.Gamepads);
         }
     }
 
@@ -167,17 +151,6 @@ public partial class GumService : IGumService
     /// <see cref="Uninitialize"/>. See <see cref="Activate"/>.
     /// </summary>
     public GumContext? Context => _context;
-
-    /// <summary>
-    /// Makes this service the current one. It stays current until another service is activated or entered,
-    /// or until this service is uninitialized (then the first live service is current again). There is no
-    /// scope to dispose and nothing is restored. <c>Initialize</c>, <c>Update</c>, <c>Draw</c>,
-    /// <see cref="Uninitialize"/> and building an element with this service's <see cref="SystemManagers"/>
-    /// already activate it. Code that runs inside one service's entry point and touches another service
-    /// must call this for the other, and again for the first when it returns to it. See
-    /// <see cref="GumContext.Activate()"/> for the rules.
-    /// </summary>
-    public void Activate() => GumContext.Activate(_context);
 
     /// <inheritdoc/>
     public INativeTextInput? NativeTextInput { get; private set; }
@@ -332,15 +305,7 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            GumContext? previous = GumContext.ReplaceActive(_context);
-            try
-            {
-                return FrameworkElement.PopupRoot;
-            }
-            finally
-            {
-                GumContext.ReplaceActive(previous);
-            }
+            return ReadAsThisService(() => FrameworkElement.PopupRoot);
         }
     }
 
@@ -353,15 +318,7 @@ public partial class GumService : IGumService
             {
                 return null!;
             }
-            GumContext? previous = GumContext.ReplaceActive(_context);
-            try
-            {
-                return FrameworkElement.ModalRoot;
-            }
-            finally
-            {
-                GumContext.ReplaceActive(previous);
-            }
+            return ReadAsThisService(() => FrameworkElement.ModalRoot);
         }
     }
 
@@ -743,7 +700,8 @@ public partial class GumService : IGumService
     public void Uninitialize()
     {
         GumContext? context = _context;
-        if (context == null && GumContext.Home != null)
+        IGumService? previousDefault = IGumService.Default;
+        if (context == null && GumContext.HasLiveContextOtherThan(null))
         {
             // This service owns no context (never initialized, or already uninitialized) while another
             // service is live. Everything it would reset is that other service's, so only its own
@@ -759,6 +717,13 @@ public partial class GumService : IGumService
         finally
         {
             // Released even when teardown throws, so a failed Uninitialize cannot leave a dead service live.
+            // A service that was the default stops being it; another default stays as it was.
+            if (context != null)
+            {
+                IGumService.Default = previousDefault != null && !ReferenceEquals(previousDefault, this) && previousDefault.IsInitialized
+                    ? previousDefault
+                    : null;
+            }
             context?.Release();
             _context = null;
         }
@@ -780,7 +745,11 @@ public partial class GumService : IGumService
     {
         // Runs in this service's scope so per-service state (content cache, registrations) is the
         // one released. Shared state is torn down only when no other service is still live.
-        GumContext.Activate(_context);
+        if (_context != null)
+        {
+            // The per-service statics below resolve this service through the default.
+            IGumService.Default = this;
+        }
         bool isLastService = !GumContext.HasLiveContextOtherThan(_context);
 
 #if !IOS && !ANDROID
@@ -834,7 +803,6 @@ public partial class GumService : IGumService
 
         SystemManagers.Default = null!;
         ISystemManagers.Default = null!;
-        IGumService.Default = null;
 
         // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).
         // Reset to the default value expected before initialization.
@@ -911,7 +879,7 @@ public partial class GumService : IGumService
     public void Draw()
     {
         // This service's own managers, not whichever service initialized last.
-        GumContext.Activate(_context);
+        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
         (_systemManagers ?? SystemManagers.Default).Draw();
     }
 

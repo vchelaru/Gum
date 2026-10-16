@@ -154,35 +154,24 @@ namespace RenderingLibrary
         void ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) { }
 
         /// <summary>
-        /// The current default <see cref="IGumService"/>. Assigned by the
-        /// concrete runtime's <c>GumService.Initialize</c> and cleared by
-        /// <c>Uninitialize</c>. May be null before initialization.
+        /// The <see cref="GumContext"/> this service owns while it is initialized, or null.
+        /// </summary>
+        GumContext? Context => null;
+
+        /// <summary>
+        /// The current default <see cref="IGumService"/>, and the one "current service" pointer: every
+        /// per-service static (<c>ObjectFinder.Self</c>, <c>LoaderManager.Self</c>, the Forms statics,
+        /// <c>SystemManagers.Default</c> and the rest) resolves the current service through it. Assigning it
+        /// switches all of them to that service. The concrete runtime's <c>Initialize</c>, <c>Update</c>,
+        /// <c>Draw</c> and <c>Uninitialize</c> assign it on entry and do not restore the previous value.
+        /// <c>Uninitialize</c> clears it when it is the default. May be null before initialization.
         /// </summary>
         public static IGumService? Default
         {
-            get
-            {
-                GumContext? context = GumContext.Current;
-                if (context == null || context.AdoptsProcessStatics)
-                {
-                    return _processWideDefault;
-                }
-                return context.Service ?? _processWideDefault;
-            }
-            set
-            {
-                GumContext? context = GumContext.Current;
-                if (context == null || context.AdoptsProcessStatics)
-                {
-                    _processWideDefault = value;
-                }
-                else
-                {
-                    context.Service = value;
-                }
-            }
+            get => _default;
+            set => _default = value;
         }
 
-        private static IGumService? _processWideDefault;
+        private static IGumService? _default;
     }
 }

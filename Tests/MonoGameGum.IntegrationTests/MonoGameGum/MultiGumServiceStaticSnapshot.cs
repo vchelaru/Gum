@@ -72,7 +72,7 @@ internal sealed class StaticSnapshot
 
     public static StaticSnapshot Capture(Gum.GumService? service = null)
     {
-        service?.Activate();
+        if (service != null) { global::RenderingLibrary.IGumService.Default = service; }
         return new StaticSnapshot
         {
             _service = service,
@@ -108,7 +108,7 @@ internal sealed class StaticSnapshot
 
     public void Restore()
     {
-        _service?.Activate();
+        if (_service != null) { global::RenderingLibrary.IGumService.Default = _service; }
         SystemManagers.Default = Managers!;
         ISystemManagers.Default = InterfaceManagers!;
         IGumService.Default = Service;

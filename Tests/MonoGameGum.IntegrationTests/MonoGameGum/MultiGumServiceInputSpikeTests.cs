@@ -510,7 +510,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
     {
         game.Current?.State.SaveDynamic();
         InputService next = game.Get(side);
-        next.Service.Activate();
+        global::RenderingLibrary.IGumService.Default = next.Service;
         next.State.Restore(restoreInputReceiver);
         game.Current = next;
     }
@@ -763,7 +763,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
             service.Project = service.Service.Initialize(this, path)!;
 
             // Install the scripted input in this service's own scope, then capture.
-            service.Service.Activate();
+            global::RenderingLibrary.IGumService.Default = service.Service;
             {
                 FormsUtilities.SetCursor(service.Cursor);
                 FormsUtilities.SetKeyboard(service.Keyboard);

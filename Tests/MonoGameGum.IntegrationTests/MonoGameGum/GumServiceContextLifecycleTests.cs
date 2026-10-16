@@ -46,7 +46,7 @@ public class GumServiceContextLifecycleTests : BaseTestClass
 
     private static GumProjectSave? ProjectOf(Gum.GumService service)
     {
-        service.Activate();
+        global::RenderingLibrary.IGumService.Default = service;
         {
             return ObjectFinder.Self.GumProjectSave;
         }
@@ -96,7 +96,7 @@ public class GumServiceContextLifecycleTests : BaseTestClass
 
         game.ServiceA.IsInitialized.ShouldBeFalse();
         game.ServiceA.Context.ShouldBeNull();
-        Gum.GumContext.Home.ShouldBeNull("the failed service must not stay live");
+        Gum.GumContext.Current.ShouldBeNull("the failed service must not stay live");
     }
 
     [Fact]
@@ -104,12 +104,12 @@ public class GumServiceContextLifecycleTests : BaseTestClass
     {
         using CollisionGame game = CreateGame();
         game.InitializeA(WriteProject("A"));
-        Gum.GumContext? homeBefore = Gum.GumContext.Home;
+        Gum.GumContext? homeBefore = Gum.GumContext.Current;
         string missing = Path.Combine(_root, "Missing", "Project.gumx");
 
         Should.Throw<Exception>(() => game.ServiceB.Initialize(game, missing));
 
-        Gum.GumContext.Home.ShouldBeSameAs(homeBefore);
+        Gum.GumContext.Current.ShouldBeSameAs(homeBefore);
         game.ServiceB.IsInitialized.ShouldBeFalse();
     }
 
@@ -124,7 +124,7 @@ public class GumServiceContextLifecycleTests : BaseTestClass
 
         project.ShouldNotBeNull();
         game.ServiceA.IsInitialized.ShouldBeTrue();
-        Gum.GumContext.Home.ShouldBeSameAs(game.ServiceA.Context);
+        Gum.GumContext.Current.ShouldBeSameAs(game.ServiceA.Context);
     }
 
     #endregion
@@ -173,7 +173,7 @@ public class GumServiceContextLifecycleTests : BaseTestClass
         ScreenSave screen = projectB.Screens.First(item => item.Name == "MainScreen");
 
         GraphicalUiElement detached;
-        game.ServiceB.Activate();
+        global::RenderingLibrary.IGumService.Default = game.ServiceB;
         {
             detached = screen.ToGraphicalUiElement(game.ServiceB.SystemManagers, addToManagers: false);
         }

@@ -58,7 +58,7 @@ internal sealed class InputStaticSnapshot
     /// </summary>
     public static InputStaticSnapshot Capture(Gum.GumService service)
     {
-        service.Activate();
+        global::RenderingLibrary.IGumService.Default = service;
         InputStaticSnapshot snapshot = new InputStaticSnapshot
         {
             _service = service,
@@ -87,7 +87,7 @@ internal sealed class InputStaticSnapshot
 
     public void Restore(bool restoreInputReceiver = false)
     {
-        _service.Activate();
+        global::RenderingLibrary.IGumService.Default = _service;
         Base.Restore();
 
         InteractiveGue.LastVisualPushed = LastVisualPushed;

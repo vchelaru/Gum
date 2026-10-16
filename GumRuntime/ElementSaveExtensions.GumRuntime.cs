@@ -27,7 +27,8 @@ namespace GumRuntime
         // any service (module initializers, startup code), and each GumContext holds the ones made while
         // its service was active. Writes go to the active context's layer, else the base. Reads see the
         // current context's layer plus the base, newest registration first (#6066).
-        private static ElementTypeRegistry WriteLayer => GumContext.Active?.ElementTypes ?? ElementTypeRegistry.Base;
+        private static ElementTypeRegistry WriteLayer =>
+            GumContext.RegisteringShared ? ElementTypeRegistry.Base : GumContext.Current?.ElementTypes ?? ElementTypeRegistry.Base;
         private static ElementTypeRegistry? ReadLayer => GumContext.Current?.ElementTypes;
 
         /// <summary>
@@ -357,7 +358,7 @@ namespace GumRuntime
         private static GraphicalUiElement ToGraphicalUiElementInContext(ElementSave elementSave,
             ISystemManagers systemManagers, bool addToManagers, string? genericType, GumContext? owner)
         {
-            GumContext.Activate(owner);
+            using GumContext.DefaultScope defaultScope = GumContext.EnterDefault(owner);
 
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
 

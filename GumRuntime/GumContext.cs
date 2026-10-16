@@ -21,22 +21,33 @@ namespace Gum;
 /// Later contexts get their own instances.
 /// </para>
 /// <para>
-/// Statics that became per-context read <see cref="Current"/>: the context last activated or entered (see
-/// <see cref="Activate()"/> for the overwrite rules), else the first live context (the "home" context), else none, in which case
-/// they fall back to the old process-wide object. Code that runs no service (the Gum tool, FlatRedBall,
-/// most unit tests) never has a context and sees no change.
+/// <b>There is one "current service" pointer: <c>IGumService.Default</c>.</b> Statics that became per-context
+/// read <see cref="Current"/>, which is the context of <c>IGumService.Default</c>. Assigning
+/// <c>IGumService.Default</c> switches every one of them (and <c>SystemManagers.Default</c> /
+/// <c>ISystemManagers.Default</c>) to that service. <c>Initialize</c>, <c>Update</c>, <c>Draw</c> and
+/// <c>Uninitialize</c> assign it on entry and never put the previous value back, so after
+/// <c>B.Update()</c> the default is B. Code that touches another service from inside an entry point
+/// assigns <c>IGumService.Default</c> again.
+/// </para>
+/// <para>
+/// With no default assigned, <see cref="Current"/> is the only live service, or none. With two or more live
+/// services and no default it throws, because silently picking one would hand out the wrong service's state.
+/// Code that runs no service (the Gum tool, FlatRedBall, most unit tests) never has a context and sees no
+/// change.
+/// </para>
+/// <para>
+/// All UI work for all services is expected to run on one thread.
 /// </para>
 /// </remarks>
 public sealed partial class GumContext
 {
-    // A plain static on purpose: all UI work for all services runs on one thread.
-    private static GumContext? _active;
-
     private static readonly List<GumContext> _live = new List<GumContext>();
     private static readonly object _liveLock = new object();
+    private static int _nextId;
 
-    // The first live context, kept in a field so reading Current takes no lock.
-    private static volatile GumContext? _home;
+    // Kept in fields so the hot reads (Current, MultipleLive) take no lock.
+    private static volatile int _liveCount;
+    private static volatile GumContext? _onlyLive;
 
     static GumContext()
     {
@@ -52,6 +63,20 @@ public sealed partial class GumContext
     internal ObjectFinder? ObjectFinder { get; set; }
 
     private readonly Dictionary<Type, object> _state = new Dictionary<Type, object>();
+
+    /// <summary>
+    /// Identifies the context in error messages.
+    /// </summary>
+    public int Id { get; } = System.Threading.Interlocked.Increment(ref _nextId);
+
+    /// <summary>The runtime type name of the owning service, set by the service. Used in error messages.</summary>
+    internal string ServiceTypeName { get; set; } = "service";
+
+    /// <summary>Describes the service this context belongs to, for example <c>GumService #2</c>.</summary>
+    public string Describe() => ServiceTypeName + " #" + Id;
+
+    /// <inheritdoc/>
+    public override string ToString() => Describe();
 
     /// <summary>
     /// The current context when it keeps its own state, or null when the process-wide statics apply
@@ -119,15 +144,39 @@ public sealed partial class GumContext
     }
 
     /// <summary>
-    /// The context last activated or entered (and not released since), else the first live context, else null.
+    /// The context of <c>IGumService.Default</c>. With no default assigned it is the only live context, or
+    /// null when none is live. Throws when two or more services are live and no default is assigned.
     /// </summary>
-    public static GumContext? Current => _active ?? Home;
+    /// <exception cref="InvalidOperationException">Two or more services are live and
+    /// <c>IGumService.Default</c> is null.</exception>
+    public static GumContext? Current
+    {
+        get
+        {
+#if FRB
+            return null;
+#else
+            IGumService? service = IGumService.Default;
+            if (service != null)
+            {
+                return service.Context;
+            }
 
-    /// <summary>
-    /// The context that went live first and is still live. Code that runs while nothing is active resolves
-    /// to it, which is what keeps a lone service behaving like the old statics.
-    /// </summary>
-    public static GumContext? Home => _home;
+            if (_liveCount < 2)
+            {
+                return _onlyLive;
+            }
+
+            throw new InvalidOperationException(
+                "Two or more Gum services are initialized but IGumService.Default is not assigned, so there is no " +
+                "way to tell which service this code is for. Assign IGumService.Default (or GumService.Default) to the " +
+                "service you want before building or using UI.");
+#endif
+        }
+    }
+
+    /// <summary>True when two or more services are live. Ownership checks only run then.</summary>
+    public static bool MultipleLive => _liveCount >= 2;
 
     /// <summary>
     /// True when a live context other than <paramref name="context"/> exists. A service tears down state
@@ -147,6 +196,11 @@ public sealed partial class GumContext
             return false;
         }
     }
+
+    // When true, element-type registrations go to the process-wide base layer even though a service is
+    // current. Set while the optional-package reflection hooks run in Initialize, which must be seen by
+    // every service.
+    internal static bool RegisteringShared { get; set; }
 
     // Which service built an element that is not (yet) attached to any managers. Only the outermost element of
     // a build is stamped; OwnerOf walks up to it.
@@ -180,11 +234,40 @@ public sealed partial class GumContext
         return null;
     }
 
-    /// <summary>
-    /// The context last activated or entered, ignoring the home fallback. Registrations made while none is
-    /// active go to the process-wide base layer instead of a service.
-    /// </summary>
-    internal static GumContext? Active => _active;
+    // With two or more live services, remembers which service a newly built element belongs to, so adding
+    // it to another service's tree can be caught. A no-op otherwise.
+    internal static void StampIfMultipleLive(GraphicalUiElement element)
+    {
+        if (_liveCount >= 2)
+        {
+            GumContext? current = Current;
+            if (current != null)
+            {
+                _builtBy.AddOrUpdate(element, current);
+            }
+        }
+    }
+
+    // Throws when two or more services are live and the child and its new parent belong to different ones.
+    // Elements with no known owner are not checked.
+    internal static void CheckSameService(GraphicalUiElement child, GraphicalUiElement parent)
+    {
+        GumContext? childOwner = OwnerOf(child);
+        if (childOwner == null)
+        {
+            return;
+        }
+        GumContext? parentOwner = OwnerOf(parent);
+        if (parentOwner == null || ReferenceEquals(childOwner, parentOwner))
+        {
+            return;
+        }
+
+        string name = string.IsNullOrEmpty(child.Name) ? child.GetType().Name : child.Name;
+        throw new InvalidOperationException(
+            $"'{name}' was built under {childOwner.Describe()} but is being added under {parentOwner.Describe()}. " +
+            $"Assign IGumService.Default = {parentOwner.Describe()} before constructing it, or add it to {childOwner.Describe()}'s tree.");
+    }
 
     /// <summary>True once <see cref="Register"/> ran and <see cref="Release"/> has not.</summary>
     public bool IsLive { get; private set; }
@@ -215,7 +298,7 @@ public sealed partial class GumContext
             AdoptsProcessStatics = _live.Count == 0;
             _live.Add(this);
             IsLive = true;
-            _home = _live[0];
+            UpdateLiveFields();
         }
     }
 
@@ -228,70 +311,68 @@ public sealed partial class GumContext
             {
                 _live.Remove(this);
                 IsLive = false;
-                _home = _live.Count > 0 ? _live[0] : null;
-                if (ReferenceEquals(_active, this))
-                {
-                    // Rule 1: a released context is never current; fall back to Home.
-                    _active = null;
-                }
+                UpdateLiveFields();
             }
         }
     }
 
-    /// <summary>
-    /// Makes this the current context. It stays current until something else is activated or entered, or
-    /// until this context is released. There is no scope and nothing is restored.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>Overwrite semantics.</b> "Current" is one plain static meaning the last service that was
-    /// activated or entered. Entering a service (<c>Initialize</c>, <c>Update</c>, <c>Draw</c>,
-    /// <c>Uninitialize</c>, building an element from its <c>SystemManagers</c>, drawing its renderer) sets
-    /// it and does not put the previous one back on exit. Outside any entry point, code therefore runs
-    /// against the last service entered, not the first.
-    /// </para>
-    /// <para>
-    /// Rules: (1) when the current context is released (its service is uninitialized or its game is
-    /// disposed), the pointer is cleared and <see cref="Current"/> falls back to <see cref="Home"/>;
-    /// (2) current means the last service activated or entered; (3) code running inside one service's
-    /// entry point (an event handler, a deferred action) that touches another service must call
-    /// <c>Activate()</c> for it, and again for the first service when it comes back.
-    /// </para>
-    /// <para>
-    /// All UI work for all services is expected to run on one thread. Building or touching a service's UI
-    /// from a background thread is unsupported unless that work runs on the UI thread.
-    /// </para>
-    /// </remarks>
-    public void Activate()
-    {
-        _active = this;
-    }
+#if !FRB
+    // The service this context belongs to; set by the service when it initializes.
+    internal IGumService? Service { get; set; }
+#endif
 
-    /// <summary>
-    /// Activates <paramref name="context"/>, or does nothing when it is null (an object that does not
-    /// belong to a service). See <see cref="Activate()"/> for the overwrite semantics.
-    /// </summary>
-    public static void Activate(GumContext? context)
+    // Framework entry points (Update, Draw, Renderer.Draw, building an element for a service) make that
+    // service the default for the length of the call, so handlers and events fired inside it see their own
+    // service, then put the previous default back. Framework code only: users assign the default
+    // themselves and never write a using. A null context, or one without a service, changes nothing.
+    internal static DefaultScope EnterDefault(GumContext? context)
     {
-        if (context != null)
+#if !FRB
+        IGumService? service = context?.Service;
+        if (service != null)
         {
-            _active = context;
+            IGumService? previous = IGumService.Default;
+            if (!ReferenceEquals(previous, service))
+            {
+                IGumService.Default = service;
+            }
+            return new DefaultScope(previous, restore: true);
         }
+#endif
+        return default;
     }
 
-    // Used where a read must look through another service's state and then leave "current" alone, such as a
-    // service's property getters. Returns what was active so the caller can put it back.
-    internal static GumContext? ReplaceActive(GumContext? context)
+    // Puts the previous default back when disposed. Skips the restore when that service was uninitialized
+    // while the call ran, so a dead service never becomes the default again.
+    internal readonly struct DefaultScope : IDisposable
     {
-        GumContext? previous = _active;
-        _active = context;
-        return previous;
+#if !FRB
+        private readonly IGumService? _previous;
+        private readonly bool _restore;
+
+        internal DefaultScope(IGumService? previous, bool restore)
+        {
+            _previous = previous;
+            _restore = restore;
+        }
+
+        public void Dispose()
+        {
+            if (_restore && (_previous == null || _previous.IsInitialized))
+            {
+                IGumService.Default = _previous;
+            }
+        }
+#else
+        public void Dispose()
+        {
+        }
+#endif
     }
 
-    // Writes made with no active context go to the process-wide registration layer; an entry point that
-    // registers shared types (module initializers, the reflection hooks) clears the pointer first.
-    internal static void ClearActive()
+    private static void UpdateLiveFields()
     {
-        _active = null;
+        _liveCount = _live.Count;
+        _onlyLive = _live.Count == 1 ? _live[0] : null;
     }
 }

@@ -23,8 +23,8 @@ namespace RenderingLibrary
 
         /// <summary>
         /// Set by Gum initialization (e.g. GumService.Initialize); not usable before that. With several
-        /// services this is the current <see cref="GumContext"/>'s managers, falling back to the
-        /// process-wide value when that context has none.
+        /// services this is the managers of the service that <c>IGumService.Default</c> names, falling back to
+        /// the process-wide value when that service has none. Hosts may still assign it directly.
         /// </summary>
         public static ISystemManagers Default
         {

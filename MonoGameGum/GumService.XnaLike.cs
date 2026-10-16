@@ -178,6 +178,7 @@ public partial class GumService
         }
         IsInitialized = true;
 
+        IGumService? previousDefault = IGumService.Default;
         try
         {
             return InitializeCore(game, graphicsDevice, gumProjectFile, systemManagers, defaultVisualsVersion);
@@ -200,6 +201,12 @@ public partial class GumService
             DetachGameDisposedHandler();
             IsInitialized = false;
             _game = null;
+
+            // The default goes back to whatever it was; this service never became usable.
+            if (IGumService.Default == null || ReferenceEquals(IGumService.Default, this))
+            {
+                IGumService.Default = previousDefault;
+            }
             throw;
         }
     }
@@ -223,17 +230,26 @@ public partial class GumService
     {
         _game = game;
 
-        // Optional packages register their runtime types into the process-wide base layer (this runs
-        // while no service is active), where every service sees them.
-        GumContext.ClearActive();
-        RegisterRuntimeTypesThroughReflection();
+        // Optional packages register their runtime types into the process-wide base layer, where every
+        // service sees them, not into the current service's layer.
+        GumContext.RegisteringShared = true;
+        try
+        {
+            RegisterRuntimeTypesThroughReflection();
+        }
+        finally
+        {
+            GumContext.RegisteringShared = false;
+        }
 
-        // Everything below runs in this service's scope, so the writes Initialize makes (registrations,
-        // content loader, cache) land in its own context. The first service to initialize adopts the
-        // process-wide statics; later ones get their own state.
+        // This service becomes the default first, so the writes Initialize makes (registrations, content
+        // loader, cache) land in its own context. The first service to initialize adopts the process-wide
+        // statics; later ones get their own state.
         _context = new GumContext();
+        _context.ServiceTypeName = GetType().Name;
+        _context.Service = this;
         _context.Register();
-        _context.Activate();
+        IGumService.Default = this;
 
         // A service whose Game was disposed without Uninitialize is dead; stop counting it as live so
         // it cannot keep owning the process statics.
@@ -251,8 +267,12 @@ public partial class GumService
             SystemManagers.Default = this.SystemManagers;
             ISystemManagers.Default = this.SystemManagers;
         }
-
-        IGumService.Default = this;
+        else if (!_context.AdoptsProcessStatics)
+        {
+            // A later service that was handed its own managers still owns them as its Default.
+            _context.Managers = systemManagers;
+            _context.ConcreteManagers = systemManagers;
+        }
 
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
 
@@ -526,6 +546,8 @@ public partial class GumService
     /// <param name="gameTime">The GameTime obtained from the Game class in the Update call.</param>
     public void Update(GameTime gameTime)
     {
+        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
+
         PollWindowSizeAndApplyFit();
 
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
@@ -543,7 +565,9 @@ public partial class GumService
 
     public void Update(GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
-        GumContext.Activate(_context);
+        // Handlers and events fired below see this service as the default; the previous default comes back
+        // when Update returns, so a handler that assigns the default has that undone.
+        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
 
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 

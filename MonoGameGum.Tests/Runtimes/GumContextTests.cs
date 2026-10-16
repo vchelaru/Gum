@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
+using Moq;
 using GumRuntime;
 using RenderingLibrary;
 using RenderingLibrary.Content;
@@ -32,12 +33,25 @@ public class GumContextTests : BaseTestClass
     private readonly Func<StateSave, string, string?, GraphicalUiElement?, IEnumerable<object>>? _originalEvaluateAllBranches =
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches;
 
+    private readonly IGumService? _originalDefault = IGumService.Default;
+
+    // A live context owned by a stand-in service, so IGumService.Default can point at it.
     private GumContext CreateLiveContext()
     {
         GumContext context = new GumContext();
+        context.ServiceTypeName = "TestService";
+        Mock<IGumService> service = new Mock<IGumService>();
+        service.SetupGet(item => item.Context).Returns(context);
+        context.Service = service.Object;
         context.Register();
         _contexts.Add(context);
         return context;
+    }
+
+    // Assigning the default is how a service becomes current.
+    private static void MakeDefault(GumContext context)
+    {
+        IGumService.Default = context.Service;
     }
 
     public override void Dispose()
@@ -46,6 +60,7 @@ public class GumContextTests : BaseTestClass
         {
             context.Release();
         }
+        IGumService.Default = _originalDefault;
         ElementSaveExtensions.Reset();
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = _originalCreateComponent;
         ElementSaveExtensions.CustomEvaluateExpression = _originalEvaluate;
@@ -54,130 +69,111 @@ public class GumContextTests : BaseTestClass
         base.Dispose();
     }
 
-    #region Current and Activate
+    #region Current is the context of IGumService.Default
 
     [Fact]
     public void Current_ShouldBeNull_WhenNoContextIsLive()
     {
+        IGumService.Default = null;
+
         GumContext.Current.ShouldBeNull();
     }
 
     [Fact]
-    public void Current_ShouldBeFirstLiveContext_WhenNothingIsActivated()
+    public void Current_ShouldBeTheDefaultsContext()
     {
-        GumContext first = CreateLiveContext();
         CreateLiveContext();
+        GumContext second = CreateLiveContext();
 
-        GumContext.Current.ShouldBeSameAs(first);
+        MakeDefault(second);
+
+        GumContext.Current.ShouldBeSameAs(second);
     }
 
     [Fact]
-    public void Current_ShouldBeNextLiveContext_WhenFirstIsReleased()
+    public void Current_ShouldFollowEachAssignmentOfTheDefault_WithoutRestoringAnything()
     {
         GumContext first = CreateLiveContext();
         GumContext second = CreateLiveContext();
 
+        MakeDefault(second);
+        MakeDefault(first);
+        MakeDefault(second);
+
+        GumContext.Current.ShouldBeSameAs(second);
+    }
+
+    [Fact]
+    public void Current_ShouldBeTheOnlyLiveContext_WhenNoDefaultIsAssigned()
+    {
+        GumContext only = CreateLiveContext();
+        IGumService.Default = null;
+
+        GumContext.Current.ShouldBeSameAs(only);
+    }
+
+    [Fact]
+    public void Current_ShouldThrow_WhenTwoContextsAreLiveAndNoDefaultIsAssigned()
+    {
+        GumContext first = CreateLiveContext();
+        CreateLiveContext();
+        IGumService.Default = null;
+
+        InvalidOperationException exception = Should.Throw<InvalidOperationException>(() => GumContext.Current);
+
+        exception.Message.ShouldContain("IGumService.Default");
+    }
+
+    [Fact]
+    public void Current_ShouldNotThrow_WhenTwoContextsAreLiveAndADefaultIsAssigned()
+    {
+        CreateLiveContext();
+        GumContext second = CreateLiveContext();
+        MakeDefault(second);
+
+        Should.NotThrow(() => GumContext.Current);
+    }
+
+    [Fact]
+    public void Current_ShouldBeTheRemainingContext_WhenOneOfTwoIsReleasedAndNoDefaultIsAssigned()
+    {
+        GumContext first = CreateLiveContext();
+        GumContext second = CreateLiveContext();
         first.Release();
+        IGumService.Default = null;
 
         GumContext.Current.ShouldBeSameAs(second);
     }
 
     [Fact]
-    public void Activate_ShouldMakeContextCurrent_AndLeaveItCurrent()
+    public void Current_ShouldBeNull_WhenTheDefaultHasNoContext()
     {
         CreateLiveContext();
-        GumContext second = CreateLiveContext();
-
-        second.Activate();
-
-        GumContext.Current.ShouldBeSameAs(second);
-    }
-
-    [Fact]
-    public void Activate_ShouldOverwriteThePreviousContext_WithoutRestoringIt()
-    {
-        GumContext first = CreateLiveContext();
-        GumContext second = CreateLiveContext();
-
-        second.Activate();
-        first.Activate();
-        second.Activate();
-
-        GumContext.Current.ShouldBeSameAs(second);
-    }
-
-    [Fact]
-    public void Release_OfTheCurrentContext_ShouldFallBackToHome()
-    {
-        GumContext first = CreateLiveContext();
-        GumContext second = CreateLiveContext();
-        GumContext third = CreateLiveContext();
-        third.Activate();
-
-        third.Release();
-
-        GumContext.Current.ShouldBeSameAs(first);
-        second.IsLive.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Release_OfANonCurrentContext_ShouldLeaveTheCurrentOneAlone()
-    {
         CreateLiveContext();
-        GumContext second = CreateLiveContext();
-        GumContext third = CreateLiveContext();
-        third.Activate();
+        IGumService.Default = new Mock<IGumService>().Object;
 
-        second.Release();
-
-        GumContext.Current.ShouldBeSameAs(third);
+        GumContext.Current.ShouldBeNull();
     }
 
-    [Fact]
-    public void Release_OfTheHomeContext_WhileAnotherIsCurrent_ShouldLeaveTheCurrentOneAlone()
-    {
-        GumContext first = CreateLiveContext();
-        GumContext second = CreateLiveContext();
-        second.Activate();
-
-        first.Release();
-
-        GumContext.Current.ShouldBeSameAs(second);
-        GumContext.Home.ShouldBeSameAs(second);
-    }
-
-    [Fact]
-    public void Activate_WithNull_ShouldKeepTheCurrentContext()
-    {
-        CreateLiveContext();
-        GumContext second = CreateLiveContext();
-        second.Activate();
-
-        GumContext.Activate(null);
-
-        GumContext.Current.ShouldBeSameAs(second);
-    }
+    #endregion
 
     // Pins the threading model: the active context is one plain static (all UI work runs on one thread),
-    // so the current context is visible from any thread.
+    // so the default, and the current context, are visible from any thread.
     [Fact]
-    public async Task Activate_ShouldBeVisibleToWorkRunOnAnotherThread()
+    public async Task Current_ShouldBeVisibleToWorkRunOnAnotherThread()
     {
         CreateLiveContext();
         GumContext second = CreateLiveContext();
 
-        GumContext? seenOnAnotherThread;
-        second.Activate();
-        {
-            seenOnAnotherThread = await Task.Run(() => GumContext.Current);
-        }
+        MakeDefault(second);
+        GumContext? seenOnAnotherThread = await Task.Run(() => GumContext.Current);
 
         seenOnAnotherThread.ShouldBeSameAs(second);
     }
 
-    // With a single-threaded synchronization context, an await resumes on that thread and the scope is intact.
+    // With a single-threaded synchronization context, an await resumes on that thread and the default is unchanged.
     [Fact]
-    public void Activate_ShouldStayCurrentAcrossAwaitOnTheSameSynchronizationContext()
+    public void Current_ShouldStayTheSameAcrossAwaitOnTheSameSynchronizationContext()
     {
         CreateLiveContext();
         GumContext second = CreateLiveContext();
@@ -189,7 +185,7 @@ public class GumContextTests : BaseTestClass
         {
             async Task Work()
             {
-                second.Activate();
+                MakeDefault(second);
                 await Task.Delay(10);
                 afterAwait = GumContext.Current;
             }
@@ -226,8 +222,6 @@ public class GumContextTests : BaseTestClass
         }
     }
 
-    #endregion
-
     #region Adopting the process statics
 
     [Fact]
@@ -257,7 +251,7 @@ public class GumContextTests : BaseTestClass
         ObjectFinder processWide = ObjectFinder.Self;
         GumContext first = CreateLiveContext();
 
-        first.Activate();
+        MakeDefault(first);
         {
             ObjectFinder.Self.ShouldBeSameAs(processWide);
         }
@@ -272,14 +266,14 @@ public class GumContextTests : BaseTestClass
         GumContext third = CreateLiveContext();
 
         ObjectFinder secondFinder;
-        second.Activate();
+        MakeDefault(second);
         {
             secondFinder = ObjectFinder.Self;
             secondFinder.GumProjectSave = new GumProjectSave();
         }
 
         ObjectFinder thirdFinder;
-        third.Activate();
+        MakeDefault(third);
         {
             thirdFinder = ObjectFinder.Self;
         }
@@ -298,13 +292,13 @@ public class GumContextTests : BaseTestClass
         GumContext second = CreateLiveContext();
 
         LoaderManager firstManager;
-        first.Activate();
+        MakeDefault(first);
         {
             firstManager = LoaderManager.Self;
         }
 
         LoaderManager secondManager;
-        second.Activate();
+        MakeDefault(second);
         {
             secondManager = LoaderManager.Self;
         }
@@ -339,22 +333,22 @@ public class GumContextTests : BaseTestClass
         GumContext first = CreateLiveContext();
         GumContext second = CreateLiveContext();
 
-        first.Activate();
+        MakeDefault(first);
         {
             FileManager.RelativeDirectory = "/projectA/";
         }
-        second.Activate();
+        MakeDefault(second);
         {
             FileManager.RelativeDirectory = "/projectB/";
         }
 
         string underFirst;
-        first.Activate();
+        MakeDefault(first);
         {
             underFirst = FileManager.RelativeDirectory;
         }
         string underSecond;
-        second.Activate();
+        MakeDefault(second);
         {
             underSecond = FileManager.RelativeDirectory;
         }
@@ -382,16 +376,16 @@ public class GumContextTests : BaseTestClass
         GumContext second = CreateLiveContext();
         ComponentSave component = new ComponentSave { Name = "Widget" };
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromFirst" });
         }
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("FromFirst");
         }
-        second.Activate();
+        MakeDefault(second);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldNotBe("FromFirst");
         }
@@ -404,20 +398,20 @@ public class GumContextTests : BaseTestClass
         GumContext second = CreateLiveContext();
         ComponentSave component = new ComponentSave { Name = "Widget" };
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromFirst" });
         }
-        second.Activate();
+        MakeDefault(second);
         {
             ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromSecond" });
         }
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("FromFirst");
         }
-        second.Activate();
+        MakeDefault(second);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("FromSecond");
         }
@@ -432,11 +426,11 @@ public class GumContextTests : BaseTestClass
         GumContext second = CreateLiveContext();
         ComponentSave component = new ComponentSave { Name = "Shared" };
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("FromBase");
         }
-        second.Activate();
+        MakeDefault(second);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("FromBase");
         }
@@ -448,14 +442,14 @@ public class GumContextTests : BaseTestClass
         GumContext first = CreateLiveContext();
         ComponentSave component = new ComponentSave { Name = "Widget" };
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "Older" });
         }
         // Registered later, with no service active, like user startup code that runs after Initialize.
         ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "Newer" });
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("Newer");
         }
@@ -468,7 +462,7 @@ public class GumContextTests : BaseTestClass
         ComponentSave component = new ComponentSave { Name = "Widget" };
         ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromBase" });
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.RegisterGueInstantiationType("Widget", typeof(GraphicalUiElement), overwriteIfAlreadyExists: false);
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("FromBase");
@@ -482,26 +476,26 @@ public class GumContextTests : BaseTestClass
         GumContext second = CreateLiveContext();
         ComponentSave component = new ComponentSave { Name = "Widget" };
         ElementSaveExtensions.RegisterGueInstantiation("Shared", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromBase" });
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromFirst" });
         }
-        second.Activate();
+        MakeDefault(second);
         {
             ElementSaveExtensions.RegisterGueInstantiation("Widget", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromSecond" });
         }
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.ClearRegistrations();
         }
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldNotBe("FromFirst");
             ElementSaveExtensions.CreateGueForElement(new ComponentSave { Name = "Shared" }).Name.ShouldBe("FromBase");
         }
-        second.Activate();
+        MakeDefault(second);
         {
             ElementSaveExtensions.CreateGueForElement(component).Name.ShouldBe("FromSecond");
         }
@@ -513,7 +507,7 @@ public class GumContextTests : BaseTestClass
         GumContext only = CreateLiveContext();
         ElementSaveExtensions.RegisterGueInstantiation("Shared", () => new GraphicalUiElement(new InvisibleRenderable()) { Name = "FromBase" });
 
-        only.Activate();
+        MakeDefault(only);
         {
             ElementSaveExtensions.ClearRegistrations();
             ElementSaveExtensions.CreateGueForElement(new ComponentSave { Name = "Shared" }).Name.ShouldNotBe("FromBase");
@@ -527,7 +521,7 @@ public class GumContextTests : BaseTestClass
         CreateLiveContext();
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = (_, _) => null;
 
-        first.Activate();
+        MakeDefault(first);
         {
             ElementSaveExtensions.ClearRegistrations();
         }

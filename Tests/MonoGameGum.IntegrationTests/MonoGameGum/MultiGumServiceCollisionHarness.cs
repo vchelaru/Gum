@@ -54,7 +54,7 @@ internal sealed class CollisionSnapshot
     /// </summary>
     public static CollisionSnapshot Capture(Gum.GumService service)
     {
-        service.Activate();
+        global::RenderingLibrary.IGumService.Default = service;
         {
             return new CollisionSnapshot { Statics = StaticSnapshot.Capture(service), _service = service };
         }
@@ -67,7 +67,7 @@ internal sealed class CollisionSnapshot
     /// </summary>
     public void Restore(bool includeElementTypeTable = false)
     {
-        _service.Activate();
+        global::RenderingLibrary.IGumService.Default = _service;
         {
             Statics.Restore();
         }
