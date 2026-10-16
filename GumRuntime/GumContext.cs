@@ -21,7 +21,7 @@ namespace Gum;
 /// Later contexts get their own instances.
 /// </para>
 /// <para>
-/// Statics that became per-context read <see cref="Current"/>: the context a thread activated with
+/// Statics that became per-context read <see cref="Current"/>: the context last activated with
 /// <see cref="Activate()"/>, else the first live context (the "home" context), else none, in which case
 /// they fall back to the old process-wide object. Code that runs no service (the Gum tool, FlatRedBall,
 /// most unit tests) never has a context and sees no change.
@@ -29,7 +29,7 @@ namespace Gum;
 /// </remarks>
 public sealed partial class GumContext
 {
-    [ThreadStatic]
+    // A plain static on purpose: all UI work for all services runs on one thread.
     private static GumContext? _active;
 
     private static readonly List<GumContext> _live = new List<GumContext>();
@@ -119,7 +119,7 @@ public sealed partial class GumContext
     }
 
     /// <summary>
-    /// The context the calling thread activated, else the first live context, else null.
+    /// The context most recently activated, else the first live context, else null.
     /// </summary>
     public static GumContext? Current => _active ?? Home;
 
@@ -181,7 +181,7 @@ public sealed partial class GumContext
     }
 
     /// <summary>
-    /// The context the calling thread explicitly activated, ignoring the home fallback. Registrations
+    /// The context explicitly activated, ignoring the home fallback. Registrations
     /// made outside any scope go to the process-wide base layer instead of a service.
     /// </summary>
     internal static GumContext? Active => _active;
@@ -234,16 +234,15 @@ public sealed partial class GumContext
     }
 
     /// <summary>
-    /// Makes this the calling thread's current context until the returned scope is disposed, which
-    /// restores the previous one. Use it with <c>using</c>.
+    /// Makes this the current context until the returned scope is disposed, which restores the previous
+    /// one. Use it with <c>using</c>.
     /// </summary>
     /// <remarks>
-    /// <b>The scope is per thread, not per async flow.</b> The active context is thread-static, so it does
-    /// not follow work across an <c>await</c> that resumes on another thread, nor into <c>Task.Run</c>,
-    /// thread-pool callbacks or other threads: code there sees the first live service. Keep the work
-    /// inside a scope synchronous, or open a new scope after the await. (Using <c>AsyncLocal</c> instead is
-    /// an open owner decision; it would make scopes follow awaits but also leak into every task started
-    /// inside one.)
+    /// <b>The active context is one plain static, shared by every thread.</b> All UI work for all services
+    /// is expected to run on one thread (the game's). Building or touching a service's UI from a
+    /// background thread is unsupported unless that work runs on the UI thread, and a scope opened on one
+    /// thread is visible to every other thread while it lasts. A scope does persist across an
+    /// <c>await</c> that resumes on the same synchronization context.
     /// </remarks>
     public ActivationScope Activate() => new ActivationScope(this);
 
@@ -254,8 +253,8 @@ public sealed partial class GumContext
     public static ActivationScope Activate(GumContext? context) => new ActivationScope(context);
 
     /// <summary>
-    /// Restores the previously active context when disposed. It must be disposed on the thread that
-    /// created it; see the threading remarks on <see cref="Activate()"/>.
+    /// Restores the previously active context when disposed. Scopes must be disposed in reverse order of
+    /// creation; see the threading remarks on <see cref="Activate()"/>.
     /// </summary>
     public readonly struct ActivationScope : IDisposable
     {

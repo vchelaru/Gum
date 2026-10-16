@@ -10,6 +10,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using Xunit;
@@ -112,22 +113,74 @@ public class GumContextTests : BaseTestClass
         }
     }
 
-    // Pins the current threading model: the active context is thread-static, so a scope does not follow
-    // work onto another thread (Task.Run, thread-pool continuations). AsyncLocal is an open owner decision.
+    // Pins the threading model: the active context is one plain static (all UI work runs on one thread),
+    // so an open scope is visible from any thread.
     [Fact]
-    public async Task Activate_ShouldNotFlowToWorkRunOnAnotherThread()
+    public async Task Activate_ShouldBeVisibleToWorkRunOnAnotherThread()
     {
-        GumContext first = CreateLiveContext();
+        CreateLiveContext();
         GumContext second = CreateLiveContext();
 
         GumContext? seenOnAnotherThread;
         using (second.Activate())
         {
-            GumContext.Current.ShouldBeSameAs(second);
             seenOnAnotherThread = await Task.Run(() => GumContext.Current);
         }
 
-        seenOnAnotherThread.ShouldBeSameAs(first, "the pool thread never activated second, so it sees the first live context");
+        seenOnAnotherThread.ShouldBeSameAs(second);
+    }
+
+    // With a single-threaded synchronization context, an await resumes on that thread and the scope is intact.
+    [Fact]
+    public void Activate_ShouldPersistAcrossAwaitOnTheSameSynchronizationContext()
+    {
+        CreateLiveContext();
+        GumContext second = CreateLiveContext();
+        GumContext? afterAwait = null;
+        SynchronizationContext? original = SynchronizationContext.Current;
+        SingleThreadContext single = new SingleThreadContext();
+        SynchronizationContext.SetSynchronizationContext(single);
+        try
+        {
+            async Task Work()
+            {
+                using (second.Activate())
+                {
+                    await Task.Delay(10);
+                    afterAwait = GumContext.Current;
+                }
+            }
+
+            Task task = Work();
+            while (!task.IsCompleted)
+            {
+                single.RunPending();
+                Thread.Sleep(1);
+            }
+            task.GetAwaiter().GetResult();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(original);
+        }
+
+        afterAwait.ShouldBeSameAs(second);
+    }
+
+    // Runs posted continuations on whichever thread calls RunPending, like a game loop.
+    private sealed class SingleThreadContext : SynchronizationContext
+    {
+        private readonly System.Collections.Concurrent.ConcurrentQueue<(SendOrPostCallback, object?)> _queue = new();
+
+        public override void Post(SendOrPostCallback d, object? state) => _queue.Enqueue((d, state));
+
+        public void RunPending()
+        {
+            while (_queue.TryDequeue(out (SendOrPostCallback Callback, object? State) item))
+            {
+                item.Callback(item.State);
+            }
+        }
     }
 
     [Fact]
