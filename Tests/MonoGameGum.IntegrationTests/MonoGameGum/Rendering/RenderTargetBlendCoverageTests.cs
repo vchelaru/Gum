@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms;
@@ -251,8 +251,11 @@ public class RenderTargetBlendCoverageTests : BaseTestClass
 
     private static XnaColor[] Render(Action<ContainerRuntime, ContainerRuntime, GraphicsDevice> build, bool useRenderTarget = true)
     {
+        System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
         using MinimalGame game = new();
+        TimingProbe.Mark("new-game", sw);
         game.RunOneFrame();
+        TimingProbe.Mark("runoneframe-total", sw);
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;
@@ -282,16 +285,19 @@ public class RenderTargetBlendCoverageTests : BaseTestClass
         using RenderTarget2D capture = new(gd, CaptureSize, CaptureSize, false, SurfaceFormat.Color,
             DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
+        TimingProbe.Mark("build-scene", sw);
         for (int i = 0; i < 2; i++)
         {
             gd.SetRenderTarget(capture);
             gd.Clear(XnaColor.Black);
             renderer.Draw(managers);
+            TimingProbe.Mark("draw" + i, sw);
         }
         gd.SetRenderTarget(null);
 
         XnaColor[] pixels = new XnaColor[CaptureSize * CaptureSize];
         capture.GetData(pixels);
+        TimingProbe.Mark("getdata", sw);
 
         root.RemoveFromManagers();
         return pixels;
@@ -313,9 +319,13 @@ public class RenderTargetBlendCoverageTests : BaseTestClass
 
         protected override void Initialize()
         {
+            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
             base.Initialize();
+            TimingProbe.Mark("base.Initialize(device)", sw);
             Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
+            TimingProbe.Mark("GumService.Initialize", sw);
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+            TimingProbe.Mark("ShapeRenderer.Initialize", sw);
         }
 
         protected override void Update(GameTime gameTime) { }
