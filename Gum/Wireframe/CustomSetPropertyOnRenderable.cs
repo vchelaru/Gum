@@ -2779,7 +2779,11 @@ public partial class CustomSetPropertyOnRenderable
             }
             else if (!string.IsNullOrEmpty(textRuntime.CustomFontFile))
             {
-                font = loaderManager.GetDisposable(textRuntime.CustomFontFile) as BitmapFont;
+                // Keyed by the absolute path (which includes the project folder) so two projects that
+                // both use a relative name like Fonts/MyFont.fnt do not share one cache entry.
+                string customFontCacheKey = ToolsUtilities.FileManager.Standardize(
+                    textRuntime.CustomFontFile, preserveCase: true, makeAbsolute: true);
+                font = loaderManager.GetDisposable(customFontCacheKey) as BitmapFont;
                 if (font == null)
                 {
 #if KNI
@@ -2787,7 +2791,7 @@ public partial class CustomSetPropertyOnRenderable
                         {
                             // this could be running in browser where we don't have File.Exists, so JUST DO IT
                             font = new BitmapFont(textRuntime.CustomFontFile);
-                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+                            loaderManager.AddDisposable(customFontCacheKey, font);
                         }
                         catch
                         {
@@ -2801,7 +2805,7 @@ public partial class CustomSetPropertyOnRenderable
                         try
                         {
                             font = new BitmapFont(textRuntime.CustomFontFile);
-                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+                            loaderManager.AddDisposable(customFontCacheKey, font);
 
                         }
                         catch(System.Text.DecoderFallbackException exception)
