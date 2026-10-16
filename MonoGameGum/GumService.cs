@@ -113,8 +113,8 @@ public partial class GumService : IGumService
     /// <summary>
     /// Makes this service the current one on the calling thread until the returned scope is disposed.
     /// Code that builds or loads UI for a service other than the first one initialized wraps it in
-    /// <c>using (service.Activate()) { ... }</c>. <see cref="Initialize"/>, <see cref="Update"/>,
-    /// <see cref="Draw"/>, <see cref="Uninitialize"/> and building an element with this service's
+    /// <c>using (service.Activate()) { ... }</c>. <c>Initialize</c>, <c>Update</c>, <c>Draw</c>,
+    /// <see cref="Uninitialize"/> and building an element with this service's
     /// <see cref="SystemManagers"/> already do so.
     /// </summary>
     public GumContext.ActivationScope Activate() => GumContext.Activate(_context);
