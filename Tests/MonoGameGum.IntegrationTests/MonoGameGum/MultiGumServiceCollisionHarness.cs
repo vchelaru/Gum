@@ -35,8 +35,8 @@ internal sealed class CollisionSnapshot
     /// </summary>
     public static readonly string[] AdditionalUncapturedState =
     {
-        "Renderer.TextureFilter (public static; ApplyProjectTextureFilter overwrites it for every project load)",
-        "Sprite.InvalidTexture (in the snapshot, but UninitializePlatform disposes whatever instance is static at the time)",
+        "Renderer.TextureFilter (public static; the first service's project sets it, a later service keeps its own on its renderer)",
+        "Sprite.InvalidTexture (in the snapshot, but the last service's UninitializePlatform disposes whatever instance is static at the time)",
         "CustomSetPropertyOnRenderable statics: FontService, InMemoryFontCreator, LocalizationService, _knownUnresolvableFontKeys, the BBCode font stacks",
         "ColoredRectangleRuntime.DefaultWidth/DefaultHeight (obsolete statics written from the loaded project's Standards)",
         "BitmapFont._reportedPageLoadFailures (static dedupe set)",

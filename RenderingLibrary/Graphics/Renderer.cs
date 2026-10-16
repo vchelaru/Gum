@@ -347,32 +347,16 @@ public class Renderer : IRenderer
     // I'm going to add a bool here to control it.
     public static bool ApplyCameraZoomOnWorldTranslation { get; set; } = false;
 
-    private static TextureFilter _processWideTextureFilter = TextureFilter.Point;
-
     /// <summary>
-    /// The sampling filter applied when drawing. Each service has its own, because it comes from the
-    /// project that service loaded.
+    /// The sampling filter applied when drawing. With several <c>GumService</c> instances this is the
+    /// filter of the first one; a later service keeps its project's filter on its own renderer instead.
     /// </summary>
-    public static TextureFilter TextureFilter
-    {
-        get
-        {
-            global::Gum.GumContext? own = global::Gum.GumContext.Own;
-            return own?.TextureFilterSetting is int stored ? (TextureFilter)stored : _processWideTextureFilter;
-        }
-        set
-        {
-            global::Gum.GumContext? own = global::Gum.GumContext.Own;
-            if (own != null)
-            {
-                own.TextureFilterSetting = (int)value;
-            }
-            else
-            {
-                _processWideTextureFilter = value;
-            }
-        }
-    }
+    public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
+
+    // This renderer's filter when it differs from the static one (a service that is not the first).
+    internal TextureFilter? TextureFilterOverride { get; set; }
+
+    internal TextureFilter EffectiveTextureFilter => TextureFilterOverride ?? TextureFilter;
 
     /// <summary>
     /// When true (the default), textures loaded from file bleed their edge color into
@@ -602,7 +586,7 @@ public class Renderer : IRenderer
         }
         else
         {
-            mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+            mRenderStateVariables.Filtering = EffectiveTextureFilter == TextureFilter.Linear;
         }
     }
 

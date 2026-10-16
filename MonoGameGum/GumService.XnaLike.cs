@@ -468,7 +468,18 @@ public partial class GumService
 
     static partial void ApplyTextureFilterPlatform(bool useLinearFiltering)
     {
-        Renderer.TextureFilter = useLinearFiltering ? TextureFilter.Linear : TextureFilter.Point;
+        TextureFilter filter = useLinearFiltering ? TextureFilter.Linear : TextureFilter.Point;
+
+        // A service that is not the first keeps its filter on its own renderer, so it never changes what the
+        // first one draws with.
+        if (GumContext.Own?.Service is GumService service)
+        {
+            service.SystemManagers.Renderer.TextureFilterOverride = filter;
+        }
+        else
+        {
+            Renderer.TextureFilter = filter;
+        }
     }
 
     // Extracts textures the serializer captured but could not resolve to a file path -- embedded or

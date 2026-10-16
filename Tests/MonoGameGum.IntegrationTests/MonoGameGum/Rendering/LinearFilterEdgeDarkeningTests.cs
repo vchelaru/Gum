@@ -58,6 +58,17 @@ public class LinearFilterEdgeDarkeningTests : BaseTestClass
     }
 
     [Fact]
+    public void RendererFilterOverride_Linear_DrawsLinearWhileTheStaticIsPoint()
+    {
+        // A service that is not the first keeps its filter on its renderer; the draw must use it, not the static.
+        Renderer.BleedTransparentTextureEdgesOnLoad = false;
+
+        XnaColor sampled = SampleMidpointOfLinearWhiteSpriteOverWhite(linearOnRendererOnly: true);
+
+        sampled.R.ShouldBeLessThan((byte)210);
+    }
+
+    [Fact]
     public void ContentManagerTexture_IsNotBled_EvenWhenEdgeBleedEnabled()
     {
         // A content-pipeline texture is the ContentManager's cached instance, shared with the game
@@ -105,7 +116,7 @@ public class LinearFilterEdgeDarkeningTests : BaseTestClass
     /// the horizontal midpoint — where linear sampling is halfway between the two texels (the worst
     /// case for the fringe).
     /// </summary>
-    private static XnaColor SampleMidpointOfLinearWhiteSpriteOverWhite()
+    private static XnaColor SampleMidpointOfLinearWhiteSpriteOverWhite(bool linearOnRendererOnly = false)
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -114,7 +125,15 @@ public class LinearFilterEdgeDarkeningTests : BaseTestClass
         SystemManagers managers = SystemManagers.Default;
         Renderer renderer = managers.Renderer;
 
-        Renderer.TextureFilter = TextureFilter.Linear;
+        if (linearOnRendererOnly)
+        {
+            Renderer.TextureFilter = TextureFilter.Point;
+            renderer.TextureFilterOverride = TextureFilter.Linear;
+        }
+        else
+        {
+            Renderer.TextureFilter = TextureFilter.Linear;
+        }
 
         // Save the texture to a PNG and load it back through the real LoaderManager/ContentLoader so
         // the load-time edge bleed (the fix) is actually exercised — building the texture directly

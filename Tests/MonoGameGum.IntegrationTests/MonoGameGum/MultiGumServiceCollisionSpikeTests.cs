@@ -832,10 +832,10 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
             $"B's Widget became {control?.GetType().Name ?? "no Forms control"}: A.Uninitialize called ElementSaveExtensions.ClearRegistrations, which empties the process-wide table B registered into");
     }
 
-    // Renderer.TextureFilter is a static set from the project's TextureFilter at load. A (Linear) loads
-    // first and B (Point) overwrites it; the snapshot does not carry it.
+    // The first service sets the static Renderer.TextureFilter from its project; a later one keeps its own on its renderer. A (Linear) loads
+    // first and B (Point) must not change what A draws with.
     [Fact]
-    public void ProjectTextureFilter_WithSnapshotSwap_ShouldBeTheActiveServicesOwn()
+    public void ProjectTextureFilter_WithSnapshotSwap_ShouldBeEachServicesOwn()
     {
         using CollisionGame game = CreateGame();
         WriteAssetProjects(game);
@@ -845,13 +845,13 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 
         TextureFilter underA;
         TextureFilter underB;
-        global::RenderingLibrary.IGumService.Default = game.ServiceA; { underA = RenderingLibrary.Graphics.Renderer.TextureFilter; }
-        global::RenderingLibrary.IGumService.Default = game.ServiceB; { underB = RenderingLibrary.Graphics.Renderer.TextureFilter; }
+        underA = game.ServiceA.Renderer.EffectiveTextureFilter;
+        underB = game.ServiceB.Renderer.EffectiveTextureFilter;
 
         List<string> failures = new();
-        if (underA != TextureFilter.Linear) { failures.Add($"with A restored Renderer.TextureFilter is {underA}, A's project says Linear"); }
-        if (underB != TextureFilter.Point) { failures.Add($"with B restored Renderer.TextureFilter is {underB}, B's project says Point"); }
-        failures.ShouldBeEmpty("Renderer.TextureFilter is a static that ApplyProjectTextureFilter sets at load and the snapshot does not carry: " + string.Join("; ", failures));
+        if (underA != TextureFilter.Linear) { failures.Add($"A renderer filter is {underA}, A's project says Linear"); }
+        if (underB != TextureFilter.Point) { failures.Add($"B renderer filter is {underB}, B's project says Point"); }
+        failures.ShouldBeEmpty("each service draws with its own project filter: " + string.Join("; ", failures));
     }
 
     #endregion

@@ -114,9 +114,6 @@ internal sealed partial class GumContext
         }
     }
 
-    // This service's Renderer.TextureFilter (a TextureFilter value); null until set.
-    internal int? TextureFilterSetting { get; set; }
-
     // This service's FileManager.RelativeDirectory. Null until set, and unused by the adopting context,
     // which keeps using the FileManager static.
     internal string? RelativeDirectory { get; set; }
