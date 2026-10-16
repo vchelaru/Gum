@@ -294,12 +294,13 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         game.InitializeA(PathA);
         game.InitializeB(PathB);
 
-        game.StateA!.Restore();
-        Texture2D textureA = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!;
-        game.StateB!.Restore();
-        Texture2D textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!;
-        game.StateA.Restore();
-        Texture2D textureAAgain = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!;
+        // Each load runs in its own service's scope (the service owns its cache and relative directory).
+        Texture2D textureA;
+        Texture2D textureB;
+        Texture2D textureAAgain;
+        using (game.ServiceA.Activate()) { textureA = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
+        using (game.ServiceB.Activate()) { textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
+        using (game.ServiceA.Activate()) { textureAAgain = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!; }
 
         List<string> failures = new();
         if (ReferenceEquals(textureA, textureB)) { failures.Add("A and B got the same Texture2D instance for 'Tex.png'"); }
@@ -398,9 +399,12 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         Build(game, true, "CacheFontScreen");
         Build(game, false, "CacheFontScreen");
 
-        // B is the last restored, so B's statics are active for both draws (no restore at draw time).
-        game.StateB!.Restore();
-        XnaColor[] pixels = DrawBoth(game, restore: false);
+        // B is the active service for both draws (no restore at draw time).
+        XnaColor[] pixels;
+        using (game.ServiceB.Activate())
+        {
+            pixels = DrawBoth(game, restore: false);
+        }
 
         List<string> failures = new();
         CollectOwnAssetFailures(failures, pixels, OriginA, "font", expectRed: true, "A's text drawn with B's statics active");
@@ -486,13 +490,16 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         GraphicalUiElement screenA = Build(game, true, "CacheFontScreen");
         Build(game, false, "CacheFontScreen");
 
-        // B's statics are active; A's text switches to FontCache/Font32Bogus.fnt (A yellow, B green).
-        game.StateB!.Restore();
-        GraphicalUiElement labelA = screenA.GetGraphicalUiElementByName("Label")!;
-        labelA.SetProperty("FontSize", 32);
-        screenA.UpdateLayout();
+        // B is the active service; A's text switches to FontCache/Font32Bogus.fnt (A yellow, B green).
+        XnaColor[] pixels;
+        using (game.ServiceB.Activate())
+        {
+            GraphicalUiElement labelA = screenA.GetGraphicalUiElementByName("Label")!;
+            labelA.SetProperty("FontSize", 32);
+            screenA.UpdateLayout();
 
-        XnaColor[] pixels = DrawBoth(game, restore: false);
+            pixels = DrawBoth(game, restore: false);
+        }
         Rectangle textArea = new Rectangle(OriginA.X, OriginA.Y + 50, 120, 30);
         int yellow = CollisionCapture.Count(pixels, textArea, CollisionCapture.IsYellow);
         int green = CollisionCapture.Count(pixels, textArea, CollisionCapture.IsGreen);
@@ -512,19 +519,22 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         GraphicalUiElement screenA = Build(game, true, "SpriteScreen");
         Build(game, false, "SpriteScreen");
 
-        game.StateB!.Restore();
-        GraphicalUiElement picA = screenA.GetGraphicalUiElementByName("Pic")!;
-        try
+        XnaColor[] pixels;
+        using (game.ServiceB.Activate())
         {
-            picA.SetProperty("SourceFile", "Tex2.png"); // A: yellow, B: green
-        }
-        catch (Exception e)
-        {
-            Assert.Fail($"Reassigning A's SourceFile while B is active throws {e.GetType().Name}: {e.Message}");
-        }
-        screenA.UpdateLayout();
+            GraphicalUiElement picA = screenA.GetGraphicalUiElementByName("Pic")!;
+            try
+            {
+                picA.SetProperty("SourceFile", "Tex2.png"); // A: yellow, B: green
+            }
+            catch (Exception e)
+            {
+                Assert.Fail($"Reassigning A's SourceFile while B is active throws {e.GetType().Name}: {e.Message}");
+            }
+            screenA.UpdateLayout();
 
-        XnaColor[] pixels = DrawBoth(game, restore: false);
+            pixels = DrawBoth(game, restore: false);
+        }
         XnaColor center = CollisionCapture.At(pixels, OriginA.X + 20, OriginA.Y + 20);
         CollisionCapture.IsYellow(center).ShouldBeTrue(
             $"A's sprite should show A's Tex2.png (yellow) but shows {CollisionCapture.Describe(center)}; the relative name resolved in the active service's folder");
@@ -594,9 +604,12 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         Build(game, false, "BothScreen");
 
         // B's own resources: its loaded texture and font page, its default font, its invalid-texture.
-        game.StateB!.Restore();
-        Texture2D textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!;
-        BitmapFontHandle defaultFontB = new(game.StateB.Statics.DefaultBitmap);
+        Texture2D textureB;
+        using (game.ServiceB.Activate())
+        {
+            textureB = LoaderManager.Self.LoadContent<Texture2D>("Tex.png")!;
+        }
+        BitmapFontHandle defaultFontB = new(game.StateB!.Statics.DefaultBitmap);
         Texture2D? invalidB = game.StateB.Statics.InvalidTexture;
 
         if (restoreBeforeUninit) { game.StateA!.Restore(); }

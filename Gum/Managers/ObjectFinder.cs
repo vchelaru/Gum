@@ -90,7 +90,26 @@ public class ObjectFinder : IObjectFinder
     /// </summary>
     Dictionary<string, StandardElementSave>? _fallbackStandardElements;
 
-    public static ObjectFinder Self { get; private set; } = new ObjectFinder();
+    static ObjectFinder _processWide = new ObjectFinder();
+
+    /// <summary>
+    /// The project lookup of the current <see cref="GumContext"/>. With one service, or none (the Gum
+    /// tool, FlatRedBall), this is the single process-wide instance it always was; each further service
+    /// has its own, so loading a second project does not replace the first one's.
+    /// </summary>
+    public static ObjectFinder Self
+    {
+        get
+        {
+            GumContext? context = GumContext.Current;
+            if (context == null || context.AdoptsProcessStatics)
+            {
+                return _processWide;
+            }
+            return context.ObjectFinder ??= new ObjectFinder();
+        }
+        private set => _processWide = value;
+    }
 
     /// <summary>
     /// The currently-loaded GumProjectSave.

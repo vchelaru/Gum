@@ -371,8 +371,15 @@ public class Renderer : IRenderer
 
     }
 
+    // The managers this renderer belongs to, used wherever a draw needs managers and none was passed,
+    // so a service's renderer never falls back to another service's SystemManagers.Default.
+    private SystemManagers? _owningManagers;
+
+    private SystemManagers OwningManagers => _owningManagers ?? SystemManagers.Default;
+
     public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
     {
+        _owningManagers = managers;
         renderTargetService = new RenderTargetService();
 
         mCamera.ClientWidth = graphicsDevice.Viewport.Width;
@@ -581,7 +588,7 @@ public class Renderer : IRenderer
 
         if (managers == null)
         {
-            managers = SystemManagers.Default;
+            managers = OwningManagers;
         }
 
 #if !FNA
@@ -800,7 +807,7 @@ public class Renderer : IRenderer
         }
         else
         {
-            Draw(SystemManagers.Default, _layers[0], renderable);
+            Draw(OwningManagers, _layers[0], renderable);
         }
     }
 
@@ -833,7 +840,7 @@ public class Renderer : IRenderer
                 Layer.SortByZ(_deferredImmediateModeRoots);
                 SiblingOrdering.BuildDrawList(
                     _deferredImmediateModeRoots, _deferredImmediateModeCommands, new ClipBoundsSource(mCamera, _layers[0]));
-                Submit(_deferredImmediateModeCommands, SystemManagers.Default, _layers[0]);
+                Submit(_deferredImmediateModeCommands, OwningManagers, _layers[0]);
             }
             finally
             {
@@ -853,7 +860,7 @@ public class Renderer : IRenderer
         // to leak across cycles and flush at non-deterministic times. This matters most
         // for consumers that do many small Begin/End cycles (FRB2's GumRenderable, the
         // immediate-mode samples).
-        _batchOrchestrator.FlushAndReset(SystemManagers.Default);
+        _batchOrchestrator.FlushAndReset(OwningManagers);
 
         spriteRenderer.EndSpriteBatch();
 
@@ -909,7 +916,7 @@ public class Renderer : IRenderer
                 }
                 if (shouldBakeRenderTarget)
                 {
-                    RenderToRenderTarget(renderable, SystemManagers.Default);
+                    RenderToRenderTarget(renderable, OwningManagers);
                 }
             }
         }

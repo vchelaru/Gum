@@ -45,15 +45,32 @@ internal sealed class CollisionSnapshot
 
     public StaticSnapshot Statics { get; private set; } = null!;
 
-    public static CollisionSnapshot Capture()
+    private Gum.GumService _service = null!;
+
+    /// <summary>
+    /// Captures the statics as seen from <paramref name="service"/>. The ones that moved into the
+    /// service's context (project lookup, relative directory, content loader) are read through its own
+    /// scope, so the snapshot holds that service's values and not the first service's.
+    /// </summary>
+    public static CollisionSnapshot Capture(Gum.GumService service)
     {
-        return new CollisionSnapshot { Statics = StaticSnapshot.Capture() };
+        using (service.Activate())
+        {
+            return new CollisionSnapshot { Statics = StaticSnapshot.Capture(), _service = service };
+        }
     }
 
-    /// <summary>Restores every static the snapshot covers. <paramref name="includeElementTypeTable"/> is ignored: the table is per service now.</summary>
+    /// <summary>
+    /// Restores every static the snapshot covers, in the owning service's scope so the per-service ones
+    /// are written back to that service. <paramref name="includeElementTypeTable"/> is ignored: the table
+    /// is per service now.
+    /// </summary>
     public void Restore(bool includeElementTypeTable = false)
     {
-        Statics.Restore();
+        using (_service.Activate())
+        {
+            Statics.Restore();
+        }
     }
 
     /// <summary>No longer needed: each service registers into its own element-type table.</summary>
@@ -90,7 +107,7 @@ internal sealed class CollisionGame : Game
     {
         if (freshElementTypeTable) { CollisionSnapshot.ClearElementTypeTable(); }
         ProjectA = ServiceA.Initialize(this, gumxPath)!;
-        StateA = CollisionSnapshot.Capture();
+        StateA = CollisionSnapshot.Capture(ServiceA);
         return ProjectA;
     }
 
@@ -98,7 +115,7 @@ internal sealed class CollisionGame : Game
     {
         if (freshElementTypeTable) { CollisionSnapshot.ClearElementTypeTable(); }
         ProjectB = ServiceB.Initialize(this, gumxPath)!;
-        StateB = CollisionSnapshot.Capture();
+        StateB = CollisionSnapshot.Capture(ServiceB);
         return ProjectB;
     }
 

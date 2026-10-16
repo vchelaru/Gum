@@ -1,6 +1,8 @@
 #nullable enable
+using Gum.Managers;
 using System;
 using System.Collections.Generic;
+using ToolsUtilities;
 
 namespace Gum;
 
@@ -30,8 +32,42 @@ public sealed partial class GumContext
     private static readonly List<GumContext> _live = new List<GumContext>();
     private static readonly object _liveLock = new object();
 
+    // The first live context, kept in a field so reading Current takes no lock.
+    private static volatile GumContext? _home;
+
+    static GumContext()
+    {
+        // FileManager sits below this assembly, so it exposes hooks instead of knowing about contexts.
+        FileManager.RelativeDirectoryReader = ReadRelativeDirectory;
+        FileManager.RelativeDirectoryWriter = WriteRelativeDirectory;
+    }
+
     // Per-service registrations of element name -> runtime type, layered over the process-wide base layer.
     internal ElementTypeRegistry ElementTypes { get; } = new ElementTypeRegistry();
+
+    // This service's project lookup. Null for the context that adopts the process-wide ObjectFinder.
+    internal ObjectFinder? ObjectFinder { get; set; }
+
+    // This service's FileManager.RelativeDirectory. Null until set, and unused by the adopting context,
+    // which keeps using the FileManager static.
+    internal string? RelativeDirectory { get; set; }
+
+    private static string? ReadRelativeDirectory()
+    {
+        GumContext? context = Current;
+        return context == null || context.AdoptsProcessStatics ? null : context.RelativeDirectory;
+    }
+
+    private static bool WriteRelativeDirectory(string value)
+    {
+        GumContext? context = Current;
+        if (context == null || context.AdoptsProcessStatics)
+        {
+            return false;
+        }
+        context.RelativeDirectory = value;
+        return true;
+    }
 
     /// <summary>
     /// The context the calling thread activated, else the first live context, else null.
@@ -42,16 +78,7 @@ public sealed partial class GumContext
     /// The context that went live first and is still live. Code that has no activation scope resolves
     /// to it, which is what keeps a lone service behaving like the old statics.
     /// </summary>
-    public static GumContext? Home
-    {
-        get
-        {
-            lock (_liveLock)
-            {
-                return _live.Count > 0 ? _live[0] : null;
-            }
-        }
-    }
+    public static GumContext? Home => _home;
 
     /// <summary>
     /// True when a live context other than <paramref name="context"/> exists. A service tears down state
@@ -99,6 +126,7 @@ public sealed partial class GumContext
             AdoptsProcessStatics = _live.Count == 0;
             _live.Add(this);
             IsLive = true;
+            _home = _live[0];
         }
     }
 
@@ -111,6 +139,7 @@ public sealed partial class GumContext
             {
                 _live.Remove(this);
                 IsLive = false;
+                _home = _live.Count > 0 ? _live[0] : null;
             }
         }
     }
