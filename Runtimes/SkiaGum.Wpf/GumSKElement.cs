@@ -132,11 +132,17 @@ namespace SkiaGum.Wpf
         {
             var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;
             GraphicalUiElement.IsAllLayoutSuspended = false;
-            foreach (var item in this.GumElementsInternal)
+            try
             {
-                item.UpdateLayout();
+                foreach (var item in this.GumElementsInternal)
+                {
+                    item.UpdateLayout();
+                }
             }
-            GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
+            finally
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
+            }
         }
 
         public void InvalidateSurface()

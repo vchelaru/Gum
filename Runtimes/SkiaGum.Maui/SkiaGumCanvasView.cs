@@ -721,11 +721,17 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
     {
         var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;
         GraphicalUiElement.IsAllLayoutSuspended = false;
-        foreach (var item in this.Children)
+        try
         {
-            item.UpdateLayout(updateParent: false, updateChildren: true);
+            foreach (var item in this.Children)
+            {
+                item.UpdateLayout(updateParent: false, updateChildren: true);
+            }
         }
-        GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
+        }
     }
 
     public Vector2 GetBottomRightMostElementCorner()

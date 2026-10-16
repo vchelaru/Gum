@@ -83,21 +83,27 @@ public class ItemsControl : ScrollViewer
                 var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
                 GraphicalUiElement.IsAllLayoutSuspended = true;
 
-                if (items != null)
+                try
                 {
-                    ClearVisualsInternal();
-                    HandleItemsCollectionChanged(this,
-                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    if (items != null)
+                    {
+                        ClearVisualsInternal();
+                        HandleItemsCollectionChanged(this,
+                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    }
+
+                    if (items is INotifyCollectionChanged notifyCollectionChanged)
+                    {
+                        notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
+                    }
+                    items = value;
+                    ForceUpdateToItems();
+                }
+                finally
+                {
+                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                 }
 
-                if (items is INotifyCollectionChanged notifyCollectionChanged)
-                {
-                    notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
-                }
-                items = value;
-                ForceUpdateToItems();
-
-                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                 if (!wasSuppressed)
                 {
                     Visual.ResumeLayout(recursive: true);
@@ -134,17 +140,23 @@ public class ItemsControl : ScrollViewer
                 var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
                 GraphicalUiElement.IsAllLayoutSuspended = true;
 
-                ClearVisualsInternal();
-
-                if (items?.Count > 0)
+                try
                 {
-                    // refresh!
-                    var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
-                        items, startingIndex: 0);
-                    HandleItemsCollectionChanged(this, args);
+                    ClearVisualsInternal();
+
+                    if (items?.Count > 0)
+                    {
+                        // refresh!
+                        var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                            items, startingIndex: 0);
+                        HandleItemsCollectionChanged(this, args);
+                    }
+                }
+                finally
+                {
+                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                 }
 
-                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                 if (!wasSuppressed)
                 {
                     Visual.ResumeLayout(recursive: true);
@@ -739,55 +751,64 @@ public class ItemsControl : ScrollViewer
                         GraphicalUiElement.IsAllLayoutSuspended = true;
                     }
 
-                    foreach (var item in e.NewItems)
+                    try
                     {
-                        GraphicalUiElement? newVisual = null;
-                        if (item is FrameworkElement existingItemFrameworkElement)
+                        foreach (var item in e.NewItems)
                         {
-                            newVisual = existingItemFrameworkElement.Visual;
-                        }
-                        else if(item is GraphicalUiElement existingItemGue)
-                        {
-                            newVisual = existingItemGue;
-                        }
-                        else if(this.VisualTemplate != null)
-                        {
-                            // August 19, 2025
-                            // Not sure if this
-                            // should set createFormsInternally
-                            // to true. ItemsControls probably want
-                            // this true, but ListBoxes probably don't
-                            // since they want to force a ListBoxItem. For
-                            // now let's make it false, and revisit later.
-                            newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
-
-                            // the visual template should respect the item (BindingContext), but just in case it doesn't:
-                            if(newVisual is InteractiveGue interactivegue)
+                            GraphicalUiElement? newVisual = null;
+                            if (item is FrameworkElement existingItemFrameworkElement)
                             {
-                                interactivegue.BindingContext = item;
+                                newVisual = existingItemFrameworkElement.Visual;
+                            }
+                            else if(item is GraphicalUiElement existingItemGue)
+                            {
+                                newVisual = existingItemGue;
+                            }
+                            else if(this.VisualTemplate != null)
+                            {
+                                // August 19, 2025
+                                // Not sure if this
+                                // should set createFormsInternally
+                                // to true. ItemsControls probably want
+                                // this true, but ListBoxes probably don't
+                                // since they want to force a ListBoxItem. For
+                                // now let's make it false, and revisit later.
+                                newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
+
+                                // the visual template should respect the item (BindingContext), but just in case it doesn't:
+                                if(newVisual is InteractiveGue interactivegue)
+                                {
+                                    interactivegue.BindingContext = item;
+                                }
+
+                                HandleCreatedItemVisual(newVisual, item);
+                            }
+                            else
+                            {
+                                newVisual = CreateNewItemFrameworkElement(item).Visual;
+
                             }
 
-                            HandleCreatedItemVisual(newVisual, item);
+                            if (newVisual.Parent != InnerPanel)
+                            {
+                                InnerPanel?.Children.Insert(index, newVisual);
+                                newVisual.Parent = InnerPanel;
+                            }
+                            // handled by the panel being updated:
+                            //HandleCollectionNewItemCreated(newItem, index);
+
+                            index++;
                         }
-                        else
+                    }
+                    finally
+                    {
+                        if (shouldSuppressLayout)
                         {
-                            newVisual = CreateNewItemFrameworkElement(item).Visual;
-
+                            GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                         }
-
-                        if (newVisual.Parent != InnerPanel)
-                        {
-                            InnerPanel?.Children.Insert(index, newVisual);
-                            newVisual.Parent = InnerPanel;
-                        }
-                        // handled by the panel being updated:
-                        //HandleCollectionNewItemCreated(newItem, index);
-
-                        index++;
                     }
                     if (shouldSuppressLayout)
                     {
-                        GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                         if (!wasSuppressed)
                         {
                             // Resume regardless of IsVisible. ResumeLayout(recursive: true)
