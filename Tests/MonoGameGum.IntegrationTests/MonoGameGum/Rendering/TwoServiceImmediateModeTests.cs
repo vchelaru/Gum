@@ -130,6 +130,23 @@ public class TwoServiceImmediateModeTests : BaseTestClass
     }
 
     [Fact]
+    public void ServiceDraw_OnServiceThatWasNeverInitialized_FallsBackToTheDefaultManagers()
+    {
+        // Hosts that set SystemManagers.Default by hand and never call Initialize on the service
+        // still call Draw on it; that must keep drawing the default managers.
+        using ServiceTestGame game = new();
+        (_, GumService second) = InitializeTwoServices(game);
+        RecordingRenderable renderable = new();
+        second.Renderer.MainLayer.Add(renderable);
+        GumService neverInitialized = new();
+
+        neverInitialized.Draw();
+
+        second.Renderer.MainLayer.Remove(renderable);
+        ShouldAllBeSameAs(renderable.RenderedWith, second.SystemManagers, "Render managers");
+    }
+
+    [Fact]
     public void GumBatch_WithoutManagers_UsesTheDefaultManagers()
     {
         using ServiceTestGame game = new();

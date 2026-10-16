@@ -800,7 +800,10 @@ public partial class GumService : IGumService
     public void Draw()
     {
         // A service that was never initialized (hosts that assign SystemManagers.Default by hand) draws the default.
-        (_systemManagers ?? SystemManagers.Default).Draw();
+        SystemManagers managers = _systemManagers ?? SystemManagers.Default
+            ?? throw new InvalidOperationException(
+                "GumService has not been initialized. Call GumService.Initialize() first.");
+        managers.Draw();
     }
 
     // Draw(Camera2D) is raylib-only and lives in GumService.Raylib.cs (issue #3608).
