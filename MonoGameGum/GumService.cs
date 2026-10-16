@@ -316,6 +316,24 @@ public partial class GumService : IGumService
 
     private readonly LanguageChangeSubscription _languageChangeSubscription;
 
+    // The subscription lives on process-wide statics (the LocalizationServiceChanged event and the
+    // localization service itself), so it must be dropped when this service is uninitialized or every
+    // service ever created stays alive, and re-translates the shared popup roots on each language change.
+    // Idempotent: constructor, Initialize and InitializeForTesting each call it.
+    private void SubscribeToLanguageChanges()
+    {
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged -= _languageChangeSubscription.Track;
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
+        // Pick up any LocalizationService that was assigned before this call.
+        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
+    }
+
+    private void UnsubscribeFromLanguageChanges()
+    {
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged -= _languageChangeSubscription.Track;
+        _languageChangeSubscription.Track(null, null);
+    }
+
     /// <summary>
     /// Re-applies all styles on the specified element and its children. Call after
     /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/>
@@ -446,9 +464,7 @@ public partial class GumService : IGumService
         Root.HasEvents = false;
 
         _languageChangeSubscription = new LanguageChangeSubscription(RefreshLocalization);
-        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
-        // Pick up any LocalizationService that was assigned before this GumService was constructed.
-        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
+        SubscribeToLanguageChanges();
 
         GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
         {
@@ -480,6 +496,7 @@ public partial class GumService : IGumService
     /// </summary>
     public void InitializeForTesting()
     {
+        SubscribeToLanguageChanges();
         if (!IsInitialized)
         {
             IsInitialized = true;
@@ -524,6 +541,8 @@ public partial class GumService : IGumService
     // InitializeInternal in GumService.XnaLike.cs / GumService.Raylib.cs (issue #3608).
     private GumProjectSave? FinishInitialize(string? gumProjectFile)
     {
+        SubscribeToLanguageChanges();
+
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
 
@@ -589,6 +608,22 @@ public partial class GumService : IGumService
         return gumProject;
     }
 
+    // Called when a platform InitializeInternal throws partway (a missing project file, for example).
+    // IsInitialized is already true and the statics already point at this service, so undo them: the
+    // caller can then fix the problem and call Initialize again instead of hitting "already called".
+    // An exception from the teardown itself is dropped; the one that failed Initialize is the useful one.
+    private void RollBackFailedInitialize()
+    {
+        try
+        {
+            Uninitialize();
+        }
+        catch (Exception)
+        {
+            IsInitialized = false;
+        }
+    }
+
     /// <summary>
     /// Applies the project's <see cref="GumProjectSave.TextureFilter"/> setting (configured in the
     /// editor's Project Properties) to the runtime so sprites render with the same filtering the
@@ -630,6 +665,14 @@ public partial class GumService : IGumService
     /// </summary>
     public void Uninitialize()
     {
+        // A service that was never initialized, or was already uninitialized, owns none of the
+        // process-wide state below. Running the teardown anyway would reset that state for a
+        // different service that is live (#6066).
+        if (!IsInitialized)
+        {
+            return;
+        }
+
 #if !IOS && !ANDROID
         _hotReloadManager?.Stop();
         _hotReloadManager = null;
@@ -710,6 +753,8 @@ public partial class GumService : IGumService
 
         _systemManagers = null;
 
+        UnsubscribeFromLanguageChanges();
+
         if (ReferenceEquals(_default, this))
         {
             _default = null;
@@ -776,7 +821,10 @@ public partial class GumService : IGumService
     public void Draw()
     {
         // A service that was never initialized (hosts that assign SystemManagers.Default by hand) draws the default.
-        (_systemManagers ?? SystemManagers.Default).Draw();
+        SystemManagers managers = _systemManagers ?? SystemManagers.Default
+            ?? throw new InvalidOperationException(
+                "GumService has not been initialized. Call GumService.Initialize() first.");
+        managers.Draw();
     }
 
     // Draw(Camera2D) is raylib-only and lives in GumService.Raylib.cs (issue #3608).

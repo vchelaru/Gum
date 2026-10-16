@@ -24,7 +24,7 @@ GumService.Default.Draw()
 GumService.Default.Uninitialize()
 ```
 
-`Initialize` throws if called twice without an intervening `Uninitialize`.
+`Initialize` throws if called twice without an intervening `Uninitialize`. A failed `Initialize` (missing `.gumx`) rolls itself back, so the service can be initialized again. `Draw()`/`Update()` on an uninitialized service throw `InvalidOperationException`; `Draw()` on a service that was never initialized draws `SystemManagers.Default`.
 
 `Draw()` draws everything through `SystemManagers.Default` in one call — for manual control over what's drawn when/to-which-target (e.g. compositing onto multiple `RenderTarget2D`s in one frame), use `GumBatch`'s immediate-mode `Begin`/`Draw`/`End` instead (`docs/code/rendering/gumbatch.md`; internals in the **gum-monogame-rendering** skill).
 
@@ -45,6 +45,9 @@ GumService.Default.Uninitialize()
 - Resets `FileManager.RelativeDirectory` to `"Content/"` (only meaningful if a project was loaded)
 - Calls `_systemManagers.Renderer.Uninitialize()` (XNALIKE only)
 - Sets `_default = null` — next access to `Default` creates a new `GumService`
+- Skips the teardown when this service is not initialized and a different service is live, so a stray or repeated `Uninitialize` cannot reset the live service's statics
+- Clears `SystemManagers.Default`/`ISystemManagers.Default`/`IGumService.Default` only when they belong to this service; restores `FileManager.CustomGetStreamFromFile` only if nobody replaced the bundle hook since; drops the language-change subscription
+- A service given its own `SystemManagers` (`Initialize(game, managers)`) adopts them as `SystemManagers.Default` only when none exists
 
 `FormsUtilities.Uninitialize()` is `internal`; tests access it via `InternalsVisibleTo`.
 
