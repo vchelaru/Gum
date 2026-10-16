@@ -774,9 +774,11 @@ jobs:
       # upstream in ShadowDusk.Compiler 0.17.0 (#4195).
       - name: "MonoGameGum.IntegrationTests (Windows, #4190)"
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
-        timeout-minutes: 30
+        timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        # console;verbosity=normal streams every test's duration as it finishes, so a timeout
+        # still shows where the time went (#6078).
         run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --logger "console;verbosity=normal" --results-directory "TestResults"
 
       # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
