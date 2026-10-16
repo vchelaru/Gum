@@ -190,6 +190,14 @@ public partial class GumService
         _context.Register();
         using GumContext.ActivationScope scope = _context.Activate();
 
+        // A service whose Game was disposed without Uninitialize is dead; stop counting it as live so
+        // it cannot keep owning the process statics.
+        if (game != null)
+        {
+            GumContext liveContext = _context;
+            game.Disposed += (_, _) => liveContext.Release();
+        }
+
         this.SystemManagers = systemManagers ?? new SystemManagers();
         this.SystemManagers.Context = _context;
         if (systemManagers == null)

@@ -645,6 +645,21 @@ public partial class GumService : IGumService
     /// </summary>
     public void Uninitialize()
     {
+        GumContext? context = _context;
+        try
+        {
+            UninitializeCore();
+        }
+        finally
+        {
+            // Released even when teardown throws, so a failed Uninitialize cannot leave a dead service live.
+            context?.Release();
+            _context = null;
+        }
+    }
+
+    private void UninitializeCore()
+    {
         // Runs in this service's scope so per-service state (content cache, registrations) is the
         // one released. Shared state is torn down only when no other service is still live.
         using GumContext.ActivationScope scope = GumContext.Activate(_context);
@@ -721,9 +736,6 @@ public partial class GumService : IGumService
         _systemManagers = null;
 
         _default = null;
-
-        _context?.Release();
-        _context = null;
     }
 
     #endregion
