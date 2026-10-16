@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum;
+using Gum.DataTypes;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -22,9 +23,12 @@ namespace GumRuntime
 {
     public static class ElementSaveExtensions
     {
-        static Dictionary<string, Type> mElementToGueTypes = new Dictionary<string, Type>();
-        static Dictionary<string, Func<GraphicalUiElement>> mElementToGueTypeFuncs = new Dictionary<string, Func<GraphicalUiElement>>();
-        static Func<GraphicalUiElement>? TemplateFunc;
+        // The element-type table is layered: ElementTypeRegistry.Base holds registrations made outside
+        // any service (module initializers, startup code), and each GumContext holds the ones made while
+        // its service was active. Writes go to the active context's layer, else the base. Reads see the
+        // current context's layer plus the base, newest registration first (#6066).
+        private static ElementTypeRegistry WriteLayer => GumContext.Active?.ElementTypes ?? ElementTypeRegistry.Base;
+        private static ElementTypeRegistry? ReadLayer => GumContext.Current?.ElementTypes;
 
         /// <summary>
         /// Evaluates a variable reference's right side. The 4th argument is the live,
@@ -66,13 +70,13 @@ namespace GumRuntime
         {
             if(overwriteIfAlreadyExists)
             {
-                mElementToGueTypes[elementName] = gueInheritingType;
+                WriteLayer.SetType(elementName, gueInheritingType);
             }
             else
             {
-                if(mElementToGueTypes.ContainsKey(elementName) == false && mElementToGueTypeFuncs.ContainsKey(elementName) == false)
+                if(IsRegistered(elementName) == false)
                 {
-                    mElementToGueTypes[elementName] = gueInheritingType;
+                    WriteLayer.SetType(elementName, gueInheritingType);
                 }
             }
         }
@@ -93,13 +97,19 @@ namespace GumRuntime
         /// </remarks>
         public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement
         {
-            mElementToGueTypeFuncs[elementName] = templateFunc;
+            WriteLayer.SetFunc(elementName, templateFunc);
+        }
+
+        private static bool IsRegistered(string elementName)
+        {
+            return ElementTypeRegistry.Base.ContainsName(elementName)
+                || (ReadLayer?.ContainsName(elementName) ?? false);
         }
 
 
         public static void RegisterDefaultInstantiationType<T>(Func<T> templateFunc) where T : GraphicalUiElement
         {
-            TemplateFunc = templateFunc;
+            WriteLayer.SetTemplate(templateFunc);
         }
 
         /// <summary>
@@ -109,33 +119,26 @@ namespace GumRuntime
         /// </summary>
         public static void UnregisterGueInstantiationTypes(Func<Type, bool> shouldRemove)
         {
-            List<string>? namesToRemove = null;
-            foreach (var pair in mElementToGueTypes)
-            {
-                if (shouldRemove(pair.Value))
-                {
-                    namesToRemove ??= new List<string>();
-                    namesToRemove.Add(pair.Key);
-                }
-            }
-
-            if (namesToRemove != null)
-            {
-                foreach (var name in namesToRemove)
-                {
-                    mElementToGueTypes.Remove(name);
-                }
-            }
+            ElementTypeRegistry.Base.RemoveTypes(shouldRemove);
+            ReadLayer?.RemoveTypes(shouldRemove);
         }
 
+        /// <summary>
+        /// Clears the current service's registrations. The process-wide registrations and the shared
+        /// hooks below are cleared only when no other service is still live, so one service's
+        /// Uninitialize does not unregister the types another service builds with.
+        /// </summary>
         public static void ClearRegistrations()
         {
-            mElementToGueTypes.Clear();
-            mElementToGueTypeFuncs.Clear();
-            TemplateFunc = null;
-            CustomCreateGraphicalComponentFunc = null;
-            CustomEvaluateExpression = null;
-            CustomEvaluateExpressionAllBranches = null;
+            ReadLayer?.Clear();
+
+            if (!GumContext.HasLiveContextOtherThan(GumContext.Current))
+            {
+                ElementTypeRegistry.Base.Clear();
+                CustomCreateGraphicalComponentFunc = null;
+                CustomEvaluateExpression = null;
+                CustomEvaluateExpressionAllBranches = null;
+            }
         }
 
 
@@ -159,9 +162,10 @@ namespace GumRuntime
 
             if (toReturn == null)
             {
-                if (TemplateFunc != null)
+                Func<GraphicalUiElement>? templateFunc = ElementTypeRegistry.GetTemplate(ReadLayer);
+                if (templateFunc != null)
                 {
-                    toReturn = TemplateFunc();
+                    toReturn = templateFunc();
                 }
             }
 
@@ -175,7 +179,7 @@ namespace GumRuntime
             return toReturn;
         }
 
-        // mElementToGueTypes is a plain Dictionary<string, Type>, which cannot carry the
+        // ElementTypeRegistry stores plain Types, which cannot carry the
         // DynamicallyAccessedMembers annotation that RegisterGueInstantiationType declares on the way
         // in. The constructors are preserved at each registration site, so reading them back out is
         // safe even though the annotation does not survive the round trip.
@@ -192,20 +196,26 @@ namespace GumRuntime
                 attemptedGenericLookup = true;
             }
 
-            if (mElementToGueTypeFuncs.ContainsKey(elementName))
+            ElementTypeRegistry? layer = ReadLayer;
+
+            if (ElementTypeRegistry.TryGetFunc(layer, elementName, out Func<GraphicalUiElement>? registeredFunc))
             {
-                toReturn = mElementToGueTypeFuncs[elementName]();
+                toReturn = registeredFunc();
             }
-            else if (mElementToGueTypes.ContainsKey(elementName))
+            else if (ElementTypeRegistry.TryGetType(layer, elementName, out Type? registeredType))
             {
                 // This code allows systems (like games that use Gum) to assign types
                 // to their GraphicalUiElements so that users of the code can work with
                 // strongly-typed Gum objects.
-                var type = mElementToGueTypes[elementName];
+                var type = registeredType;
 
                 if (!string.IsNullOrEmpty(genericType))
                 {
-                    type = MakeGenericRuntimeType(type, mElementToGueTypes[genericType!]);
+                    if (!ElementTypeRegistry.TryGetType(layer, genericType!, out Type? genericArgument))
+                    {
+                        throw new KeyNotFoundException($"No runtime type is registered for {genericType}");
+                    }
+                    type = MakeGenericRuntimeType(type, genericArgument);
                 }
 
                 toReturn = InstantiateRegisteredType(type, elementName, fullInstantiation);
@@ -214,13 +224,13 @@ namespace GumRuntime
             {
                 // fall back to non-generic lookup if the generic type was not registered
                 elementName = elementSave.Name;
-                if (mElementToGueTypeFuncs.ContainsKey(elementName))
+                if (ElementTypeRegistry.TryGetFunc(layer, elementName, out Func<GraphicalUiElement>? fallbackFunc))
                 {
-                    toReturn = mElementToGueTypeFuncs[elementName]();
+                    toReturn = fallbackFunc();
                 }
-                else if (mElementToGueTypes.ContainsKey(elementName))
+                else if (ElementTypeRegistry.TryGetType(layer, elementName, out Type? fallbackType))
                 {
-                    toReturn = InstantiateRegisteredType(mElementToGueTypes[elementName], elementName, fullInstantiation);
+                    toReturn = InstantiateRegisteredType(fallbackType, elementName, fullInstantiation);
                 }
             }
 
@@ -317,6 +327,10 @@ namespace GumRuntime
             ISystemManagers systemManagers,
             bool addToManagers, string? genericType = null)
         {
+            // Build under the service that owns these managers, so the element-type table and content
+            // cache are that service's, whichever service happens to be current on this thread (#6066).
+            using GumContext.ActivationScope scope = GumContext.Activate(systemManagers?.Context);
+
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
 
             toReturn.Name = elementSave.Name;
@@ -1579,10 +1593,8 @@ namespace GumRuntime
 
         public static void Reset()
         {
-            mElementToGueTypes.Clear();
-            mElementToGueTypeFuncs.Clear();
-            TemplateFunc = null;
-
+            ElementTypeRegistry.Base.Clear();
+            ReadLayer?.Clear();
         }
     }
 }

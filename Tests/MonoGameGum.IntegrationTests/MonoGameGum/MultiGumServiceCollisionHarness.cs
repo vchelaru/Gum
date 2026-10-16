@@ -22,19 +22,13 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 // MultiGumServiceStaticSnapshot.cs so the two spike branches do not conflict.
 
 /// <summary>
-/// <see cref="StaticSnapshot"/> plus the element-type table of <see cref="ElementSaveExtensions"/>,
-/// which has no public setter and is read here through reflection. Spike-only: it shows what a
-/// per-service table would have to look like.
+/// <see cref=StaticSnapshot/> plus the element-type table. The table used to be one process-wide
+/// dictionary read here through reflection; it is now owned by each service's GumContext, so there is
+/// nothing left to capture or restore for it and the table members below do nothing. They stay so the
+/// tests that exercised the old per-service-table spike keep their shape.
 /// </summary>
 internal sealed class CollisionSnapshot
 {
-    private static readonly FieldInfo TypesField = typeof(ElementSaveExtensions).GetField(
-        "mElementToGueTypes", BindingFlags.NonPublic | BindingFlags.Static)!;
-    private static readonly FieldInfo FuncsField = typeof(ElementSaveExtensions).GetField(
-        "mElementToGueTypeFuncs", BindingFlags.NonPublic | BindingFlags.Static)!;
-    private static readonly FieldInfo TemplateField = typeof(ElementSaveExtensions).GetField(
-        "TemplateFunc", BindingFlags.NonPublic | BindingFlags.Static)!;
-
     /// <summary>
     /// State found by the collision spike that neither <see cref="StaticSnapshot"/> nor this class restores
     /// (in addition to <see cref="StaticSnapshot.UncapturedState"/>).
@@ -42,68 +36,30 @@ internal sealed class CollisionSnapshot
     public static readonly string[] AdditionalUncapturedState =
     {
         "Renderer.TextureFilter (public static; ApplyProjectTextureFilter overwrites it for every project load)",
-        "Renderer.CustomEffectManager (static; every Renderer.Uninitialize resets it for all services)",
-        "LoaderManager.Self cache (one shared dictionary; Uninitialize runs DisposeAndClear on all of it; CustomFontFile fonts are keyed by the raw relative name)",
         "Sprite.InvalidTexture (in the snapshot, but UninitializePlatform disposes whatever instance is static at the time)",
         "CustomSetPropertyOnRenderable statics: FontService, InMemoryFontCreator, LocalizationService, _knownUnresolvableFontKeys, the BBCode font stacks",
         "ColoredRectangleRuntime.DefaultWidth/DefaultHeight (obsolete statics written from the loaded project's Standards)",
         "BitmapFont._reportedPageLoadFailures (static dedupe set)",
-        "ElementSaveExtensions table: Text/Polygon/Rectangle factories close over the registering SystemManagers and RegisterGueInstantiation overwrites, so the last Initialize owns them; from-file registrations are first-wins; Uninitialize clears the whole table",
         "ObjectFinder.Self is read lazily after construction (BehaviorFormsPropertyApplier, TextRuntime font cache names, CustomSetPropertyOnRenderable.ResolveFontFilePath), as is FileManager.RelativeDirectory (font and SourceFile reloads on property change)",
     };
 
     public StaticSnapshot Statics { get; private set; } = null!;
-    public Dictionary<string, Type> Types { get; private set; } = new();
-    public Dictionary<string, Func<GraphicalUiElement>> Funcs { get; private set; } = new();
-    public Func<GraphicalUiElement>? Template { get; private set; }
 
     public static CollisionSnapshot Capture()
     {
-        return new CollisionSnapshot
-        {
-            Statics = StaticSnapshot.Capture(),
-            Types = new Dictionary<string, Type>((Dictionary<string, Type>)TypesField.GetValue(null)!),
-            Funcs = new Dictionary<string, Func<GraphicalUiElement>>(
-                (Dictionary<string, Func<GraphicalUiElement>>)FuncsField.GetValue(null)!),
-            Template = (Func<GraphicalUiElement>?)TemplateField.GetValue(null),
-        };
+        return new CollisionSnapshot { Statics = StaticSnapshot.Capture() };
     }
 
-    /// <summary>Restores every static the original snapshot covers, and optionally the element-type table.</summary>
+    /// <summary>Restores every static the snapshot covers. <paramref name="includeElementTypeTable"/> is ignored: the table is per service now.</summary>
     public void Restore(bool includeElementTypeTable = false)
     {
         Statics.Restore();
-        if (includeElementTypeTable)
-        {
-            RestoreTable();
-        }
     }
 
-    private void RestoreTable()
-    {
-        Dictionary<string, Type> types = (Dictionary<string, Type>)TypesField.GetValue(null)!;
-        types.Clear();
-        foreach (KeyValuePair<string, Type> pair in Types) { types[pair.Key] = pair.Value; }
-
-        Dictionary<string, Func<GraphicalUiElement>> funcs =
-            (Dictionary<string, Func<GraphicalUiElement>>)FuncsField.GetValue(null)!;
-        funcs.Clear();
-        foreach (KeyValuePair<string, Func<GraphicalUiElement>> pair in Funcs) { funcs[pair.Key] = pair.Value; }
-
-        TemplateField.SetValue(null, Template);
-    }
-
-    /// <summary>Empties the process-wide table without touching the other statics.</summary>
+    /// <summary>No longer needed: each service registers into its own element-type table.</summary>
     public static void ClearElementTypeTable()
     {
-        ((Dictionary<string, Type>)TypesField.GetValue(null)!).Clear();
-        ((Dictionary<string, Func<GraphicalUiElement>>)FuncsField.GetValue(null)!).Clear();
-        TemplateField.SetValue(null, null);
     }
-
-    /// <summary>The Gum element names currently registered to a runtime type.</summary>
-    public static IReadOnlyDictionary<string, Type> CurrentTypes =>
-        (Dictionary<string, Type>)TypesField.GetValue(null)!;
 }
 
 /// <summary>A game holding two <see cref="Gum.GumService"/> instances, each initialized on demand.</summary>

@@ -86,7 +86,7 @@ public partial class GumService
     /// <inheritdoc/>
     IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
 
-    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
+    public ContentLoader? ContentLoader => LoaderManager.Of(_context).ContentLoader as ContentLoader;
 
     private Game? _game;
     public Game Game
@@ -178,9 +178,20 @@ public partial class GumService
         IsInitialized = true;
 
         _game = game;
+
+        // Optional packages register their runtime types into the process-wide base layer (this runs
+        // before this service's scope opens), where every service sees them.
         RegisterRuntimeTypesThroughReflection();
 
+        // Everything below runs in this service's scope, so the writes Initialize makes (registrations,
+        // content loader, cache) land in its own context. The first service to initialize adopts the
+        // process-wide statics; later ones get their own state.
+        _context = new GumContext();
+        _context.Register();
+        using GumContext.ActivationScope scope = _context.Activate();
+
         this.SystemManagers = systemManagers ?? new SystemManagers();
+        this.SystemManagers.Context = _context;
         if (systemManagers == null)
         {
             SystemManagers.Default = this.SystemManagers;
@@ -402,22 +413,28 @@ public partial class GumService
         // reflection scan re-invokes it each cycle, so their registrations come
         // back. Packages that register only via [ModuleInitializer] won't, by
         // design — that's a known load-order contract gap tracked in issue #2761.
-        RenderableRegistry.Reset();
+        // Process-wide state shared by every service is reset only when the last service leaves.
+        bool isLastService = !GumContext.HasLiveContextOtherThan(_context);
 
-        // Issue #4416 — reset optional packages' own static state (e.g. ShapeRenderer.Self for
-        // Gum.Shapes.MonoGame/KNI) via the same reflection hook RegisterRuntimeTypesThroughReflection
-        // uses in the opposite direction.
-        UninitializeRuntimeTypesThroughReflection();
-
-        Text.Customizations.Clear();
-        Text.ContextCustomizations.Clear();
-        Text.DefaultBitmapFont = null;
-        Text.DefaultFont = null;
-
-        if (Sprite.InvalidTexture != null)
+        if (isLastService)
         {
-            Sprite.InvalidTexture.Dispose();
-            Sprite.InvalidTexture = null;
+            RenderableRegistry.Reset();
+
+            // Issue #4416 — reset optional packages' own static state (e.g. ShapeRenderer.Self for
+            // Gum.Shapes.MonoGame/KNI) via the same reflection hook RegisterRuntimeTypesThroughReflection
+            // uses in the opposite direction.
+            UninitializeRuntimeTypesThroughReflection();
+
+            Text.Customizations.Clear();
+            Text.ContextCustomizations.Clear();
+            Text.DefaultBitmapFont = null;
+            Text.DefaultFont = null;
+
+            if (Sprite.InvalidTexture != null)
+            {
+                Sprite.InvalidTexture.Dispose();
+                Sprite.InvalidTexture = null;
+            }
         }
 
         if (_systemManagers != null)
@@ -426,7 +443,10 @@ public partial class GumService
         }
 
         // Declared non-null but null! until Initialize sets it; teardown restores that state.
-        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
+        if (isLastService)
+        {
+            Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
+        }
 
         // Folded from the end of the pre-split Uninitialize (was a trailing #if XNALIKE _game = null).
         // Nothing between this seam's call site and that point reads _game, so the move is inert.
@@ -468,6 +488,8 @@ public partial class GumService
 
     public void Update(GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
+        using GumContext.ActivationScope scope = GumContext.Activate(_context);
+
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 
         UpdatePreamble(roots);

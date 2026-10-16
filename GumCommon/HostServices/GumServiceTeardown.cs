@@ -44,6 +44,16 @@ public static class GumServiceTeardown
 
         ObjectFinder.Self.GumProjectSave = null;
 
+        ReleaseContent();
+    }
+
+    /// <summary>
+    /// Disposes the cached content of the current service only. Used instead of
+    /// <see cref="ReleaseFormsAndContent"/> when another service is still live and the shared Forms and
+    /// project state must stay.
+    /// </summary>
+    public static void ReleaseContent()
+    {
         LoaderManager.Self.DisposeAndClear();
     }
 }

@@ -72,6 +72,12 @@ public partial class SystemManagers : ISystemManagers
 
     IRenderer ISystemManagers.Renderer => Renderer;
 
+    /// <summary>
+    /// The context of the <c>GumService</c> these managers belong to, set when the service creates or
+    /// adopts them. Null for managers created on their own (the Gum tool, unit tests).
+    /// </summary>
+    public global::Gum.GumContext? Context { get; set; }
+
 #if !RAYLIB
     // The managers below are created in Initialize.
     public SpriteManager SpriteManager

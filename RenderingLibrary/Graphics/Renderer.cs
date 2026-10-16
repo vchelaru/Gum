@@ -421,7 +421,11 @@ public class Renderer : IRenderer
         mDottedLineTexture?.Dispose();
         mDottedLineTexture = null!;
 
-        CustomEffectManager.Reset();
+        // The effect manager is device-bound and shared, so the last service out resets it.
+        if (!global::Gum.GumContext.HasLiveContextOtherThan(global::Gum.GumContext.Current))
+        {
+            CustomEffectManager.Reset();
+        }
     }
 
     #region Add/Remove Layers
