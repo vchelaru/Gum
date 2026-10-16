@@ -1,11 +1,14 @@
 using Gum;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
+using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using ToolsUtilities;
 using Xunit;
@@ -18,6 +21,14 @@ public class GumContextTests : BaseTestClass
 {
     private readonly List<GumContext> _contexts = new List<GumContext>();
     private readonly string _originalRelativeDirectory = FileManager.RelativeDirectory;
+
+    // ClearRegistrations also nulls these process-wide hooks that other tests rely on.
+    private readonly Func<string, ISystemManagers, IRenderable?>? _originalCreateComponent =
+        ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
+    private readonly Func<StateSave, string, string?, GraphicalUiElement?, object?>? _originalEvaluate =
+        ElementSaveExtensions.CustomEvaluateExpression;
+    private readonly Func<StateSave, string, string?, GraphicalUiElement?, IEnumerable<object>>? _originalEvaluateAllBranches =
+        ElementSaveExtensions.CustomEvaluateExpressionAllBranches;
 
     private GumContext CreateLiveContext()
     {
@@ -34,6 +45,9 @@ public class GumContextTests : BaseTestClass
             context.Release();
         }
         ElementSaveExtensions.Reset();
+        ElementSaveExtensions.CustomCreateGraphicalComponentFunc = _originalCreateComponent;
+        ElementSaveExtensions.CustomEvaluateExpression = _originalEvaluate;
+        ElementSaveExtensions.CustomEvaluateExpressionAllBranches = _originalEvaluateAllBranches;
         FileManager.RelativeDirectory = _originalRelativeDirectory;
         base.Dispose();
     }
@@ -415,7 +429,6 @@ public class GumContextTests : BaseTestClass
         }
 
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc.ShouldNotBeNull();
-        ElementSaveExtensions.CustomCreateGraphicalComponentFunc = null;
     }
 
     #endregion
