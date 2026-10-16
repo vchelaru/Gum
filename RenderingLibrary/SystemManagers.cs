@@ -55,30 +55,9 @@ public partial class SystemManagers : ISystemManagers
     /// </summary>
     public static SystemManagers Default
     {
-        get
-        {
-            global::Gum.GumContext? context = global::Gum.GumContext.Current;
-            if (context == null || context.AdoptsProcessStatics)
-            {
-                return _processWideDefault;
-            }
-            return (context.ConcreteManagers as SystemManagers) ?? _processWideDefault;
-        }
-        set
-        {
-            global::Gum.GumContext? context = global::Gum.GumContext.Current;
-            if (context == null || context.AdoptsProcessStatics)
-            {
-                _processWideDefault = value;
-            }
-            else
-            {
-                context.ConcreteManagers = value;
-            }
-        }
-    }
-
-    private static SystemManagers _processWideDefault = null!;
+        get;
+        set;
+    } = null!;
 
 
     /// <summary>

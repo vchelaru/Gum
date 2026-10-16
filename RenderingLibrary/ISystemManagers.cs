@@ -19,36 +19,8 @@ namespace RenderingLibrary
         /// </summary>
         GumContext? Context => null;
 
-        private static ISystemManagers _processWideDefault = null!;
-
-        /// <summary>
-        /// Set by Gum initialization (e.g. GumService.Initialize); not usable before that. With several
-        /// services this is the managers of the service that <c>IGumService.Default</c> names, falling back to
-        /// the process-wide value when that service has none. Hosts may still assign it directly.
-        /// </summary>
-        public static ISystemManagers Default
-        {
-            get
-            {
-                GumContext? context = GumContext.Current;
-                if (context == null || context.AdoptsProcessStatics)
-                {
-                    return _processWideDefault;
-                }
-                return context.Managers ?? _processWideDefault;
-            }
-            set
-            {
-                GumContext? context = GumContext.Current;
-                if (context == null || context.AdoptsProcessStatics)
-                {
-                    _processWideDefault = value;
-                }
-                else
-                {
-                    context.Managers = value;
-                }
-            }
-        }
+        // Set by Gum initialization (e.g. GumService.Initialize); not usable before that. With several services,
+        // assigning IGumService.Default moves this to the new default's managers, so it is a plain static.
+        public static ISystemManagers Default { get; set; } = null!;
     }
 }

@@ -114,12 +114,6 @@ public sealed partial class GumContext
         }
     }
 
-    // This service's value of ISystemManagers.Default and of the XNA-like SystemManagers.Default. Null until
-    // set; the adopting context uses the statics those properties always had instead.
-    internal ISystemManagers? Managers { get; set; }
-
-    internal object? ConcreteManagers { get; set; }
-
     // This service's Renderer.TextureFilter (a TextureFilter value); null until set.
     internal int? TextureFilterSetting { get; set; }
 

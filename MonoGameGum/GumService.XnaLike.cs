@@ -56,6 +56,14 @@ public partial class GumService
         {
             _default = typed;
         }
+
+        // SystemManagers.Default and ISystemManagers.Default follow the default service. They stay plain
+        // statics, so a host that assigns them by hand still works until the default changes.
+        if (service is GumService gumService && gumService._systemManagers != null)
+        {
+            SystemManagers.Default = gumService._systemManagers;
+            ISystemManagers.Default = gumService._systemManagers;
+        }
     }
 #pragma warning restore CS0618
 
@@ -293,12 +301,6 @@ public partial class GumService
         {
             SystemManagers.Default = this.SystemManagers;
             ISystemManagers.Default = this.SystemManagers;
-        }
-        else if (!_context.AdoptsProcessStatics)
-        {
-            // A later service that was handed its own managers still owns them as its Default.
-            _context.Managers = systemManagers;
-            _context.ConcreteManagers = systemManagers;
         }
 
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);

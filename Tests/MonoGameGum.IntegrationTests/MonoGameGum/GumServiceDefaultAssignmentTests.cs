@@ -223,6 +223,49 @@ public class GumServiceDefaultAssignmentTests : BaseTestClass
         IGumService.Default.ShouldBeSameAs(game.ServiceA);
     }
 
+    [Fact]
+    public void AssigningTheDefault_ShouldMoveSystemManagersDefaultAndISystemManagersDefault()
+    {
+        using CollisionGame game = CreateTwoServices();
+
+        IGumService.Default = game.ServiceB;
+        SystemManagers.Default.ShouldBeSameAs(game.ServiceB.SystemManagers);
+        ISystemManagers.Default.ShouldBeSameAs(game.ServiceB.SystemManagers);
+
+        IGumService.Default = game.ServiceA;
+        SystemManagers.Default.ShouldBeSameAs(game.ServiceA.SystemManagers);
+        ISystemManagers.Default.ShouldBeSameAs(game.ServiceA.SystemManagers);
+    }
+
+    [Fact]
+    public void Update_ShouldPutTheManagersDefaultsBack_WithThePreviousDefault()
+    {
+        using CollisionGame game = CreateTwoServices();
+        IGumService.Default = game.ServiceA;
+        ISystemManagers? seenInside = null;
+        game.ServiceB.DeferredQueue.Enqueue(() => seenInside = ISystemManagers.Default);
+
+        game.ServiceB.Update(FrameTime);
+
+        seenInside.ShouldBeSameAs(game.ServiceB.SystemManagers);
+        ISystemManagers.Default.ShouldBeSameAs(game.ServiceA.SystemManagers);
+        SystemManagers.Default.ShouldBeSameAs(game.ServiceA.SystemManagers);
+    }
+
+    [Fact]
+    public void HandAssigningTheManagersDefaults_ShouldStillWork_UntilTheDefaultChanges()
+    {
+        using CollisionGame game = CreateTwoServices();
+        IGumService.Default = game.ServiceA;
+        SystemManagers hostOwned = game.ServiceB.SystemManagers;
+
+        SystemManagers.Default = hostOwned;
+        ISystemManagers.Default = hostOwned;
+
+        SystemManagers.Default.ShouldBeSameAs(hostOwned);
+        ISystemManagers.Default.ShouldBeSameAs(hostOwned);
+    }
+
     private static string Name(CollisionGame game, IGumService? service) =>
         ReferenceEquals(service, game.ServiceA) ? "A" : ReferenceEquals(service, game.ServiceB) ? "B" : "other";
 
