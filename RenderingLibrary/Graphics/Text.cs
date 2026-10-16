@@ -95,24 +95,19 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 {
     #region Fields
 
-    private static SpriteFont? _processWideDefaultFont;
-
-    // Per service like the other defaults: the context that adopted the process statics uses the field.
     public static SpriteFont? DefaultFont
     {
-        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.GetState<SpriteFont>() : _processWideDefaultFont; }
-        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.SetState(value); } else { _processWideDefaultFont = value; } }
+        get;
+        set;
     }
-
-    private static BitmapFont? _processWideDefaultBitmapFont;
 
     /// <summary>
     /// The default BitmapFont to use if a Text instance is referencing a null font.
     /// </summary>
     public static BitmapFont? DefaultBitmapFont
     {
-        get { global::Gum.GumContext? own = global::Gum.GumContext.Own; return own != null ? own.GetState<BitmapFont>() : _processWideDefaultBitmapFont; }
-        set { global::Gum.GumContext? own = global::Gum.GumContext.Own; if (own != null) { own.SetState(value); } else { _processWideDefaultBitmapFont = value; } }
+        get;
+        set;
     }
 
     /// <summary>

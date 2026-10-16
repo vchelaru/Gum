@@ -94,7 +94,7 @@ internal sealed partial class GumContext
 
     /// <summary>
     /// A per-service value keyed by its type, for state whose type lives in a runtime assembly this one
-    /// cannot reference (Styling, the default fonts). Null when unset.
+    /// cannot reference (Styling). Null when unset.
     /// </summary>
     public T? GetState<T>() where T : class
     {

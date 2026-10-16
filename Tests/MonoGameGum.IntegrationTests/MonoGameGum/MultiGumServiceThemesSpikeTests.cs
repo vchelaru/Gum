@@ -223,8 +223,8 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         Check("FormsUtilities.Keyboard", afterA.Keyboard, now.Keyboard);
         Check("Styling.ActiveStyle", afterA.Style, now.Style);
         Check("ElementSaveExtensions.InitialStateAppliedNotifier", afterA.InitialStateNotifier, now.InitialStateNotifier);
-        Check("Text.DefaultFont", afterA.DefaultTextFont, now.DefaultTextFont);
-        Check("Text.DefaultBitmapFont", afterA.DefaultBitmap, now.DefaultBitmap);
+        // Text.DefaultFont and Text.DefaultBitmapFont are shared by every service on purpose: the second Initialize
+        // replaces the embedded default font, which is the same on the same device.
         Check("FrameworkElement.KeyboardsForUiControl (contents)",
             string.Join(",", afterA.KeyboardsForUiControl.Select(item => item.GetHashCode())),
             string.Join(",", now.KeyboardsForUiControl.Select(item => item.GetHashCode())));

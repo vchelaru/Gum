@@ -532,16 +532,17 @@ public partial class GumService
 
             Text.Customizations.Clear();
             Text.ContextCustomizations.Clear();
-        }
 
-        // The default fonts, the invalid-texture and the style belong to this service.
-        Text.DefaultBitmapFont = null;
-        Text.DefaultFont = null;
+            // Fixed built-ins on the shared graphics device, not project data, so every service uses the
+            // same ones until the last leaves.
+            Text.DefaultBitmapFont = null;
+            Text.DefaultFont = null;
 
-        if (Sprite.InvalidTexture != null)
-        {
-            Sprite.InvalidTexture.Dispose();
-            Sprite.InvalidTexture = null;
+            if (Sprite.InvalidTexture != null)
+            {
+                Sprite.InvalidTexture.Dispose();
+                Sprite.InvalidTexture = null;
+            }
         }
 
         if (_systemManagers != null)
