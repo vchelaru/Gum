@@ -589,6 +589,22 @@ public partial class GumService : IGumService
         return gumProject;
     }
 
+    // Called when a platform InitializeInternal throws partway (a missing project file, for example).
+    // IsInitialized is already true and the statics already point at this service, so undo them: the
+    // caller can then fix the problem and call Initialize again instead of hitting "already called".
+    // An exception from the teardown itself is dropped; the one that failed Initialize is the useful one.
+    private void RollBackFailedInitialize()
+    {
+        try
+        {
+            Uninitialize();
+        }
+        catch (Exception)
+        {
+            IsInitialized = false;
+        }
+    }
+
     /// <summary>
     /// Applies the project's <see cref="GumProjectSave.TextureFilter"/> setting (configured in the
     /// editor's Project Properties) to the runtime so sprites render with the same filtering the

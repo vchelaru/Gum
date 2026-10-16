@@ -177,29 +177,37 @@ public partial class GumService
         }
         IsInitialized = true;
 
-        _game = game;
-        RegisterRuntimeTypesThroughReflection();
-
-        this.SystemManagers = systemManagers ?? new SystemManagers();
-        if (systemManagers == null)
+        try
         {
-            SystemManagers.Default = this.SystemManagers;
-            ISystemManagers.Default = this.SystemManagers;
+            _game = game;
+            RegisterRuntimeTypesThroughReflection();
+
+            this.SystemManagers = systemManagers ?? new SystemManagers();
+            if (systemManagers == null)
+            {
+                SystemManagers.Default = this.SystemManagers;
+                ISystemManagers.Default = this.SystemManagers;
+            }
+
+            IGumService.Default = this;
+
+            this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
+
+            if (game != null && ContentLoader != null && ContentLoader.XnaContentManager == null)
+            {
+                ContentLoader.XnaContentManager = game.Content;
+            }
+
+            FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
+                defaultVisualsVersion: defaultVisualsVersion);
+
+            return FinishInitialize(gumProjectFile);
         }
-
-        IGumService.Default = this;
-
-        this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-
-        if (game != null && ContentLoader != null && ContentLoader.XnaContentManager == null)
+        catch
         {
-            ContentLoader.XnaContentManager = game.Content;
+            RollBackFailedInitialize();
+            throw;
         }
-
-        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
-            defaultVisualsVersion: defaultVisualsVersion);
-
-        return FinishInitialize(gumProjectFile);
     }
 
     // Framework/BCL assemblies never define a Gum "RegisterRuntimeType(s)" hook. Skipping them by
