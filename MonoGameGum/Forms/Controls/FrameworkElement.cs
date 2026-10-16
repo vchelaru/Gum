@@ -682,9 +682,13 @@ public class FrameworkElement : INotifyPropertyChanged
     /// This may contain standard Gum types such as Gum.Forms.Controls, as well as derived types, such as
     /// forms types created from components in generated code.
     /// </summary>
+#if FRB
+    public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates { get; private set; } = new Dictionary<Type, VisualTemplate>();
+#else
     public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates => GumContext.Own?.DefaultFormsTemplates ?? _defaultFormsTemplates;
 
     static readonly Dictionary<Type, VisualTemplate> _defaultFormsTemplates = new Dictionary<Type, VisualTemplate>();
+#endif
 
     protected static InteractiveGue? GetGraphicalUiElementFor(FrameworkElement element)
     {
