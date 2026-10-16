@@ -20,6 +20,8 @@ public class TwoServiceDrawTests : BaseTestClass
 
     private static RectangleRuntime AddRectangle(global::Gum.GumService service, int x, int y, byte red, byte blue)
     {
+        // An element belongs to the service that is the default when it is built.
+        IGumService.Default = service;
         RectangleRuntime rectangle = new();
         rectangle.X = x;
         rectangle.Y = y;
@@ -37,7 +39,7 @@ public class TwoServiceDrawTests : BaseTestClass
         using TwoServiceGame game = new();
         game.RunOneFrame();
 
-        // Red belongs to service A, blue to service B (the last service initialized).
+        // Red belongs to service A, blue to service B.
         AddRectangle(game.ServiceA, x: 20, y: 20, red: 255, blue: 0);
         AddRectangle(game.ServiceB, x: 200, y: 100, red: 0, blue: 255);
 

@@ -174,12 +174,12 @@ public class UninitializeTests : BaseTestClass
         using TwoServiceGame game = new TwoServiceGame();
         game.RunOneFrame();
 
-        // Second Initialize makes ServiceB the current service.
-        game.ServiceA.Uninitialize();
+        // The first Initialize made ServiceA the current service; a second Initialize leaves it alone.
+        game.ServiceB.Uninitialize();
 
-        IGumService.Default.ShouldBeSameAs(game.ServiceB);
-        SystemManagers.Default.ShouldBeSameAs(game.ServiceB.SystemManagers);
-        ISystemManagers.Default.ShouldBeSameAs(game.ServiceB.SystemManagers);
+        IGumService.Default.ShouldBeSameAs(game.ServiceA);
+        SystemManagers.Default.ShouldBeSameAs(game.ServiceA.SystemManagers);
+        ISystemManagers.Default.ShouldBeSameAs(game.ServiceA.SystemManagers);
     }
 
     [Fact]
@@ -188,10 +188,10 @@ public class UninitializeTests : BaseTestClass
         using TwoServiceGame game = new TwoServiceGame();
         game.RunOneFrame();
 
-        SystemManagers deadManagers = game.ServiceB.SystemManagers;
-        game.ServiceB.Uninitialize();
+        SystemManagers deadManagers = game.ServiceA.SystemManagers;
+        game.ServiceA.Uninitialize();
 
-        IGumService.Default.ShouldNotBeSameAs(game.ServiceB);
+        IGumService.Default.ShouldNotBeSameAs(game.ServiceA);
         SystemManagers.Default.ShouldNotBeSameAs(deadManagers);
         ISystemManagers.Default.ShouldNotBeSameAs(deadManagers);
     }

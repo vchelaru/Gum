@@ -55,77 +55,77 @@ public class TwoServiceImmediateModeTests : BaseTestClass
         first.Initialize(game, Gum.Forms.DefaultVisualsVersion.V3);
         GumService second = game.CreateService();
         second.Initialize(game, Gum.Forms.DefaultVisualsVersion.V3);
-        SystemManagers.Default.ShouldBeSameAs(second.SystemManagers, "the later service owns the default");
+        SystemManagers.Default.ShouldBeSameAs(first.SystemManagers, "the first service keeps the default");
         return (first, second);
     }
 
     [Fact]
-    public void ImmediateDraw_OnFirstService_RendersWithItsOwnManagers()
+    public void ImmediateDraw_OnNonDefaultService_RendersWithItsOwnManagers()
     {
         using ServiceTestGame game = new();
-        (GumService first, _) = InitializeTwoServices(game);
+        (_, GumService second) = InitializeTwoServices(game);
         RecordingRenderable renderable = new();
 
-        first.Renderer.Begin();
-        first.Renderer.Draw(renderable);
-        first.Renderer.End();
+        second.Renderer.Begin();
+        second.Renderer.Draw(renderable);
+        second.Renderer.End();
 
-        ShouldAllBeSameAs(renderable.RenderedWith, first.SystemManagers, "Render managers");
-        ShouldAllBeSameAs(renderable.BatchStartedWith, first.SystemManagers, "StartBatch managers");
-        ShouldAllBeSameAs(renderable.BatchEndedWith, first.SystemManagers, "EndBatch managers");
+        ShouldAllBeSameAs(renderable.RenderedWith, second.SystemManagers, "Render managers");
+        ShouldAllBeSameAs(renderable.BatchStartedWith, second.SystemManagers, "StartBatch managers");
+        ShouldAllBeSameAs(renderable.BatchEndedWith, second.SystemManagers, "EndBatch managers");
     }
 
     [Fact]
-    public void DeferredDraw_OnFirstService_RendersWithItsOwnManagersAtEnd()
+    public void DeferredDraw_OnNonDefaultService_RendersWithItsOwnManagersAtEnd()
     {
         using ServiceTestGame game = new();
-        (GumService first, _) = InitializeTwoServices(game);
+        (_, GumService second) = InitializeTwoServices(game);
         RecordingRenderable renderable = new();
 
-        first.Renderer.Begin(mode: Renderer.GumBatchDrawMode.Deferred);
-        first.Renderer.Draw(renderable);
+        second.Renderer.Begin(mode: Renderer.GumBatchDrawMode.Deferred);
+        second.Renderer.Draw(renderable);
         renderable.RenderedWith.Count.ShouldBe(0, "a deferred draw waits for End");
-        first.Renderer.End();
+        second.Renderer.End();
 
-        ShouldAllBeSameAs(renderable.RenderedWith, first.SystemManagers, "Render managers");
-        ShouldAllBeSameAs(renderable.BatchStartedWith, first.SystemManagers, "StartBatch managers");
-        ShouldAllBeSameAs(renderable.BatchEndedWith, first.SystemManagers, "EndBatch managers");
+        ShouldAllBeSameAs(renderable.RenderedWith, second.SystemManagers, "Render managers");
+        ShouldAllBeSameAs(renderable.BatchStartedWith, second.SystemManagers, "StartBatch managers");
+        ShouldAllBeSameAs(renderable.BatchEndedWith, second.SystemManagers, "EndBatch managers");
     }
 
     [Fact]
-    public void LayeredDraw_WithNullManagers_OnFirstService_RendersWithItsOwnManagers()
+    public void LayeredDraw_WithNullManagers_OnNonDefaultService_RendersWithItsOwnManagers()
     {
         using ServiceTestGame game = new();
-        (GumService first, _) = InitializeTwoServices(game);
+        (_, GumService second) = InitializeTwoServices(game);
         RecordingRenderable renderable = new();
-        first.Renderer.MainLayer.Add(renderable);
+        second.Renderer.MainLayer.Add(renderable);
 
-        first.Renderer.Draw((SystemManagers)null!);
+        second.Renderer.Draw((SystemManagers)null!);
 
-        first.Renderer.MainLayer.Remove(renderable);
-        ShouldAllBeSameAs(renderable.RenderedWith, first.SystemManagers, "Render managers");
-        ShouldAllBeSameAs(renderable.BatchEndedWith, first.SystemManagers, "EndBatch managers");
+        second.Renderer.MainLayer.Remove(renderable);
+        ShouldAllBeSameAs(renderable.RenderedWith, second.SystemManagers, "Render managers");
+        ShouldAllBeSameAs(renderable.BatchEndedWith, second.SystemManagers, "EndBatch managers");
     }
 
     [Fact]
     public void GumBatch_WithExplicitManagers_RendersWithThoseManagersAndLeavesTheDefaultAlone()
     {
         using ServiceTestGame game = new();
-        (GumService first, GumService second) = InitializeTwoServices(game);
-        second.SystemManagers.Renderer.Camera.ClientWidth = 12345;
+        (GumService defaultService, GumService other) = InitializeTwoServices(game);
+        defaultService.SystemManagers.Renderer.Camera.ClientWidth = 12345;
         RecordingRenderable renderable = new();
-        GumBatch batch = new(first.SystemManagers);
+        GumBatch batch = new(other.SystemManagers);
 
         batch.Begin();
         batch.Draw(renderable);
         batch.End();
 
-        ShouldAllBeSameAs(renderable.RenderedWith, first.SystemManagers, "Render managers");
-        ShouldAllBeSameAs(renderable.BatchEndedWith, first.SystemManagers, "EndBatch managers");
-        batch.SpriteBatch.ShouldBeSameAs(first.SystemManagers.Renderer.SpriteRenderer.SpriteBatch);
-        first.SystemManagers.Renderer.Camera.ClientWidth.ShouldBe(game.GraphicsDevice.Viewport.Width,
+        ShouldAllBeSameAs(renderable.RenderedWith, other.SystemManagers, "Render managers");
+        ShouldAllBeSameAs(renderable.BatchEndedWith, other.SystemManagers, "EndBatch managers");
+        batch.SpriteBatch.ShouldBeSameAs(other.SystemManagers.Renderer.SpriteRenderer.SpriteBatch);
+        other.SystemManagers.Renderer.Camera.ClientWidth.ShouldBe(game.GraphicsDevice.Viewport.Width,
             "Begin sizes the camera of the managers the batch was created with");
-        second.SystemManagers.Renderer.Camera.ClientWidth.ShouldBe(12345,
+        defaultService.SystemManagers.Renderer.Camera.ClientWidth.ShouldBe(12345,
             "the default service's camera is not this batch's to touch");
     }
 
@@ -135,22 +135,22 @@ public class TwoServiceImmediateModeTests : BaseTestClass
         // Hosts that set SystemManagers.Default by hand and never call Initialize on the service
         // still call Draw on it; that must keep drawing the default managers.
         using ServiceTestGame game = new();
-        (_, GumService second) = InitializeTwoServices(game);
+        (GumService first, _) = InitializeTwoServices(game);
         RecordingRenderable renderable = new();
-        second.Renderer.MainLayer.Add(renderable);
+        first.Renderer.MainLayer.Add(renderable);
         GumService neverInitialized = new();
 
         neverInitialized.Draw();
 
-        second.Renderer.MainLayer.Remove(renderable);
-        ShouldAllBeSameAs(renderable.RenderedWith, second.SystemManagers, "Render managers");
+        first.Renderer.MainLayer.Remove(renderable);
+        ShouldAllBeSameAs(renderable.RenderedWith, first.SystemManagers, "Render managers");
     }
 
     [Fact]
     public void GumBatch_WithoutManagers_UsesTheDefaultManagers()
     {
         using ServiceTestGame game = new();
-        (_, GumService second) = InitializeTwoServices(game);
+        (GumService first, _) = InitializeTwoServices(game);
         RecordingRenderable renderable = new();
         GumBatch batch = new();
 
@@ -158,7 +158,7 @@ public class TwoServiceImmediateModeTests : BaseTestClass
         batch.Draw(renderable);
         batch.End();
 
-        ShouldAllBeSameAs(renderable.RenderedWith, second.SystemManagers, "Render managers");
+        ShouldAllBeSameAs(renderable.RenderedWith, first.SystemManagers, "Render managers");
     }
 
     [Fact]
