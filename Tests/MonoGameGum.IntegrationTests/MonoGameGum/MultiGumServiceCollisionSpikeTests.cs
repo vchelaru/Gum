@@ -446,7 +446,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
                 }
             }
 
-            RenderingLibrary.Graphics.Text text = (RenderingLibrary.Graphics.Text)screen.GetGraphicalUiElementByName("Label")!.RenderableComponent;
+            RenderingLibrary.Graphics.Text text = (RenderingLibrary.Graphics.Text)screen.GetGraphicalUiElementByName("Label")!.RenderableComponent!;
             object? textManagers = typeof(RenderingLibrary.Graphics.Text)
                 .GetField("mManagers", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(text);
             if (!ReferenceEquals(textManagers, service.SystemManagers))
@@ -529,7 +529,7 @@ public class MultiGumServiceCollisionSpikeTests : BaseTestClass
         {
             GraphicalUiElement label = detached.GetGraphicalUiElementByName("Label")!;
             label.SetProperty("FontSize", 32);
-            fontFile = ((RenderingLibrary.Graphics.Text)label.RenderableComponent).BitmapFont!.FontFile!;
+            fontFile = ((RenderingLibrary.Graphics.Text)label.RenderableComponent!).BitmapFont!.FontFile!;
         }
 
         string folderA = Path.GetDirectoryName(PathA)!.Replace(Path.DirectorySeparatorChar, '/');

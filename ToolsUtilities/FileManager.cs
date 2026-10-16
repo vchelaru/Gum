@@ -87,9 +87,9 @@ namespace ToolsUtilities
         // directory. The reader returns the current service's value, or null to use the process-wide one; the
         // writer stores the normalized value for the current service and returns true, or false to use the
         // process-wide one. Unused in hosts that run no service.
-        internal static Func<string?>? RelativeDirectoryReader;
+        internal static Func<string?>? RelativeDirectoryReader = null;
 
-        internal static Func<string, bool>? RelativeDirectoryWriter;
+        internal static Func<string, bool>? RelativeDirectoryWriter = null;
 
         public static string RelativeDirectory
         {

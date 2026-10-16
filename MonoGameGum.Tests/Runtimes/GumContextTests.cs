@@ -196,7 +196,10 @@ public class GumContextTests : BaseTestClass
                 single.RunPending();
                 Thread.Sleep(1);
             }
-            task.GetAwaiter().GetResult();
+            if (task.Exception != null)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(task.Exception.InnerException ?? task.Exception).Throw();
+            }
         }
         finally
         {
