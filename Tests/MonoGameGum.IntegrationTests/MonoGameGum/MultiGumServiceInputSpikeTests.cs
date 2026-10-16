@@ -164,6 +164,32 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         other.ConfirmClicks.ShouldBe(1);
     }
 
+    // A click handler runs inside its service's Update, which makes that service the default for the call.
+    [Theory]
+    [InlineData(Side.A)]
+    [InlineData(Side.B)]
+    public void Click_HandlerFiredInsideUpdate_ShouldSeeItsOwnServiceAsDefault(Side clicker)
+    {
+        using InputGame game = CreateGame(coincidentConfirmButtons: true);
+        Point target = game.ConfirmCenter(clicker);
+        InputService clicking = game.Get(clicker);
+        List<IGumService?> seenByHandler = new List<IGumService?>();
+        clicking.ConfirmButton.Click += (_, _) => seenByHandler.Add(IGumService.Default);
+
+        // The default is the other service whenever this one's Update starts.
+        for (int frame = 0; frame < 3; frame++)
+        {
+            clicking.Cursor.Place(target.X, target.Y, leftDown: frame == 1);
+            game.Get(Other(clicker)).Cursor.Place(-50, -50, leftDown: false);
+            IGumService.Default = game.Get(Other(clicker)).Service;
+            TickWithoutSwap(game, clicker);
+            IGumService.Default.ShouldBeSameAs(game.Get(Other(clicker)).Service, "Update puts the previous default back");
+        }
+
+        seenByHandler.Count.ShouldBe(1);
+        seenByHandler[0].ShouldBeSameAs(clicking.Service);
+    }
+
     // Red on purpose: the same click, but A's Update runs without swapping A's statics back in.
     [Fact]
     public void Click_InA_WhenAUpdatesWithoutRestoringItsStatics_ShouldStillFireA()

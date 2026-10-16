@@ -181,6 +181,12 @@ public class GumServiceUnitTests : BaseTestClass
 
         protected override void Dispose(bool disposing)
         {
+            // This service is the current one (IGumService.Default) once initialized, and GumService.Default
+            // follows it, so leaving it initialized would make the next test's GumService.Default.Initialize throw.
+            if (GumService.IsInitialized)
+            {
+                GumService.Uninitialize();
+            }
             LoaderManager.Self?.DisposeAndClear();
             base.Dispose(disposing);
         }
