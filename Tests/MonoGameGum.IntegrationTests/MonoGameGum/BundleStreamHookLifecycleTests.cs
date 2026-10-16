@@ -61,6 +61,81 @@ public class BundleStreamHookLifecycleTests : BaseTestClass
         FileManager.CustomGetStreamFromFile.ShouldBe(hookB);
     }
 
+    [Fact]
+    public void Uninitialize_AfterHostReplacedTheHook_LeavesTheHostsHookAlone()
+    {
+        using ServiceTestGame game = new();
+        game.Start();
+        Gum.GumService service = game.CreateService();
+        service.Initialize(game, WriteBundle("A"));
+        Func<string, Stream> hostHook = path => throw new FileNotFoundException(path);
+        FileManager.CustomGetStreamFromFile = hostHook;
+
+        service.Uninitialize();
+
+        FileManager.CustomGetStreamFromFile.ShouldBe(hostHook,
+            "the host installed this hook after Initialize; restoring the earlier one would discard it");
+    }
+
+    [Fact]
+    public void Uninitialize_InReverseOfInstallOrder_RestoresEachPreviousHookInTurn()
+    {
+        using ServiceTestGame game = new();
+        game.Start();
+        Gum.GumService serviceA = game.CreateService();
+        serviceA.Initialize(game, WriteBundle("A"));
+        Func<string, Stream>? hookA = FileManager.CustomGetStreamFromFile;
+        Gum.GumService serviceB = game.CreateService();
+        serviceB.Initialize(game, WriteBundle("B"));
+        FileManager.CustomGetStreamFromFile.ShouldNotBe(hookA);
+
+        serviceB.Uninitialize();
+        FileManager.CustomGetStreamFromFile.ShouldBe(hookA, "B's teardown puts back the hook it composed over");
+        serviceA.Uninitialize();
+
+        FileManager.CustomGetStreamFromFile.ShouldBe(_hookBefore);
+    }
+
+    [Fact]
+    public void InitializeAndUninitialize_RepeatedOnOneService_DoNotStackHooks()
+    {
+        using ServiceTestGame game = new();
+        game.Start();
+        Gum.GumService service = game.CreateService();
+        string bundle = WriteBundle("A");
+
+        for (int cycle = 0; cycle < 3; cycle++)
+        {
+            service.Initialize(game, bundle);
+            service.CurrentProjectResolution!.PreviousHook.ShouldBe(_hookBefore,
+                "each load composes over the original hook, not over the previous cycle's bundle hook");
+
+            service.Uninitialize();
+
+            FileManager.CustomGetStreamFromFile.ShouldBe(_hookBefore);
+        }
+    }
+
+    [Fact]
+    public void Initialize_WhenTheBundledProjectFailsToLoad_RestoresPreviousStreamHook()
+    {
+        using ServiceTestGame game = new();
+        game.Start();
+        Gum.GumService service = game.CreateService();
+        string path = Path.Combine(_directory, "Broken.gumpkg");
+        using (FileStream stream = File.Create(path))
+        {
+            GumBundleWriter.Write(stream, new List<(string, byte[])>
+            {
+                ("Broken.gumx", Encoding.UTF8.GetBytes("this is not a gum project")),
+            });
+        }
+
+        Should.Throw<Exception>(() => service.Initialize(game, path));
+
+        FileManager.CustomGetStreamFromFile.ShouldBe(_hookBefore);
+    }
+
     private string WriteBundle(string name)
     {
         string path = Path.Combine(_directory, name + ".gumpkg");
