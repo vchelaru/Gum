@@ -560,7 +560,7 @@ public partial class GumService
     /// <param name="gameTime">The GameTime obtained from the Game class in the Update call.</param>
     public void Update(GameTime gameTime)
     {
-        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
+        using ServiceCallScope scope = EnterServiceCall();
 
         PollWindowSizeAndApplyFit();
 
@@ -581,7 +581,7 @@ public partial class GumService
     {
         // Handlers and events fired below see this service as the default; the previous default comes back
         // when Update returns, so a handler that assigns the default has that undone.
-        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
+        using ServiceCallScope scope = EnterServiceCall();
 
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 

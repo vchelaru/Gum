@@ -42,6 +42,12 @@ After this, `await` lines in event handlers — including `await dialogBox.ShowA
 
 Skip `UseSingleThreadedAsync` if you've already installed your own `SynchronizationContext`. Installing two would route continuations through the wrong queue. The one-liner is opt-in for exactly this reason.
 
+## More Than One GumService
+
+Call `UseSingleThreadedAsync` on **each** service. `GumService.Update` and `GumService.Draw` make a service's own context the current `SynchronizationContext` for the length of the call and then put the previous one back, so an `await` inside a handler fired from that service's `Update` resumes in that service's next `Update`, with that service as `GumService.Default`. Without the swap, the service whose `UseSingleThreadedAsync` ran last would capture every `await`, and the continuation would run inside the wrong service's `Update`.
+
+A service that did not call `UseSingleThreadedAsync` (for example because you installed your own `SynchronizationContext`) does not get its context switched. Continuations that resume through your own context run under whichever service is the default at that moment, so reassign `GumService.Default` after the `await` if you build or read UI there. Do not call `UseSingleThreadedAsync` from `Initialize` for the other services; it stays opt-in.
+
 ## Manual Setup (Advanced / Pre-existing Projects)
 
 If you copied `SingleThreadSynchronizationContext` into your own project from an older version of this guide and pump `Update()` yourself, that still works — do **not** also call `UseSingleThreadedAsync`. The two installs would conflict.

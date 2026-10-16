@@ -475,6 +475,41 @@ public partial class GumService : IGumService
         _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
     }
 
+    // What a framework entry point (Update, Draw) sets for the length of the call and then puts back:
+    // this service as the default and, when it called UseSingleThreadedAsync, its own synchronization
+    // context. A continuation that starts inside a handler then captures this service's context, so it
+    // drains inside this service's Update under this service's default, even though the constructor of
+    // the last service's context installed itself on the thread. Internal to the framework; users never
+    // write a using.
+    private readonly struct ServiceCallScope : IDisposable
+    {
+        private readonly GumContext.DefaultScope _defaultScope;
+        private readonly System.Threading.SynchronizationContext? _previousSync;
+        private readonly bool _swappedSync;
+
+        internal ServiceCallScope(GumContext.DefaultScope defaultScope, Gum.Async.SingleThreadSynchronizationContext? serviceSync)
+        {
+            _defaultScope = defaultScope;
+            _previousSync = System.Threading.SynchronizationContext.Current;
+            _swappedSync = serviceSync != null;
+            if (serviceSync != null)
+            {
+                System.Threading.SynchronizationContext.SetSynchronizationContext(serviceSync);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_swappedSync)
+            {
+                System.Threading.SynchronizationContext.SetSynchronizationContext(_previousSync);
+            }
+            _defaultScope.Dispose();
+        }
+    }
+
+    private ServiceCallScope EnterServiceCall() => new ServiceCallScope(GumContext.EnterDefault(_context), _syncContext);
+
 
     /// <summary>
     /// Gets whether GumService has been initialized.
@@ -885,7 +920,7 @@ public partial class GumService : IGumService
     public void Draw()
     {
         // This service's own managers, not whichever service initialized last.
-        using GumContext.DefaultScope scope = GumContext.EnterDefault(_context);
+        using ServiceCallScope scope = EnterServiceCall();
         (_systemManagers ?? SystemManagers.Default).Draw();
     }
 

@@ -91,6 +91,9 @@ internal sealed class CollisionGame : Game
     public CollisionSnapshot? StateA { get; private set; }
     public CollisionSnapshot? StateB { get; private set; }
 
+    /// <summary>Free-form tag a test sets to say which service is mid-Update, for logging.</summary>
+    public string? Updating { get; set; }
+
     public CollisionGame()
     {
         LoaderManager.Self?.DisposeAndClear();
