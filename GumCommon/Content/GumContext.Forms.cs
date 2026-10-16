@@ -26,11 +26,6 @@ internal sealed partial class GumContext
 
     internal Dictionary<Type, VisualTemplate> DefaultFormsTemplates { get; } = new Dictionary<Type, VisualTemplate>();
 
-    internal Dictionary<Type, Type> DefaultFormsComponents { get; } = new Dictionary<Type, Type>();
-
-    internal List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> AdditionalPopupRootPairs { get; } =
-        new List<(InteractiveGue, InteractiveGue)>();
-
     internal GamePad[] Gamepads { get; set; } = new GamePad[4];
 
     internal VisualTemplate? DefaultTooltipTemplate { get; set; }

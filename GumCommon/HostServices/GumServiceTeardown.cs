@@ -16,14 +16,15 @@ public static class GumServiceTeardown
     /// </summary>
     public static void ReleaseFormsAndContent()
     {
-        ReleaseFormsAndProject();
+        ReleaseFormsAndProject(isLastService: true);
 
         LoaderManager.Self.DisposeAndClear();
     }
 
     // The part of ReleaseFormsAndContent that belongs to one service. The content cache is one cache for all
-    // services, so a service that is not the last to leave must not dispose it.
-    internal static void ReleaseFormsAndProject()
+    // services, so a service that is not the last to leave must not dispose it, and the obsolete component
+    // registrations are shared by all services, so only the last one out clears them.
+    internal static void ReleaseFormsAndProject(bool isLastService)
     {
         // The statics reset with null! below are declared non-null but start as null! until
         // Initialize sets them; teardown returns them to that pre-Initialize state.
@@ -47,9 +48,12 @@ public static class GumServiceTeardown
         FrameworkElement.MainKeyboard = null!;
 
         FrameworkElement.DefaultFormsTemplates.Clear();
+        if (isLastService)
+        {
 #pragma warning disable CS0618 // obsolete types and members still load from older projects
-        FrameworkElement.DefaultFormsComponents.Clear();
+            FrameworkElement.DefaultFormsComponents.Clear();
 #pragma warning restore CS0618
+        }
 
         ObjectFinder.Self.GumProjectSave = null;
     }

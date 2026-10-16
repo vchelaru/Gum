@@ -809,7 +809,7 @@ public partial class GumService : IGumService
         // Shared with GumServiceSkiaBase.
         // Forms state and the project are per service, so each service releases its own. The content cache is
         // one cache for all services, disposed when the last one leaves.
-        GumServiceTeardown.ReleaseFormsAndProject();
+        GumServiceTeardown.ReleaseFormsAndProject(isLastService);
         if (isLastService)
         {
             LoaderManager.Self.DisposeAndClear();

@@ -199,9 +199,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// that requirement should not register the pair here, and should instead manage its root's z-order
     /// and sizing itself while still adding its content to the list of roots passed into Update.
     /// </summary>
-    public static List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> AdditionalPopupRootPairs => GumContext.Own?.AdditionalPopupRootPairs ?? _additionalPopupRootPairs;
-
-    static readonly List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> _additionalPopupRootPairs = new();
+    public static List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> AdditionalPopupRootPairs { get; } = new();
 
 #endif
 
@@ -676,9 +674,7 @@ public class FrameworkElement : INotifyPropertyChanged
     ///     typeof(ProjectName.GumRuntimes.LargeMenuButtonRuntime);
     /// </example>
     [Obsolete("Use DefaultFormsTemplates")]
-    public static Dictionary<Type, Type> DefaultFormsComponents => GumContext.Own?.DefaultFormsComponents ?? _defaultFormsComponents;
-
-    static readonly Dictionary<Type, Type> _defaultFormsComponents = new Dictionary<Type, Type>();
+    public static Dictionary<Type, Type> DefaultFormsComponents { get; private set; } = new Dictionary<Type, Type>();
 
     /// <summary>
     /// Contains the default association from a Forms type (such as Button) to the visual template used

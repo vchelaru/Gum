@@ -1,4 +1,7 @@
 using Gum.DataTypes;
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -91,4 +94,62 @@ public class GumServiceSharedDefaultsTests : BaseTestClass
         Sprite.InvalidTexture.ShouldBeNull();
         invalid.IsDisposed.ShouldBeTrue();
     }
+
+    [Fact]
+    public void AdditionalPopupRootPairs_RegisteredUnderOneService_ShouldBeVisibleUnderTheOther()
+    {
+        using CollisionGame game = CreateGame();
+        game.InitializeA(WriteProject("A"));
+        game.InitializeB(WriteProject("B"));
+        InteractiveGue popup = new InteractiveGue();
+        InteractiveGue modal = new InteractiveGue();
+
+        try
+        {
+            IGumService.Default = game.ServiceA;
+            FrameworkElement.AdditionalPopupRootPairs.Add((popup, modal));
+            IGumService.Default = game.ServiceB;
+
+            FrameworkElement.AdditionalPopupRootPairs.ShouldContain((popup, modal));
+        }
+        finally
+        {
+            FrameworkElement.AdditionalPopupRootPairs.Clear();
+        }
+    }
+
+#pragma warning disable CS0618 // DefaultFormsComponents is obsolete but still supported
+    [Fact]
+    public void DefaultFormsComponents_RegisteredUnderOneService_ShouldBeVisibleUnderTheOther()
+    {
+        using CollisionGame game = CreateGame();
+        game.InitializeA(WriteProject("A"));
+        game.InitializeB(WriteProject("B"));
+
+        IGumService.Default = game.ServiceA;
+        FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(ContainerRuntime);
+        IGumService.Default = game.ServiceB;
+
+        FrameworkElement.DefaultFormsComponents.ShouldContainKey(typeof(Button));
+    }
+
+    [Fact]
+    public void Uninitialize_FirstServiceWhileSecondIsLive_ShouldKeepDefaultFormsComponents()
+    {
+        using CollisionGame game = CreateGame();
+        game.InitializeA(WriteProject("A"));
+        game.InitializeB(WriteProject("B"));
+        IGumService.Default = game.ServiceA;
+        FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(ContainerRuntime);
+
+        game.ServiceA.Uninitialize();
+        IGumService.Default = game.ServiceB;
+
+        FrameworkElement.DefaultFormsComponents.ShouldContainKey(typeof(Button));
+
+        game.ServiceB.Uninitialize();
+
+        FrameworkElement.DefaultFormsComponents.ShouldBeEmpty("the last service out clears them");
+    }
+#pragma warning restore CS0618
 }
