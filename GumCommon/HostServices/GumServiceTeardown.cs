@@ -16,6 +16,15 @@ public static class GumServiceTeardown
     /// </summary>
     public static void ReleaseFormsAndContent()
     {
+        ReleaseFormsAndProject();
+
+        LoaderManager.Self.DisposeAndClear();
+    }
+
+    // The part of ReleaseFormsAndContent that belongs to one service. The content cache is one cache for all
+    // services, so a service that is not the last to leave must not dispose it.
+    internal static void ReleaseFormsAndProject()
+    {
         // The statics reset with null! below are declared non-null but start as null! until
         // Initialize sets them; teardown returns them to that pre-Initialize state.
         if (FrameworkElement.PopupRoot != null)
@@ -42,18 +51,6 @@ public static class GumServiceTeardown
         FrameworkElement.DefaultFormsComponents.Clear();
 #pragma warning restore CS0618
 
-        ReleaseContent();
-    }
-
-    /// <summary>
-    /// Unloads the current service's project and disposes its cached content, leaving the Forms state
-    /// that all services share alone. Used instead of <see cref="ReleaseFormsAndContent"/> when another
-    /// service is still live.
-    /// </summary>
-    public static void ReleaseContent()
-    {
         ObjectFinder.Self.GumProjectSave = null;
-
-        LoaderManager.Self.DisposeAndClear();
     }
 }

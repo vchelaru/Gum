@@ -818,8 +818,13 @@ public partial class GumService : IGumService
 
         // Forms roots, Forms input registrations and templates, the project, and the content cache.
         // Shared with GumServiceSkiaBase.
-        // Forms state, the project and the content cache are per service, so each service releases its own.
-        GumServiceTeardown.ReleaseFormsAndContent();
+        // Forms state and the project are per service, so each service releases its own. The content cache is
+        // one cache for all services, disposed when the last one leaves.
+        GumServiceTeardown.ReleaseFormsAndProject();
+        if (isLastService)
+        {
+            LoaderManager.Self.DisposeAndClear();
+        }
         CurrentProjectResolution = null;
 
         FormsUtilities.Uninitialize();

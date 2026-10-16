@@ -163,14 +163,15 @@ public class GumServiceDefaultAssignmentTests : BaseTestClass
     {
         using CollisionGame game = new CollisionGame();
         game.RunOneFrame();
-        game.InitializeA(WriteProject("A"));
-        int cachedByABefore = RenderingLibrary.Content.LoaderManager.Of(game.ServiceA.Context).CachedDisposables.Count;
+        GumProjectSave projectA = game.InitializeA(WriteProject("A"));
 
-        game.InitializeB(WriteProject("B"));
+        GumProjectSave projectB = game.InitializeB(WriteProject("B"));
 
-        // B's embedded fonts and project content were loaded while B was current, so they are in B's cache.
-        RenderingLibrary.Content.LoaderManager.Of(game.ServiceA.Context).CachedDisposables.Count.ShouldBe(cachedByABefore);
-        RenderingLibrary.Content.LoaderManager.Of(game.ServiceB.Context).CachedDisposables.Count.ShouldBeGreaterThan(0);
+        // B's project was loaded while B was current, so it is B's, and A still has its own.
+        IGumService.Default = game.ServiceA;
+        Gum.Managers.ObjectFinder.Self.GumProjectSave.ShouldBeSameAs(projectA);
+        IGumService.Default = game.ServiceB;
+        Gum.Managers.ObjectFinder.Self.GumProjectSave.ShouldBeSameAs(projectB);
     }
 
     [Fact]

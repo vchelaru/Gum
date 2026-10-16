@@ -100,8 +100,7 @@ public partial class GumService
     /// <inheritdoc/>
     IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
 
-    public ContentLoader? ContentLoader =>
-        HasNoStateOfItsOwnWhileOthersLive ? null : LoaderManager.Of(_context).ContentLoader as ContentLoader;
+    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
     private Game? _game;
     public Game Game

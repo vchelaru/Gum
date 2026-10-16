@@ -1,5 +1,4 @@
-﻿using Gum;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,33 +49,9 @@ public class LoaderManager
     #region Properties
 
     /// <summary>
-    /// The content cache and loader of the current <see cref="GumContext"/> (the service the calling
-    /// thread activated, else the first one initialized). With one service, or none, this is the single
-    /// process-wide instance it always was; each further service gets its own cache, so one service's
-    /// Uninitialize does not dispose another's content.
+    /// The shared singleton instance.
     /// </summary>
-    public static LoaderManager Self => Of(GumContext.Current);
-
-    /// <summary>
-    /// The content cache of <paramref name="context"/>, or the process-wide instance when it is null.
-    /// </summary>
-    public static LoaderManager Of(GumContext? context)
-    {
-        if (context == null)
-        {
-            return ProcessWide;
-        }
-
-        LoaderManager? own = context.LoaderManager;
-        if (own == null)
-        {
-            own = context.AdoptsProcessStatics ? ProcessWide : new LoaderManager();
-            context.LoaderManager = own;
-        }
-        return own;
-    }
-
-    private static LoaderManager ProcessWide
+    public static LoaderManager Self
     {
         get
         {
@@ -229,6 +204,10 @@ public class LoaderManager
     /// <summary>
     /// Disposes every cached asset and empties the cache.
     /// </summary>
+    /// <remarks>
+    /// There is one cache for every <c>GumService</c> in the process, so this unloads content for all of them.
+    /// Gum calls it when the last service uninitializes, not when one of several does.
+    /// </remarks>
     public void DisposeAndClear()
     {
         foreach (var item in mCachedDisposables.Values)

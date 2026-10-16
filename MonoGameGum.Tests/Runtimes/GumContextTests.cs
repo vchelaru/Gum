@@ -285,49 +285,6 @@ public class GumContextTests : BaseTestClass
     }
 
     [Fact]
-    public void LoaderManagerSelf_ShouldBeOwnedByEachNonAdoptingContext()
-    {
-        LoaderManager processWide = LoaderManager.Self;
-        GumContext first = CreateLiveContext();
-        GumContext second = CreateLiveContext();
-
-        LoaderManager firstManager;
-        MakeDefault(first);
-        {
-            firstManager = LoaderManager.Self;
-        }
-
-        LoaderManager secondManager;
-        MakeDefault(second);
-        {
-            secondManager = LoaderManager.Self;
-        }
-
-        firstManager.ShouldBeSameAs(processWide);
-        secondManager.ShouldNotBeSameAs(processWide);
-        LoaderManager.Of(second).ShouldBeSameAs(secondManager);
-    }
-
-    [Fact]
-    public void LoaderManagerDisposeAndClear_ShouldNotClearAnotherContextsCache()
-    {
-        GumContext first = CreateLiveContext();
-        GumContext second = CreateLiveContext();
-        TestDisposable firstItem = new TestDisposable();
-        TestDisposable secondItem = new TestDisposable();
-        LoaderManager.Of(first).AddDisposable("item", firstItem);
-        LoaderManager.Of(second).AddDisposable("item", secondItem);
-
-        LoaderManager.Of(second).DisposeAndClear();
-
-        secondItem.IsDisposed.ShouldBeTrue();
-        firstItem.IsDisposed.ShouldBeFalse();
-        LoaderManager.Of(first).GetDisposable("item").ShouldBeSameAs(firstItem);
-
-        LoaderManager.Of(first).DisposeAndClear();
-    }
-
-    [Fact]
     public void FileManagerRelativeDirectory_ShouldBeOwnedByEachNonAdoptingContext()
     {
         GumContext first = CreateLiveContext();

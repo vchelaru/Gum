@@ -256,7 +256,6 @@ public class GumServiceContextLifecycleTests : BaseTestClass
         notInitialized.PopupRoot.ShouldBeNull();
         notInitialized.ModalRoot.ShouldBeNull();
         notInitialized.Gamepads.ShouldBeEmpty();
-        notInitialized.ContentLoader.ShouldBeNull();
     }
 
     [Fact]

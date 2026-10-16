@@ -180,7 +180,6 @@ public class MultiGumServiceSpikeTests : BaseTestClass
         Check("FormsUtilities.Cursor", afterA.Cursor, now.Cursor);
         Check("FormsUtilities.Keyboard", afterA.Keyboard, now.Keyboard);
         Check("Styling.ActiveStyle", afterA.Style, now.Style);
-        Check("LoaderManager.Self.ContentLoader", afterA.ContentLoader, now.ContentLoader);
         Check("GraphicalUiElement.CanvasWidth", afterA.CanvasWidth, now.CanvasWidth);
         Check("GraphicalUiElement.CanvasHeight", afterA.CanvasHeight, now.CanvasHeight);
         Check("ElementSaveExtensions.CustomCreateGraphicalComponentFunc", afterA.CreateComponent, now.CreateComponent);

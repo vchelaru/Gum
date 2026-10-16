@@ -222,7 +222,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         Check("FormsUtilities.Cursor", afterA.Cursor, now.Cursor);
         Check("FormsUtilities.Keyboard", afterA.Keyboard, now.Keyboard);
         Check("Styling.ActiveStyle", afterA.Style, now.Style);
-        Check("LoaderManager.Self.ContentLoader", afterA.ContentLoader, now.ContentLoader);
         Check("ElementSaveExtensions.InitialStateAppliedNotifier", afterA.InitialStateNotifier, now.InitialStateNotifier);
         Check("Text.DefaultFont", afterA.DefaultTextFont, now.DefaultTextFont);
         Check("Text.DefaultBitmapFont", afterA.DefaultBitmap, now.DefaultBitmap);
