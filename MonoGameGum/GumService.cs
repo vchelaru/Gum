@@ -747,7 +747,7 @@ public partial class GumService : IGumService
 
     public void Draw()
     {
-        SystemManagers.Default.Draw();
+        SystemManagers.Draw();
     }
 
     // Draw(Camera2D) is raylib-only and lives in GumService.Raylib.cs (issue #3608).
