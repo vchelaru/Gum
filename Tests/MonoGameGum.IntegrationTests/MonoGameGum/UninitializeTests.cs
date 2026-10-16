@@ -197,6 +197,29 @@ public class UninitializeTests : BaseTestClass
     }
 
     [Fact]
+    public void Uninitialize_OfCurrentServiceWithoutOwnManagers_ClearsDefaultManagersAssignedByHand()
+    {
+        // Hosts such as the raylib tests call InitializeForTesting and assign SystemManagers.Default by
+        // hand, so the service owns no managers of its own. As the current default service it must
+        // still clear them, otherwise the next Initialize reuses stale managers.
+        using TwoServiceGame game = new TwoServiceGame();
+        game.RunOneFrame();
+        game.ServiceB.Uninitialize();
+        game.ServiceA.Uninitialize();
+        SystemManagers handAssigned = new SystemManagers();
+        SystemManagers.Default = handAssigned;
+        ISystemManagers.Default = handAssigned;
+        GumService service = new GumService();
+        service.InitializeForTesting();
+        IGumService.Default.ShouldBeSameAs(service);
+
+        service.Uninitialize();
+
+        SystemManagers.Default.ShouldBeNull();
+        ISystemManagers.Default.ShouldBeNull();
+    }
+
+    [Fact]
     public void Uninitialize_OfNonDefaultService_KeepsStaticGumServiceDefault()
     {
         using TwoServiceGame game = new TwoServiceGame();

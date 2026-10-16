@@ -673,13 +673,16 @@ public partial class GumService : IGumService
 
         _windowFit?.Reset();
 
-        // Clear each static default only if it still refers to this service, so tearing down one
+        // Clear each static default only if it belongs to this service, so tearing down one
         // service does not strip the defaults from another service that is still live (#6066).
-        if (ReferenceEquals(SystemManagers.Default, _systemManagers))
+        // The current default service (IGumService.Default) also owns SystemManagers.Default even when
+        // it has no managers of its own, e.g. InitializeForTesting with managers assigned by hand.
+        bool isCurrentService = ReferenceEquals(IGumService.Default, this);
+        if (isCurrentService || ReferenceEquals(SystemManagers.Default, _systemManagers))
         {
             SystemManagers.Default = null!;
         }
-        if (ReferenceEquals(ISystemManagers.Default, _systemManagers))
+        if (isCurrentService || ReferenceEquals(ISystemManagers.Default, _systemManagers))
         {
             ISystemManagers.Default = null!;
         }
