@@ -779,7 +779,7 @@ jobs:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         # console;verbosity=normal streams every test's duration as it finishes, so a timeout
         # still shows where the time went (#6078).
-        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --logger "console;verbosity=normal" --results-directory "TestResults" --filter "FullyQualifiedName~RenderTargetBlendCoverageTests"
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --logger "console;verbosity=normal" --results-directory "TestResults" --filter "FullyQualifiedName~ShapeInitProbeTests"
       # TEMPORARY probe output (#6078)
       - name: "TEMP timing probe"
         if: always() && runner.os == 'Windows'
