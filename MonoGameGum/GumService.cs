@@ -673,9 +673,20 @@ public partial class GumService : IGumService
 
         _windowFit?.Reset();
 
-        SystemManagers.Default = null!;
-        ISystemManagers.Default = null!;
-        IGumService.Default = null;
+        // Clear each static default only if it still refers to this service, so tearing down one
+        // service does not strip the defaults from another service that is still live (#6066).
+        if (ReferenceEquals(SystemManagers.Default, _systemManagers))
+        {
+            SystemManagers.Default = null!;
+        }
+        if (ReferenceEquals(ISystemManagers.Default, _systemManagers))
+        {
+            ISystemManagers.Default = null!;
+        }
+        if (ReferenceEquals(IGumService.Default, this))
+        {
+            IGumService.Default = null;
+        }
 
         // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).
         // Reset to the default value expected before initialization.
@@ -685,7 +696,10 @@ public partial class GumService : IGumService
 
         _systemManagers = null;
 
-        _default = null;
+        if (ReferenceEquals(_default, this))
+        {
+            _default = null;
+        }
     }
 
     #endregion

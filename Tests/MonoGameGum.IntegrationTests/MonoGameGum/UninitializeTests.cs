@@ -165,8 +165,86 @@ public class UninitializeTests : BaseTestClass
     }
 
     // -------------------------------------------------------------------------
+    // Multiple GumService instances (#6066)
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void Uninitialize_OfNonCurrentService_LeavesLiveServiceDefaultsIntact()
+    {
+        using TwoServiceGame game = new TwoServiceGame();
+        game.RunOneFrame();
+
+        // Second Initialize makes ServiceB the current service.
+        game.ServiceA.Uninitialize();
+
+        IGumService.Default.ShouldBeSameAs(game.ServiceB);
+        SystemManagers.Default.ShouldBeSameAs(game.ServiceB.SystemManagers);
+        ISystemManagers.Default.ShouldBeSameAs(game.ServiceB.SystemManagers);
+    }
+
+    [Fact]
+    public void Uninitialize_OfCurrentService_DoesNotLeaveDefaultsPointingAtDeadService()
+    {
+        using TwoServiceGame game = new TwoServiceGame();
+        game.RunOneFrame();
+
+        SystemManagers deadManagers = game.ServiceB.SystemManagers;
+        game.ServiceB.Uninitialize();
+
+        IGumService.Default.ShouldNotBeSameAs(game.ServiceB);
+        SystemManagers.Default.ShouldNotBeSameAs(deadManagers);
+        ISystemManagers.Default.ShouldNotBeSameAs(deadManagers);
+    }
+
+    [Fact]
+    public void Uninitialize_OfNonDefaultService_KeepsStaticGumServiceDefault()
+    {
+        using TwoServiceGame game = new TwoServiceGame();
+        game.RunOneFrame();
+
+        game.ServiceB.Uninitialize();
+
+        GumService.Default.ShouldBeSameAs(game.ServiceA);
+    }
+
+    // -------------------------------------------------------------------------
     // Nested Game classes
     // -------------------------------------------------------------------------
+
+    private class TwoServiceGame : Game
+    {
+        private readonly GraphicsDeviceManager _graphics;
+        public GumService ServiceA { get; }
+        public GumService ServiceB { get; }
+
+        public TwoServiceGame()
+        {
+            LoaderManager.Self?.DisposeAndClear();
+            _graphics = new GraphicsDeviceManager(this);
+            // ServiceA is the static GumService.Default so its lifetime can be checked too.
+            ServiceA = GumService.Default;
+            ServiceB = new GumService();
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+            ServiceA.Initialize(this, DefaultVisualsVersion.V3);
+            ServiceB.Initialize(this, DefaultVisualsVersion.V3);
+        }
+
+        protected override void Draw(GameTime gameTime) =>
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        protected override void Dispose(bool disposing)
+        {
+            if (ServiceB.IsInitialized)
+                ServiceB.Uninitialize();
+            if (ServiceA.IsInitialized)
+                ServiceA.Uninitialize();
+            base.Dispose(disposing);
+        }
+    }
 
     private class GameForUninitializeTest : Game
     {
