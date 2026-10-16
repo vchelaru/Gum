@@ -441,14 +441,6 @@ public abstract class TextBoxBase :
 
     public TextBoxBase() : base() { }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new TextBoxBase using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public TextBoxBase(global::RenderingLibrary.IGumService service) : base(service) { }
-#endif
-
     public TextBoxBase(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

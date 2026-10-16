@@ -85,17 +85,6 @@ public class Slider : RangeBase, IInputReceiver
         Initialize();
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new Slider using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public Slider(global::RenderingLibrary.IGumService service) : base(service)
-    {
-        Initialize();
-    }
-#endif
-
     public Slider(InteractiveGue visual) : base(visual)
     {
         Initialize();

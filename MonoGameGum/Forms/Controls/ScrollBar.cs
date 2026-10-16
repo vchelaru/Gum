@@ -90,17 +90,6 @@ public class ScrollBar : RangeBase
         base.Orientation = Orientation.Vertical;
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new ScrollBar using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public ScrollBar(global::RenderingLibrary.IGumService service) : base(service)
-    {
-        base.Orientation = Orientation.Vertical;
-    }
-#endif
-
     public ScrollBar(InteractiveGue visual) : base(visual) 
     {
         base.Orientation = Orientation.Vertical;

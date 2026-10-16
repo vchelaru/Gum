@@ -56,16 +56,6 @@ public class Panel :
 
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new Panel. Its visual does not depend on a service, so this is the same as the
-    /// parameterless constructor; it exists so every control can be constructed the same way.
-    /// </summary>
-    public Panel(global::RenderingLibrary.IGumService service) : this()
-    {
-    }
-#endif
-
     /// <summary>
     /// Creates a new Panel using the specified visual.
     /// </summary>

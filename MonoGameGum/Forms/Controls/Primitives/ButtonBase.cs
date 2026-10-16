@@ -102,14 +102,6 @@ public class ButtonBase :
 
     public ButtonBase() : base() { }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new ButtonBase using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public ButtonBase(global::RenderingLibrary.IGumService service) : base(service) { }
-#endif
-
     public ButtonBase(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

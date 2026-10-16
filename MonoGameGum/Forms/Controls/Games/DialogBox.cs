@@ -158,14 +158,6 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public DialogBox() : base() { }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new DialogBox using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public DialogBox(global::RenderingLibrary.IGumService service) : base(service) { }
-#endif
-
     public DialogBox(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

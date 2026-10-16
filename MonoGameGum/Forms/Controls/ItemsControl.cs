@@ -239,17 +239,6 @@ public class ItemsControl : ScrollViewer
         ForceUpdateToItems();
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new ItemsControl using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public ItemsControl(global::RenderingLibrary.IGumService service) : base(service)
-    {
-        ForceUpdateToItems();
-    }
-#endif
-
     public ItemsControl(InteractiveGue visual) : base(visual)
     {
         ForceUpdateToItems();

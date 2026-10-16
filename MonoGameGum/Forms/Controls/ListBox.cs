@@ -542,18 +542,6 @@ public class ListBox : ItemsControl, IInputReceiver
         selectedItemsCollection.CollectionChanged += HandleSelectedItemsCollectionChanged;
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new ListBox using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public ListBox(global::RenderingLibrary.IGumService service) : base(service)
-    {
-        _selectedRowsInternal = new List<ListBoxItem>();
-        selectedItemsCollection.CollectionChanged += HandleSelectedItemsCollectionChanged;
-    }
-#endif
-
     public ListBox(InteractiveGue visual) : base(visual)
     {
         _selectedRowsInternal = new List<ListBoxItem>();

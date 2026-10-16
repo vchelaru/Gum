@@ -238,14 +238,6 @@ public abstract class RangeBase :
 
     public RangeBase() : base() { }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new RangeBase using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public RangeBase(global::RenderingLibrary.IGumService service) : base(service) { }
-#endif
-
     public RangeBase(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

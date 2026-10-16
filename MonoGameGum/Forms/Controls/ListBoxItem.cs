@@ -89,14 +89,6 @@ public class ListBoxItem :
 
     public ListBoxItem() : base() { }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new ListBoxItem using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public ListBoxItem(global::RenderingLibrary.IGumService service) : base(service) { }
-#endif
-
     public ListBoxItem(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()

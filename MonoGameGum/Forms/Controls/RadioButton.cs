@@ -113,18 +113,6 @@ public class RadioButton : ToggleButton
         IsChecked = false;
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new RadioButton using the default visual registered for <paramref name="service"/>,
-    /// without having to make that service current first.
-    /// </summary>
-    public RadioButton(global::RenderingLibrary.IGumService service, string groupName = "") : base(service)
-    {
-        GroupName = groupName;
-        IsChecked = false;
-    }
-#endif
-
     public RadioButton(InteractiveGue visual, string groupName = "") : base(visual)
     {
         GroupName = groupName;

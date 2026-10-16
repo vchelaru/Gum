@@ -782,36 +782,6 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates the control with the default visual registered for <paramref name="service"/> (its
-    /// templates, style and project), without the caller making that service current first. The service
-    /// is current only while the visual is built; the previously current service is restored afterward.
-    /// </summary>
-    /// <param name="service">The initialized service to build for. A service that is not initialized
-    /// leaves the current service unchanged.</param>
-    public FrameworkElement(global::RenderingLibrary.IGumService service)
-    {
-        PropertyRegistry = new(this);
-
-        GumContext? previous = GumContext.Active;
-        GumContext.Activate(service?.Context);
-        try
-        {
-            var possibleVisual = GetGraphicalUiElementFor(this);
-            if (possibleVisual != null)
-            {
-                Visual = possibleVisual;
-                Visual.FormsControlAsObject = this;
-            }
-        }
-        finally
-        {
-            GumContext.ReplaceActive(previous);
-        }
-    }
-#endif
-
     #endregion
 
     #region Hide/Show/Add/Remove 

@@ -154,12 +154,6 @@ namespace RenderingLibrary
         void ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) { }
 
         /// <summary>
-        /// The <see cref="GumContext"/> this service owns while it is initialized, or null. Forms controls
-        /// constructed with a service use it to build their visual in that service's context.
-        /// </summary>
-        GumContext? Context => null;
-
-        /// <summary>
         /// The current default <see cref="IGumService"/>. Assigned by the
         /// concrete runtime's <c>GumService.Initialize</c> and cleared by
         /// <c>Uninitialize</c>. May be null before initialization.

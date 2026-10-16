@@ -18,14 +18,6 @@ public class CheckBox : ToggleButton
 
     public CheckBox() : base() { }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new CheckBox using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public CheckBox(global::RenderingLibrary.IGumService service) : base(service) { }
-#endif
-
     public CheckBox(InteractiveGue visual) : base(visual) { }
 
     #endregion

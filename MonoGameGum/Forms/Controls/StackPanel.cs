@@ -50,16 +50,6 @@ public class StackPanel : Panel
     {
     }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new StackPanel using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public StackPanel(global::RenderingLibrary.IGumService service) : base(service)
-    {
-    }
-#endif
-
     public StackPanel(InteractiveGue visual) : base(visual) 
     {
     }

@@ -70,14 +70,6 @@ public class Tooltip : FrameworkElement
     /// </summary>
     public Tooltip() : base() { }
 
-#if !FRB
-    /// <summary>
-    /// Creates a new Tooltip using the default visual registered for <paramref name="service"/>, without
-    /// having to make that service current first. The service that was current is restored afterward.
-    /// </summary>
-    public Tooltip(global::RenderingLibrary.IGumService service) : base(service) { }
-#endif
-
     /// <summary>
     /// Creates a new <see cref="Tooltip"/> wrapping the provided visual.
     /// </summary>
