@@ -18,6 +18,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// PreRender and never nest, so a <c>SubtractAlpha</c> child drawn after a nested render-target
 /// container in the outer bake must still punch its hole. Pins that, for SpriteBatch and Apos.Shapes.
 /// </summary>
+[Collection(SharedShapeGame.CollectionName)]
 public class NestedRenderTargetBakeFlagTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -57,8 +58,7 @@ public class NestedRenderTargetBakeFlagTests : BaseTestClass
 
     private static XnaColor[] Render(bool useCircle)
     {
-        using MinimalGame game = new();
-        game.RunOneFrame();
+        using ShapeGameLease game = SharedShapeGame.Acquire();
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;
@@ -124,40 +124,5 @@ public class NestedRenderTargetBakeFlagTests : BaseTestClass
 
         root.RemoveFromManagers();
         return pixels;
-    }
-
-    private class MinimalGame : Game
-    {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes uses an SM4 effect the default Reach profile can't load - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-            };
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.Black);
-
-        protected override void Dispose(bool disposing)
-        {
-            if (Gum.GumService.Default.IsInitialized)
-            {
-                Gum.GumService.Default.Uninitialize();
-            }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
-        }
     }
 }

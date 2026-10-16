@@ -19,6 +19,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// <c>class</c> attributes. Apos.Shapes before 0.8.6 dropped the block, so every such path
 /// drew black.
 /// </summary>
+[Collection(SharedShapeGame.CollectionName)]
 public class SvgStyleClassRenderTests : BaseTestClass
 {
     private const string ClassStyledSvg =
@@ -52,8 +53,7 @@ public class SvgStyleClassRenderTests : BaseTestClass
 
         try
         {
-            using MinimalGame game = new();
-            game.RunOneFrame();
+            using ShapeGameLease game = SharedShapeGame.Acquire();
 
             GraphicsDevice gd = game.GraphicsDevice;
             SystemManagers managers = SystemManagers.Default;
@@ -98,40 +98,5 @@ public class SvgStyleClassRenderTests : BaseTestClass
         XnaColor[] pixels = new XnaColor[CaptureWidth * CaptureHeight];
         capture.GetData(pixels);
         return pixels;
-    }
-
-    private class MinimalGame : Game
-    {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes uses an SM4 effect the default Reach profile can't load - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-            };
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(BackgroundColor);
-
-        protected override void Dispose(bool disposing)
-        {
-            if (Gum.GumService.Default.IsInitialized)
-            {
-                Gum.GumService.Default.Uninitialize();
-            }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
-        }
     }
 }

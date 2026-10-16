@@ -777,7 +777,9 @@ jobs:
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        # console;verbosity=normal streams every test's duration as it finishes, so a timeout
+        # still shows where the time went (#6078).
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --logger "console;verbosity=normal" --results-directory "TestResults"
 
       # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
       # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites

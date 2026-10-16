@@ -16,6 +16,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// Issue #5696: a render-target container's bake target only gets a stencil buffer when a baked
 /// shape draws through it (MinAlpha / ReplaceAlpha bounds mask), and keeps it once it has one.
 /// </summary>
+[Collection(SharedShapeGame.CollectionName)]
 public class RenderTargetLazyStencilTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -24,7 +25,7 @@ public class RenderTargetLazyStencilTests : BaseTestClass
 
     private sealed class Scene : System.IDisposable
     {
-        public MinimalGame Game = new();
+        public ShapeGameLease Game = SharedShapeGame.Acquire();
         public SystemManagers Managers = null!;
         public Renderer Renderer = null!;
         public ContainerRuntime Root = null!;
@@ -34,7 +35,6 @@ public class RenderTargetLazyStencilTests : BaseTestClass
 
         public Scene(Gum.RenderingLibrary.Blend circleBlend)
         {
-            Game.RunOneFrame();
             Managers = SystemManagers.Default;
             Renderer = Managers.Renderer;
             Root = new();
@@ -152,40 +152,5 @@ public class RenderTargetLazyStencilTests : BaseTestClass
         scene.DrawFrames(3);
 
         scene.BakedTarget.ShouldBeSameAs(target);
-    }
-
-    private class MinimalGame : Game
-    {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes uses an SM4 effect the default Reach profile can't load - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-            };
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.Black);
-
-        protected override void Dispose(bool disposing)
-        {
-            if (Gum.GumService.Default.IsInitialized)
-            {
-                Gum.GumService.Default.Uninitialize();
-            }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
-        }
     }
 }

@@ -20,6 +20,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// Normal and Additive keep touching only the body. The mask shape is at (20,20) size 60x60, so
 /// pixel (22,22) is inside the bounds but outside a circle or a 30px-radius rounded rectangle.
 /// </summary>
+[Collection(SharedShapeGame.CollectionName)]
 public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -193,8 +194,7 @@ public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
         float maskX = 20, float maskY = 20, float maskWidth = 60, float maskHeight = 60,
         float maskCornerRadius = 30, float maskRotation = 0)
     {
-        using MinimalGame game = new();
-        game.RunOneFrame();
+        using ShapeGameLease game = SharedShapeGame.Acquire();
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;
@@ -289,40 +289,5 @@ public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
 
         root.RemoveFromManagers();
         return pixels;
-    }
-
-    private class MinimalGame : Game
-    {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes uses an SM4 effect the default Reach profile can't load - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-            };
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.Black);
-
-        protected override void Dispose(bool disposing)
-        {
-            if (Gum.GumService.Default.IsInitialized)
-            {
-                Gum.GumService.Default.Uninitialize();
-            }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
-        }
     }
 }
