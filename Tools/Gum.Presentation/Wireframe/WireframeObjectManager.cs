@@ -157,6 +157,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             bool wasFontRegenerationSuppressed = GraphicalUiElement.SuppressFontRegeneration;
             GraphicalUiElement.SuppressFontRegeneration = false;
             ObjectFinder.Self.EnableCache();
+            try
             {
                 ClearAll();
 
@@ -170,32 +171,37 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
 
                 GraphicalUiElement.IsAllLayoutSuspended = true;
-
-                // The "Show Localization" project setting must gate translation everywhere it
-                // happens - not just this class's own ApplyLocalization sweep below, but every
-                // SetProperty("Text", ...) call made while building the tree (SetInitialState's
-                // ApplyState translates directly, with no knowledge of this tool-only setting).
-                GraphicalUiElement.SetLocalizationEnabled?.Invoke(_projectState.GumProjectSave?.ShowLocalizationInGum ?? true);
-
                 try
                 {
-                    RootGue = _pluginManager.CreateGraphicalUiElement(elementSave);
+                    // The "Show Localization" project setting must gate translation everywhere it
+                    // happens - not just this class's own ApplyLocalization sweep below, but every
+                    // SetProperty("Text", ...) call made while building the tree (SetInitialState's
+                    // ApplyState translates directly, with no knowledge of this tool-only setting).
+                    GraphicalUiElement.SetLocalizationEnabled?.Invoke(_projectState.GumProjectSave?.ShowLocalizationInGum ?? true);
 
-                    if(RootGue != null)
+                    try
                     {
-                        ApplySelectedStateAfterCreation(RootGue, elementSave);
+                        RootGue = _pluginManager.CreateGraphicalUiElement(elementSave);
 
-                        AddAllIpsos(RootGue);
+                        if(RootGue != null)
+                        {
+                            ApplySelectedStateAfterCreation(RootGue, elementSave);
+
+                            AddAllIpsos(RootGue);
+                        }
+
                     }
-
+                    catch(Exception e)
+                    {
+                        RootGue = null;
+                        _guiCommands.PrintOutput(e.ToString());
+                        _dialogService.ShowMessage($"Error loading {elementSave}. See output window for more details");
+                    }
                 }
-                catch(Exception e)
+                finally
                 {
-                    RootGue = null;
-                    _guiCommands.PrintOutput(e.ToString());
-                    _dialogService.ShowMessage($"Error loading {elementSave}. See output window for more details");
+                    GraphicalUiElement.IsAllLayoutSuspended = false;
                 }
-                GraphicalUiElement.IsAllLayoutSuspended = false;
 
                 if(RootGue != null)
                 {
@@ -229,8 +235,11 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     }
                 }
             }
-            ObjectFinder.Self.DisableCache();
-            GraphicalUiElement.SuppressFontRegeneration = wasFontRegenerationSuppressed;
+            finally
+            {
+                ObjectFinder.Self.DisableCache();
+                GraphicalUiElement.SuppressFontRegeneration = wasFontRegenerationSuppressed;
+            }
         }
         ElementShowing = elementSave;
 
