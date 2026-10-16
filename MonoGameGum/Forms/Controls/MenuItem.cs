@@ -556,30 +556,36 @@ public class MenuItem : ItemsControl
                 //var oldHorizontalScrollBarVisibility = itemsPopup.HorizontalScrollBarVisibility;
                 //var oldVerticalScrollBarVisibility = itemsPopup.VerticalScrollBarVisibility;
 
-                itemsPopup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
-                itemsPopup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-
-                itemsPopup.VerticalSizeMode = SizeMode.Auto;
-                itemsPopup.HorizontalSizeMode = SizeMode.Auto;
-
-                // We can't make assumptions about the structure of the popup, so we have to just recursively
-                // climb up from the inner panel and size it according to its children.
-                var parentForSizing = itemsPopup.InnerPanel;
-                while(parentForSizing != null)
+                try
                 {
-                    parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                    parentForSizing.Width = 0;
-                    parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                    parentForSizing.Height = 0;
+                    itemsPopup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                    itemsPopup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
 
-                    if (parentForSizing == itemsPopup.Visual)
+                    itemsPopup.VerticalSizeMode = SizeMode.Auto;
+                    itemsPopup.HorizontalSizeMode = SizeMode.Auto;
+
+                    // We can't make assumptions about the structure of the popup, so we have to just recursively
+                    // climb up from the inner panel and size it according to its children.
+                    var parentForSizing = itemsPopup.InnerPanel;
+                    while(parentForSizing != null)
                     {
-                        break;
+                        parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                        parentForSizing.Width = 0;
+                        parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                        parentForSizing.Height = 0;
+
+                        if (parentForSizing == itemsPopup.Visual)
+                        {
+                            break;
+                        }
+                        parentForSizing = parentForSizing.Parent;
                     }
-                    parentForSizing = parentForSizing.Parent;
+                }
+                finally
+                {
+                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                 }
 
-                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                 if (!wasSuppressed)
                 {
                     itemsPopup.Visual.UpdateLayout();

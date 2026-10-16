@@ -102,17 +102,26 @@ public partial class GraphicalUiElement
             didSuspend = true;
         }
 
-        // Three-pass approach:
-        // 1. Save runtime properties (text, caret, scroll position, etc.)
-        SaveFormsRuntimePropertiesRecursive();
-        // 2. Re-apply all states (default + categorical)
-        RefreshStylesRecursive();
-        // 3. Restore runtime properties on top
-        RestoreFormsRuntimePropertiesRecursive();
+        try
+        {
+            // Three-pass approach:
+            // 1. Save runtime properties (text, caret, scroll position, etc.)
+            SaveFormsRuntimePropertiesRecursive();
+            // 2. Re-apply all states (default + categorical)
+            RefreshStylesRecursive();
+            // 3. Restore runtime properties on top
+            RestoreFormsRuntimePropertiesRecursive();
+        }
+        finally
+        {
+            if (didSuspend)
+            {
+                IsAllLayoutSuspended = false;
+            }
+        }
 
         if (didSuspend)
         {
-            IsAllLayoutSuspended = false;
             this.UpdateLayout();
         }
     }
