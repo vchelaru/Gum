@@ -18,6 +18,7 @@ using GumService = global::Gum.GumService;
 /// <c>GumService.Default</c>) leaves one more service, and the UI tree it holds, subscribed for the life of
 /// the process, and a language change refreshes the shared popup roots once per leaked service (#6066).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class LocalizationSubscriptionLifecycleTests : BaseTestClass
 {
     private sealed class CountingLocalizationService : ILocalizationService

@@ -18,6 +18,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// composed over the previous one (#6066 C3). Uninitialize must put the previous hook back, unless
 /// a later service has installed its own hook on top.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class BundleStreamHookLifecycleTests : BaseTestClass
 {
     private readonly string _directory;

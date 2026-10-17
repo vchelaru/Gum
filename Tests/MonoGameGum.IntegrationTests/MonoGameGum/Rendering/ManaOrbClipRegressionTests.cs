@@ -29,6 +29,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// Loads the actual sample project/component (not a hand-built synthetic scene) so the exact
 /// codegen/state-application path the sample uses is exercised.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class ManaOrbClipRegressionTests : BaseTestClass
 {
     [Fact]
@@ -215,23 +216,11 @@ public class ManaOrbClipRegressionTests : BaseTestClass
     /// real GameUiSamples project so <see cref="ObjectFinder.Self"/> resolves the actual
     /// <c>ManaOrb</c> component exactly as the sample app does.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public GumService GumService { get; }
+        public GumService GumService { get; } = new GumService();
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new GumService();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, FindGameUiSamplesGumProjectFile());
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, FindGameUiSamplesGumProjectFile());
 
         // Walks up from the test binary's output directory to the repo root, then anchors on the
         // real GameUiSamples project file — reproducing #4091 requires the actual sample
@@ -257,17 +246,12 @@ public class ManaOrbClipRegressionTests : BaseTestClass
             throw new InvalidOperationException("could not locate GameUiSamples project from " + AppContext.BaseDirectory);
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }
