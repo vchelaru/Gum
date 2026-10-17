@@ -84,6 +84,14 @@ sets `DialogWindow.SetScrollContent(this, false)` (twin of WPF's `Dialog.ScrollC
 take the bounded height itself and scroll only one part, as `GetUserStringDialogView` scrolls its
 message while keeping the text box pinned.
 
+**The Settings window** (File > Settings...) is one `SettingsDialogViewModel` with a close-only button row
+(`AffirmativeText = "Close"`, `NegativeText = null`); changes apply as they are made, so a page has no
+Cancel. Its pages come from `ISettingsPageRegistry` plus Application > General, Appearance and Plugins,
+which the view model builds on each open; see `gum-tool-plugins` for adding a page. A dialog view model
+can be reused as a page (`ThemingDialogViewModel`, `PluginsDialogViewModel`): `SettingsPageViewRegistry`
+embeds its dialog view and moves the view's `DialogWindow.SetAuxiliaryActions` buttons under it, because
+the page has no button row of its own.
+
 A dialog with nothing to type into can set `AnswersOnAccessKeyAlone` so the bare access-key letter
 of its "_Yes"/"_No" text answers it (`DialogViewModel.TryAnswerFromAccessKey`).
 

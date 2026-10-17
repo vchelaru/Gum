@@ -188,7 +188,7 @@ public class MenuStripManagerTests : BaseTestClass
 
         _menuStripManager.PopulateMenu(menu);
 
-        var helpMenu = (MenuItem)menu.Items[5];
+        var helpMenu = (MenuItem)menu.Items[4];
         helpMenu.Items.OfType<MenuItem>()
             .ShouldContain(mi => mi.Header as string == "Open Settings Folder...");
     }

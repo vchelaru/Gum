@@ -40,8 +40,8 @@ public class CodeOutputPluginSettingsPageTests : BaseTestClass
         Directory.CreateDirectory(_projectDirectory);
 
         Mock<INameVerifier> nameVerifier = new();
-        string whyNotValid;
-        CommonValidationError error;
+        string? whyNotValid = "";
+        CommonValidationError error = default;
         nameVerifier.Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error)).Returns(true);
         Mock<IProjectState> projectState = new();
         projectState.Setup(p => p.ProjectDirectory).Returns(_projectDirectory + Path.DirectorySeparatorChar);

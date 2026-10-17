@@ -56,7 +56,7 @@ Edits are written out through `IFileCommands.TryAutoSaveElement(ElementSave)` /
 `TryAutoSaveCurrentElement()` / `TryAutoSaveObject(object)` in
 `Tools/Gum.Presentation/Commands/FileCommands.cs`, each of which no-ops unless
 `IProjectManager.AutoSave` is true (`ProjectManager.cs`, backed by `GeneralSettingsFile`,
-user-toggleable in Project Properties).
+user-toggleable on the Settings window's General page).
 
 **Landmine:** "the element is edited" does not imply "the file on disk changed" — with AutoSave off,
 in-memory changes sit unsaved until an explicit save. Code that mutates an element other than the

@@ -43,9 +43,9 @@ The type check `is IPriorityPlugin` is used at runtime — priority plugins rece
 
 ## Plugin Lifecycle
 
-`StartUp()` is called once on load — subscribe to events and add menu entries here (the menu model is populated before plugins load). `ShutDown(PluginShutDownReason)` is called on unload. Service dependencies arrive through `[ImportingConstructor]` parameters or the inherited `[Import]` properties; a few legacy plugins still call `Locator.GetRequiredService<T>()` in their constructor (drain on touch). If any plugin handler throws, `PluginContainer` disables that plugin for the rest of the session. `PluginInstantiator` (`Tools/Gum.Presentation/Plugins/`) creates plugins one at a time; a plugin whose constructor throws or whose import is missing is reported in Output and skipped, and the rest still load. Skipped plugins are recorded (`PluginInstantiator.NotCreated`, carried into `PluginScanReport`) and show in Manage Plugins as "(not loaded)" rows. `PluginManager.ScanPluginFolder` takes the folder as a parameter, so a test can scan its own folder.
+`StartUp()` is called once on load — subscribe to events and add menu entries here (the menu model is populated before plugins load). `ShutDown(PluginShutDownReason)` is called on unload. Service dependencies arrive through `[ImportingConstructor]` parameters or the inherited `[Import]` properties; a few legacy plugins still call `Locator.GetRequiredService<T>()` in their constructor (drain on touch). If any plugin handler throws, `PluginContainer` disables that plugin for the rest of the session. `PluginInstantiator` (`Tools/Gum.Presentation/Plugins/`) creates plugins one at a time; a plugin whose constructor throws or whose import is missing is reported in Output and skipped, and the rest still load. Skipped plugins are recorded (`PluginInstantiator.NotCreated`, carried into `PluginScanReport`) and show on the Settings window's Plugins page as "(not loaded)" rows. `PluginManager.ScanPluginFolder` takes the folder as a parameter, so a test can scan its own folder.
 
-`StartUp()` runs once per plugin instance; turning a plugin off and on in Manage Plugins only toggles `IsEnabled`, so `ShutDown(UserDisabled)` must not tear down what `StartUp` created. While a plugin is off, the tabs and menu items it added through its base are hidden and disabled. Nothing enforces the two ways around that: a plugin taking `ITabManager` in its constructor must wrap it with `TrackTabsFrom`, and menu items must go through `AddMenuEntry`, not straight into `Menu`. A plugin whose `ShutDown` always refuses must also override `CanUserDisable => false`, which greys its Manage Plugins checkbox and makes startup ignore a stored "disabled" entry for it.
+`StartUp()` runs once per plugin instance; turning a plugin off and on on the Plugins page only toggles `IsEnabled`, so `ShutDown(UserDisabled)` must not tear down what `StartUp` created. While a plugin is off, the tabs and menu items it added through its base are hidden and disabled. Nothing enforces the two ways around that: a plugin taking `ITabManager` in its constructor must wrap it with `TrackTabsFrom`, and menu items must go through `AddMenuEntry`, not straight into `Menu`. A plugin whose `ShutDown` always refuses must also override `CanUserDisable => false`, which greys its checkbox on the Plugins page and makes startup ignore a stored "disabled" entry for it.
 
 ## Internal Plugin Map
 
@@ -62,8 +62,9 @@ Each internal plugin has a `Main[FeatureName]Plugin.cs` entry point in `[Feature
 | Menu strip | `MenuStripPlugin/` | shared model, WPF renderer |
 | Undo/History | `Undos/` | shared |
 | Delete dialog | `Delete/` | shared |
-| Errors, Hotkeys, File Watch, Load Recent, Project Properties | per feature | shared |
-| Font Settings (`Edit > Font Settings`) | `FontsPlugin/` (view model, logic); plugin in `Tool/Gum.Avalonia/Plugins/Fonts/` | Avalonia head only |
+| Errors, File Watch, Load Recent | per feature | shared |
+| Settings window pages: Project Properties (General, Canvas, Localization), Keyboard shortcuts (Hotkeys) | `ProjectPropertiesWindowPlugin/`, `Hotkey/` | shared |
+| Settings window page: Fonts | `FontsPlugin/` (view model, logic); plugin in `Tool/Gum.Avalonia/Plugins/Fonts/` | Avalonia head only |
 
 ## Common Events
 
@@ -152,8 +153,8 @@ And four more for the Avalonia head, which is the tool that ships:
 Most first-party internal plugins now live in `Tools/Gum.Presentation/Plugins/InternalPlugins/<Feature>/`
 (and `FileWatchPlugin/`), derive from `CorePriorityPlugin` (neutral: `PluginBase` + `IPriorityPlugin`
 with `PriorityPlugin`'s defaults), and load in both heads because each head lists Gum.Presentation in
-`InternalPluginAssemblies`. Keep their class names and namespaces when moving one: the Manage Plugins
-dialog and the plugin-enablement store key on them.
+`InternalPluginAssemblies`. Keep their class names and namespaces when moving one: the Plugins
+page and the plugin-enablement store key on them.
 
 **A shared plugin's tab is a ViewModel.** Pass the VM to `AddControl`/`CreateTab`; each head resolves it
 through its own `TabViewRegistry` (`Gum/Controls/TabViewRegistry.cs` for WPF,
@@ -163,9 +164,18 @@ header (the Errors count). The WPF head throws when a VM has no registered view;
 new shared tab means one registration in **each** registry. View code-behind must not hold logic: move
 it to the VM (with a test in `Gum.Presentation.Tests`) and bind.
 
+**Settings belong in the Settings window, not in a tab or a menu item.** A plugin with options calls
+`AddSettingsPage(new SettingsPage(id, title, section, content, order))` in `StartUp` (`PluginBase`,
+`Tools/Gum.Presentation/SettingsWindow/`) and opens the window on a page with `ShowSettingsWindow(pageId)`.
+`content` is a view model; the Avalonia head maps it to a view in `SettingsPageViewRegistry`
+(`PluginHostTests.EveryPageAPluginAddsToTheSettingsWindow_ResolvesToAnAvaloniaView` fails when one is
+missing). The Project section only lists while a project is loaded, and `Activated` runs each time the
+page is shown, so refill the view model from the project there. `ISettingsPageRegistry` and
+`ISettingsWindowService` are bridged in `PluginManager.AddCoreExports`, so a new page needs no change there.
+
 Still WPF-only in `Gum/Plugins/InternalPlugins/`: the tree view and state tree (phase 60), the Variables
-tab (phase 70), and the menu strip renderer. A WPF view that builds its rows from the view model's
-members (Project Properties' `DataUiGrid`) must hide any view-only member you add to that view model.
+tab (phase 70), and the menu strip renderer. A view that builds its rows from the view model's members
+(the Settings pages' `DataUiGrid`) must hide any view-only member you add to that view model.
 
 ## Writing a plugin that runs under both heads
 
