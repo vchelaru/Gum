@@ -406,11 +406,9 @@ jobs:
         if: steps.plan.outputs.active == 'true' && runner.os == 'macOS'
         run: git submodule update --init --recursive --jobs 4
 
-      - name: Setup .NET SDKs
-        if: steps.plan.outputs.active == 'true'
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
+      # No actions/setup-dotnet: the runner images already carry a 10.0.x SDK that satisfies global.json
+      # (windows-latest 10.0.401, macos-15 10.0.400) and the 8.0/9.0 runtimes the test projects target.
+      # Installing 10.0.x cost ~32 s on Windows and ~20 s on macOS for the same SDK band (#6092).
 
       # On main: full cache (restore + save). On PRs: restore only, no save.
       # PR branch caches are scoped to that branch and never reused, so saving
@@ -436,9 +434,9 @@ jobs:
             C:\Program Files\dotnet\metadata
             C:\Program Files\dotnet\packs
             C:\Program Files\dotnet\sdk-manifests
-            /usr/local/share/dotnet/metadata
-            /usr/local/share/dotnet/packs
-            /usr/local/share/dotnet/sdk-manifests
+            ~/.dotnet/metadata
+            ~/.dotnet/packs
+            ~/.dotnet/sdk-manifests
           key: ${{ steps.workload-key.outputs.key }}
 
       - name: Restore cached .NET workloads (PRs)
@@ -450,9 +448,9 @@ jobs:
             C:\Program Files\dotnet\metadata
             C:\Program Files\dotnet\packs
             C:\Program Files\dotnet\sdk-manifests
-            /usr/local/share/dotnet/metadata
-            /usr/local/share/dotnet/packs
-            /usr/local/share/dotnet/sdk-manifests
+            ~/.dotnet/metadata
+            ~/.dotnet/packs
+            ~/.dotnet/sdk-manifests
           key: ${{ steps.workload-key.outputs.key }}
 
       - name: Install workloads
