@@ -304,6 +304,7 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
     private readonly Grid _grid;
     private readonly TextBlock _label;
     private readonly WrapPanel _buttonPanel;
+    private readonly LabelThenStripPanel _labelAndStrip;
     private readonly TextBlock _hint;
     private ToggleButtonOption[] _options;
 
@@ -323,12 +324,9 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
 
         _grid = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("100,*"),
             RowDefinitions = new RowDefinitions("Auto,Auto"),
             Margin = new Thickness(0, 4),
         };
-        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
-        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 30);
         Border buttonGroup = new Border
         {
             Child = _buttonPanel,
@@ -336,11 +334,9 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
             VerticalAlignment = VerticalAlignment.Center,
         };
         buttonGroup.Classes.Add(OptionGroupClass);
-        Grid.SetColumn(buttonGroup, 1);
+        _labelAndStrip = new LabelThenStripPanel(_label, buttonGroup, 100);
         Grid.SetRow(_hint, 1);
-        Grid.SetColumnSpan(_hint, 2);
-        _grid.Children.Add(_label);
-        _grid.Children.Add(buttonGroup);
+        _grid.Children.Add(_labelAndStrip);
         _grid.Children.Add(_hint);
         Content = _grid;
 
@@ -386,7 +382,7 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()
     {
-        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
+        _labelAndStrip.MaxLabelWidth = InstanceMember?.FirstGridLength ?? 100;
     }
 
     /// <inheritdoc/>
