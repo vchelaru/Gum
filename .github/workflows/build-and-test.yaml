@@ -256,7 +256,7 @@ jobs:
       # generated code is stale. This forces codegen behavior changes to ship with
       # their regenerated output in the same PR, which the compile step below then
       # proves still builds. GumCli exit code 1 means individual elements were
-      # skipped by the per-element error check — expected, several harness projects
+      # skipped by the per-element error check â€” expected, several harness projects
       # contain deliberately-broken fixture elements (e.g. DemoScreenGum's deleted
       # component reference). Exit code 2+ means the project failed to load and
       # must fail the build.
