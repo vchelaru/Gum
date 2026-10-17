@@ -283,7 +283,7 @@ public class TextureCoordinateTabScenarioTests
                     whileOpen = solid.Color;
                     return true;
                 });
-                tab.Tree.PickMainMenu("File", "Settings...");
+                tab.Tree.PickMainMenu("Edit", "Settings...");
                 tab.Frame();
                 whileOpen.ShouldBe(picked, "the tab's background takes the theme's checker color");
                 solid.Color.ShouldBe(picked, "closing the window keeps the color");

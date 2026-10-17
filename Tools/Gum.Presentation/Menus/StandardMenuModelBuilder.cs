@@ -129,8 +129,6 @@ public class StandardMenuModelBuilder
         file.Items.Add(new MenuItemModel("Save Project", () => SaveProject(saveAll: false)));
         file.Items.Add(new MenuItemModel("Save All", () => SaveProject(saveAll: true)));
         file.Items.Add(MenuItemModel.Separator());
-        file.Items.Add(new MenuItemModel("Settings...", () => _dialogService.Show<SettingsDialogViewModel>()));
-        file.Items.Add(MenuItemModel.Separator());
         file.Items.Add(new MenuItemModel("Export"));
 
         MenuItemModel edit = new MenuItemModel("Edit");
@@ -156,6 +154,8 @@ public class StandardMenuModelBuilder
         remove.Items.Add(_removeStateMenuItem);
         remove.Items.Add(_removeVariableMenuItem);
         edit.Items.Add(remove);
+        edit.Items.Add(MenuItemModel.Separator());
+        edit.Items.Add(new MenuItemModel("Settings...", () => _dialogService.Show<SettingsDialogViewModel>()));
 
         MenuItemModel view = new MenuItemModel("View");
         // Zooms the whole app (the UI font size), not the canvas, which has its own zoom controls.

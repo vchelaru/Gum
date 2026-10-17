@@ -488,7 +488,7 @@ public class TabViewScenarioTests
                 page.AccentColor = accent;
                 return true;
             });
-            tree.PickMainMenu("File", "Settings...");
+            tree.PickMainMenu("Edit", "Settings...");
             tree.Input.Layout();
             tree.Input.Window.ActualThemeVariant.ShouldBe(ThemeVariant.Dark);
             ((ISolidColorBrush)Application.Current.Resources["Frb.Brushes.Primary"]!).Color.ShouldBe(Color.FromRgb(0x20, 0x90, 0xd0));
@@ -497,7 +497,7 @@ public class TabViewScenarioTests
                 page.Mode = ThemeMode.Light;
                 return true;
             });
-            tree.PickMainMenu("File", "Settings...");
+            tree.PickMainMenu("Edit", "Settings...");
             tree.Input.Layout();
             tree.Input.Window.ActualThemeVariant.ShouldBe(ThemeVariant.Light);
 

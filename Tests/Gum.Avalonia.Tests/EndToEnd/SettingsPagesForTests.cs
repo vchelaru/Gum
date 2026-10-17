@@ -19,7 +19,7 @@ internal static class SettingsPagesForTests
             page.UseStandardsPalette = on;
             return true;
         });
-        tree.PickMainMenu("File", "Settings...");
+        tree.PickMainMenu("Edit", "Settings...");
     }
 
     /// <summary>The project settings shared by the General, Canvas and Localization project pages.</summary>

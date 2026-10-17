@@ -84,13 +84,15 @@ public class StandardMenuModelBuilderTests
     }
 
     [Fact]
-    public void Build_FileSettings_ShowsTheSettingsWindow()
+    public void Build_EditSettings_ShowsTheSettingsWindow()
     {
         AutoMocker mocker = new AutoMocker();
         Mock<IDialogService> dialogService = mocker.GetMock<IDialogService>();
         StandardMenuModelBuilder builder = mocker.CreateInstance<StandardMenuModelBuilder>();
 
-        MenuItemModel settings = builder.Build().GetItem("File")!.Items.Single(item => item.Header == "Settings...");
+        MenuModel model = builder.Build();
+        model.GetItem("File")!.Items.Select(item => item.Header).ShouldNotContain("Settings...");
+        MenuItemModel settings = model.GetItem("Edit")!.Items.Single(item => item.Header == "Settings...");
         settings.Invoke();
 
         dialogService.Verify(

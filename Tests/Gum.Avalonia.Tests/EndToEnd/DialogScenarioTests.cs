@@ -205,7 +205,7 @@ public class DialogScenarioTests
                 theming.EffectiveSettings.CheckerA.ShouldBe(picked, "the color applies while the window is open");
                 return true;
             });
-            tree.PickMainMenu("File", "Settings...");
+            tree.PickMainMenu("Edit", "Settings...");
             theming.CheckerA.ShouldBe(picked);
             Services.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<Gum.Settings.ThemeSettings>>().CurrentValue.CheckerA.ShouldBe(picked, "closing keeps the setting");
         }
@@ -233,7 +233,7 @@ public class DialogScenarioTests
             return true;
         });
 
-        tree.PickMainMenu("File", "Settings...");
+        tree.PickMainMenu("Edit", "Settings...");
 
         listed.Count.ShouldBe(pluginManager.PluginContainers.Count);
         listed.ShouldContain(plugin => plugin.Text.StartsWith("State Animation Plugin", StringComparison.Ordinal) && plugin.IsEnabled);
@@ -265,7 +265,7 @@ public class DialogScenarioTests
             return true;
         });
 
-        tree.PickMainMenu("File", "Settings...");
+        tree.PickMainMenu("Edit", "Settings...");
 
         PluginContainerFor(pluginManager, "HTML to Gum").IsEnabled.ShouldBeTrue();
         Services.GetRequiredService<Gum.Menus.MenuModel>().GetItem("Content")!.Items.Single(item => item.Header == "Import").Items
@@ -303,7 +303,7 @@ public class DialogScenarioTests
             return true;
         });
 
-        tree.PickMainMenu("File", "Settings...");
+        tree.PickMainMenu("Edit", "Settings...");
 
         loadRecent.IsEnabled.ShouldBeTrue();
         store.IsDisabled(loadRecent.Plugin.UniqueId).ShouldBeFalse("Load Recent never turned off, so the next launch must start it");
@@ -332,7 +332,7 @@ public class DialogScenarioTests
             return true;
         });
 
-        tree.PickMainMenu("File", "Settings...");
+        tree.PickMainMenu("Edit", "Settings...");
 
         animations.IsVisible.ShouldBeTrue("turning the plugin back on shows the tab it had showing");
         tree.AssertOracles();
@@ -360,7 +360,7 @@ public class DialogScenarioTests
             window.Click(window.AffirmativeButton);
         });
 
-        tree.PickMainMenu("File", "Settings...");
+        tree.PickMainMenu("Edit", "Settings...");
 
         rows.Count.ShouldBe(pluginManager.PluginContainers.Count, "every plugin the tool composed has a row");
         rows.ShouldAllBe(row => row.IsChecked == true, "every plugin is running");
@@ -403,7 +403,7 @@ public class DialogScenarioTests
                 window.Click(window.AffirmativeButton);
             });
 
-            tree.PickMainMenu("File", "Settings...");
+            tree.PickMainMenu("Edit", "Settings...");
 
             tree.AssertOracles();
         }
@@ -516,7 +516,7 @@ public class DialogScenarioTests
             projectPages.AddRange(settings.NavigationEntries.Where(entry => entry.Page?.Section == SettingsSection.Project).Select(entry => entry.Title));
             return true;
         });
-        tree.PickMainMenu("File", "Settings...");
+        tree.PickMainMenu("Edit", "Settings...");
         projectPages.ShouldBe(new[] { "General", "Canvas", "Fonts", "Localization", "Code generation" }, ignoreOrder: false, customMessage: "the Project section lists every project page, in order");
 
         properties.RestrictToUnitValues = true;
