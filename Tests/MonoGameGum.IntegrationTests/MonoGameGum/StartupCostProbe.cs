@@ -13,6 +13,23 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
 // TEMPORARY (#6092): times each phase of creating a Game, drawing in it and tearing it down, so the
 // per-test cost seen on CI can be attributed. Delete before the final PR.
+public static class ProbeLog
+{
+    private static readonly Stopwatch Clock = Stopwatch.StartNew();
+    private static long _last;
+
+    // Appends "label: ms since the previous mark" to the probe file.
+    public static void Mark(string label)
+    {
+        long now = Clock.ElapsedMilliseconds;
+        string directory = Path.Combine(
+            Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") ?? ".", "TestResults");
+        Directory.CreateDirectory(directory);
+        File.AppendAllText(Path.Combine(directory, "marks.txt"), $"{label}: {now - _last} ms\n");
+        _last = now;
+    }
+}
+
 public class StartupCostProbe : BaseTestClass
 {
     [Fact]

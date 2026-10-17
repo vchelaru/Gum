@@ -50,8 +50,11 @@ public class ImmediateModeDrawCallStatisticsTests : BaseTestClass
     [Fact]
     public void Begin_Draw_End_ReportsSameDrawCallCountAsLayeredPathForEquivalentContent()
     {
+        ProbeLog.Mark("T1 before new MinimalGame (since previous mark)");
         using MinimalGame game = new();
+        ProbeLog.Mark("T1 new MinimalGame");
         game.RunOneFrame();
+        ProbeLog.Mark("T1 RunOneFrame");
 
         SystemManagers managers = SystemManagers.Default;
         Renderer renderer = managers.Renderer;
@@ -62,8 +65,11 @@ public class ImmediateModeDrawCallStatisticsTests : BaseTestClass
         RectangleRuntime layeredRectangle = CreateRectangle();
         layeredRectangle.AddToRoot();
         global::Gum.GumService.Default.Root.UpdateLayout();
+        ProbeLog.Mark("T1 create rectangle + layout");
         global::Gum.GumService.Default.Draw(); // warm-up: discard first-time costs
+        ProbeLog.Mark("T1 first Draw");
         global::Gum.GumService.Default.Draw();
+        ProbeLog.Mark("T1 second Draw");
         int layeredCount = renderer.RenderStateChangeStatistics.DrawCallCount;
 
         // Immediate-mode measurement: an equivalent, unparented rectangle drawn directly through
@@ -73,14 +79,17 @@ public class ImmediateModeDrawCallStatisticsTests : BaseTestClass
         AdvanceHostFrame(managers, ref hostTime);
         renderer.Begin();
         renderer.End(); // warm-up: discard first-time costs
+        ProbeLog.Mark("T1 immediate warm-up Begin/End");
 
         AdvanceHostFrame(managers, ref hostTime);
         renderer.Begin();
         renderer.Draw(immediateRectangle);
         renderer.End();
+        ProbeLog.Mark("T1 immediate Begin/Draw/End");
         int immediateModeCount = renderer.RenderStateChangeStatistics.DrawCallCount;
 
         immediateModeCount.ShouldBe(layeredCount);
+        ProbeLog.Mark("T1 end of body (Dispose follows)");
     }
 
     [Fact]
