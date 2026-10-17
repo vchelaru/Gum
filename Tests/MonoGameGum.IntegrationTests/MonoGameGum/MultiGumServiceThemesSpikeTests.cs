@@ -30,7 +30,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// Captures are saved as PNGs in <see cref="CaptureDirectory"/>.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
-public class MultiGumServiceThemesSpikeTests : BaseTestClass
+public class MultiGumServiceThemesSpikeTests : BaseTestClass, IClassFixture<ThemeProjectFolders>
 {
     private const int CaptureWidth = 1024;
     private const int CaptureHeight = 768;
@@ -50,16 +50,16 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
     private static readonly XnaColor ClearColor = XnaColor.CornflowerBlue;
 
-    private readonly string _rootDirectory;
+    private readonly ThemeProjectFolders _themeFolders;
     private readonly StringBuilder _log = new StringBuilder();
 
     /// <summary>Where the PNG captures are written (next to the test binaries).</summary>
     public static string CaptureDirectory { get; } =
         Path.Combine(AppContext.BaseDirectory, "MultiServiceCaptures");
 
-    public MultiGumServiceThemesSpikeTests()
+    public MultiGumServiceThemesSpikeTests(ThemeProjectFolders themeFolders)
     {
-        _rootDirectory = Path.Combine(Path.GetTempPath(), "GumTwoThemes_" + Guid.NewGuid().ToString("N"));
+        _themeFolders = themeFolders;
         Directory.CreateDirectory(CaptureDirectory);
     }
 
@@ -72,7 +72,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         GraphicalUiElement.IsAllLayoutSuspended = false;
 
         try { File.AppendAllText(Path.Combine(CaptureDirectory, "run-log.txt"), _log.ToString()); } catch { /* best effort */ }
-        try { Directory.Delete(_rootDirectory, recursive: true); } catch { /* best effort */ }
     }
 
     #region Harness checks (a lone service must render its own theme)
@@ -82,7 +81,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     [InlineData("Hazard")]
     public void SingleService_Alone_ShouldRenderItsOwnTheme(string theme)
     {
-        string path = CopyTheme(theme);
+        string path = _themeFolders.GetGumxPath(theme);
         using ThemedGame game = new ThemedGame(path, pathB: null);
         game.Initialize();
 
@@ -320,8 +319,8 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
     private ThemedGame CreateGame()
     {
-        string pathA = CopyTheme("Bubblegum");
-        string pathB = CopyTheme("Hazard");
+        string pathA = _themeFolders.GetGumxPath("Bubblegum");
+        string pathB = _themeFolders.GetGumxPath("Hazard");
         ThemedGame game = new ThemedGame(pathA, pathB);
         game.Initialize();
         return game;
@@ -493,62 +492,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
             foreach (KeyValuePair<string, Type?> pair in FormsControlTypes) { builder.Append($", {pair.Key}->{pair.Value?.Name ?? "null"}"); }
             return builder.ToString();
         }
-    }
-
-    #endregion
-
-    #region Theme project on disk
-
-    /// <summary>
-    /// Copies a shipped Forms theme (Tools/Gum.ProjectServices/Templates/FormsThemes/&lt;theme&gt;) and the
-    /// shared FormsBehaviors it references into a temp folder, laid out the way the repo has them, so the
-    /// theme's relative ../../FormsBehaviors paths still resolve. Returns the .gumx path.
-    /// </summary>
-    private string CopyTheme(string theme)
-    {
-        string templates = FindTemplatesDirectory();
-        string sharedBehaviors = Path.Combine(_rootDirectory, "FormsBehaviors");
-        if (!Directory.Exists(sharedBehaviors))
-        {
-            CopyDirectory(Path.Combine(templates, "FormsBehaviors"), sharedBehaviors);
-        }
-
-        string destination = Path.Combine(_rootDirectory, "FormsThemes", theme);
-        CopyDirectory(Path.Combine(templates, "FormsThemes", theme), destination);
-        return Path.Combine(destination, "GumProject.gumx");
-    }
-
-    private static void CopyDirectory(string source, string destination)
-    {
-        Directory.CreateDirectory(destination);
-        foreach (string file in Directory.GetFiles(source))
-        {
-            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
-        }
-        foreach (string directory in Directory.GetDirectories(source))
-        {
-            CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
-        }
-    }
-
-    private static string FindTemplatesDirectory()
-    {
-        string current = AppContext.BaseDirectory;
-        for (int i = 0; i < 10; i++)
-        {
-            string candidate = Path.Combine(current, "Tools", "Gum.ProjectServices", "Templates");
-            if (Directory.Exists(candidate))
-            {
-                return candidate;
-            }
-            string? parent = Path.GetDirectoryName(current);
-            if (string.IsNullOrEmpty(parent) || parent == current)
-            {
-                break;
-            }
-            current = parent;
-        }
-        throw new InvalidOperationException("could not locate Tools/Gum.ProjectServices/Templates from " + AppContext.BaseDirectory);
     }
 
     #endregion

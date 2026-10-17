@@ -36,7 +36,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// expects in its summary.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
-public class MultiGumServiceInputSpikeTests : BaseTestClass
+public class MultiGumServiceInputSpikeTests : BaseTestClass, IClassFixture<ThemeProjectFolders>
 {
     private const int CaptureWidth = 1024;
     private const int CaptureHeight = 768;
@@ -44,18 +44,17 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
     private static readonly XnaColor ClearColor = XnaColor.CornflowerBlue;
 
-    private readonly string _rootDirectory;
+    private readonly ThemeProjectFolders _themeFolders;
 
-    public MultiGumServiceInputSpikeTests()
+    public MultiGumServiceInputSpikeTests(ThemeProjectFolders themeFolders)
     {
-        _rootDirectory = Path.Combine(Path.GetTempPath(), "GumInputSpike_" + Guid.NewGuid().ToString("N"));
+        _themeFolders = themeFolders;
     }
 
     public override void Dispose()
     {
         base.Dispose();
         GraphicalUiElement.IsAllLayoutSuspended = false;
-        try { Directory.Delete(_rootDirectory, recursive: true); } catch { /* best effort */ }
     }
 
     #region Update drives each service's own cursor and keyboard
@@ -480,8 +479,8 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
     private InputGame CreateGame(bool coincidentConfirmButtons = false)
     {
-        string pathA = CopyTheme("Bubblegum");
-        string pathB = CopyTheme("Hazard");
+        string pathA = _themeFolders.GetGumxPath("Bubblegum");
+        string pathB = _themeFolders.GetGumxPath("Hazard");
         InputGame game = new InputGame(pathA, pathB);
         game.Initialize();
 
@@ -813,59 +812,6 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
             Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
             _lease.Dispose();
         }
-    }
-
-    #endregion
-
-    #region Theme project on disk
-
-    // Same layout as the themes spike (a private helper there): the shipped theme plus the shared
-    // FormsBehaviors folder it references by relative path.
-    private string CopyTheme(string theme)
-    {
-        string templates = FindTemplatesDirectory();
-        string sharedBehaviors = Path.Combine(_rootDirectory, "FormsBehaviors");
-        if (!Directory.Exists(sharedBehaviors))
-        {
-            CopyDirectory(Path.Combine(templates, "FormsBehaviors"), sharedBehaviors);
-        }
-
-        string destination = Path.Combine(_rootDirectory, "FormsThemes", theme);
-        CopyDirectory(Path.Combine(templates, "FormsThemes", theme), destination);
-        return Path.Combine(destination, "GumProject.gumx");
-    }
-
-    private static void CopyDirectory(string source, string destination)
-    {
-        Directory.CreateDirectory(destination);
-        foreach (string file in Directory.GetFiles(source))
-        {
-            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: true);
-        }
-        foreach (string directory in Directory.GetDirectories(source))
-        {
-            CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
-        }
-    }
-
-    private static string FindTemplatesDirectory()
-    {
-        string current = AppContext.BaseDirectory;
-        for (int i = 0; i < 10; i++)
-        {
-            string candidate = Path.Combine(current, "Tools", "Gum.ProjectServices", "Templates");
-            if (Directory.Exists(candidate))
-            {
-                return candidate;
-            }
-            string? parent = Path.GetDirectoryName(current);
-            if (string.IsNullOrEmpty(parent) || parent == current)
-            {
-                break;
-            }
-            current = parent;
-        }
-        throw new InvalidOperationException("could not locate Tools/Gum.ProjectServices/Templates from " + AppContext.BaseDirectory);
     }
 
     #endregion
