@@ -109,9 +109,39 @@ public class CodeGenerationContext
     {
         get
         {
-            return Element?.BaseType == "Text"
-                ? "global::" + CodeGenerator.GetGueDerivingNamespace(ResolvedSyntaxVersion, isSkia: false) + ".TextRuntime"
-                : null;
+            return Element?.BaseType == "Text" ? TextRuntimeTypeName : null;
+        }
+    }
+
+    /// <summary>
+    /// Whether <see cref="CodePrefixNoTabs"/> already casts <c>Visual</c> to <c>TextRuntime</c>, so a per-variable
+    /// cast on top of it would be redundant.
+    /// </summary>
+    public bool PrefixCastsVisualToTextRuntime =>
+        Instance == null
+            ? BaseStandardRuntimeTypeName != null && string.IsNullOrEmpty(ThisPrefix)
+                && CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms
+            : InstanceStandardRuntimeTypeName != null;
+
+    internal string TextRuntimeTypeName =>
+        "global::" + CodeGenerator.GetGueDerivingNamespace(ResolvedSyntaxVersion, isSkia: false) + ".TextRuntime";
+
+    /// <summary>
+    /// The fully qualified runtime class behind the <c>Visual</c> of <see cref="Instance"/> when the instance is a
+    /// Forms object whose component is rooted in the Text standard element (an instance of a Label), or
+    /// <see langword="null"/> otherwise. Same reason as <see cref="BaseStandardRuntimeTypeName"/>: Text-only
+    /// members are not on <c>InteractiveGue</c>.
+    /// </summary>
+    private string? InstanceStandardRuntimeTypeName
+    {
+        get
+        {
+            if (_instance == null || _isInstanceFormsObject != true)
+            {
+                return null;
+            }
+
+            return ObjectFinder.Self.GetRootStandardElementSave(_instance)?.Name == "Text" ? TextRuntimeTypeName : null;
         }
     }
 
@@ -170,14 +200,13 @@ public class CodeGenerationContext
                 string instanceNameInCode = _nameVerifier.ToCSharpName(Instance.Name);
                 if (_isInstanceFormsObject == true)
                 {
-                    if (string.IsNullOrEmpty(ThisPrefix))
-                    {
-                        return "this." + instanceNameInCode + "." + "Visual";
-                    }
-                    else
-                    {
-                        return ThisPrefix + "." + instanceNameInCode + "." + "Visual";
-                    }
+                    string visualAccess = string.IsNullOrEmpty(ThisPrefix)
+                        ? "this." + instanceNameInCode + "." + "Visual"
+                        : ThisPrefix + "." + instanceNameInCode + "." + "Visual";
+
+                    return InstanceStandardRuntimeTypeName is string runtimeTypeName
+                        ? $"(({runtimeTypeName}){visualAccess})"
+                        : visualAccess;
                 }
                 else
                 {
@@ -1165,6 +1194,7 @@ public class CodeGenerator
                     string? sourceObjectCast = null;
 
                     ElementSave? sourceInstanceElement = null;
+                    string? textRuntimeCast = null;
 
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                     {
@@ -1180,9 +1210,15 @@ public class CodeGenerator
                                 if (isState == false || isStateOnVisual)
                                 {
                                     sourceObjectCSharpName += ".Visual";
+
+                                    if (ObjectFinder.Self.GetRootStandardElementSave(sourceInstanceElement)?.Name == "Text")
+                                    {
+                                        // A Label's Visual is typed InteractiveGue, but Text-only members live on TextRuntime.
+                                        textRuntimeCast = context.TextRuntimeTypeName;
+                                    }
                                 }
                             }
-                            sourceObjectCast = GetVisualCast(exposedVariable, context.Element, context);
+                            sourceObjectCast = textRuntimeCast ?? GetVisualCast(exposedVariable, context.Element, context);
                         }
                     }
 
@@ -4699,7 +4735,7 @@ public class CodeGenerator
                 }
                 else
                 {
-                    if(leftSideCast != null)
+                    if(leftSideCast != null && !context.PrefixCastsVisualToTextRuntime)
                     {
                         return $"(({leftSideCast}){context.CodePrefixNoTabs}).{variableName} = {VariableValueToGumCodeValue(variable, context)};";
 
