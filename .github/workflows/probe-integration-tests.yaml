@@ -1,10 +1,12 @@
 name: Probe Integration Tests
 
 # Temporary (#6092): runs only MonoGameGum.IntegrationTests on Windows, with no workloads and no
-# AllLibraries build, so timing changes can be measured without the full CI matrix. Manual dispatch
-# only. Delete before the final PR.
+# AllLibraries build, so timing changes can be measured without the full CI matrix. A new workflow
+# file can't be dispatched until it is on the default branch, so it runs on pushes to the issue
+# branch (keep the PR closed meanwhile, or the full matrix runs too). Delete before the final PR.
 on:
-  workflow_dispatch:
+  push:
+    branches: [6092-faster-windows-ci]
 
 jobs:
   Probe:
