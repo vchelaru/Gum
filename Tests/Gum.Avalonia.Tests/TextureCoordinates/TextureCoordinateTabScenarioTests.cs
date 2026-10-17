@@ -363,12 +363,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    private static ProjectPropertiesViewModel ProjectProperties()
-    {
-        AvaloniaTabManager tabs = (AvaloniaTabManager)TestAppBuilder.Services.GetRequiredService<ITabManager>();
-        AvaloniaPluginTab tab = tabs.AllTabs.Single(candidate => candidate.Title == "Project Properties");
-        return (ProjectPropertiesViewModel)((global::Avalonia.Controls.Control)tab.Content).DataContext!;
-    }
+    private static ProjectPropertiesViewModel ProjectProperties() => Gum.Avalonia.Tests.EndToEnd.SettingsPagesForTests.ProjectProperties();
 
     private static void OnTab(Action<TextureCoordinateTabHarness> scenario)
     {

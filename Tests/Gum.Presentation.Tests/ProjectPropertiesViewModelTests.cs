@@ -18,7 +18,7 @@ public class ProjectPropertiesViewModelTests
     {
         ProjectPropertiesViewModel viewModel = new();
         GumProjectSave gumProject = new();
-        viewModel.SetFrom(autoSave: false, gumProject);
+        viewModel.SetFrom(gumProject);
 
         viewModel.ShowCanvasOutline = true;
 
@@ -76,13 +76,14 @@ public class ProjectPropertiesViewModelTests
     }
 
     [Fact]
-    public void SetFrom_AssignsAutoSaveFromParameter()
+    public void SetFrom_FillsCanvasSizeFromTheProject()
     {
         ProjectPropertiesViewModel viewModel = new();
-        GumProjectSave gumProject = new();
+        GumProjectSave gumProject = new() { DefaultCanvasWidth = 640, DefaultCanvasHeight = 480 };
 
-        viewModel.SetFrom(autoSave: true, gumProject);
+        viewModel.SetFrom(gumProject);
 
-        viewModel.AutoSave.ShouldBeTrue();
+        viewModel.CanvasWidth.ShouldBe(640);
+        viewModel.CanvasHeight.ShouldBe(480);
     }
 }

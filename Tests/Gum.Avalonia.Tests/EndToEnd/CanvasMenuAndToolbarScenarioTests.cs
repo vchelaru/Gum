@@ -451,12 +451,7 @@ public class CanvasMenuAndToolbarScenarioTests
     private static float LabelWidth(CanvasHarness canvas) =>
         canvas.Wireframe.AllIpsos.Single(ipso => ipso.Name == "Label").AbsoluteWidth;
 
-    private static ProjectPropertiesViewModel Properties()
-    {
-        AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
-        AvaloniaPluginTab tab = tabs.AllTabs.Single(candidate => candidate.Title == "Project Properties");
-        return (ProjectPropertiesViewModel)((Control)tab.Content).DataContext!;
-    }
+    private static ProjectPropertiesViewModel Properties() => SettingsPagesForTests.ProjectProperties();
 
     private static GumProjectSave SavedProject(CanvasHarness canvas) =>
         GumProjectSave.Load(canvas.Project.ProjectFilePath, out _) ?? throw new InvalidOperationException("The project file did not load.");

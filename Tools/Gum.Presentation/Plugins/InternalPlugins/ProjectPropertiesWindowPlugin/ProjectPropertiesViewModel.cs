@@ -19,12 +19,6 @@ public class ProjectPropertiesViewModel : ViewModel
 
     GumProjectSave? gumProject;
 
-    public bool AutoSave
-    {
-        get => Get<bool>(); 
-        set => Set(value); 
-    }
-
     public bool ShowOutlines
     {
         get => Get<bool>(); 
@@ -179,15 +173,13 @@ public class ProjectPropertiesViewModel : ViewModel
 
     public bool IsUpdatingFromModel { get; private set; }
 
-    public void SetFrom(bool autoSave, GumProjectSave gumProject)
+    public void SetFrom(GumProjectSave gumProject)
     {
         IsUpdatingFromModel = true;
 
         {
             this.gumProject = gumProject;
 
-
-            AutoSave = autoSave;
             ShowOutlines = gumProject.ShowOutlines;
             try
             {

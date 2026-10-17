@@ -11,6 +11,7 @@ using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.SettingsWindow;
 using HtmlToGumPlugin;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -189,7 +190,7 @@ public class DialogScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "DLG-013")]
-    public void Theming_AppliesAColorLive_CancelRestoresIt_AndOkKeepsIt_WithoutTouchingTheProject()
+    public void Appearance_AppliesAColorLive_AndClosingTheSettingsWindowKeepsIt_WithoutTouchingTheProject()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         IThemingService theming = Services.GetRequiredService<IThemingService>();
@@ -198,23 +199,15 @@ public class DialogScenarioTests
         System.Drawing.Color picked = System.Drawing.Color.FromArgb(255, 12, 34, 56);
         try
         {
-            tree.Dialogs.AnswerNext<ThemingDialogViewModel>(dialog =>
+            tree.Dialogs.AnswerNextSettingsPage<ThemingDialogViewModel>(SettingsPageIds.Appearance, dialog =>
             {
                 dialog.CheckerAColor = picked;
-                theming.EffectiveSettings.CheckerA.ShouldBe(picked, "the color applies while the dialog is open");
-                return false;
-            });
-            tree.PickMainMenu("View", "Theming");
-            theming.CheckerA.ShouldBe(original, "Cancel puts the color back");
-
-            tree.Dialogs.AnswerNext<ThemingDialogViewModel>(dialog =>
-            {
-                dialog.CheckerAColor = picked;
+                theming.EffectiveSettings.CheckerA.ShouldBe(picked, "the color applies while the window is open");
                 return true;
             });
-            tree.PickMainMenu("View", "Theming");
+            tree.PickMainMenu("File", "Settings...");
             theming.CheckerA.ShouldBe(picked);
-            Services.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<Gum.Settings.ThemeSettings>>().CurrentValue.CheckerA.ShouldBe(picked, "OK keeps the setting");
+            Services.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<Gum.Settings.ThemeSettings>>().CurrentValue.CheckerA.ShouldBe(picked, "closing keeps the setting");
         }
         finally
         {
@@ -234,13 +227,13 @@ public class DialogScenarioTests
         PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
         ProjectFileSnapshot start = tree.SnapshotFiles();
         List<(string Text, bool IsEnabled)> listed = new List<(string, bool)>();
-        tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
+        tree.Dialogs.AnswerNextSettingsPage<PluginsDialogViewModel>(SettingsPageIds.Plugins, dialog =>
         {
             listed.AddRange(dialog.Plugins.Select(plugin => (plugin.DisplayText, plugin.IsEnabled)));
             return true;
         });
 
-        tree.PickMainMenu("Plugins", "Manage Plugins");
+        tree.PickMainMenu("File", "Settings...");
 
         listed.Count.ShouldBe(pluginManager.PluginContainers.Count);
         listed.ShouldContain(plugin => plugin.Text.StartsWith("State Animation Plugin", StringComparison.Ordinal) && plugin.IsEnabled);
@@ -262,7 +255,7 @@ public class DialogScenarioTests
         htmlPlugin.AddImportMenuEntryIfConverterFound();
         htmlPlugin.FindConverterDir = originalFindConverterDir;
         ProjectFileSnapshot start = tree.SnapshotFiles();
-        tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
+        tree.Dialogs.AnswerNextSettingsPage<PluginsDialogViewModel>(SettingsPageIds.Plugins, dialog =>
         {
             PluginItemViewModel htmlImport = dialog.Plugins.Single(plugin => plugin.DisplayText.StartsWith("HTML to Gum", StringComparison.Ordinal));
             htmlImport.IsEnabled = false;
@@ -272,7 +265,7 @@ public class DialogScenarioTests
             return true;
         });
 
-        tree.PickMainMenu("Plugins", "Manage Plugins");
+        tree.PickMainMenu("File", "Settings...");
 
         PluginContainerFor(pluginManager, "HTML to Gum").IsEnabled.ShouldBeTrue();
         Services.GetRequiredService<Gum.Menus.MenuModel>().GetItem("Content")!.Items.Single(item => item.Header == "Import").Items
@@ -290,7 +283,7 @@ public class DialogScenarioTests
         IPluginEnablementStore store = Services.GetRequiredService<IPluginEnablementStore>();
         PluginContainer loadRecent = PluginContainerFor(pluginManager, "MainRecentFilesPlugin");
         List<string> sprangBack = new List<string>();
-        tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
+        tree.Dialogs.AnswerNextSettingsPage<PluginsDialogViewModel>(SettingsPageIds.Plugins, dialog =>
         {
             PluginItemViewModel loadRecentRow = dialog.Plugins.Single(plugin => plugin.DisplayText == loadRecent.ToString());
             loadRecentRow.CanToggle.ShouldBeFalse();
@@ -310,7 +303,7 @@ public class DialogScenarioTests
             return true;
         });
 
-        tree.PickMainMenu("Plugins", "Manage Plugins");
+        tree.PickMainMenu("File", "Settings...");
 
         loadRecent.IsEnabled.ShouldBeTrue();
         store.IsDisabled(loadRecent.Plugin.UniqueId).ShouldBeFalse("Load Recent never turned off, so the next launch must start it");
@@ -327,7 +320,7 @@ public class DialogScenarioTests
         AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
         tree.PickMainMenu("View", "View Animations");
         AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations" && tab.IsVisible);
-        tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
+        tree.Dialogs.AnswerNextSettingsPage<PluginsDialogViewModel>(SettingsPageIds.Plugins, dialog =>
         {
             PluginItemViewModel stateAnimation = dialog.Plugins.Single(plugin => plugin.DisplayText.StartsWith("State Animation Plugin", StringComparison.Ordinal));
             stateAnimation.IsEnabled = false;
@@ -339,7 +332,7 @@ public class DialogScenarioTests
             return true;
         });
 
-        tree.PickMainMenu("Plugins", "Manage Plugins");
+        tree.PickMainMenu("File", "Settings...");
 
         animations.IsVisible.ShouldBeTrue("turning the plugin back on shows the tab it had showing");
         tree.AssertOracles();
@@ -358,17 +351,16 @@ public class DialogScenarioTests
         List<string> stagedPlugins = Directory.GetDirectories(PluginManager.PluginFolder).Select(Path.GetFileName).Select(name => name + ".dll").ToList()!;
         List<(string Text, bool? IsChecked)> rows = new List<(string, bool?)>();
         string scan = "";
-        tree.Dialogs.AnswerNextInWindow<PluginsDialogViewModel>(window =>
+        tree.Dialogs.AnswerNextSettingsPageInWindow<PluginsDialogViewModel>(SettingsPageIds.Plugins, (window, plugins) =>
         {
             rows.AddRange(window.FindAll<global::Avalonia.Controls.CheckBox>().Select(box => (box.Content as string ?? "", box.IsChecked)));
             window.Click(window.Find<global::Avalonia.Controls.TabItem>(tab => tab.Header as string == "Folder scan"));
-            scan = window.Find<global::Avalonia.Controls.TextBox>().Text ?? "";
-            PluginsDialogViewModel plugins = (PluginsDialogViewModel)window.Window.DataContext!;
+            scan = window.Find<global::Avalonia.Controls.TextBox>(box => box.IsReadOnly).Text ?? "";
             window.Click(window.Find<global::Avalonia.Controls.Button>(button => button.Command == plugins.CopyDiagnosticsCommand));
             window.Click(window.AffirmativeButton);
         });
 
-        tree.PickMainMenu("Plugins", "Manage Plugins");
+        tree.PickMainMenu("File", "Settings...");
 
         rows.Count.ShouldBe(pluginManager.PluginContainers.Count, "every plugin the tool composed has a row");
         rows.ShouldAllBe(row => row.IsChecked == true, "every plugin is running");
@@ -402,16 +394,16 @@ public class DialogScenarioTests
         {
             pluginManager.PluginScanReport = pluginManager.ScanPluginFolder(folder, new List<System.ComponentModel.Composition.Primitives.ComposablePartCatalog>());
             using ProjectTreeHarness tree = new ProjectTreeHarness();
-            tree.Dialogs.AnswerNextInWindow<PluginsDialogViewModel>(window =>
+            tree.Dialogs.AnswerNextSettingsPageInWindow<PluginsDialogViewModel>(SettingsPageIds.Plugins, (window, _) =>
             {
                 rows.AddRange(window.FindAll<global::Avalonia.Controls.CheckBox>().Select(box =>
                     (box.Content as string ?? "", box.IsChecked, box.IsEnabled, global::Avalonia.Controls.ToolTip.GetTip(box) as string)));
                 window.Click(window.Find<global::Avalonia.Controls.TabItem>(tab => tab.Header as string == "Folder scan"));
-                scan = window.Find<global::Avalonia.Controls.TextBox>().Text ?? "";
+                scan = window.Find<global::Avalonia.Controls.TextBox>(box => box.IsReadOnly).Text ?? "";
                 window.Click(window.AffirmativeButton);
             });
 
-            tree.PickMainMenu("Plugins", "Manage Plugins");
+            tree.PickMainMenu("File", "Settings...");
 
             tree.AssertOracles();
         }
@@ -514,14 +506,18 @@ public class DialogScenarioTests
     [Trait("Feature", "PROP-015")]
     [Trait("Feature", "PROP-019")]
     [Trait("Feature", "EDIT-012")]
-    public void ProjectProperties_FromTheEditMenu_SaveEachChangeIntoTheProjectFile_AndCloseHidesTheTab()
+    public void ProjectProperties_FromTheSettingsWindow_SaveEachChangeIntoTheProjectFile()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
-        AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
-        AvaloniaPluginTab tab = tabs.AllTabs.Single(candidate => candidate.Title == "Project Properties");
-        ProjectPropertiesViewModel properties = (ProjectPropertiesViewModel)((global::Avalonia.Controls.Control)tab.Content).DataContext!;
-        tree.PickMainMenu("Edit", "Properties");
-        tab.IsVisible.ShouldBeTrue();
+        ProjectPropertiesViewModel properties = SettingsPagesForTests.ProjectProperties();
+        List<string> projectPages = new List<string>();
+        tree.Dialogs.AnswerNext<SettingsDialogViewModel>(settings =>
+        {
+            projectPages.AddRange(settings.NavigationEntries.Where(entry => entry.Page?.Section == SettingsSection.Project).Select(entry => entry.Title));
+            return true;
+        });
+        tree.PickMainMenu("File", "Settings...");
+        projectPages.ShouldBe(new[] { "General", "Canvas", "Fonts", "Localization", "Code generation" }, ignoreOrder: false, customMessage: "the Project section lists every project page, in order");
 
         properties.RestrictToUnitValues = true;
         properties.ShowLocalization = !properties.ShowLocalization;
@@ -534,12 +530,8 @@ public class DialogScenarioTests
         saved.ShowLocalizationInGum.ShouldBe(showLocalization);
         saved.RestrictFileNamesForAndroid.ShouldBeTrue();
 
-        // What the tab's Close button calls (ProjectPropertiesViewTests).
-        properties.RequestClose();
-        tab.IsVisible.ShouldBeFalse();
-
         tree.AssertOracles();
-        // The reload refilled the tab from the saved file.
+        // The reload refilled the page from the saved file.
         (properties.RestrictToUnitValues, properties.RestrictFileNamesForAndroid).ShouldBe((true, true));
     }
 

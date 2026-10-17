@@ -4,6 +4,7 @@ using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
+using Gum.SettingsWindow;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
@@ -15,9 +16,10 @@ using ToolsUtilities;
 namespace Gum.Plugins.PropertiesWindowPlugin;
 
 /// <summary>
-/// The Project Properties tab (Edit > Properties), shared by both heads. Keeps
-/// <see cref="ProjectPropertiesViewModel"/> in step with the loaded project and hands each change to
-/// <see cref="ProjectPropertiesChangeLogic"/>. Each head supplies the view (TabViewRegistry).
+/// The project's properties, shared by both heads, as the General, Canvas and Localization pages of
+/// the Settings window. Keeps <see cref="ProjectPropertiesViewModel"/> in step with the loaded project
+/// and hands each change to <see cref="ProjectPropertiesChangeLogic"/>. Each head supplies the page
+/// view (its settings page view registry).
 /// </summary>
 [Export(typeof(PluginBase))]
 class MainPropertiesWindowPlugin : CorePriorityPlugin
@@ -33,7 +35,6 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
 
     private ProjectPropertiesViewModel _viewModel = null!;
     private ProjectPropertiesChangeLogic _changeLogic = null!;
-    private IPluginTab? _pluginTab;
 
     #endregion
 
@@ -56,8 +57,6 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
 
     public override void StartUp()
     {
-        AddMenuEntry(HandlePropertiesClicked, "Edit", "Properties");
-
         _changeLogic = new ProjectPropertiesChangeLogic(
             _projectManager,
             _projectState,
@@ -69,14 +68,32 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
 
         _viewModel = new ProjectPropertiesViewModel();
         _viewModel.PropertyChanged += HandlePropertyChanged;
-        _viewModel.CloseRequested += () => _pluginTab?.Hide();
 
         this.ProjectLoad += HandleProjectLoad;
         _fileCommands.LocalizationLoaded += HandleLocalizationLoaded;
 
-        // Each head resolves the view model to its own view (TabViewRegistry).
-        _pluginTab = _tabManager.AddControl(_viewModel, "Project Properties");
-        _pluginTab.Hide();
+        // Each head resolves a page's content to its own view (its settings page view registry).
+        AddSettingsPage(new SettingsPage(
+            SettingsPageIds.ProjectGeneral, "General", SettingsSection.Project,
+            new ProjectPropertiesPageViewModel(_viewModel, ProjectPropertiesSection.General), order: 0)
+        {
+            Activated = Reload,
+            Keywords = new[] { "texture filter", "unit values", "android", "file names", "single pixel texture" },
+        });
+        AddSettingsPage(new SettingsPage(
+            SettingsPageIds.Canvas, "Canvas", SettingsSection.Project,
+            new ProjectPropertiesPageViewModel(_viewModel, ProjectPropertiesSection.Canvas), order: 1)
+        {
+            Activated = Reload,
+            Keywords = new[] { "width", "height", "size", "guides", "outlines", "checker" },
+        });
+        AddSettingsPage(new SettingsPage(
+            SettingsPageIds.Localization, "Localization", SettingsSection.Project,
+            new ProjectPropertiesPageViewModel(_viewModel, ProjectPropertiesSection.Localization), order: 3)
+        {
+            Activated = Reload,
+            Keywords = new[] { "language", "csv", "resx", "translation" },
+        });
     }
 
     private void HandleLocalizationLoaded()
@@ -90,12 +107,13 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
         using var _ = Gum.Diagnostics.StartupTiming.Time("MainPropertiesWindowPlugin.HandleProjectLoad (total)");
         using (Gum.Diagnostics.StartupTiming.Time("  SetFrom + reload"))
         {
-            _viewModel.SetFrom(_projectManager.AutoSave, project);
+            _viewModel.SetFrom(project);
             RefreshLanguagesAndReload();
         }
     }
 
-    private void HandlePropertiesClicked()
+    // Shown each time a page is opened, so the page reflects the project as it is now.
+    private void Reload()
     {
         try
         {
@@ -103,14 +121,8 @@ class MainPropertiesWindowPlugin : CorePriorityPlugin
             {
                 return;
             }
-            _viewModel.SetFrom(_projectManager.AutoSave, project);
+            _viewModel.SetFrom(project);
             RefreshLanguagesAndReload();
-            if (_pluginTab != null)
-            {
-                _pluginTab.Show();
-                _pluginTab.CanClose = true;
-                _pluginTab.IsSelected = true;
-            }
         }
         catch (Exception ex)
         {

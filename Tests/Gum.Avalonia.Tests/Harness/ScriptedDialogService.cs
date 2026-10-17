@@ -1,4 +1,5 @@
 using Gum.Services.Dialogs;
+using Gum.SettingsWindow;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gum.Avalonia.Tests.Harness;
@@ -58,6 +59,35 @@ internal sealed class ScriptedDialogService : IDialogService
             }
             AnswerInWindow(viewModel, interact);
             return null;
+        });
+    }
+
+    /// <summary>
+    /// Queues the answer to the next Settings window: it opens on <paramref name="pageId"/>, and the
+    /// handler gets that page's content (a view model) and returns what the user closes it with.
+    /// </summary>
+    public void AnswerNextSettingsPage<TContent>(string pageId, Func<TContent, bool> fill) where TContent : class
+    {
+        AnswerNext<SettingsDialogViewModel>(settings =>
+        {
+            settings.SelectPage(pageId);
+            return fill((TContent)settings.SelectedPage!.Content);
+        });
+    }
+
+    /// <summary>
+    /// Queues the answer to the next Settings window, given in its own window: it opens on
+    /// <paramref name="pageId"/>, and <paramref name="interact"/> gets the window and that page's
+    /// content, then clicks and types until the window closes.
+    /// </summary>
+    public void AnswerNextSettingsPageInWindow<TContent>(string pageId, Action<DialogWindowDriver, TContent> interact) where TContent : class
+    {
+        AnswerNextInWindow<SettingsDialogViewModel>(window =>
+        {
+            SettingsDialogViewModel settings = (SettingsDialogViewModel)window.Window.DataContext!;
+            settings.SelectPage(pageId);
+            window.Layout();
+            interact(window, (TContent)settings.SelectedPage!.Content);
         });
     }
 
