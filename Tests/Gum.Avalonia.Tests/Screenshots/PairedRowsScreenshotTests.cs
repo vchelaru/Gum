@@ -1,3 +1,4 @@
+using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Avalonia.Tests.VariableGrid;
 using Gum.DataTypes;
@@ -66,6 +67,23 @@ public class PairedRowsScreenshotTests
         grid.Settle();
 
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, $"texture-rectangle-rows-width-{width}");
+    });
+
+    [SkippableFact]
+    public void GradientRows_OnACircle() => PrScreenshot.Run(() =>
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave ring = grid.Project.AddInstance(button, "Ring", "Circle");
+        grid.Select(ring);
+        grid.Input.Click(grid.Editor<CheckBoxDisplay>("UseGradient").CheckBox);
+        grid.Settle();
+        grid.TypeAndEnter("GradientX2", "80");
+        grid.Input.TypeInto(grid.View.FilterTextBox, "Gradient");
+        grid.Input.Window.Height = 700;
+        grid.Settle();
+
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "gradient-rows");
     });
 
     [SkippableFact]

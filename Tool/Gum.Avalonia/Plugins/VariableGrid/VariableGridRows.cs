@@ -21,7 +21,7 @@ internal static class VariableGridRows
     private static readonly IValueConverter DefaultToOpacity = new FuncValueConverter<bool, double>(isDefault => isDefault ? 0 : 1);
 
     /// <summary>
-    /// Variables that share a row: a position and a size read, and tab, as pairs. The nullable Min and
+    /// Variables that share a row: a position, a size and a gradient point read, and tab, as pairs. The nullable Min and
     /// Max sizes stay single rows, since each carries an "Is Null" check box.
     /// </summary>
     public static readonly RowPair[] Pairs =
@@ -30,6 +30,8 @@ internal static class VariableGridRows
         new RowPair("Width", "Height"),
         new RowPair("TextureLeft", "TextureTop"),
         new RowPair("TextureWidth", "TextureHeight"),
+        new RowPair("GradientX1", "GradientY1"),
+        new RowPair("GradientX2", "GradientY2"),
     };
 
     // The WPF IconInline size: 1.25 times the base font.
