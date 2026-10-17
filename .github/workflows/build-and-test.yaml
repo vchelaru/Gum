@@ -156,6 +156,13 @@ jobs:
       - name: Gum.ProjectServices.Tests (save parity on every OS)
         if: runner.os != 'Windows'
         run: dotnet test Tests/Gum.ProjectServices.Tests/Gum.ProjectServices.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+      # Slowest classes and tests in the job summary, so this job's minutes can be explained from the
+      # run page alone (#6092).
+      - name: Slowest tests
+        if: always()
+        continue-on-error: true
+        shell: pwsh
+        run: ./.github/scripts/trx-slowest.ps1 -ResultsDirectory TestResults
       - name: Publish Test Results
         if: always()
         uses: dorny/test-reporter@v2

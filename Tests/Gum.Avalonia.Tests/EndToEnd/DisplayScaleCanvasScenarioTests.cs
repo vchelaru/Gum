@@ -36,7 +36,7 @@ public class DisplayScaleCanvasScenarioTests
                 Point first = canvas.WindowPointOf(300, 300);
 
                 List<string> trace = new List<string>();
-                bool isDoubleClick = ClickTwice(canvas.Input.Window, first, new Point(first.X + 8, first.Y), canvas.Frame,
+                bool isDoubleClick = ClickTwice(canvas.Input.Window, canvas.Canvas, first, new Point(first.X + 8, first.Y), canvas.Frame,
                     time, TimeSpan.FromMilliseconds(100), () => InputLibrary.Cursor.Self.PrimaryDoubleClick,
                     () =>
                     {
@@ -74,7 +74,7 @@ public class DisplayScaleCanvasScenarioTests
                 Point first = tab.WindowPointOf(200, 200);
 
                 List<string> trace = new List<string>();
-                bool isDoubleClick = ClickTwice(tab.Input.Window, first, new Point(first.X + 8, first.Y), tab.Frame,
+                bool isDoubleClick = ClickTwice(tab.Input.Window, tab.CanvasControl, first, new Point(first.X + 8, first.Y), tab.Frame,
                     time, TimeSpan.FromMilliseconds(100), () => tab.Canvas.XnaCursor.PrimaryDoubleClick,
                     () =>
                     {
@@ -83,6 +83,38 @@ public class DisplayScaleCanvasScenarioTests
                     });
 
                 isDoubleClick.ShouldBeTrue(tab.Describe() + "; per frame: " + string.Join(" | ", trace));
+            }
+            finally
+            {
+                tab.CanvasControl.DisplayScaleOverride = null;
+                tab.Frame();
+            }
+        });
+    }
+
+    [SkippableFact]
+    public void TextureCoordinatesCanvas_AnExtraFrameAfterTheSecondClick_StillReadsADoubleClick()
+    {
+        Skip.IfNot(TextureCoordinateTabHarness.CanRun, TextureCoordinateTabHarness.SkipReason);
+        TextureCoordinateTabHarness.OnUiThread(() =>
+        {
+            using TextureCoordinateTabHarness tab = new TextureCoordinateTabHarness();
+            ComponentSave button = tab.Project.AddComponent("Button");
+            string atlas = tab.AddTextureFile("Atlas.png");
+            InstanceSave icon = tab.AddSprite(button, "Icon", atlas, left: 32, top: 32, width: 64, height: 64);
+            tab.Select(icon);
+            tab.CanvasControl.DisplayScaleOverride = 2;
+            ManualTimeProvider time = new ManualTimeProvider();
+            tab.Canvas.TimeManager.SetTimeProvider(time);
+            try
+            {
+                Point first = tab.WindowPointOf(200, 200);
+
+                bool isDoubleClick = ClickTwice(tab.Input.Window, tab.CanvasControl, first, new Point(first.X + 8, first.Y), tab.Frame,
+                    time, TimeSpan.FromMilliseconds(100), () => tab.Canvas.XnaCursor.PrimaryDoubleClick,
+                    extraFramesAfterSecondClick: 1);
+
+                isDoubleClick.ShouldBeTrue(tab.Describe());
             }
             finally
             {
@@ -110,7 +142,7 @@ public class DisplayScaleCanvasScenarioTests
             {
                 Point first = tab.WindowPointOf(200, 200);
 
-                bool isDoubleClick = ClickTwice(tab.Input.Window, first, first, tab.Frame,
+                bool isDoubleClick = ClickTwice(tab.Input.Window, tab.CanvasControl, first, first, tab.Frame,
                     time, TimeSpan.FromMilliseconds(500), () => tab.Canvas.XnaCursor.PrimaryDoubleClick);
 
                 isDoubleClick.ShouldBeFalse(tab.Describe());
@@ -125,27 +157,46 @@ public class DisplayScaleCanvasScenarioTests
 
     // Two left clicks a fixed, known time apart on a manual clock, so a slow runner cannot push
     // the second click outside the double-click window. Returns whether the cursor read a double
-    // click on the second.
-    private static bool ClickTwice(global::Avalonia.Controls.Window window, Point first, Point second, Action frame,
-        ManualTimeProvider time, TimeSpan between, Func<bool> isDoubleClick, Action? afterFrame = null)
+    // click on the second. The cursor's PrimaryDoubleClick lasts one canvas frame and the canvas
+    // also draws on its own timer, so a frame the test did not ask for can run after the second
+    // click and clear it before a read (#6117). The flag is read after every presented frame
+    // instead, whichever frame that is; extraFramesAfterSecondClick stands in for those frames.
+    private static bool ClickTwice(global::Avalonia.Controls.Window window, AvaloniaGraphicsDeviceControl canvas,
+        Point first, Point second, Action frame, ManualTimeProvider time, TimeSpan between, Func<bool> isDoubleClick,
+        Action? afterFrame = null, int extraFramesAfterSecondClick = 0)
     {
+        bool sawDoubleClick = false;
+        void ObservePresentedFrame() => sawDoubleClick |= isDoubleClick();
+
         void Step()
         {
             frame();
             afterFrame?.Invoke();
         }
 
-        window.MouseMove(first, RawInputModifiers.None);
-        Step();
-        window.MouseDown(first, MouseButton.Left, RawInputModifiers.None);
-        Step();
-        window.MouseUp(first, MouseButton.Left, RawInputModifiers.None);
-        Step();
-        time.Advance(between);
-        window.MouseDown(second, MouseButton.Left, RawInputModifiers.None);
-        Step();
-        window.MouseUp(second, MouseButton.Left, RawInputModifiers.None);
-        Step();
-        return isDoubleClick();
+        canvas.FramePresented += ObservePresentedFrame;
+        try
+        {
+            window.MouseMove(first, RawInputModifiers.None);
+            Step();
+            window.MouseDown(first, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            window.MouseUp(first, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            time.Advance(between);
+            window.MouseDown(second, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            window.MouseUp(second, MouseButton.Left, RawInputModifiers.None);
+            Step();
+            for (int i = 0; i < extraFramesAfterSecondClick; i++)
+            {
+                Step();
+            }
+        }
+        finally
+        {
+            canvas.FramePresented -= ObservePresentedFrame;
+        }
+        return sawDoubleClick;
     }
 }
