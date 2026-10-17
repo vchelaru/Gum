@@ -22,6 +22,7 @@ foreach ($file in Get-ChildItem -Path $ResultsDirectory -Filter *.trx -ErrorActi
             Class    = if ($dot -gt 0) { $name.Substring(0, $dot) } else { $name }
             Test     = $name
             Seconds  = [TimeSpan]::Parse($result.duration).TotalSeconds
+            Start    = [DateTimeOffset]::Parse($result.startTime)
         }
     }
 }
@@ -46,6 +47,16 @@ $lines += "| Test | Seconds |"
 $lines += "|---|---|"
 $rows | Sort-Object Seconds -Descending | Select-Object -First $Top |
     ForEach-Object { $lines += "| $($_.Test) | $([math]::Round($_.Seconds, 2)) |" }
+
+$lines += ""
+$lines += "### Mean seconds per test by position in the run (10 buckets, start order)"
+$ordered = @($rows | Sort-Object Start)
+$bucketSize = [math]::Max(1, [math]::Ceiling($ordered.Count / 10))
+for ($b = 0; $b * $bucketSize -lt $ordered.Count; $b++) {
+    $slice = $ordered[($b * $bucketSize)..([math]::Min($ordered.Count, ($b + 1) * $bucketSize) - 1)]
+    $mean = ($slice | Measure-Object Seconds -Average).Average
+    $lines += "- tests $($b * $bucketSize + 1)-$($b * $bucketSize + $slice.Count): $([math]::Round($mean, 2)) s"
+}
 
 $lines += ""
 $total = ($rows | Measure-Object Seconds -Sum).Sum
