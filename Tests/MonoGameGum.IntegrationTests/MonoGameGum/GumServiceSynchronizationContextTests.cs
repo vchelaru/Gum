@@ -17,6 +17,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// the length of its Update and Draw, so an await inside one service's handler resumes inside that
 /// service's Update under that service's default. No real threads: continuations drain on the test thread.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceSynchronizationContextTests : BaseTestClass
 {
     private static readonly GameTime FrameTime = new GameTime(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1.0 / 60.0));

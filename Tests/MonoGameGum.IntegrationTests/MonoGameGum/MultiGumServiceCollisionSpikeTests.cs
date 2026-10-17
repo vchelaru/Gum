@@ -24,6 +24,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// test is a collision; the failure message says which one. A test makes a service the default
 /// (<c>IGumService.Default</c>) before building for it, as the service rule requires.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class MultiGumServiceCollisionSpikeTests : BaseTestClass
 {
     // Project A puts its content at (20,20) and B at (200,100); sizes below keep the two apart.

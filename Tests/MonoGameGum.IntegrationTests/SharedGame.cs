@@ -91,6 +91,9 @@ public abstract class SharedGameLease : IDisposable
 
     public Game Game => _host;
 
+    /// <summary>Lets a test pass the lease wherever the per-test Game it replaced was passed.</summary>
+    public static implicit operator Game(SharedGameLease lease) => lease._host;
+
     public GraphicsDevice GraphicsDevice => _host.GraphicsDevice;
 
     public ContentManager Content => _host.Content;

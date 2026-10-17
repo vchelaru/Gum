@@ -16,6 +16,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// State that does not depend on the loaded project is shared by every service (#6066): the embedded default
 /// font and the invalid-texture placeholder. They go away when the last service leaves, not before.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceSharedDefaultsTests : BaseTestClass
 {
     private readonly string _root;
