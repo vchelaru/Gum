@@ -35,6 +35,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// between the two services (its message says which static or queue is shared). Each test names what it
 /// expects in its summary.
 /// </summary>
+[Collection(SharedMultiServiceGame.CollectionName)]
 public class MultiGumServiceInputSpikeTests : BaseTestClass
 {
     private const int CaptureWidth = 1024;
@@ -482,7 +483,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         string pathA = CopyTheme("Bubblegum");
         string pathB = CopyTheme("Hazard");
         InputGame game = new InputGame(pathA, pathB);
-        game.RunOneFrame();
+        game.Initialize();
 
         // Each screen is built with its own service's statics live, like the themes spike.
         BuildScreen(game, Side.A, "Bubblegum");
@@ -738,9 +739,9 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
         public int ConfirmClicks { get; set; }
     }
 
-    private sealed class InputGame : Game
+    private sealed class InputGame : IDisposable
     {
-        private readonly GraphicsDeviceManager _graphics;
+        private readonly MultiServiceGameLease _lease;
         private readonly string _pathA;
         private readonly string _pathB;
 
@@ -752,23 +753,18 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         public Point ConfirmCenter(Side side) => Center(Get(side).ConfirmButton.Visual);
 
+        public GraphicsDevice GraphicsDevice => _lease.GraphicsDevice;
+
         public InputGame(string pathA, string pathB)
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                GraphicsProfile = GraphicsProfile.HiDef,
-                PreferredBackBufferWidth = CaptureWidth,
-                PreferredBackBufferHeight = CaptureHeight,
-            };
+            _lease = SharedMultiServiceGame.Acquire();
             _pathA = pathA;
             _pathB = pathB;
         }
 
-        protected override void Initialize()
+        public void Initialize()
         {
-            base.Initialize();
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+            ShapeRenderer.Self.Initialize(GraphicsDevice, _lease.Game.Content);
 
             Setup(A, _pathA);
             Setup(B, _pathB);
@@ -776,7 +772,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         private void Setup(InputService service, string path)
         {
-            service.Project = service.Service.Initialize(this, path)!;
+            service.Project = service.Service.Initialize(_lease.Game, path)!;
 
             // Install the scripted input in this service's own scope and note its popup and modal roots.
             global::RenderingLibrary.IGumService.Default = service.Service;
@@ -788,10 +784,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
             }
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
             // Drop shared input state first so no control gets a focus callback after teardown.
             try { InteractiveGue.CurrentInputReceiver = null; } catch { /* teardown after a red test */ }
@@ -818,7 +811,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
             FrameworkElement.PopupRoot = null!;
             FrameworkElement.ModalRoot = null!;
             Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
-            base.Dispose(disposing);
+            _lease.Dispose();
         }
     }
 

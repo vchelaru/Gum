@@ -29,6 +29,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// The tests assert the behavior we want, so a red test marks a collision between the two services.
 /// Captures are saved as PNGs in <see cref="CaptureDirectory"/>.
 /// </summary>
+[Collection(SharedMultiServiceGame.CollectionName)]
 public class MultiGumServiceThemesSpikeTests : BaseTestClass
 {
     private const int CaptureWidth = 1024;
@@ -83,7 +84,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     {
         string path = CopyTheme(theme);
         using ThemedGame game = new ThemedGame(path, pathB: null);
-        game.RunOneFrame();
+        game.Initialize();
 
         DemoScreen screen = BuildDemoScreen(game.ServiceA, game.ProjectA, theme, offset: Point.Zero);
         Log($"{theme} solo: {screen.Describe()}");
@@ -322,7 +323,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         string pathA = CopyTheme("Bubblegum");
         string pathB = CopyTheme("Hazard");
         ThemedGame game = new ThemedGame(pathA, pathB);
-        game.RunOneFrame();
+        game.Initialize();
         return game;
     }
 
@@ -554,9 +555,9 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
     #region Test game
 
-    private sealed class ThemedGame : Game
+    private sealed class ThemedGame : IDisposable
     {
-        private readonly GraphicsDeviceManager _graphics;
+        private readonly MultiServiceGameLease _lease;
         private readonly string _pathA;
         private readonly string? _pathB;
 
@@ -565,38 +566,29 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         public GumProjectSave ProjectA { get; private set; } = null!;
         public GumProjectSave ProjectB { get; private set; } = null!;
 
+        public GraphicsDevice GraphicsDevice => _lease.GraphicsDevice;
+
         public ThemedGame(string pathA, string? pathB)
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes (the themes' rectangles and circles) needs an SM4 effect - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-                PreferredBackBufferWidth = CaptureWidth,
-                PreferredBackBufferHeight = CaptureHeight,
-            };
+            _lease = SharedMultiServiceGame.Acquire();
             _pathA = pathA;
             _pathB = pathB;
             ServiceA = new Gum.GumService();
             ServiceB = new Gum.GumService();
         }
 
-        protected override void Initialize()
+        public void Initialize()
         {
-            base.Initialize();
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+            ShapeRenderer.Self.Initialize(GraphicsDevice, _lease.Game.Content);
 
-            ProjectA = ServiceA.Initialize(this, _pathA)!;
+            ProjectA = ServiceA.Initialize(_lease.Game, _pathA)!;
             if (_pathB != null)
             {
-                ProjectB = ServiceB.Initialize(this, _pathB)!;
+                ProjectB = ServiceB.Initialize(_lease.Game, _pathB)!;
             }
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
             if (ServiceB.IsInitialized)
             {
@@ -615,7 +607,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
             FrameworkElement.PopupRoot = null!;
             FrameworkElement.ModalRoot = null!;
             Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
-            base.Dispose(disposing);
+            _lease.Dispose();
         }
     }
 
