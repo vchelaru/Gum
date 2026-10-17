@@ -35,7 +35,12 @@ jobs:
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe
-        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "FullyQualifiedName~StartupCostProbe" --logger "trx" --results-directory "TestResults"
+
+      - name: Startup probe
+        if: always()
+        shell: pwsh
+        run: Get-Content TestResults/startup-probe.txt
 
       - name: Slowest tests
         if: always()
