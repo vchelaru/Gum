@@ -1,0 +1,27 @@
+{
+  "Name": "DarkPro/Controls/Panel",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "PanelBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": []
+}

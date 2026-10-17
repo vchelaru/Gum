@@ -1,0 +1,1002 @@
+{
+  "Name": "ForestGlade/Controls/MenuItem",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Background.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Background.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Background.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Background.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Background.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Background.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "Background.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Background.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ContainerInstance.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ContainerInstance.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "ContainerInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ContainerInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "ContainerInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ContainerInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "DefaultChildContainer",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "SubItemContainerInstance"
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "MenuItemCategoryState",
+          "Type": "MenuItemCategory",
+          "SetsValue": true
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "SubItemContainerInstance.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "SubItemContainerInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "SubItemContainerInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "SubItemContainerInstance.IgnoredByParentSize",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "SubItemContainerInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "SubItemContainerInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "SubItemContainerInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 5
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 240
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/Nunito-Regular.ttf"
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "ContainerInstance"
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 241
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "\u003E"
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 240
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/Nunito-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "TextInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TextInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "ContainerInstance"
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 241
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "ExposedAsName": "Header",
+          "SetsValue": true,
+          "ValueAsString": "Menu Item"
+        },
+        {
+          "Name": "TextInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TextInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Font = Components/ForestGlade/Styles.Normal.Font",
+            "FontSize = Components/ForestGlade/Styles.Normal.FontSize",
+            "Color = Components/ForestGlade/Styles.Text.FillColor"
+          ]
+        },
+        {
+          "Name": "SubmenuIndicatorInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Font = Components/ForestGlade/Styles.Normal.Font",
+            "FontSize = Components/ForestGlade/Styles.Normal.FontSize",
+            "Color = Components/ForestGlade/Styles.Text.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "MenuItemCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [
+            {
+              "Name": "Background.FillAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "SubmenuIndicatorInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.Text.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [
+            {
+              "Name": "Background.FillAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "SubmenuIndicatorInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.SunPale.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.SunPale.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/ForestGlade/Styles.AccentDim.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Selected",
+          "Variables": [
+            {
+              "Name": "Background.FillAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "SubmenuIndicatorInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.SunPale.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/ForestGlade/Styles.AccentDim.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.SunPale.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Focused",
+          "Variables": [
+            {
+              "Name": "Background.FillAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "SubmenuIndicatorInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.SunPale.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.SunPale.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/ForestGlade/Styles.AccentDim.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [
+            {
+              "Name": "Background.FillAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "SubmenuIndicatorInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "SubmenuIndicatorInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.Disabled.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/ForestGlade/Styles.Disabled.FillColor"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "Background",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "SubmenuIndicatorInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "ContainerInstance",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "SubItemContainerInstance",
+      "BaseType": "Container"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "MenuItemBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "MenuItemCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

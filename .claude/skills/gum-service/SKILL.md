@@ -65,7 +65,7 @@ GumService.Default.Uninitialize()
 
 ## Multiple GumService Instances
 
-The constructor is public (`new GumService()`), but two instances don't give two independent UI spaces — `GraphicalUiElement.CanvasWidth`/`CanvasHeight`, `FormsUtilities`'s `Cursor`/`Keyboard`, and `SystemManagers.Default`/`ISystemManagers.Default` are static, so the second instance's `Initialize()` overwrites state the first depends on (e.g. `Cursor`'s zoom-aware hit-testing reads `SystemManagers.Default` directly, not its owning instance). Tracked as issue #4096.
+The constructor is public (`new GumService()`) and each XNA-like instance owns its project lookup, cursor, canvas and element registrations through a `GumContext` (`GumRuntime/GumContext.cs`). `IGumService.Default` is the current service: `Initialize` sets it only when none exists, `Update`/`Draw` set it for the call and restore it, and code that builds or changes another service's elements outside those calls must assign it first (a sample doing this: `Samples/MultiGumServiceSample/`). Raylib, Skia and Silk stay single-service. User docs: the "More Than One GumService" section of `docs/code/gum-code-reference/gumservice-gumui/README.md`; the remaining shared state is listed in `Direction/multi-gum-service-audit.md`.
 
 ## Key Files
 

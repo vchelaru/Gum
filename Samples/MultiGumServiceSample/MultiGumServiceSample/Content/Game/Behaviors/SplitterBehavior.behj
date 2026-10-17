@@ -1,0 +1,32 @@
+{
+  "Name": "SplitterBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "ResizeBehavior",
+      "Type": "ResizeBehavior?",
+      "SetsValue": true,
+      "Description": "Rows resizes the row above/below the splitter; Columns resizes the columns to either side. Empty leaves the choice to layout (StackPanel orientation determines the axis)."
+    }
+  ],
+  "ToolOnlyVariableReferences": [],
+  "Categories": [],
+  "RequiredInstances": [],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "ForestGlade/Controls/Splitter"
+}

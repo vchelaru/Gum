@@ -1,0 +1,206 @@
+{
+  "Name": "DarkPro/Controls/Label",
+  "BaseType": "Text",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Medium.ttf"
+        },
+        {
+          "Name": "FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "IsBold",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextCategoryState",
+          "Type": "TextCategory"
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor",
+            "Font = Components/DarkPro/Styles.Strong.Font",
+            "FontSize = Components/DarkPro/Styles.Strong.FontSize",
+            "IsBold = Components/DarkPro/Styles.Strong.IsBold"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "TextCategory",
+      "States": [
+        {
+          "Name": "Normal",
+          "Variables": [
+            {
+              "Name": "Font",
+              "Type": "string",
+              "SetsValue": true,
+              "IsFont": true,
+              "ValueAsString": "Fonts/DMMono-Regular.ttf"
+            },
+            {
+              "Name": "FontSize",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 14
+            },
+            {
+              "Name": "IsBold",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IsItalic",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Font = Components/DarkPro/Styles.Normal.Font",
+                "FontSize = Components/DarkPro/Styles.Normal.FontSize",
+                "IsBold = Components/DarkPro/Styles.Normal.IsBold",
+                "IsItalic = Components/DarkPro/Styles.Normal.IsItalic"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Strong",
+          "Variables": [
+            {
+              "Name": "Font",
+              "Type": "string",
+              "SetsValue": true,
+              "IsFont": true,
+              "ValueAsString": "Fonts/DMMono-Medium.ttf"
+            },
+            {
+              "Name": "FontSize",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 14
+            },
+            {
+              "Name": "IsBold",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IsItalic",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Font = Components/DarkPro/Styles.Strong.Font",
+                "FontSize = Components/DarkPro/Styles.Strong.FontSize",
+                "IsBold = Components/DarkPro/Styles.Strong.IsBold",
+                "IsItalic = Components/DarkPro/Styles.Strong.IsItalic"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "LabelBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

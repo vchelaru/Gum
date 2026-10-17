@@ -1,0 +1,1756 @@
+{
+  "Name": "ForestGlade/Styles",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "AccentDim.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 46
+        },
+        {
+          "Name": "AccentDim.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "AccentDim.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "AccentDim.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "AccentDim.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "AccentDim.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "AccentDim.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "AccentHalo.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 76
+        },
+        {
+          "Name": "AccentHalo.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "AccentHalo.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "AccentHalo.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "AccentHalo.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "AccentHalo.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "AccentHalo.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Bark.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "Bark.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 28
+        },
+        {
+          "Name": "Bark.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 70
+        },
+        {
+          "Name": "Bark.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Bark.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "Bark.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 46
+        },
+        {
+          "Name": "Border.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "Border.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Border.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "Border.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Border.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "Border.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BorderHover.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 107
+        },
+        {
+          "Name": "BorderHover.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "BorderHover.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "BorderHover.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "BorderHover.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "BorderHover.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "BorderHover.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonDisabledFillBottom.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 48
+        },
+        {
+          "Name": "ButtonDisabledFillBottom.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 58
+        },
+        {
+          "Name": "ButtonDisabledFillBottom.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 36
+        },
+        {
+          "Name": "ButtonDisabledFillBottom.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonDisabledFillBottom.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonDisabledFillBottom.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonDisabledFillTop.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 56
+        },
+        {
+          "Name": "ButtonDisabledFillTop.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 68
+        },
+        {
+          "Name": "ButtonDisabledFillTop.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 44
+        },
+        {
+          "Name": "ButtonDisabledFillTop.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonDisabledFillTop.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonDisabledFillTop.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonHoverFillBottom.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 59
+        },
+        {
+          "Name": "ButtonHoverFillBottom.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 178
+        },
+        {
+          "Name": "ButtonHoverFillBottom.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 8
+        },
+        {
+          "Name": "ButtonHoverFillBottom.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonHoverFillBottom.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonHoverFillBottom.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonHoverFillTop.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 92
+        },
+        {
+          "Name": "ButtonHoverFillTop.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 219
+        },
+        {
+          "Name": "ButtonHoverFillTop.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 44
+        },
+        {
+          "Name": "ButtonHoverFillTop.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonHoverFillTop.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonHoverFillTop.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonPushedFillBottom.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 40
+        },
+        {
+          "Name": "ButtonPushedFillBottom.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 112
+        },
+        {
+          "Name": "ButtonPushedFillBottom.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ButtonPushedFillBottom.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonPushedFillBottom.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonPushedFillBottom.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonPushedFillTop.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 46
+        },
+        {
+          "Name": "ButtonPushedFillTop.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 140
+        },
+        {
+          "Name": "ButtonPushedFillTop.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ButtonPushedFillTop.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonPushedFillTop.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonPushedFillTop.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonRestFillBottom.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 46
+        },
+        {
+          "Name": "ButtonRestFillBottom.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 140
+        },
+        {
+          "Name": "ButtonRestFillBottom.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ButtonRestFillBottom.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonRestFillBottom.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonRestFillBottom.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ButtonRestFillTop.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 72
+        },
+        {
+          "Name": "ButtonRestFillTop.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 196
+        },
+        {
+          "Name": "ButtonRestFillTop.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 15
+        },
+        {
+          "Name": "ButtonRestFillTop.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ButtonRestFillTop.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ButtonRestFillTop.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "CanopyDeep.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 57
+        },
+        {
+          "Name": "CanopyDeep.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 50
+        },
+        {
+          "Name": "CanopyDeep.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 5
+        },
+        {
+          "Name": "CanopyDeep.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "CanopyDeep.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "CanopyDeep.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "CanopyLit.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 59
+        },
+        {
+          "Name": "CanopyLit.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 178
+        },
+        {
+          "Name": "CanopyLit.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 8
+        },
+        {
+          "Name": "CanopyLit.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "CanopyLit.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "CanopyLit.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Colors.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Colors.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 75
+        },
+        {
+          "Name": "Colors.StackSpacing",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 4
+        },
+        {
+          "Name": "Colors.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -0
+        },
+        {
+          "Name": "Colors.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Colors.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Colors.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Colors.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Colors.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Colors.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Colors.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "DarkShadow.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 200
+        },
+        {
+          "Name": "DarkShadow.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 30
+        },
+        {
+          "Name": "DarkShadow.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "DarkShadow.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DarkShadow.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "DarkShadow.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "DarkShadow.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Disabled.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 88
+        },
+        {
+          "Name": "Disabled.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 106
+        },
+        {
+          "Name": "Disabled.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 74
+        },
+        {
+          "Name": "Disabled.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Disabled.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "Disabled.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "GlowMedium.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 110
+        },
+        {
+          "Name": "GlowMedium.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "GlowMedium.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "GlowMedium.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "GlowMedium.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "GlowMedium.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "GlowMedium.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "GlowStrong.FillAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 170
+        },
+        {
+          "Name": "GlowStrong.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "GlowStrong.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "GlowStrong.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "GlowStrong.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "GlowStrong.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "GlowStrong.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -0
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Icon.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Fonts/DejaVuSansMono.ttf"
+        },
+        {
+          "Name": "Icon.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "Icon.IsBold",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Icon.IsItalic",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Icon.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TextStyles"
+        },
+        {
+          "Name": "Icon.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Icon"
+        },
+        {
+          "Name": "InputFill.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 36
+        },
+        {
+          "Name": "InputFill.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "InputFill.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "InputFill.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "InputFill.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "InputFill.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "InputFillDark.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 23
+        },
+        {
+          "Name": "InputFillDark.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "InputFillDark.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "InputFillDark.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "InputFillDark.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "InputFillDark.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "InputFillDisabled.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 28
+        },
+        {
+          "Name": "InputFillDisabled.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 25
+        },
+        {
+          "Name": "InputFillDisabled.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 8
+        },
+        {
+          "Name": "InputFillDisabled.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "InputFillDisabled.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "InputFillDisabled.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "InputFillDisabledDark.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 18
+        },
+        {
+          "Name": "InputFillDisabledDark.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 16
+        },
+        {
+          "Name": "InputFillDisabledDark.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 5
+        },
+        {
+          "Name": "InputFillDisabledDark.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "InputFillDisabledDark.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "InputFillDisabledDark.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "LeafBright.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "LeafBright.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "LeafBright.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "LeafBright.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "LeafBright.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "LeafBright.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Muted.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 163
+        },
+        {
+          "Name": "Muted.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 186
+        },
+        {
+          "Name": "Muted.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 155
+        },
+        {
+          "Name": "Muted.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Muted.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "Muted.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Normal.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Fonts/Nunito-Regular.ttf"
+        },
+        {
+          "Name": "Normal.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "Normal.IsBold",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Normal.IsItalic",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Normal.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TextStyles"
+        },
+        {
+          "Name": "Normal.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Normal"
+        },
+        {
+          "Name": "Placeholder.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 135
+        },
+        {
+          "Name": "Placeholder.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 156
+        },
+        {
+          "Name": "Placeholder.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 125
+        },
+        {
+          "Name": "Placeholder.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Placeholder.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "Placeholder.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ScrollTrack.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 25
+        },
+        {
+          "Name": "ScrollTrack.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 22
+        },
+        {
+          "Name": "ScrollTrack.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "ScrollTrack.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ScrollTrack.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "ScrollTrack.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SliderDisabled.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 56
+        },
+        {
+          "Name": "SliderDisabled.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 68
+        },
+        {
+          "Name": "SliderDisabled.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 44
+        },
+        {
+          "Name": "SliderDisabled.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "SliderDisabled.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "SliderDisabled.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SliderTrack.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 25
+        },
+        {
+          "Name": "SliderTrack.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 22
+        },
+        {
+          "Name": "SliderTrack.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "SliderTrack.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "SliderTrack.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "SliderTrack.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "Strong.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Fonts/Nunito-Bold.ttf"
+        },
+        {
+          "Name": "Strong.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "Strong.IsBold",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Strong.IsItalic",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Strong.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TextStyles"
+        },
+        {
+          "Name": "Strong.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Strong"
+        },
+        {
+          "Name": "SunPale.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "SunPale.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "SunPale.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "SunPale.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "SunPale.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "SunPale.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Text.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 240
+        },
+        {
+          "Name": "Text.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Text.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 241
+        },
+        {
+          "Name": "Text.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Text.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "Text.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextStyles.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextStyles.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "TextStyles.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TextStyles.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "TextStyles.X",
+          "Type": "float",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextStyles.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 81
+        },
+        {
+          "Name": "Title.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Fonts/Fraunces-BoldItalic.ttf"
+        },
+        {
+          "Name": "Title.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 18
+        },
+        {
+          "Name": "Title.IsBold",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Title.IsItalic",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Title.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TextStyles"
+        },
+        {
+          "Name": "Title.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Title"
+        },
+        {
+          "Name": "VineCord.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "VineCord.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 53
+        },
+        {
+          "Name": "VineCord.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 90
+        },
+        {
+          "Name": "VineCord.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "VineCord.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "VineCord.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -0
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "WindowBody.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 38
+        },
+        {
+          "Name": "WindowBody.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 45
+        },
+        {
+          "Name": "WindowBody.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 10
+        },
+        {
+          "Name": "WindowBody.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "WindowBody.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "WindowBody.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "WindowTitleBar.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 22
+        },
+        {
+          "Name": "WindowTitleBar.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "WindowTitleBar.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 74
+        },
+        {
+          "Name": "WindowTitleBar.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "WindowTitleBar.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Colors"
+        },
+        {
+          "Name": "WindowTitleBar.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Colors",
+      "BaseType": "Container",
+      "Locked": true
+    },
+    {
+      "Name": "CanopyDeep",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "CanopyLit",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "LeafBright",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "SunPale",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Text",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Muted",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Disabled",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Placeholder",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Border",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "BorderHover",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "AccentDim",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "AccentHalo",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonRestFillTop",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonRestFillBottom",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonHoverFillTop",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonHoverFillBottom",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonPushedFillTop",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonPushedFillBottom",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonDisabledFillTop",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ButtonDisabledFillBottom",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "GlowMedium",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "GlowStrong",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "DarkShadow",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "InputFill",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "InputFillDisabled",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "InputFillDark",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "InputFillDisabledDark",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ScrollTrack",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "WindowBody",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "WindowTitleBar",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Bark",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "SliderTrack",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "SliderDisabled",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "VineCord",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Normal",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "Strong",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "Title",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "Icon",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "TextStyles",
+      "BaseType": "Container"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

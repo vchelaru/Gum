@@ -1,0 +1,131 @@
+{
+  "Name": "TextBoxBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "AcceptsReturn",
+      "Type": "bool",
+      "SetsValue": true,
+      "Description": "If true, Enter inserts a newline; otherwise it fires the default action.",
+      "ValueAsBool": false
+    },
+    {
+      "Name": "IsReadOnly",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": false
+    },
+    {
+      "Name": "AcceptsTab",
+      "Type": "bool",
+      "SetsValue": true,
+      "Description": "If true, Tab inserts a tab; otherwise it moves focus.",
+      "ValueAsBool": false
+    },
+    {
+      "Name": "Placeholder",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "MaxLength",
+      "Type": "int?",
+      "SetsValue": true,
+      "Description": "Caps how many characters can be entered. Empty = no limit."
+    },
+    {
+      "Name": "MaxLettersToShow",
+      "Type": "int?",
+      "SetsValue": true,
+      "Description": "Caps how many letters are rendered. Use MaxLength to cap input itself."
+    },
+    {
+      "Name": "MaxNumberOfLines",
+      "Type": "int?",
+      "SetsValue": true,
+      "Description": "Caps how many lines are rendered."
+    },
+    {
+      "Name": "TextWrapping",
+      "Type": "TextWrapping",
+      "SetsValue": true,
+      "Description": "NoWrap (default) keeps text on one line; Wrap breaks long lines at the container\u0027s width.",
+      "ValueAsString": "NoWrap"
+    }
+  ],
+  "ToolOnlyVariableReferences": [
+    "TextBoxCategoryState = IsEnabled ? \u0022Enabled\u0022 : \u0022Disabled\u0022",
+    "LineModeCategoryState = TextWrapping == \u0022Wrap\u0022 ? \u0022Multi\u0022 : (AcceptsReturn ? \u0022Multi\u0022 : \u0022Single\u0022)"
+  ],
+  "Categories": [
+    {
+      "Name": "TextBoxCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    },
+    {
+      "Name": "LineModeCategory",
+      "States": [
+        {
+          "Name": "Single",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Multi",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "RequiredInstances": [
+    {
+      "Behaviors": [],
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Behaviors": [],
+      "Name": "CaretInstance",
+      "BaseType": ""
+    }
+  ],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "DarkPro/Controls/TextBox"
+}

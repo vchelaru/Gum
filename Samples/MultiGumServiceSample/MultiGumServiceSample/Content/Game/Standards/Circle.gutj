@@ -1,0 +1,423 @@
+{
+  "Name": "Circle",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Alpha2",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Blend",
+          "Type": "Blend",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Blue2",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DropshadowAlpha",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "DropshadowBlue",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DropshadowBlur",
+          "Type": "float",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "DropshadowGreen",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DropshadowOffsetX",
+          "Type": "float",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DropshadowOffsetY",
+          "Type": "float",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "DropshadowRed",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ExposeChildrenEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FillAlpha",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "FillBlue",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "FillGreen",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "FillRed",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "GradientInnerRadius",
+          "Type": "float",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsFloat": 50
+        },
+        {
+          "Name": "GradientInnerRadiusUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "GradientOuterRadius",
+          "Type": "float",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "GradientOuterRadiusUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "GradientType",
+          "Type": "GradientType",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "GradientX1",
+          "Type": "float",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "GradientX1Units",
+          "Type": "PositionUnitType",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "GradientX2",
+          "Type": "float",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "GradientX2Units",
+          "Type": "PositionUnitType",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "GradientY1",
+          "Type": "float",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "GradientY1Units",
+          "Type": "PositionUnitType",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "GradientY2",
+          "Type": "float",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "GradientY2Units",
+          "Type": "PositionUnitType",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Green2",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "HasDropshadow",
+          "Type": "bool",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "HasEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 32
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IgnoredByParentSize",
+          "Type": "bool",
+          "Category": "Parent",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "IsFilled",
+          "Type": "bool",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "MaxHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MaxWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MinHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MinWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "Parent",
+          "Type": "string",
+          "Category": "Parent",
+          "SetsValue": true
+        },
+        {
+          "Name": "Red2",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Rotation",
+          "Type": "float",
+          "Category": "Flip and Rotation",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "StrokeAlpha",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "StrokeBlue",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "StrokeGreen",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "StrokeRed",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "StrokeWidth",
+          "Type": "float",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "UseGradient",
+          "Type": "bool",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Visible",
+          "Type": "bool",
+          "Category": "States and Visibility",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 32
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "X",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Y",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "YOrigin",
+          "Type": "VerticalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "YUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": []
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

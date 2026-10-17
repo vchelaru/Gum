@@ -1,0 +1,46 @@
+{
+  "Name": "ItemsControlBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "VerticalScrollBarVisibility",
+      "Type": "ScrollBarVisibility",
+      "SetsValue": true,
+      "Description": "Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.",
+      "ValueAsString": "Auto"
+    },
+    {
+      "Name": "HorizontalScrollBarVisibility",
+      "Type": "ScrollBarVisibility",
+      "SetsValue": true,
+      "Description": "Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.",
+      "ValueAsString": "Auto"
+    },
+    {
+      "Name": "Orientation",
+      "Type": "Orientation?",
+      "SetsValue": true,
+      "Description": "Vertical stacks items top-to-bottom; Horizontal stacks left-to-right. Empty leaves the inner panel\u0027s authored ChildrenLayout untouched.",
+      "ValueAsString": "Vertical"
+    }
+  ],
+  "ToolOnlyVariableReferences": [],
+  "Categories": [],
+  "RequiredInstances": [],
+  "RequiredAnimations": []
+}

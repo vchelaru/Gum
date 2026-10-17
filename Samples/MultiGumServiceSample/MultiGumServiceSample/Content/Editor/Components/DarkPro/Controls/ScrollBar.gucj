@@ -1,0 +1,328 @@
+{
+  "Name": "DarkPro/Controls/ScrollBar",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "OrientationCategoryState",
+          "Type": "OrientationCategory",
+          "SetsValue": true
+        },
+        {
+          "Name": "ScrollBarCategoryState",
+          "Type": "ScrollBarCategory"
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "ThumbInstance.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TrackInstance"
+        },
+        {
+          "Name": "ThumbInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ThumbInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ThumbInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ThumbInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "ThumbInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ThumbInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "TrackInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "TrackInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ScrollBarCategory",
+      "States": []
+    },
+    {
+      "Name": "OrientationCategory",
+      "States": [
+        {
+          "Name": "Vertical",
+          "Variables": [
+            {
+              "Name": "Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 128
+            },
+            {
+              "Name": "HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "ThumbInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 32
+            },
+            {
+              "Name": "ThumbInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "Category": "Dimensions",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "ThumbInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -6
+            },
+            {
+              "Name": "ThumbInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "TrackInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "TrackInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 18
+            },
+            {
+              "Name": "WidthUnits",
+              "Type": "DimensionUnitType",
+              "Category": "Dimensions",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Horizontal",
+          "Variables": [
+            {
+              "Name": "Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 18
+            },
+            {
+              "Name": "HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "ThumbInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -6
+            },
+            {
+              "Name": "ThumbInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "ThumbInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 32
+            },
+            {
+              "Name": "ThumbInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TrackInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "TrackInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "TrackInstance",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "ThumbInstance",
+      "BaseType": "DarkPro/Controls/ScrollBarThumb"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ScrollBarBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ScrollBarCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

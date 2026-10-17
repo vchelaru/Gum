@@ -1,0 +1,1310 @@
+{
+  "Name": "ForestGlade/Controls/ComboBox",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Border.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Border.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 12
+        },
+        {
+          "Name": "Border.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Border.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Border.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 12
+        },
+        {
+          "Name": "Border.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Border.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Border.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 56
+        },
+        {
+          "Name": "Border.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "Border.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Border.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "Border.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "Border.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Border.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Border.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Border.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Border.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ComboBoxCategoryState",
+          "Type": "ComboBoxCategory",
+          "SetsValue": true,
+          "ValueAsString": "Enabled"
+        },
+        {
+          "Name": "DefaultChildContainer",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "ListBoxInstance"
+        },
+        {
+          "Name": "Fill.Blue2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 36
+        },
+        {
+          "Name": "Fill.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Fill.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 12
+        },
+        {
+          "Name": "Fill.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Fill.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Fill.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 12
+        },
+        {
+          "Name": "Fill.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 23
+        },
+        {
+          "Name": "Fill.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "Fill.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Fill.GradientType",
+          "Type": "GradientType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Fill.GradientX1",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.GradientX1Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Fill.GradientX2",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.GradientX2Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Fill.GradientY1",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.GradientY1Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Fill.GradientY2",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.GradientY2Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Fill.Green2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "Fill.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Fill.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Fill.Red2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "Fill.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.UseGradient",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Fill.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Fill.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Fill.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Fill.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Fill.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "FocusRing.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 15
+        },
+        {
+          "Name": "FocusRing.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 15
+        },
+        {
+          "Name": "FocusRing.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "FocusRing.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusRing.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRing.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 76
+        },
+        {
+          "Name": "FocusRing.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "FocusRing.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "FocusRing.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "FocusRing.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "FocusRing.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRing.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "FocusRing.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusRing.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusRing.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusRing.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "FocusRing.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusRing.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusRing.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "IconInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "IconInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DejaVuSansMono.ttf"
+        },
+        {
+          "Name": "IconInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 11
+        },
+        {
+          "Name": "IconInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "IconInstance.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "IconInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 16
+        },
+        {
+          "Name": "IconInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IconInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "IconInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "\u25BC"
+        },
+        {
+          "Name": "IconInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 16
+        },
+        {
+          "Name": "IconInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IconInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -12
+        },
+        {
+          "Name": "IconInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "IconInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "IconInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "IconInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ListBoxInstance.ListBoxCategoryState",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Enabled"
+        },
+        {
+          "Name": "ListBoxInstance.SizingCategoryState",
+          "Type": "SizingCategory",
+          "SetsValue": true,
+          "ValueAsString": "FitChildren"
+        },
+        {
+          "Name": "ListBoxInstance.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "ListBoxInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ListBoxInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ListBoxInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 28
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 240
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/Nunito-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 241
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Selected Item"
+        },
+        {
+          "Name": "TextInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -32
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 12
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 256
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "FocusRing.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/ForestGlade/Styles.AccentHalo.FillColor"
+          ]
+        },
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/ForestGlade/Styles.Text.FillColor",
+            "Font = Components/ForestGlade/Styles.Normal.Font",
+            "FontSize = Components/ForestGlade/Styles.Normal.FontSize"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ComboBoxCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 56
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 115
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocused",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Pushed",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 20
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 163
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 186
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 155
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 163
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 186
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 155
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocused",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 20
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 163
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 186
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 155
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 163
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 186
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 155
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "FocusRing",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Fill",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Border",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "IconInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "ListBoxInstance",
+      "BaseType": "ForestGlade/Controls/ListBox"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ComboBoxBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ComboBoxCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

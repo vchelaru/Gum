@@ -1,0 +1,556 @@
+{
+  "Name": "ForestGlade/Controls/ColorPicker",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 160
+        },
+        {
+          "Name": "HueContainer.ClipsChildren",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "HueContainer.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueContainer.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueContainer.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "HueContainer.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueContainer.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueContainer.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "HueDisplay.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueDisplay.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueDisplay.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HueContainer"
+        },
+        {
+          "Name": "HueDisplay.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueDisplay.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "HueIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HueContainer"
+        },
+        {
+          "Name": "HueIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "HueIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "HueIndicatorInner.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -2
+        },
+        {
+          "Name": "HueIndicatorInner.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueIndicatorInner.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HueIndicator"
+        },
+        {
+          "Name": "HueIndicatorInner.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -2
+        },
+        {
+          "Name": "HueIndicatorInner.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueIndicatorInner.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "HueIndicatorInner.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "HueIndicatorOuter.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueIndicatorOuter.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueIndicatorOuter.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HueIndicator"
+        },
+        {
+          "Name": "HueIndicatorOuter.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HueIndicatorOuter.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HueIndicatorOuter.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HueIndicatorOuter.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueIndicatorOuter.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueOutline.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueOutline.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HueOutline.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HueContainer"
+        },
+        {
+          "Name": "HueOutline.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 80
+        },
+        {
+          "Name": "HueOutline.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 80
+        },
+        {
+          "Name": "HueOutline.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 80
+        },
+        {
+          "Name": "HueOutline.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HueOutline.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueContainer.ClipsChildren",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "SaturationValueContainer.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SaturationValueContainer.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueContainer.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -24
+        },
+        {
+          "Name": "SaturationValueContainer.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueDisplay.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SaturationValueDisplay.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueDisplay.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "SaturationValueContainer"
+        },
+        {
+          "Name": "SaturationValueDisplay.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SaturationValueDisplay.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 11
+        },
+        {
+          "Name": "SaturationValueIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "SaturationValueContainer"
+        },
+        {
+          "Name": "SaturationValueIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 11
+        },
+        {
+          "Name": "SaturationValueIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "SaturationValueIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "SaturationValueIndicatorInner.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -2
+        },
+        {
+          "Name": "SaturationValueIndicatorInner.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueIndicatorInner.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "SaturationValueIndicator"
+        },
+        {
+          "Name": "SaturationValueIndicatorInner.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -2
+        },
+        {
+          "Name": "SaturationValueIndicatorInner.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueIndicatorInner.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "SaturationValueIndicatorInner.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "SaturationValueIndicator"
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SaturationValueIndicatorOuter.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueOutline.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SaturationValueOutline.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "SaturationValueOutline.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "SaturationValueContainer"
+        },
+        {
+          "Name": "SaturationValueOutline.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 80
+        },
+        {
+          "Name": "SaturationValueOutline.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 80
+        },
+        {
+          "Name": "SaturationValueOutline.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 80
+        },
+        {
+          "Name": "SaturationValueOutline.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SaturationValueOutline.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 184
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "SaturationValueContainer",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "SaturationValueDisplay",
+      "BaseType": "Sprite"
+    },
+    {
+      "Name": "SaturationValueOutline",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "SaturationValueIndicator",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "SaturationValueIndicatorOuter",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "SaturationValueIndicatorInner",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "HueContainer",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "HueDisplay",
+      "BaseType": "Sprite"
+    },
+    {
+      "Name": "HueOutline",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "HueIndicator",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "HueIndicatorOuter",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "HueIndicatorInner",
+      "BaseType": "Rectangle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ColorPickerBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

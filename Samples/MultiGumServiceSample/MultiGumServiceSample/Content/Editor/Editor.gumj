@@ -1,0 +1,387 @@
+{
+  "FontRanges": "32-126,160-255,9632-9727,10003-10007",
+  "FontSpacingVertical": 1,
+  "FontSpacingHorizontal": 1,
+  "UseFontCharacterFile": false,
+  "AutoSizeFontOutputs": false,
+  "FontGenerator": 1,
+  "Version": 6,
+  "DefaultCanvasWidth": 1024,
+  "DefaultCanvasHeight": 768,
+  "CustomCanvasSizes": [
+    {
+      "Width": null,
+      "Height": null,
+      "FriendlyName": "Project Default"
+    },
+    {
+      "Width": 640,
+      "Height": 480,
+      "FriendlyName": "480p"
+    },
+    {
+      "Width": 1280,
+      "Height": 720,
+      "FriendlyName": "720p"
+    },
+    {
+      "Width": 1280,
+      "Height": 800,
+      "FriendlyName": "Steam Deck"
+    },
+    {
+      "Width": 1920,
+      "Height": 1080,
+      "FriendlyName": "1080p"
+    },
+    {
+      "Width": 3840,
+      "Height": 2160,
+      "FriendlyName": "4k"
+    }
+  ],
+  "ShowOutlines": false,
+  "ShowCanvasOutline": true,
+  "ShowRuler": true,
+  "ShowCheckerBackground": true,
+  "TextureFilter": "Point",
+  "ConvertVariablesOnUnitTypeChange": false,
+  "RestrictToUnitValues": true,
+  "SnapToGrid": false,
+  "GridSize": 16,
+  "RestrictFileNamesForAndroid": false,
+  "Guides": [],
+  "FavoriteComponents": [],
+  "ParentProjectRoot": "../",
+  "LocalizationFiles": [],
+  "ShowLocalizationInGum": true,
+  "CurrentLanguageIndex": 0,
+  "ScreenReferences": [
+    {
+      "Name": "EditorScreen",
+      "ElementType": 0,
+      "LinkType": 0
+    }
+  ],
+  "ComponentReferences": [
+    {
+      "Name": "DarkPro/Controls/Button",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ButtonIcon",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/CheckBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ColorPicker",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ComboBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/DialogBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Expander",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ItemsControl",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Label",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ListBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ListBoxItem",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Menu",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/MenuItem",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Panel",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/PasswordBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/RadioButton",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ScrollBar",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ScrollBarThumb",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/ScrollViewer",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Slider",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/SliderThumb",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Splitter",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/StackPanel",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/TextBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Toast",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/UserControl",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Controls/Window",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Elements/Divider",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Elements/Icon",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "DarkPro/Styles",
+      "ElementType": 1,
+      "LinkType": 0
+    }
+  ],
+  "StandardElementReferences": [
+    {
+      "Name": "Circle",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Component",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Container",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "NineSlice",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Polygon",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Rectangle",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Sprite",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Text",
+      "ElementType": 2,
+      "LinkType": 0
+    }
+  ],
+  "BehaviorReferences": [
+    {
+      "Name": "ButtonBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/Button"
+    },
+    {
+      "Name": "CheckBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/CheckBox"
+    },
+    {
+      "Name": "ColorPickerBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/ColorPicker"
+    },
+    {
+      "Name": "ComboBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/ComboBox"
+    },
+    {
+      "Name": "DialogBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/DialogBox"
+    },
+    {
+      "Name": "ExpanderBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/Expander"
+    },
+    {
+      "Name": "ItemsControlBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "LabelBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "ListBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/ListBox"
+    },
+    {
+      "Name": "ListBoxItemBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/ListBoxItem"
+    },
+    {
+      "Name": "MenuBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/Menu"
+    },
+    {
+      "Name": "MenuItemBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/MenuItem"
+    },
+    {
+      "Name": "OnScreenKeyboardBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "PanelBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "PasswordBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/PasswordBox"
+    },
+    {
+      "Name": "RadioButtonBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/RadioButton"
+    },
+    {
+      "Name": "ScrollBarBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/ScrollBar"
+    },
+    {
+      "Name": "ScrollViewerBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/ScrollViewer"
+    },
+    {
+      "Name": "SliderBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/Slider"
+    },
+    {
+      "Name": "SplitterBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/Splitter"
+    },
+    {
+      "Name": "StackPanelBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "TextBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/TextBox"
+    },
+    {
+      "Name": "ToastBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/Toast"
+    },
+    {
+      "Name": "ToggleBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "UserControlBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "DarkPro/Controls/UserControl"
+    },
+    {
+      "Name": "WindowBehavior",
+      "SourcePath": ""
+    }
+  ],
+  "SinglePixelTextureFile": "",
+  "CustomProperties": []
+}

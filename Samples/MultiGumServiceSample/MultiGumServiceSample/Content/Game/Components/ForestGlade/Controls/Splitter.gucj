@@ -1,0 +1,173 @@
+{
+  "Name": "ForestGlade/Controls/Splitter",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "LineInstance.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "LineInstance.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 53
+        },
+        {
+          "Name": "LineInstance.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 90
+        },
+        {
+          "Name": "LineInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -0
+        },
+        {
+          "Name": "LineInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "LineInstance.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "LineInstance.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "LineInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -0
+        },
+        {
+          "Name": "LineInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "LineInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "LineInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "LineInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "LineInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "LineInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "LineInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -0
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "LineInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/ForestGlade/Styles.VineCord.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "LineInstance",
+      "BaseType": "Rectangle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "SplitterBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

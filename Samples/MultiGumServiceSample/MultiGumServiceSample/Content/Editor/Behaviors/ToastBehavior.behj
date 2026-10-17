@@ -1,0 +1,32 @@
+{
+  "Name": "ToastBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    }
+  ],
+  "ToolOnlyVariableReferences": [],
+  "Categories": [],
+  "RequiredInstances": [
+    {
+      "Behaviors": [],
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    }
+  ],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "DarkPro/Controls/Toast"
+}

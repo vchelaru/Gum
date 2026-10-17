@@ -1,0 +1,373 @@
+{
+  "Name": "DarkPro/Controls/DialogBox",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "ContinueIndicatorInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "ContinueIndicatorInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DejaVuSansMono.ttf"
+        },
+        {
+          "Name": "ContinueIndicatorInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "ContinueIndicatorInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "ContinueIndicatorInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "ContinueIndicatorInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ContinueIndicatorInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ContinueIndicatorInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "\u25B6"
+        },
+        {
+          "Name": "ContinueIndicatorInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ContinueIndicatorInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "ContinueIndicatorInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -12
+        },
+        {
+          "Name": "ContinueIndicatorInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ContinueIndicatorInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "ContinueIndicatorInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -8
+        },
+        {
+          "Name": "ContinueIndicatorInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ContinueIndicatorInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 5
+        },
+        {
+          "Name": "ExposeChildrenEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 128
+        },
+        {
+          "Name": "NineSliceInstance.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "NineSliceInstance.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 38
+        },
+        {
+          "Name": "NineSliceInstance.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "NineSliceInstance.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "NineSliceInstance.HasDropshadow",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "NineSliceInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "NineSliceInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "NineSliceInstance.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "NineSliceInstance.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "NineSliceInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "NineSliceInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "NineSliceInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "NineSliceInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "NineSliceInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "NineSliceInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "NineSliceInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "NineSliceInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -32
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "This is a dialog box. This text will be displayed one character at a time. Typically a dialog box is added to a Screen such as the GameScreen, but it defaults to being invisible."
+        },
+        {
+          "Name": "TextInstance.TextOverflowVerticalMode",
+          "Type": "TextOverflowVerticalMode",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -16
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "TextInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 256
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor",
+            "Font = Components/DarkPro/Styles.Normal.Font",
+            "FontSize = Components/DarkPro/Styles.Normal.FontSize"
+          ]
+        },
+        {
+          "Name": "NineSliceInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+          ]
+        },
+        {
+          "Name": "ContinueIndicatorInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "NineSliceInstance",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "ContinueIndicatorInstance",
+      "BaseType": "Text"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "DialogBoxBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ContainedType",
+    "ChildrenLayout",
+    "ExposeChildrenEvents"
+  ]
+}

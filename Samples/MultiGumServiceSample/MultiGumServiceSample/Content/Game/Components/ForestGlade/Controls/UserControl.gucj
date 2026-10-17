@@ -1,0 +1,128 @@
+{
+  "Name": "ForestGlade/Controls/UserControl",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Background.ExposeChildrenEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Background.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 57
+        },
+        {
+          "Name": "Background.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 50
+        },
+        {
+          "Name": "Background.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 5
+        },
+        {
+          "Name": "Background.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Background.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Background.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "Background.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/ForestGlade/Styles.CanopyDeep.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Background",
+      "BaseType": "Rectangle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "UserControlBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ContainedType",
+    "ChildrenLayout"
+  ]
+}

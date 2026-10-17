@@ -1,0 +1,2815 @@
+{
+  "Name": "ForestGlade/Controls/CheckBox",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "BoxBorder.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BoxBorder.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "BoxBorder.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BoxBorder.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BoxBorder.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "BoxBorder.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "BoxBorder.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "BoxBorder.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "BoxContainer"
+        },
+        {
+          "Name": "BoxBorder.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 76
+        },
+        {
+          "Name": "BoxBorder.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "BoxBorder.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "BoxBorder.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "BoxBorder.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1.5
+        },
+        {
+          "Name": "BoxBorder.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "BoxBorder.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxBorder.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxBorder.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BoxBorder.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "BoxContainer.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "BoxContainer.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "BoxContainer.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxContainer.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "BoxContainer.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxContainer.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxContainer.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxContainer.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxContainer.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxContainer.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BoxContainer.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "BoxFill.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BoxFill.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "BoxFill.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BoxFill.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BoxFill.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "BoxFill.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "BoxFill.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 28
+        },
+        {
+          "Name": "BoxFill.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "BoxFill.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "BoxFill.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxFill.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "BoxFill.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "BoxContainer"
+        },
+        {
+          "Name": "BoxFill.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxFill.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "BoxFill.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxFill.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxFill.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxFill.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxFill.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxFill.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BoxFill.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "CheckBoxCategoryState",
+          "Type": "CheckBoxCategory"
+        },
+        {
+          "Name": "CheckGlyph.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 31
+        },
+        {
+          "Name": "CheckGlyph.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DejaVuSansMono.ttf"
+        },
+        {
+          "Name": "CheckGlyph.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 16
+        },
+        {
+          "Name": "CheckGlyph.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 63
+        },
+        {
+          "Name": "CheckGlyph.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "CheckGlyph.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckGlyph.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "CheckGlyph.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "BoxContainer"
+        },
+        {
+          "Name": "CheckGlyph.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 5
+        },
+        {
+          "Name": "CheckGlyph.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "\u2713"
+        },
+        {
+          "Name": "CheckGlyph.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "CheckGlyph.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "CheckGlyph.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "CheckGlyph.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckGlyph.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -2
+        },
+        {
+          "Name": "CheckGlyph.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckGlyph.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckGlyph.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "CheckGlyph.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "CheckGlyph.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "DashIndicator.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "DashIndicator.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "DashIndicator.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "DashIndicator.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "DashIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "DashIndicator.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DashIndicator.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "DashIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "BoxContainer"
+        },
+        {
+          "Name": "DashIndicator.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DashIndicator.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "DashIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 9
+        },
+        {
+          "Name": "DashIndicator.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DashIndicator.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 9
+        },
+        {
+          "Name": "DashIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "DashIndicator.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DashIndicator.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DashIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "DashIndicator.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "FocusRing.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 11
+        },
+        {
+          "Name": "FocusRing.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 11
+        },
+        {
+          "Name": "FocusRing.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "FocusRing.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusRing.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRing.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "BoxContainer"
+        },
+        {
+          "Name": "FocusRing.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 76
+        },
+        {
+          "Name": "FocusRing.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "FocusRing.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "FocusRing.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "FocusRing.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "FocusRing.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRing.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "FocusRing.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusRing.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -3
+        },
+        {
+          "Name": "FocusRing.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusRing.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusRing.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusRing.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusRing.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IsChecked",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 240
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/Nunito-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "TextInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TextInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 241
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "ExposedAsName": "Text",
+          "SetsValue": true,
+          "ValueAsString": "Label"
+        },
+        {
+          "Name": "TextInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -26
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 26
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 128
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "FocusRing.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/ForestGlade/Styles.AccentHalo.FillColor"
+          ]
+        },
+        {
+          "Name": "DashIndicator.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/ForestGlade/Styles.SunPale.FillColor"
+          ]
+        },
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/ForestGlade/Styles.Text.FillColor",
+            "Font = Components/ForestGlade/Styles.Normal.Font",
+            "FontSize = Components/ForestGlade/Styles.Normal.FontSize"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "CheckBoxCategory",
+      "States": [
+        {
+          "Name": "EnabledOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 76
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 140
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "FocusedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocusedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "PushedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 18
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 16
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 8
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocusedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 18
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 16
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 8
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "EnabledOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "CheckGlyph.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 31
+            },
+            {
+              "Name": "CheckGlyph.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 63
+            },
+            {
+              "Name": "CheckGlyph.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 5
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "CheckGlyph.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 31
+            },
+            {
+              "Name": "CheckGlyph.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 63
+            },
+            {
+              "Name": "CheckGlyph.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 5
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "FocusedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "CheckGlyph.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 31
+            },
+            {
+              "Name": "CheckGlyph.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 63
+            },
+            {
+              "Name": "CheckGlyph.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 5
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocusedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "CheckGlyph.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 31
+            },
+            {
+              "Name": "CheckGlyph.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 63
+            },
+            {
+              "Name": "CheckGlyph.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 5
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "PushedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 126
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckGlyph.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 176
+            },
+            {
+              "Name": "CheckGlyph.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 245
+            },
+            {
+              "Name": "CheckGlyph.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 214
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 18
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 16
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 8
+            },
+            {
+              "Name": "CheckGlyph.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "CheckGlyph.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "CheckGlyph.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocusedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 18
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 16
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 8
+            },
+            {
+              "Name": "CheckGlyph.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "CheckGlyph.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "CheckGlyph.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "EnabledIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "FocusedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocusedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "PushedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 3
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 240
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 241
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 18
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 16
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 8
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocusedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BoxFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 18
+            },
+            {
+              "Name": "BoxFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 16
+            },
+            {
+              "Name": "BoxFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 8
+            },
+            {
+              "Name": "CheckGlyph.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 88
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 106
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 74
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "BoxContainer",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "FocusRing",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "BoxFill",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "BoxBorder",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "CheckGlyph",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "DashIndicator",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "CheckBoxBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "CheckBoxCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}
