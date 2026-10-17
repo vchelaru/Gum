@@ -48,6 +48,13 @@ jobs:
           Get-Content TestResults/startup-probe.txt
           Get-Content TestResults/marks.txt
 
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-results
+          path: TestResults
+
       - name: Slowest tests
         if: always()
         shell: pwsh

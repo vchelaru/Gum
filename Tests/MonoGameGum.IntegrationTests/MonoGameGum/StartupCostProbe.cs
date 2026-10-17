@@ -18,6 +18,19 @@ public static class ProbeLog
     private static readonly Stopwatch Clock = Stopwatch.StartNew();
     private static long _last;
 
+    // One CSV row per call: when, thread count, handle count, working set, managed heap.
+    public static void LogProcess()
+    {
+        string directory = Path.Combine(
+            Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") ?? ".", "TestResults");
+        Directory.CreateDirectory(directory);
+        using System.Diagnostics.Process process = System.Diagnostics.Process.GetCurrentProcess();
+        File.AppendAllText(
+            Path.Combine(directory, "process.csv"),
+            $"{DateTime.UtcNow:O},{process.Threads.Count},{process.HandleCount}," +
+            $"{process.WorkingSet64 / (1024 * 1024)},{GC.GetTotalMemory(false) / (1024 * 1024)}\n");
+    }
+
     // Appends "label: ms since the previous mark" to the probe file.
     public static void Mark(string label)
     {
