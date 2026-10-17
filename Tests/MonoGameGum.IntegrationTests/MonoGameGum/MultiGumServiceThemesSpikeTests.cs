@@ -29,6 +29,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// The tests assert the behavior we want, so a red test marks a collision between the two services.
 /// Captures are saved as PNGs in <see cref="CaptureDirectory"/>.
 /// </summary>
+[Collection(SharedMultiServiceGame.CollectionName)]
 public class MultiGumServiceThemesSpikeTests : BaseTestClass
 {
     private const int CaptureWidth = 1024;
@@ -58,7 +59,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
     public MultiGumServiceThemesSpikeTests()
     {
-        TempProbe.Reset();
         _rootDirectory = Path.Combine(Path.GetTempPath(), "GumTwoThemes_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(CaptureDirectory);
     }
@@ -73,8 +73,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
         try { File.AppendAllText(Path.Combine(CaptureDirectory, "run-log.txt"), _log.ToString()); } catch { /* best effort */ }
         try { Directory.Delete(_rootDirectory, recursive: true); } catch { /* best effort */ }
-        TempProbe.Mark("classDispose");
-        TempProbe.Report();
     }
 
     #region Harness checks (a lone service must render its own theme)
@@ -85,11 +83,8 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     public void SingleService_Alone_ShouldRenderItsOwnTheme(string theme)
     {
         string path = CopyTheme(theme);
-        TempProbe.Mark("copyTheme");
         using ThemedGame game = new ThemedGame(path, pathB: null);
-        TempProbe.Mark("newGame");
-        game.RunOneFrame();
-        TempProbe.Mark("runOneFrame");
+        game.Initialize();
 
         DemoScreen screen = BuildDemoScreen(game.ServiceA, game.ProjectA, theme, offset: Point.Zero);
         Log($"{theme} solo: {screen.Describe()}");
@@ -327,11 +322,8 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     {
         string pathA = CopyTheme("Bubblegum");
         string pathB = CopyTheme("Hazard");
-        TempProbe.Mark("copyThemes");
         ThemedGame game = new ThemedGame(pathA, pathB);
-        TempProbe.Mark("newGame");
-        game.RunOneFrame();
-        TempProbe.Mark("runOneFrame");
+        game.Initialize();
         return game;
     }
 
@@ -345,7 +337,6 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         screen.X += offset.X;
         screen.Y += offset.Y;
         screen.UpdateLayout();
-        TempProbe.Mark("buildScreen");
         return new DemoScreen(theme, screen);
     }
 
@@ -370,21 +361,18 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
                 gd.SetRenderTarget(capture);
                 if (makeServiceDefault) { IGumService.Default = service; }
                 service.SystemManagers.Renderer.Draw(service.SystemManagers);
-                TempProbe.Mark("  draw");
             }
         }
 
         gd.SetRenderTarget(null);
         XnaColor[] pixels = new XnaColor[CaptureWidth * CaptureHeight];
         capture.GetData(pixels);
-        TempProbe.Mark("readback");
 
         string pngPath = Path.Combine(CaptureDirectory, pngName);
         using (FileStream stream = File.Create(pngPath))
         {
             capture.SaveAsPng(stream, CaptureWidth, CaptureHeight);
         }
-        TempProbe.Mark("savePng");
         Log("wrote " + pngPath);
         return new Frame(pixels, pngPath);
     }
@@ -567,9 +555,9 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
     #region Test game
 
-    private sealed class ThemedGame : Game
+    private sealed class ThemedGame : IDisposable
     {
-        private readonly GraphicsDeviceManager _graphics;
+        private readonly MultiServiceGameLease _lease;
         private readonly string _pathA;
         private readonly string? _pathB;
 
@@ -578,44 +566,30 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         public GumProjectSave ProjectA { get; private set; } = null!;
         public GumProjectSave ProjectB { get; private set; } = null!;
 
+        public GraphicsDevice GraphicsDevice => _lease.GraphicsDevice;
+
         public ThemedGame(string pathA, string? pathB)
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes (the themes' rectangles and circles) needs an SM4 effect - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-                PreferredBackBufferWidth = CaptureWidth,
-                PreferredBackBufferHeight = CaptureHeight,
-            };
+            _lease = SharedMultiServiceGame.Acquire();
             _pathA = pathA;
             _pathB = pathB;
             ServiceA = new Gum.GumService();
             ServiceB = new Gum.GumService();
         }
 
-        protected override void Initialize()
+        public void Initialize()
         {
-            base.Initialize();
-            TempProbe.Mark("baseInit");
-            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-            TempProbe.Mark("shapeInit");
+            ShapeRenderer.Self.Initialize(GraphicsDevice, _lease.Game.Content);
 
-            ProjectA = ServiceA.Initialize(this, _pathA)!;
-            TempProbe.Mark("setupA");
+            ProjectA = ServiceA.Initialize(_lease.Game, _pathA)!;
             if (_pathB != null)
             {
-                ProjectB = ServiceB.Initialize(this, _pathB)!;
-                TempProbe.Mark("setupB");
+                ProjectB = ServiceB.Initialize(_lease.Game, _pathB)!;
             }
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            TempProbe.Mark("testBody");
             if (ServiceB.IsInitialized)
             {
                 try { ServiceB.Uninitialize(); } catch { /* teardown after a red test */ }
@@ -633,8 +607,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
             FrameworkElement.PopupRoot = null!;
             FrameworkElement.ModalRoot = null!;
             Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
-            base.Dispose(disposing);
-            TempProbe.Mark("gameDispose");
+            _lease.Dispose();
         }
     }
 
