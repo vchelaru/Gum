@@ -55,6 +55,25 @@ public class UninitializeTests : BaseTestClass
     }
 
     // -------------------------------------------------------------------------
+    // Radio button groups
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void Uninitialize_ClearsRadioButtonGroups()
+    {
+        using var game = new GameForUninitializeTest();
+        game.RunOneFrame();
+        Gum.Forms.Controls.RadioButton radio = new Gum.Forms.Controls.RadioButton("group");
+        game.GumService.Root.AddChild(radio.Visual);
+        // The groups are keyed by each button's parent visual, so a group left behind keeps that whole tree alive.
+        Gum.Forms.Controls.RadioButton.RadioButtonDictionary.Count.ShouldBeGreaterThan(0);
+
+        game.GumService.Uninitialize();
+
+        Gum.Forms.Controls.RadioButton.RadioButtonDictionary.Count.ShouldBe(0);
+    }
+
+    // -------------------------------------------------------------------------
     // GumService lifecycle
     // -------------------------------------------------------------------------
 
