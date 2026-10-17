@@ -43,38 +43,38 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
 
     public HorizontalAlignment LabelInstanceHorizontalAlignment
     {
-        get => ((TextRuntime) LabelInstance.Visual).HorizontalAlignment;
-        set => ((TextRuntime)LabelInstance.Visual).HorizontalAlignment = value;
+        get => ((global::Gum.GueDeriving.TextRuntime) LabelInstance.Visual).HorizontalAlignment;
+        set => ((global::Gum.GueDeriving.TextRuntime)LabelInstance.Visual).HorizontalAlignment = value;
     }
 
     public int? LabelInstanceMaxLettersToShow
     {
-        get => ((TextRuntime) LabelInstance.Visual).MaxLettersToShow;
-        set => ((TextRuntime)LabelInstance.Visual).MaxLettersToShow = value;
+        get => ((global::Gum.GueDeriving.TextRuntime) LabelInstance.Visual).MaxLettersToShow;
+        set => ((global::Gum.GueDeriving.TextRuntime)LabelInstance.Visual).MaxLettersToShow = value;
     }
 
     public int? LabelInstanceMaxNumberOfLines
     {
-        get => ((TextRuntime) LabelInstance.Visual).MaxNumberOfLines;
-        set => ((TextRuntime)LabelInstance.Visual).MaxNumberOfLines = value;
+        get => ((global::Gum.GueDeriving.TextRuntime) LabelInstance.Visual).MaxNumberOfLines;
+        set => ((global::Gum.GueDeriving.TextRuntime)LabelInstance.Visual).MaxNumberOfLines = value;
     }
 
     public TextOverflowHorizontalMode LabelInstanceTextOverflowHorizontalMode
     {
-        get => ((TextRuntime) LabelInstance.Visual).TextOverflowHorizontalMode;
-        set => ((TextRuntime)LabelInstance.Visual).TextOverflowHorizontalMode = value;
+        get => ((global::Gum.GueDeriving.TextRuntime) LabelInstance.Visual).TextOverflowHorizontalMode;
+        set => ((global::Gum.GueDeriving.TextRuntime)LabelInstance.Visual).TextOverflowHorizontalMode = value;
     }
 
     public TextOverflowVerticalMode LabelInstanceTextOverflowVerticalMode
     {
-        get => LabelInstance.Visual.TextOverflowVerticalMode;
-        set => LabelInstance.Visual.TextOverflowVerticalMode = value;
+        get => ((global::Gum.GueDeriving.TextRuntime) LabelInstance.Visual).TextOverflowVerticalMode;
+        set => ((global::Gum.GueDeriving.TextRuntime)LabelInstance.Visual).TextOverflowVerticalMode = value;
     }
 
     public VerticalAlignment LabelInstanceVerticalAlignment
     {
-        get => ((TextRuntime) LabelInstance.Visual).VerticalAlignment;
-        set => ((TextRuntime)LabelInstance.Visual).VerticalAlignment = value;
+        get => ((global::Gum.GueDeriving.TextRuntime) LabelInstance.Visual).VerticalAlignment;
+        set => ((global::Gum.GueDeriving.TextRuntime)LabelInstance.Visual).VerticalAlignment = value;
     }
 
     public GeneralScreen(InteractiveGue visual) : base(visual)
@@ -117,13 +117,13 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
         this.CircleInstance.X = 197f;
         this.CircleInstance.Y = 110f;
 
-        ((TextRuntime)this.LabelInstance.Visual).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-        ((TextRuntime)this.LabelInstance.Visual).MaxLettersToShow = 55;
-        ((TextRuntime)this.LabelInstance.Visual).MaxNumberOfLines = 3;
+        ((global::Gum.GueDeriving.TextRuntime)this.LabelInstance.Visual).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        ((global::Gum.GueDeriving.TextRuntime)this.LabelInstance.Visual).MaxLettersToShow = 55;
+        ((global::Gum.GueDeriving.TextRuntime)this.LabelInstance.Visual).MaxNumberOfLines = 3;
         this.LabelInstance.Text = @"Hello1234";
-        ((TextRuntime)this.LabelInstance.Visual).TextOverflowHorizontalMode = global::RenderingLibrary.Graphics.TextOverflowHorizontalMode.EllipsisLetter;
-        this.LabelInstance.Visual.TextOverflowVerticalMode = global::RenderingLibrary.Graphics.TextOverflowVerticalMode.TruncateLine;
-        ((TextRuntime)this.LabelInstance.Visual).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((global::Gum.GueDeriving.TextRuntime)this.LabelInstance.Visual).TextOverflowHorizontalMode = global::RenderingLibrary.Graphics.TextOverflowHorizontalMode.EllipsisLetter;
+        ((global::Gum.GueDeriving.TextRuntime)this.LabelInstance.Visual).TextOverflowVerticalMode = global::RenderingLibrary.Graphics.TextOverflowVerticalMode.TruncateLine;
+        ((global::Gum.GueDeriving.TextRuntime)this.LabelInstance.Visual).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
 
     }
     partial void CustomInitialize();

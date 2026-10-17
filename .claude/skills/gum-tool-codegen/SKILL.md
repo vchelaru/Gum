@@ -67,6 +67,8 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 **MonoGameForms `.Visual` wrapping** -- When OutputLibrary is MonoGameForms, property access on instances goes through `.Visual` (e.g., `this.Visual` for root, `this.InstanceName.Visual` for children). The generated code treats everything that is not a StandardElement as a Forms object.
 
+**Label `.Visual` is typed `InteractiveGue`** -- A component rooted in the Text standard (Label) has Text-only members (Font, FontSize, IsBold, ...) on `TextRuntime`, not on `Visual`. Both the element's own code (`BaseStandardRuntimeTypeName`) and instances of it (`InstanceStandardRuntimeTypeName`, plus the exposed-variable getter/setter) cast `Visual` to `TextRuntime`; `PrefixCastsVisualToTextRuntime` stops `GetVisualCast` from casting twice. Don't extend a per-variable whitelist for this.
+
 **Forms base type from behaviors** -- MonoGameForms determines the generated base class by scanning the element's behaviors (e.g., ButtonBehavior maps to Button). The method `GetGumFormsTypeFromBehaviors` drives this.
 
 **Unsupported Forms base type** -- A component on a non-Container standard (Sprite, NineSlice, ...) with no Forms behavior has no valid Forms base class. `gumcli codegen` reports it as an element error through `FormsCodegenBaseTypeErrorSource` and skips the element; `GetInheritance` still writes the same message into the class for callers that skip the error pass (the tool). `gumcli check` does not run it, since it depends on the output library.

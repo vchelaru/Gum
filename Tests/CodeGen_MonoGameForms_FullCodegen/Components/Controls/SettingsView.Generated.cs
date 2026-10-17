@@ -88,17 +88,17 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
         this.FullscreenCheckboxInstance.Visual.Y = 0f;
 
         this.MusicVolumeLabel.Text = @"Music Volume";
-        this.MusicVolumeLabel.Visual.Width = 0f;
-        this.MusicVolumeLabel.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.MusicVolumeLabel.Visual.Y = 12f;
+        ((global::Gum.GueDeriving.TextRuntime)this.MusicVolumeLabel.Visual).Width = 0f;
+        ((global::Gum.GueDeriving.TextRuntime)this.MusicVolumeLabel.Visual).WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ((global::Gum.GueDeriving.TextRuntime)this.MusicVolumeLabel.Visual).Y = 12f;
 
         this.MusicSliderInstance.Visual.Width = 0f;
         this.MusicSliderInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
         this.SoundVolumeLabel.Text = @"Sound Effect Volume";
-        this.SoundVolumeLabel.Visual.Width = 0f;
-        this.SoundVolumeLabel.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.SoundVolumeLabel.Visual.Y = 12f;
+        ((global::Gum.GueDeriving.TextRuntime)this.SoundVolumeLabel.Visual).Width = 0f;
+        ((global::Gum.GueDeriving.TextRuntime)this.SoundVolumeLabel.Visual).WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ((global::Gum.GueDeriving.TextRuntime)this.SoundVolumeLabel.Visual).Y = 12f;
 
         this.SoundSliderInstance.Visual.Width = 0f;
         this.SoundSliderInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;

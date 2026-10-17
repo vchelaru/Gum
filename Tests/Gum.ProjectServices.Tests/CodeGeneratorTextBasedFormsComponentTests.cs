@@ -1,8 +1,10 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.ProjectServices.CodeGeneration;
 using Moq;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.IO;
@@ -92,6 +94,92 @@ public class CodeGeneratorTextBasedFormsComponentTests : BaseTestClass
 
         code.ShouldMatch(@"\(\(global::[\w.]+\.TextRuntime\)this\.Visual\)\.Font = ");
         code.ShouldMatch(@"\(\(global::[\w.]+\.TextRuntime\)this\.Visual\)\.Red = ");
+    }
+
+    private string GenerateScreenWithMeadowLabelInstance(params (string Member, string Type, object Value)[] overrides)
+    {
+        return GenerateElementWithMeadowLabelInstance(new ScreenSave { Name = "DemoScreen" }, exposedFontName: null, overrides);
+    }
+
+    private string GenerateElementWithMeadowLabelInstance(
+        ElementSave element,
+        string? exposedFontName,
+        params (string Member, string Type, object Value)[] overrides)
+    {
+        StandardElementsManager.Self.Initialize();
+        ProjectLoadResult result = new ProjectLoader().Load(FindMeadowGumx());
+        result.Success.ShouldBeTrue();
+        GumProjectSave meadow = result.Project!;
+        ObjectFinder.Self.GumProjectSave = meadow;
+
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+        InstanceSave instance = new InstanceSave
+        {
+            Name = "LabelInstance1",
+            BaseType = "Meadow/Controls/Label",
+            ParentContainer = element,
+        };
+        element.Instances.Add(instance);
+        foreach ((string member, string type, object value) in overrides)
+        {
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = "LabelInstance1." + member,
+                Type = type,
+                Value = value,
+                SetsValue = true,
+                ExposedAsName = member == "Font" ? exposedFontName : null,
+            });
+        }
+
+        return CreateCodeGenerator().GetGeneratedCodeForElement(
+            element,
+            new CodeOutputElementSettings(),
+            new CodeOutputProjectSettings
+            {
+                OutputLibrary = OutputLibrary.MonoGameForms,
+                ObjectInstantiationType = ObjectInstantiationType.FullyInCode,
+                RootNamespace = "MyGame",
+            });
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_LabelInstanceFontOverrides_CastVisualToTextRuntime()
+    {
+        string code = GenerateScreenWithMeadowLabelInstance(
+            ("Font", "string", "Fonts/Custom.ttf"),
+            ("FontSize", "int", 14),
+            ("IsBold", "bool", true),
+            ("IsItalic", "bool", false));
+
+        TextOnlyVisualAssignment.Matches(code).Select(m => m.Value).ShouldBeEmpty();
+        code.ShouldMatch(@"\(\(global::[\w.]+\.TextRuntime\)this\.LabelInstance1\.Visual\)\.Font = ");
+        code.ShouldMatch(@"\(\(global::[\w.]+\.TextRuntime\)this\.LabelInstance1\.Visual\)\.FontSize = ");
+        code.ShouldMatch(@"\(\(global::[\w.]+\.TextRuntime\)this\.LabelInstance1\.Visual\)\.IsBold = ");
+        code.ShouldMatch(@"\(\(global::[\w.]+\.TextRuntime\)this\.LabelInstance1\.Visual\)\.IsItalic = ");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_ExposedLabelInstanceFont_CastsVisualToTextRuntime()
+    {
+        string code = GenerateElementWithMeadowLabelInstance(
+            new ComponentSave { Name = "Card", BaseType = "Container" },
+            exposedFontName: "TitleFont",
+            ("Font", "string", "Fonts/Custom.ttf"));
+
+        code.ShouldMatch(@"get => \(\(global::[\w.]+\.TextRuntime\) ?LabelInstance1\.Visual\)\.Font;");
+        code.ShouldMatch(@"set => \(\(global::[\w.]+\.TextRuntime\) ?LabelInstance1\.Visual\)\.Font = value;");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_LabelInstanceAlignment_CastsVisualOnce()
+    {
+        string code = GenerateScreenWithMeadowLabelInstance(
+            ("HorizontalAlignment", "HorizontalAlignment", HorizontalAlignment.Center));
+
+        code.ShouldNotContain("(TextRuntime)((");
+        code.ShouldMatch(@"\(\(global::[\w.]+\.TextRuntime\)this\.LabelInstance1\.Visual\)\.HorizontalAlignment = ");
     }
 
     [Fact]
