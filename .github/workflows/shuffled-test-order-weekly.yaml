@@ -1,10 +1,12 @@
 name: Shuffled Test Order Weekly
 
-# Runs Gum.Presentation.Tests and MonoGameGum.Tests several times with test classes, and the methods
-# within each class, in a random order, to catch a test that leaks static state (ObjectFinder.Self,
-# StandardElementsManager.Self, ...) into a later one (#5820, #5840). ShuffledTestCollectionOrderer
-# and ShuffledTestCaseOrderer (Tests/TestOrdering) shuffle by GUM_TEST_SHUFFLE_SEED; without it the
-# suites keep xUnit's default order, so PR CI is unaffected.
+# Runs Gum.Presentation.Tests, MonoGameGum.Tests and MonoGameGum.IntegrationTests several times with
+# test classes, and the methods within each class, in a random order, to catch a test that leaks static
+# state (ObjectFinder.Self, StandardElementsManager.Self, the shared GraphicsDevice, ...) into a later
+# one (#5820, #5840, #6106). ShuffledTestCollectionOrderer and ShuffledTestCaseOrderer (Tests/TestOrdering)
+# shuffle by GUM_TEST_SHUFFLE_SEED; without it the suites keep xUnit's default order, so PR CI is
+# unaffected. The integration project is xunit v3: it uses the v3 case orderer (Tests/TestOrdering/Xunit3)
+# and shuffles its classes in its framework executor, because v3 has no class orderer.
 #
 # Each run prints its seed. To replay a failure locally on the same commit:
 #   GUM_TEST_SHUFFLE_SEED=<seed> GUM_ALLOW_FULL_TESTS=1 dotnet test <project>
@@ -28,6 +30,7 @@ jobs:
         project:
           - Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj
           - MonoGameGum.Tests/MonoGameGum.Tests.csproj
+          - Tests/MonoGameGum.IntegrationTests/MonoGameGum.IntegrationTests.csproj
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
@@ -40,9 +43,16 @@ jobs:
           dotnet-version: 10.0.x
       - name: Build
         run: dotnet build "${{ matrix.project }}" --configuration Release --verbosity quiet -p:WarningLevel=0
+      # The integration project needs a GL device and the runners have no GPU (see build-and-test.yaml).
+      - name: Install Mesa llvmpipe (software GL, integration tests only)
+        if: contains(matrix.project, 'IntegrationTests')
+        uses: ./.github/actions/install-mesa-llvmpipe
+        with:
+          dest-dirs: Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0
       - name: Run tests in shuffled class order
         shell: bash
         env:
+          GALLIUM_DRIVER: llvmpipe   # only read by the integration tests' GL device
           PROJECT: ${{ matrix.project }}
           RUNS: ${{ inputs.runs || '3' }}
         run: |
