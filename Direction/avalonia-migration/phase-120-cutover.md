@@ -67,8 +67,8 @@ it himself. The list below is the reference for when that happens.
    head or drop it), `WpfPluginBase`/`PriorityPlugin` and the `AddMenuItem` shim, the four WPF
    plugin heads (`EditorTabPlugin_XNA`, `TextureCoordinateSelectionPlugin`, `StateAnimationPlugin`,
    `CodeOutputPlugin`), `XnaAndWinforms.Wpf`, `Tool/Tests/GumToolUnitTests` (its 500-odd
-   WPF-bound tests; move any logic test that is still there), `Gum.Wpf.sln` and the `Build-Tool`
-   CI job, `GumFull.sln` (or re-point it at the head plus the CLI), the AppCenter packages,
+   WPF-bound tests; move any logic test that is still there), and `Gum.Wpf.sln` (the `Build-Tool`
+   CI job is already gone), `GumFull.sln` (or re-point it at the head plus the CLI), the AppCenter packages,
    `FullClean.ps1`'s WPF lines; rename `Gum.Avalonia` to `Gum` if wanted; re-run task 5's sweep
    and date the matrix all-removed; delete the `GumToolUnitTests` section of `CLAUDE.md` and the
    "frozen WPF head" mentions in the skills; give `GEMINI.md` to its owner.
