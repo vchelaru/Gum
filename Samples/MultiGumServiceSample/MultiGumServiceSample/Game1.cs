@@ -7,7 +7,9 @@ using Gum.Forms.Controls;
 using Gum.Wireframe;
 using RenderingLibrary;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameAndGum.Renderables;
 
 namespace MultiGumServiceSample;
 
@@ -39,6 +41,8 @@ public class Game1 : Game
             PreferredBackBufferWidth = 1024,
             PreferredBackBufferHeight = 768
         };
+        // Apos.Shapes (behind the slider thumb and other rounded shapes) needs the HiDef profile.
+        _graphics.GraphicsProfile = GraphicsProfile.HiDef;
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }
@@ -48,6 +52,12 @@ public class Game1 : Game
         // The first service to initialize becomes IGumService.Default; the second leaves it alone.
         // Paths are relative to the Content folder.
         _gameProject = _gameUi.Initialize(this, "Game/Game.gumj")!;
+
+        // One ShapeRenderer serves both services. It reads the device from the current service,
+        // which is the game here, and must run before the editor initializes so the editor
+        // registers the shape runtimes too.
+        ShapeRenderer.Self.Initialize();
+
         _editorProject = _editorUi.Initialize(this, "Editor/Editor.gumj")!;
 
         _gameUi.SystemManagers.Renderer.Camera.X = InitialGameCameraX;

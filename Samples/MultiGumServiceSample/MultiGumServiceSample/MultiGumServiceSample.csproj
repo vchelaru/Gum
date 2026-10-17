@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
   </ItemGroup>
 
   <ItemGroup>
