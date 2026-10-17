@@ -51,13 +51,11 @@ public class Game1 : Game
         // The first service to initialize becomes IGumService.Default; the second leaves it alone.
         // Paths are relative to the Content folder.
         _gameProject = _gameUi.Initialize(this, "Game/Game.gumj")!;
-
-        // One ShapeRenderer serves both services. It reads the device from the current service,
-        // which is the game here, and must run before the editor initializes so the editor
-        // registers the shape runtimes too.
-        ShapeRenderer.Self.Initialize();
-
         _editorProject = _editorUi.Initialize(this, "Editor/Editor.gumj")!;
+
+        // Needed for shapes (rounded rectangles, circles). It takes the GraphicsDevice from the
+        // current service, so it runs after Initialize. One call serves both services.
+        ShapeRenderer.Self.Initialize();
 
         _gameUi.SystemManagers.Renderer.Camera.X = InitialGameCameraX;
 
@@ -72,8 +70,9 @@ public class Game1 : Game
         // current one while building its elements.
         IGumService.Default = _editorUi;
 
-        ScreenSave editorScreen = _editorProject.Screens.First(item => item.Name == "EditorScreen");
+        ScreenSave editorScreen = _editorProject.GetScreenSave("EditorScreen")!;
         GraphicalUiElement screen = editorScreen.ToGraphicalUiElement(_editorUi.SystemManagers);
+        // Using AddToRoot is a little ambiguous since there are two services, so add it to the root explicitly.
         _editorUi.Root.Children.Add(screen);
 
         ListBox screenListBox = screen.FindFormsControl<ListBox>("ScreenListBox")!;
