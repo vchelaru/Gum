@@ -15,6 +15,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// Lifecycle edges of a service's GumContext (#6066 prototype): a service that is not initialized must not
 /// touch the state of one that is, and a failed Initialize must leave nothing live.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceContextLifecycleTests : BaseTestClass
 {
     private readonly string _root;

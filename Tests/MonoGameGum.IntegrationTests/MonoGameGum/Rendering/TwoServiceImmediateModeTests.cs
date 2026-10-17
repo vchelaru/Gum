@@ -16,6 +16,7 @@ using GumService = global::Gum.GumService;
 /// Each test records the <see cref="ISystemManagers"/> a renderable is given instead of reading pixels,
 /// because the managers are the thing under test and a pixel can look right through either one.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class TwoServiceImmediateModeTests : BaseTestClass
 {
     private sealed class RecordingRenderable : InvisibleRenderable

@@ -19,6 +19,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Fonts;
 /// texture, warns on a genuinely unrenderable glyph, and replays growth into a freshly-oversampled
 /// font. Mirrors TextRuntimeFontOversamplingRealFontTests.cs's MinimalGame setup.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class TextRuntimeAutomaticFontGrowthRealFontTests : BaseTestClass
 {
     private static readonly string OrbitronPath = System.IO.Path.Combine(
@@ -149,35 +150,18 @@ public class TextRuntimeAutomaticFontGrowthRealFontTests : BaseTestClass
         }
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public Gum.GumService GumService { get; }
+        public Gum.GumService GumService { get; } = new Gum.GumService();
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new Gum.GumService();
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

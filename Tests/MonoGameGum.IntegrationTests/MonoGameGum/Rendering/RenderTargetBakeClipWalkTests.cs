@@ -18,6 +18,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// visibility / cull / clip semantics as the main pass — matching raylib, which already culled
 /// inside bakes.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class RenderTargetBakeClipWalkTests : BaseTestClass
 {
     [Fact]
@@ -180,33 +181,16 @@ public class RenderTargetBakeClipWalkTests : BaseTestClass
     /// Minimal Game host that initializes a fresh <see cref="GumService"/> per test so
     /// <see cref="Renderer.Draw(SystemManagers)"/> can be invoked against a live device.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override void OnInitialize() => Gum.GumService.Default.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (Gum.GumService.Default.IsInitialized)
             {
                 Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

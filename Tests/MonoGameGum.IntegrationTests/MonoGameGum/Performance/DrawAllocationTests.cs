@@ -19,6 +19,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// the target is zero managed bytes allocated per steady-state idle frame; the guard is a ratchet
 /// that tightens as allocation sources are removed in follow-up optimization PRs.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class DrawAllocationTests : BaseTestClass
 {
     private readonly ITestOutputHelper _output;
@@ -171,33 +172,16 @@ public class DrawAllocationTests : BaseTestClass
     /// live device so <see cref="global::Gum.GumService.Update(GameTime)"/> / <c>Draw()</c> can be
     /// driven manually after <see cref="Game.RunOneFrame"/>.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, global::Gum.Forms.DefaultVisualsVersion.Newest);
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            global::Gum.GumService.Default.Initialize(this, global::Gum.Forms.DefaultVisualsVersion.Newest);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (global::Gum.GumService.Default.IsInitialized)
             {
                 global::Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

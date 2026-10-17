@@ -13,6 +13,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// The project's texture filter (#6066): the first service sets the process-wide <see cref="Renderer.TextureFilter"/>
 /// as before; a later service keeps its own on its renderer, so loading it never changes what the first draws with.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceTextureFilterTests : BaseTestClass
 {
     private readonly string _root;

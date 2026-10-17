@@ -20,6 +20,7 @@ using GumService = global::Gum.GumService;
 /// a failed Initialize followed by a retry, services created with their own SystemManagers, and a
 /// Game that goes away without Uninitialize.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceLifecycleTests : BaseTestClass
 {
     private static readonly GameTime FrameTime = new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1.0 / 60.0));

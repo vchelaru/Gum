@@ -16,6 +16,7 @@ using GumService = global::Gum.GumService;
 /// Uninitialize on a service that is not initialized has nothing of its own to tear down, so it must
 /// not reset the process-wide state a different, live service depends on (#6066).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class UninitializeGuardTests : BaseTestClass
 {
     [Fact]

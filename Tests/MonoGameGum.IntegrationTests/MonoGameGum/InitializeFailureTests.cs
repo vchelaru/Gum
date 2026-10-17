@@ -16,6 +16,7 @@ using GumService = global::Gum.GumService;
 /// A failed Initialize (for example a missing project file) must roll back, so the service is not left
 /// half-initialized and the caller can fix the problem and call Initialize again (#6066).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class InitializeFailureTests : BaseTestClass
 {
     [Fact]

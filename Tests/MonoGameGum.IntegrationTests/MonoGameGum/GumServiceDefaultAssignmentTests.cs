@@ -14,6 +14,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// IGumService.Default is the one current-service pointer. Update and Draw make their service the default
 /// for the length of the call and put the previous default back afterward.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceDefaultAssignmentTests : BaseTestClass
 {
     private readonly string _root;

@@ -22,6 +22,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Fonts;
 /// headlessly, through the real IInMemoryFontCreator.TryCreateFont path -- not a synthetic fake --
 /// so a pass here is strong evidence the visible demo is fixed too.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
 {
     private static readonly string TestFontPath = System.IO.Path.GetFullPath(
@@ -317,35 +318,18 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
     /// go through that cascade, so they don't need this). Uses a fresh GumService instance, not the
     /// static Default, since that singleton can only be initialized once per process.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public Gum.GumService GumService { get; }
+        public Gum.GumService GumService { get; } = new Gum.GumService();
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new Gum.GumService();
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

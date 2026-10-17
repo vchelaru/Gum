@@ -20,6 +20,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// asserts the invariant that would have caught it: once inflation returns and
 /// <see cref="GraphicalUiElement.IsAllLayoutSuspended"/> is false, no node is still suspended.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class SampleInflationLayoutSuspensionTests : BaseTestClass
 {
     public static TheoryData<string> SampleProjects => new()
@@ -117,25 +118,17 @@ public class SampleInflationLayoutSuspensionTests : BaseTestClass
         }
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         private readonly string _projectRelativePath;
-        public Gum.GumService GumService { get; }
+        public Gum.GumService GumService { get; } = new Gum.GumService();
 
         public MinimalGame(string projectRelativePath)
         {
             _projectRelativePath = projectRelativePath;
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new Gum.GumService();
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, FindProjectFile(_projectRelativePath));
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, FindProjectFile(_projectRelativePath));
 
         private static string FindProjectFile(string projectRelativePath)
         {
@@ -157,17 +150,12 @@ public class SampleInflationLayoutSuspensionTests : BaseTestClass
             throw new InvalidOperationException("could not locate " + projectRelativePath + " from " + AppContext.BaseDirectory);
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

@@ -17,6 +17,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// throws, and resolving the current service with no default assigned throws. With one service neither
 /// ever does.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceOwnershipTests : BaseTestClass
 {
     private readonly string _root;
