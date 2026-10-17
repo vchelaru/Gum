@@ -14,6 +14,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Fonts;
 /// dropshadow font must be attached as <see cref="BitmapFont.ShadowFont"/>, not silently discarded.
 /// Mirrors RaylibGum.Tests's KernSmithRaylibFontCreatorTests.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class KernSmithFontCreatorTests : BaseTestClass
 {
     [Fact]
@@ -67,26 +68,10 @@ public class KernSmithFontCreatorTests : BaseTestClass
     }
 
     /// <summary>
-    /// Minimal Game host providing a live GraphicsDevice, since KernSmithFontCreator uploads
+    /// Minimal host providing a live GraphicsDevice, since KernSmithFontCreator uploads
     /// generated atlas pages to real Texture2D instances.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
-        }
     }
 }

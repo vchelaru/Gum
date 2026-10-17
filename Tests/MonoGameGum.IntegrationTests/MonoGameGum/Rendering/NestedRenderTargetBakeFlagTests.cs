@@ -18,7 +18,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// PreRender and never nest, so a <c>SubtractAlpha</c> child drawn after a nested render-target
 /// container in the outer bake must still punch its hole. Pins that, for SpriteBatch and Apos.Shapes.
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class NestedRenderTargetBakeFlagTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -58,7 +58,7 @@ public class NestedRenderTargetBakeFlagTests : BaseTestClass
 
     private static XnaColor[] Render(bool useCircle)
     {
-        using ShapeGameLease game = SharedShapeGame.Acquire();
+        using ShapeGameLease game = new ShapeGameLease();
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;

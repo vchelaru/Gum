@@ -20,7 +20,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// of fault as #4091 (<c>MinAlpha</c>). Covers both batchers: SpriteBatch (a rectangle) and
 /// Apos.Shapes (a circle, which skips <c>Renderer.AdjustBlendStateForRenderTargetBake</c>).
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class RenderTargetSubtractAlphaTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -60,7 +60,7 @@ public class RenderTargetSubtractAlphaTests : BaseTestClass
 
     private static XnaColor[] Render(bool useCircle)
     {
-        using ShapeGameLease game = SharedShapeGame.Acquire();
+        using ShapeGameLease game = new ShapeGameLease();
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;

@@ -25,6 +25,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// both draw into the same render target. The tests assert the behavior we want, so a red test marks
 /// a collision between the two services.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class MultiGumServiceSpikeTests : BaseTestClass
 {
     private const int CaptureWidth = 400;
@@ -319,41 +320,32 @@ public class MultiGumServiceSpikeTests : BaseTestClass
 
     #region Test game
 
-    private sealed class TwoServiceGame : Game
+    private sealed class TwoServiceGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         private readonly string _pathA;
         private readonly string? _pathB;
 
-        public Gum.GumService ServiceA { get; }
-        public Gum.GumService ServiceB { get; }
+        public Gum.GumService ServiceA { get; } = new Gum.GumService();
+        public Gum.GumService ServiceB { get; } = new Gum.GumService();
         public GumProjectSave ProjectA { get; private set; } = null!;
         public GumProjectSave ProjectB { get; private set; } = null!;
 
         public TwoServiceGame(string pathA, string? pathB)
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
             _pathA = pathA;
             _pathB = pathB;
-            ServiceA = new Gum.GumService();
-            ServiceB = new Gum.GumService();
         }
 
-        protected override void Initialize()
+        protected override void OnInitialize()
         {
-            base.Initialize();
-            ProjectA = ServiceA.Initialize(this, _pathA)!;
+            ProjectA = ServiceA.Initialize(Game, _pathA)!;
             if (_pathB != null)
             {
-                ProjectB = ServiceB.Initialize(this, _pathB)!;
+                ProjectB = ServiceB.Initialize(Game, _pathB)!;
             }
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (ServiceB.IsInitialized) { ServiceB.Uninitialize(); }
             if (ServiceA.IsInitialized) { ServiceA.Uninitialize(); }
@@ -366,7 +358,7 @@ public class MultiGumServiceSpikeTests : BaseTestClass
             FrameworkElement.PopupRoot = null!;
             FrameworkElement.ModalRoot = null!;
             Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
-            base.Dispose(disposing);
+            FileManager.RelativeDirectory = "Content/";
         }
     }
 

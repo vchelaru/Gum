@@ -1,6 +1,8 @@
+using Gum.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using MonoGameAndGum.Renderables;
 using RenderingLibrary.Content;
 using Xunit;
 
@@ -22,12 +24,18 @@ public class SharedGameCollection : ICollectionFixture<SharedGame>
 /// about 0.8 s to create and the first draw on it about 3 s more, and the process's native memory
 /// grew by roughly 35 MB per Game until it passed 7 GB, which slowed later tests from about 0.3 s
 /// to about 2 s each. Each test takes a <see cref="SharedGameLease"/> instead, through a nested
-/// <c>MinimalGame</c> that derives from it. Like <see cref="SharedShapeGame"/> but without the shape
-/// renderer; a test that draws Apos.Shapes belongs in that collection.
+/// <c>MinimalGame</c> that derives from it. A test that draws Apos.Shapes takes a
+/// <see cref="ShapeGameLease"/> and one that runs two themed services takes a
+/// <see cref="MultiServiceGameLease"/>; both are leases on this same device, so the whole assembly
+/// creates one <see cref="Game"/> (it used to create one per lease type, and one per test before that).
 /// </summary>
 public sealed class SharedGame : IDisposable
 {
     public const string CollectionName = "SharedGame";
+
+    /// <summary>The back buffer size <c>GraphicsDeviceManager</c> starts with.</summary>
+    public const int DefaultWidth = 800;
+    public const int DefaultHeight = 480;
 
     private static SharedGame? _current;
 
@@ -54,20 +62,41 @@ public sealed class SharedGame : IDisposable
 
     internal sealed class HostGame : Game
     {
+        private readonly GraphicsDeviceManager _graphics;
+
         public Color ClearColor { get; set; } = Color.CornflowerBlue;
+
+        /// <summary>How many frames have been presented; lets a test see that a lease flushed pending GL deletions.</summary>
+        public int FramesDrawn { get; private set; }
 
         public HostGame()
         {
-            new GraphicsDeviceManager(this)
+            _graphics = new GraphicsDeviceManager(this)
             {
                 // Apos.Shapes and some render-target paths need an SM4 effect the default Reach profile can't load - #4403.
                 GraphicsProfile = GraphicsProfile.HiDef,
             };
         }
 
+        /// <summary>Resizes the back buffer for a test that is laid out for a different canvas; a no-op at the same size.</summary>
+        public void EnsureBackBufferSize(int width, int height)
+        {
+            if (_graphics.PreferredBackBufferWidth == width && _graphics.PreferredBackBufferHeight == height)
+            {
+                return;
+            }
+            _graphics.PreferredBackBufferWidth = width;
+            _graphics.PreferredBackBufferHeight = height;
+            _graphics.ApplyChanges();
+        }
+
         protected override void Update(GameTime gameTime) { }
 
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(ClearColor);
+        protected override void Draw(GameTime gameTime)
+        {
+            FramesDrawn++;
+            GraphicsDevice.Clear(ClearColor);
+        }
     }
 }
 
@@ -83,9 +112,14 @@ public abstract class SharedGameLease : IDisposable
     private bool _isInitialized;
     private bool _isDisposed;
 
-    protected SharedGameLease()
+    /// <param name="backBufferWidth">Back buffer width the test is laid out for; the device is resized if it differs.</param>
+    /// <param name="backBufferHeight">Back buffer height the test is laid out for; the device is resized if it differs.</param>
+    protected SharedGameLease(
+        int backBufferWidth = SharedGame.DefaultWidth,
+        int backBufferHeight = SharedGame.DefaultHeight)
     {
         _host = SharedGame.CurrentHost;
+        _host.EnsureBackBufferSize(backBufferWidth, backBufferHeight);
         LoaderManager.Self?.DisposeAndClear();
     }
 
@@ -144,5 +178,52 @@ public abstract class SharedGameLease : IDisposable
         device.DepthStencilState = DepthStencilState.Default;
         device.RasterizerState = RasterizerState.CullCounterClockwise;
         device.ScissorRectangle = device.Viewport.Bounds;
+
+        // MonoGame deletes a disposed texture's GL object on the next Present, so a test that never draws a
+        // frame (the themed multi-service tests) keeps every texture it disposed until the process ends:
+        // about 20 MB of GPU or software-GL memory per test. One frame here lets the deletions run. A second
+        // frame crashes the process inside MonoGame's native GL layer, so do not add one.
+        _host.RunOneFrame();
+    }
+}
+
+/// <summary>
+/// A test that draws Apos.Shapes (#6078). Gum and the shape renderer are initialized on construction and
+/// uninitialized on dispose, as the per-test Game did. On CI's software GL (Mesa llvmpipe) the first
+/// <c>ShapeBatch</c> on a device costs about 2.4 s while it prepares the shape shader and later ones about
+/// 2 ms, which is why these tests share a device at all.
+/// </summary>
+public sealed class ShapeGameLease : SharedGameLease
+{
+    public ShapeGameLease()
+    {
+        Gum.GumService.Default.Initialize(Game, DefaultVisualsVersion.V3);
+        ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+    }
+
+    protected override Color ClearColor => Color.Black;
+
+    protected override void OnDispose()
+    {
+        if (Gum.GumService.Default.IsInitialized)
+        {
+            Gum.GumService.Default.Uninitialize();
+        }
+    }
+}
+
+/// <summary>
+/// A test that runs two themed GumServices (#6085). It builds and tears down its own services on the
+/// shared device. The themed demo screens are laid out for 1024x768, so the back buffer is that size for
+/// the test and goes back to the default for the next one.
+/// </summary>
+public sealed class MultiServiceGameLease : SharedGameLease
+{
+    public const int Width = 1024;
+    public const int Height = 768;
+
+    public MultiServiceGameLease()
+        : base(Width, Height)
+    {
     }
 }

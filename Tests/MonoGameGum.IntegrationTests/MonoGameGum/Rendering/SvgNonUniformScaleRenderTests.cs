@@ -24,7 +24,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// The document is full-bleed (blue left half, red right half of a 2:1 viewBox) so the assertions
 /// read the drawing's own halves rather than depending on where a partial drawing anchors.
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class SvgNonUniformScaleRenderTests : BaseTestClass
 {
     private const string TwoByOneHalvesSvg =
@@ -96,7 +96,7 @@ public class SvgNonUniformScaleRenderTests : BaseTestClass
 
         try
         {
-            using ShapeGameLease game = SharedShapeGame.Acquire();
+            using ShapeGameLease game = new ShapeGameLease();
 
             GraphicsDevice gd = game.GraphicsDevice;
             SystemManagers managers = SystemManagers.Default;

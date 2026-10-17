@@ -139,6 +139,8 @@ Baselines are **approved snapshots, not derived from spec** — same convention 
 
 ## Integration Tests (MonoGameGum.IntegrationTests)
 
-Use this project for anything requiring a real `GraphicsDevice`. Each test creates a minimal nested `Game` subclass, calls `game.RunOneFrame()` to trigger `Initialize`, then asserts. See `Tests/MonoGameGum.IntegrationTests/MonoGameGum/GumServiceUnitTests.cs` for the established pattern. Always call `LoaderManager.Self?.DisposeAndClear()` in the `Game.Dispose` override to prevent state leaking across tests via the singleton.
+Use this project for anything requiring a real `GraphicsDevice`. The whole assembly shares one `Game` (`SharedGame` in `SharedGame.cs`); a test class is marked `[Collection(SharedGame.CollectionName)]` and takes a lease on it by deriving a nested class from `SharedGameLease` (`OnInitialize` runs on the first `RunOneFrame`, `OnDispose` on dispose). `ShapeGameLease` (Apos.Shapes) and `MultiServiceGameLease` (1024x768 back buffer) are the other leases. See `GumServiceUnitTests.cs` for the pattern.
+
+Never declare a `Game` subclass or a second collection in this project: a real `Game` created and disposed beside the shared one leaves the shared device without a GL context, so later draws render nothing. `SharedGameCollectionGuardTests` fails on either. A lease's `Dispose` presents one frame because MonoGame deletes disposed GL objects only on Present; do not add a second frame, it crashes the process in native code.
 
 The project uses xunit v3 with its own `Main` (`MainThreadTestHost.cs`) so tests run on the main thread, which macOS requires. Don't reference `MonoGameGum.TestsCommon` from it, because that project brings in xunit v2.

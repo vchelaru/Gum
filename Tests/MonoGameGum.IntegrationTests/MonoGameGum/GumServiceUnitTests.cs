@@ -12,6 +12,7 @@ using Xunit;
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
+[Collection(SharedGame.CollectionName)]
 public class GumServiceUnitTests : BaseTestClass
 {
     [Fact]
@@ -37,7 +38,7 @@ public class GumServiceUnitTests : BaseTestClass
         var gameInstance = gumService.Game;
 
         gameInstance.ShouldNotBeNull();
-        gameInstance.ShouldBeSameAs(game);
+        gameInstance.ShouldBeSameAs(game.Game);
     }
 
     [Fact]
@@ -108,78 +109,38 @@ public class GumServiceUnitTests : BaseTestClass
 
     #region Test Classes
 
-    public class Game1 : Game
+    public class Game1 : SharedGameLease
     {
-        private GraphicsDeviceManager _graphics;
         GumService GumUI => GumService.Default;
-        public Game1()
+
+        protected override void OnInitialize()
         {
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            GumUI.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
         }
 
-        protected override void Initialize()
+        protected override void OnDispose()
         {
-            base.Initialize();
-            GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime)
-        {
-        }
-
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            // Game1 initializes GumService.Default, so it must uninitialize it on teardown
-            // (before base.Dispose disposes the GraphicsDevice that Uninitialize releases
-            // GPU resources through). Without this, GumService.Default stays initialized and
-            // leaks into the next test in this sequential single-process suite, whose own
-            // GumService.Default.Initialize would then throw "already been called once".
+            // Game1 initializes GumService.Default, so it must uninitialize it on teardown. Without
+            // this, GumService.Default stays initialized and leaks into the next test in this
+            // sequential single-process suite, whose own GumService.Default.Initialize would then
+            // throw "already been called once".
             if (GumUI.IsInitialized)
             {
                 GumUI.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 
-    public class GameForInitializationTest : Game
+    public class GameForInitializationTest : SharedGameLease
     {
-        private GraphicsDeviceManager _graphics;
-        public GumService GumService { get; private set; }
+        public GumService GumService { get; } = new GumService();
 
-        public GameForInitializationTest()
+        protected override void OnInitialize()
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
-            GumService = new GumService();
+            GumService.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime)
-        {
-        }
-
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-        }
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             // This service is the current one (IGumService.Default) once initialized, and GumService.Default
             // follows it, so leaving it initialized would make the next test's GumService.Default.Initialize throw.
@@ -187,8 +148,6 @@ public class GumServiceUnitTests : BaseTestClass
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
     #endregion

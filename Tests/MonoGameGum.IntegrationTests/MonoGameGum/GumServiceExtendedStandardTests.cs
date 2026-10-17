@@ -17,6 +17,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// tolerate these declared-but-never-rendered standards. GumService now registers the extended
 /// default states at load so they resolve instead of throwing.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceExtendedStandardTests : BaseTestClass, IDisposable
 {
     private string? _tempDirectory;
@@ -115,43 +116,24 @@ public class GumServiceExtendedStandardTests : BaseTestClass, IDisposable
 
     #region Test Game
 
-    private class GameForExtendedStandardTest : Game
+    private sealed class GameForExtendedStandardTest : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         private readonly string _gumProjectFile;
-        public Gum.GumService GumService { get; private set; }
+        public Gum.GumService GumService { get; } = new Gum.GumService();
 
         public GameForExtendedStandardTest(string gumProjectFile)
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
             _gumProjectFile = gumProjectFile;
-            GumService = new Gum.GumService();
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, _gumProjectFile);
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, _gumProjectFile);
 
-        protected override void Update(GameTime gameTime) { }
-
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-        }
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 

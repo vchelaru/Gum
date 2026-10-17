@@ -16,7 +16,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// Issue #5696: a render-target container's bake target only gets a stencil buffer when a baked
 /// shape draws through it (MinAlpha / ReplaceAlpha bounds mask), and keeps it once it has one.
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class RenderTargetLazyStencilTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -25,7 +25,7 @@ public class RenderTargetLazyStencilTests : BaseTestClass
 
     private sealed class Scene : System.IDisposable
     {
-        public ShapeGameLease Game = SharedShapeGame.Acquire();
+        public ShapeGameLease Game = new ShapeGameLease();
         public SystemManagers Managers = null!;
         public Renderer Renderer = null!;
         public ContainerRuntime Root = null!;

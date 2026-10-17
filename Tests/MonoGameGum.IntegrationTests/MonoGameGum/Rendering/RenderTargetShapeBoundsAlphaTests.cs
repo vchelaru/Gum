@@ -20,7 +20,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// Normal and Additive keep touching only the body. The mask shape is at (20,20) size 60x60, so
 /// pixel (22,22) is inside the bounds but outside a circle or a 30px-radius rounded rectangle.
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -194,7 +194,7 @@ public class RenderTargetShapeBoundsAlphaTests : BaseTestClass
         float maskX = 20, float maskY = 20, float maskWidth = 60, float maskHeight = 60,
         float maskCornerRadius = 30, float maskRotation = 0)
     {
-        using ShapeGameLease game = SharedShapeGame.Acquire();
+        using ShapeGameLease game = new ShapeGameLease();
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;

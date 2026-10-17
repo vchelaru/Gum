@@ -8,35 +8,41 @@ namespace MonoGameGum.IntegrationTests;
 /// <summary>
 /// A real <see cref="Game"/> created and disposed while <see cref="SharedGame"/> is alive leaves the
 /// shared device without a current GL context, so every later draw on it silently renders nothing
-/// (#6092). A class in the shared collection must take a <see cref="SharedGameLease"/> instead.
+/// (#6092). Every test takes a <see cref="SharedGameLease"/> instead, and every test class is in the one
+/// shared collection, so the assembly creates a single Game (#6101).
 /// </summary>
 public class SharedGameCollectionGuardTests
 {
     [Fact]
-    public void ClassesInTheSharedCollection_ShouldNotDeclareTheirOwnGame()
+    public void TheAssembly_ShouldDeclareNoGameButTheSharedHost()
     {
         List<string> offenders = new List<string>();
         foreach (Type type in typeof(SharedGame).Assembly.GetTypes())
         {
-            if (type.IsNested)
+            if (typeof(Game).IsAssignableFrom(type) && type.Name != "HostGame")
             {
-                continue;
-            }
-            CollectionAttribute? collection = type.GetCustomAttribute<CollectionAttribute>();
-            if (collection?.Name != SharedGame.CollectionName)
-            {
-                continue;
-            }
-            foreach (Type nested in type.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (typeof(Game).IsAssignableFrom(nested))
-                {
-                    offenders.Add($"{type.Name}.{nested.Name}");
-                }
+                offenders.Add(type.FullName!);
             }
         }
 
         offenders.ShouldBeEmpty(
-            "these shared-collection test classes declare their own Game; derive from SharedGameLease instead");
+            "these types declare their own Game; derive from SharedGameLease instead");
+    }
+
+    [Fact]
+    public void TestClasses_ShouldNotJoinACollectionOtherThanTheSharedGame()
+    {
+        List<string> offenders = new List<string>();
+        foreach (Type type in typeof(SharedGame).Assembly.GetTypes())
+        {
+            CollectionAttribute? collection = type.GetCustomAttribute<CollectionAttribute>();
+            if (collection != null && collection.Name != SharedGame.CollectionName)
+            {
+                offenders.Add($"{type.Name}: {collection.Name}");
+            }
+        }
+
+        offenders.ShouldBeEmpty(
+            "a second collection fixture would create a second Game; use the shared collection");
     }
 }

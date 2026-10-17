@@ -21,6 +21,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Fonts;
 /// the live <see cref="Texture2D"/> instead of a full regenerate. Uses a real <see cref="GraphicsDevice"/>
 /// (mirrors <see cref="KernSmithFontCreatorTests"/>) since this exercises actual texture uploads/reads.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class KernSmithFontCreatorGrowthTests : BaseTestClass
 {
     [Fact]
@@ -198,23 +199,7 @@ chars count=1
 char id=65   x=0   y=0   width=10     height=10    xoffset=0    yoffset=0    xadvance=10     page=0  chnl=15
 ";
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
-        }
     }
 }

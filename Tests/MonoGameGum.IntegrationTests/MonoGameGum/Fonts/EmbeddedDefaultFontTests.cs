@@ -17,6 +17,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Fonts;
 /// regular atlas also carries baked UI shapes (the radio-button circles) in the rows below the glyphs;
 /// those must stay byte-identical at the same coordinates because they are addressed by pixel position.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class EmbeddedDefaultFontTests : BaseTestClass
 {
     // SHA-256 over the decoded RGBA bytes of atlas rows 160..255 (the whole shape section), taken from the
@@ -65,16 +66,7 @@ public class EmbeddedDefaultFontTests : BaseTestClass
         glyphBottoms.Max().ShouldBeLessThanOrEqualTo(ShapeSectionTop);
     }
 
-    private sealed class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-
-        public MinimalGame()
-        {
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
     }
 }
