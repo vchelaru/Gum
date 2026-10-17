@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Editor/Elements/VerticalLines</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="bool" Name="ClipsChildren" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="ColorCategoryState" SetsValue="false" />
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">16</Value>
+    </Variable>
+    <Variable Type="int" Name="LinesSprite.Alpha" ExposedAsName="LineAlpha" SetsValue="false" />
+    <Variable IsFile="true" Type="string" Name="LinesSprite.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="LinesSprite.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="LinesSprite.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">32</Value>
+    </Variable>
+    <Variable Type="int" Name="LinesSprite.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="LinesSprite.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">960</Value>
+    </Variable>
+    <Variable Type="int" Name="LinesSprite.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">1024</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="LinesSprite.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="LinesSprite.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="LinesSprite.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">128</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>LinesSprite.AnimationFrames</Name>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value />
+    </VariableList>
+  </State>
+  <Category>
+    <Name>ColorCategory</Name>
+    <State>
+      <Name>Black</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.Black.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>DarkGray</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.DarkGray.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Gray</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.Gray.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>LightGray</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">170</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">170</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">170</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.LightGray.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>White</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.White.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>PrimaryDark</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">51</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">51</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">51</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.PrimaryDark.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Primary</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>PrimaryLight</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">89</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">89</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">89</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.PrimaryLight.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Success</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">48</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">167</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">62</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.Success.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Warning</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">25</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">171</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.Warning.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Danger</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">212</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.Danger.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Accent</Name>
+      <Variable Type="int" Name="LinesSprite.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">222</Value>
+      </Variable>
+      <Variable Type="int" Name="LinesSprite.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>LinesSprite.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Editor/Styles.Accent.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+  </Category>
+  <Instance Name="LinesSprite" BaseType="Sprite" />
+  <Behaviors />
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

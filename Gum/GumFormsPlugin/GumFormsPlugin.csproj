@@ -92,6 +92,7 @@
 			<ForestGladeThemeFiles Include="$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/ForestGlade/**/*.*" />
 			<NeonThemeFiles Include="$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Neon/**/*.*" />
 			<MeadowThemeFiles Include="$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Meadow/**/*.*" />
+			<EditorThemeFiles Include="$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Editor/**/*.*" />
 		</ItemGroup>
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Standard" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Standard')" />
@@ -125,6 +126,10 @@
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow')" />
 		<Copy SourceFiles="@(MeadowThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow/%(RecursiveDir)" />
 		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Meadow/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow/Behaviors&quot;" />
+
+		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Editor" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Editor')" />
+		<Copy SourceFiles="@(EditorThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Editor/%(RecursiveDir)" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Editor/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Editor/Behaviors&quot;" />
 
 		<!-- The Avalonia head reads the same staged themes from its own Content folder. -->
 		<ItemGroup>

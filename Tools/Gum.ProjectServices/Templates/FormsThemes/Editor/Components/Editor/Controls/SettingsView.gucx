@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Editor/Controls/SettingsView</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="ChildrenLayout" Name="ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="string" Name="FullscreenCheckboxInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Fullscreen</Value>
+    </Variable>
+    <Variable Type="float" Name="FullscreenCheckboxInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="FullscreenCheckboxInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="FullscreenCheckboxInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="MusicSliderInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MusicSliderInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="MusicVolumeLabel.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Music Volume</Value>
+    </Variable>
+    <Variable Type="float" Name="MusicVolumeLabel.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MusicVolumeLabel.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="MusicVolumeLabel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="float" Name="SoundSliderInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SoundSliderInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="SoundVolumeLabel.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Sound Effect Volume</Value>
+    </Variable>
+    <Variable Type="float" Name="SoundVolumeLabel.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SoundVolumeLabel.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="SoundVolumeLabel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+  </State>
+  <Instance Name="FullscreenCheckboxInstance" BaseType="Editor/Controls/CheckBox" />
+  <Instance Name="MusicVolumeLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="MusicSliderInstance" BaseType="Editor/Controls/Slider" />
+  <Instance Name="SoundVolumeLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="SoundSliderInstance" BaseType="Editor/Controls/Slider" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>SettingsViewBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

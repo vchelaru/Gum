@@ -70,7 +70,7 @@ public class FormsThemeCreationTests : IDisposable
         FormsThemeLocator locator = new FormsThemeLocator(new[] { FindThemesRoot() });
 
         locator.GetAvailableThemes().ShouldBe(
-            new[] { "Bubblegum", "DarkPro", "ForestGlade", "Hazard", "Meadow", "Neon", "Retro95" });
+            new[] { "Bubblegum", "DarkPro", "Editor", "ForestGlade", "Hazard", "Meadow", "Neon", "Retro95" });
     }
 
     [Fact]

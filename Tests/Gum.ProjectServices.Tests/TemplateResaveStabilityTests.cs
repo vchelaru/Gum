@@ -34,7 +34,7 @@ public class TemplateResaveStabilityTests : IDisposable
 
     public static IEnumerable<object[]> ThemeNames => new[]
     {
-        "Bubblegum", "DarkPro", "ForestGlade", "Hazard", "Meadow", "Neon", "Retro95"
+        "Bubblegum", "DarkPro", "Editor", "ForestGlade", "Hazard", "Meadow", "Neon", "Retro95"
     }.Select(name => new object[] { name });
 
     [Fact]

@@ -21,7 +21,7 @@ public class TemplateDerivedVariablesHiddenTests
     public static IEnumerable<object[]> TemplateProjects => new[]
     {
         "FormsTemplate",
-        "FormsThemes/Bubblegum", "FormsThemes/DarkPro", "FormsThemes/ForestGlade", "FormsThemes/Hazard",
+        "FormsThemes/Bubblegum", "FormsThemes/DarkPro", "FormsThemes/Editor", "FormsThemes/ForestGlade", "FormsThemes/Hazard",
         "FormsThemes/Meadow", "FormsThemes/Neon", "FormsThemes/Retro95",
     }.Select(path => new object[] { path });
 
