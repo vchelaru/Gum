@@ -19,9 +19,8 @@ parity today (staged per-theme in `Gum/GumFormsPlugin/GumFormsPlugin.csproj`'s p
 the default `Standard` theme — 8 entries in the tool's theme dropdown). `Editor` exists as a
 code-only theme (`Themes/Gum.Themes.Editor.*`) but was investigated and intentionally skipped: it
 doesn't follow the full-chrome-rebuild pattern the tool-content model assumes (it recolors V3's
-stock NineSlice visuals in place rather than replacing them), restyles only 9 of ~21 Forms
-controls, and introduces `Expander` — a control with no Add-Forms behavior infrastructure. Porting
-it would mean inventing a look the theme's own author chose not to build.
+stock NineSlice visuals in place rather than replacing them) and restyles only 9 of ~21 Forms
+controls. Porting it would mean inventing a look the theme's own author chose not to build.
 
 ## Porting a new theme (#3527): do the landmines up front, not reactively
 
