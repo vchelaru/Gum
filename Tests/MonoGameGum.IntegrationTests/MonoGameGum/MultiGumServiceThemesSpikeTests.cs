@@ -58,6 +58,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
     public MultiGumServiceThemesSpikeTests()
     {
+        TempProbe.Reset();
         _rootDirectory = Path.Combine(Path.GetTempPath(), "GumTwoThemes_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(CaptureDirectory);
     }
@@ -72,6 +73,8 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
         try { File.AppendAllText(Path.Combine(CaptureDirectory, "run-log.txt"), _log.ToString()); } catch { /* best effort */ }
         try { Directory.Delete(_rootDirectory, recursive: true); } catch { /* best effort */ }
+        TempProbe.Mark("classDispose");
+        TempProbe.Report();
     }
 
     #region Harness checks (a lone service must render its own theme)
@@ -82,8 +85,11 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     public void SingleService_Alone_ShouldRenderItsOwnTheme(string theme)
     {
         string path = CopyTheme(theme);
+        TempProbe.Mark("copyTheme");
         using ThemedGame game = new ThemedGame(path, pathB: null);
+        TempProbe.Mark("newGame");
         game.RunOneFrame();
+        TempProbe.Mark("runOneFrame");
 
         DemoScreen screen = BuildDemoScreen(game.ServiceA, game.ProjectA, theme, offset: Point.Zero);
         Log($"{theme} solo: {screen.Describe()}");
@@ -321,8 +327,11 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
     {
         string pathA = CopyTheme("Bubblegum");
         string pathB = CopyTheme("Hazard");
+        TempProbe.Mark("copyThemes");
         ThemedGame game = new ThemedGame(pathA, pathB);
+        TempProbe.Mark("newGame");
         game.RunOneFrame();
+        TempProbe.Mark("runOneFrame");
         return game;
     }
 
@@ -336,6 +345,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         screen.X += offset.X;
         screen.Y += offset.Y;
         screen.UpdateLayout();
+        TempProbe.Mark("buildScreen");
         return new DemoScreen(theme, screen);
     }
 
@@ -360,18 +370,21 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
                 gd.SetRenderTarget(capture);
                 if (makeServiceDefault) { IGumService.Default = service; }
                 service.SystemManagers.Renderer.Draw(service.SystemManagers);
+                TempProbe.Mark("  draw");
             }
         }
 
         gd.SetRenderTarget(null);
         XnaColor[] pixels = new XnaColor[CaptureWidth * CaptureHeight];
         capture.GetData(pixels);
+        TempProbe.Mark("readback");
 
         string pngPath = Path.Combine(CaptureDirectory, pngName);
         using (FileStream stream = File.Create(pngPath))
         {
             capture.SaveAsPng(stream, CaptureWidth, CaptureHeight);
         }
+        TempProbe.Mark("savePng");
         Log("wrote " + pngPath);
         return new Frame(pixels, pngPath);
     }
@@ -584,12 +597,16 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
         protected override void Initialize()
         {
             base.Initialize();
+            TempProbe.Mark("baseInit");
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+            TempProbe.Mark("shapeInit");
 
             ProjectA = ServiceA.Initialize(this, _pathA)!;
+            TempProbe.Mark("setupA");
             if (_pathB != null)
             {
                 ProjectB = ServiceB.Initialize(this, _pathB)!;
+                TempProbe.Mark("setupB");
             }
         }
 
@@ -598,6 +615,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
         protected override void Dispose(bool disposing)
         {
+            TempProbe.Mark("testBody");
             if (ServiceB.IsInitialized)
             {
                 try { ServiceB.Uninitialize(); } catch { /* teardown after a red test */ }
@@ -616,6 +634,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
             FrameworkElement.ModalRoot = null!;
             Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
             base.Dispose(disposing);
+            TempProbe.Mark("gameDispose");
         }
     }
 
