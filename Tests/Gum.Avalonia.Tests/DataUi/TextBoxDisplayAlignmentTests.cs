@@ -32,7 +32,8 @@ public class TextBoxDisplayAlignmentTests
         double labelTextCenter = label.TranslatePoint(
             new Point(0, label.Padding.Top + (label.Bounds.Height - label.Padding.Top - label.Padding.Bottom) / 2), window)!.Value.Y;
         double fieldTextCenter = fieldText.TranslatePoint(new Point(0, fieldText.Bounds.Height / 2), window)!.Value.Y;
-        labelTextCenter.ShouldBe(fieldTextCenter, 0.5);
+        // Within a pixel: layout rounds to whole pixels and font metrics differ a little per platform.
+        labelTextCenter.ShouldBe(fieldTextCenter, 1.0);
         window.Close();
     }
 }
