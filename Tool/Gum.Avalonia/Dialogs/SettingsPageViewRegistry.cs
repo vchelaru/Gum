@@ -7,6 +7,8 @@ using Gum.Avalonia.Dialogs.Views;
 using Gum.Avalonia.Panels;
 using Gum.Avalonia.Settings;
 using Gum.Dialogs;
+using Gum.Plugins.FontsPlugin;
+using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Services.Dialogs;
 using Gum.SettingsWindow;
@@ -32,6 +34,8 @@ public class SettingsPageViewRegistry
         Register<ThemingDialogViewModel>(() => Scrolled(new ThemingDialogView()));
         Register<PluginsDialogViewModel>(() => WithDialogButtons(new PluginsDialogView()));
         Register<ProjectPropertiesPageViewModel>(() => new ProjectPropertiesPageView());
+        Register<FontsViewModel>(() => new FontsView());
+        Register<HotkeyViewModel>(() => new HotkeyView());
     }
 
     /// <summary>The view-model types with a registered page view.</summary>

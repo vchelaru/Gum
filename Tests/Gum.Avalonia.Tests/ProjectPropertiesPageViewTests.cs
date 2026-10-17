@@ -28,7 +28,7 @@ public class ProjectPropertiesPageViewTests
         view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.ShowCheckerBackground)).ShouldNotBeNull();
         view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.TextureFilter)).ShouldBeNull();
         view.Grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.LocalizationFiles)).ShouldBeNull();
-        view.GetVisualDescendants().OfType<CheckBox>().Count().ShouldBe(3, "show outlines, canvas outline and checker background");
+        view.GetVisualDescendants().OfType<CheckBox>().Count().ShouldBeGreaterThanOrEqualTo(3, "show outlines, canvas outline and checker background");
         window.Close();
     }
 

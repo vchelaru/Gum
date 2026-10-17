@@ -8,6 +8,7 @@ using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.SettingsWindow;
 using Gum.Plugins.FontsPlugin;
 using Microsoft.Extensions.DependencyInjection;
 using RenderingLibrary.Graphics.Fonts;
@@ -18,7 +19,7 @@ using WpfDataUi.DataTypes;
 namespace Gum.Avalonia.Tests.EndToEnd;
 
 /// <summary>
-/// The Font Settings tab (Edit > Font Settings) driven with simulated input over a real project: the ranges table, the
+/// The Fonts page of the Settings window driven with simulated input over a real project: the ranges table, the
 /// font character file, and the generation settings each save into the project file.
 /// </summary>
 public class FontsTabScenarioTests
@@ -27,12 +28,11 @@ public class FontsTabScenarioTests
 
     [AvaloniaFact]
     [Trait("Feature", "EDIT-013")]
-    public void EditFontSettings_OpensTheTab_ShowingTheProjectsRanges()
+    public void FontsPage_ShowsTheProjectsRanges()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         using FontsTab fonts = new FontsTab(tree);
 
-        fonts.Tab.IsVisible.ShouldBeTrue();
         fonts.ViewModel.Entries.Select(entry => (entry.FontFamily, entry.Ranges)).ShouldBe(new[] { ("", BmfcSave.DefaultRanges) });
 
         tree.AssertOracles();
@@ -162,7 +162,7 @@ public class FontsTabScenarioTests
     private static GumProjectSave SavedProject(ProjectTreeHarness tree) =>
         GumProjectSave.Load(tree.Project.ProjectFilePath, out _) ?? throw new InvalidOperationException("The project file did not load.");
 
-    /// <summary>The head's Font Settings tab, opened with Edit > Font Settings and hosted in a window of its own.</summary>
+    /// <summary>The head's Fonts page of the Settings window, hosted in a window of its own.</summary>
     private sealed class FontsTab : IDisposable
     {
         private readonly ProjectTreeHarness _tree;
@@ -170,15 +170,13 @@ public class FontsTabScenarioTests
         public FontsTab(ProjectTreeHarness tree)
         {
             _tree = tree;
-            tree.PickMainMenu("Edit", "Font Settings");
-            Tab = ((AvaloniaTabManager)TestAppBuilder.Services.GetRequiredService<ITabManager>()).AllTabs.Single(candidate => candidate.Title == "Font Settings");
-            Tab.IsVisible.ShouldBeTrue();
-            View = (FontsView)Tab.Content;
-            ViewModel = (FontsViewModel)View.DataContext!;
+            SettingsPage page = SettingsPagesForTests.Page(SettingsPageIds.Fonts);
+            // Opening the page fills it from the project.
+            page.Activated!();
+            ViewModel = (FontsViewModel)page.Content;
+            View = new FontsView { DataContext = ViewModel };
             Input = new HeadlessWindowDriver(View, width: 520, height: 900, framesFolderName: "GumFonts");
         }
-
-        public AvaloniaPluginTab Tab { get; }
 
         public FontsView View { get; }
 

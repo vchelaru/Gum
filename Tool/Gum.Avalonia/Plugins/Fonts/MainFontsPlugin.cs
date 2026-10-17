@@ -10,6 +10,7 @@ using Gum.Plugins.FontsPlugin;
 using Gum.ProjectServices;
 using Gum.Services;
 using Gum.Services.Fonts;
+using Gum.SettingsWindow;
 using Gum.ToolStates;
 using RenderingLibrary.Graphics.Fonts;
 using ToolsUtilities;
@@ -17,7 +18,7 @@ using ToolsUtilities;
 namespace Gum.Avalonia.Plugins.Fonts;
 
 /// <summary>
-/// The Font Settings tab (Edit > Font Settings): the character ranges per font and the font generation settings.
+/// The Fonts page of the Settings window: the character ranges per font and the font generation settings.
 /// Keeps <see cref="FontsViewModel"/> in step with the loaded project and hands each change to
 /// <see cref="FontsChangeLogic"/>, and keeps the project-wide ranges in step with the project's
 /// .gumfcs font character file while one is in use.
@@ -33,7 +34,6 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
 
     private FontsViewModel _viewModel = null!;
     private FontsChangeLogic _changeLogic = null!;
-    private IPluginTab? _pluginTab;
     private FilePath? _fontCharacterFileAbsolute;
 
     /// <summary>Creates the plugin over the tool services it acts through.</summary>
@@ -61,8 +61,6 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
     /// <inheritdoc/>
     public override void StartUp()
     {
-        AddMenuEntry(HandleFontsClicked, "Edit", "Font Settings");
-
         _changeLogic = new FontsChangeLogic(
             _fontManager,
             _dialogService,
@@ -78,9 +76,12 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
         this.ProjectLoad += HandleProjectLoad;
         this.ReactToFileChanged += HandleFileChanged;
 
-        // The head resolves the view model to its view (TabViewRegistry).
-        _pluginTab = _tabManager.AddControl(_viewModel, "Font Settings");
-        _pluginTab.Hide();
+        // The head resolves the view model to its view (SettingsPageViewRegistry).
+        AddSettingsPage(new SettingsPage(SettingsPageIds.Fonts, "Fonts", SettingsSection.Project, _viewModel, order: 2)
+        {
+            Activated = Reload,
+            Keywords = new[] { "character ranges", "gumfcs", "glyph spacing", "atlas", "generator", "kernsmith" },
+        });
     }
 
     /// <inheritdoc/>
@@ -92,7 +93,8 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
         UseCharacterFileRangesWhenInUse();
     }
 
-    private void HandleFontsClicked()
+    // Shown each time the page is opened, so it reflects the project as it is now.
+    private void Reload()
     {
         try
         {
@@ -105,17 +107,10 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
             UseCharacterFileRangesWhenInUse();
             RefreshFontUsage(project);
             _viewModel.NotifyReloaded();
-
-            if (_pluginTab != null)
-            {
-                _pluginTab.Show();
-                _pluginTab.CanClose = true;
-                _pluginTab.IsSelected = true;
-            }
         }
         catch (Exception ex)
         {
-            _guiCommands.PrintOutput($"Error showing the Font Settings tab:\n{ex}");
+            _guiCommands.PrintOutput($"Error showing the font settings:\n{ex}");
         }
     }
 

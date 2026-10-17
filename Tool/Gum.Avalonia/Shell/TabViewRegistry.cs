@@ -32,13 +32,11 @@ public class TabViewRegistry
 
         // Built-in plugins shared with the WPF head (Gum.Presentation).
         Register<MainOutputViewModel>(() => new OutputView());
-        Register<HotkeyViewModel>(() => new HotkeyView());
         Register<FileWatchViewModel>(() => new FileWatchView());
         Register<AllErrorsViewModel>(() => new ErrorsView(), header: () => new ErrorTabHeaderView());
         Register<UndosViewModel>(() => new UndosView());
         Register<AlignmentViewModel>(() => new AlignmentView());
         Register<BehaviorsViewModel>(() => new BehaviorsView());
-        Register<FontsViewModel>(() => new FontsView());
 
         // Plugins in their own projects that ship no views.
         Register<PerformanceViewModel>(() => new PerformanceView());
