@@ -4,7 +4,11 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
+using AvaloniaDataUi.Controls;
 using Gum.DataTypes;
+using Gum.Avalonia.Plugins.VariableGrid;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests.VariableGrid;
@@ -60,6 +64,54 @@ public class PairedRowsScenarioTests
         TopOf(grid, "TextureHeight").ShouldBe(TopOf(grid, "TextureWidth"), 0.5);
         LeftOf(grid, "TextureWidth").ShouldBeLessThan(LeftOf(grid, "TextureHeight"));
         TopOf(grid, "TextureWidth").ShouldBeGreaterThan(TopOf(grid, "TextureLeft"));
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Circle")]
+    [InlineData("Rectangle")]
+    public void GradientPoints_ShareARowPerPoint_WithTheUnitsRowsBelow(string baseType)
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave shape = grid.Project.AddInstance(button, "Shape", baseType);
+        grid.Select(shape);
+        grid.Input.Click(grid.Editor<CheckBoxDisplay>("UseGradient").CheckBox);
+        grid.Settle();
+
+        TopOf(grid, "GradientY1").ShouldBe(TopOf(grid, "GradientX1"), 0.5);
+        LeftOf(grid, "GradientX1").ShouldBeLessThan(LeftOf(grid, "GradientY1"));
+        TopOf(grid, "GradientY2").ShouldBe(TopOf(grid, "GradientX2"), 0.5);
+        LeftOf(grid, "GradientX2").ShouldBeLessThan(LeftOf(grid, "GradientY2"));
+        TopOf(grid, "GradientX2").ShouldBeGreaterThan(TopOf(grid, "GradientX1"));
+        TopOf(grid, "GradientX1Units").ShouldBeGreaterThan(TopOf(grid, "GradientX1"));
+        TopOf(grid, "GradientY1Units").ShouldBeGreaterThan(TopOf(grid, "GradientX1Units"));
+    }
+
+    /// <summary>
+    /// Arc and the legacy Skia shapes come from the Skia plugin, which the harness does not load, so
+    /// their rows are checked from their default states: pairs match by name, so both gradient
+    /// members being present is what makes them share a row.
+    /// </summary>
+    [Theory]
+    [InlineData("Arc")]
+    [InlineData("ColoredCircle")]
+    [InlineData("RoundedRectangle")]
+    public void GradientPairs_AreInTheListOfPairs_AndBothMembersExistOnTheShape(string shape)
+    {
+        StateSave state = shape switch
+        {
+            "Arc" => StandardElementsManager.GetArcState(),
+            "ColoredCircle" => StandardElementsManager.GetColoredCircleState(),
+            _ => StandardElementsManager.GetRoundedRectangleState(),
+        };
+        List<string> names = state.Variables.Select(variable => variable.Name).ToList();
+
+        foreach ((string first, string second) in new[] { ("GradientX1", "GradientY1"), ("GradientX2", "GradientY2") })
+        {
+            VariableGridRows.Pairs.ShouldContain(new RowPair(first, second));
+            names.ShouldContain(first);
+            names.ShouldContain(second);
+        }
     }
 
     [AvaloniaFact]
