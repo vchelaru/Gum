@@ -28,4 +28,19 @@ public class ToggleStripRowScreenshotTests
 
         PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, $"toggle-strip-rows-width-{width}");
     });
+
+    [SkippableFact]
+    public void VariableReferencesRow_LabelOnOneLine() => PrScreenshot.Run(() =>
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        InstanceSave label = grid.Project.AddInstance(button, "Label", "Container");
+        grid.Select(label);
+        grid.Input.TypeInto(grid.View.FilterTextBox, "References");
+        grid.Input.Window.Width = 300;
+        grid.Input.Window.Height = 300;
+        grid.Settle();
+
+        PrScreenshot.SaveWindowAtZoomLevels(grid.Input.Window, "variable-references-row");
+    });
 }

@@ -70,14 +70,13 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
         _hint = CreateHintTextBlock();
 
         // The editor takes its own full-width row under the label. The button sits on the label row,
-        // so showing it neither covers the text or scroll bars nor pushes the rows below.
+        // so showing it neither covers the text or scroll bars nor pushes the rows below. The label
+        // takes the whole row less the button, so it wraps only when that is too narrow for it.
         _grid = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("100,*"),
+            ColumnDefinitions = new ColumnDefinitions("*,Auto"),
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
         };
-        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
-        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 60);
         Grid.SetRow(_textBox, 1);
         Grid.SetColumnSpan(_textBox, 2);
         Grid.SetColumn(ApplyButton, 1);
@@ -108,7 +107,6 @@ public class MultiLineTextBoxDisplay : DataUiDisplayBase
     /// <inheritdoc/>
     protected override void OnInstanceMemberChanged()
     {
-        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
         _textBox.ClearValue(TemplatedControl.BackgroundProperty);
     }
 
