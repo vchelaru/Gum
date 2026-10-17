@@ -146,8 +146,20 @@ public sealed class ProjectPropertiesGridPresenter
             {
                 grid.Categories.Remove(category);
             }
+            else if (category.Name == UncategorizedName)
+            {
+                category.Name = section switch
+                {
+                    ProjectPropertiesSection.Canvas => "Canvas Size",
+                    ProjectPropertiesSection.Localization => "Localization",
+                    _ => "General",
+                };
+            }
         }
     }
+
+    // The name DataUiGridModel gives members that no category claims.
+    private const string UncategorizedName = "Uncategorized";
 
     private static ProjectPropertiesSection? SectionOf(string memberName) => memberName switch
     {

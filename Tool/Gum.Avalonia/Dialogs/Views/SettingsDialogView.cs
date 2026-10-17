@@ -22,6 +22,8 @@ public sealed class SettingsDialogView : Grid
     /// <summary>Height the window opens at (shrinks on a shorter screen).</summary>
     public const double WindowHeight = 560;
 
+    private const double TitleScale = 1.5;
+
     private readonly SettingsPageViewRegistry _pageViews;
 
     /// <summary>Builds the view.</summary>
@@ -32,7 +34,8 @@ public sealed class SettingsDialogView : Grid
         Width = WindowWidth;
         DialogWindow.SetPreferredHeight(this, WindowHeight);
         DialogWindow.SetScrollContent(this, false);
-        ColumnDefinitions = new ColumnDefinitions("200,*");
+        // The page list is as wide as its longest name, so a large zoom does not clip names.
+        ColumnDefinitions = new ColumnDefinitions("Auto,*");
 
         Control navigation = BuildNavigation();
         Control page = BuildPage();
@@ -61,7 +64,7 @@ public sealed class SettingsDialogView : Grid
             e.Container.Focusable = !isHeader;
         };
 
-        DockPanel navigation = new DockPanel { Margin = new Thickness(0, 0, 12, 0) };
+        DockPanel navigation = new DockPanel { Margin = new Thickness(0, 0, 12, 0), MinWidth = 200 };
         navigation.Children.Add(search);
         navigation.Children.Add(pages);
         return navigation;
@@ -86,7 +89,10 @@ public sealed class SettingsDialogView : Grid
 
     private Control BuildPage()
     {
-        TextBlock title = new TextBlock { FontSize = 18, FontWeight = FontWeight.Medium };
+        TextBlock title = new TextBlock { FontWeight = FontWeight.Medium };
+        // Larger than the body text at every zoom level, so it follows the base font size the tool zooms by.
+        title.Bind(TextBlock.FontSizeProperty, title.GetResourceObservable(
+            "ControlContentThemeFontSize", size => (size is double baseSize ? baseSize : 12d) * TitleScale));
         title.Bind(TextBlock.TextProperty, new Binding($"{nameof(SettingsDialogViewModel.SelectedPage)}.{nameof(SettingsPage.Title)}"));
 
         TextBlock scope = new TextBlock { Margin = new Thickness(0, 2, 0, 12) }

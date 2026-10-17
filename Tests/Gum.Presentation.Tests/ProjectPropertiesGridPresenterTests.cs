@@ -106,6 +106,24 @@ public class ProjectPropertiesGridPresenterTests
         grid.Categories.Select(category => category.Name).ShouldNotContain("Single Pixel Texture");
     }
 
+    [Theory]
+    [InlineData(ProjectPropertiesSection.General, "General")]
+    [InlineData(ProjectPropertiesSection.Canvas, "Canvas Size")]
+    [InlineData(ProjectPropertiesSection.Localization, "Localization")]
+    public void Bind_WithASection_NamesTheUncategorizedRowsAfterThePage(ProjectPropertiesSection section, string expectedName)
+    {
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(new GumProjectSave());
+        ModelBackedGrid grid = new ModelBackedGrid();
+        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid, section);
+
+        presenter.Bind(viewModel);
+
+        string[] names = grid.Categories.Select(category => category.Name).ToArray();
+        names.ShouldContain(expectedName);
+        names.ShouldNotContain("Uncategorized");
+    }
+
     [Fact]
     public void Bind_WithoutASection_NeverShowsAutoSave()
     {
