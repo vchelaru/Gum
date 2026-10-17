@@ -791,6 +791,14 @@ jobs:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         run: dotnet test "Tests/MonoGameGum.Shapes.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
+      # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
+      # page alone (#6092).
+      - name: Slowest tests
+        if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        continue-on-error: true
+        shell: pwsh
+        run: ./.github/scripts/trx-slowest.ps1 -ResultsDirectory TestResults
+
       - name: Publish Test Results
         if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         uses: dorny/test-reporter@v2
