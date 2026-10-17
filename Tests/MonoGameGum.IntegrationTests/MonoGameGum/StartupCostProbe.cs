@@ -54,10 +54,21 @@ public class StartupCostProbe : BaseTestClass
             long firstTargetFrame = Phase(() => game.RunOneFrame());
             long secondTargetFrame = Phase(() => game.RunOneFrame());
 
+            TextRuntime text = new TextRuntime { Text = "Hello", Y = 120 };
+            Gum.GumService.Default.Root.AddChild(text);
+            long firstTextFrame = Phase(() => game.RunOneFrame());
+            long secondTextFrame = Phase(() => game.RunOneFrame());
+
+            Gum.Forms.Controls.Button button = new Gum.Forms.Controls.Button();
+            long buttonCreate = Phase(() => Gum.GumService.Default.Root.AddChild(button.Visual));
+            long firstButtonFrame = Phase(() => game.RunOneFrame());
+            long secondButtonFrame = Phase(() => game.RunOneFrame());
+
             long dispose = Phase(() => game.Dispose());
 
             lines.Add(
-                $"iteration {i}: create+init={created} ms | rect frame1={firstRectFrame} frame2={secondRectFrame} | " +
+                $"iteration {i}: text frame1={firstTextFrame} frame2={secondTextFrame} | button create={buttonCreate} frame1={firstButtonFrame} frame2={secondButtonFrame} | " +
+                $"create+init={created} ms | rect frame1={firstRectFrame} frame2={secondRectFrame} | " +
                 $"ShapeRenderer.Initialize={shapeInit} | circle frame1={firstCircleFrame} frame2={secondCircleFrame} | " +
                 $"render target frame1={firstTargetFrame} frame2={secondTargetFrame} | dispose={dispose} | total={total.ElapsedMilliseconds} ms");
         }

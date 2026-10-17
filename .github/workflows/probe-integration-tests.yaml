@@ -35,6 +35,10 @@ jobs:
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe
+          # Experiment (#6092): does a Mesa on-disk shader cache make every Game after the first
+          # skip the ~2.3 s Apos.Shapes effect compile?
+          MESA_SHADER_CACHE_DISABLE: "false"
+          MESA_SHADER_CACHE_DIR: ${{ runner.temp }}\mesa-shader-cache
         run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "FullyQualifiedName~StartupCostProbe" --logger "trx" --results-directory "TestResults"
 
       - name: Startup probe
