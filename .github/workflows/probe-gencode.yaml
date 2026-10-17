@@ -3,10 +3,8 @@ on:
   push:
     branches: [6092-gencode-job-faster]
 jobs:
-  inventory:
+  noinstall:
     runs-on: windows-latest
-    outputs:
-      key: ${{ steps.k.outputs.key }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -14,88 +12,46 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Before listing
+      - name: Workload state
         shell: bash
         run: |
-          D="C:/Program Files/dotnet"
-          (cd "$D" && ls packs sdk-manifests metadata/workloads 2>/dev/null | sort) > before.txt
-          du -sm "$D/packs" "$D/sdk-manifests" "$D/metadata"
-          du -sm "$D/packs"/* | sort -rn | head -30
-      - name: Install maui
+          dotnet --version
+          dotnet workload list
+          dotnet workload --info | head -30
+      - name: New pipeline
+        shell: pwsh
+        run: |
+          function T($n, [scriptblock]$b) { $sw=[Diagnostics.Stopwatch]::StartNew(); & $b; Write-Host "TIMING $n $([int]$sw.Elapsed.TotalSeconds)s exit=$LASTEXITCODE" }
+          T "cli build" { dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0 }
+          $cli = "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
+          $g = @("Tests/CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx","Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx","Tests/CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_Skia_ByReference/Content/GumProject/CodeGenTestProject.gumx")
+          T "codegen x7" { foreach ($x in $g) { & $cli codegen $x } }
+          T "restore slnx" { dotnet restore Tests/CodeGen_Harnesses.slnx --verbosity quiet -p:MauiWindowsOnly=true }
+          T "build slnx" { dotnet build Tests/CodeGen_Harnesses.slnx --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0 -p:MauiWindowsOnly=true -m }
+          T "themes" { pwsh Tools/build-theme-projects.ps1 -Cli $cli }
+          git status --porcelain -- "Tests/CodeGen_*"
+  skipmanifest:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Workload state
+        shell: bash
+        run: |
+          dotnet --version
+          dotnet workload list
+          dotnet workload --info | head -30
+      - name: Install skip-manifest-update
         shell: bash
         run: |
           s=$(date +%s)
-          bash .github/scripts/install-workloads.sh maui
+          dotnet workload install maui --skip-manifest-update 2>&1 | tail -15
           echo "INSTALL_SECONDS=$(( $(date +%s) - s ))"
-      - name: Diff
-        id: k
-        shell: bash
-        run: |
-          D="C:/Program Files/dotnet"
-          cd "$D"
-          : > $GITHUB_WORKSPACE/added.txt
-          for dir in packs sdk-manifests metadata; do
-            for e in $(ls "$dir"); do
-              if ! grep -qx "$e" $GITHUB_WORKSPACE/before.txt; then echo "$dir/$e" >> $GITHUB_WORKSPACE/added.txt; fi
-            done
-          done
-          echo "== added entries"; cat $GITHUB_WORKSPACE/added.txt | head -80
-          echo "== sizes"; (while read p; do du -sm "$p"; done < $GITHUB_WORKSPACE/added.txt) | awk '{s+=$1; print} END {print "TOTAL_ADDED_MB", s}' | tail -40
-          echo "== versioned subdirs inside pre-existing pack dirs"
-          for p in $(ls packs); do grep -qx "$p" $GITHUB_WORKSPACE/before.txt && echo "pre-existing: $p -> $(ls packs/$p | tr '\n' ' ')"; done | head -30
-          echo "key=probe-$GITHUB_RUN_ID" >> $GITHUB_OUTPUT
-          # cache paths: added top-level entries (with the full-path prefix)
-          { echo 'paths<<EOF'; while read p; do echo "C:\Program Files\dotnet\${p//\//\}"; done < $GITHUB_WORKSPACE/added.txt; echo EOF; } > $GITHUB_WORKSPACE/paths.txt
-          cat $GITHUB_WORKSPACE/paths.txt | head -5
-      - name: Save diff cache
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            C:\Program Files\dotnet\packs\Microsoft.Android*
-            C:\Program Files\dotnet\packs\Microsoft.iOS*
-            C:\Program Files\dotnet\packs\Microsoft.MacCatalyst*
-            C:\Program Files\dotnet\packs\Microsoft.tvOS*
-            C:\Program Files\dotnet\packs\Microsoft.macOS*
-            C:\Program Files\dotnet\packs\Microsoft.Maui*
-            C:\Program Files\dotnet\packs\Microsoft.AspNetCore.Components.WebView.Maui*
-            C:\Program Files\dotnet\packs\Microsoft.NET.Runtime*
-            C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Runtime*
-            C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Crossgen*
-            C:\Program Files\dotnet\packs\Microsoft.WindowsAppSDK*
-            C:\Program Files\dotnet\packs\Microsoft.Windows*
-            C:\Program Files\dotnet\sdk-manifests
-            C:\Program Files\dotnet\metadata
-          key: probe-${{ github.run_id }}
-  fast:
-    needs: inventory
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-      - name: Restore narrow cache
-        id: rc
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            C:\Program Files\dotnet\packs\Microsoft.Android*
-            C:\Program Files\dotnet\packs\Microsoft.iOS*
-            C:\Program Files\dotnet\packs\Microsoft.MacCatalyst*
-            C:\Program Files\dotnet\packs\Microsoft.tvOS*
-            C:\Program Files\dotnet\packs\Microsoft.macOS*
-            C:\Program Files\dotnet\packs\Microsoft.Maui*
-            C:\Program Files\dotnet\packs\Microsoft.AspNetCore.Components.WebView.Maui*
-            C:\Program Files\dotnet\packs\Microsoft.NET.Runtime*
-            C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Runtime*
-            C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Crossgen*
-            C:\Program Files\dotnet\packs\Microsoft.WindowsAppSDK*
-            C:\Program Files\dotnet\packs\Microsoft.Windows*
-            C:\Program Files\dotnet\sdk-manifests
-            C:\Program Files\dotnet\metadata
-          key: probe-${{ github.run_id }}
+          dotnet workload list
       - name: New pipeline
         shell: pwsh
         run: |
