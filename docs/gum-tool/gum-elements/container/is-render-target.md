@@ -12,10 +12,6 @@
 * Container [Blend](../general-properties/blend.md)
 * Alpha-only [Blend](../general-properties/blend.md#alpha-only-blends) modes on instances contained in the Container
 
-{% hint style="warning" %}
-As of February 2025 the `Is Render Target` variable is considered experimental. You may experience issues when using this as it is being developed. Please report any problems you find through GitHub or on Discord.
-{% endhint %}
-
 ## Is Render Target Clips Children
 
 Containers with Is Render Target set to true automatically clip their children. This behavior is the same as setting [Clips Children](../general-properties/clips-children.md) to true. This happens because render targets internally create a texture which matches their size. Therefore, any items which are placed outside of the bounds of a render target container are not rendered.
@@ -33,4 +29,3 @@ Once a container is rendered to a render target, additional special effects can 
 For a step-by-step tool walkthrough of rotating and scaling a clipped container, see [Rotating and Scaling Clipped Contents](../../tutorials-and-examples/examples/rotating-and-scaling-clipped-contents.md). For the same pattern in code, see the [SpriteRuntime RenderTargetTextureSource](../../../code/standard-visuals/spriteruntime/rendertargettexturesource.md) documentation.
 
 If you are managing a render target yourself in code instead of using `Is Render Target`, see [Render Targets](../../../code/rendering/render-targets.md) for the blend-mode setup needed to composite translucent content correctly on MonoGame and raylib.
-
