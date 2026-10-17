@@ -35,7 +35,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// between the two services (its message says which static or queue is shared). Each test names what it
 /// expects in its summary.
 /// </summary>
-[Collection(SharedMultiServiceGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class MultiGumServiceInputSpikeTests : BaseTestClass
 {
     private const int CaptureWidth = 1024;
@@ -757,7 +757,7 @@ public class MultiGumServiceInputSpikeTests : BaseTestClass
 
         public InputGame(string pathA, string pathB)
         {
-            _lease = SharedMultiServiceGame.Acquire();
+            _lease = new MultiServiceGameLease();
             _pathA = pathA;
             _pathB = pathB;
         }

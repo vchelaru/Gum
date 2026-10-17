@@ -20,7 +20,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// when destination alpha is below 1 or masks stack, SubtractAlpha in a mixed shape batch, Normal and
 /// Additive shapes inside a bake, and SubtractAlpha outside a render target.
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class RenderTargetBlendCoverageTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -252,7 +252,7 @@ public class RenderTargetBlendCoverageTests : BaseTestClass
 
     private static XnaColor[] Render(Action<ContainerRuntime, ContainerRuntime, GraphicsDevice> build, bool useRenderTarget = true)
     {
-        using ShapeGameLease game = SharedShapeGame.Acquire();
+        using ShapeGameLease game = new ShapeGameLease();
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;

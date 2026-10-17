@@ -29,7 +29,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// The tests assert the behavior we want, so a red test marks a collision between the two services.
 /// Captures are saved as PNGs in <see cref="CaptureDirectory"/>.
 /// </summary>
-[Collection(SharedMultiServiceGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class MultiGumServiceThemesSpikeTests : BaseTestClass
 {
     private const int CaptureWidth = 1024;
@@ -570,7 +570,7 @@ public class MultiGumServiceThemesSpikeTests : BaseTestClass
 
         public ThemedGame(string pathA, string? pathB)
         {
-            _lease = SharedMultiServiceGame.Acquire();
+            _lease = new MultiServiceGameLease();
             _pathA = pathA;
             _pathB = pathB;
             ServiceA = new Gum.GumService();

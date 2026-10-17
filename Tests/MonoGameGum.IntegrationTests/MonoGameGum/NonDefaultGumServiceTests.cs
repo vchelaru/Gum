@@ -15,6 +15,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// Code that must work on a GumService created with <c>new GumService()</c> while
 /// <c>GumService.Default</c> is never initialized (#6066).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class NonDefaultGumServiceTests : BaseTestClass
 {
     private static readonly FieldInfo DefaultField =
@@ -67,32 +68,18 @@ public class NonDefaultGumServiceTests : BaseTestClass
         GraphicalUiElement.RefreshLocalizationOnElementAction.ShouldBeSameAs(sentinel);
     }
 
-    private sealed class NonDefaultServiceGame : Game
+    private sealed class NonDefaultServiceGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         public Gum.GumService GumService { get; } = new Gum.GumService();
 
-        public NonDefaultServiceGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, DefaultVisualsVersion.V3);
-        }
-
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            base.Dispose(disposing);
         }
     }
 }

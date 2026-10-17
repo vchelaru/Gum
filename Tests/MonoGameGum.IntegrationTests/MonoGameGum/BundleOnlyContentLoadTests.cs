@@ -21,6 +21,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// hook. These load each content type through the real MonoGame loaders with a real GraphicsDevice
 /// (#5225), and pin that a loose file still wins over a bundle hook that doesn't serve it.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class BundleOnlyContentLoadTests : BaseTestClass
 {
     private readonly string _projectDirectory;
@@ -144,24 +145,20 @@ public class BundleOnlyContentLoadTests : BaseTestClass
         return stream.ToArray();
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         private readonly bool _initializeWithGame;
 
         public MinimalGame(bool initializeWithGame)
         {
             _initializeWithGame = initializeWithGame;
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
         }
 
-        protected override void Initialize()
+        protected override void OnInitialize()
         {
-            base.Initialize();
             if (_initializeWithGame)
             {
-                Gum.GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+                Gum.GumService.Default.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
             }
             else
             {
@@ -169,17 +166,12 @@ public class BundleOnlyContentLoadTests : BaseTestClass
             }
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (Gum.GumService.Default.IsInitialized)
             {
                 Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

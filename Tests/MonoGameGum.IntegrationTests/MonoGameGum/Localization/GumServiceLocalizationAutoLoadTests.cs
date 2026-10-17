@@ -16,6 +16,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Localization;
 /// Integration tests verifying that GumService.Initialize auto-loads the
 /// project's LocalizationFile for both CSV and RESX formats.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceLocalizationAutoLoadTests : BaseTestClass, IDisposable
 {
     private string? _tempDirectory;
@@ -263,39 +264,24 @@ public class GumServiceLocalizationAutoLoadTests : BaseTestClass, IDisposable
 
     #region Test Game
 
-    private class GameForLocalizationTest : Game
+    private sealed class GameForLocalizationTest : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         private readonly string _gumProjectFile;
-        public GumService GumService { get; private set; }
+        public GumService GumService { get; } = new GumService();
 
         public GameForLocalizationTest(string gumProjectFile)
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
             _gumProjectFile = gumProjectFile;
-            GumService = new GumService();
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, _gumProjectFile);
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, _gumProjectFile);
 
-        protected override void Update(GameTime gameTime) { }
-
-        protected override void Draw(GameTime gameTime)
+        protected override void OnDispose()
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
+            if (GumService.IsInitialized)
+            {
+                GumService.Uninitialize();
+            }
         }
     }
 

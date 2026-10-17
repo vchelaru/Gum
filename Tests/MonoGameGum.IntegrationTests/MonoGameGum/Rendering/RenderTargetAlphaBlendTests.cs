@@ -20,7 +20,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// (a circle). The mask is 50% alpha: MinAlpha over an opaque fill yields 50%, ReplaceAlpha writes
 /// 50%, so both expect an even mix of fill and backdrop inside the mask and plain fill outside.
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class RenderTargetAlphaBlendTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -89,7 +89,7 @@ public class RenderTargetAlphaBlendTests : BaseTestClass
 
     private static XnaColor[] Render(bool useCircle, Gum.RenderingLibrary.Blend blend, bool normalCircleFill = false)
     {
-        using ShapeGameLease game = SharedShapeGame.Acquire();
+        using ShapeGameLease game = new ShapeGameLease();
 
         GraphicsDevice gd = game.GraphicsDevice;
         SystemManagers managers = SystemManagers.Default;

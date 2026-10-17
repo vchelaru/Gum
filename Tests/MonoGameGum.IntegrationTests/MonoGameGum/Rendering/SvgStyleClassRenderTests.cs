@@ -19,7 +19,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// <c>class</c> attributes. Apos.Shapes before 0.8.6 dropped the block, so every such path
 /// drew black.
 /// </summary>
-[Collection(SharedShapeGame.CollectionName)]
+[Collection(SharedGame.CollectionName)]
 public class SvgStyleClassRenderTests : BaseTestClass
 {
     private const string ClassStyledSvg =
@@ -53,7 +53,7 @@ public class SvgStyleClassRenderTests : BaseTestClass
 
         try
         {
-            using ShapeGameLease game = SharedShapeGame.Acquire();
+            using ShapeGameLease game = new ShapeGameLease();
 
             GraphicsDevice gd = game.GraphicsDevice;
             SystemManagers managers = SystemManagers.Default;

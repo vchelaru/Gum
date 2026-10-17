@@ -13,6 +13,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// Two <see cref="global::Gum.GumService"/> instances in one process (#6066): each service's
 /// Draw must render its own tree, not the tree of whichever service initialized last.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class TwoServiceDrawTests : BaseTestClass
 {
     private const int CaptureWidth = 400;
@@ -102,30 +103,18 @@ public class TwoServiceDrawTests : BaseTestClass
         cameraB.ClientWidth.ShouldBe(clientWidthBBefore, "baking A's render target should not touch B's camera");
     }
 
-    private sealed class TwoServiceGame : Game
+    private sealed class TwoServiceGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-
         public global::Gum.GumService ServiceA { get; } = new();
         public global::Gum.GumService ServiceB { get; } = new();
 
-        public TwoServiceGame()
+        protected override void OnInitialize()
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
+            ServiceA.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
+            ServiceB.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            ServiceA.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-            ServiceB.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (ServiceB.IsInitialized) { ServiceB.Uninitialize(); }
             if (ServiceA.IsInitialized) { ServiceA.Uninitialize(); }
@@ -133,7 +122,6 @@ public class TwoServiceDrawTests : BaseTestClass
             SystemManagers.Default = null!;
             ISystemManagers.Default = null!;
             IGumService.Default = null;
-            base.Dispose(disposing);
         }
     }
 }
