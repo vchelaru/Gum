@@ -25,6 +25,7 @@ using Gum.Reflection;
 using Gum.SelectionHistory;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
+using Gum.SettingsWindow;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -143,6 +144,8 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IOperatingSystemInfo, OperatingSystemInfo>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
+        services.AddSingleton<ISettingsPageRegistry, SettingsPageRegistry>();
+        services.AddSingleton<ISettingsWindowService, SettingsWindowService>();
         services.AddSingleton<IKeyCombinationFormatter>(KeyCombinationFormatter.ForCurrentPlatform());
         // The main menu as a framework-neutral model; each head renders it with its own menu control.
         services.AddSingleton<StandardMenuModelBuilder>();
