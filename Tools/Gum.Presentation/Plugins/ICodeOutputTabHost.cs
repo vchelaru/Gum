@@ -19,4 +19,7 @@ public interface ICodeOutputTabHost : ICodeOutputTabView
 
     /// <summary>Raised by a Generate All button, in a head that shows one.</summary>
     event EventHandler? GenerateAllCodeClicked;
+
+    /// <summary>Raised by the link that opens the project-wide settings in the Settings window.</summary>
+    event EventHandler? EditProjectSettingsClicked;
 }

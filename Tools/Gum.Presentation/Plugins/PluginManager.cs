@@ -897,6 +897,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // IFileWatchManager, IMessenger) are already bridged above.
         batch.AddExportedValue<ISetVariableLogic>(Locator.GetRequiredService<ISetVariableLogic>());
         batch.AddExportedValue<IHotkeyManager>(Locator.GetRequiredService<IHotkeyManager>());
+        // The Settings window: plugins add pages to its registry and open it (PluginBase imports both).
+        batch.AddExportedValue<Gum.SettingsWindow.ISettingsPageRegistry>(Locator.GetRequiredService<Gum.SettingsWindow.ISettingsPageRegistry>());
+        batch.AddExportedValue<Gum.SettingsWindow.ISettingsWindowService>(Locator.GetRequiredService<Gum.SettingsWindow.ISettingsWindowService>());
         batch.AddExportedValue<IEditCommands>(Locator.GetRequiredService<IEditCommands>());
         batch.AddExportedValue<ICopyPasteLogic>(Locator.GetRequiredService<ICopyPasteLogic>());
         batch.AddExportedValue<IVariableInCategoryPropagationLogic>(Locator.GetRequiredService<IVariableInCategoryPropagationLogic>());

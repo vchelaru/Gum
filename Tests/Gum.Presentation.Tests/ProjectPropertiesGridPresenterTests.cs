@@ -20,7 +20,7 @@ public class ProjectPropertiesGridPresenterTests
     public void Bind_GroupsNamesAndTrimsTheRows_AsTheWpfGrid()
     {
         ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
-        viewModel.SetFrom(autoSave: true, new GumProjectSave());
+        viewModel.SetFrom(new GumProjectSave());
         ModelBackedGrid grid = new ModelBackedGrid();
         ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid);
 
@@ -53,11 +53,112 @@ public class ProjectPropertiesGridPresenterTests
         }
     }
 
+    [Theory]
+    [InlineData(ProjectPropertiesSection.General, new[]
+    {
+        nameof(ProjectPropertiesViewModel.TextureFilter),
+        nameof(ProjectPropertiesViewModel.RestrictToUnitValues),
+        nameof(ProjectPropertiesViewModel.RestrictFileNamesForAndroid),
+        nameof(ProjectPropertiesViewModel.SinglePixelTextureFile),
+        nameof(ProjectPropertiesViewModel.SinglePixelTextureLeft),
+        nameof(ProjectPropertiesViewModel.SinglePixelTextureTop),
+        nameof(ProjectPropertiesViewModel.SinglePixelTextureRight),
+        nameof(ProjectPropertiesViewModel.SinglePixelTextureBottom),
+    })]
+    [InlineData(ProjectPropertiesSection.Canvas, new[]
+    {
+        nameof(ProjectPropertiesViewModel.CanvasWidth),
+        nameof(ProjectPropertiesViewModel.CanvasHeight),
+        nameof(ProjectPropertiesViewModel.ShowOutlines),
+        nameof(ProjectPropertiesViewModel.ShowCanvasOutline),
+        nameof(ProjectPropertiesViewModel.ShowCheckerBackground),
+    })]
+    [InlineData(ProjectPropertiesSection.Localization, new[]
+    {
+        nameof(ProjectPropertiesViewModel.ShowLocalization),
+        nameof(ProjectPropertiesViewModel.LocalizationFiles),
+    })]
+    public void Bind_WithASection_ShowsOnlyThatSectionsRows(ProjectPropertiesSection section, string[] expectedRows)
+    {
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(new GumProjectSave());
+        ModelBackedGrid grid = new ModelBackedGrid();
+        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid, section);
+
+        presenter.Bind(viewModel);
+
+        string[] shown = grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToArray();
+        shown.OrderBy(name => name).ToArray().ShouldBe(expectedRows.OrderBy(name => name).ToArray());
+    }
+
+    [Fact]
+    public void Bind_WithASection_DropsCategoriesThatEndUpEmpty()
+    {
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(new GumProjectSave());
+        ModelBackedGrid grid = new ModelBackedGrid();
+        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid, ProjectPropertiesSection.Localization);
+
+        presenter.Bind(viewModel);
+
+        grid.Categories.ShouldAllBe(category => category.Members.Count > 0);
+        grid.Categories.Select(category => category.Name).ShouldNotContain("Guides");
+        grid.Categories.Select(category => category.Name).ShouldNotContain("Single Pixel Texture");
+    }
+
+    [Theory]
+    [InlineData(ProjectPropertiesSection.General, "General")]
+    [InlineData(ProjectPropertiesSection.Canvas, "Canvas Size")]
+    [InlineData(ProjectPropertiesSection.Localization, "Localization")]
+    public void Bind_WithASection_NamesTheUncategorizedRowsAfterThePage(ProjectPropertiesSection section, string expectedName)
+    {
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(new GumProjectSave());
+        ModelBackedGrid grid = new ModelBackedGrid();
+        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid, section);
+
+        presenter.Bind(viewModel);
+
+        string[] names = grid.Categories.Select(category => category.Name).ToArray();
+        names.ShouldContain(expectedName);
+        names.ShouldNotContain("Uncategorized");
+    }
+
+    [Fact]
+    public void RowLabels_ListsTheLabelsOfThatSectionsRows_ForSearching()
+    {
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(new GumProjectSave());
+
+        IReadOnlyList<string> canvas = ProjectPropertiesGridPresenter.RowLabels(viewModel, ProjectPropertiesSection.Canvas);
+        IReadOnlyList<string> localization = ProjectPropertiesGridPresenter.RowLabels(viewModel, ProjectPropertiesSection.Localization);
+
+        canvas.ShouldContain("Canvas Width");
+        canvas.ShouldContain("Show Checker Background");
+        canvas.ShouldNotContain("Texture Filter");
+        localization.ShouldContain("Show Localization");
+        localization.ShouldContain("Localization Files");
+    }
+
+    [Fact]
+    public void Bind_WithoutASection_NeverShowsAutoSave()
+    {
+        // Auto save is an application setting, on the Application > General page.
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(new GumProjectSave());
+        ModelBackedGrid grid = new ModelBackedGrid();
+        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid);
+
+        presenter.Bind(viewModel);
+
+        grid.GetInstanceMember("AutoSave").ShouldBeNull();
+    }
+
     [Fact]
     public void Reloaded_RebuildsTheRows_FromTheSameViewModel()
     {
         ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
-        viewModel.SetFrom(autoSave: true, new GumProjectSave());
+        viewModel.SetFrom(new GumProjectSave());
         ModelBackedGrid grid = new ModelBackedGrid();
         ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid);
         presenter.Bind(viewModel);

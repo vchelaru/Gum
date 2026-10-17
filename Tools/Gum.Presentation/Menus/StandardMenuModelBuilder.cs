@@ -10,6 +10,7 @@ using Gum.Messages;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.SettingsWindow;
 using Gum.ToolStates;
 using Gum.Undo;
 using ToolsUtilities;
@@ -17,7 +18,7 @@ using ToolsUtilities;
 namespace Gum.Menus;
 
 /// <summary>
-/// Builds the tool's standard menus (File, Edit, View, Content, Plugins, Help) into a
+/// Builds the tool's standard menus (File, Edit, View, Content, Help) into a
 /// <see cref="MenuModel"/> and keeps the selection-dependent items current through
 /// <see cref="RefreshUI"/>. Plugins add their own items on top through the model.
 /// </summary>
@@ -41,7 +42,6 @@ public class StandardMenuModelBuilder
     private MenuItemModel? _removeElementMenuItem;
     private MenuItemModel? _removeStateMenuItem;
     private MenuItemModel? _removeVariableMenuItem;
-    private MenuItemModel? _standardsPaletteMenuItem;
     private MenuStepper? _zoomStepper;
 
     /// <summary>Creates the builder over the services the standard items act on.</summary>
@@ -71,7 +71,7 @@ public class StandardMenuModelBuilder
         _uiSettingsService = uiSettingsService;
         // The hotkeys and the Theming dialog change the same size, so the row follows the setting.
         _messenger.Register<UiBaseFontSizeChangedMessage>(this, (_, _) => RefreshZoomText());
-        _menuStripStateLogic = new MenuStripStateLogic(selectedState, projectManager);
+        _menuStripStateLogic = new MenuStripStateLogic(selectedState);
     }
 
     /// <summary>The model built by <see cref="Build"/>.</summary>
@@ -154,24 +154,10 @@ public class StandardMenuModelBuilder
         remove.Items.Add(_removeStateMenuItem);
         remove.Items.Add(_removeVariableMenuItem);
         edit.Items.Add(remove);
+        edit.Items.Add(MenuItemModel.Separator());
+        edit.Items.Add(new MenuItemModel("Settings...", () => _dialogService.Show<SettingsDialogViewModel>()));
 
         MenuItemModel view = new MenuItemModel("View");
-        view.Items.Add(new MenuItemModel("Theming", () => _dialogService.Show<ThemingDialogViewModel>()));
-        // Replaces the Standard tree folder with a chip palette at the bottom of the Project panel.
-        // On by default; persisted in the global settings file, which loads after Build, so
-        // RefreshUI syncs the check mark once settings are available.
-        _standardsPaletteMenuItem = new MenuItemModel("Standards palette")
-        {
-            IsCheckable = true,
-            IsChecked = _projectManager.EffectiveUseStandardsPalette,
-        };
-        _standardsPaletteMenuItem.Click = () =>
-        {
-            _projectManager.UseStandardsPalette = _standardsPaletteMenuItem.IsChecked;
-            _projectManager.SaveGeneralSettings();
-            _messenger.Send(new StandardsPaletteSettingChangedMessage(_projectManager.EffectiveUseStandardsPalette));
-        };
-        view.Items.Add(_standardsPaletteMenuItem);
         // Zooms the whole app (the UI font size), not the canvas, which has its own zoom controls.
         _zoomStepper = new MenuStepper(
             "Zoom", "Zoom In", "Zoom Out", "Actual Size",
@@ -188,9 +174,6 @@ public class StandardMenuModelBuilder
 
         MenuItemModel content = new MenuItemModel("Content");
         content.Items.Add(new MenuItemModel("Find file references...", FindFileReferences));
-
-        MenuItemModel plugins = new MenuItemModel("Plugins");
-        plugins.Items.Add(new MenuItemModel("Manage Plugins", () => _dialogService.Show<PluginsDialogViewModel>()));
 
         MenuItemModel help = new MenuItemModel("Help");
         help.Items.Add(new MenuItemModel("About...", ShowAbout));
@@ -224,7 +207,6 @@ public class StandardMenuModelBuilder
         Model.TopLevelItems.Add(edit);
         Model.TopLevelItems.Add(view);
         Model.TopLevelItems.Add(content);
-        Model.TopLevelItems.Add(plugins);
         Model.TopLevelItems.Add(help);
 
         RefreshUI();
@@ -242,10 +224,6 @@ public class StandardMenuModelBuilder
     {
         MenuStripRefreshState state = _menuStripStateLogic.GetRefreshState();
 
-        if (_standardsPaletteMenuItem != null)
-        {
-            _standardsPaletteMenuItem.IsChecked = state.StandardsPaletteChecked;
-        }
         if (_removeStateMenuItem != null)
         {
             _removeStateMenuItem.Header = state.RemoveStateHeader;

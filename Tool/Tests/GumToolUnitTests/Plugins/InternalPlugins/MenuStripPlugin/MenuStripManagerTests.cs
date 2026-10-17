@@ -60,19 +60,18 @@ public class MenuStripManagerTests : BaseTestClass
             Mock.Of<IUiSettingsService>()));
 
     [StaFact]
-    public void PopulateMenu_ShouldCreateSixTopLevelMenuItems()
+    public void PopulateMenu_ShouldCreateFiveTopLevelMenuItems()
     {
         var menu = new Menu();
 
         _menuStripManager.PopulateMenu(menu);
 
-        menu.Items.Count.ShouldBe(6);
+        menu.Items.Count.ShouldBe(5);
         ((MenuItem)menu.Items[0]).Header.ShouldBe("File");
         ((MenuItem)menu.Items[1]).Header.ShouldBe("Edit");
         ((MenuItem)menu.Items[2]).Header.ShouldBe("View");
         ((MenuItem)menu.Items[3]).Header.ShouldBe("Content");
-        ((MenuItem)menu.Items[4]).Header.ShouldBe("Plugins");
-        ((MenuItem)menu.Items[5]).Header.ShouldBe("Help");
+        ((MenuItem)menu.Items[4]).Header.ShouldBe("Help");
     }
 
     [StaFact]
@@ -147,9 +146,9 @@ public class MenuStripManagerTests : BaseTestClass
 
         var result = AddMenuItem(_menuStripManager, new[] { "Tools", "My Tool" });
 
-        menu.Items.Count.ShouldBe(7);
-        ((MenuItem)menu.Items[5]).Header.ShouldBe("Tools");
-        ((MenuItem)menu.Items[6]).Header.ShouldBe("Help");
+        menu.Items.Count.ShouldBe(6);
+        ((MenuItem)menu.Items[4]).Header.ShouldBe("Tools");
+        ((MenuItem)menu.Items[5]).Header.ShouldBe("Help");
         result.Header.ShouldBe("My Tool");
     }
 
@@ -189,7 +188,7 @@ public class MenuStripManagerTests : BaseTestClass
 
         _menuStripManager.PopulateMenu(menu);
 
-        var helpMenu = (MenuItem)menu.Items[5];
+        var helpMenu = (MenuItem)menu.Items[4];
         helpMenu.Items.OfType<MenuItem>()
             .ShouldContain(mi => mi.Header as string == "Open Settings Folder...");
     }
@@ -210,7 +209,6 @@ public class MenuStripManagerTests : BaseTestClass
     [InlineData("Edit")]
     [InlineData("View")]
     [InlineData("Content")]
-    [InlineData("Plugins")]
     [InlineData("Help")]
     public void GetItem_ReturnsItem_ForExistingTopLevelMenus(string menuName)
     {
@@ -349,18 +347,19 @@ public class MenuStripManagerTests : BaseTestClass
     public void CheckableItem_TogglesOnceThroughTheModel()
     {
         Menu menu = new Menu();
-        _projectManager.SetupProperty(p => p.UseStandardsPalette, (bool?)false);
         _menuStripManager.PopulateMenu(menu);
+        int clicks = 0;
+        MenuItemModel model = _menuStripManager.Model.AddMenuItem(new[] { "View", "Show Thing" });
+        model.IsCheckable = true;
+        model.Click = () => clicks++;
+        MenuItem rendered = _menuStripManager.GetMenuItem(model);
+        rendered.IsChecked.ShouldBeFalse();
 
-        MenuItem viewMenu = GetItem(_menuStripManager, "View")!;
-        MenuItem palette = viewMenu.Items.OfType<MenuItem>()
-            .First(mi => (mi.Header as string)!.StartsWith("Standards palette"));
-        palette.IsChecked.ShouldBeFalse();
+        rendered.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
 
-        palette.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-
-        palette.IsChecked.ShouldBeTrue();
-        _projectManager.VerifySet(p => p.UseStandardsPalette = true, Times.Once);
+        rendered.IsChecked.ShouldBeTrue();
+        model.IsChecked.ShouldBeTrue();
+        clicks.ShouldBe(1);
     }
 
     [StaFact]

@@ -6,6 +6,7 @@ using Gum.Avalonia.Shell;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
+using Gum.SettingsWindow;
 using Microsoft.Extensions.DependencyInjection;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -273,19 +274,19 @@ public class TextureCoordinateTabScenarioTests
                 checker.Visible.ShouldBe(properties.ShowCheckerBackground, tab.Describe());
                 solid.Color.ShouldBe(theming.EffectiveSettings.CheckerA);
 
-                // The dialog applies a color while it is open; Cancel puts it back, so no setting is saved.
+                // The Settings window's Appearance page applies a color as it is picked.
                 System.Drawing.Color? whileOpen = null;
-                tab.Project.Dialogs.AnswerNext<ThemingDialogViewModel>(dialog =>
+                tab.Project.Dialogs.AnswerNextSettingsPage<ThemingDialogViewModel>(SettingsPageIds.Appearance, page =>
                 {
-                    dialog.CheckerAColor = picked;
+                    page.CheckerAColor = picked;
                     tab.Frame();
                     whileOpen = solid.Color;
-                    return false;
+                    return true;
                 });
-                tab.Tree.PickMainMenu("View", "Theming");
+                tab.Tree.PickMainMenu("Edit", "Settings...");
                 tab.Frame();
                 whileOpen.ShouldBe(picked, "the tab's background takes the theme's checker color");
-                solid.Color.ShouldBe(theming.EffectiveSettings.CheckerA, "Cancel puts the color back");
+                solid.Color.ShouldBe(picked, "closing the window keeps the color");
 
                 properties.ShowCheckerBackground = !originalChecker;
                 tab.Frame();
@@ -363,12 +364,7 @@ public class TextureCoordinateTabScenarioTests
         });
     }
 
-    private static ProjectPropertiesViewModel ProjectProperties()
-    {
-        AvaloniaTabManager tabs = (AvaloniaTabManager)TestAppBuilder.Services.GetRequiredService<ITabManager>();
-        AvaloniaPluginTab tab = tabs.AllTabs.Single(candidate => candidate.Title == "Project Properties");
-        return (ProjectPropertiesViewModel)((global::Avalonia.Controls.Control)tab.Content).DataContext!;
-    }
+    private static ProjectPropertiesViewModel ProjectProperties() => Gum.Avalonia.Tests.EndToEnd.SettingsPagesForTests.ProjectProperties();
 
     private static void OnTab(Action<TextureCoordinateTabHarness> scenario)
     {

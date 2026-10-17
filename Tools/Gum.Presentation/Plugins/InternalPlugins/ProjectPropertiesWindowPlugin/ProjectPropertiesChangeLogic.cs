@@ -60,7 +60,6 @@ public class ProjectPropertiesChangeLogic
         }
 
         viewModel.ApplyToModelObjects();
-        _projectManager.AutoSave = viewModel.AutoSave;
 
         bool shouldSaveAndRefresh = true;
         switch (propertyName)

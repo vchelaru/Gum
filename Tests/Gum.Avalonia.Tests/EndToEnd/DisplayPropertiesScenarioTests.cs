@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Panels;
+using Gum.Avalonia.Settings;
 using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Plugins.VariableGrid;
 using Gum.Avalonia.Services;
@@ -19,6 +20,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.PropertiesWindowPlugin;
+using Gum.SettingsWindow;
 using Gum.Services.Dialogs;
 using Gum.Wireframe;
 using Microsoft.Extensions.DependencyInjection;
@@ -425,10 +427,10 @@ public class DisplayPropertiesScenarioTests
         bool originalAutoSave = projectManager.AutoSave;
         try
         {
-            using (ProjectPropertiesTab properties = new ProjectPropertiesTab(tree))
+            using (GeneralSettingsPage general = new GeneralSettingsPage(tree))
             {
-                properties.ClickCheckBox("AutoSave");
-                properties.ViewModel.AutoSave.ShouldBeFalse();
+                general.ClickCheckBox("Auto save");
+                general.ViewModel.AutoSave.ShouldBeFalse();
             }
             projectManager.AutoSave.ShouldBeFalse();
             ProjectFileSnapshot beforeEdit = tree.SnapshotFiles();
@@ -437,9 +439,9 @@ public class DisplayPropertiesScenarioTests
             VariableGridHarness.StoredValue(Component(tree, "Button"), "Width").ShouldBe(210f);
             tree.SnapshotFiles().ShouldMatch(beforeEdit, "with Auto Save off an edit stays in memory");
 
-            using (ProjectPropertiesTab properties = new ProjectPropertiesTab(tree))
+            using (GeneralSettingsPage general = new GeneralSettingsPage(tree))
             {
-                properties.ClickCheckBox("AutoSave");
+                general.ClickCheckBox("Auto save");
             }
             projectManager.AutoSave.ShouldBeTrue();
             tree.Grid.TypeAndEnter("Width", "220");
@@ -810,40 +812,82 @@ public class DisplayPropertiesScenarioTests
         });
     }
 
+    /// <summary>The Settings window's Application > General page, hosted in a window of its own.</summary>
+    private sealed class GeneralSettingsPage : IDisposable
+    {
+        private readonly ProjectTreeHarness _tree;
+        private readonly GeneralSettingsView _view;
+
+        public GeneralSettingsPage(ProjectTreeHarness tree)
+        {
+            _tree = tree;
+            ViewModel = Services.GetRequiredService<GeneralSettingsViewModel>();
+            _view = new GeneralSettingsView { DataContext = ViewModel };
+            Input = new HeadlessWindowDriver(_view, width: 520, height: 400, framesFolderName: "GumGeneralSettings");
+        }
+
+        public GeneralSettingsViewModel ViewModel { get; }
+
+        public HeadlessWindowDriver Input { get; }
+
+        public void ClickCheckBox(string label)
+        {
+            Input.Layout();
+            Input.Click(_view.GetVisualDescendants().OfType<CheckBox>().Single(box => box.Content as string == label));
+            Input.Layout();
+            _tree.ThrowIfCrashed();
+        }
+
+        public void Dispose() => Input.Dispose();
+    }
+
     /// <summary>
-    /// The head's Project Properties tab, opened with Edit > Properties and hosted in a window of its
-    /// own, driven through its property grid's editors.
+    /// The head's Project pages of the Settings window (General, Canvas and Localization), each hosted
+    /// as the window hosts it and stacked in a window of their own, driven through their property
+    /// grids' editors.
     /// </summary>
     private sealed class ProjectPropertiesTab : IDisposable
     {
         private readonly ProjectTreeHarness _tree;
+        private readonly List<ProjectPropertiesPageView> _views;
 
         public ProjectPropertiesTab(ProjectTreeHarness tree)
         {
             _tree = tree;
-            tree.PickMainMenu("Edit", "Properties");
-            AvaloniaPluginTab tab = ((AvaloniaTabManager)Services.GetRequiredService<ITabManager>()).AllTabs.Single(candidate => candidate.Title == "Project Properties");
-            tab.IsVisible.ShouldBeTrue();
-            View = (ProjectPropertiesView)tab.Content;
-            ViewModel = (ProjectPropertiesViewModel)View.DataContext!;
-            Input = new HeadlessWindowDriver(View, width: 520, height: 1600, framesFolderName: "GumProjectProperties");
-        }
+            SettingsPage[] pages = Services.GetRequiredService<ISettingsPageRegistry>().Pages
+                .Where(page => page.Content is ProjectPropertiesPageViewModel)
+                .ToArray();
+            // Opening a page fills it from the project.
+            foreach (SettingsPage page in pages)
+            {
+                page.Activated!();
+            }
+            ViewModel = ((ProjectPropertiesPageViewModel)pages[0].Content).Properties;
 
-        public ProjectPropertiesView View { get; }
+            _views = new List<ProjectPropertiesPageView>();
+            StackPanel stack = new StackPanel();
+            foreach (SettingsPage page in pages)
+            {
+                ProjectPropertiesPageView view = new ProjectPropertiesPageView { DataContext = page.Content };
+                _views.Add(view);
+                stack.Children.Add(view);
+            }
+            Input = new HeadlessWindowDriver(stack, width: 520, height: 2400, framesFolderName: "GumProjectProperties");
+        }
 
         public ProjectPropertiesViewModel ViewModel { get; }
 
         public HeadlessWindowDriver Input { get; }
 
         public InstanceMember Member(string name) =>
-            View.Grid.Categories.SelectMany(category => category.Members).FirstOrDefault(member => member.Name == name)
-            ?? throw new InvalidOperationException($"The Project Properties grid has no {name} row.");
+            _views.SelectMany(view => view.Grid.Categories).SelectMany(category => category.Members).FirstOrDefault(member => member.Name == name)
+            ?? throw new InvalidOperationException($"The Project pages have no {name} row.");
 
         public SingleDataUiContainer Row(string name)
         {
             Input.Layout();
             InstanceMember member = Member(name);
-            SingleDataUiContainer row = View.Grid.LiveContainers.FirstOrDefault(candidate => candidate.Member == member)
+            SingleDataUiContainer row = _views.SelectMany(view => view.Grid.LiveContainers).FirstOrDefault(candidate => candidate.Member == member)
                 ?? throw new InvalidOperationException($"The {name} row has no live editor.");
             row.BringIntoView();
             Input.Layout();

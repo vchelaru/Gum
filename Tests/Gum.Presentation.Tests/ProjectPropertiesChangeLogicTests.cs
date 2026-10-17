@@ -155,7 +155,7 @@ public class ProjectPropertiesChangeLogicTests
     {
         ProjectPropertiesViewModel viewModel = new();
         GumProjectSave gumProject = new();
-        viewModel.SetFrom(autoSave: false, gumProject);
+        viewModel.SetFrom(gumProject);
         return viewModel;
     }
 }

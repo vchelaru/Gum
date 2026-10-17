@@ -8,7 +8,6 @@ using Gum.Plugins.Errors;
 using Gum.Plugins.FileWatchPlugin;
 using Gum.Plugins.FontsPlugin;
 using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
-using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Plugins.Undos;
 using PerformanceMeasurementPlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
@@ -33,14 +32,11 @@ public class TabViewRegistry
 
         // Built-in plugins shared with the WPF head (Gum.Presentation).
         Register<MainOutputViewModel>(() => new OutputView());
-        Register<HotkeyViewModel>(() => new HotkeyView());
         Register<FileWatchViewModel>(() => new FileWatchView());
         Register<AllErrorsViewModel>(() => new ErrorsView(), header: () => new ErrorTabHeaderView());
         Register<UndosViewModel>(() => new UndosView());
         Register<AlignmentViewModel>(() => new AlignmentView());
         Register<BehaviorsViewModel>(() => new BehaviorsView());
-        Register<ProjectPropertiesViewModel>(() => new ProjectPropertiesView());
-        Register<FontsViewModel>(() => new FontsView());
 
         // Plugins in their own projects that ship no views.
         Register<PerformanceViewModel>(() => new PerformanceView());

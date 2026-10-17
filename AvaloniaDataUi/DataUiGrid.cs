@@ -55,6 +55,7 @@ public class DataUiGrid : UserControl, IDataUiGrid
         };
 
         _categories = categories;
+        _model.Categories.CollectionChanged += (_, _) => UpdateHeaderState();
         _scrollViewer = new ScrollViewer
         {
             Content = categories,
@@ -152,6 +153,36 @@ public class DataUiGrid : UserControl, IDataUiGrid
         {
             Setters = { new Setter(ContentPresenter.BackgroundProperty, new SolidColorBrush(Colors.Black, opacity)) },
         };
+
+    /// <summary>Defines the <see cref="HideLoneCategoryHeader"/> property.</summary>
+    public static readonly StyledProperty<bool> HideLoneCategoryHeaderProperty =
+        AvaloniaProperty.Register<DataUiGrid, bool>(nameof(HideLoneCategoryHeader));
+
+    /// <summary>
+    /// When true and the grid has a single category, that category shows only its rows: a header over
+    /// the only group of rows labels nothing, and could collapse everything with no other group to show.
+    /// </summary>
+    public bool HideLoneCategoryHeader
+    {
+        get => GetValue(HideLoneCategoryHeaderProperty);
+        set => SetValue(HideLoneCategoryHeaderProperty, value);
+    }
+
+    /// <summary>What the category views bind to for whether their header shows.</summary>
+    internal CategoryHeaderState HeaderState { get; } = new CategoryHeaderState();
+
+    private void UpdateHeaderState() =>
+        HeaderState.AreHidden = HideLoneCategoryHeader && _model.Categories.Count <= 1;
+
+    /// <inheritdoc/>
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == HideLoneCategoryHeaderProperty)
+        {
+            UpdateHeaderState();
+        }
+    }
 
     /// <summary>Maps displayer keys to controls for this grid's rows.</summary>
     public DisplayerRegistry Displayers { get; set; }

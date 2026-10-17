@@ -15,12 +15,17 @@ namespace Gum.Plugins.PropertiesWindowPlugin;
 public sealed class ProjectPropertiesGridPresenter
 {
     private readonly IDataUiGrid _grid;
+    private readonly ProjectPropertiesSection? _section;
     private ProjectPropertiesViewModel? _viewModel;
 
-    /// <summary>Creates a presenter over <paramref name="grid"/>.</summary>
-    public ProjectPropertiesGridPresenter(IDataUiGrid grid)
+    /// <summary>
+    /// Creates a presenter over <paramref name="grid"/>; with a <paramref name="section"/> it shows only
+    /// that page's settings, without one it shows all of them.
+    /// </summary>
+    public ProjectPropertiesGridPresenter(IDataUiGrid grid, ProjectPropertiesSection? section = null)
     {
         _grid = grid;
+        _section = section;
     }
 
     /// <summary>The view model shown, or null.</summary>
@@ -41,6 +46,17 @@ public sealed class ProjectPropertiesGridPresenter
         Rebuild();
     }
 
+    /// <summary>
+    /// The labels of the rows a page of <paramref name="section"/> shows, as the grid names them, for
+    /// the Settings window's search.
+    /// </summary>
+    public static IReadOnlyList<string> RowLabels(ProjectPropertiesViewModel viewModel, ProjectPropertiesSection section)
+    {
+        DataUiGridModel model = new DataUiGridModel { Instance = viewModel };
+        ApplyLayout(model, viewModel, section);
+        return model.Categories.SelectMany(category => category.Members).Select(member => member.DisplayName).ToList();
+    }
+
     /// <summary>Rebuilds the rows from the view model's current members.</summary>
     public void Rebuild()
     {
@@ -49,16 +65,17 @@ public sealed class ProjectPropertiesGridPresenter
         if (_viewModel != null)
         {
             _grid.Instance = _viewModel;
-            ApplyLayout(_grid.Model, _viewModel);
+            ApplyLayout(_grid.Model, _viewModel, _section);
         }
     }
 
     /// <summary>
     /// Shapes the auto-populated rows of <paramref name="grid"/>: the guide and single pixel texture
     /// members in their own categories, spaced display names, the file editors and option lists,
-    /// and no rows for the view model's bookkeeping members.
+    /// and no rows for the view model's bookkeeping members. With a <paramref name="section"/>, only
+    /// that section's rows are kept.
     /// </summary>
-    public static void ApplyLayout(DataUiGridModel grid, ProjectPropertiesViewModel viewModel)
+    public static void ApplyLayout(DataUiGridModel grid, ProjectPropertiesViewModel viewModel, ProjectPropertiesSection? section = null)
     {
         foreach (InstanceMember member in grid.Categories.SelectMany(category => category.Members).ToArray())
         {
@@ -117,7 +134,64 @@ public sealed class ProjectPropertiesGridPresenter
         {
             textureFilter.CustomOptions = new List<object> { TextureFilter.Point, TextureFilter.Linear };
         }
+
+        if (section != null)
+        {
+            KeepOnlySection(grid, section.Value);
+        }
     }
+
+    // A page shows its own settings; the rest stay on the other pages.
+    private static void KeepOnlySection(DataUiGridModel grid, ProjectPropertiesSection section)
+    {
+        foreach (MemberCategory category in grid.Categories.ToArray())
+        {
+            foreach (InstanceMember member in category.Members.ToArray())
+            {
+                if (SectionOf(member.Name) != section)
+                {
+                    category.Members.Remove(member);
+                }
+            }
+            if (category.Members.Count == 0)
+            {
+                grid.Categories.Remove(category);
+            }
+            else if (category.Name == UncategorizedName)
+            {
+                category.Name = section switch
+                {
+                    ProjectPropertiesSection.Canvas => "Canvas Size",
+                    ProjectPropertiesSection.Localization => "Localization",
+                    _ => "General",
+                };
+            }
+        }
+    }
+
+    // The name DataUiGridModel gives members that no category claims.
+    private const string UncategorizedName = "Uncategorized";
+
+    private static ProjectPropertiesSection? SectionOf(string memberName) => memberName switch
+    {
+        nameof(ProjectPropertiesViewModel.TextureFilter)
+            or nameof(ProjectPropertiesViewModel.RestrictToUnitValues)
+            or nameof(ProjectPropertiesViewModel.RestrictFileNamesForAndroid)
+            or nameof(ProjectPropertiesViewModel.SinglePixelTextureFile)
+            or nameof(ProjectPropertiesViewModel.SinglePixelTextureLeft)
+            or nameof(ProjectPropertiesViewModel.SinglePixelTextureTop)
+            or nameof(ProjectPropertiesViewModel.SinglePixelTextureRight)
+            or nameof(ProjectPropertiesViewModel.SinglePixelTextureBottom) => ProjectPropertiesSection.General,
+        nameof(ProjectPropertiesViewModel.CanvasWidth)
+            or nameof(ProjectPropertiesViewModel.CanvasHeight)
+            or nameof(ProjectPropertiesViewModel.ShowOutlines)
+            or nameof(ProjectPropertiesViewModel.ShowCanvasOutline)
+            or nameof(ProjectPropertiesViewModel.ShowCheckerBackground) => ProjectPropertiesSection.Canvas,
+        nameof(ProjectPropertiesViewModel.ShowLocalization)
+            or nameof(ProjectPropertiesViewModel.LocalizationFiles)
+            or nameof(ProjectPropertiesViewModel.LanguageName) => ProjectPropertiesSection.Localization,
+        _ => null,
+    };
 
     private static void RemoveMember(ICollection<InstanceMember> members, string name)
     {

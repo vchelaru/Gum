@@ -16,15 +16,13 @@ namespace Gum.Presentation.Tests;
 public class MenuStripStateLogicTests
 {
     private readonly Mock<ISelectedState> _selectedState;
-    private readonly Mock<IProjectManager> _projectManager;
     private readonly MenuStripStateLogic _sut;
 
     public MenuStripStateLogicTests()
     {
         _selectedState = new Mock<ISelectedState>();
-        _projectManager = new Mock<IProjectManager>();
 
-        _sut = new MenuStripStateLogic(_selectedState.Object, _projectManager.Object);
+        _sut = new MenuStripStateLogic(_selectedState.Object);
     }
 
     [Fact]
@@ -127,26 +125,6 @@ public class MenuStripStateLogicTests
 
         result.RemoveVariableHeader.ShouldBe("<no behavior variable selected>");
         result.RemoveVariableEnabled.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void GetRefreshState_ShouldReflectStandardsPaletteSetting_WhenDisabled()
-    {
-        _projectManager.Setup(x => x.EffectiveUseStandardsPalette).Returns(false);
-
-        MenuStripRefreshState result = _sut.GetRefreshState();
-
-        result.StandardsPaletteChecked.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void GetRefreshState_ShouldReflectStandardsPaletteSetting_WhenEnabled()
-    {
-        _projectManager.Setup(x => x.EffectiveUseStandardsPalette).Returns(true);
-
-        MenuStripRefreshState result = _sut.GetRefreshState();
-
-        result.StandardsPaletteChecked.ShouldBeTrue();
     }
 
     [Fact]

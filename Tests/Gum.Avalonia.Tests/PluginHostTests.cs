@@ -1,8 +1,10 @@
 using Avalonia.Headless.XUnit;
 using System.ComponentModel.Composition.Hosting;
 using System.Reflection;
+using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Plugins;
 using Gum.Avalonia.Services;
+using Gum.SettingsWindow;
 using Gum.Avalonia.Shell;
 using Gum.Managers;
 using Gum.Plugins;
@@ -187,6 +189,29 @@ public class PluginHostTests
 
         unresolved.ShouldBeEmpty("Register an Avalonia view in TabViewRegistry for: " + string.Join(", ", unresolved));
         tabs.AllTabs.Select(tab => tab.Title).ShouldContain("Output");
+    }
+
+    [AvaloniaFact]
+    public void EveryPageAPluginAddsToTheSettingsWindow_ResolvesToAnAvaloniaView()
+    {
+        ISettingsPageRegistry registry = TestAppBuilder.Services.GetRequiredService<ISettingsPageRegistry>();
+        SettingsPageViewRegistry pageViews = new SettingsPageViewRegistry();
+
+        string[] unresolved = registry.Pages
+            .Where(page => !pageViews.HasView(page.Content.GetType()))
+            .Select(page => $"{page.Title} ({page.Content.GetType().Name})")
+            .ToArray();
+
+        unresolved.ShouldBeEmpty("Register an Avalonia view in SettingsPageViewRegistry for: " + string.Join(", ", unresolved));
+        registry.Pages.Select(page => page.Id).ShouldBe(new[]
+        {
+            SettingsPageIds.ProjectGeneral,
+            SettingsPageIds.Canvas,
+            SettingsPageIds.Localization,
+            SettingsPageIds.Fonts,
+            SettingsPageIds.KeyboardShortcuts,
+            SettingsPageIds.CodeGeneration,
+        }, ignoreOrder: true);
     }
 
     /// <summary>A stand-in assembly whose only referenced assembly is WPF's PresentationFramework.</summary>

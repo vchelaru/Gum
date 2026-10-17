@@ -87,8 +87,7 @@ public class ComboCanvasScenarioTests
         OnCanvas(canvas =>
         {
             LocalizationService localization = Services.GetRequiredService<LocalizationService>();
-            ProjectPropertiesViewModel properties = (ProjectPropertiesViewModel)((global::Avalonia.Controls.Control)
-                ((AvaloniaTabManager)Services.GetRequiredService<ITabManager>()).AllTabs.Single(tab => tab.Title == "Project Properties").Content).DataContext!;
+            ProjectPropertiesViewModel properties = SettingsPagesForTests.ProjectProperties();
             try
             {
                 ComponentSave button = canvas.Project.AddComponent("Button");

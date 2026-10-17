@@ -42,7 +42,7 @@ public class FileMenuScenarioTests
         bool autoSave = ProjectManager.AutoSave;
         try
         {
-            properties.AutoSave = false;
+            ProjectManager.AutoSave = false;
             tree.Click(tree.NodeFor(card));
             tree.Grid.TypeAndEnter("Width", "175");
             properties.CanvasWidth = 1234;
@@ -61,7 +61,7 @@ public class FileMenuScenarioTests
         }
         finally
         {
-            properties.AutoSave = autoSave;
+            ProjectManager.AutoSave = autoSave;
         }
 
         tree.AssertOracles();
@@ -415,8 +415,10 @@ public class FileMenuScenarioTests
 
                 File.Exists(png).ShouldBeTrue(canvas.Describe());
                 using SkiaSharp.SKBitmap image = SkiaSharp.SKBitmap.Decode(png);
-                PixelsOf(image, new SkiaSharp.SKRectI(0, 0, 0, 0), inside: false)
-                    .ShouldAllBe(pixel => pixel.Alpha == 0, "the dotted outline is not exported");
+                List<SkiaSharp.SKColor> outsidePixels = PixelsOf(image, new SkiaSharp.SKRectI(0, 0, 0, 0), inside: false);
+                List<SkiaSharp.SKColor> opaque = outsidePixels.Where(pixel => pixel.Alpha != 0).ToList();
+                opaque.ShouldBeEmpty(
+                    $"the dotted outline is not exported; {opaque.Count} of {outsidePixels.Count} pixels in the {image.Width}x{image.Height} image are not transparent, the first {opaque.FirstOrDefault()}. {canvas.Describe()}");
 
                 LineRectangle outline = canvas.Wireframe.GetRepresentation(group.Instances.Single())!.RenderableComponent.ShouldBeOfType<LineRectangle>();
                 outline.LocalVisible.ShouldBeTrue("the outline is back on the canvas");
@@ -461,12 +463,7 @@ public class FileMenuScenarioTests
 
     private static ComponentSave CurrentCard() => ProjectManager.GumProjectSave!.Components.Single(component => component.Name == "Card");
 
-    private static ProjectPropertiesViewModel ProjectProperties()
-    {
-        AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
-        AvaloniaPluginTab tab = tabs.AllTabs.Single(candidate => candidate.Title == "Project Properties");
-        return (ProjectPropertiesViewModel)((global::Avalonia.Controls.Control)tab.Content).DataContext!;
-    }
+    private static ProjectPropertiesViewModel ProjectProperties() => SettingsPagesForTests.ProjectProperties();
 
     private static GumProjectSave SavedProject(ProjectTreeHarness tree) =>
         GumProjectSave.Load(tree.Project.ProjectFilePath, out _) ?? throw new InvalidOperationException("The project file did not load.");
