@@ -56,23 +56,6 @@ public class UninitializeTests : BaseTestClass
     }
 
     // -------------------------------------------------------------------------
-    // Process-wide texture filter
-    // -------------------------------------------------------------------------
-
-    [Fact]
-    public void Uninitialize_RestoresTheProcessWideTextureFilter()
-    {
-        using var game = new GameForUninitializeTest();
-        game.RunOneFrame();
-        // A project with linear filtering sets this for the first service.
-        RenderingLibrary.Graphics.Renderer.TextureFilter = TextureFilter.Linear;
-
-        game.GumService.Uninitialize();
-
-        RenderingLibrary.Graphics.Renderer.TextureFilter.ShouldBe(TextureFilter.Point);
-    }
-
-    // -------------------------------------------------------------------------
     // Radio button groups
     // -------------------------------------------------------------------------
 

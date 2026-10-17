@@ -148,9 +148,8 @@ public class BundleStreamHookLifecycleTests : BaseTestClass
         return path;
     }
 
-    private sealed class TwoServiceGame : Game
+    private sealed class TwoServiceGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         private readonly string _pathA;
         private readonly string? _pathB;
 
@@ -159,32 +158,24 @@ public class BundleStreamHookLifecycleTests : BaseTestClass
 
         public TwoServiceGame(string pathA, string? pathB)
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
             _pathA = pathA;
             _pathB = pathB;
         }
 
-        protected override void Initialize()
+        protected override void OnInitialize()
         {
-            base.Initialize();
-            ServiceA.Initialize(this, _pathA);
+            ServiceA.Initialize(Game, _pathA);
             if (_pathB != null)
             {
-                ServiceB.Initialize(this, _pathB);
+                ServiceB.Initialize(Game, _pathB);
             }
         }
 
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (ServiceB.IsInitialized) { ServiceB.Uninitialize(); }
             if (ServiceA.IsInitialized) { ServiceA.Uninitialize(); }
-            LoaderManager.Self?.DisposeAndClear();
             SystemManagers.Default = null!;
-            base.Dispose(disposing);
         }
     }
 }

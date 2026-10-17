@@ -548,10 +548,6 @@ public partial class GumService
             // radio button tree built since startup, and whatever it references, stays reachable.
             Gum.Forms.Controls.RadioButton.ClearDictionary();
 
-            // The first service sets the process-wide filter from its project (ApplyTextureFilterPlatform);
-            // put the default back so it does not decide how the next service's first draw samples.
-            Renderer.TextureFilter = TextureFilter.Point;
-
             // Fixed built-ins on the shared graphics device, not project data, so every service uses the
             // same ones until the last leaves.
             Text.DefaultBitmapFont = null;
