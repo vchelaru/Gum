@@ -19,6 +19,7 @@ using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Services.Dialogs;
+using Gum.SettingsWindow;
 using ToolsUtilities;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Messages;
@@ -212,6 +213,24 @@ public abstract class CodeOutputPluginBase : PluginBase
         CreateControl();
 
         AssignEvents();
+        AddProjectSettingsPage();
+    }
+
+    // The project-wide settings are a page of the Settings window; the Code tab links to it.
+    private void AddProjectSettingsPage()
+    {
+        CodeGenerationSettingsViewModel page = new CodeGenerationSettingsViewModel(_settingsMembers);
+
+        AddSettingsPage(new SettingsPage(
+            SettingsPageIds.CodeGeneration, "Code generation", SettingsSection.Project, page, order: 4)
+        {
+            Activated = () =>
+            {
+                _settingsMembers.ProjectSettings = codeOutputProjectSettings;
+                page.Reload();
+            },
+            Keywords = new[] { "code project root", "namespace", "output library", "generated code", "usings", "syntax version" },
+        });
     }
 
     private void AssignEvents()
@@ -437,6 +456,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         control.CodeOutputSettingsPropertyChanged += (_, _) => HandleCodeOutputPropertyChanged();
         control.GenerateCodeClicked += (_, _) => HandleGenerateCodeButtonClicked();
         control.GenerateAllCodeClicked += (_, _) => HandleGenerateAllCodeButtonClicked();
+        control.EditProjectSettingsClicked += (_, _) => ShowSettingsWindow(SettingsPageIds.CodeGeneration);
         viewModel.PropertyChanged += (sender, args) => HandleMainViewModelPropertyChanged(args.PropertyName);
 
         pluginTab = _tabManager.AddControl(control.Control, "Code", TabLocation.RightBottom);

@@ -1,14 +1,17 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using CodeOutputPlugin.ViewModels;
 using Gum.Avalonia.Plugins.CodeOutput;
+using Gum.Avalonia.Settings;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Tests.Harness;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.SettingsWindow;
 using Microsoft.Extensions.DependencyInjection;
 using WpfDataUi.DataTypes;
 
@@ -32,6 +35,7 @@ internal sealed class CodeTabHarness : IDisposable
     private static IServiceProvider Services => TestAppBuilder.Services;
 
     private readonly HeadlessWindowDriver _driver;
+    private readonly global::Avalonia.Controls.Grid _host;
     private readonly bool _wasSelected;
 
     /// <param name="beforeLoad">Runs after the project is first saved and before it is reopened, for files the load should see (a .csproj, a .codsj).</param>
@@ -50,7 +54,14 @@ internal sealed class CodeTabHarness : IDisposable
             _wasSelected = Tab.IsSelected;
             // The preview only follows the selection while the tab is the one shown.
             Tab.IsSelected = true;
-            _driver = new HeadlessWindowDriver(View, width: 1000, height: 800, framesFolderName: "GumCodeTab");
+            // The project-wide settings are a page of the Settings window; it is hosted under the tab.
+            ProjectSettingsPage = new CodeGenerationSettingsPageView { DataContext = SettingsPagesForTests.Page(SettingsPageIds.CodeGeneration).Content };
+            ActivateProjectSettingsPage();
+            _host = new global::Avalonia.Controls.Grid { RowDefinitions = new RowDefinitions("*,*") };
+            global::Avalonia.Controls.Grid.SetRow(ProjectSettingsPage, 1);
+            _host.Children.Add(View);
+            _host.Children.Add(ProjectSettingsPage);
+            _driver = new HeadlessWindowDriver(_host, width: 1000, height: 1000, framesFolderName: "GumCodeTab");
         }
         catch
         {
@@ -70,6 +81,9 @@ internal sealed class CodeTabHarness : IDisposable
     public AvaloniaPluginTab Tab { get; }
 
     public CodeOutputView View { get; }
+
+    /// <summary>The Code generation page of the Settings window, which holds the project-wide rows.</summary>
+    public CodeGenerationSettingsPageView ProjectSettingsPage { get; }
 
     public CodeWindowViewModel ViewModel => (CodeWindowViewModel)(View.DataContext
         ?? throw new InvalidOperationException("The Code tab has no view model."));
@@ -97,23 +111,27 @@ internal sealed class CodeTabHarness : IDisposable
 
     #region Settings grid
 
+    /// <summary>The Code tab's grid: the selected element's rows. It is hidden while the tab offers setup.</summary>
     public DataUiGrid Grid => View.SettingsGrid;
+
+    /// <summary>The grids a scenario edits: the project-wide rows on the settings page, then the selected element's on the tab.</summary>
+    private IEnumerable<DataUiGrid> Grids => new[] { ProjectSettingsPage.Grid, View.SettingsGrid };
 
     public List<string> ShownMemberNames()
     {
         _driver.Layout();
-        return Grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
+        return Grids.SelectMany(grid => grid.Categories).SelectMany(category => category.Members).Select(member => member.Name).ToList();
     }
 
     public InstanceMember Member(string memberName) =>
-        Grid.Categories.SelectMany(category => category.Members).FirstOrDefault(member => member.Name == memberName)
-            ?? throw new InvalidOperationException($"The Code tab shows no {memberName} row; it shows [{string.Join(", ", ShownMemberNames())}].");
+        Grids.SelectMany(grid => grid.Categories).SelectMany(category => category.Members).FirstOrDefault(member => member.Name == memberName)
+            ?? throw new InvalidOperationException($"The code settings show no {memberName} row; they show [{string.Join(", ", ShownMemberNames())}].");
 
     public SingleDataUiContainer Row(string memberName)
     {
         _driver.Layout();
         InstanceMember member = Member(memberName);
-        SingleDataUiContainer row = Grid.LiveContainers.FirstOrDefault(container => container.Member == member)
+        SingleDataUiContainer row = Grids.SelectMany(grid => grid.LiveContainers).FirstOrDefault(container => container.Member == member)
             ?? throw new InvalidOperationException($"The {memberName} row has no live editor.");
         row.BringIntoView();
         _driver.Layout();
@@ -224,8 +242,12 @@ internal sealed class CodeTabHarness : IDisposable
     {
         Project.SaveAndReload();
         Tree.TreeManager.RefreshUi();
+        ActivateProjectSettingsPage();
         _driver.Layout();
     }
+
+    // Opening the page fills it from the loaded project's code settings.
+    private static void ActivateProjectSettingsPage() => SettingsPagesForTests.Page(SettingsPageIds.CodeGeneration).Activated!();
 
     public void Undo()
     {
@@ -256,6 +278,8 @@ internal sealed class CodeTabHarness : IDisposable
             ViewModel.WhatToView = WhatToView.SelectedElement;
             Tab.IsSelected = _wasSelected;
             _driver.Dispose();
+            // The tab's view is the tool's for the session; let the next scenario host it again.
+            _host.Children.Clear();
         }
         finally
         {

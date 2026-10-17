@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using CodeOutputPlugin;
 using CodeOutputPlugin.Manager;
 using CodeOutputPlugin.ViewModels;
@@ -35,7 +36,7 @@ public class CodeOutputTabTests
     }
 
     [AvaloniaFact]
-    public void CodeOutputView_ShowsTheSettingsRows_RaisesGenerate_AndShowsTheCode()
+    public void CodeOutputView_ShowsTheElementRows_RaisesGenerate_LinksToProjectSettings_AndShowsTheCode()
     {
         IProjectState projectState = Services.GetRequiredService<IProjectState>();
         CodeWindowViewModel viewModel = new CodeWindowViewModel(
@@ -57,13 +58,21 @@ public class CodeOutputTabTests
         window.UpdateLayout();
         int generates = 0;
         host.GenerateCodeClicked += (_, _) => generates++;
+        int editProjectSettings = 0;
+        host.EditProjectSettingsClicked += (_, _) => editProjectSettings++;
 
         viewModel.NeedsSetup.ShouldBeFalse();
         view.SettingsGrid.IsVisible.ShouldBeTrue();
-        view.SettingsGrid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ShouldContain("Output Library");
+        List<string> rows = view.SettingsGrid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
+        rows.ShouldContain("Generation Behavior");
+        rows.ShouldNotContain("Output Library", "the project-wide rows are on the Settings window's Code generation page");
         view.GenerateButton.IsEffectivelyVisible.ShouldBeTrue();
         view.GenerateButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         generates.ShouldBe(1);
+
+        HyperlinkButton link = view.GetVisualDescendants().OfType<HyperlinkButton>().Single();
+        link.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        editProjectSettings.ShouldBe(1);
 
         viewModel.Code = "class Sample {}";
         view.CodeTextBox.Text.ShouldBe("class Sample {}");

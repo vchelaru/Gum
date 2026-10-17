@@ -78,6 +78,13 @@ public partial class CodeWindow : UserControl, ICodeOutputTabHost
     public event EventHandler? GenerateCodeClicked;
     public event EventHandler? GenerateAllCodeClicked;
 
+    // This head keeps the project-wide settings on the tab and has no Settings window to link to.
+    event EventHandler? ICodeOutputTabHost.EditProjectSettingsClicked
+    {
+        add { }
+        remove { }
+    }
+
     #endregion
 
     private void FullRefreshDataGrid()

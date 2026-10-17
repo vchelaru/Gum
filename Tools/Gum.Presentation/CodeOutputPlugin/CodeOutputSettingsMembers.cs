@@ -71,6 +71,12 @@ public class CodeOutputSettingsMembers
     /// </summary>
     public List<MemberCategory> BuildCategories()
     {
+        return new List<MemberCategory> { BuildProjectCategory(), BuildElementCategory() };
+    }
+
+    /// <summary>The project-wide rows, shown on the Code generation page of the Settings window.</summary>
+    public MemberCategory BuildProjectCategory()
+    {
         MemberCategory projectCategory = new MemberCategory("Project-Wide Code Generation");
         projectCategory.Members.Add(CreateCodeProjectRootMember());
         projectCategory.Members.Add(CreateGeneratedCodeFolderMember());
@@ -96,6 +102,15 @@ public class CodeOutputSettingsMembers
 
         projectCategory.Members.Add(CreateSyntaxVersionMember());
 
+        return projectCategory;
+    }
+
+    /// <summary>
+    /// The rows for the selected element, shown on the Code tab. Also updates the view model's
+    /// <see cref="CodeWindowViewModel.CanGenerateCode"/>.
+    /// </summary>
+    public MemberCategory BuildElementCategory()
+    {
         MemberCategory elementCategory = new MemberCategory("Element Code Generation");
         elementCategory.Members.Add(CreateGenerationBehaviorMember());
         elementCategory.Members.Add(CreateUsingStatementsMember());
@@ -107,7 +122,7 @@ public class CodeOutputSettingsMembers
             ElementSettings?.GenerationBehavior == GenerationBehavior.GenerateManually ||
             ElementSettings?.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
 
-        return new List<MemberCategory> { projectCategory, elementCategory };
+        return elementCategory;
     }
 
     /// <summary>Fills in the project settings automatically, as the Auto setup button does.</summary>

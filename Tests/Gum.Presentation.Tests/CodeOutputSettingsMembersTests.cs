@@ -64,6 +64,48 @@ public class CodeOutputSettingsMembersTests
     }
 
     [Fact]
+    public void BuildProjectCategory_ListsOnlyTheProjectRows()
+    {
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms };
+
+        MemberCategory category = _sut.BuildProjectCategory();
+
+        category.Name.ShouldBe("Project-Wide Code Generation");
+        category.Members.Select(member => member.Name).ShouldBe(new[]
+        {
+            "Code Project Root", "Generated Code Folder", "Generated Code Folder Prefix", "Output Library", "Object Instantiation Type", "Project-wide Using Statements",
+            "Root Namespace", "Append Folder to Namespace", "Default Screen Base", "Syntax Version",
+        });
+    }
+
+    [Fact]
+    public void BuildElementCategory_ListsOnlyTheElementRows()
+    {
+        _sut.ElementSettings = new CodeOutputElementSettings();
+
+        MemberCategory category = _sut.BuildElementCategory();
+
+        category.Name.ShouldBe("Element Code Generation");
+        category.Members.Select(member => member.Name).ShouldBe(new[]
+        {
+            "Generation Behavior", "Using Statements", "Namespace", "Generated File Name", "Localize Element",
+        });
+    }
+
+    [Fact]
+    public void BuildElementCategory_UpdatesWhetherTheViewModelCanGenerate()
+    {
+        _sut.ElementSettings = new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateManually };
+        _sut.BuildElementCategory();
+        _viewModel.CanGenerateCode.ShouldBeTrue();
+
+        _sut.ElementSettings = new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.NeverGenerate };
+        _sut.BuildElementCategory();
+
+        _viewModel.CanGenerateCode.ShouldBeFalse();
+    }
+
+    [Fact]
     public void BuildCategories_AddsTheDensityRows_ForMaui()
     {
         _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.Maui };

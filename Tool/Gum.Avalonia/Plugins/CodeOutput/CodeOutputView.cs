@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Avalonia;
 using Avalonia.Controls;
@@ -21,6 +22,7 @@ using Gum.Reflection;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Avalonia.Plugins.CodeOutput;
 
@@ -77,7 +79,6 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
 
         TextBlock settingsTitle = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
         settingsTitle.Bind(TextBlock.TextProperty, new Binding(nameof(CodeWindowViewModel.NeedsSetup)) { Converter = SetupTitleConverter });
-
         _generate = new Button { Content = "Generate", Padding = new Thickness(4, 1), Margin = new Thickness(0, 0, 8, 0) };
         _generate.Bind(ToolTip.TipProperty, new Binding(nameof(CodeWindowViewModel.GenerateToolTip)));
         _generate.Click += (_, _) => GenerateCodeClicked?.Invoke(this, EventArgs.Empty);
@@ -124,9 +125,21 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
         settingsBody.Children.Add(setupButtons);
         settingsBody.Children.Add(_grid);
 
+        // The project-wide settings are a page of the Settings window; this tab keeps the selected element's.
+        HyperlinkButton editProjectSettings = new HyperlinkButton
+        {
+            Content = new TextBlock { Text = "Edit project settings...", TextDecorations = TextDecorations.Underline },
+            Padding = new Thickness(0),
+            Margin = new Thickness(4, 2, 4, 6),
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        editProjectSettings.Click += (_, _) => EditProjectSettingsClicked?.Invoke(this, EventArgs.Empty);
+
         DockPanel settings = new DockPanel();
         DockPanel.SetDock(settingsHeader, Dock.Top);
+        DockPanel.SetDock(editProjectSettings, Dock.Top);
         settings.Children.Add(settingsHeader);
+        settings.Children.Add(editProjectSettings);
         settings.Children.Add(settingsBody);
 
         Grid generateUi = new Grid { ColumnDefinitions = new ColumnDefinitions("*,4,*") };
@@ -160,6 +173,9 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
 
     /// <inheritdoc/>
     public event EventHandler? GenerateCodeClicked;
+
+    /// <inheritdoc/>
+    public event EventHandler? EditProjectSettingsClicked;
 
     // This head has no Generate All button (the WPF head's is disabled as well).
     event EventHandler? ICodeOutputTabHost.GenerateAllCodeClicked
@@ -217,7 +233,7 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
     /// <summary>The Generate scope's all-elements choice, for tests.</summary>
     internal ToggleButton AllInProjectToggle => _allInProjectToggle;
 
-    private void RebuildSettings() => _grid.SetCategories(_settingsMembers.BuildCategories());
+    private void RebuildSettings() => _grid.SetCategories(new List<MemberCategory> { _settingsMembers.BuildElementCategory() });
 
     private static ToggleButton CreateToggle(string text, string tip, string property)
     {

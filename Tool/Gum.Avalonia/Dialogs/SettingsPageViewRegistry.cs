@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using CodeOutputPlugin;
 using Gum.Avalonia.Dialogs.Views;
 using Gum.Avalonia.Panels;
 using Gum.Avalonia.Settings;
@@ -36,6 +37,7 @@ public class SettingsPageViewRegistry
         Register<ProjectPropertiesPageViewModel>(() => new ProjectPropertiesPageView());
         Register<FontsViewModel>(() => new FontsView());
         Register<HotkeyViewModel>(() => new HotkeyView());
+        Register<CodeGenerationSettingsViewModel>(() => new CodeGenerationSettingsPageView());
     }
 
     /// <summary>The view-model types with a registered page view.</summary>
