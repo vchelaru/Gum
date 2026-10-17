@@ -415,8 +415,10 @@ public class FileMenuScenarioTests
 
                 File.Exists(png).ShouldBeTrue(canvas.Describe());
                 using SkiaSharp.SKBitmap image = SkiaSharp.SKBitmap.Decode(png);
-                PixelsOf(image, new SkiaSharp.SKRectI(0, 0, 0, 0), inside: false)
-                    .ShouldAllBe(pixel => pixel.Alpha == 0, "the dotted outline is not exported");
+                List<SkiaSharp.SKColor> outsidePixels = PixelsOf(image, new SkiaSharp.SKRectI(0, 0, 0, 0), inside: false);
+                List<SkiaSharp.SKColor> opaque = outsidePixels.Where(pixel => pixel.Alpha != 0).ToList();
+                opaque.ShouldBeEmpty(
+                    $"the dotted outline is not exported; {opaque.Count} of {outsidePixels.Count} pixels in the {image.Width}x{image.Height} image are not transparent, the first {opaque.FirstOrDefault()}. {canvas.Describe()}");
 
                 LineRectangle outline = canvas.Wireframe.GetRepresentation(group.Instances.Single())!.RenderableComponent.ShouldBeOfType<LineRectangle>();
                 outline.LocalVisible.ShouldBeTrue("the outline is back on the canvas");
