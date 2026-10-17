@@ -46,7 +46,7 @@ public sealed class SettingsDialogView : Grid
 
     private Control BuildNavigation()
     {
-        TextBox search = new TextBox { Watermark = "Search settings", Margin = new Thickness(0, 0, 0, 8) };
+        TextBox search = new TextBox { Watermark = "Search", Margin = new Thickness(0, 0, 0, 8) };
         search.Bind(TextBox.TextProperty, new Binding(nameof(SettingsDialogViewModel.SearchText)) { Mode = BindingMode.TwoWay });
         DockPanel.SetDock(search, Dock.Top);
 
