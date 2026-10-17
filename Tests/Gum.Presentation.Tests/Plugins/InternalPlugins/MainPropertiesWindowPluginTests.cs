@@ -72,6 +72,14 @@ public class MainPropertiesWindowPluginTests
     }
 
     [Fact]
+    public void EachPage_OffersItsRowLabelsToTheSearch()
+    {
+        SettingsPage canvas = _registry.Pages.Single(page => page.Id == SettingsPageIds.Canvas);
+
+        canvas.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Canvas Width");
+    }
+
+    [Fact]
     public void StartUp_AddsNoEditPropertiesMenuItem()
     {
         _menu.GetItem("Edit").ShouldBeNull();

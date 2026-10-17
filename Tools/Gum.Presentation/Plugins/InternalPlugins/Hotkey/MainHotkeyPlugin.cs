@@ -1,6 +1,7 @@
 using Gum.Plugins.BaseClasses;
 using Gum.SettingsWindow;
 using System.ComponentModel.Composition;
+using System.Linq;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey
@@ -27,6 +28,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
                 SettingsPageIds.KeyboardShortcuts, "Keyboard shortcuts", SettingsSection.Application, _hotkeyViewModel, order: 2)
             {
                 Keywords = new[] { "hotkeys", "keys", "bindings" },
+                SearchTerms = () => _hotkeyViewModel.Items.Select(item => item.Display),
             });
 
             this.ShowHotkeys += HandleShowHotkeysRequested;

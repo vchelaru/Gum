@@ -125,6 +125,22 @@ public class ProjectPropertiesGridPresenterTests
     }
 
     [Fact]
+    public void RowLabels_ListsTheLabelsOfThatSectionsRows_ForSearching()
+    {
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(new GumProjectSave());
+
+        IReadOnlyList<string> canvas = ProjectPropertiesGridPresenter.RowLabels(viewModel, ProjectPropertiesSection.Canvas);
+        IReadOnlyList<string> localization = ProjectPropertiesGridPresenter.RowLabels(viewModel, ProjectPropertiesSection.Localization);
+
+        canvas.ShouldContain("Canvas Width");
+        canvas.ShouldContain("Show Checker Background");
+        canvas.ShouldNotContain("Texture Filter");
+        localization.ShouldContain("Show Localization");
+        localization.ShouldContain("Localization Files");
+    }
+
+    [Fact]
     public void Bind_WithoutASection_NeverShowsAutoSave()
     {
         // Auto save is an application setting, on the Application > General page.

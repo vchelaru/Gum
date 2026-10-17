@@ -78,6 +78,12 @@ public class SettingsPage
     /// <summary>Extra words the search box matches besides the title.</summary>
     public IReadOnlyList<string> Keywords { get; init; } = Array.Empty<string>();
 
+    /// <summary>
+    /// The labels of the settings on the page, read each time the user searches, so a search finds a
+    /// setting by its own name and not only the page it is on. Null for a page with no list to give.
+    /// </summary>
+    public Func<IEnumerable<string>>? SearchTerms { get; init; }
+
     /// <summary>Called each time the page is shown, to refill <see cref="Content"/> from the project.</summary>
     public Action? Activated { get; init; }
 }

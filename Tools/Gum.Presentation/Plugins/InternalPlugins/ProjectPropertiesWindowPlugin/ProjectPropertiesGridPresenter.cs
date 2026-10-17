@@ -46,6 +46,17 @@ public sealed class ProjectPropertiesGridPresenter
         Rebuild();
     }
 
+    /// <summary>
+    /// The labels of the rows a page of <paramref name="section"/> shows, as the grid names them, for
+    /// the Settings window's search.
+    /// </summary>
+    public static IReadOnlyList<string> RowLabels(ProjectPropertiesViewModel viewModel, ProjectPropertiesSection section)
+    {
+        DataUiGridModel model = new DataUiGridModel { Instance = viewModel };
+        ApplyLayout(model, viewModel, section);
+        return model.Categories.SelectMany(category => category.Members).Select(member => member.DisplayName).ToList();
+    }
+
     /// <summary>Rebuilds the rows from the view model's current members.</summary>
     public void Rebuild()
     {

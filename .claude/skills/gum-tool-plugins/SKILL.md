@@ -170,7 +170,9 @@ it to the VM (with a test in `Gum.Presentation.Tests`) and bind.
 `content` is a view model; the Avalonia head maps it to a view in `SettingsPageViewRegistry`
 (`PluginHostTests.EveryPageAPluginAddsToTheSettingsWindow_ResolvesToAnAvaloniaView` fails when one is
 missing). The Project section only lists while a project is loaded, and `Activated` runs each time the
-page is shown, so refill the view model from the project there. `ISettingsPageRegistry` and
+page is shown, so refill the view model from the project there. The window's search matches a page's title,
+`Keywords` and `SearchTerms` (a callback returning its setting labels, read per search), so give a page the
+labels of its settings or a search will not find them. `ISettingsPageRegistry` and
 `ISettingsWindowService` are bridged in `PluginManager.AddCoreExports`, so a new page needs no change there.
 
 Still WPF-only in `Gum/Plugins/InternalPlugins/`: the tree view and state tree (phase 60), the Variables

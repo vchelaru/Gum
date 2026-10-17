@@ -57,6 +57,16 @@ public class MainFontsPluginTests
     }
 
     [Fact]
+    public void ThePage_OffersItsSettingLabelsToTheSearch()
+    {
+        SettingsPage page = _registry.Pages.ShouldHaveSingleItem();
+
+        page.Keywords.ShouldContain("Add Font Range");
+        page.Keywords.ShouldContain("Font Generator");
+        page.Keywords.ShouldContain("Use Font Character File");
+    }
+
+    [Fact]
     public void StartUp_AddsNoFontSettingsMenuItem()
     {
         _menu.GetItem("Edit").ShouldBeNull();

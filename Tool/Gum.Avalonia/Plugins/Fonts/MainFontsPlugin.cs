@@ -80,7 +80,12 @@ public class MainFontsPlugin : PluginBase, IPriorityPlugin
         AddSettingsPage(new SettingsPage(SettingsPageIds.Fonts, "Fonts", SettingsSection.Project, _viewModel, order: 2)
         {
             Activated = Reload,
-            Keywords = new[] { "character ranges", "gumfcs", "glyph spacing", "atlas", "generator", "kernsmith" },
+            // The page is a custom view, so its labels are listed here instead of read from a grid.
+            Keywords = new[]
+            {
+                "Character Ranges", "Use Font Character File", "gumfcs", "Add Font Range", "Font Generator", "kernsmith",
+                "Font Spacing Horizontal", "Font Spacing Vertical", "glyph spacing", "Auto-Size Font Outputs", "atlas",
+            },
         });
     }
 

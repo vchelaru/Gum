@@ -100,6 +100,14 @@ public class CodeOutputPluginSettingsPageTests : BaseTestClass
     }
 
     [Fact]
+    public void ThePage_OffersItsRowLabelsToTheSearch()
+    {
+        SettingsPage page = _registry.Pages.ShouldHaveSingleItem();
+
+        page.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain("Output Library");
+    }
+
+    [Fact]
     public void TheCodeTabsEditProjectSettingsLink_OpensTheSettingsWindowOnThePage()
     {
         _host.Raise(x => x.EditProjectSettingsClicked += null, EventArgs.Empty);

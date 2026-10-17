@@ -1,4 +1,5 @@
 using System.Linq;
+using Gum.Input;
 using Gum.Managers;
 using Gum.Menus;
 using Gum.Plugins.InternalPlugins.Hotkey;
@@ -23,7 +24,9 @@ public class MainHotkeyPluginTests
         _settingsWindow = new Mock<ISettingsWindowService>();
         _menu = new MenuModel();
 
-        HotkeyViewModel viewModel = new(Mock.Of<IHotkeyManager>(), Mock.Of<IKeyCombinationFormatter>());
+        Mock<IHotkeyManager> hotkeyManager = new();
+        hotkeyManager.Setup(x => x.Copy).Returns(KeyCombination.Ctrl(GumKey.C));
+        HotkeyViewModel viewModel = new(hotkeyManager.Object, new KeyCombinationFormatter(KeyDisplayStyle.Windows));
 
         _plugin = new MainHotkeyPlugin(viewModel)
         {
@@ -43,6 +46,14 @@ public class MainHotkeyPluginTests
         page.Title.ShouldBe("Keyboard shortcuts");
         page.Section.ShouldBe(SettingsSection.Application);
         page.Content.ShouldBeOfType<HotkeyViewModel>();
+    }
+
+    [Fact]
+    public void ThePage_OffersEachShortcutsNameToTheSearch()
+    {
+        SettingsPage page = _registry.Pages.ShouldHaveSingleItem();
+
+        page.SearchTerms.ShouldNotBeNull().Invoke().ShouldContain(term => term.StartsWith("Copy"));
     }
 
     [Fact]

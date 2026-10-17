@@ -65,15 +65,20 @@ public class SettingsDialogViewModel : DialogViewModel
         {
             new SettingsPage(SettingsPageIds.General, "General", SettingsSection.Application, general, GeneralOrder)
             {
-                Keywords = new[] { "auto save", "autosave", "standards palette", "settings folder" },
+                Keywords = new[] { "Auto save", "autosave", "Standards palette", "Open settings folder", "settings folder" },
             },
             new SettingsPage(SettingsPageIds.Appearance, "Appearance", SettingsSection.Application, theming, AppearanceOrder)
             {
-                Keywords = new[] { "theme", "dark", "light", "accent", "color", "checker", "guide", "outline" },
+                Keywords = new[]
+                {
+                    "Theme Mode", "theme", "dark", "light", "Accent Color", "Editor Background", "Checker Color",
+                    "Outline Color", "Guide Line Color", "Guide Text Color", "Reset All", "color",
+                },
             },
             new SettingsPage(SettingsPageIds.Plugins, "Plugins", SettingsSection.Application, plugins, PluginsOrder)
             {
-                Keywords = new[] { "enable", "disable", "folder scan" },
+                Keywords = new[] { "enable", "disable", "Folder scan", "Copy Scan" },
+                SearchTerms = () => plugins.Plugins.Select(plugin => plugin.DisplayText),
             },
         };
         _allPages.AddRange(registry.Pages.Where(page => hasProject || page.Section == SettingsSection.Application));
@@ -206,7 +211,9 @@ public class SettingsDialogViewModel : DialogViewModel
         }
     }
 
+    // A page matches on its title, its keywords, or the labels of the settings on it.
     private static bool Matches(SettingsPage page, string search) =>
         page.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
-        || page.Keywords.Any(keyword => keyword.Contains(search, StringComparison.OrdinalIgnoreCase));
+        || page.Keywords.Any(keyword => keyword.Contains(search, StringComparison.OrdinalIgnoreCase))
+        || (page.SearchTerms?.Invoke() ?? Array.Empty<string>()).Any(term => term.Contains(search, StringComparison.OrdinalIgnoreCase));
 }

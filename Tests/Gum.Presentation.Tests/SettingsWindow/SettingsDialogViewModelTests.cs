@@ -21,10 +21,12 @@ public class SettingsDialogViewModelTests
 {
     private readonly SettingsPageRegistry _registry;
     private readonly Mock<IProjectState> _projectState;
+    private readonly List<PluginSummary> _plugins;
 
     public SettingsDialogViewModelTests()
     {
         _registry = new SettingsPageRegistry();
+        _plugins = new List<PluginSummary>();
         _projectState = new Mock<IProjectState>();
         _projectState.SetupGet(x => x.GumProjectSave).Returns(new GumProjectSave());
     }
@@ -32,7 +34,7 @@ public class SettingsDialogViewModelTests
     private SettingsDialogViewModel CreateViewModel()
     {
         Mock<IPluginManager> pluginManager = new Mock<IPluginManager>();
-        pluginManager.Setup(x => x.GetAllPluginSummaries()).Returns(new List<PluginSummary>());
+        pluginManager.Setup(x => x.GetAllPluginSummaries()).Returns(_plugins);
 
         Mock<IOptionsMonitor<ThemeSettings>> themeSettings = new Mock<IOptionsMonitor<ThemeSettings>>();
         themeSettings.SetupGet(x => x.CurrentValue).Returns(new ThemeSettings());
@@ -217,6 +219,63 @@ public class SettingsDialogViewModelTests
         viewModel.SearchText = "GUIDES";
 
         PageTitles(viewModel).ShouldBe(new[] { "Canvas" });
+    }
+
+    [Fact]
+    public void SearchText_MatchesTheSettingLabelsAPageReports()
+    {
+        _registry.Register(new SettingsPage("keys", "Keyboard shortcuts", SettingsSection.Application, new object(), 2)
+        {
+            SearchTerms = () => new[] { "Copy: Ctrl+C", "Paste: Ctrl+V" },
+        });
+        SettingsDialogViewModel viewModel = CreateViewModel();
+
+        viewModel.SearchText = "paste";
+
+        PageTitles(viewModel).ShouldBe(new[] { "Keyboard shortcuts" });
+    }
+
+    [Fact]
+    public void SearchText_ReadsThePagesLabelsWhenSearching_NotWhenOpening()
+    {
+        List<string> labels = new List<string> { "Canvas Width" };
+        _registry.Register(new SettingsPage("canvas", "Canvas", SettingsSection.Project, new object(), 1)
+        {
+            SearchTerms = () => labels,
+        });
+        SettingsDialogViewModel viewModel = CreateViewModel();
+        labels.Add("Show Checker Background");
+
+        viewModel.SearchText = "checker background";
+
+        PageTitles(viewModel).ShouldBe(new[] { "Canvas" });
+    }
+
+    [Theory]
+    [InlineData("Auto save", "General")]
+    [InlineData("Open settings folder", "General")]
+    [InlineData("Accent Color", "Appearance")]
+    [InlineData("Guide Line Color", "Appearance")]
+    [InlineData("Theme Mode", "Appearance")]
+    [InlineData("Copy Scan", "Plugins")]
+    public void SearchText_FindsTheApplicationPagesBySettingLabel(string label, string expectedPage)
+    {
+        SettingsDialogViewModel viewModel = CreateViewModel();
+
+        viewModel.SearchText = label;
+
+        PageTitles(viewModel).ShouldBe(new[] { expectedPage });
+    }
+
+    [Fact]
+    public void SearchText_FindsThePluginsPageByAPluginsName()
+    {
+        _plugins.Add(new PluginSummary("MyCoolPlugin", "My Cool Plugin", IsEnabled: true, HasFailureDetails: false, PluginHandle: new object()));
+        SettingsDialogViewModel viewModel = CreateViewModel();
+
+        viewModel.SearchText = "cool plugin";
+
+        PageTitles(viewModel).ShouldBe(new[] { "Plugins" });
     }
 
     [Fact]

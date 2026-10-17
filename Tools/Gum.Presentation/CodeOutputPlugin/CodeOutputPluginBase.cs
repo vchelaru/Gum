@@ -229,7 +229,8 @@ public abstract class CodeOutputPluginBase : PluginBase
                 _settingsMembers.ProjectSettings = codeOutputProjectSettings;
                 page.Reload();
             },
-            Keywords = new[] { "code project root", "namespace", "output library", "generated code", "usings", "syntax version" },
+            Keywords = new[] { "namespace", "usings" },
+            SearchTerms = () => page.BuildCategories().SelectMany(category => category.Members).Select(member => member.Name),
         });
     }
 
