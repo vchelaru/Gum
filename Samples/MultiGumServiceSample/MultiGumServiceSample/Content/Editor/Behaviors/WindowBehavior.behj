@@ -1,0 +1,33 @@
+{
+  "Name": "WindowBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "ResizeMode",
+      "Type": "ResizeMode",
+      "SetsValue": true,
+      "Description": "CanResize lets the user drag the window\u0027s borders to resize it; NoResize disables border-driven resizing.",
+      "ValueAsString": "CanResize"
+    }
+  ],
+  "ToolOnlyVariableReferences": [],
+  "Categories": [],
+  "RequiredInstances": [],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "Controls/WindowStandard"
+}

@@ -1,0 +1,559 @@
+{
+  "Name": "DarkPro/Controls/SliderThumb",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Body.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "Body.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "Body.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Body.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Body.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Body.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Body.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Body.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Body.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Body.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Body.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Body.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Body.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Body.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Body.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ButtonCategoryState",
+          "Type": "ButtonCategory"
+        },
+        {
+          "Name": "FocusedIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 4
+        },
+        {
+          "Name": "FocusedIndicator.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusedIndicator.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "FocusedIndicator.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "FocusedIndicator.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "FocusedIndicator.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "FocusedIndicator.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 4
+        },
+        {
+          "Name": "FocusedIndicator.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusedIndicator.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusedIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusedIndicator.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "FocusedIndicator.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusedIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusedIndicator.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "Body.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        },
+        {
+          "Name": "FocusedIndicator.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ButtonCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [
+            {
+              "Name": "Body.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Body.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Body.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "Body.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [
+            {
+              "Name": "Body.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "Body.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 153
+            },
+            {
+              "Name": "Body.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 34
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "Body.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.HoverAccent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Pushed",
+          "Variables": [
+            {
+              "Name": "Body.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 153
+            },
+            {
+              "Name": "Body.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "Body.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "Body.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.AccentPressed.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Focused",
+          "Variables": [
+            {
+              "Name": "Body.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Body.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Body.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "Body.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedFocused",
+          "Variables": [
+            {
+              "Name": "Body.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "Body.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 153
+            },
+            {
+              "Name": "Body.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 34
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "Body.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.HoverAccent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [
+            {
+              "Name": "Body.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 66
+            },
+            {
+              "Name": "Body.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 62
+            },
+            {
+              "Name": "Body.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 62
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "Body.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledThumb.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledFocused",
+          "Variables": [
+            {
+              "Name": "Body.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 66
+            },
+            {
+              "Name": "Body.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 62
+            },
+            {
+              "Name": "Body.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 62
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "Body.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledThumb.FillColor"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "Body",
+      "BaseType": "Circle"
+    },
+    {
+      "Name": "FocusedIndicator",
+      "BaseType": "Circle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ButtonBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ButtonCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

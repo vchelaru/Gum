@@ -1,0 +1,382 @@
+{
+  "Name": "Inventory",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Menu.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 16
+        },
+        {
+          "Name": "Menu.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "Menu.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Background.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "Background.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "Background.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "Background.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "Background.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "Background.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 38
+        },
+        {
+          "Name": "Background.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 45
+        },
+        {
+          "Name": "Background.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 10
+        },
+        {
+          "Name": "Background.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Background.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Menu"
+        },
+        {
+          "Name": "Background.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 20
+        },
+        {
+          "Name": "Background.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 28
+        },
+        {
+          "Name": "Background.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 70
+        },
+        {
+          "Name": "Background.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "Background.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Background.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "MenuItems.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "MenuItems.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "MenuItems.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "MenuItems.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Menu"
+        },
+        {
+          "Name": "MenuItems.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -16
+        },
+        {
+          "Name": "MenuItems.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "MenuItems.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "MenuItems.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "MenuItems.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "MenuItems.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "MenuItems.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "MenuItems.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "MenuItems.StackSpacing",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "Menu.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "Menu.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "Menu.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 300
+        },
+        {
+          "Name": "TitleLabel.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "MenuItems"
+        },
+        {
+          "Name": "TitleLabel.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Inventory"
+        },
+        {
+          "Name": "SwordLabel.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "MenuItems"
+        },
+        {
+          "Name": "SwordLabel.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Wooden sword x1"
+        },
+        {
+          "Name": "PotionLabel.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "MenuItems"
+        },
+        {
+          "Name": "PotionLabel.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Healing potion x3"
+        },
+        {
+          "Name": "AcornLabel.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "MenuItems"
+        },
+        {
+          "Name": "AcornLabel.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Acorn x12"
+        },
+        {
+          "Name": "MapLabel.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "MenuItems"
+        },
+        {
+          "Name": "MapLabel.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Forest map x1"
+        },
+        {
+          "Name": "CloseButton.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "MenuItems"
+        },
+        {
+          "Name": "CloseButton.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Close"
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "Menu",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "Background",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "MenuItems",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "TitleLabel",
+      "BaseType": "ForestGlade/Controls/Label"
+    },
+    {
+      "Name": "SwordLabel",
+      "BaseType": "ForestGlade/Controls/Label"
+    },
+    {
+      "Name": "PotionLabel",
+      "BaseType": "ForestGlade/Controls/Label"
+    },
+    {
+      "Name": "AcornLabel",
+      "BaseType": "ForestGlade/Controls/Label"
+    },
+    {
+      "Name": "MapLabel",
+      "BaseType": "ForestGlade/Controls/Label"
+    },
+    {
+      "Name": "CloseButton",
+      "BaseType": "ForestGlade/Controls/Button"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

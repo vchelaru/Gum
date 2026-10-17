@@ -1,0 +1,206 @@
+{
+  "Name": "ForestGlade/Controls/Label",
+  "BaseType": "Text",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 240
+        },
+        {
+          "Name": "Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/Nunito-Regular.ttf"
+        },
+        {
+          "Name": "FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "IsBold",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 241
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextCategoryState",
+          "Type": "TextCategory"
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/ForestGlade/Styles.Text.FillColor",
+            "Font = Components/ForestGlade/Styles.Normal.Font",
+            "FontSize = Components/ForestGlade/Styles.Normal.FontSize",
+            "IsBold = Components/ForestGlade/Styles.Normal.IsBold"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "TextCategory",
+      "States": [
+        {
+          "Name": "Normal",
+          "Variables": [
+            {
+              "Name": "Font",
+              "Type": "string",
+              "SetsValue": true,
+              "IsFont": true,
+              "ValueAsString": "Fonts/Nunito-Regular.ttf"
+            },
+            {
+              "Name": "FontSize",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 14
+            },
+            {
+              "Name": "IsBold",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IsItalic",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Font = Components/ForestGlade/Styles.Normal.Font",
+                "FontSize = Components/ForestGlade/Styles.Normal.FontSize",
+                "IsBold = Components/ForestGlade/Styles.Normal.IsBold",
+                "IsItalic = Components/ForestGlade/Styles.Normal.IsItalic"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Strong",
+          "Variables": [
+            {
+              "Name": "Font",
+              "Type": "string",
+              "SetsValue": true,
+              "IsFont": true,
+              "ValueAsString": "Fonts/Nunito-Bold.ttf"
+            },
+            {
+              "Name": "FontSize",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 14
+            },
+            {
+              "Name": "IsBold",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IsItalic",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Font = Components/ForestGlade/Styles.Strong.Font",
+                "FontSize = Components/ForestGlade/Styles.Strong.FontSize",
+                "IsBold = Components/ForestGlade/Styles.Strong.IsBold",
+                "IsItalic = Components/ForestGlade/Styles.Strong.IsItalic"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "LabelBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

@@ -1,0 +1,1002 @@
+{
+  "Name": "ForestGlade/Controls/SliderThumb",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "BevelInstance.Blue2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 46
+        },
+        {
+          "Name": "BevelInstance.DropshadowAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 110
+        },
+        {
+          "Name": "BevelInstance.DropshadowBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "BevelInstance.DropshadowBlurX",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "BevelInstance.DropshadowBlurY",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "BevelInstance.DropshadowGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "BevelInstance.DropshadowOffsetX",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BevelInstance.DropshadowOffsetY",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BevelInstance.DropshadowRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "BevelInstance.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "BevelInstance.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "BevelInstance.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "BevelInstance.GradientInnerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BevelInstance.GradientOuterRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 50
+        },
+        {
+          "Name": "BevelInstance.GradientOuterRadiusUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BevelInstance.GradientType",
+          "Type": "GradientType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BevelInstance.Green2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 140
+        },
+        {
+          "Name": "BevelInstance.HasDropshadow",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "BevelInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BevelInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "BevelInstance.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "BevelInstance.Red2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BevelInstance.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 128
+        },
+        {
+          "Name": "BevelInstance.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "BevelInstance.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "BevelInstance.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "BevelInstance.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BevelInstance.StrokeWidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BevelInstance.UseGradient",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "BevelInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BevelInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "BevelInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BevelInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BevelInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "BevelInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BevelInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BevelInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ButtonCategoryState",
+          "Type": "ButtonCategory"
+        },
+        {
+          "Name": "FocusRectInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "FocusRectInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusRectInstance.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRectInstance.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 76
+        },
+        {
+          "Name": "FocusRectInstance.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "FocusRectInstance.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "FocusRectInstance.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "FocusRectInstance.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "FocusRectInstance.StrokeWidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusRectInstance.Visible",
+          "Type": "bool",
+          "ExposedAsName": "ShowFocusRect",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRectInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "FocusRectInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusRectInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusRectInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusRectInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "FocusRectInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusRectInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusRectInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ButtonCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [
+            {
+              "Name": "BevelInstance.Blue2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 46
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurX",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 22
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurY",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 22
+            },
+            {
+              "Name": "BevelInstance.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.Green2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 140
+            },
+            {
+              "Name": "BevelInstance.HasDropshadow",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "BevelInstance.Red2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "BevelInstance.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 128
+            },
+            {
+              "Name": "BevelInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.UseGradient",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [
+            {
+              "Name": "BevelInstance.Blue2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 46
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurX",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 30
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurY",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 30
+            },
+            {
+              "Name": "BevelInstance.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.Green2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 140
+            },
+            {
+              "Name": "BevelInstance.HasDropshadow",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "BevelInstance.Red2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "BevelInstance.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.UseGradient",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Pushed",
+          "Variables": [
+            {
+              "Name": "BevelInstance.Blue2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 40
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurX",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 30
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurY",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 30
+            },
+            {
+              "Name": "BevelInstance.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "BevelInstance.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "BevelInstance.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "BevelInstance.Green2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 112
+            },
+            {
+              "Name": "BevelInstance.HasDropshadow",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "BevelInstance.Red2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "BevelInstance.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.UseGradient",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [
+            {
+              "Name": "BevelInstance.Blue2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 46
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurX",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 22
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurY",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 22
+            },
+            {
+              "Name": "BevelInstance.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.Green2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 140
+            },
+            {
+              "Name": "BevelInstance.HasDropshadow",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "BevelInstance.Red2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "BevelInstance.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.UseGradient",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRectInstance.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocused",
+          "Variables": [
+            {
+              "Name": "BevelInstance.Blue2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 46
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurX",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 30
+            },
+            {
+              "Name": "BevelInstance.DropshadowBlurY",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 30
+            },
+            {
+              "Name": "BevelInstance.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.Green2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 140
+            },
+            {
+              "Name": "BevelInstance.HasDropshadow",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "BevelInstance.Red2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "BevelInstance.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.UseGradient",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusRectInstance.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [
+            {
+              "Name": "BevelInstance.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 56
+            },
+            {
+              "Name": "BevelInstance.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 68
+            },
+            {
+              "Name": "BevelInstance.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 44
+            },
+            {
+              "Name": "BevelInstance.HasDropshadow",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "BevelInstance.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BevelInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.UseGradient",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRectInstance.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocused",
+          "Variables": [
+            {
+              "Name": "BevelInstance.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 56
+            },
+            {
+              "Name": "BevelInstance.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 68
+            },
+            {
+              "Name": "BevelInstance.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 44
+            },
+            {
+              "Name": "BevelInstance.HasDropshadow",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "BevelInstance.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 26
+            },
+            {
+              "Name": "BevelInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "BevelInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "BevelInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "BevelInstance.UseGradient",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusRectInstance.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "BevelInstance",
+      "BaseType": "Circle"
+    },
+    {
+      "Name": "FocusRectInstance",
+      "BaseType": "Circle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ButtonBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ButtonCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

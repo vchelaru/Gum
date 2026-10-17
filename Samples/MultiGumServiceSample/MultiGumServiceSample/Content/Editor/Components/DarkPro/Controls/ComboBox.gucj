@@ -1,0 +1,1504 @@
+{
+  "Name": "DarkPro/Controls/ComboBox",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Background.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Background.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 38
+        },
+        {
+          "Name": "Background.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "Background.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "Background.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Background.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Background.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Background.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Background.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Background.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "BorderInstance.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BorderInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BorderInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "BorderInstance.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "BorderInstance.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "BorderInstance.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "BorderInstance.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "BorderInstance.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "BorderInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BorderInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "BorderInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BorderInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BorderInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "BorderInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BorderInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BorderInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ComboBoxCategoryState",
+          "Type": "ComboBoxCategory",
+          "SetsValue": true,
+          "ValueAsString": "Enabled"
+        },
+        {
+          "Name": "DefaultChildContainer",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "ListBoxInstance"
+        },
+        {
+          "Name": "FocusedIndicator.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "FocusedIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "FocusedIndicator.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusedIndicator.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "FocusedIndicator.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "FocusedIndicator.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "FocusedIndicator.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "FocusedIndicator.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "FocusedIndicator.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "FocusedIndicator.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusedIndicator.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusedIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusedIndicator.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "FocusedIndicator.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusedIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusedIndicator.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "IconInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 136
+        },
+        {
+          "Name": "IconInstance.ExposeChildrenEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "IconInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DejaVuSansMono.ttf"
+        },
+        {
+          "Name": "IconInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 12
+        },
+        {
+          "Name": "IconInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 136
+        },
+        {
+          "Name": "IconInstance.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "IconInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 16
+        },
+        {
+          "Name": "IconInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IconInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 136
+        },
+        {
+          "Name": "IconInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "\u25BC"
+        },
+        {
+          "Name": "IconInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 16
+        },
+        {
+          "Name": "IconInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IconInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -12
+        },
+        {
+          "Name": "IconInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "IconInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "IconInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "IconInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ListBoxInstance.ListBoxCategoryState",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Enabled"
+        },
+        {
+          "Name": "ListBoxInstance.SizingCategoryState",
+          "Type": "SizingCategory",
+          "SetsValue": true,
+          "ValueAsString": "FitChildren"
+        },
+        {
+          "Name": "ListBoxInstance.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "ListBoxInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ListBoxInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ListBoxInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 28
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "Selected Item"
+        },
+        {
+          "Name": "TextInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -44
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 12
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 256
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor",
+            "Font = Components/DarkPro/Styles.Normal.Font",
+            "FontSize = Components/DarkPro/Styles.Normal.FontSize"
+          ]
+        },
+        {
+          "Name": "FocusedIndicator.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        },
+        {
+          "Name": "BorderInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+          ]
+        },
+        {
+          "Name": "IconInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Muted.FillColor"
+          ]
+        },
+        {
+          "Name": "Background.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ComboBoxCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "BorderInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BorderInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BorderInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 136
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 136
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 136
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BorderInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+              ]
+            },
+            {
+              "Name": "IconInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Muted.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BorderInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BorderInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BorderInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BorderInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "IconInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "BorderInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BorderInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BorderInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BorderInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.BorderHover.FillColor"
+              ]
+            },
+            {
+              "Name": "IconInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Pushed",
+          "Variables": [
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "BorderInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BorderInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BorderInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BorderInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "IconInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedFocused",
+          "Variables": [
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "BorderInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BorderInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BorderInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BorderInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "IconInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Focused",
+          "Variables": [
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "BorderInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BorderInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BorderInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BorderInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "IconInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledFocused",
+          "Variables": [
+            {
+              "Name": "Background.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "Background.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "Background.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "BorderInstance.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BorderInstance.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BorderInstance.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "IconInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "IconInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "IconInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BorderInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "IconInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "Background.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "Background",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "ListBoxInstance",
+      "BaseType": "DarkPro/Controls/ListBox"
+    },
+    {
+      "Name": "IconInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "BorderInstance",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "FocusedIndicator",
+      "BaseType": "Rectangle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ComboBoxBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ComboBoxCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

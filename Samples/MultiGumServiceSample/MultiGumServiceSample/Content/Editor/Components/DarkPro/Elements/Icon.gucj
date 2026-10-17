@@ -1,0 +1,2774 @@
+{
+  "Name": "DarkPro/Elements/Icon",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "IconCategoryState",
+          "Type": "IconCategory"
+        },
+        {
+          "Name": "IconSprite.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "IconSprite.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "IconSprite.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "IconSprite.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "IconSprite.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "IconSprite.SourceFile",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFile": true,
+          "ValueAsString": "UISpriteSheet.png"
+        },
+        {
+          "Name": "IconSprite.TextureAddress",
+          "Type": "TextureAddress",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconSprite.TextureHeight",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "IconSprite.TextureLeft",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 288
+        },
+        {
+          "Name": "IconSprite.TextureTop",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IconSprite.TextureWidth",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "IconSprite.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "IconSprite.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "IconSprite.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconSprite.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "IconSprite.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "IconSprite.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "IconSprite.AnimationFrames",
+          "Type": "string",
+          "StringValues": []
+        },
+        {
+          "Name": "IconSprite.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "IconCategory",
+      "States": [
+        {
+          "Name": "None",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "ArrowUpDown",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 256
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Arrow1",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 256
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Arrow2",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 256
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Arrow3",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 256
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Basket",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Battery",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Check",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 128
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "CheckeredFlag",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Circle1",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 128
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Circle2",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 128
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Close",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 192
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Crosshairs",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Currency",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Cursor",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "CursorText",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Dash",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 20
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Delete",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Enter",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Expand",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 192
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Gamepad",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadNES",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadSNES",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadNintendo64",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadGamecube",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadSwitchPro",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadXbox",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadPlaystationDualShock",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "GamepadSegaGenesis",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Gear",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 96
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "FastForward",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 160
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "FastForwardBar",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 160
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "FitToScreen",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 192
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Flame1",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 64
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Flame2",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 64
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Heart",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 128
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Info",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 256
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Keyboard",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Leaf",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 64
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Lightning",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 64
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Minimize",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 192
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Monitor",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 192
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Mouse",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Music",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Pause",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 160
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Pencil",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 96
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Play",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 160
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "PlayBar",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 160
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Power",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Radiation",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 64
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Reduce",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 192
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Shield",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Shot",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Skull",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Sliders",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 96
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "SoundMaximum",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "SoundMinimum",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 224
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Speech",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 96
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Star",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 128
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Stop",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 160
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Temperature",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 64
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Touch",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Trash",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 96
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Trophy",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 128
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "User",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 288
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "UserAdd",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "UserDelete",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 416
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "UserGear",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 352
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "UserMulti",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 320
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "UserRemove",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Warning",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 448
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 256
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Wrench",
+          "Variables": [
+            {
+              "Name": "IconSprite.TextureHeight",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.TextureLeft",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 384
+            },
+            {
+              "Name": "IconSprite.TextureTop",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 96
+            },
+            {
+              "Name": "IconSprite.TextureWidth",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 32
+            },
+            {
+              "Name": "IconSprite.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "IconSprite",
+      "BaseType": "Sprite"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": [
+    "ContainedType",
+    "ChildrenLayout"
+  ]
+}

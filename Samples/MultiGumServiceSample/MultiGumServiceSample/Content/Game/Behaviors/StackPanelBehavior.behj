@@ -1,0 +1,42 @@
+{
+  "Name": "StackPanelBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "Orientation",
+      "Type": "Orientation",
+      "SetsValue": true,
+      "Description": "Vertical stacks children top-to-bottom; Horizontal stacks left-to-right.",
+      "ValueAsString": "Vertical"
+    },
+    {
+      "Name": "Spacing",
+      "Type": "float",
+      "SetsValue": true,
+      "Description": "Pixels of space between adjacent children along the stack axis.",
+      "ValueAsFloat": 0
+    }
+  ],
+  "ToolOnlyVariableReferences": [
+    "ChildrenLayout = Orientation == \u0022Horizontal\u0022 ? \u0022LeftToRightStack\u0022 : \u0022TopToBottomStack\u0022",
+    "StackSpacing = Spacing"
+  ],
+  "Categories": [],
+  "RequiredInstances": [],
+  "RequiredAnimations": []
+}

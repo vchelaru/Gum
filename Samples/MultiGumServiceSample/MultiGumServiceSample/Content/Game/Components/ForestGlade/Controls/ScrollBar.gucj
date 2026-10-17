@@ -1,0 +1,507 @@
+{
+  "Name": "ForestGlade/Controls/ScrollBar",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 128
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "OrientationCategoryState",
+          "Type": "OrientationCategory",
+          "SetsValue": true
+        },
+        {
+          "Name": "ScrollBarCategoryState",
+          "Type": "ScrollBarCategory"
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "ThumbInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 32
+        },
+        {
+          "Name": "ThumbInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ThumbInstance.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TrackInstance"
+        },
+        {
+          "Name": "ThumbInstance.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": ""
+        },
+        {
+          "Name": "ThumbInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -4
+        },
+        {
+          "Name": "ThumbInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ThumbInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ThumbInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ThumbInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "ThumbInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ThumbInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ThumbInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "TrackFill.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "TrackFill.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "TrackFill.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "TrackFill.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "TrackFill.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "TrackFill.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 25
+        },
+        {
+          "Name": "TrackFill.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 22
+        },
+        {
+          "Name": "TrackFill.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TrackFill.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackFill.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "TrackFill.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TrackInstance"
+        },
+        {
+          "Name": "TrackFill.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackFill.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackFill.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "TrackFill.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackFill.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "TrackInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "TrackInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 16
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "TrackFill.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/ForestGlade/Styles.ScrollTrack.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ScrollBarCategory",
+      "States": []
+    },
+    {
+      "Name": "OrientationCategory",
+      "States": [
+        {
+          "Name": "Vertical",
+          "Variables": [
+            {
+              "Name": "Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 128
+            },
+            {
+              "Name": "HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "ThumbInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 32
+            },
+            {
+              "Name": "ThumbInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "ThumbInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -4
+            },
+            {
+              "Name": "ThumbInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "TrackInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "TrackInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 16
+            },
+            {
+              "Name": "WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Horizontal",
+          "Variables": [
+            {
+              "Name": "Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 16
+            },
+            {
+              "Name": "HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "ThumbInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -4
+            },
+            {
+              "Name": "ThumbInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "ThumbInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 32
+            },
+            {
+              "Name": "ThumbInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TrackInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.HeightUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "TrackInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "TrackInstance.WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 2
+            },
+            {
+              "Name": "Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 128
+            },
+            {
+              "Name": "WidthUnits",
+              "Type": "DimensionUnitType",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "TrackInstance",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "TrackFill",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ThumbInstance",
+      "BaseType": "ForestGlade/Controls/Button"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ScrollBarBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ScrollBarCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

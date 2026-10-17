@@ -1,0 +1,374 @@
+{
+  "Name": "Text",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Alpha",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Blue",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "CustomFontFile",
+          "Type": "string",
+          "Category": "Font",
+          "SetsValue": true,
+          "IsFile": true,
+          "ValueAsString": ""
+        },
+        {
+          "Name": "DropshadowAlpha",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "DropshadowBlue",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DropshadowBlur",
+          "Type": "float",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "DropshadowGreen",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DropshadowOffsetX",
+          "Type": "float",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DropshadowOffsetY",
+          "Type": "float",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "DropshadowRed",
+          "Type": "int",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ExposeChildrenEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Font",
+          "Type": "string",
+          "Category": "Font",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Regular.ttf"
+        },
+        {
+          "Name": "FontScale",
+          "Type": "float",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "FontSize",
+          "Type": "int",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsInt": 18
+        },
+        {
+          "Name": "Green",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "HasDropshadow",
+          "Type": "bool",
+          "Category": "Dropshadow",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "HasEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 50
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "Category": "Text",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "IgnoredByParentSize",
+          "Type": "bool",
+          "Category": "Parent",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "IsBold",
+          "Type": "bool",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "IsItalic",
+          "Type": "bool",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "LineHeightMultiplier",
+          "Type": "float",
+          "Category": "Text",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "LocalizeText",
+          "Type": "bool",
+          "Category": "Text",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "MaxHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MaxLettersToShow",
+          "Type": "int?",
+          "Category": "Text",
+          "SetsValue": true
+        },
+        {
+          "Name": "MaxNumberOfLines",
+          "Type": "int?",
+          "Category": "Text",
+          "SetsValue": true
+        },
+        {
+          "Name": "MaxWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MinHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MinWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "OutlineThickness",
+          "Type": "int",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Parent",
+          "Type": "string",
+          "Category": "Parent",
+          "SetsValue": true
+        },
+        {
+          "Name": "Red",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Rotation",
+          "Type": "float",
+          "Category": "Flip and Rotation",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "Text",
+          "Type": "string",
+          "Category": "Text",
+          "SetsValue": true,
+          "ValueAsString": "Hello"
+        },
+        {
+          "Name": "TextOverflowHorizontalMode",
+          "Type": "TextOverflowHorizontalMode",
+          "Category": "Text",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextOverflowVerticalMode",
+          "Type": "TextOverflowVerticalMode",
+          "Category": "Text",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "UseCustomFont",
+          "Type": "bool",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "UseFontSmoothing",
+          "Type": "bool",
+          "Category": "Font",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "Category": "Text",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Visible",
+          "Type": "bool",
+          "Category": "States and Visibility",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "X",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Y",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "YOrigin",
+          "Type": "VerticalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "YUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": []
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}
