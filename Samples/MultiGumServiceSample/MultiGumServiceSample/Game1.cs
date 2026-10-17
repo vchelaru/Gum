@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Gum;
 using Gum.DataTypes;
@@ -69,21 +68,20 @@ public class Game1 : Game
 
     private void CreateEditorScreen()
     {
-        ListBox screenListBox = RunAs(_editorUi, () =>
+        // Gum builds Forms controls through IGumService.Default, so make the editor service the
+        // current one while building its elements.
+        IGumService.Default = _editorUi;
+
+        ScreenSave editorScreen = _editorProject.Screens.First(item => item.Name == "EditorScreen");
+        GraphicalUiElement screen = editorScreen.ToGraphicalUiElement(_editorUi.SystemManagers);
+        _editorUi.Root.Children.Add(screen);
+
+        ListBox screenListBox = screen.FindFormsControl<ListBox>("ScreenListBox")!;
+        foreach (ScreenSave gameScreen in _gameProject.Screens)
         {
-            ScreenSave editorScreen = _editorProject.Screens.First(item => item.Name == "EditorScreen");
-            GraphicalUiElement screen = editorScreen.ToGraphicalUiElement(_editorUi.SystemManagers);
-            _editorUi.Root.Children.Add(screen);
+            screenListBox.Items!.Add(gameScreen.Name);
+        }
 
-            var listBox = screen.FindFormsControl<ListBox>("ScreenListBox")!;
-            foreach (ScreenSave gameScreen in _gameProject.Screens)
-            {
-                listBox.Items!.Add(gameScreen.Name);
-            }
-            return listBox;
-        });
-
-        // Raised from inside the editor service's Update, so the editor is the current service here.
         screenListBox.SelectionChanged += (_, _) =>
         {
             if (screenListBox.SelectedObject is string screenName)
@@ -91,24 +89,28 @@ public class Game1 : Game
                 ShowGameScreen(screenName);
             }
         };
+
+        // Leave the game as the current service, the way Initialize left it.
+        IGumService.Default = _gameUi;
     }
 
     private void ShowGameScreen(string screenName)
     {
-        // The game's elements must be built and removed while the game service is current.
-        RunAs(_gameUi, () =>
-        {
-            if (_currentGameScreen != null)
-            {
-                _currentGameScreen.Parent = null;
-                _currentGameScreen.RemoveFromManagers();
-            }
+        // This runs inside the editor's Update, so the editor is current. Switch to the game
+        // service while building its elements, then switch back.
+        IGumService.Default = _gameUi;
 
-            ScreenSave screenSave = _gameProject.Screens.First(item => item.Name == screenName);
-            _currentGameScreen = screenSave.ToGraphicalUiElement(_gameUi.SystemManagers);
-            _gameUi.Root.Children.Add(_currentGameScreen);
-            return 0;
-        });
+        if (_currentGameScreen != null)
+        {
+            _currentGameScreen.Parent = null;
+            _currentGameScreen.RemoveFromManagers();
+        }
+
+        ScreenSave screenSave = _gameProject.Screens.First(item => item.Name == screenName);
+        _currentGameScreen = screenSave.ToGraphicalUiElement(_gameUi.SystemManagers);
+        _gameUi.Root.Children.Add(_currentGameScreen);
+
+        IGumService.Default = _editorUi;
     }
 
     protected override void Update(GameTime gameTime)
@@ -141,21 +143,5 @@ public class Game1 : Game
         _editorUi.Draw();
 
         base.Draw(gameTime);
-    }
-
-    // Update and Draw make their own service current for the call. Anything else that builds or
-    // changes another service's elements has to set IGumService.Default itself.
-    private static T RunAs<T>(GumService service, Func<T> action)
-    {
-        IGumService? previous = IGumService.Default;
-        IGumService.Default = service;
-        try
-        {
-            return action();
-        }
-        finally
-        {
-            IGumService.Default = previous;
-        }
     }
 }
