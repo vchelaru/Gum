@@ -16,7 +16,7 @@ public sealed class ProjectPropertiesPageView : DockPanel
     /// <summary>Builds the view.</summary>
     public ProjectPropertiesPageView()
     {
-        Grid = new DataUiGrid();
+        Grid = new DataUiGrid { HideLoneCategoryHeader = true };
         Children.Add(Grid);
 
         DataContextChanged += (_, _) => HandleDataContextChanged();

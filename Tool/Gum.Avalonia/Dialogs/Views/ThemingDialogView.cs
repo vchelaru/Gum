@@ -21,16 +21,15 @@ public sealed class ThemingDialogView : Grid
     {
         MinWidth = 360;
         DialogWindow.SetDialogTitle(this, "Theming");
-        ColumnDefinitions = new ColumnDefinitions("Auto,*,40");
+        ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*");
         RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto");
 
         AddLabel("Theme Mode", 0);
-        ComboBox mode = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 2) };
+        ComboBox mode = new ComboBox { HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 160, Margin = new Thickness(0, 2) };
         mode.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(ThemingDialogViewModel.ThemeModes)));
         mode.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(ThemingDialogViewModel.Mode)) { Mode = BindingMode.TwoWay });
         SetRow(mode, 0);
         SetColumn(mode, 1);
-        SetColumnSpan(mode, 2);
         Children.Add(mode);
 
         AddColorRow("Accent Color", 1, nameof(ThemingDialogViewModel.AccentColor), nameof(ThemingDialogViewModel.HasExplicitAccentColor));
@@ -57,7 +56,7 @@ public sealed class ThemingDialogView : Grid
     {
         AddLabel(label, row);
 
-        ColorPicker picker = new ColorPicker { HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 2) };
+        ColorPicker picker = new ColorPicker { HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2) };
         picker.Bind(ColorView.ColorProperty, new Binding(colorProperty) { Mode = BindingMode.TwoWay, Converter = DrawingColorToAvaloniaColorConverter.Instance });
         SetRow(picker, row);
         SetColumn(picker, 1);

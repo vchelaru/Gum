@@ -15,7 +15,7 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
     /// <summary>Builds the view.</summary>
     public CodeGenerationSettingsPageView()
     {
-        Grid = new DataUiGrid();
+        Grid = new DataUiGrid { HideLoneCategoryHeader = true };
         Children.Add(Grid);
 
         DataContextChanged += (_, _) => HandleDataContextChanged();

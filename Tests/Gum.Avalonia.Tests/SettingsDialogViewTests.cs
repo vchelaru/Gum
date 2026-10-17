@@ -60,6 +60,30 @@ public class SettingsDialogViewTests
     }
 
     [AvaloniaFact]
+    public void AppearancePage_KeepsItsChoicesNarrow_AndLeftAlignedWithTheirLabels()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        viewModel.SelectPage(SettingsPageIds.Appearance);
+        DialogWindow window = Open(viewModel);
+
+        ComboBox themeMode = window.GetVisualDescendants().OfType<ComboBox>().Single();
+        List<ColorPicker> pickers = window.GetVisualDescendants().OfType<ColorPicker>().ToList();
+        TextBlock accentLabel = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Accent Color");
+
+        themeMode.Bounds.Width.ShouldBeLessThan(260, "the theme list is a short choice, not a full-width bar");
+        pickers.ShouldNotBeEmpty();
+        double themeLeft = themeMode.TranslatePoint(new Point(0, 0), window)!.Value.X;
+        foreach (ColorPicker picker in pickers)
+        {
+            double pickerLeft = picker.TranslatePoint(new Point(0, 0), window)!.Value.X;
+            pickerLeft.ShouldBe(themeLeft, 1, "every choice starts at the same left edge, beside its label");
+        }
+        double labelRight = accentLabel.TranslatePoint(new Point(accentLabel.Bounds.Width, 0), window)!.Value.X;
+        (themeLeft - labelRight).ShouldBeLessThan(40, "no big gap between a label and its choice");
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void SettingsWindow_ClickingASectionHeader_KeepsThePageSelected()
     {
         SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();

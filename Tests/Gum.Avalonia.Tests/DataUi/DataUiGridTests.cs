@@ -200,6 +200,65 @@ public class DataUiGridTests
     }
 
     [AvaloniaFact]
+    public void HideLoneCategoryHeader_HidesTheHeaderOfASingleCategory_AndKeepsItsRowsShown()
+    {
+        EditorFixture fixture = new EditorFixture();
+        MemberCategory category = Category("GridLone", fixture, nameof(EditorFixture.Text));
+        category.IsExpanded = false;
+        DataUiGrid grid = new DataUiGrid { HideLoneCategoryHeader = true };
+        grid.SetCategories(new List<MemberCategory> { category });
+        Window window = new Window { Content = grid, Width = 500, Height = 700 };
+        window.Show();
+        window.UpdateLayout();
+
+        DataUiCategoryView view = window.GetVisualDescendantsOfType<DataUiCategoryView>().Single();
+
+        view.Header.IsVisible.ShouldBeFalse("a lone category's header is a label for nothing");
+        view.Rows.IsVisible.ShouldBeTrue("a collapsed category with no header to expand it would hide its rows for good");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void HideLoneCategoryHeader_KeepsTheHeadersOfSeveralCategories()
+    {
+        EditorFixture fixture = new EditorFixture();
+        DataUiGrid grid = new DataUiGrid { HideLoneCategoryHeader = true };
+        grid.SetCategories(new List<MemberCategory>
+        {
+            Category("GridFirst", fixture, nameof(EditorFixture.Text)),
+            Category("GridSecond", fixture, nameof(EditorFixture.Count)),
+        });
+        Window window = new Window { Content = grid, Width = 500, Height = 700 };
+        window.Show();
+        window.UpdateLayout();
+
+        window.GetVisualDescendantsOfType<DataUiCategoryView>().ShouldAllBe(view => view.Header.IsVisible);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void HideLoneCategoryHeader_ShowsTheHeaderAgain_WhenASecondCategoryArrives()
+    {
+        EditorFixture fixture = new EditorFixture();
+        DataUiGrid grid = new DataUiGrid { HideLoneCategoryHeader = true };
+        grid.SetCategories(new List<MemberCategory> { Category("GridOnly", fixture, nameof(EditorFixture.Text)) });
+        Window window = new Window { Content = grid, Width = 500, Height = 700 };
+        window.Show();
+        window.UpdateLayout();
+        window.GetVisualDescendantsOfType<DataUiCategoryView>().Single().Header.IsVisible.ShouldBeFalse();
+
+        grid.SetCategories(new List<MemberCategory>
+        {
+            Category("GridOnly", fixture, nameof(EditorFixture.Text)),
+            Category("GridOther", fixture, nameof(EditorFixture.Count)),
+        });
+        window.UpdateLayout();
+
+        window.GetVisualDescendantsOfType<DataUiCategoryView>().ShouldAllBe(view => view.Header.IsVisible);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void CategoryHeader_UsesTheHeaderColor_OrTheGridsHeaderBrush_AndLeavesTheRowsUnpainted()
     {
         EditorFixture fixture = new EditorFixture();

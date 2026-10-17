@@ -73,6 +73,7 @@ public sealed class DataUiCategoryView : StackPanel
         headerRow.Children.Add(name);
 
         Header = new Border { Child = headerRow, Padding = new Thickness(0, 3) };
+        Header.Bind(IsVisibleProperty, new Binding(nameof(CategoryHeaderState.AreShown)) { Source = grid.HeaderState });
         if (category.HeaderColor is System.Drawing.Color headerColor)
         {
             Header.Background = new SolidColorBrush(Color.FromArgb(headerColor.A, headerColor.R, headerColor.G, headerColor.B));
@@ -104,7 +105,16 @@ public sealed class DataUiCategoryView : StackPanel
         };
         Rows.Classes.Add(RowsClass);
         Rows.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(MemberCategory.Members)));
-        Rows.Bind(IsVisibleProperty, new Binding(nameof(MemberCategory.IsExpanded)));
+        // Rows show while expanded, and always when no header is left to expand them.
+        Rows.Bind(IsVisibleProperty, new MultiBinding
+        {
+            Converter = BoolConverters.Or,
+            Bindings =
+            {
+                new Binding(nameof(MemberCategory.IsExpanded)),
+                new Binding(nameof(CategoryHeaderState.AreHidden)) { Source = grid.HeaderState },
+            },
+        });
         Children.Add(Rows);
     }
 
