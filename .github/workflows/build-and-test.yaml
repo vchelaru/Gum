@@ -212,7 +212,7 @@ jobs:
   # needs one — maui — so this job installs just that, with its own cache key,
   # rather than duplicating the full set.
   Build-Generated-Code:
-    if: github.event_name != 'push' && github.event_name != 'schedule'
+    if: github.event_name != 'schedule'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -224,6 +224,20 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      # The cache key names the SDK and the workload list, so unrelated workflow edits keep hitting
+      # it and a new SDK patch or a changed list misses. The list is also what the install step
+      # installs.
+      - name: Workload cache key
+        id: workload-key
+        shell: bash
+        env:
+          WORKLOADS: maui
+        run: |
+          echo "workloads=$WORKLOADS" >> "$GITHUB_OUTPUT"
+          echo "key=workloads-gencode-${RUNNER_OS}-$(dotnet --version)-${WORKLOADS// /-}-${{ hashFiles('.github/scripts/install-workloads.sh') }}" >> "$GITHUB_OUTPUT"
+
+      # A push to main runs this job only to seed the cache (PRs restore it but cannot save one that
+      # other PRs can read), then skips the build and checks below.
       - name: Cache .NET workloads (main only)
         id: cache-workloads
         if: github.ref == 'refs/heads/main'
@@ -233,7 +247,7 @@ jobs:
             C:\Program Files\dotnet\metadata
             C:\Program Files\dotnet\packs
             C:\Program Files\dotnet\sdk-manifests
-          key: workloads-gencode-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
+          key: ${{ steps.workload-key.outputs.key }}
 
       - name: Restore cached .NET workloads (PRs)
         id: cache-workloads-restore
@@ -244,7 +258,7 @@ jobs:
             C:\Program Files\dotnet\metadata
             C:\Program Files\dotnet\packs
             C:\Program Files\dotnet\sdk-manifests
-          key: workloads-gencode-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
+          key: ${{ steps.workload-key.outputs.key }}
 
       - name: Install workloads
         if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true'
@@ -252,7 +266,7 @@ jobs:
         shell: bash
         run: |
           # Caps each attempt and retries once; see the script for why.
-          bash .github/scripts/install-workloads.sh maui
+          bash .github/scripts/install-workloads.sh ${{ steps.workload-key.outputs.workloads }}
 
       - name: Upload workload install logs
         if: failure()
@@ -270,6 +284,7 @@ jobs:
       # component reference). Exit code 2+ means the project failed to load and
       # must fail the build.
       - name: Codegen Drift Check
+        if: github.event_name != 'push'
         run: |
           dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0
           $cli = "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
@@ -295,6 +310,7 @@ jobs:
           }
 
       - name: Build Generated Code Projects
+        if: github.event_name != 'push'
         run: |
           # Note: the Maui project is built by csproj (not its .sln) with --framework
           # rather than -p:TargetFrameworks=. A -p: override on a solution build is a
@@ -342,6 +358,7 @@ jobs:
       # and compiled against this checkout. The checked-in projects above only cover what their
       # own components contain; the themes set variables those never do.
       - name: Build Theme Projects
+        if: github.event_name != 'push'
         run: pwsh Tools/build-theme-projects.ps1 -Cli "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
 
   Build-and-Test:
@@ -450,6 +467,18 @@ jobs:
       # On main: full cache (restore + save). On PRs: restore only, no save.
       # PR branch caches are scoped to that branch and never reused, so saving
       # the 3.6 GB cache on PRs is wasted upload time.
+      # Keyed on the SDK and the workload list (not the workflow file), so an unrelated edit to this
+      # file no longer costs a PR a full workload install and a re-seed on main.
+      - name: Workload cache key
+        id: workload-key
+        if: runner.os == 'macOS' && steps.plan.outputs.active == 'true'
+        shell: bash
+        env:
+          WORKLOADS: wasm-tools ios android maui
+        run: |
+          echo "workloads=$WORKLOADS" >> "$GITHUB_OUTPUT"
+          echo "key=workloads-${RUNNER_OS}-$(dotnet --version)-${WORKLOADS// /-}-${{ hashFiles('.github/scripts/install-workloads.sh') }}" >> "$GITHUB_OUTPUT"
+
       - name: Cache .NET workloads (main only)
         id: cache-workloads
         if: github.ref == 'refs/heads/main' && steps.plan.outputs.active == 'true' && runner.os == 'macOS'
@@ -462,7 +491,7 @@ jobs:
             /usr/local/share/dotnet/metadata
             /usr/local/share/dotnet/packs
             /usr/local/share/dotnet/sdk-manifests
-          key: workloads-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
+          key: ${{ steps.workload-key.outputs.key }}
 
       - name: Restore cached .NET workloads (PRs)
         id: cache-workloads-restore
@@ -476,7 +505,7 @@ jobs:
             /usr/local/share/dotnet/metadata
             /usr/local/share/dotnet/packs
             /usr/local/share/dotnet/sdk-manifests
-          key: workloads-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
+          key: ${{ steps.workload-key.outputs.key }}
 
       - name: Install workloads
         if: runner.os == 'macOS' && steps.plan.outputs.active == 'true' && steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true'
@@ -484,7 +513,7 @@ jobs:
         shell: bash
         run: |
           # Caps each attempt and retries once; see the script for why.
-          bash .github/scripts/install-workloads.sh wasm-tools ios android maui
+          bash .github/scripts/install-workloads.sh ${{ steps.workload-key.outputs.workloads }}
 
       - name: Upload workload install logs
         if: failure() && runner.os == 'macOS'
