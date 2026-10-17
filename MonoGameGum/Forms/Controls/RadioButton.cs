@@ -53,17 +53,32 @@ public class RadioButton : ToggleButton
 
     private void RemoveFromDictionary()
     {
-        var parent = GetParent();
+        RemoveFromDictionary(GetParent());
+    }
 
+    private void RemoveFromDictionary(object? parent)
+    {
         if (parent == null) //parent will be null when visual is null. groupname dictionary updates are meaningless until we have set the scope for the radio button!
             return;
 
-        if (RadioButtonDictionary.ContainsKey(parent)
-            && GroupName != null
-            && RadioButtonDictionary[parent].ContainsKey(GroupName)
-            && RadioButtonDictionary[parent][GroupName].Contains(this))
+        if (GroupName == null
+            || RadioButtonDictionary.TryGetValue(parent, out var groups) == false
+            || groups.TryGetValue(GroupName, out var radioButtons) == false)
         {
-            RadioButtonDictionary[parent][GroupName].Remove(this);
+            return;
+        }
+
+        radioButtons.Remove(this);
+
+        // An empty entry still holds the parent visual as a key, which keeps its whole tree reachable.
+        if (radioButtons.Count == 0)
+        {
+            groups.Remove(GroupName);
+        }
+
+        if (groups.Count == 0)
+        {
+            RadioButtonDictionary.Remove(parent);
         }
     }
 
@@ -133,6 +148,15 @@ public class RadioButton : ToggleButton
         UpdateState();
     }
 
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        // The old visual is still assigned at this point, so its parent is the key the button was added under.
+        RemoveFromDictionary();
+        Visual.ParentChanged -= HandleParentChanged;
+    }
+
     protected override void RefreshInternalVisualReferences()
     {
         base.RefreshInternalVisualReferences();
@@ -154,9 +178,11 @@ public class RadioButton : ToggleButton
         var parent = GetParent();
 
         // Don't set all RadioButtons to FALSE just because they don't have a parent yet!
-        if (parent != null && parent != FakeRoot)
+        if (parent != null && parent != FakeRoot
+            && RadioButtonDictionary.TryGetValue(parent, out var groups)
+            && groups.TryGetValue(GroupName, out var radioButtons))
         {
-            foreach (var radio in RadioButtonDictionary[parent][GroupName])
+            foreach (var radio in radioButtons)
             {
                 if (radio != this)
                 {
@@ -187,6 +213,9 @@ public class RadioButton : ToggleButton
 
     private void HandleParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs e)
     {
+        // GetParent() already reports the new parent, so the old parent's entry is released explicitly.
+        RemoveFromDictionary((object?)e.OldValue ?? FakeRoot);
+
         // setting GroupName refreshes grouping
         GroupName = GroupName;
     }

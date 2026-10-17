@@ -5,6 +5,7 @@ using Gum.Managers;
 using Gum.Wireframe;
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
 using RenderingLibrary;
 using Shouldly;
 using System;
@@ -98,6 +99,60 @@ public class RadioButtonTests : BaseTestClass
     {
         RadioButton sut = new();
         sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ParentChanged_ShouldReleaseOldParentEntry_WhenRadioButtonMovesToAnotherParent()
+    {
+        ContainerRuntime oldParent = new();
+        ContainerRuntime newParent = new();
+        RadioButton radioButton = new("Group");
+        oldParent.AddChild(radioButton.Visual);
+        RadioButton.RadioButtonDictionary.ContainsKey(oldParent).ShouldBeTrue();
+
+        newParent.AddChild(radioButton.Visual);
+
+        RadioButton.RadioButtonDictionary.ContainsKey(oldParent).ShouldBeFalse(
+            "because the old parent's group can no longer reach the button, and a stale key keeps its whole visual tree alive");
+        RadioButton.RadioButtonDictionary[newParent]["Group"].ShouldContain(radioButton);
+    }
+
+    [Fact]
+    public void ParentChanged_ShouldKeepOldParentEntry_WhenOtherRadioButtonsRemain()
+    {
+        ContainerRuntime oldParent = new();
+        RadioButton staying = new("Group");
+        RadioButton leaving = new("Group");
+        oldParent.AddChild(staying.Visual);
+        oldParent.AddChild(leaving.Visual);
+
+        leaving.Visual.Parent = null;
+
+        RadioButton.RadioButtonDictionary[oldParent]["Group"].ShouldBe(new[] { staying });
+    }
+
+    [Fact]
+    public void ParentChanged_ShouldReleaseOldParentEntry_WhenRadioButtonIsDetached()
+    {
+        ContainerRuntime parent = new();
+        RadioButton radioButton = new("Group");
+        parent.AddChild(radioButton.Visual);
+
+        radioButton.Visual.Parent = null;
+
+        RadioButton.RadioButtonDictionary.ContainsKey(parent).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Visual_ShouldReleaseEntry_WhenSetToNull()
+    {
+        ContainerRuntime parent = new();
+        RadioButton radioButton = new("Group");
+        parent.AddChild(radioButton.Visual);
+
+        radioButton.Visual = null;
+
+        RadioButton.RadioButtonDictionary.ContainsKey(parent).ShouldBeFalse();
     }
 
     [Fact]
