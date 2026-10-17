@@ -63,6 +63,7 @@ public sealed class SharedGame : IDisposable
     internal sealed class HostGame : Game
     {
         private readonly GraphicsDeviceManager _graphics;
+        private BasicEffect? _cacheInvalidatorEffect;
 
         public Color ClearColor { get; set; } = Color.CornflowerBlue;
 
@@ -88,6 +89,29 @@ public sealed class SharedGame : IDisposable
             _graphics.PreferredBackBufferWidth = width;
             _graphics.PreferredBackBufferHeight = height;
             _graphics.ApplyChanges();
+        }
+
+        /// <summary>
+        /// Makes MonoGame's DesktopGL layer forget which vertex buffer it last pointed the vertex attributes
+        /// at (#6107). It forgets whenever a draw goes through <c>VertexDeclaration.Apply</c>, which is what
+        /// <c>DrawUserPrimitives</c> does, so a draw of one degenerate triangle does it without reaching into
+        /// MonoGame's internals. Nothing is shaded: all three vertices are the same point.
+        /// </summary>
+        public void InvalidateVertexAttributeCache()
+        {
+            _cacheInvalidatorEffect ??= new BasicEffect(GraphicsDevice);
+            _cacheInvalidatorEffect.CurrentTechnique.Passes[0].Apply();
+            GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, new VertexPositionColor[3], 0, 1);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _cacheInvalidatorEffect?.Dispose();
+                _cacheInvalidatorEffect = null;
+            }
+            base.Dispose(disposing);
         }
 
         protected override void Update(GameTime gameTime) { }
@@ -179,10 +203,17 @@ public abstract class SharedGameLease : IDisposable
         device.RasterizerState = RasterizerState.CullCounterClockwise;
         device.ScissorRectangle = device.Viewport.Bounds;
 
-        // MonoGame deletes a disposed texture's GL object on the next Present, so a test that never draws a
-        // frame (the themed multi-service tests) keeps every texture it disposed until the process ends:
-        // about 20 MB of GPU or software-GL memory per test. One frame here lets the deletions run. A second
-        // frame crashes the process inside MonoGame's native GL layer, so do not add one.
+        // MonoGame deletes a disposed GL object two Presents after the dispose (the Present after it moves the
+        // pending deletes to a second list and the one after frees them), so a test that never draws a frame
+        // (the themed multi-service tests) keeps every texture it disposed until the process ends: about
+        // 20 MB of GPU or software-GL memory per test. Two frames here lets the deletions run.
+        //
+        // The frames are only safe after InvalidateVertexAttributeCache (#6107). The last vertex buffer drawn
+        // (Apos.Shapes') is freed by the second frame, and the next one created gets the same GL name back.
+        // MonoGame skips re-pointing the vertex attributes for a buffer whose name matches the cached one, so
+        // the draw reads from nothing and the process dies with an access violation in native code.
+        _host.InvalidateVertexAttributeCache();
+        _host.RunOneFrame();
         _host.RunOneFrame();
     }
 }
