@@ -143,6 +143,14 @@ public class SpriteRenderer
     public static bool SnapPositionEvenWhenScaled = true;
 
     /// <summary>
+    /// Added to a snapped glyph origin at fractional scale. A glyph edge or texel sample that lands
+    /// exactly on a pixel center is resolved by float noise that depends on the glyph's absolute
+    /// position, so the same glyph rasterizes differently once its block moves. The bias moves those
+    /// ties off the exact boundary; it is far smaller than a pixel.
+    /// </summary>
+    private const float GlyphTieBreakBiasInScreenPixels = 1f / 64f;
+
+    /// <summary>
     /// Decision core behind the main <c>Draw</c> overload's pixel-snapping: whether to snap a
     /// sprite's destination origin to the nearest device pixel. At integer scale, snapping is always
     /// safe (matches pre-fix behavior for every draw kind). At non-integer scale, snapping is safe
@@ -664,6 +672,20 @@ public class SpriteRenderer
             // instead.
             float x = MathFunctions.RoundToInt(position.X * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
             float y = MathFunctions.RoundToInt(position.Y * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+
+            if (!isIntegerScale && dimensionSnapping == DimensionSnapping.DimensionSnapping)
+            {
+                if (MathFunctions.RoundToInt(quarterRotations) % 2 == 0)
+                {
+                    // Snap the bottom edge so glyphs of different heights on one baseline end on the same row.
+                    float worldHeight = (sourceRectangle?.Height ?? textureToUse.Height) * scale.Y;
+                    y = MathFunctions.RoundToInt((position.Y + worldHeight) * CurrentZoom) / CurrentZoom - worldHeight +
+                        effectivePixelOffsetY / CurrentZoom;
+                }
+
+                x += GlyphTieBreakBiasInScreenPixels / CurrentZoom;
+                y += GlyphTieBreakBiasInScreenPixels / CurrentZoom;
+            }
 
             // need to also adjust scale:
             if(shouldSnapDimensions)

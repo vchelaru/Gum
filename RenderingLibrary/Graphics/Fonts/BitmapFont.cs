@@ -983,11 +983,13 @@ public class BitmapFont : IDisposable
 
         int lineNumber = 0;
 
-        // int is used if pixel perfect
+        // The block origin in whole screen pixels, used when snapping to pixels.
         // No TextPositionRoundingMode (Floor/Ceiling) knob here -- away-from-zero rounding is hardcoded
         // and no one has reported spacing jitter needing it. Raylib-only is fine (#3708).
-        int xOffsetAsInt = MathFunctions.RoundToInt(xOffset);
-        int yOffsetAsInt = MathFunctions.RoundToInt(yOffset);
+        // CurrentZoom is 0 until a SpriteBatch has begun.
+        float zoom = spriteRenderer.CurrentZoom > 0 ? spriteRenderer.CurrentZoom : 1;
+        int xOffsetAsScreenPixels = MathFunctions.RoundToInt(xOffset * zoom);
+        int yOffsetAsScreenPixels = MathFunctions.RoundToInt(yOffset * zoom);
 
         // otherwise, we use rounded to the zoom value, to try to get close:
         float xOffsetRoundedToZoom = MathFunctions.RoundFloat(xOffset, scaleX);
@@ -1155,9 +1157,17 @@ public class BitmapFont : IDisposable
                     }
                     else
                     {
-                        // position:
-                        destRect.X += xOffsetAsInt + lineOffset;
-                        destRect.Y += yOffsetAsInt;
+                        // Snap the block origin to a screen pixel once, then each glyph's offset from it.
+                        // SpriteRenderer.Draw snaps again, but on already-snapped positions that is a no-op.
+                        // Snapping each glyph's absolute position instead lets a sub-pixel move of the
+                        // block flip individual glyphs (uneven spacing, mismatched baselines).
+                        // Y snaps the glyph's bottom edge, so glyphs of different heights that sit on the
+                        // same baseline end on the same pixel row.
+                        float glyphX = destRect.X + lineOffset;
+                        float glyphBottom = destRect.Y + destRect.Height;
+
+                        destRect.X = (xOffsetAsScreenPixels + MathFunctions.RoundToInt(glyphX * zoom)) / zoom;
+                        destRect.Y = (yOffsetAsScreenPixels + MathFunctions.RoundToInt(glyphBottom * zoom)) / zoom - destRect.Height;
 
                         finalPosition = new Vector2(destRect.X, destRect.Y);
                     }

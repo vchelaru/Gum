@@ -73,10 +73,16 @@ public class DisplayScaleCanvasScenarioTests
             {
                 Point first = tab.WindowPointOf(200, 200);
 
+                List<string> trace = new List<string>();
                 bool isDoubleClick = ClickTwice(tab.Input.Window, first, new Point(first.X + 8, first.Y), tab.Frame,
-                    time, TimeSpan.FromMilliseconds(100), () => tab.Canvas.XnaCursor.PrimaryDoubleClick);
+                    time, TimeSpan.FromMilliseconds(100), () => tab.Canvas.XnaCursor.PrimaryDoubleClick,
+                    () =>
+                    {
+                        InputLibrary.Cursor cursor = tab.Canvas.XnaCursor;
+                        trace.Add($"({cursor.X}, {cursor.Y}) click {cursor.PrimaryClick} double {cursor.PrimaryDoubleClick}");
+                    });
 
-                isDoubleClick.ShouldBeTrue(tab.Describe());
+                isDoubleClick.ShouldBeTrue(tab.Describe() + "; per frame: " + string.Join(" | ", trace));
             }
             finally
             {
