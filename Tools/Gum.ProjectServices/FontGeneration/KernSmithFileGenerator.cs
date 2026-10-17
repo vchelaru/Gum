@@ -80,7 +80,7 @@ public class KernSmithFileGenerator : IFontFileGenerator
 
             // ToFile expects a base path WITHOUT the .fnt extension.
             string basePath = Path.ChangeExtension(outputFntPath, null);
-            result.ToFile(basePath);
+            WriteResult(result, basePath);
 
             stopwatch.Stop();
 
@@ -104,6 +104,63 @@ public class KernSmithFileGenerator : IFontFileGenerator
         }
 
         return response;
+    }
+
+    private const string StagingName = "kernsmith_staging";
+
+    /// <summary>
+    /// Writes the result's .fnt and atlas page(s) at <paramref name="basePath"/> (no extension).
+    /// KernSmith's <c>ToFile</c> names the atlas PNG with <c>Path.GetFileNameWithoutExtension</c> of the
+    /// base path, so a name with dots (a font file such as Pixel12x10-v1.1.0.ttf bakes
+    /// "Font16Pixel12x10-v1.1.0_ttf_noSmooth") loses everything after its last dot and every variant
+    /// of that font writes the same PNG. A dotted name is therefore written under a dot-free staging
+    /// name and moved into place, with the page names in the text files pointed at the final name.
+    /// </summary>
+    private static void WriteResult(BmFontResult result, string basePath)
+    {
+        string fileName = Path.GetFileName(basePath);
+        if (Path.GetFileNameWithoutExtension(basePath) == fileName)
+        {
+            result.ToFile(basePath);
+            return;
+        }
+
+        string stagingDirectory = Path.Combine(Path.GetTempPath(), "GumKernSmith_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(stagingDirectory);
+        try
+        {
+            string stagingBase = Path.Combine(stagingDirectory, StagingName);
+            result.ToFile(stagingBase);
+
+            string? targetDirectory = Path.GetDirectoryName(basePath);
+            if (!string.IsNullOrEmpty(targetDirectory))
+            {
+                Directory.CreateDirectory(targetDirectory);
+            }
+
+            foreach (string stagedFile in Directory.GetFiles(stagingDirectory))
+            {
+                string stagedName = Path.GetFileName(stagedFile);
+                string targetFile = Path.Combine(targetDirectory ?? string.Empty, fileName + stagedName.Substring(StagingName.Length));
+                string extension = Path.GetExtension(stagedFile);
+
+                if (extension == ".fnt" || extension == ".bmfc")
+                {
+                    string text = File.ReadAllText(stagedFile)
+                        .Replace($"file=\"{StagingName}_", $"file=\"{fileName}_")
+                        .Replace(stagingBase, basePath);
+                    File.WriteAllText(targetFile, text, new System.Text.UTF8Encoding(false));
+                }
+                else
+                {
+                    File.Move(stagedFile, targetFile, overwrite: true);
+                }
+            }
+        }
+        finally
+        {
+            Directory.Delete(stagingDirectory, recursive: true);
+        }
     }
 
     /// <summary>
