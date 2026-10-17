@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.csproj" />
+  <Project Path="CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.csproj" />
+  <Project Path="CodeGen_MonoGameForms_ByReference/CodeGenProject.csproj" />
+  <Project Path="CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" />
+  <Project Path="CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.csproj" />
+  <Project Path="CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.csproj" />
+  <Project Path="CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.csproj" />
+</Solution>
