@@ -36,6 +36,29 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Whether the PR touches anything but docs. The jobs below that are not required checks skip
+  # themselves on a docs-only PR (about 40 runner-minutes of nothing). The required Build-and-Test
+  # legs cannot skip at job level (their matrix names would not report), so they guard their own
+  # steps instead - see "Detect docs-only PR" there. Not a path filter on the trigger, for the reason
+  # in the top-of-file comment. Outputs 'true' for every event other than pull_request.
+  Changes:
+    runs-on: ubuntu-latest
+    outputs:
+      non-docs: ${{ github.event_name != 'pull_request' || steps.filter.outputs.non-docs == 'true' }}
+    steps:
+      - name: Detect docs-only PR
+        if: github.event_name == 'pull_request'
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          predicate-quantifier: every
+          filters: |
+            non-docs:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.gitbook/**'
+
   # The WPF Gum tool (Gum.Wpf.sln) builds with neither submodules nor .NET mobile
   # workloads: it contains no FNA projects and no mobile-TFM projects
   # (MonoGameGum/RaylibGum are not in it; the in-solution KniGum defaults to
@@ -49,7 +72,8 @@ jobs:
   # Skipped on push to main: the tool was already validated in the PR, and unlike
   # Build-and-Test this lane seeds no cache, so there is nothing to do on push.
   Build-Tool:
-    if: github.event_name != 'push' && github.event_name != 'schedule'
+    needs: Changes
+    if: github.event_name != 'push' && github.event_name != 'schedule' && needs.Changes.outputs.non-docs == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,7 +106,8 @@ jobs:
   # (macos-15) already proves the shared code there. The nightly run and workflow_dispatch run all
   # three, so a macOS-only break shows up within a day.
   Build-Avalonia-Head:
-    if: github.event_name != 'push'
+    needs: Changes
+    if: github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -122,11 +147,14 @@ jobs:
           xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --blame --blame-hang-timeout 8m --blame-hang-dump-type mini --logger "trx;LogFileName=head-process.trx" --results-directory TestResults --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTab|FullyQualifiedName~CanvasScenarioTests|FullyQualifiedName~CanvasMenuAndToolbarScenarioTests|FullyQualifiedName~DragDropScenarioTests"
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
+      # Windows already runs it in Build-and-Test, so it is not repeated here.
       - name: Gum.Presentation.Tests (shared logic on every OS)
+        if: runner.os != 'Windows'
         run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
-      # Save byte-parity (ProjectSaveParityTests) must hold on every OS, not only on the Windows
-      # runner that runs this suite in the main test job; the other tests here are headless too.
+      # Save byte-parity (ProjectSaveParityTests) must hold on every OS; Windows runs it in the main
+      # test job, so only macOS and Linux run it here.
       - name: Gum.ProjectServices.Tests (save parity on every OS)
+        if: runner.os != 'Windows'
         run: dotnet test Tests/Gum.ProjectServices.Tests/Gum.ProjectServices.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
       - name: Publish Test Results
         if: always()
@@ -164,7 +192,8 @@ jobs:
   # MonoGameGum/GumCommon, and mobile TFMs are opt-in (IncludeIOS/IncludeAndroid), so restore
   # stays on just net8.0 with no flags needed.
   Native-AOT-Smoke:
-    if: github.event_name != 'push' && github.event_name != 'schedule'
+    needs: Changes
+    if: github.event_name != 'push' && github.event_name != 'schedule' && needs.Changes.outputs.non-docs == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -212,7 +241,8 @@ jobs:
   # needs one — maui — so this job installs just that, with its own cache key,
   # rather than duplicating the full set.
   Build-Generated-Code:
-    if: github.event_name != 'schedule'
+    needs: Changes
+    if: github.event_name != 'schedule' && needs.Changes.outputs.non-docs == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
