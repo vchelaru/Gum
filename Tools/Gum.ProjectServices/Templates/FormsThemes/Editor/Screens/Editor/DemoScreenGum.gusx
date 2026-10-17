@@ -1,0 +1,1304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Editor/DemoScreenGum</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="Background.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="Background.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Background.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Background.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Background.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Background.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="Background1.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="Background1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoDialog</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Background1.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Background1.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Background1.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background1.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Background1.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Background1.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonCloseInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle1</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="ButtonCloseInstance1.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ButtonCloseInstance1.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonCloseInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="ButtonCloseInstance2.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ButtonCloseInstance2.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonConfirmInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonContainer</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="ButtonConfirmInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ButtonConfirmInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ButtonContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonContainer.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ButtonContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">16</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonDenyInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="ComboBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="ComboBoxInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ComboBoxInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="ContainerInstance.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="ContainerInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ContainerInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="ContainerInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoHud</Value>
+    </Variable>
+    <Variable Type="float" Name="ContainerInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ContainerInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ContainerInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="ContainerInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ContainerInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="ContainerInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="ContainerInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ContainerInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="string" Name="ControlLabel.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="string" Name="ControlLabel.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Control Scheme</Value>
+    </Variable>
+    <Variable Type="float" Name="ControlLabel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoDialog.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DemoDialog.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoDialog.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">349</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoDialog.X" SetsValue="true">
+      <Value xsi:type="xsd:float">425</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoDialog.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">13</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="DemoHud.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoHud.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">207</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DemoHud.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="DemoHud.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="DemoHud.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoHud.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">279</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DemoHud.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoHud.X" SetsValue="true">
+      <Value xsi:type="xsd:float">426</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DemoHud.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DemoHud.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoHud.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">346</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="DemoHud.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DemoHud.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoSettingsMenu.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DemoSettingsMenu.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoSettingsMenu.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">400</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DemoSettingsMenu.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoSettingsMenu.X" SetsValue="true">
+      <Value xsi:type="xsd:float">15</Value>
+    </Variable>
+    <Variable Type="float" Name="DemoSettingsMenu.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DemoSettingsMenu.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="string" Name="DetectResolutionsButton.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="string" Name="DetectResolutionsButton.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Detect Resolutions</Value>
+    </Variable>
+    <Variable Type="float" Name="DetectResolutionsButton.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">156</Value>
+    </Variable>
+    <Variable Type="float" Name="DetectResolutionsButton.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DetectResolutionsButton.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DetectResolutionsButton.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="DetectResolutionsButton.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">9</Value>
+    </Variable>
+    <Variable Type="float" Name="DialogBoxInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">715</Value>
+    </Variable>
+    <Variable Type="float" Name="DialogBoxInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">346</Value>
+    </Variable>
+    <Variable Type="string" Name="DifficultyLabel.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="string" Name="DifficultyLabel.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Difficulty</Value>
+    </Variable>
+    <Variable Type="float" Name="DifficultyLabel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DividerInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="DividerInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance2.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance3.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance3.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance3.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance4.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle1</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance4.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance4.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DividerInstance4.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance4.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="DividerInstance4.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance4.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerInstance5.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerInstance5.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerInstance5.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DividerInstance5.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance5.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="DividerInstance5.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DividerInstance5.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="string" Name="FullScreenCheckbox.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="string" Name="FullScreenCheckbox.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Run Fullscreen</Value>
+    </Variable>
+    <Variable Type="float" Name="FullScreenCheckbox.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">200</Value>
+    </Variable>
+    <Variable Type="float" Name="FullScreenCheckbox.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="FullScreenCheckbox.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">-26</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="HitpointsBar1.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">VerticalLines</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar1.BarPercent" SetsValue="true">
+      <Value xsi:type="xsd:float">75</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="HitpointsBar1.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Success</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="HitpointsBar1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoHud</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HitpointsBar1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar1.X" SetsValue="true">
+      <Value xsi:type="xsd:float">184</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">10</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="HitpointsBar2.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">VerticalLines</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar2.BarPercent" SetsValue="true">
+      <Value xsi:type="xsd:float">50</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="HitpointsBar2.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Warning</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar2.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="HitpointsBar2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoHud</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HitpointsBar2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar2.X" SetsValue="true">
+      <Value xsi:type="xsd:float">184</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar2.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="HitpointsBar3.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">VerticalLines</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar3.BarPercent" SetsValue="true">
+      <Value xsi:type="xsd:float">25</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="HitpointsBar3.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Danger</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar3.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="HitpointsBar3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoHud</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar3.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HitpointsBar3.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar3.X" SetsValue="true">
+      <Value xsi:type="xsd:float">184</Value>
+    </Variable>
+    <Variable Type="float" Name="HitpointsBar3.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">31</Value>
+    </Variable>
+    <Variable Type="string" Name="LabelInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MarginContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="LabelInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">New Profile Name</Value>
+    </Variable>
+    <Variable Type="float" Name="LabelInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="LabelInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">WindowStandardInstance</Value>
+    </Variable>
+    <Variable Type="string" Name="LabelInstance1.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">I am a label. I will line wrap if you resize this window. You can also grab the top part of the window to move it around. Try it!</Value>
+    </Variable>
+    <Variable Type="float" Name="LabelInstance1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="LabelInstance1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="LabelInstance1.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="LabelInstance1.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="LabelInstance1.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="LabelInstance1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">22</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="LabelInstance1.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="LabelInstance1.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="MarginContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="MarginContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MarginContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="MarginContainer.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoDialog</Value>
+    </Variable>
+    <Variable Type="float" Name="MarginContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MarginContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="MarginContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="MarginContainer.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="MarginContainer.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="MarginContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="MarginContainer.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="MarginContainer.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="MenuItems.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuItems.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuItems.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="MenuItems.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuItems.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-16</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuItems.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuItems.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="MenuItems.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="MenuItems.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuItems.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="MenuItems.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="MenuItems.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuTitle.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuTitle.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="MenuTitle.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuTitle.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuTitle.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuTitle1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuTitle1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="MenuTitle1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MarginContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuTitle1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuTitle1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuTitle2.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuTitle2.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="MenuTitle2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="MenuTitle2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MenuTitle2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="MultiLineTextBox.AcceptsReturn" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="MultiLineTextBox.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">174</Value>
+    </Variable>
+    <Variable Type="LineModeCategory" Name="MultiLineTextBox.LineModeCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Multi</Value>
+    </Variable>
+    <Variable Type="string" Name="MultiLineTextBox.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MarginContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="MultiLineTextBox.Placeholder" SetsValue="true">
+      <Value xsi:type="xsd:string">Multi-line text box</Value>
+    </Variable>
+    <Variable Type="TextWrapping" Name="MultiLineTextBox.TextWrapping" SetsValue="true">
+      <Value xsi:type="xsd:string">Wrap</Value>
+    </Variable>
+    <Variable Type="float" Name="MultiLineTextBox.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MultiLineTextBox.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="MultiLineTextBox.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">7</Value>
+    </Variable>
+    <Variable Type="string" Name="MusicLabel.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="string" Name="MusicLabel.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Music Volume</Value>
+    </Variable>
+    <Variable Type="float" Name="MusicLabel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="MusicSlider.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="MusicSlider.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="MusicSlider.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarInstance1.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">CautionLines</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance1.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Success</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarInstance1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarInstance2.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">VerticalLines</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance2.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Warning</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarInstance2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance2.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance3.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Danger</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarInstance3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance3.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarInstance3.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance3.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarInstance4.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">CautionLines</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance4.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Accent</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarInstance4.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance4.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarInstance4.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance4.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance5.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Danger</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarInstance5.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance5.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarInstance5.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarInstance5.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="RadioButtonInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="RadioButtonCategory" Name="RadioButtonInstance.RadioButtonCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">EnabledOff</Value>
+    </Variable>
+    <Variable Type="string" Name="RadioButtonInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Keyboard &amp; Mouse</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioButtonInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="RadioButtonInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="RadioButtonInstance1.IsChecked" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="RadioButtonInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="RadioButtonCategory" Name="RadioButtonInstance1.RadioButtonCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">EnabledOn</Value>
+    </Variable>
+    <Variable Type="string" Name="RadioButtonInstance1.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Gamepad</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioButtonInstance1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="RadioButtonInstance1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioButtonInstance1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="string" Name="RadioButtonInstance2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="RadioButtonCategory" Name="RadioButtonInstance2.RadioButtonCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">EnabledOff</Value>
+    </Variable>
+    <Variable Type="string" Name="RadioButtonInstance2.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Touchscreen</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioButtonInstance2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="RadioButtonInstance2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioButtonInstance2.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ResolutionBox.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">128</Value>
+    </Variable>
+    <Variable Type="string" Name="ResolutionBox.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="ResolutionBox.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ResolutionBox.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="ResolutionLabel.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="string" Name="ResolutionLabel.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Resolution</Value>
+    </Variable>
+    <Variable Type="string" Name="SoundLabel.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="string" Name="SoundLabel.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Sound Volume</Value>
+    </Variable>
+    <Variable Type="string" Name="SoundSlider.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuItems</Value>
+    </Variable>
+    <Variable Type="float" Name="SoundSlider.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SoundSlider.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="TextBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MarginContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBoxInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextBoxInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="TextBoxInstance1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MarginContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBoxInstance1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextBoxInstance1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBoxInstance1.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBoxInstance1.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">7</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TitleText.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TitleText.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Settings</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TitleText1.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TitleText1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText1.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText1.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">New Profile</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText1.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText2.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TitleText2.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TitleText2.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText2.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText2.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText2.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText2.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText2.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText2.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText2.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText2.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">MenuTitle2</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText2.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText2.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">HUD Demo</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText2.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="TreeViewInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">155</Value>
+    </Variable>
+    <Variable Type="float" Name="TreeViewInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">227</Value>
+    </Variable>
+    <Variable Type="float" Name="TreeViewInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">783</Value>
+    </Variable>
+    <Variable Type="float" Name="TreeViewInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">50</Value>
+    </Variable>
+    <Variable Type="string" Name="WindowOkButton.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">WindowStandardInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="WindowOkButton.X" SetsValue="true">
+      <Value xsi:type="xsd:float">-8</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="WindowOkButton.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="WindowOkButton.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="WindowOkButton.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">-8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="WindowOkButton.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="WindowOkButton.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="float" Name="WindowStandardInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">163</Value>
+    </Variable>
+    <Variable Type="float" Name="WindowStandardInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">313</Value>
+    </Variable>
+    <Variable Type="float" Name="WindowStandardInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">15</Value>
+    </Variable>
+    <Variable Type="float" Name="WindowStandardInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">596</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>DemoHud.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Accent.FillColor</string>
+        <string>Font = Components/Editor/Styles.Title.Font</string>
+        <string>FontSize = Components/Editor/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Title.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Title.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Title.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Title.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Title.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Title.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Accent.FillColor</string>
+        <string>Font = Components/Editor/Styles.Title.Font</string>
+        <string>FontSize = Components/Editor/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Title.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Title.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Title.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Title.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Title.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Title.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText2.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Accent.FillColor</string>
+        <string>Font = Components/Editor/Styles.Title.Font</string>
+        <string>FontSize = Components/Editor/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Title.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Title.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Title.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Title.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Title.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Title.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+  </State>
+  <Instance Name="DemoSettingsMenu" BaseType="Container" />
+  <Instance Name="Background" BaseType="NineSlice" />
+  <Instance Name="MenuTitle" BaseType="Container" />
+  <Instance Name="MenuTitle1" BaseType="Container" />
+  <Instance Name="MenuItems" BaseType="Container" />
+  <Instance Name="TitleText" BaseType="Text" />
+  <Instance Name="TitleText1" BaseType="Text" />
+  <Instance Name="ButtonCloseInstance1" BaseType="Editor/Controls/ButtonClose" />
+  <Instance Name="DividerInstance" BaseType="Editor/Elements/DividerHorizontal" />
+  <Instance Name="DividerInstance4" BaseType="Editor/Elements/DividerHorizontal" />
+  <Instance Name="ResolutionLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="ResolutionBox" BaseType="Editor/Controls/ListBox" />
+  <Instance Name="DetectResolutionsButton" BaseType="Editor/Controls/Button" />
+  <Instance Name="FullScreenCheckbox" BaseType="Editor/Controls/CheckBox" />
+  <Instance Name="DividerInstance1" BaseType="Editor/Elements/DividerHorizontal" />
+  <Instance Name="MusicLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="MusicSlider" BaseType="Editor/Controls/Slider" />
+  <Instance Name="SoundLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="SoundSlider" BaseType="Editor/Controls/Slider" />
+  <Instance Name="DividerInstance2" BaseType="Editor/Elements/DividerHorizontal" />
+  <Instance Name="ControlLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="RadioButtonInstance" BaseType="Editor/Controls/RadioButton" />
+  <Instance Name="RadioButtonInstance1" BaseType="Editor/Controls/RadioButton" />
+  <Instance Name="RadioButtonInstance2" BaseType="Editor/Controls/RadioButton" />
+  <Instance Name="DividerInstance3" BaseType="Editor/Elements/DividerHorizontal" />
+  <Instance Name="DifficultyLabel" BaseType="Editor/Controls/Label" />
+  <Instance Name="Background1" BaseType="NineSlice" />
+  <Instance Name="ComboBoxInstance" BaseType="Editor/Controls/ComboBox" />
+  <Instance Name="ButtonContainer" BaseType="Container" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Editor/Controls/ButtonConfirm" />
+  <Instance Name="WindowOkButton" BaseType="Editor/Controls/ButtonConfirm" />
+  <Instance Name="ButtonDenyInstance" BaseType="Editor/Controls/ButtonDeny" />
+  <Instance Name="DemoDialog" BaseType="Container" />
+  <Instance Name="MarginContainer" BaseType="Container" />
+  <Instance Name="LabelInstance" BaseType="Editor/Controls/Label" />
+  <Instance Name="TextBoxInstance" BaseType="Editor/Controls/TextBox" />
+  <Instance Name="TextBoxInstance1" BaseType="Editor/Controls/PasswordBox" />
+  <Instance Name="MultiLineTextBox" BaseType="Editor/Controls/TextBox" />
+  <Instance Name="DemoHud" BaseType="NineSlice" />
+  <Instance Name="TitleText2" BaseType="Text" />
+  <Instance Name="MenuTitle2" BaseType="Container" />
+  <Instance Name="PercentBarInstance" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="HitpointsBar1" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="HitpointsBar2" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="HitpointsBar3" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="PercentBarInstance1" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="PercentBarInstance2" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="DividerInstance5" BaseType="Editor/Elements/DividerHorizontal" />
+  <Instance Name="ButtonCloseInstance2" BaseType="Editor/Controls/ButtonClose" />
+  <Instance Name="PercentBarInstance3" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="PercentBarInstance4" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="PercentBarInstance5" BaseType="Editor/Elements/PercentBarIcon" />
+  <Instance Name="ContainerInstance" BaseType="Container" />
+  <Instance Name="TreeViewInstance" BaseType="Editor/Controls/TreeView" />
+  <Instance Name="DialogBoxInstance" BaseType="Editor/Controls/DialogBox" />
+  <Instance Name="WindowStandardInstance" BaseType="Editor/Controls/Window" />
+  <Instance Name="LabelInstance1" BaseType="Editor/Controls/Label" />
+  <Behaviors />
+</ScreenSave>

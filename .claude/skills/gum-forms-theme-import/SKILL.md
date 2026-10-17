@@ -14,10 +14,19 @@ bypassable — the tool never edits the user's game project.
 This is the **tool-content** side: a theme is a self-contained Gum project under
 `Tools/Gum.ProjectServices/Templates/FormsThemes/<Name>/` (its own `GumProject.gumx`,
 `Components/`, `Behaviors/`, `Screens/`, `Standards/`) that Add Forms copies into the user's
-project. `Bubblegum`, `Hazard`, `DarkPro`, `Retro95`, `ForestGlade`, `Neon`, and `Meadow` have
-parity today (staged per-theme in `Gum/GumFormsPlugin/GumFormsPlugin.csproj`'s postbuild, alongside
-the default `Standard` theme — 8 entries in the tool's theme dropdown). `Editor` exists only as a
-code-only theme (`Themes/Gum.Themes.Editor.*`).
+project. `Bubblegum`, `Hazard`, `DarkPro`, `Retro95`, `ForestGlade`, `Neon`, `Meadow`, and `Editor`
+have parity today (staged per-theme in `Gum/GumFormsPlugin/GumFormsPlugin.csproj`'s postbuild,
+alongside the default `Standard` theme — 9 entries in the tool's theme dropdown).
+
+`Editor` is the exception to "clone a themed theme": the code theme (`Themes/Gum.Themes.Editor.*`)
+leaves most controls on the stock V3 look, so the content is a copy of `Templates/FormsTemplate`
+(Standard) with `Editor/` prefixed onto every element name and four Standard names changed to match
+the other themes (`ButtonStandard`→`Button`, `ColorPickerStandard`, `ExpanderStandard`,
+`SplitterStandard`). The palette is the code theme's `EditorColors` by name and value, plus
+`PrimaryDark`/`PrimaryLight` baked from `Primary`. Only the controls the code theme restyles differ
+from Standard (outline rectangles, recessed/panel backgrounds, selection, slider thumb width;
+`EditorTemplateTests` pins each), and Text instances use `TextPrimary` where Standard uses `White`.
+Standard's `Behaviors/` (TreeView, SettingsView, ...) ride along in the theme folder.
 
 ## Porting a new theme (#3527): do the landmines up front, not reactively
 

@@ -1,0 +1,2622 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Editor/StylesScreen</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="int" Name="Bordered.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="Bordered.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Bordered.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Bordered.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="Bordered.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Bordered.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Bordered.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="Bordered.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Bordered.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Bordered.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Bordered.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Bordered.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Bordered.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Bordered.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="BracketHorizontal.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="BracketHorizontal.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BracketHorizontal.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="BracketHorizontal.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="BracketHorizontal.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="BracketHorizontal.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">72</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">72</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="BracketHorizontal.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BracketHorizontal.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="BracketHorizontal.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BracketHorizontal.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BracketHorizontal.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="BracketHorizontal.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BracketHorizontal.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="BracketVertical.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="BracketVertical.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BracketVertical.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="BracketVertical.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="BracketVertical.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="BracketVertical.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">72</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="BracketVertical.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BracketVertical.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="BracketVertical.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BracketVertical.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BracketVertical.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="BracketVertical.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BracketVertical.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonCloseInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonCloseInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonConfirmInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonConfirmInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Confirm</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonConfirmInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonDenyInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonDenyInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Deny</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonDenyInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonIconInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonIconInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="ButtonsContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ButtonsContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ButtonsContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">159</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonStandardIconInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonStandardIconInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Standard Icon</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonStandardIconInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonStandardInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonStandardInstance.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Standard</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonTabInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="ButtonTabInstance.TabDisplayText" SetsValue="true">
+      <Value xsi:type="xsd:string">Tab</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="ButtonTabInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ButtonTabInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonTabInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="ButtonTabInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="CautionLinesInstance.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="string" Name="CautionLinesInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="CautionLinesInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="CautionLinesInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="CautionLinesInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="string" Name="CheckBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="CheckBoxInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="CheckBoxInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="ColorContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="ColorContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ColorContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ColorContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">774</Value>
+    </Variable>
+    <Variable Type="float" Name="ColorContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="string" Name="ComboBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="ComboBoxInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ComboBoxInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ComboBoxInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="ControlsContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="ControlsContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ControlsContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ControlsContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">256</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ControlsContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="ControlsContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">482</Value>
+    </Variable>
+    <Variable Type="float" Name="ControlsContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="string" Name="DialogBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="DialogBoxInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DialogBoxInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DialogBoxInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerHorizontalInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerHorizontalInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DividerHorizontalInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerHorizontalInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerVerticalInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="string" Name="DividerVerticalInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="DividerVerticalInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="ElementsContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="ElementsContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ElementsContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ElementsContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">310</Value>
+    </Variable>
+    <Variable Type="float" Name="ElementsContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">14</Value>
+    </Variable>
+    <Variable Type="string" Name="IconInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="KeyboardContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">144</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="KeyboardContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="KeyboardContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">352</Value>
+    </Variable>
+    <Variable Type="float" Name="KeyboardContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">-326</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="KeyboardContainer.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="KeyboardContainer.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="KeyboardContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">77</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="KeyboardContainer.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="KeyboardContainer.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="KeyboardInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="KeyboardInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">KeyboardContainer</Value>
+    </Variable>
+    <Variable Type="string" Name="LabelInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="ListBoxInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">96</Value>
+    </Variable>
+    <Variable Type="string" Name="ListBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="ListBoxInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ListBoxInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="ListBoxInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="NineSliceStyleContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="NineSliceStyleContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="NineSliceStyleContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="NineSliceStyleContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="NineSliceStyleContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="NineSliceStyleContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">9</Value>
+    </Variable>
+    <Variable Type="float" Name="NineSliceStyleContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">14</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="Outlined.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Outlined.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Outlined.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="Outlined.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Outlined.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Outlined.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">72</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="Outlined.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Outlined.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Outlined.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Outlined.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Outlined.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Outlined.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Outlined.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="OutlinedHeavy.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="OutlinedHeavy.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="OutlinedHeavy.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="OutlinedHeavy.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="OutlinedHeavy.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="OutlinedHeavy.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">72</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="OutlinedHeavy.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="OutlinedHeavy.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="OutlinedHeavy.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="OutlinedHeavy.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="OutlinedHeavy.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="OutlinedHeavy.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="OutlinedHeavy.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="Panel.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Panel.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="Panel.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Panel.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Panel.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Panel.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Panel.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Panel.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Panel.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Panel.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="string" Name="PasswordBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="PasswordBoxInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarCautionDecor.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">CautionLines</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarCautionDecor.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarCautionDecor.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarCautionDecor.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarCautionDecor.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarIconCautionDecor.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">CautionLines</Value>
+    </Variable>
+    <Variable Type="IconCategory" Name="PercentBarIconCautionDecor.BarIcon" SetsValue="true">
+      <Value xsi:type="xsd:string">Battery</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarIconCautionDecor.BarIconColor" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarIconCautionDecor.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarIconCautionDecor.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarIconCautionDecor.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarIconCautionDecor.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarIconCautionDecor.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarIconLinesDecor.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">VerticalLines</Value>
+    </Variable>
+    <Variable Type="IconCategory" Name="PercentBarIconLinesDecor.BarIcon" SetsValue="true">
+      <Value xsi:type="xsd:string">Battery</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarIconLinesDecor.BarIconColor" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarIconLinesDecor.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarIconLinesDecor.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarIconLinesDecor.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarIconLinesDecor.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarIconLinesDecor.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarIconPrimary.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">None</Value>
+    </Variable>
+    <Variable Type="IconCategory" Name="PercentBarIconPrimary.BarIcon" SetsValue="true">
+      <Value xsi:type="xsd:string">Battery</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarIconPrimary.BarIconColor" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarIconPrimary.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarIconPrimary.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarIconPrimary.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarIconPrimary.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarIconPrimary.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="BarDecorCategory" Name="PercentBarLinesDecor.BarDecorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">VerticalLines</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarLinesDecor.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarLinesDecor.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarLinesDecor.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarLinesDecor.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="string" Name="PercentBarPrimary.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="PercentBarPrimary.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="PercentBarPrimary.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="RadioButtonInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioButtonInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="RadioButtonInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="RadioButtonInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="string" Name="SliderInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="SliderInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SliderInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="SliderInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="Solid.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Solid.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Solid.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="Solid.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Solid.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Solid.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="Solid.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Solid.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Solid.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Solid.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Solid.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Solid.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="Tab.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Tab.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Tab.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="Tab.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Tab.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Tab.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="Tab.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Tab.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Tab.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Tab.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Tab.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Tab.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Tab.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="bool" Name="TabBordered.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="TabBordered.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TabBordered.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="TabBordered.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TabBordered.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="TabBordered.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">72</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="float" Name="TabBordered.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TabBordered.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TabBordered.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TabBordered.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="TabBordered.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TabBordered.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TabBordered.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextAccent.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextAccent.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextAccent.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextAccent.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextAccent.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextAccent.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="float" Name="TextAccent.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextAccent.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextAccent.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextAccent.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextAccent.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextAccent.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextAccent.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="string" Name="TextAccent.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Accent</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextAccent.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextAccent.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextAccent.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBlack.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextBlack.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextBlack.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBlack.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBlack.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBlack.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBlack.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextBlack.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextBlack.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextBlack.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBlack.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextBlack.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBlack.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="TextBlack.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Black</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextBlack.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBlack.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextBlack.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="TextBoxInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBoxInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextDarkGray.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextDarkGray.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextDarkGray.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextDarkGray.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextDarkGray.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextDarkGray.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
+    </Variable>
+    <Variable Type="float" Name="TextDarkGray.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextDarkGray.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextDarkGray.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextDarkGray.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextDarkGray.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextDarkGray.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextDarkGray.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
+    </Variable>
+    <Variable Type="string" Name="TextDarkGray.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Dark Gray</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextDarkGray.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextDarkGray.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextDarkGray.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextEmphasis.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextEmphasis.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextEmphasis.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextEmphasis.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextEmphasis.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextEmphasis.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextEmphasis.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextEmphasis.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextEmphasis.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextEmphasis.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="TextEmphasis.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextEmphasis.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextEmphasis.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextEmphasis.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Emphasis</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextEmphasis.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextEmphasis.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextEmphasis.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextGray.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextGray.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextGray.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextGray.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextGray.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextGray.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="float" Name="TextGray.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextGray.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextGray.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextGray.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextGray.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextGray.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextGray.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="string" Name="TextGray.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Gray</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextGray.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextGray.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextGray.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextH1.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextH1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH1.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">22</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH1.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH1.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextH1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextH1.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Heading 1</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH1.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH2.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextH2.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextH2.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH2.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH2.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">18</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH2.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH2.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH2.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH2.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH2.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH2.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextH2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH2.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextH2.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Heading 2</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH2.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH3.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextH3.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextH3.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH3.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH3.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">16</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH3.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH3.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH3.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH3.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH3.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH3.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextH3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH3.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextH3.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Heading 3</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextH3.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH3.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH3.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextLightGray.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextLightGray.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextLightGray.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextLightGray.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextLightGray.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextLightGray.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="float" Name="TextLightGray.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextLightGray.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextLightGray.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextLightGray.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextLightGray.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextLightGray.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextLightGray.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="string" Name="TextLightGray.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Light Gray</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextLightGray.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextLightGray.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextLightGray.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextNormal.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextNormal.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextNormal.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextNormal.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextNormal.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextNormal.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextNormal.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextNormal.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextNormal.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextNormal.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextNormal.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextNormal.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextNormal.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextNormal.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Normal</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextNormal.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextNormal.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextNormal.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimary.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextPrimary.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextPrimary.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimary.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimary.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimary.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimary.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimary.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimary.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimary.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimary.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimary.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimary.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimary.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimary.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimary.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimary.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDark.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">51</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextPrimaryDark.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextPrimaryDark.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryDark.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDark.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDark.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">51</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryDark.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryDark.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryDark.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryDark.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryDark.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimaryDark.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDark.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">51</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimaryDark.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary Dark</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryDark.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryDark.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryDark.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryLight.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">89</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextPrimaryLight.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextPrimaryLight.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryLight.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryLight.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryLight.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">89</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryLight.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryLight.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryLight.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryLight.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryLight.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimaryLight.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryLight.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">89</Value>
+    </Variable>
+    <Variable Type="string" Name="TextPrimaryLight.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary Light</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextPrimaryLight.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryLight.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryLight.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSmall.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextSmall.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextSmall.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSmall.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSmall.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">12</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSmall.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSmall.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextSmall.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextSmall.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextSmall.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSmall.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextSmall.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSmall.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextSmall.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Small</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextSmall.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSmall.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextSmall.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextStrong.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextStrong.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextStrong.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStrong.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextStrong.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextStrong.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStrong.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextStrong.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextStrong.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextStrong.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStrong.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextStrong.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextStrong.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextStrong.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Strong</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextStrong.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStrong.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextStrong.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="TextStyleContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStyleContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextStyleContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="TextStyleContainer.Parent" SetsValue="true" />
+    <Variable Type="float" Name="TextStyleContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">85</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStyleContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">57</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStyleContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">11</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSuccess.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextSuccess.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextSuccess.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSuccess.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSuccess.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSuccess.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">167</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSuccess.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextSuccess.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextSuccess.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextSuccess.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSuccess.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextSuccess.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSuccess.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">62</Value>
+    </Variable>
+    <Variable Type="string" Name="TextSuccess.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Success</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextSuccess.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSuccess.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextSuccess.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTiny.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextTiny.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextTiny.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTiny.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTiny.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">10</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTiny.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTiny.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTiny.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextTiny.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextTiny.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTiny.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextTiny.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTiny.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextTiny.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Tiny</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextTiny.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTiny.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTiny.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTitle.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextTitle.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextTitle.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTitle.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTitle.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTitle.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTitle.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTitle.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextTitle.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextTitle.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTitle.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextTitle.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTitle.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextTitle.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">H2</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextTitle.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTitle.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTitle.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">25</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextWarning.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextWarning.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">171</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWarning.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWarning.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWarning.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextWarning.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
+    <Variable Type="string" Name="TextWarning.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Warning</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWarning.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWarning.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">41</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextWarning1.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextWarning1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning1.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">18</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWarning1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWarning1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWarning1.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning1.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextWarning1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">212</Value>
+    </Variable>
+    <Variable Type="string" Name="TextWarning1.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Danger</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWarning1.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWarning1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWhite.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextWhite.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextWhite.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWhite.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWhite.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWhite.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWhite.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWhite.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWhite.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWhite.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWhite.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="string" Name="TextWhite.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWhite.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="string" Name="TextWhite.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">White</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextWhite.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWhite.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWhite.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="string" Name="TreeViewInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ControlsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="TreeViewInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TreeViewInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="TreeViewInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="VerticalLinesInstance.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Primary</Value>
+    </Variable>
+    <Variable Type="string" Name="VerticalLinesInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">ElementsContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="VerticalLinesInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="VerticalLinesInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="VerticalLinesInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Bordered.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BracketHorizontal.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BracketVertical.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Outlined.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>OutlinedHeavy.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Panel.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Solid.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Tab.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TabBordered.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Primary.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextAccent.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Accent.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextBlack.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Black.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextDarkGray.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.DarkGray.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextEmphasis.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.Emphasis.Font</string>
+        <string>FontSize = Components/Editor/Styles.Emphasis.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Emphasis.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Emphasis.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Emphasis.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Emphasis.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Emphasis.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Emphasis.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextGray.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Gray.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextH1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.H1.Font</string>
+        <string>FontSize = Components/Editor/Styles.H1.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.H1.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.H1.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.H1.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.H1.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.H1.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.H1.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextH2.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.H2.Font</string>
+        <string>FontSize = Components/Editor/Styles.H2.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.H2.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.H2.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.H2.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.H2.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.H2.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.H2.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextH3.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.H3.Font</string>
+        <string>FontSize = Components/Editor/Styles.H3.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.H3.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.H3.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.H3.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.H3.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.H3.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.H3.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextLightGray.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.LightGray.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextNormal.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextPrimary.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Accent.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextPrimaryDark.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.PrimaryDark.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextPrimaryLight.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.PrimaryLight.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextSmall.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.Small.Font</string>
+        <string>FontSize = Components/Editor/Styles.Small.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Small.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Small.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Small.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Small.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Small.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Small.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextStrong.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.Strong.Font</string>
+        <string>FontSize = Components/Editor/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Strong.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Strong.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Strong.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Strong.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Strong.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Strong.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextSuccess.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Success.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextTiny.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.Tiny.Font</string>
+        <string>FontSize = Components/Editor/Styles.Tiny.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Tiny.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Tiny.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Tiny.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Tiny.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Tiny.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Tiny.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextTitle.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.Title.Font</string>
+        <string>FontSize = Components/Editor/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Title.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Title.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Title.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Title.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Title.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Title.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextWarning.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Warning.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextWarning1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.Danger.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextWhite.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Editor/Styles.TextPrimary.FillColor</string>
+        <string>Font = Components/Editor/Styles.Normal.Font</string>
+        <string>FontSize = Components/Editor/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Editor/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Editor/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Editor/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Editor/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Editor/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Editor/Styles.Normal.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+  </State>
+  <Instance Name="TextStyleContainer" BaseType="Container" />
+  <Instance Name="TextTitle" BaseType="Text" />
+  <Instance Name="TextH1" BaseType="Text" />
+  <Instance Name="TextH2" BaseType="Text" />
+  <Instance Name="TextH3" BaseType="Text" />
+  <Instance Name="TextNormal" BaseType="Text" />
+  <Instance Name="TextStrong" BaseType="Text" />
+  <Instance Name="TextEmphasis" BaseType="Text" />
+  <Instance Name="TextSmall" BaseType="Text" />
+  <Instance Name="TextTiny" BaseType="Text" />
+  <Instance Name="Solid" BaseType="NineSlice" />
+  <Instance Name="Bordered" BaseType="NineSlice" />
+  <Instance Name="BracketHorizontal" BaseType="NineSlice" />
+  <Instance Name="BracketVertical" BaseType="NineSlice" />
+  <Instance Name="Tab" BaseType="NineSlice" />
+  <Instance Name="TabBordered" BaseType="NineSlice" />
+  <Instance Name="Outlined" BaseType="NineSlice" />
+  <Instance Name="OutlinedHeavy" BaseType="NineSlice" />
+  <Instance Name="Panel" BaseType="NineSlice" />
+  <Instance Name="NineSliceStyleContainer" BaseType="Container" />
+  <Instance Name="ButtonsContainer" BaseType="Container" />
+  <Instance Name="ButtonStandardInstance" BaseType="Editor/Controls/Button" />
+  <Instance Name="ButtonStandardIconInstance" BaseType="Editor/Controls/ButtonStandardIcon" />
+  <Instance Name="ButtonTabInstance" BaseType="Editor/Controls/ButtonTab" />
+  <Instance Name="ButtonIconInstance" BaseType="Editor/Controls/ButtonIcon" />
+  <Instance Name="ButtonConfirmInstance" BaseType="Editor/Controls/ButtonConfirm" />
+  <Instance Name="ButtonDenyInstance" BaseType="Editor/Controls/ButtonDeny" />
+  <Instance Name="ButtonCloseInstance" BaseType="Editor/Controls/ButtonClose" />
+  <Instance Name="ElementsContainer" BaseType="Container" />
+  <Instance Name="PercentBarPrimary" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="PercentBarLinesDecor" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="PercentBarCautionDecor" BaseType="Editor/Elements/PercentBar" />
+  <Instance Name="PercentBarIconPrimary" BaseType="Editor/Elements/PercentBarIcon" />
+  <Instance Name="PercentBarIconLinesDecor" BaseType="Editor/Elements/PercentBarIcon" />
+  <Instance Name="PercentBarIconCautionDecor" BaseType="Editor/Elements/PercentBarIcon" />
+  <Instance Name="ControlsContainer" BaseType="Container" />
+  <Instance Name="LabelInstance" BaseType="Editor/Controls/Label" />
+  <Instance Name="CheckBoxInstance" BaseType="Editor/Controls/CheckBox" />
+  <Instance Name="RadioButtonInstance" BaseType="Editor/Controls/RadioButton" />
+  <Instance Name="ComboBoxInstance" BaseType="Editor/Controls/ComboBox" />
+  <Instance Name="ListBoxInstance" BaseType="Editor/Controls/ListBox" />
+  <Instance Name="SliderInstance" BaseType="Editor/Controls/Slider" />
+  <Instance Name="TextBoxInstance" BaseType="Editor/Controls/TextBox" />
+  <Instance Name="PasswordBoxInstance" BaseType="Editor/Controls/PasswordBox" />
+  <Instance Name="DividerVerticalInstance" BaseType="Editor/Elements/DividerVertical" />
+  <Instance Name="DividerHorizontalInstance" BaseType="Editor/Elements/DividerHorizontal" />
+  <Instance Name="IconInstance" BaseType="Editor/Elements/Icon" />
+  <Instance Name="CautionLinesInstance" BaseType="Editor/Elements/CautionLines" />
+  <Instance Name="VerticalLinesInstance" BaseType="Editor/Elements/VerticalLines" />
+  <Instance Name="ColorContainer" BaseType="Container" />
+  <Instance Name="TextBlack" BaseType="Text" />
+  <Instance Name="TextDarkGray" BaseType="Text" />
+  <Instance Name="TextGray" BaseType="Text" />
+  <Instance Name="TextLightGray" BaseType="Text" />
+  <Instance Name="TextWhite" BaseType="Text" />
+  <Instance Name="TextPrimaryDark" BaseType="Text" />
+  <Instance Name="TextPrimary" BaseType="Text" />
+  <Instance Name="TextPrimaryLight" BaseType="Text" />
+  <Instance Name="TextAccent" BaseType="Text" />
+  <Instance Name="TextSuccess" BaseType="Text" />
+  <Instance Name="TextWarning" BaseType="Text" />
+  <Instance Name="TextWarning1" BaseType="Text" />
+  <Instance Name="KeyboardInstance" BaseType="Editor/Controls/Keyboard" />
+  <Instance Name="KeyboardContainer" BaseType="Container" />
+  <Instance Name="TreeViewInstance" BaseType="Editor/Controls/TreeView" />
+  <Instance Name="DialogBoxInstance" BaseType="Editor/Controls/DialogBox" />
+  <Behaviors />
+</ScreenSave>

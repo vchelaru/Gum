@@ -20,7 +20,7 @@ public class FormsThemesTemplateTests
 {
     public static IEnumerable<object[]> ThemeNames => new[]
     {
-        "Bubblegum", "DarkPro", "ForestGlade", "Hazard", "Meadow", "Neon", "Retro95"
+        "Bubblegum", "DarkPro", "Editor", "ForestGlade", "Hazard", "Meadow", "Neon", "Retro95"
     }.Select(name => new object[] { name });
 
     [Theory]
@@ -71,7 +71,7 @@ public class FormsThemesTemplateTests
     private static readonly string[] AllTemplateFolders =
     {
         "FormsTemplate",
-        "FormsThemes/Bubblegum", "FormsThemes/DarkPro", "FormsThemes/ForestGlade", "FormsThemes/Hazard",
+        "FormsThemes/Bubblegum", "FormsThemes/DarkPro", "FormsThemes/Editor", "FormsThemes/ForestGlade", "FormsThemes/Hazard",
         "FormsThemes/Meadow", "FormsThemes/Neon", "FormsThemes/Retro95"
     };
 
