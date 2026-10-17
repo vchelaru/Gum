@@ -1,0 +1,325 @@
+name: Probe Windows test lane
+# Temporary probe for #6092 (push-triggered single job so it does not start the whole PR matrix).
+on:
+  push:
+    branches: ['6092-split-windows-test-lane']
+jobs:
+  Probe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build test projects (Windows)
+        run: |
+          dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
+          dotnet build "Tests/CiTestProjects.slnf" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
+
+      # ---------------------------------------------------------------------
+      # Test allow-list policy
+      #
+      # GitHub Actions runners have no GPU. We can only run test projects whose
+      # tests do not instantiate a real GraphicsDevice / window / native renderer.
+      # Auto-discovery (`dotnet test <solution>`) is tempting but unsafe here —
+      # it would pull in projects whose tests open raylib windows, spin up
+      # MonoGame integration harnesses, etc. So we maintain an explicit list.
+      #
+      # When you add a new test project, decide which bucket it belongs to and
+      # update both this list and the comments below.
+      #
+      # Bucket A suites BLOCK the merge — a red test fails the job (no
+      # continue-on-error). Keep them green.
+      #
+      # Bucket A — RUN IN CI (headless: pure data, IO, codegen, analyzers, or
+      # MonoGame's headless TestGame harness):
+      #   - MonoGameGum.Tests              (headless TestGame harness)
+      #   - GumToolUnitTests               (WPF tool unit tests; Windows only —
+      #                                     now runs in the separate Build-Tool
+      #                                     job at the top of this file, #3349)
+      #   - Gum.Bundle.Tests               (brotli/tar/format; pure IO)
+      #   - Gum.ProjectServices.Tests      (headless project loading, codegen)
+      #   - Gum.Presentation.Tests         (headless undo/redo + relocated tool
+      #                                     ViewModels; references Gum.Presentation
+      #                                     alone, no WPF/WinForms — ADR-0005)
+      #   - Gum.ProjectServices.SkiaGum.Tests (SkiaGum SVG export — renders into
+      #                                     SKSvgCanvas, CPU-only like SkiaGum.Tests)
+      #   - Gum.Analyzers.Tests            (Roslyn analyzers; pure compilation)
+      #   - Gum.AssemblyNameGuard.Tests    (MSBuild buildTransitive collision guard;
+      #                                     shells out to `dotnet build` against temp
+      #                                     projects, no window/GPU. #4311)
+      #   - Gum.RepoHygiene.Tests          (checked-in .sln files reference only
+      #                                     projects that exist; pure IO. #4695)
+      #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts, the
+      #                                     raylib-backend screenshot test, and the
+      #                                     diff-screenshots test (which renders via
+      #                                     BOTH MonoGame and raylib) all self-gate
+      #                                     by OS at runtime — see
+      #                                     ScreenshotCommandTests/
+      #                                     DiffScreenshotsCommandTests, #4174 —
+      #                                     rather than being excluded via a Trait.
+      #                                     Runs after "Install Mesa" below since
+      #                                     those tests need it on Windows)
+      #   - Gum.ImageDiff.Tests            (PixelComparer; pure SkiaSharp bitmap
+      #                                     comparison, no window/GL, fully headless)
+      #   - SkiaGum.Tests                  (renders into an in-memory CPU raster
+      #                                     SKSurface — no GPU / window / GL. It
+      #                                     was wrongly excluded as "needs a
+      #                                     window"; it is fully headless. #3233)
+      #   - Gum.NetStandard.Tests          (GumCommon/SkiaGum netstandard2.1 builds,
+      #                                     the ones Unity loads, run on .NET 10;
+      #                                     CPU raster SKSurface, headless. #5508)
+      #   - SilkNetGum.Tests               (Gum.SilkNet runtime: SkiaGum renderer +
+      #                                     Silk.NET.Input host. CPU raster SKSurface
+      #                                     + mocked input, fully headless. #3605)
+      #   - UnityGum.Tests                 (Unity runtime: SkiaGum renderer + host-
+      #                                     pushed input; no Unity needed. #5506)
+      #   - RaylibGum.Tests                (raylib runtime; Windows-only. Needs an
+      #                                     OpenGL 3.3 context the GPU-less runners
+      #                                     lack, supplied by Mesa llvmpipe software
+      #                                     GL dropped in by the "Install Mesa" step
+      #                                     right before it. #3250)
+      #   - Gum.ProjectServices.Raylib.Tests (RaylibScreenshotService — same real
+      #                                     raylib window/OpenGL context as
+      #                                     RaylibGum.Tests above, needs the same
+      #                                     Mesa llvmpipe DLLs. #4174)
+      #   - Gum.ProjectServices.MonoGame.Tests (MonoGameScreenshotService — real
+      #                                     MonoGame Game + GraphicsDevice like
+      #                                     MonoGameGum.IntegrationTests below,
+      #                                     same Mesa llvmpipe DLLs. #4403)
+      #   - MonoGameGum.IntegrationTests   (real MonoGame Game + GraphicsDevice;
+      #                                     Windows-only, on the same Mesa llvmpipe
+      #                                     software GL as RaylibGum.Tests. Promoted
+      #                                     from Bucket D in #4190 — see the note
+      #                                     under that bucket below)
+      #   - MonoGameGum.Shapes.Tests       (Apos.Shapes-backed shape runtimes;
+      #                                     Windows-only, same Mesa llvmpipe software
+      #                                     GL. Promoted from Bucket D in #4198: its
+      #                                     harness turned out to be fully headless —
+      #                                     every test explicitly avoids creating a
+      #                                     GraphicsDevice (see the "no GraphicsDevice"
+      #                                     comments in CircleRuntimeTests /
+      #                                     RectangleRuntimeTests / RenderableShapeBaseTests)
+      #                                     — so Bucket D's "requires a real graphics
+      #                                     device" premise never applied to it. Still
+      #                                     verified with a real Mesa llvmpipe run
+      #                                     before promotion per the linked issue.)
+      #
+      # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
+      # mix headless and graphics-using tests in the same project; would need
+      # xUnit traits or filter-by-class to split):
+      #   - MonoGameGum.Tests.V3           (V1 is headless; V3 likely is too —
+      #                                     verify before enabling)
+      #
+      # Bucket C — (empty) RaylibGum.Tests used to live here as "cannot run in CI
+      # yet". It graduated to Bucket A in #3250: the macOS probe hung at GLFW/Cocoa
+      # window creation, but the Windows job supplies software GL via Mesa llvmpipe
+      # (Win32 window creation is not main-thread-coupled like Cocoa), so it now
+      # runs headless and blocks. See the Install Mesa + RaylibGum.Tests steps below.
+      #
+      # Bucket D — (empty) both remaining entries were resolved in #4198.
+      # MonoGameGum.Shapes.Tests graduated to Bucket A above: it turned out to be
+      # fully headless (no GraphicsDevice at all), so the original "requires a real
+      # graphics device" rationale never applied to it.
+      # MonoGameFum.FromFile.Tests (a typo'd "MonoGameGum") was dead scaffolding —
+      # a csproj with zero source files and zero project references, added by
+      # accident in an unrelated PR (#2085) and never filled in. Deleted rather
+      # than promoted or documented as excluded, since there was nothing in it to
+      # run or to protect.
+      #
+      # MonoGameGum.IntegrationTests graduated from Bucket D to Bucket A in #4190. Its
+      # "needs a real GraphicsDevice" exclusion predated Mesa llvmpipe (#3250) and was
+      # already contradicted by two jobs: Native-AOT-Smoke drives a real Game +
+      # GraphicsDevice + Texture2D upload on this runner, and Gum.Cli.Tests renders via
+      # MonoGame under `dotnet test` with the same Mesa DLLs. The suite uses the identical
+      # MonoGame.Framework.DesktopGL, and its MinimalGame hosts match the AOT harness's
+      # SmokeGame. The gap had a cost: a DrawAllocationTests ratchet went red for 129
+      # commits with nothing to catch it.
+      # ---------------------------------------------------------------------
+
+      # continue-on-error was removed from the Bucket-A suites below (#3233): a red
+      # test now fails the job and blocks the merge. Note the trade-off — the first
+      # failing suite short-circuits the suites listed after it; the "Publish Test
+      # Results" step runs with always() so whatever trx were produced are still
+      # reported.
+      - name: MonoGameGum.Tests
+        continue-on-error: true
+        run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.Bundle.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.Bundle.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.ProjectServices.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.ImageDiff.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.ImageDiff.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.Presentation.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.Presentation.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.AssemblyNameGuard.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.AssemblyNameGuard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.RepoHygiene.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.RepoHygiene.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.Analyzers.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.Analyzers.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # SkiaGum.Tests renders into an in-memory CPU raster SKSurface (no GPU / window /
+      # GL), so it runs headless on CI like the suites above and blocks on failure. It
+      # was previously excluded by mistake — the old comment claimed it needed window
+      # plumbing, which is not true of these tests. #3233
+      - name: SkiaGum.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # Runs the netstandard2.1 builds of GumCommon and SkiaGum (what Unity loads), so their
+      # netstandard2.1-only branches execute. Headless like SkiaGum.Tests. #5508
+      - name: Gum.NetStandard.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.NetStandard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # SilkNetGum.Tests is the Gum.SilkNet runtime (SkiaGum renderer + Silk.NET.Input host).
+      # Like SkiaGum.Tests it renders into an in-memory CPU raster SKSurface and mocks input —
+      # no GPU / window / GL — so it runs headless and blocks on failure. #3605
+      - name: SilkNetGum.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/SilkNetGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # UnityGum.Tests is the Unity runtime (SkiaGum renderer + host-pushed input). No Unity needed:
+      # the runtime references no Unity assembly, and the tests draw into a CPU raster SKSurface. #5506
+      - name: UnityGum.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/UnityGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
+      # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
+      # like SkiaGum.Tests above, so it blocks on failure too. #3259
+      - name: Gum.ProjectServices.SkiaGum.Tests
+        continue-on-error: true
+        run: dotnet test "Tests/Gum.ProjectServices.SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # --- RaylibGum.Tests via Mesa llvmpipe software GL (Windows, #3250) ---------
+      # raylib's InitWindow needs an OpenGL 3.3 context the GPU-less runners lack.
+      # Mesa's llvmpipe is a software GL rasterizer; raylib's native lib imports
+      # opengl32.dll by name, and Windows resolves that from the test host's own
+      # directory BEFORE System32, so dropping Mesa's opengl32.dll (+ its gallium/
+      # glapi siblings) next to the built test binaries overrides the GL-less system
+      # stub with a working software implementation. An earlier macOS probe (#3233)
+      # HUNG at window creation (GLFW/Cocoa needs the main thread); Win32 window
+      # creation is not main-thread-coupled, so it works headless here.
+      #
+      # This is a BLOCKING Bucket-A suite (promoted from an advisory probe in #3250
+      # after a clean 351/351 run). The install step feeds that blocking gate, so
+      # its download is cached + retried against transient GitHub-releases hiccups
+      # (./.github/actions/install-mesa-llvmpipe, shared with Native-AOT-Smoke's
+      # Mesa install step above - #4915); the timeout-minutes guard on the test
+      # step stays so a hang fails fast instead of burning the job budget, and the
+      # trx now lands in the shared TestResults dir so the "Publish Test Results"
+      # reporter gates on it like every other suite.
+      - name: "Install Mesa llvmpipe (Windows, #3250)"
+        continue-on-error: true
+        uses: ./.github/actions/install-mesa-llvmpipe
+        with:
+          dest-dirs: |
+            Tests/RaylibGum.Tests/bin/Release/net8.0
+            Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net10.0
+            Tests/Gum.Cli.Tests/bin/Release/net10.0
+            Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0
+            Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0
+            Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0
+
+      # Moved here (after Mesa is installed) because ScreenshotCommandTests and
+      # DiffScreenshotsCommandTests exercise `gumcli screenshot --backend raylib` and
+      # `gumcli diff-screenshots` (#4174), which need the same software-GL override as RaylibGum.Tests
+      # below (diff-screenshots also renders via MonoGame — same Mesa DLLs cover both). Runs on both
+      # OSes (no runner.os gate) like before this move — only the raylib-touching tests self-skip on
+      # non-Windows (see their own comments).
+      - name: Gum.Cli.Tests
+        continue-on-error: true
+        env:
+          GALLIUM_DRIVER: llvmpipe   # only consulted by the raylib-touching tests, themselves
+                                     # Windows-only; harmless no-op elsewhere
+        run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: "RaylibGum.Tests (Windows, #3250)"
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/RaylibGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # RaylibScreenshotService (#4174) — same real raylib window/OpenGL context as
+      # RaylibGum.Tests above, via the same Mesa llvmpipe DLLs copied in the step above.
+      - name: "Gum.ProjectServices.Raylib.Tests (Windows, #4174)"
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/Gum.ProjectServices.Raylib.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # MonoGameScreenshotService (#4403) — real MonoGame Game + GraphicsDevice, same Mesa
+      # llvmpipe DLLs copied above. Pins the fix for Circle/rounded-rectangle instances
+      # (Apos.Shapes-backed) rendering with renderable construction defaults instead of the
+      # element's actual state because ShapeRenderer.Self was never initialized.
+      - name: "Gum.ProjectServices.MonoGame.Tests (Windows, #4403)"
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/Gum.ProjectServices.MonoGame.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # Real MonoGame Game + GraphicsDevice per test, on the same Mesa llvmpipe DLLs copied above
+      # (#4190). Windows-only because Mesa is dropped in as Windows DLLs. The suite also runs locally
+      # on macOS: its own Main runs every test on the process main thread, which Cocoa requires (#5025).
+      #
+      # All tests run unfiltered, including the 7 RenderTargetEffectTests that compile a .fx with
+      # ShadowDusk for PlatformTarget.OpenGL. That target used to fail here with "DXIL container
+      # mismatch for 'PSVRuntimeInfoSize'" — a stray, unpaired dxil.dll ShadowDusk's native loader
+      # wrote to the app base directory at runtime, which Windows' DLL search order picked up ahead
+      # of the correctly RID-scoped, version-paired copy under runtimes\win-x64\native. Fixed
+      # upstream in ShadowDusk.Compiler 0.17.0 (#4195).
+      - name: "MonoGameGum.IntegrationTests (Windows, #4190)"
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        # console;verbosity=normal streams every test's duration as it finishes, so a timeout
+        # still shows where the time went (#6078).
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --logger "console;verbosity=normal" --results-directory "TestResults"
+
+      # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
+      # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
+      # above, though verification showed every test here mocks out GraphicsDevice entirely.
+      - name: "MonoGameGum.Shapes.Tests (Windows, #4198)"
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/MonoGameGum.Shapes.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
+      # page alone (#6092).
+      - name: Slowest tests
+        continue-on-error: true
+        shell: pwsh
+        run: ./.github/scripts/trx-slowest.ps1 -ResultsDirectory TestResults
+
+      - name: Upload TestResults
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-testresults
+          path: TestResults
