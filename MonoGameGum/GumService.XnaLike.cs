@@ -544,10 +544,6 @@ public partial class GumService
             Text.Customizations.Clear();
             Text.ContextCustomizations.Clear();
 
-            // The radio button groups are keyed by each button's parent visual, so without this every
-            // radio button tree built since startup, and whatever it references, stays reachable.
-            Gum.Forms.Controls.RadioButton.ClearDictionary();
-
             // Fixed built-ins on the shared graphics device, not project data, so every service uses the
             // same ones until the last leaves.
             Text.DefaultBitmapFont = null;
