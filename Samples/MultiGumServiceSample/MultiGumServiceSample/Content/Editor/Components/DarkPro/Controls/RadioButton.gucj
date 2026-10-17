@@ -1,0 +1,2148 @@
+{
+  "Name": "DarkPro/Controls/RadioButton",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "FocusedIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "FocusedIndicator.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "FocusedIndicator.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "FocusedIndicator.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "FocusedIndicator.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "FocusedIndicator.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "FocusedIndicator.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "FocusedIndicator.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -2
+        },
+        {
+          "Name": "FocusedIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusedIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusedIndicator.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "Radio.ExposeChildrenEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Radio.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "Radio.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "Radio.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Radio.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Radio.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "Radio.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Radio.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Radio.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "RadioBackground"
+        },
+        {
+          "Name": "Radio.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Radio.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Radio.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "Radio.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Radio.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Radio.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Radio.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Radio.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Radio.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Radio.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "RadioBackground.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 38
+        },
+        {
+          "Name": "RadioBackground.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "RadioBackground.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "RadioBackground.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "RadioBackground.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "RadioBackground.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "RadioBackground.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "RadioBackground.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "RadioBackground.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "RadioBackground.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "RadioBackground.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "RadioBackground.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "RadioBackground.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "RadioBackground.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "RadioBackground.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "RadioBackground.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "RadioBackground.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "RadioButtonCategoryState",
+          "Type": "RadioButtonCategory"
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "ExposedAsName": "Text",
+          "SetsValue": true,
+          "ValueAsString": "Radio Label"
+        },
+        {
+          "Name": "TextInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -28
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 28
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 128
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor",
+            "Font = Components/DarkPro/Styles.Normal.Font",
+            "FontSize = Components/DarkPro/Styles.Normal.FontSize"
+          ]
+        },
+        {
+          "Name": "FocusedIndicator.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        },
+        {
+          "Name": "Radio.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        },
+        {
+          "Name": "RadioBackground.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Surface1.FillColor",
+            "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "RadioButtonCategory",
+      "States": [
+        {
+          "Name": "EnabledOn",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "EnabledOff",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledOn",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledOff",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedOn",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.BorderHover.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedOff",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.BorderHover.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "PushedOn",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 30
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.PressedFill.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "PushedOff",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 30
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.PressedFill.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "FocusedOn",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "FocusedOff",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedFocusedOn",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedFocusedOff",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledFocusedOn",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledFocusedOff",
+          "Variables": [
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "Radio.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "Radio.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "RadioBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "RadioBackground.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "RadioBackground.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "RadioBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor",
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "Radio.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "RadioBackground",
+      "BaseType": "Circle"
+    },
+    {
+      "Name": "Radio",
+      "BaseType": "Circle"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "FocusedIndicator",
+      "BaseType": "Circle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "RadioButtonBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "RadioButtonCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

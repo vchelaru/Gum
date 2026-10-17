@@ -1,0 +1,560 @@
+{
+  "Name": "ForestGlade/Controls/Slider",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "SliderCategoryState",
+          "Type": "SliderCategory"
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "ThumbInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "ThumbInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ThumbInstance.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TrackInstance"
+        },
+        {
+          "Name": "ThumbInstance.ShowFocusRect",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "ThumbInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 18
+        },
+        {
+          "Name": "ThumbInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ThumbInstance.X",
+          "Type": "float",
+          "ExposedAsName": "SliderPercent"
+        },
+        {
+          "Name": "ThumbInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ThumbInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ThumbInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ThumbInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "TrackFill.Blue2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "TrackFill.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "TrackFill.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 59
+        },
+        {
+          "Name": "TrackFill.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 178
+        },
+        {
+          "Name": "TrackFill.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 8
+        },
+        {
+          "Name": "TrackFill.GradientType",
+          "Type": "GradientType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TrackFill.GradientX1",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.GradientX1Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TrackFill.GradientX2",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.GradientX2Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackFill.GradientY1",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.GradientY1Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackFill.GradientY2",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.GradientY2Units",
+          "Type": "GeneralUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackFill.Green2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "TrackFill.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "TrackFill.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TrackFill.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "TrackFill.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "TrackInstance"
+        },
+        {
+          "Name": "TrackFill.Red2",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "TrackFill.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.UseGradient",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "TrackFill.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackFill.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackFill.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "TrackFill.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackFill.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackFill.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "TrackInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TrackInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -18
+        },
+        {
+          "Name": "TrackInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TrackInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "TrackInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TrackInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 128
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "SliderCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [
+            {
+              "Name": "ThumbInstance.ButtonCategoryState",
+              "Type": "ButtonCategory",
+              "SetsValue": true,
+              "ValueAsString": "Enabled"
+            },
+            {
+              "Name": "ThumbInstance.ShowFocusRect",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [
+            {
+              "Name": "ThumbInstance.ButtonCategoryState",
+              "Type": "ButtonCategory",
+              "SetsValue": true,
+              "ValueAsString": "Highlighted"
+            },
+            {
+              "Name": "ThumbInstance.ShowFocusRect",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Pushed",
+          "Variables": [
+            {
+              "Name": "ThumbInstance.ButtonCategoryState",
+              "Type": "ButtonCategory",
+              "SetsValue": true,
+              "ValueAsString": "Pushed"
+            },
+            {
+              "Name": "ThumbInstance.ShowFocusRect",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [
+            {
+              "Name": "ThumbInstance.ButtonCategoryState",
+              "Type": "ButtonCategory",
+              "SetsValue": true,
+              "ValueAsString": "Focused"
+            },
+            {
+              "Name": "ThumbInstance.ShowFocusRect",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocused",
+          "Variables": [
+            {
+              "Name": "ThumbInstance.ButtonCategoryState",
+              "Type": "ButtonCategory",
+              "SetsValue": true,
+              "ValueAsString": "HighlightedFocused"
+            },
+            {
+              "Name": "ThumbInstance.ShowFocusRect",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [
+            {
+              "Name": "ThumbInstance.ButtonCategoryState",
+              "Type": "ButtonCategory",
+              "SetsValue": true,
+              "ValueAsString": "Disabled"
+            },
+            {
+              "Name": "ThumbInstance.ShowFocusRect",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TrackFill.Blue2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 56
+            },
+            {
+              "Name": "TrackFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 56
+            },
+            {
+              "Name": "TrackFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 68
+            },
+            {
+              "Name": "TrackFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 44
+            },
+            {
+              "Name": "TrackFill.Green2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 68
+            },
+            {
+              "Name": "TrackFill.Red2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 44
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocused",
+          "Variables": [
+            {
+              "Name": "ThumbInstance.ButtonCategoryState",
+              "Type": "ButtonCategory",
+              "SetsValue": true,
+              "ValueAsString": "DisabledFocused"
+            },
+            {
+              "Name": "ThumbInstance.ShowFocusRect",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TrackFill.Blue2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 56
+            },
+            {
+              "Name": "TrackFill.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 56
+            },
+            {
+              "Name": "TrackFill.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 68
+            },
+            {
+              "Name": "TrackFill.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 44
+            },
+            {
+              "Name": "TrackFill.Green2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 68
+            },
+            {
+              "Name": "TrackFill.Red2",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 44
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "TrackInstance",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "TrackFill",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ThumbInstance",
+      "BaseType": "ForestGlade/Controls/SliderThumb"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "SliderBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "SliderCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

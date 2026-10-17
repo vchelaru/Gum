@@ -1,0 +1,102 @@
+{
+  "Name": "SliderBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "Minimum",
+      "Type": "double",
+      "SetsValue": true,
+      "ValueAsDouble": 0
+    },
+    {
+      "Name": "Maximum",
+      "Type": "double",
+      "SetsValue": true,
+      "ValueAsDouble": 100
+    },
+    {
+      "Name": "Value",
+      "Type": "double",
+      "SetsValue": true,
+      "ValueAsDouble": 0
+    },
+    {
+      "Name": "SmallChange",
+      "Type": "double",
+      "SetsValue": true,
+      "Description": "Step size for arrow keys / mouse wheel.",
+      "ValueAsDouble": 1
+    },
+    {
+      "Name": "LargeChange",
+      "Type": "double",
+      "SetsValue": true,
+      "Description": "Step size for clicks on the track.",
+      "ValueAsDouble": 10
+    },
+    {
+      "Name": "TicksFrequency",
+      "Type": "double",
+      "SetsValue": true,
+      "ValueAsDouble": 1
+    },
+    {
+      "Name": "IsSnapToTickEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": false
+    }
+  ],
+  "ToolOnlyVariableReferences": [],
+  "Categories": [
+    {
+      "Name": "SliderCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocused",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "RequiredInstances": [
+    {
+      "Behaviors": [],
+      "Name": "TrackInstance",
+      "BaseType": "Container"
+    }
+  ],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "DarkPro/Controls/Slider"
+}

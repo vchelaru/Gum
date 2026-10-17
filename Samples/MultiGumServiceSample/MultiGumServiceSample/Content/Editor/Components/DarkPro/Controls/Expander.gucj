@@ -1,0 +1,701 @@
+{
+  "Name": "DarkPro/Controls/Expander",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "ArrowIndicator.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "ArrowIndicator.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Regular.ttf"
+        },
+        {
+          "Name": "ArrowIndicator.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "ArrowIndicator.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "ArrowIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ArrowIndicator.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ArrowIndicator.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ArrowIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HeaderContainer"
+        },
+        {
+          "Name": "ArrowIndicator.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "ArrowIndicator.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "\u002B"
+        },
+        {
+          "Name": "ArrowIndicator.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ArrowIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "ArrowIndicator.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ArrowIndicator.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 4
+        },
+        {
+          "Name": "ArrowIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ArrowIndicator.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ArrowIndicator.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ArrowIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ArrowIndicator.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "ContentContainer.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ContentContainer.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "ContentContainer.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "ContentContainer.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "ContentContainer.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "DefaultChildContainer",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "ContentContainer"
+        },
+        {
+          "Name": "ExpanderCategoryState",
+          "Type": "ExpanderCategory"
+        },
+        {
+          "Name": "HeaderBackground.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "HeaderBackground.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 38
+        },
+        {
+          "Name": "HeaderBackground.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "HeaderBackground.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "HeaderBackground.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeaderBackground.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HeaderBackground.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "HeaderBackground.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HeaderContainer"
+        },
+        {
+          "Name": "HeaderBackground.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeaderBackground.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeaderBackground.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HeaderBackground.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeaderBackground.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "HeaderBackground.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "HeaderBackground.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeaderBackground.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "HeaderBackground.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "HeaderContainer.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "HeaderContainer.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 32
+        },
+        {
+          "Name": "HeaderContainer.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HeaderContainer.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeaderContainer.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "HeaderContainer"
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "ExposedAsName": "Header",
+          "SetsValue": true,
+          "ValueAsString": "Expander"
+        },
+        {
+          "Name": "TextInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -48
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 40
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "HeaderBackground.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+          ]
+        },
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor",
+            "Font = Components/DarkPro/Styles.Normal.Font",
+            "FontSize = Components/DarkPro/Styles.Normal.FontSize"
+          ]
+        },
+        {
+          "Name": "ArrowIndicator.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor",
+            "Font = Components/DarkPro/Styles.Normal.Font",
+            "FontSize = Components/DarkPro/Styles.Normal.FontSize"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ExpanderCategory",
+      "States": [
+        {
+          "Name": "Collapsed",
+          "Variables": [
+            {
+              "Name": "ArrowIndicator.Text",
+              "Type": "string",
+              "SetsValue": true,
+              "ValueAsString": "\u002B"
+            },
+            {
+              "Name": "ContentContainer.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Expanded",
+          "Variables": [
+            {
+              "Name": "ArrowIndicator.Text",
+              "Type": "string",
+              "SetsValue": true,
+              "ValueAsString": "-"
+            },
+            {
+              "Name": "ContentContainer.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledCollapsed",
+          "Variables": [
+            {
+              "Name": "ArrowIndicator.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "ArrowIndicator.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "ArrowIndicator.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "ArrowIndicator.Text",
+              "Type": "string",
+              "SetsValue": true,
+              "ValueAsString": "\u002B"
+            },
+            {
+              "Name": "ContentContainer.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "ArrowIndicator.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledExpanded",
+          "Variables": [
+            {
+              "Name": "ArrowIndicator.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "ArrowIndicator.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "ArrowIndicator.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "ArrowIndicator.Text",
+              "Type": "string",
+              "SetsValue": true,
+              "ValueAsString": "-"
+            },
+            {
+              "Name": "ContentContainer.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "ArrowIndicator.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "HeaderContainer",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "HeaderBackground",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "ArrowIndicator",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "ContentContainer",
+      "BaseType": "Container"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ExpanderBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ExpanderCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

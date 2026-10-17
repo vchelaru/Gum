@@ -1,0 +1,36 @@
+{
+  "Name": "DarkPro/Controls/StackPanel",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "StackPanelBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "StackSpacing",
+    "ChildrenLayout"
+  ]
+}

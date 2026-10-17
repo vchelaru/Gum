@@ -1,0 +1,60 @@
+{
+  "Name": "ExpanderBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "IsExpanded",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": false
+    }
+  ],
+  "ToolOnlyVariableReferences": [
+    "ExpanderCategoryState = IsEnabled ? (IsExpanded ? \u0022Expanded\u0022 : \u0022Collapsed\u0022) : (IsExpanded ? \u0022DisabledExpanded\u0022 : \u0022DisabledCollapsed\u0022)"
+  ],
+  "Categories": [
+    {
+      "Name": "ExpanderCategory",
+      "States": [
+        {
+          "Name": "Collapsed",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Expanded",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledCollapsed",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledExpanded",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "RequiredInstances": [],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "ForestGlade/Controls/Expander"
+}

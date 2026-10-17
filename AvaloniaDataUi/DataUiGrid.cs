@@ -115,6 +115,13 @@ public class DataUiGrid : UserControl, IDataUiGrid
     /// </summary>
     public Func<Control, Control>? RowDecorator { get; set; }
 
+    /// <summary>
+    /// Members that share a row. A category holding both members of a pair shows them side by side, at
+    /// the first member's place; a pair missing a member (excluded, or filtered away) shows as ordinary
+    /// single rows. Set before the categories are shown.
+    /// </summary>
+    public IReadOnlyList<RowPair> RowPairs { get; set; } = Array.Empty<RowPair>();
+
     /// <summary>Whether rows alternate a faint dark stripe; on by default, as in the WPF grid.</summary>
     public bool AlternatesRowBackgrounds
     {

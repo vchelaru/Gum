@@ -1,0 +1,107 @@
+{
+  "Name": "ScrollViewerBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "SmallChange",
+      "Type": "double",
+      "SetsValue": true,
+      "Description": "Step size for arrow buttons / mouse wheel.",
+      "ValueAsDouble": 1
+    },
+    {
+      "Name": "LargeChange",
+      "Type": "double",
+      "SetsValue": true,
+      "Description": "Step size for clicks on the scroll bar track.",
+      "ValueAsDouble": 10
+    },
+    {
+      "Name": "VerticalScrollBarVisibility",
+      "Type": "ScrollBarVisibility",
+      "SetsValue": true,
+      "Description": "Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.",
+      "ValueAsString": "Auto"
+    },
+    {
+      "Name": "HorizontalScrollBarVisibility",
+      "Type": "ScrollBarVisibility",
+      "SetsValue": true,
+      "Description": "Auto shows the bar only when content overflows; Visible always shows it; Hidden never shows it.",
+      "ValueAsString": "Auto"
+    }
+  ],
+  "ToolOnlyVariableReferences": [
+    "ScrollBarVisibilityState = VerticalScrollBarVisibility == \u0022Hidden\u0022 ? (HorizontalScrollBarVisibility == \u0022Hidden\u0022 ? \u0022NoScrollBar\u0022 : \u0022HorizontalScrollVisible\u0022) : (HorizontalScrollBarVisibility == \u0022Hidden\u0022 ? \u0022VerticalScrollVisible\u0022 : \u0022BothScrollVisible\u0022)"
+  ],
+  "Categories": [
+    {
+      "Name": "ScrollBarVisibility",
+      "States": [
+        {
+          "Name": "NoScrollBar",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "VerticalScrollVisible",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    },
+    {
+      "Name": "ScrollViewerCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "RequiredInstances": [
+    {
+      "Behaviors": [
+        {
+          "Name": "ScrollBarBehavior"
+        }
+      ],
+      "Name": "VerticalScrollBarInstance",
+      "BaseType": ""
+    },
+    {
+      "Behaviors": [],
+      "Name": "InnerPanelInstance",
+      "BaseType": ""
+    },
+    {
+      "Behaviors": [],
+      "Name": "ClipContainerInstance",
+      "BaseType": ""
+    }
+  ],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "DarkPro/Controls/ScrollViewer"
+}

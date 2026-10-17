@@ -1,0 +1,167 @@
+{
+  "Name": "Polygon",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Alpha",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Blue",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "ExposeChildrenEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Green",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "HasEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "IgnoredByParentSize",
+          "Type": "bool",
+          "Category": "Parent",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Parent",
+          "Type": "string",
+          "Category": "Parent",
+          "SetsValue": true
+        },
+        {
+          "Name": "Red",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Rotation",
+          "Type": "float",
+          "Category": "Flip and Rotation",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "Visible",
+          "Type": "bool",
+          "Category": "States and Visibility",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "X",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Y",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "YOrigin",
+          "Type": "VerticalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "YUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "Points",
+          "Type": "Vector2",
+          "Category": "Points",
+          "Vector2Values": [
+            {
+              "X": 0,
+              "Y": 0
+            },
+            {
+              "X": 32,
+              "Y": 0
+            },
+            {
+              "X": 32,
+              "Y": 32
+            },
+            {
+              "X": 0,
+              "Y": 32
+            },
+            {
+              "X": 0,
+              "Y": 0
+            }
+          ]
+        },
+        {
+          "Name": "VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": []
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

@@ -1,0 +1,392 @@
+{
+  "FontRanges": "32-126,160-255,9632-9727,10003-10007",
+  "FontSpacingVertical": 1,
+  "FontSpacingHorizontal": 1,
+  "UseFontCharacterFile": false,
+  "AutoSizeFontOutputs": false,
+  "FontGenerator": 1,
+  "Version": 6,
+  "DefaultCanvasWidth": 1024,
+  "DefaultCanvasHeight": 768,
+  "CustomCanvasSizes": [
+    {
+      "Width": null,
+      "Height": null,
+      "FriendlyName": "Project Default"
+    },
+    {
+      "Width": 640,
+      "Height": 480,
+      "FriendlyName": "480p"
+    },
+    {
+      "Width": 1280,
+      "Height": 720,
+      "FriendlyName": "720p"
+    },
+    {
+      "Width": 1280,
+      "Height": 800,
+      "FriendlyName": "Steam Deck"
+    },
+    {
+      "Width": 1920,
+      "Height": 1080,
+      "FriendlyName": "1080p"
+    },
+    {
+      "Width": 3840,
+      "Height": 2160,
+      "FriendlyName": "4k"
+    }
+  ],
+  "ShowOutlines": false,
+  "ShowCanvasOutline": true,
+  "ShowRuler": true,
+  "ShowCheckerBackground": true,
+  "TextureFilter": "Point",
+  "ConvertVariablesOnUnitTypeChange": false,
+  "RestrictToUnitValues": true,
+  "SnapToGrid": false,
+  "GridSize": 16,
+  "RestrictFileNamesForAndroid": false,
+  "Guides": [],
+  "FavoriteComponents": [],
+  "ParentProjectRoot": "../",
+  "LocalizationFiles": [],
+  "ShowLocalizationInGum": true,
+  "CurrentLanguageIndex": 0,
+  "ScreenReferences": [
+    {
+      "Name": "MainMenu",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Settings",
+      "ElementType": 0,
+      "LinkType": 0
+    },
+    {
+      "Name": "Inventory",
+      "ElementType": 0,
+      "LinkType": 0
+    }
+  ],
+  "ComponentReferences": [
+    {
+      "Name": "ForestGlade/Controls/Button",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ButtonIcon",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/CheckBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ColorPicker",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ComboBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/DialogBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Expander",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ItemsControl",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Label",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ListBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ListBoxItem",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Menu",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/MenuItem",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Panel",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/PasswordBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/RadioButton",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ScrollBar",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/ScrollViewer",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Slider",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/SliderThumb",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Splitter",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/StackPanel",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/TextBox",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Toast",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/UserControl",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Controls/Window",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Elements/Divider",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Elements/TextInputChrome",
+      "ElementType": 1,
+      "LinkType": 0
+    },
+    {
+      "Name": "ForestGlade/Styles",
+      "ElementType": 1,
+      "LinkType": 0
+    }
+  ],
+  "StandardElementReferences": [
+    {
+      "Name": "Circle",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Component",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Container",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "NineSlice",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Polygon",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Rectangle",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Sprite",
+      "ElementType": 2,
+      "LinkType": 0
+    },
+    {
+      "Name": "Text",
+      "ElementType": 2,
+      "LinkType": 0
+    }
+  ],
+  "BehaviorReferences": [
+    {
+      "Name": "ButtonBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/Button"
+    },
+    {
+      "Name": "CheckBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/CheckBox"
+    },
+    {
+      "Name": "ColorPickerBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/ColorPicker"
+    },
+    {
+      "Name": "ComboBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/ComboBox"
+    },
+    {
+      "Name": "DialogBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/DialogBox"
+    },
+    {
+      "Name": "ExpanderBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/Expander"
+    },
+    {
+      "Name": "ItemsControlBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "LabelBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "ListBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/ListBox"
+    },
+    {
+      "Name": "ListBoxItemBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/ListBoxItem"
+    },
+    {
+      "Name": "MenuBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/Menu"
+    },
+    {
+      "Name": "MenuItemBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/MenuItem"
+    },
+    {
+      "Name": "OnScreenKeyboardBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "PanelBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "PasswordBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/PasswordBox"
+    },
+    {
+      "Name": "RadioButtonBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/RadioButton"
+    },
+    {
+      "Name": "ScrollBarBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/ScrollBar"
+    },
+    {
+      "Name": "ScrollViewerBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/ScrollViewer"
+    },
+    {
+      "Name": "SliderBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/Slider"
+    },
+    {
+      "Name": "SplitterBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/Splitter"
+    },
+    {
+      "Name": "StackPanelBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "TextBoxBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/TextBox"
+    },
+    {
+      "Name": "ToastBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/Toast"
+    },
+    {
+      "Name": "ToggleBehavior",
+      "SourcePath": ""
+    },
+    {
+      "Name": "UserControlBehavior",
+      "SourcePath": "",
+      "DefaultImplementationOverride": "ForestGlade/Controls/UserControl"
+    },
+    {
+      "Name": "WindowBehavior",
+      "SourcePath": ""
+    }
+  ],
+  "SinglePixelTextureFile": "",
+  "CustomProperties": []
+}

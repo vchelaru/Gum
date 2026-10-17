@@ -1,0 +1,69 @@
+{
+  "Name": "ButtonBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    }
+  ],
+  "ToolOnlyVariableReferences": [
+    "ButtonCategoryState = IsEnabled ? \u0022Enabled\u0022 : \u0022Disabled\u0022"
+  ],
+  "Categories": [
+    {
+      "Name": "ButtonCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Disabled",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Highlighted",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Pushed",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocused",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocused",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "RequiredInstances": [],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "ForestGlade/Controls/Button"
+}

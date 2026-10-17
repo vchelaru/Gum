@@ -1,0 +1,3126 @@
+{
+  "Name": "DarkPro/Controls/CheckBox",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "BoxBorder.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "BoxBorder.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "BoxBorder.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "BoxBorder.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "BoxBorder.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "BoxBorder.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "BoxBorder.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 60
+        },
+        {
+          "Name": "BoxBorder.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "BoxBorder.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "BoxBorder.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxBorder.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "BoxBorder.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "BoxBorder.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "BoxBorder.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "CheckBoxBackground.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "CheckBoxBackground.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 38
+        },
+        {
+          "Name": "CheckBoxBackground.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "CheckBoxBackground.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 37
+        },
+        {
+          "Name": "CheckBoxBackground.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "CheckBoxBackground.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckBoxBackground.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "CheckBoxBackground.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "CheckBoxBackground.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 20
+        },
+        {
+          "Name": "CheckBoxBackground.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckBoxBackground.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckBoxBackground.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "CheckBoxBackground.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "CheckBoxBackground.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "CheckBoxCategoryState",
+          "Type": "CheckBoxCategory"
+        },
+        {
+          "Name": "DashIndicator.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DashIndicator.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "DashIndicator.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "DashIndicator.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DashIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "DashIndicator.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DashIndicator.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "DashIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "CheckBoxBackground"
+        },
+        {
+          "Name": "DashIndicator.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DashIndicator.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "DashIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 10
+        },
+        {
+          "Name": "DashIndicator.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "DashIndicator.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DashIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "DashIndicator.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "DashIndicator.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "DashIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "DashIndicator.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "FocusedIndicator.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "FocusedIndicator.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "FocusedIndicator.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "FocusedIndicator.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "FocusedIndicator.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "FocusedIndicator.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "FocusedIndicator.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "FocusedIndicator.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusedIndicator.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 22
+        },
+        {
+          "Name": "FocusedIndicator.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -2
+        },
+        {
+          "Name": "FocusedIndicator.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "FocusedIndicator.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusedIndicator.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusedIndicator.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "InnerCheck.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 204
+        },
+        {
+          "Name": "InnerCheck.ExposeChildrenEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "InnerCheck.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DejaVuSansMono.ttf"
+        },
+        {
+          "Name": "InnerCheck.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 18
+        },
+        {
+          "Name": "InnerCheck.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 122
+        },
+        {
+          "Name": "InnerCheck.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "InnerCheck.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "InnerCheck.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "InnerCheck.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "InnerCheck.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "CheckBoxBackground"
+        },
+        {
+          "Name": "InnerCheck.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "InnerCheck.Text",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "\u2713"
+        },
+        {
+          "Name": "InnerCheck.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "InnerCheck.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "InnerCheck.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 24
+        },
+        {
+          "Name": "InnerCheck.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "InnerCheck.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "InnerCheck.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "InnerCheck.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "InnerCheck.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "InnerCheck.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "InnerCheck.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "IsChecked",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "TextInstance.Blue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Font",
+          "Type": "string",
+          "SetsValue": true,
+          "IsFont": true,
+          "ValueAsString": "Fonts/DMMono-Regular.ttf"
+        },
+        {
+          "Name": "TextInstance.FontSize",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 14
+        },
+        {
+          "Name": "TextInstance.Green",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "TextInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "TextInstance.HorizontalAlignment",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.Red",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 212
+        },
+        {
+          "Name": "TextInstance.Text",
+          "Type": "string",
+          "ExposedAsName": "Text",
+          "SetsValue": true,
+          "ValueAsString": "Label"
+        },
+        {
+          "Name": "TextInstance.VerticalAlignment",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -28
+        },
+        {
+          "Name": "TextInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "TextInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 28
+        },
+        {
+          "Name": "TextInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "TextInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 128
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "TextInstance.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Text.FillColor",
+            "Font = Components/DarkPro/Styles.Normal.Font",
+            "FontSize = Components/DarkPro/Styles.Normal.FontSize"
+          ]
+        },
+        {
+          "Name": "CheckBoxBackground.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+          ]
+        },
+        {
+          "Name": "BoxBorder.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+          ]
+        },
+        {
+          "Name": "DashIndicator.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        },
+        {
+          "Name": "FocusedIndicator.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        },
+        {
+          "Name": "InnerCheck.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "Color = Components/DarkPro/Styles.Accent.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "CheckBoxCategory",
+      "States": [
+        {
+          "Name": "EnabledOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.BorderHover.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "FocusedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedFocusedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "PushedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 30
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.PressedFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledFocusedOff",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "EnabledOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "InnerCheck.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "InnerCheck.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+              ]
+            },
+            {
+              "Name": "InnerCheck.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "InnerCheck.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "InnerCheck.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.BorderHover.FillColor"
+              ]
+            },
+            {
+              "Name": "InnerCheck.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "FocusedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "InnerCheck.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "InnerCheck.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "InnerCheck.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedFocusedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "InnerCheck.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "InnerCheck.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "InnerCheck.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "PushedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 30
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "InnerCheck.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "InnerCheck.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "InnerCheck.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.PressedFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "InnerCheck.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "InnerCheck.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "InnerCheck.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledFocusedOn",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "InnerCheck.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "InnerCheck.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "InnerCheck.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "EnabledIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 60
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Border.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 90
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.BorderHover.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "FocusedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 38
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 37
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface1.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "HighlightedFocusedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 48
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 45
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.Surface2.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "PushedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 204
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 122
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 0
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 30
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 29
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 212
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.Accent.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.Text.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.PressedFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "DisabledFocusedIndeterminate",
+          "Variables": [
+            {
+              "Name": "BoxBorder.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "BoxBorder.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 41
+            },
+            {
+              "Name": "CheckBoxBackground.FillBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "CheckBoxBackground.FillRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 28
+            },
+            {
+              "Name": "DashIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "FocusedIndicator.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "InnerCheck.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "TextInstance.Blue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Green",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            },
+            {
+              "Name": "TextInstance.Red",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 69
+            }
+          ],
+          "VariableLists": [
+            {
+              "Name": "BoxBorder.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "StrokeColor = Components/DarkPro/Styles.DisabledBorder.FillColor"
+              ]
+            },
+            {
+              "Name": "TextInstance.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "Color = Components/DarkPro/Styles.DisabledText.FillColor"
+              ]
+            },
+            {
+              "Name": "CheckBoxBackground.VariableReferences",
+              "Type": "string",
+              "Category": "References",
+              "StringValues": [
+                "FillColor = Components/DarkPro/Styles.DisabledFill.FillColor"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "CheckBoxBackground",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "BoxBorder",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "InnerCheck",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "DashIndicator",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text"
+    },
+    {
+      "Name": "FocusedIndicator",
+      "BaseType": "Rectangle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "CheckBoxBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "CheckBoxCategoryState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ClipsChildren",
+    "IsRenderTarget",
+    "ExposeChildrenEvents"
+  ]
+}

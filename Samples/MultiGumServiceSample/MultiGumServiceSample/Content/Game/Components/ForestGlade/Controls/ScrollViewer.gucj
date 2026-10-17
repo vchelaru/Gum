@@ -1,0 +1,934 @@
+{
+  "Name": "ForestGlade/Controls/ScrollViewer",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Border.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Border.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "Border.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Border.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Border.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "Border.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Border.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Border.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 220
+        },
+        {
+          "Name": "Border.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 117
+        },
+        {
+          "Name": "Border.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Border.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 232
+        },
+        {
+          "Name": "Border.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Border.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Border.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Border.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Border.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Border.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Border.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "ClipContainerInstance.ClipsChildren",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "ClipContainerInstance.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "ClipContainerInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -6
+        },
+        {
+          "Name": "ClipContainerInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ClipContainerInstance.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "ClipContainerInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -30
+        },
+        {
+          "Name": "ClipContainerInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ClipContainerInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "ClipContainerInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "ClipContainerInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "ClipContainerInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "DefaultChildContainer",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "InnerPanelInstance"
+        },
+        {
+          "Name": "Fill.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Fill.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "Fill.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Fill.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 2
+        },
+        {
+          "Name": "Fill.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 8
+        },
+        {
+          "Name": "Fill.FillBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 36
+        },
+        {
+          "Name": "Fill.FillGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 32
+        },
+        {
+          "Name": "Fill.FillRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "Fill.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Fill.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Fill.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "Fill.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Fill.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "Fill.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "Fill.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "Fill.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "FocusRing.CornerRadius",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusBottomLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 11
+        },
+        {
+          "Name": "FocusRing.CustomRadiusBottomRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusTopLeft",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 5
+        },
+        {
+          "Name": "FocusRing.CustomRadiusTopRight",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 11
+        },
+        {
+          "Name": "FocusRing.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "FocusRing.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusRing.IsFilled",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRing.StrokeAlpha",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 76
+        },
+        {
+          "Name": "FocusRing.StrokeBlue",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 65
+        },
+        {
+          "Name": "FocusRing.StrokeGreen",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 246
+        },
+        {
+          "Name": "FocusRing.StrokeRed",
+          "Type": "int",
+          "SetsValue": true,
+          "ValueAsInt": 71
+        },
+        {
+          "Name": "FocusRing.StrokeWidth",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "FocusRing.Visible",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FocusRing.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 6
+        },
+        {
+          "Name": "FocusRing.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "FocusRing.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusRing.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusRing.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 6
+        },
+        {
+          "Name": "FocusRing.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "FocusRing.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "FocusRing.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 7
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.OrientationCategoryState",
+          "Type": "OrientationCategory",
+          "SetsValue": true,
+          "ValueAsString": "Horizontal"
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -27
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -3
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "HorizontalScrollBarInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 5
+        },
+        {
+          "Name": "InnerPanelInstance.ChildrenLayout",
+          "Type": "ChildrenLayout",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        },
+        {
+          "Name": "InnerPanelInstance.HasEvents",
+          "Type": "bool",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "InnerPanelInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "InnerPanelInstance.HeightUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "InnerPanelInstance.Parent",
+          "Type": "string",
+          "SetsValue": true,
+          "ValueAsString": "ClipContainerInstance"
+        },
+        {
+          "Name": "InnerPanelInstance.Width",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "InnerPanelInstance.WidthUnits",
+          "Type": "DimensionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "ScrollBarVisibilityState",
+          "Type": "ScrollBarVisibility"
+        },
+        {
+          "Name": "ScrollViewerCategoryState",
+          "Type": "ScrollViewerCategory",
+          "SetsValue": true
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "SetsValue": true
+        },
+        {
+          "Name": "VerticalScrollBarInstance.Height",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -27
+        },
+        {
+          "Name": "VerticalScrollBarInstance.Parent",
+          "Type": "string",
+          "SetsValue": true
+        },
+        {
+          "Name": "VerticalScrollBarInstance.X",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": -3
+        },
+        {
+          "Name": "VerticalScrollBarInstance.XOrigin",
+          "Type": "HorizontalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 2
+        },
+        {
+          "Name": "VerticalScrollBarInstance.XUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 4
+        },
+        {
+          "Name": "VerticalScrollBarInstance.Y",
+          "Type": "float",
+          "SetsValue": true,
+          "ValueAsFloat": 3
+        },
+        {
+          "Name": "VerticalScrollBarInstance.YOrigin",
+          "Type": "VerticalAlignment",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "VerticalScrollBarInstance.YUnits",
+          "Type": "PositionUnitType",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "FocusRing.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "StrokeColor = Components/ForestGlade/Styles.AccentHalo.FillColor"
+          ]
+        },
+        {
+          "Name": "Fill.VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": [
+            "FillColor = Components/ForestGlade/Styles.InputFill.FillColor"
+          ]
+        }
+      ]
+    }
+  ],
+  "Categories": [
+    {
+      "Name": "ScrollBarVisibility",
+      "States": [
+        {
+          "Name": "NoScrollBar",
+          "Variables": [
+            {
+              "Name": "ClipContainerInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -6
+            },
+            {
+              "Name": "ClipContainerInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -6
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -27
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -27
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "VerticalScrollVisible",
+          "Variables": [
+            {
+              "Name": "ClipContainerInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -6
+            },
+            {
+              "Name": "ClipContainerInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -30
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Visible",
+              "Type": "bool",
+              "Category": "States and Visibility",
+              "SetsValue": true,
+              "ValueAsBool": false
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -27
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "HorizontalScrollVisible",
+          "Variables": [
+            {
+              "Name": "ClipContainerInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -30
+            },
+            {
+              "Name": "ClipContainerInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -6
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Visible",
+              "Type": "bool",
+              "Category": "States and Visibility",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": 0
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -27
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Visible",
+              "Type": "bool",
+              "Category": "States and Visibility",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "BothScrollVisible",
+          "Variables": [
+            {
+              "Name": "ClipContainerInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -30
+            },
+            {
+              "Name": "ClipContainerInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -30
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Visible",
+              "Type": "bool",
+              "Category": "States and Visibility",
+              "SetsValue": true,
+              "ValueAsBool": true
+            },
+            {
+              "Name": "HorizontalScrollBarInstance.Width",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -27
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Height",
+              "Type": "float",
+              "SetsValue": true,
+              "ValueAsFloat": -27
+            },
+            {
+              "Name": "VerticalScrollBarInstance.Visible",
+              "Type": "bool",
+              "Category": "States and Visibility",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    },
+    {
+      "Name": "ScrollViewerCategory",
+      "States": [
+        {
+          "Name": "Enabled",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 220
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 117
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 232
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": false
+            }
+          ],
+          "VariableLists": []
+        },
+        {
+          "Name": "Focused",
+          "Variables": [
+            {
+              "Name": "Border.StrokeAlpha",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 255
+            },
+            {
+              "Name": "Border.StrokeBlue",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 65
+            },
+            {
+              "Name": "Border.StrokeGreen",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 246
+            },
+            {
+              "Name": "Border.StrokeRed",
+              "Type": "int",
+              "SetsValue": true,
+              "ValueAsInt": 71
+            },
+            {
+              "Name": "FocusRing.Visible",
+              "Type": "bool",
+              "SetsValue": true,
+              "ValueAsBool": true
+            }
+          ],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "Instances": [
+    {
+      "Name": "FocusRing",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "Fill",
+      "BaseType": "Rectangle"
+    },
+    {
+      "Name": "VerticalScrollBarInstance",
+      "BaseType": "ForestGlade/Controls/ScrollBar"
+    },
+    {
+      "Name": "HorizontalScrollBarInstance",
+      "BaseType": "ForestGlade/Controls/ScrollBar"
+    },
+    {
+      "Name": "ClipContainerInstance",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "InnerPanelInstance",
+      "BaseType": "Container"
+    },
+    {
+      "Name": "Border",
+      "BaseType": "Rectangle"
+    }
+  ],
+  "Events": [],
+  "Behaviors": [
+    {
+      "BehaviorName": "ScrollViewerBehavior"
+    }
+  ],
+  "VariablesHiddenFromInstances": [
+    "ScrollBarVisibilityState",
+    "ContainedType",
+    "ChildrenLayout",
+    "ExposeChildrenEvents"
+  ]
+}

@@ -1,0 +1,303 @@
+{
+  "Name": "Sprite",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Alpha",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "Animate",
+          "Type": "bool",
+          "Category": "Animation",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Blend",
+          "Type": "Blend",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Blue",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "ColorOperation",
+          "Type": "ColorOperation",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "CurrentChainName",
+          "Type": "string",
+          "Category": "Animation",
+          "SetsValue": true
+        },
+        {
+          "Name": "ExposeChildrenEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FlipHorizontal",
+          "Type": "bool",
+          "Category": "Flip and Rotation",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "FlipVertical",
+          "Type": "bool",
+          "Category": "Flip and Rotation",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Green",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "HasEvents",
+          "Type": "bool",
+          "Category": "Behavior",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "Height",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "HeightUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "IgnoredByParentSize",
+          "Type": "bool",
+          "Category": "Parent",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "MaxHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MaxWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MinHeight",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "MinWidth",
+          "Type": "float?",
+          "Category": "Dimensions",
+          "SetsValue": true
+        },
+        {
+          "Name": "Parent",
+          "Type": "string",
+          "Category": "Parent",
+          "SetsValue": true
+        },
+        {
+          "Name": "Red",
+          "Type": "int",
+          "Category": "Rendering",
+          "SetsValue": true,
+          "ValueAsInt": 255
+        },
+        {
+          "Name": "RenderTargetTextureSource",
+          "Type": "string",
+          "Category": "Source",
+          "SetsValue": true
+        },
+        {
+          "Name": "Rotation",
+          "Type": "float",
+          "Category": "Flip and Rotation",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "SourceFile",
+          "Type": "string",
+          "Category": "Source",
+          "SetsValue": true,
+          "IsFile": true,
+          "ValueAsString": ""
+        },
+        {
+          "Name": "State",
+          "Type": "State",
+          "Category": "States and Visibility",
+          "ValueAsString": "Default"
+        },
+        {
+          "Name": "TextureAddress",
+          "Type": "TextureAddress",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextureHeight",
+          "Type": "int",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextureHeightScale",
+          "Type": "float",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "TextureLeft",
+          "Type": "int",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextureTop",
+          "Type": "int",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextureWidth",
+          "Type": "int",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "TextureWidthScale",
+          "Type": "float",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsFloat": 1
+        },
+        {
+          "Name": "Visible",
+          "Type": "bool",
+          "Category": "States and Visibility",
+          "SetsValue": true,
+          "ValueAsBool": true
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsFloat": 100
+        },
+        {
+          "Name": "WidthUnits",
+          "Type": "DimensionUnitType",
+          "Category": "Dimensions",
+          "SetsValue": true,
+          "ValueAsInt": 3
+        },
+        {
+          "Name": "Wrap",
+          "Type": "bool",
+          "Category": "Source",
+          "SetsValue": true,
+          "ValueAsBool": false
+        },
+        {
+          "Name": "X",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "XOrigin",
+          "Type": "HorizontalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "XUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "Y",
+          "Type": "float",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsFloat": 0
+        },
+        {
+          "Name": "YOrigin",
+          "Type": "VerticalAlignment",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 0
+        },
+        {
+          "Name": "YUnits",
+          "Type": "PositionUnitType",
+          "Category": "Position",
+          "SetsValue": true,
+          "ValueAsInt": 1
+        }
+      ],
+      "VariableLists": [
+        {
+          "Name": "VariableReferences",
+          "Type": "string",
+          "Category": "References",
+          "StringValues": []
+        }
+      ]
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

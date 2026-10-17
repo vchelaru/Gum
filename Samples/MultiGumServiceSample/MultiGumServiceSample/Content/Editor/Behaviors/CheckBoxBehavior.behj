@@ -1,0 +1,110 @@
+{
+  "Name": "CheckBoxBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "IsChecked",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": false
+    }
+  ],
+  "ToolOnlyVariableReferences": [
+    "CheckBoxCategoryState = IsEnabled ? (IsChecked ? \u0022EnabledOn\u0022 : \u0022EnabledOff\u0022) : (IsChecked ? \u0022DisabledOn\u0022 : \u0022DisabledOff\u0022)"
+  ],
+  "Categories": [
+    {
+      "Name": "CheckBoxCategory",
+      "States": [
+        {
+          "Name": "EnabledOn",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "EnabledOff",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledOn",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledOff",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedOn",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedOff",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "PushedOn",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "PushedOff",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "FocusedOn",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "FocusedOff",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocusedOn",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "HighlightedFocusedOff",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocusedOn",
+          "Variables": [],
+          "VariableLists": []
+        },
+        {
+          "Name": "DisabledFocusedOff",
+          "Variables": [],
+          "VariableLists": []
+        }
+      ]
+    }
+  ],
+  "RequiredInstances": [],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "DarkPro/Controls/CheckBox"
+}

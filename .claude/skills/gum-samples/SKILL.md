@@ -41,6 +41,10 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 **MonoGame/KNI host init (landmine).** Referencing the package is not enough — the game host must call `ShapeRenderer.Self.Initialize()` (namespace `MonoGameAndGum.Renderables`) **after** `GumService.Default.Initialize(...)`, **and** set `GraphicsProfile.HiDef` (Apos.Shapes uses an SM4 effect that Reach can't load). Miss either and shape fills/effects silently do not draw — no error. See `docs/code/standard-visuals/shapes-apos.shapes.md`.
 
+## Multi-service sample (MultiGumServiceSample)
+
+`Samples/MultiGumServiceSample/` runs two `GumService`s in one MonoGame window, each loading its own `.gumj` from `Content/Game` and `Content/Editor`. Its screens are generated JSON, so edit them in the Gum tool or by script, and run `gumcli check` on both projects afterward.
+
 ## Host-embedded samples (SkiaGumWpfSample, MauiSkiaGum)
 
 `Samples/SkiaGumWpfSample/` and `Samples/MauiSkiaGum/` aren't feature samples — they demo Gum embedded inside a host UI framework (WPF, MAUI) that already has its own native controls. There, Gum is typically the visualization/canvas layer, not a Forms-control replacement for the host's own buttons/text boxes — see `GumSKElement`/`SkiaGumCanvasView` (`Runtimes/SkiaGum.Wpf/`, `Runtimes/SkiaGum.Maui/`), each owning its own `SystemManagers` so one host app can embed multiple independent Gum canvases. Don't add a Forms-control (Button, TextBox) demo here just because Forms exist on this backend.

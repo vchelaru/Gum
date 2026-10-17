@@ -69,6 +69,18 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     /// <inheritdoc/>
     public bool SuppressSettingProperty { get; set; }
 
+    /// <summary>
+    /// Whether the row is one cell of a shared row (see <see cref="DataUiGrid.RowPairs"/>), so a
+    /// displayer that can gives its label only the width its text needs. Set before the member is.
+    /// </summary>
+    public bool IsCompact { get; set; }
+
+    /// <summary>
+    /// The least width a compact row needs to show its label and a usable field; a shared row stacks
+    /// its cells when it cannot give both this much. Zero when the displayer does not say.
+    /// </summary>
+    public virtual double CompactMinimumWidth => 0;
+
     /// <inheritdoc/>
     public abstract void Refresh(bool forceRefreshEvenIfFocused = false);
 

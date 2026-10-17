@@ -1,0 +1,78 @@
+{
+  "Name": "ScrollBarBehavior",
+  "RequiredVariables": {
+    "Name": "",
+    "Variables": [],
+    "VariableLists": []
+  },
+  "FormsProperties": [
+    {
+      "Name": "ToolTip",
+      "Type": "string",
+      "SetsValue": true
+    },
+    {
+      "Name": "IsEnabled",
+      "Type": "bool",
+      "SetsValue": true,
+      "ValueAsBool": true
+    },
+    {
+      "Name": "Minimum",
+      "Type": "double",
+      "SetsValue": true,
+      "ValueAsDouble": 0
+    },
+    {
+      "Name": "Maximum",
+      "Type": "double",
+      "SetsValue": true,
+      "ValueAsDouble": 100
+    },
+    {
+      "Name": "Value",
+      "Type": "double",
+      "SetsValue": true,
+      "ValueAsDouble": 0
+    },
+    {
+      "Name": "SmallChange",
+      "Type": "double",
+      "SetsValue": true,
+      "Description": "Step size for arrow buttons / mouse wheel.",
+      "ValueAsDouble": 1
+    },
+    {
+      "Name": "LargeChange",
+      "Type": "double",
+      "SetsValue": true,
+      "Description": "Step size for clicks on the track.",
+      "ValueAsDouble": 10
+    }
+  ],
+  "ToolOnlyVariableReferences": [],
+  "Categories": [
+    {
+      "Name": "ScrollBarCategory",
+      "States": []
+    }
+  ],
+  "RequiredInstances": [
+    {
+      "Behaviors": [
+        {
+          "Name": "ButtonBehavior"
+        }
+      ],
+      "Name": "ThumbInstance",
+      "BaseType": ""
+    },
+    {
+      "Behaviors": [],
+      "Name": "TrackInstance",
+      "BaseType": "Container"
+    }
+  ],
+  "RequiredAnimations": [],
+  "DefaultImplementation": "ForestGlade/Controls/ScrollBar"
+}
