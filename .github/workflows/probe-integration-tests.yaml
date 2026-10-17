@@ -1,0 +1,50 @@
+name: Probe Integration Tests
+
+# Temporary (#6092): runs only MonoGameGum.IntegrationTests on Windows, so timing and memory changes can be
+# measured without the full CI matrix. A new workflow file can't be dispatched until it is on the default
+# branch, so it runs on pushes to the issue branch (keep the PR closed meanwhile, or the full matrix runs
+# too). Delete before the final PR.
+on:
+  push:
+    branches: [6092-faster-windows-ci]
+
+jobs:
+  Probe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build MonoGameGum.IntegrationTests (no workloads)
+        run: |
+          dotnet restore "Tests/MonoGameGum.IntegrationTests" --verbosity quiet
+          dotnet build "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
+
+      - name: Install Mesa llvmpipe
+        uses: ./.github/actions/install-mesa-llvmpipe
+        with:
+          dest-dirs: Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0
+
+      - name: MonoGameGum.IntegrationTests
+        timeout-minutes: 15
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-results
+          path: TestResults
+
+      - name: Slowest tests
+        if: always()
+        shell: pwsh
+        run: ./.github/scripts/trx-slowest.ps1 -ResultsDirectory TestResults
