@@ -14,6 +14,11 @@ public class BaseTestClass : IDisposable
 {
     public virtual void Dispose()
     {
+        // Experiment (#6092): native GPU resources are released by finalizers that the managed heap
+        // alone never prompts, so memory may balloon across tests.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         global::MonoGameGum.IntegrationTests.MonoGameGum.ProbeLog.LogProcess();
 
         // GumService.Default follows IGumService.Default, the current service. A test that initialized a service
