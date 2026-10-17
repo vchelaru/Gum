@@ -92,6 +92,12 @@ can be reused as a page (`ThemingDialogViewModel`, `PluginsDialogViewModel`): `S
 embeds its dialog view and moves the view's `DialogWindow.SetAuxiliaryActions` buttons under it, because
 the page has no button row of its own.
 
+**A page view is plain content that grows; the window scrolls it.** `SettingsDialogView` puts the page's
+title, scope line and view in one `ScrollViewer`, so everything but the page list and Close scrolls as one
+page. A page therefore must not hold a list box, scroller or fixed height of its own (a `DataUiGrid` is fine,
+since it grows in an outer scroller). Only a reused view that already scrolls internally registers with
+`scrollsItself: true`, and then gets the bounded height under a fixed title (the Plugins page).
+
 A dialog with nothing to type into can set `AnswersOnAccessKeyAlone` so the bare access-key letter
 of its "_Yes"/"_No" text answers it (`DialogViewModel.TryAnswerFromAccessKey`).
 

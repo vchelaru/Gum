@@ -179,7 +179,6 @@ public class TreeNavigationScenarioTests
         RecordingFileSystemRevealService reveal = (RecordingFileSystemRevealService)Services.GetRequiredService<IFileSystemRevealService>();
         RecordingClipboardService clipboard = (RecordingClipboardService)Services.GetRequiredService<IClipboardService>();
         IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
-        Menus.MenuItemModel palette = Services.GetRequiredService<Menus.MenuModel>().GetItem("View")!.Items.Single(item => item.Header == "Standards palette");
         bool? originalPalette = projectManager.UseStandardsPalette;
         bool originalEffectivePalette = projectManager.EffectiveUseStandardsPalette;
         reveal.Clear();
@@ -207,10 +206,7 @@ public class TreeNavigationScenarioTests
         // A standard element (in the tree while the Standards palette is off): its file, and Force Save writes it again.
         try
         {
-            if (palette.IsChecked)
-            {
-                tree.PickMainMenu("View", "Standards palette");
-            }
+            SettingsPagesForTests.SetStandardsPalette(tree, false);
             tree.Input.Layout();
             GumTreeNode sprite = tree.RootNode("Standard").Nodes.Single(node => node.Text == "Sprite");
             string spriteFile = Path.Combine(folder, "Standards", "Sprite.gutx");
@@ -226,9 +222,9 @@ public class TreeNavigationScenarioTests
         }
         finally
         {
-            if (palette.IsChecked != originalEffectivePalette)
+            if (projectManager.EffectiveUseStandardsPalette != originalEffectivePalette)
             {
-                tree.PickMainMenu("View", "Standards palette");
+                SettingsPagesForTests.SetStandardsPalette(tree, originalEffectivePalette);
             }
             projectManager.UseStandardsPalette = originalPalette;
             projectManager.SaveGeneralSettings();

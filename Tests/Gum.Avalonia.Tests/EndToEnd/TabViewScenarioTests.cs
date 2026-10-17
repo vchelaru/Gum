@@ -18,6 +18,8 @@ using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Menus;
 using Gum.Plugins.Behaviors;
+using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
+using Gum.SettingsWindow;
 using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.Plugins.Errors;
 using Gum.Plugins.FileWatchPlugin;
@@ -320,7 +322,7 @@ public class TabViewScenarioTests
     [Trait("Feature", "TAB-013")]
     [Trait("Feature", "KEY-018")]
     [Trait("Feature", "KEY-019")]
-    public void ViewMenu_ShowsAndHidesTheHotkeysFileWatchAndAnimationsTabs_AndCtrlQuestionShowsHotkeys()
+    public void ViewMenu_ShowsAndHidesTheFileWatchAndAnimationsTabs_AndCtrlQuestionOpensTheKeyboardShortcuts()
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         tree.Project.AddComponent("Card");
@@ -328,39 +330,28 @@ public class TabViewScenarioTests
         tree.Project.SaveAndReload();
         ProjectFileSnapshot start = tree.SnapshotFiles();
         MenuItemModel view = Services.GetRequiredService<MenuModel>().GetItem("View")!;
-        AvaloniaPluginTab hotkeys = Tab("Hotkeys");
         AvaloniaPluginTab fileWatch = Tab("File Watch");
         AvaloniaPluginTab animations = Tab("Animations");
-        hotkeys.IsVisible = false;
         fileWatch.IsVisible = false;
         animations.IsVisible = false;
         Dispatcher.UIThread.RunJobs();
 
-        // View Hotkeys shows the tab in front, and the item then reads Hide Hotkeys.
-        tree.PickMainMenu("View", "View Hotkeys");
-        hotkeys.IsVisible.ShouldBeTrue();
-        hotkeys.IsSelected.ShouldBeTrue();
-        Tabs.CenterBottom.ShouldContain(hotkeys);
-        view.Items.Select(item => item.Header).ShouldContain("Hide Hotkeys");
-        using (HeadlessWindowDriver hotkeysWindow = HostTab("Hotkeys", height: 1200))
+        // Ctrl+? opens the Settings window on the Keyboard shortcuts page, from anywhere in the window.
+        IHotkeyManager hotkeyManager = Services.GetRequiredService<IHotkeyManager>();
+        IKeyCombinationFormatter formatter = Services.GetRequiredService<IKeyCombinationFormatter>();
+        List<string> rows = new List<string>();
+        string? openedOn = null;
+        tree.Dialogs.AnswerNext<SettingsDialogViewModel>(settings =>
         {
-            List<string> rows = ((HotkeyView)hotkeys.Content).GetRealizedContainers().OfType<ListBoxItem>()
-                .Select(row => row.GetVisualDescendants().OfType<TextBlock>().First().Text ?? "").ToList();
-            IHotkeyManager hotkeyManager = Services.GetRequiredService<IHotkeyManager>();
-            IKeyCombinationFormatter formatter = Services.GetRequiredService<IKeyCombinationFormatter>();
-            rows.ShouldContain("Undo: " + formatter.Format(hotkeyManager.Undo));
-            rows.ShouldContain("Show Hotkeys: " + formatter.Format(hotkeyManager.ShowHotkeys));
-        }
-        tree.PickMainMenu("View", "Hide Hotkeys");
-        hotkeys.IsVisible.ShouldBeFalse();
-        Dispatcher.UIThread.RunJobs();
-        Tabs.CenterBottom.ShouldNotContain(hotkeys);
-
-        // Ctrl+? brings it back from anywhere in the window.
+            openedOn = settings.SelectedPage?.Id;
+            rows.AddRange(((HotkeyViewModel)settings.SelectedPage!.Content).Items.Select(item => item.Display));
+            return true;
+        });
         tree.Click(tree.RootNode("Components"));
         tree.Press(Key.Oem2, PhysicalKey.Slash, RawInputModifiers.Control);
-        hotkeys.IsVisible.ShouldBeTrue("Ctrl+? shows the Hotkeys tab");
-        hotkeys.IsSelected.ShouldBeTrue();
+        openedOn.ShouldBe(SettingsPageIds.KeyboardShortcuts, "Ctrl+? opens the Settings window on the Keyboard shortcuts page");
+        rows.ShouldContain("Undo: " + formatter.Format(hotkeyManager.Undo));
+        rows.ShouldContain("Show Hotkeys: " + formatter.Format(hotkeyManager.ShowHotkeys));
 
         // Show File Watch: the watched folders, and the print option reaches the watcher.
         IFileWatchManager watcher = Services.GetRequiredService<IFileWatchManager>();
@@ -466,7 +457,6 @@ public class TabViewScenarioTests
         double originalFontSize = uiSettings.BaseFontSize;
         bool? originalPalette = projectManager.UseStandardsPalette;
         bool originalEffectivePalette = projectManager.EffectiveUseStandardsPalette;
-        MenuItemModel palette = view.Items.Single(item => item.Header == "Standards palette");
         IDisposable fontSize = AppWideWindowInput.FollowBaseFontSize(tree.Input.Window, Services.GetRequiredService<IAppScaleProvider>());
         try
         {
@@ -479,39 +469,35 @@ public class TabViewScenarioTests
             view.Items.Select(item => item.Header).ShouldContain("Hide Tools");
 
             // Standards palette off puts the Standard folder in the tree; on takes it out again.
-            if (!palette.IsChecked)
-            {
-                tree.PickMainMenu("View", "Standards palette");
-            }
+            SetStandardsPalette(tree, true);
             tree.View.Nodes.Select(node => node.Text).ShouldNotContain("Standard");
-            tree.PickMainMenu("View", "Standards palette");
-            palette.IsChecked.ShouldBeFalse();
+            SetStandardsPalette(tree, false);
             projectManager.EffectiveUseStandardsPalette.ShouldBeFalse();
             tree.Input.Layout();
             tree.RootNode("Standard").Nodes.Select(node => node.Text).ShouldContain("Sprite");
-            tree.PickMainMenu("View", "Standards palette");
-            palette.IsChecked.ShouldBeTrue();
+            SetStandardsPalette(tree, true);
+            projectManager.EffectiveUseStandardsPalette.ShouldBeTrue();
             tree.Input.Layout();
             tree.View.Nodes.Select(node => node.Text).ShouldNotContain("Standard");
 
-            // Theming: dark mode and an accent reach the app's resources.
+            // Appearance: dark mode and an accent reach the app's resources.
             System.Drawing.Color accent = System.Drawing.Color.FromArgb(255, 0x20, 0x90, 0xd0);
-            tree.Dialogs.AnswerNext<ThemingDialogViewModel>(dialog =>
+            tree.Dialogs.AnswerNextSettingsPage<ThemingDialogViewModel>(SettingsPageIds.Appearance, page =>
             {
-                dialog.Mode = ThemeMode.Dark;
-                dialog.AccentColor = accent;
+                page.Mode = ThemeMode.Dark;
+                page.AccentColor = accent;
                 return true;
             });
-            tree.PickMainMenu("View", "Theming");
+            tree.PickMainMenu("File", "Settings...");
             tree.Input.Layout();
             tree.Input.Window.ActualThemeVariant.ShouldBe(ThemeVariant.Dark);
             ((ISolidColorBrush)Application.Current.Resources["Frb.Brushes.Primary"]!).Color.ShouldBe(Color.FromRgb(0x20, 0x90, 0xd0));
-            tree.Dialogs.AnswerNext<ThemingDialogViewModel>(dialog =>
+            tree.Dialogs.AnswerNextSettingsPage<ThemingDialogViewModel>(SettingsPageIds.Appearance, page =>
             {
-                dialog.Mode = ThemeMode.Light;
+                page.Mode = ThemeMode.Light;
                 return true;
             });
-            tree.PickMainMenu("View", "Theming");
+            tree.PickMainMenu("File", "Settings...");
             tree.Input.Layout();
             tree.Input.Window.ActualThemeVariant.ShouldBe(ThemeVariant.Light);
 
@@ -536,9 +522,9 @@ public class TabViewScenarioTests
             RestoreResources(originalResources);
             Application.Current.RequestedThemeVariant = originalVariant;
             Tabs.IsToolsVisible = true;
-            if (palette.IsChecked != originalEffectivePalette)
+            if (projectManager.EffectiveUseStandardsPalette != originalEffectivePalette)
             {
-                tree.PickMainMenu("View", "Standards palette");
+                SetStandardsPalette(tree, originalEffectivePalette);
             }
             projectManager.UseStandardsPalette = originalPalette;
             projectManager.SaveGeneralSettings();
@@ -610,13 +596,14 @@ public class TabViewScenarioTests
         ClickNative(appMenu, "About Gum");
         tree.Dialogs.Messages.Last().ShouldStartWith("Gum version");
 
-        AvaloniaPluginTab hotkeys = Tab("Hotkeys");
-        hotkeys.IsVisible = false;
+        AvaloniaPluginTab fileWatchTab = Tab("File Watch");
+        fileWatchTab.IsVisible = false;
         NativeMenu menuBar = AvaloniaNativeMenuBuilder.Build(Services.GetRequiredService<MenuModel>());
-        ClickNative(menuBar, "View", "View Hotkeys");
-        hotkeys.IsVisible.ShouldBeTrue("the menu-bar item runs the same action");
-        NativeMenuItem viewHotkeys = NativeItem(menuBar, "View").Menu!.Items.OfType<NativeMenuItem>().Single(item => item.Header is "Hide Hotkeys" or "View Hotkeys");
-        viewHotkeys.Header.ShouldBe("Hide Hotkeys", "the menu-bar item follows the model's header");
+        ClickNative(menuBar, "View", "Show File Watch");
+        fileWatchTab.IsVisible.ShouldBeTrue("the menu-bar item runs the same action");
+        NativeMenuItem viewFileWatch = NativeItem(menuBar, "View").Menu!.Items.OfType<NativeMenuItem>().Single(item => item.Header is "Hide File Watch" or "Show File Watch");
+        viewFileWatch.Header.ShouldBe("Hide File Watch", "the menu-bar item follows the model's header");
+        fileWatchTab.IsVisible = false;
 
         // Back to the harness's project, which its oracles check.
         tree.Dialogs.AnswerNextOpenFile(tree.Project.ProjectFilePath);
@@ -634,6 +621,8 @@ public class TabViewScenarioTests
     #region Helpers
 
     private static AvaloniaPluginTab Tab(string title) => Tabs.AllTabs.Single(tab => tab.Title == title);
+
+    private static void SetStandardsPalette(ProjectTreeHarness tree, bool on) => SettingsPagesForTests.SetStandardsPalette(tree, on);
 
     /// <summary>The head's own view of the tab titled <paramref name="title"/>, in a headless window.</summary>
     private static HeadlessWindowDriver HostTab(string title, double width = 500, double height = 700) =>

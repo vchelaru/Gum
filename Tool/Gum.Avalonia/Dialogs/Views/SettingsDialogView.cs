@@ -89,30 +89,50 @@ public sealed class SettingsDialogView : Grid
 
     private Control BuildPage()
     {
-        TextBlock title = new TextBlock { FontWeight = FontWeight.Medium };
-        // Larger than the body text at every zoom level, so it follows the base font size the tool zooms by.
-        title.Bind(TextBlock.FontSizeProperty, title.GetResourceObservable(
-            "ControlContentThemeFontSize", size => (size is double baseSize ? baseSize : 12d) * TitleScale));
-        title.Bind(TextBlock.TextProperty, new Binding($"{nameof(SettingsDialogViewModel.SelectedPage)}.{nameof(SettingsPage.Title)}"));
-
-        TextBlock scope = new TextBlock { Margin = new Thickness(0, 2, 0, 12) }
-            .WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
-        scope.Bind(TextBlock.TextProperty, new Binding(nameof(SettingsDialogViewModel.SelectedScopeText)));
-
         ContentControl content = new ContentControl
         {
-            ContentTemplate = new FuncDataTemplate<object>((page, _) => page == null ? null : _pageViews.CreateView(page)),
+            ContentTemplate = new FuncDataTemplate<SettingsPage>((page, _) => page == null ? null : BuildSelectedPage(page)),
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
             VerticalContentAlignment = VerticalAlignment.Stretch,
         };
-        content.Bind(ContentControl.ContentProperty, new Binding($"{nameof(SettingsDialogViewModel.SelectedPage)}.{nameof(SettingsPage.Content)}"));
+        content.Bind(ContentControl.ContentProperty, new Binding(nameof(SettingsDialogViewModel.SelectedPage)));
+        return content;
+    }
 
-        DockPanel page = new DockPanel();
-        DockPanel.SetDock(title, Dock.Top);
-        DockPanel.SetDock(scope, Dock.Top);
-        page.Children.Add(title);
-        page.Children.Add(scope);
-        page.Children.Add(content);
-        return page;
+    // The standard for a page: its title, scope line and view scroll together as one page, so a page
+    // view is plain content that grows. A reused view with scrollers of its own is given the window's
+    // height under a title that stays put instead.
+    private Control BuildSelectedPage(SettingsPage page)
+    {
+        TextBlock title = new TextBlock { Text = page.Title, FontWeight = FontWeight.Medium };
+        // Larger than the body text at every zoom level, so it follows the base font size the tool zooms by.
+        title.Bind(TextBlock.FontSizeProperty, title.GetResourceObservable(
+            "ControlContentThemeFontSize", size => (size is double baseSize ? baseSize : 12d) * TitleScale));
+
+        TextBlock scope = new TextBlock { Margin = new Thickness(0, 2, 0, 12) }
+            .WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
+        scope.Bind(TextBlock.TextProperty, new Binding($"{nameof(DataContext)}.{nameof(SettingsDialogViewModel.SelectedScopeText)}")
+        {
+            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(SettingsDialogView) },
+        });
+
+        StackPanel heading = new StackPanel { Children = { title, scope } };
+        Control view = _pageViews.CreateView(page.Content);
+
+        if (_pageViews.ScrollsItself(page.Content.GetType()))
+        {
+            DockPanel fixedTitle = new DockPanel();
+            DockPanel.SetDock(heading, Dock.Top);
+            fixedTitle.Children.Add(heading);
+            fixedTitle.Children.Add(view);
+            return fixedTitle;
+        }
+
+        return new ScrollViewer
+        {
+            Content = new StackPanel { Margin = new Thickness(0, 0, 8, 0), Children = { heading, view } },
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        };
     }
 }

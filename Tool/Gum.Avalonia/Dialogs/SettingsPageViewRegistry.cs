@@ -25,15 +25,18 @@ namespace Gum.Avalonia.Dialogs;
 public class SettingsPageViewRegistry
 {
     private readonly Dictionary<Type, Func<Control>> _factories;
+    private readonly HashSet<Type> _scrollsItself;
 
     /// <summary>Creates the registry with every page view this head has.</summary>
     public SettingsPageViewRegistry()
     {
         _factories = new Dictionary<Type, Func<Control>>();
+        _scrollsItself = new HashSet<Type>();
 
-        Register<GeneralSettingsViewModel>(() => Scrolled(new GeneralSettingsView()));
-        Register<ThemingDialogViewModel>(() => Scrolled(new ThemingDialogView()));
-        Register<PluginsDialogViewModel>(() => WithDialogButtons(new PluginsDialogView()));
+        Register<GeneralSettingsViewModel>(() => new GeneralSettingsView());
+        Register<ThemingDialogViewModel>(() => new ThemingDialogView());
+        // Reused as it is: its own tabs each scroll, so it is given the window's height to fill.
+        Register<PluginsDialogViewModel>(() => WithDialogButtons(new PluginsDialogView()), scrollsItself: true);
         Register<ProjectPropertiesPageViewModel>(() => new ProjectPropertiesPageView());
         Register<FontsViewModel>(() => new FontsView());
         Register<HotkeyViewModel>(() => new HotkeyView());
@@ -43,9 +46,37 @@ public class SettingsPageViewRegistry
     /// <summary>The view-model types with a registered page view.</summary>
     public IReadOnlyCollection<Type> RegisteredViewModelTypes => _factories.Keys;
 
-    /// <summary>Registers (or replaces) the view for <typeparamref name="TViewModel"/>.</summary>
-    public void Register<TViewModel>(Func<Control> factory) where TViewModel : class =>
+    /// <summary>
+    /// Registers (or replaces) the view for <typeparamref name="TViewModel"/>. A page view is plain
+    /// content: the window scrolls it, with its title, as one page. Pass <paramref name="scrollsItself"/>
+    /// only for a reused view that has scrollers of its own; it is then given the window's bounded
+    /// height under a title that stays put.
+    /// </summary>
+    public void Register<TViewModel>(Func<Control> factory, bool scrollsItself = false) where TViewModel : class
+    {
         _factories[typeof(TViewModel)] = factory;
+        if (scrollsItself)
+        {
+            _scrollsItself.Add(typeof(TViewModel));
+        }
+        else
+        {
+            _scrollsItself.Remove(typeof(TViewModel));
+        }
+    }
+
+    /// <summary>True when the view for <paramref name="viewModelType"/> scrolls itself rather than being scrolled by the window.</summary>
+    public bool ScrollsItself(Type viewModelType)
+    {
+        for (Type? type = viewModelType; type != null; type = type.BaseType)
+        {
+            if (_factories.ContainsKey(type))
+            {
+                return _scrollsItself.Contains(type);
+            }
+        }
+        return false;
+    }
 
     /// <summary>True when <paramref name="viewModelType"/> or one of its base types has a registered view.</summary>
     public bool HasView(Type viewModelType) => FindFactory(viewModelType) != null;
@@ -73,13 +104,6 @@ public class SettingsPageViewRegistry
         }
         return null;
     }
-
-    private static Control Scrolled(Control view) => new ScrollViewer
-    {
-        Content = view,
-        HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-        VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-    };
 
     // A dialog view reused as a page: it sizes itself for a dialog window and puts its extra buttons
     // on that window's button row, so drop the fixed width and place the buttons under the view.
