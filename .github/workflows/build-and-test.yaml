@@ -236,85 +236,31 @@ jobs:
   # instead of adding to its critical path.
   #
   # None of the CodeGen_* projects reference FnaGum, so this job skips
-  # submodule init entirely. Of the workloads Build-and-Test installs for
-  # AllLibraries.sln (wasm-tools/ios/android/maui), only CodeGen_Maui_FullCodegen
-  # needs one — maui — so this job installs just that, with its own cache key,
-  # rather than duplicating the full set.
+  # submodule init entirely. It also installs no workloads: the windows-latest image already
+  # has maui-windows, which is all the Windows-only Maui harness needs (MauiWindowsOnly drops
+  # that project's Android head, the only reason it wanted the full maui workload). Installing
+  # or restoring a cached `maui` set cost 3-5 minutes and added nothing (#6092). It uses the
+  # image's .NET SDK for the same reason: global.json only needs 10.0.100 or newer.
+  #
+  # The job does nothing on a push to main (it used to seed a workload cache).
   Build-Generated-Code:
     needs: Changes
-    if: github.event_name != 'schedule' && needs.Changes.outputs.non-docs == 'true'
+    if: github.event_name != 'schedule' && github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: false
 
-      - name: Setup .NET SDKs
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      # The cache key names the SDK and the workload list, so unrelated workflow edits keep hitting
-      # it and a new SDK patch or a changed list misses. The list is also what the install step
-      # installs.
-      - name: Workload cache key
-        id: workload-key
-        shell: bash
-        env:
-          WORKLOADS: maui
-        run: |
-          echo "workloads=$WORKLOADS" >> "$GITHUB_OUTPUT"
-          echo "key=workloads-gencode-${RUNNER_OS}-$(dotnet --version)-${WORKLOADS// /-}-${{ hashFiles('.github/scripts/install-workloads.sh') }}" >> "$GITHUB_OUTPUT"
-
-      # A push to main runs this job only to seed the cache (PRs restore it but cannot save one that
-      # other PRs can read), then skips the build and checks below.
-      - name: Cache .NET workloads (main only)
-        id: cache-workloads
-        if: github.ref == 'refs/heads/main'
-        uses: actions/cache@v4
-        with:
-          path: |
-            C:\Program Files\dotnet\metadata
-            C:\Program Files\dotnet\packs
-            C:\Program Files\dotnet\sdk-manifests
-          key: ${{ steps.workload-key.outputs.key }}
-
-      - name: Restore cached .NET workloads (PRs)
-        id: cache-workloads-restore
-        if: github.ref != 'refs/heads/main'
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            C:\Program Files\dotnet\metadata
-            C:\Program Files\dotnet\packs
-            C:\Program Files\dotnet\sdk-manifests
-          key: ${{ steps.workload-key.outputs.key }}
-
-      - name: Install workloads
-        if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true'
-        timeout-minutes: 25
-        shell: bash
-        run: |
-          # Caps each attempt and retries once; see the script for why.
-          bash .github/scripts/install-workloads.sh ${{ steps.workload-key.outputs.workloads }}
-
-      - name: Upload workload install logs
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: workload-install-logs-generated-code
-          path: workload-install-*.log
-
       # Regenerate every harness project with GumCli and fail if the checked-in
       # generated code is stale. This forces codegen behavior changes to ship with
       # their regenerated output in the same PR, which the compile step below then
       # proves still builds. GumCli exit code 1 means individual elements were
-      # skipped by the per-element error check — expected, several harness projects
+      # skipped by the per-element error check � expected, several harness projects
       # contain deliberately-broken fixture elements (e.g. DemoScreenGum's deleted
       # component reference). Exit code 2+ means the project failed to load and
       # must fail the build.
       - name: Codegen Drift Check
-        if: github.event_name != 'push'
         run: |
           dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0
           $cli = "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
@@ -339,56 +285,21 @@ jobs:
             exit 1
           }
 
+      # One restore and one parallel build over all seven harnesses (Tests/CodeGen_Harnesses.slnx)
+      # so the shared runtime projects build once. MauiWindowsOnly is a global property that
+      # only CodeGen_Maui_FullCodegen reads: it keeps that project to its Windows TFM. (A
+      # -p:TargetFrameworks override would reach GumCommon and break the reference chain.)
       - name: Build Generated Code Projects
-        if: github.event_name != 'push'
         run: |
-          # Note: the Maui project is built by csproj (not its .sln) with --framework
-          # rather than -p:TargetFrameworks=. A -p: override on a solution build is a
-          # global MSBuild property that leaks into every project in the graph — it
-          # forced GumCommon's own <TargetFrameworks>net8.0</TargetFrameworks> to
-          # net9.0-windows10.0.19041.0 too, breaking the SkiaGum.Maui -> SkiaGum ->
-          # GumCommon reference chain. --framework on the csproj scopes the TFM
-          # selection to just that project via the SDK's outer/inner multi-target build.
-          dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --verbosity quiet
+          dotnet restore "Tests/CodeGen_Harnesses.slnx" --verbosity quiet -p:MauiWindowsOnly=true
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0 --framework net9.0-windows10.0.19041.0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          dotnet build "Tests/CodeGen_Harnesses.slnx" --configuration Debug --no-restore -m --verbosity quiet -p:WarningLevel=0 -p:MauiWindowsOnly=true
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # Every bundled Forms theme, created and generated through gumcli (new --theme, codegen)
       # and compiled against this checkout. The checked-in projects above only cover what their
       # own components contain; the themes set variables those never do.
       - name: Build Theme Projects
-        if: github.event_name != 'push'
         run: pwsh Tools/build-theme-projects.ps1 -Cli "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
 
   Build-and-Test:
