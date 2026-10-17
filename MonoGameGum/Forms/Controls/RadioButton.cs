@@ -17,26 +17,20 @@ public class RadioButton : ToggleButton
 {
     #region Fields/Properties
 
-    //<radio button parent, <group name, radio button list>>
+    /// <summary>
+    /// No longer populated. Radio button groups are the radio buttons sharing a parent visual and
+    /// <see cref="GroupName"/>, found by scanning the parent's children, so there is no registry to keep
+    /// in sync or to leak a removed screen's visual tree.
+    /// </summary>
+    [Obsolete("Radio button groups are no longer tracked in a static dictionary, so this is always empty.")]
     public static Dictionary<object, Dictionary<string, List<RadioButton>>> RadioButtonDictionary = new Dictionary<object, Dictionary<string, List<RadioButton>>>();
-
-    private static readonly object FakeRoot = new object();    //will act as fake root to enable root level radio buttons to be added to the dictionary
 
     private string _groupName = "";
 
-    private object? GetParent()
-    {
-        object? parent;
-        if (Visual == null)
-            parent = null;
-        else if (Visual.Parent != null)
-            parent = Visual.Parent;
-        else
-            parent = FakeRoot;
-
-        return parent;
-    }
-
+    /// <summary>
+    /// The name of the group this radio button belongs to. Checking a radio button unchecks the other radio
+    /// buttons with the same GroupName that share its parent.
+    /// </summary>
     public string GroupName
     {
         get
@@ -45,63 +39,17 @@ public class RadioButton : ToggleButton
         }
         set
         {
-            RemoveFromDictionary();
-            _groupName = value;
-            AddToDictionary();
+            _groupName = value ?? "";
         }
     }
 
-    private void RemoveFromDictionary()
-    {
-        var parent = GetParent();
-
-        if (parent == null) //parent will be null when visual is null. groupname dictionary updates are meaningless until we have set the scope for the radio button!
-            return;
-
-        if (RadioButtonDictionary.ContainsKey(parent)
-            && GroupName != null
-            && RadioButtonDictionary[parent].ContainsKey(GroupName)
-            && RadioButtonDictionary[parent][GroupName].Contains(this))
-        {
-            RadioButtonDictionary[parent][GroupName].Remove(this);
-        }
-    }
-
-    //Only use this on screen clean-up!!
+    /// <summary>
+    /// No longer needed. Groups are no longer stored anywhere, so there is nothing to clear on screen clean-up.
+    /// </summary>
+    [Obsolete("Radio button groups are no longer tracked in a static dictionary, so there is nothing to clear.")]
     public static void ClearDictionary()
     {
-        foreach (var parent in RadioButtonDictionary)
-        {
-            foreach (var child in parent.Value)
-            {
-                child.Value.Clear();
-            }
-            parent.Value.Clear();
-        }
-        RadioButtonDictionary.Clear();
     }
-
-    private void AddToDictionary()
-    {
-        var parent = GetParent();
-
-        // early out: parent is null when there is no Visual
-        if (parent == null)
-        {
-            return;
-        }
-        // end early out
-
-        if (RadioButtonDictionary.ContainsKey(parent) == false)
-            RadioButtonDictionary.Add(parent, new Dictionary<string, List<RadioButton>>());
-
-        if (RadioButtonDictionary[parent].ContainsKey(GroupName) == false)
-            RadioButtonDictionary[parent].Add(GroupName, new List<RadioButton>());
-
-        RadioButtonDictionary[parent][GroupName].Add(this);
-    }
-
-
 
     #endregion
 
@@ -119,46 +67,30 @@ public class RadioButton : ToggleButton
         IsChecked = false;
     }
 
-    /*
-    This method will assign the group of the radio box according to the parent of the assigned Visual. 
-    This method assumes that the visual is already attached to its parent
-    and that the parent will not change after this method has been called. If these assumptions cause problems in the future we may have to revisit this
-     */
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
 
-        Visual.ParentChanged += HandleParentChanged;
-
         UpdateState();
     }
 
-    protected override void RefreshInternalVisualReferences()
-    {
-        base.RefreshInternalVisualReferences();
-
-        if (GroupName == null)
-        {
-            GroupName = ""; //this will force the dictionary to be updated for the current <group name, visual> pair
-        }
-        else
-        {
-            GroupName = GroupName; //this will force the dictionary to be updated for the current <group name, visual> pair
-        }
-    }
     #endregion
 
     #region UpdateTo Methods
     private void SetThisAsOnlyCheckedInGroup()
     {
-        var parent = GetParent();
+        GraphicalUiElement? parent = Visual?.Parent;
 
         // Don't set all RadioButtons to FALSE just because they don't have a parent yet!
-        if (parent != null && parent != FakeRoot)
+        if (parent?.Children != null)
         {
-            foreach (var radio in RadioButtonDictionary[parent][GroupName])
+            // Index rather than foreach: unchecking raises events whose handlers may change the children.
+            for (int i = 0; i < parent.Children.Count; i++)
             {
-                if (radio != this)
+                GraphicalUiElement sibling = parent.Children[i];
+                if ((sibling as InteractiveGue)?.FormsControlAsObject is RadioButton radio
+                    && radio != this
+                    && radio.GroupName == GroupName)
                 {
                     radio.IsChecked = false;
                 }
@@ -184,12 +116,6 @@ public class RadioButton : ToggleButton
     #endregion
 
     #region Event Handlers
-
-    private void HandleParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs e)
-    {
-        // setting GroupName refreshes grouping
-        GroupName = GroupName;
-    }
 
     protected override void OnClick()
     {

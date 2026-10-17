@@ -40,6 +40,8 @@ An agent working in a nested `.claude/worktrees/` worktree cannot run the canary
 
 The Forms canary (`FlatRedBall.Forms.DesktopGlNet6.csproj`) still reads `..\Gum\`, the primary checkout, from any worktree. To test a branch's `MonoGameGum/Forms/` changes, check the branch out in the primary checkout (or detach it to `origin/<branch>`) before building.
 
+A session that must not touch the primary checkout can build the canary through junctions instead: make a folder with a `Gum` junction to the worktree and a `FlatRedBall` junction to the FRB repo, then build the Forms csproj from the `FlatRedBall` junction. MSBuild keeps the junction path, so the `..\Gum` imports land in the worktree. Put the folder at a drive root (for example `F:\frbc`); under a long temp path the build fails with `MSB3030`/`MSB3491` path-length errors that look like compile errors. Delete the junctions afterwards with `(Get-Item <path>).Delete()`.
+
 ## Canaries
 
 Pick by what you changed. **The "Lives in" column is the repo containing the `.csproj` file itself** — don't go hunting for it in the other repo. Both rows still need the FlatRedBall sibling present (row 1's target also pulls in some FlatRedBall-side `Embedded\*.cs` files), but only row 2's `.csproj` is physically located there.
