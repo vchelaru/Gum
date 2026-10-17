@@ -770,7 +770,7 @@ jobs:
       # trx now lands in the shared TestResults dir so the "Publish Test Results"
       # reporter gates on it like every other suite.
       - name: "Install Mesa llvmpipe (Windows, #3250)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         uses: ./.github/actions/install-mesa-llvmpipe
         with:
           dest-dirs: |
@@ -795,7 +795,7 @@ jobs:
         run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: "RaylibGum.Tests (Windows, #3250)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
@@ -804,7 +804,7 @@ jobs:
       # RaylibScreenshotService (#4174) — same real raylib window/OpenGL context as
       # RaylibGum.Tests above, via the same Mesa llvmpipe DLLs copied in the step above.
       - name: "Gum.ProjectServices.Raylib.Tests (Windows, #4174)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
@@ -815,7 +815,7 @@ jobs:
       # (Apos.Shapes-backed) rendering with renderable construction defaults instead of the
       # element's actual state because ShapeRenderer.Self was never initialized.
       - name: "Gum.ProjectServices.MonoGame.Tests (Windows, #4403)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
@@ -832,7 +832,7 @@ jobs:
       # of the correctly RID-scoped, version-paired copy under runtimes\win-x64\native. Fixed
       # upstream in ShadowDusk.Compiler 0.17.0 (#4195).
       - name: "MonoGameGum.IntegrationTests (Windows, #4190)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
@@ -844,7 +844,7 @@ jobs:
       # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
       # above, though verification showed every test here mocks out GraphicsDevice entirely.
       - name: "MonoGameGum.Shapes.Tests (Windows, #4198)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
