@@ -17,6 +17,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// submitting immediately and unbatched. <see cref="Renderer.GumBatchDrawMode.Immediate"/> (the
 /// default, no mode argument) is pinned unchanged here - this feature is purely additive.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumBatchDeferredDrawModeTests : BaseTestClass
 {
     private static void AdvanceHostFrame(SystemManagers managers, ref double hostTime)
@@ -464,33 +465,16 @@ public class GumBatchDeferredDrawModeTests : BaseTestClass
         nextCycleProbe.RenderCount.ShouldBe(1);
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, global::Gum.Forms.DefaultVisualsVersion.V3);
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            global::Gum.GumService.Default.Initialize(this, global::Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (global::Gum.GumService.Default.IsInitialized)
             {
                 global::Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

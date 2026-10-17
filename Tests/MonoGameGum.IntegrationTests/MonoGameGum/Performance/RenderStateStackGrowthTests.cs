@@ -24,6 +24,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// per-layer <c>Renderer.Draw(SystemManagers, Layer)</c> path used by FRB, which never runs that
 /// reset and is instead balanced by the NET8+ pop in <c>RenderLayer</c> (#3515).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class RenderStateStackGrowthTests : BaseTestClass
 {
     private readonly ITestOutputHelper _output;
@@ -168,33 +169,16 @@ public class RenderStateStackGrowthTests : BaseTestClass
     /// live device so <see cref="global::Gum.GumService.Update(GameTime)"/> / <c>Draw()</c> can be
     /// driven manually after <see cref="Game.RunOneFrame"/>.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, global::Gum.Forms.DefaultVisualsVersion.Newest);
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            global::Gum.GumService.Default.Initialize(this, global::Gum.Forms.DefaultVisualsVersion.Newest);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (global::Gum.GumService.Default.IsInitialized)
             {
                 global::Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

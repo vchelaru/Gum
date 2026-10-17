@@ -21,6 +21,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// cycles in one host frame (one per camera, plus a screen-level overlay pass — the reported FRB2
 /// shape) accumulate into one frame's total instead of resetting mid-frame or leaking across frames.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class ImmediateModeDrawCallStatisticsTests : BaseTestClass
 {
     private static void AdvanceHostFrame(SystemManagers managers, ref double hostTime)
@@ -185,33 +186,16 @@ public class ImmediateModeDrawCallStatisticsTests : BaseTestClass
         lateCount.ShouldBe(earlyCount);
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, global::Gum.Forms.DefaultVisualsVersion.V3);
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            global::Gum.GumService.Default.Initialize(this, global::Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (global::Gum.GumService.Default.IsInitialized)
             {
                 global::Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

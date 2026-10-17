@@ -21,6 +21,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 /// These are baselines, not zero-allocation assertions; each guard is a ratchet to drive down in a follow-up
 /// optimization PR.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class RealisticLayoutAllocationTests : BaseTestClass
 {
     private const string TreeDescription =
@@ -167,33 +168,16 @@ public class RealisticLayoutAllocationTests : BaseTestClass
     /// live device so layout of a Text-bearing Forms tree can be driven manually after
     /// <see cref="Game.RunOneFrame"/>.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, DefaultVisualsVersion.Newest);
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            global::Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (global::Gum.GumService.Default.IsInitialized)
             {
                 global::Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

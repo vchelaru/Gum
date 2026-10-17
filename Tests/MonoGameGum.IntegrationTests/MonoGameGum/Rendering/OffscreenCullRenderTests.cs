@@ -15,6 +15,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// compares the number of SpriteBatch state changes with the cull off vs on. Children scrolled
 /// outside the parent's clip rect should contribute no state changes when culling is enabled.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class OffscreenCullRenderTests : BaseTestClass
 {
     [Fact]
@@ -79,35 +80,18 @@ public class OffscreenCullRenderTests : BaseTestClass
     /// Minimal Game host that initializes a fresh <see cref="GumService"/> per test so
     /// <see cref="Renderer.Draw(SystemManagers)"/> can be invoked against a live device.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public GumService GumService { get; }
+        public GumService GumService { get; } = new GumService();
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new GumService();
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }
