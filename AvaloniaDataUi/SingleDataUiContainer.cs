@@ -32,6 +32,12 @@ public class SingleDataUiContainer : ContentControl
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
     }
 
+    /// <summary>
+    /// Whether this row is one cell of a row shared with another member, so its label takes only the
+    /// width its text needs. Set before the row's member is assigned.
+    /// </summary>
+    public bool IsCompact { get; set; }
+
     /// <summary>The displayer currently hosted, if any.</summary>
     public Control? Displayer { get; private set; }
 
@@ -99,6 +105,11 @@ public class SingleDataUiContainer : ContentControl
         {
             throw new InvalidOperationException(
                 $"The object of type {controlType} must implement the IDataUi interface to be used in a DataUiGrid");
+        }
+
+        if (control is AvaloniaDataUi.Controls.DataUiDisplayBase displayBase)
+        {
+            displayBase.IsCompact = IsCompact;
         }
 
         display.InstanceMember = member;

@@ -17,6 +17,8 @@ namespace AvaloniaDataUi.Controls;
 /// </summary>
 public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 {
+    private const double FieldMinWidth = 44;
+
     private readonly TextBoxDisplayLogic _logic;
     private readonly LabelDragScrubLogic _scrubLogic;
     private readonly Grid _grid;
@@ -36,7 +38,6 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     {
         _label = new TextBlock
         {
-            Padding = new Thickness(4, 4, 4, 0),
             VerticalAlignment = VerticalAlignment.Center,
             TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
         };
@@ -48,6 +49,14 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         CapturedPointerDrag.Attach(_labelHost, TryBeginLabelScrub, HandleLabelScrubMoved, EndLabelScrub);
 
         _textBox = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Center };
+        _textBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TemplatedControl.PaddingProperty)
+            {
+                MatchLabelPaddingToField();
+            }
+        };
+        MatchLabelPaddingToField();
         _textBox.GotFocus += (_, _) => RefreshPlaceholderText();
         _textBox.EditCommitRequested += HandleEditCommitRequested;
         _textBox.LostFocus += HandleTextBoxLostFocus;
@@ -69,7 +78,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
             RowDefinitions = new RowDefinitions("Auto,Auto,Auto"),
         };
         DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], 100);
-        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], 44);
+        DataUiRowLayout.ConfigureValueColumn(_grid.ColumnDefinitions[1], FieldMinWidth);
         Grid.SetColumn(_textBox, 1);
         Grid.SetColumn(_nullableCheckBox, 2);
         Grid.SetRow(_hint, 2);
@@ -130,6 +139,17 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         }
     }
 
+    /// <inheritdoc/>
+    public override double CompactMinimumWidth
+    {
+        get
+        {
+            // The label unwrapped, plus the narrowest the field is allowed to get.
+            _label.Measure(Size.Infinity);
+            return _label.DesiredSize.Width + FieldMinWidth;
+        }
+    }
+
     /// <summary>The text field, for tests and subclasses.</summary>
     protected internal TextBox TextBox => _textBox;
 
@@ -141,7 +161,14 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     {
         _logic.InstanceMember = InstanceMember;
         _lastApplyValueResult = null;
-        DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
+        if (IsCompact)
+        {
+            DataUiRowLayout.ConfigureCompactLabelColumn(_grid.ColumnDefinitions[0]);
+        }
+        else
+        {
+            DataUiRowLayout.ConfigureLabelColumn(_grid.ColumnDefinitions[0], InstanceMember?.FirstGridLength ?? 100);
+        }
         _textBox.ClearValue(TemplatedControl.BackgroundProperty);
     }
 
@@ -210,6 +237,13 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         _logic.HasUserChangedAnything = false;
         _logic.TextAtStartOfEditing = _textBox.Text ?? string.Empty;
         _textBox.AcceptText();
+    }
+
+    // The label takes the field's vertical padding, so both texts center on the same line whatever the
+    // theme pads the field by.
+    private void MatchLabelPaddingToField()
+    {
+        _label.Padding = new Thickness(4, _textBox.Padding.Top, 4, _textBox.Padding.Bottom);
     }
 
     private bool IsDisplayedTypeNullable()

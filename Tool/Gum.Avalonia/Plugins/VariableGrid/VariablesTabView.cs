@@ -54,6 +54,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         _behaviorGrid = new DataUiGrid(displayers);
         // The WPF Variables grid's rows: separators and the set-value marker, no stripes.
         _variablesGrid.RowDecorator = VariableGridRows.Frame;
+        _variablesGrid.RowPairs = VariableGridRows.Pairs;
         _variablesGrid.AlternatesRowBackgrounds = false;
 
         Border stateBanner = new Border { Padding = new Thickness(6, 3) };

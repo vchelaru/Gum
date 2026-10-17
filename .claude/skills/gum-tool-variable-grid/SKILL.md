@@ -85,6 +85,10 @@ A row is hidden by removing it from `category.Members`, not by a visibility flag
 
 Emptying a category hides its header only because each category `DataTemplate` binds the `Expander`'s `Visibility` to the neutral `MemberCategory.IsVisible` bool (computed from `Members.Count`) through a `BooleanToVisibilityConverter`. Those templates are the three `MemberCategory` `DataTemplate`s in `Gum/Themes/Frb.Styles.Defaults.xaml` and `WpfDataUi/Themes/Generic.xaml` — a new one that omits the binding leaves empty headers stacked on screen, with nothing in the model to indicate the mistake.
 
+### Paired Rows (X/Y, Width/Height, texture rectangle)
+
+Avalonia only. `DataUiGrid.RowPairs` (the Variables tab sets `VariableGridRows.Pairs`) shows two members side by side, and it is purely a view concern: `category.Members` stays flat, so the filter, lookups by name, multi-select and copy/paste see ordinary rows. `RowProjection` folds a pair into one row at the first member's place, and `PairedRowView` hosts two ordinary rows, each framed by `RowDecorator`, so each cell keeps its own set-value marker and detail text. It stacks the cells when `DataUiDisplayBase.CompactMinimumWidth` says both cannot fit. Nullable members (the Min/Max sizes) stay out of pairs because their "Is Null" box needs the room.
+
 ### Structural Rebuild vs. Partial Refresh
 
 `PropertyGridManager.RefreshDataGrid` tracks the previous display target (element, state, instances, behavior). If unchanged and `force=false`, it calls `Refresh()` to update values without recreating categories. If the target changed, it calls `SetCategories` with a fresh list from `ElementSaveDisplayer`. Pass `force: true` to always rebuild.
