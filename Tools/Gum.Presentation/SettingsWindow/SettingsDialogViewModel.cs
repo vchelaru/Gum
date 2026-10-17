@@ -44,6 +44,7 @@ public class SettingsDialogViewModel : DialogViewModel
     private readonly Dictionary<string, SettingsNavigationEntry> _entriesByPageId;
     private SettingsNavigationEntry? _selectedEntry;
     private string _searchText;
+    private readonly string _projectFileName;
 
     /// <summary>Creates the window's view model; the pages reflect the registry and project as they are now.</summary>
     public SettingsDialogViewModel(
@@ -59,6 +60,7 @@ public class SettingsDialogViewModel : DialogViewModel
         _searchText = "";
 
         bool hasProject = projectState.GumProjectSave != null;
+        _projectFileName = System.IO.Path.GetFileName(projectState.GumProjectSave?.FullFileName ?? "");
         _allPages = new List<SettingsPage>
         {
             new SettingsPage(SettingsPageIds.General, "General", SettingsSection.Application, general, GeneralOrder)
@@ -101,6 +103,14 @@ public class SettingsDialogViewModel : DialogViewModel
 
     /// <summary>The page shown on the right, or null before one is chosen.</summary>
     public SettingsPage? SelectedPage => _selectedEntry?.Page;
+
+    /// <summary>Where the selected page's settings live: this machine, or the project file.</summary>
+    public string SelectedScopeText => SelectedPage?.Section switch
+    {
+        SettingsSection.Application => "Applies to this machine, whatever project is open.",
+        SettingsSection.Project => string.IsNullOrEmpty(_projectFileName) ? "Saved in the project." : $"Saved in {_projectFileName}.",
+        _ => "",
+    };
 
     /// <summary>
     /// The selected row of <see cref="NavigationEntries"/>. A header or null is ignored, so the
@@ -156,6 +166,7 @@ public class SettingsDialogViewModel : DialogViewModel
         _selectedEntry = entry;
         NotifyPropertyChanged(nameof(SelectedEntry));
         NotifyPropertyChanged(nameof(SelectedPage));
+        NotifyPropertyChanged(nameof(SelectedScopeText));
         entry.Page?.Activated?.Invoke();
     }
 

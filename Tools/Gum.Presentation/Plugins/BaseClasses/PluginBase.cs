@@ -16,6 +16,7 @@ using Gum.Commands;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.SettingsWindow;
 using Gum.Input;
 
 namespace Gum.Plugins.BaseClasses;
@@ -53,6 +54,20 @@ public abstract class PluginBase : IPlugin
     private Gum.Menus.MenuModel? _menu;
     /// <summary>The head's menu model. Optional so heads that still render menus themselves compose.</summary>
     [Import(AllowDefault = true)] public Gum.Menus.MenuModel? Menu { get => _menu; set => _menu = value; }
+
+    private ISettingsPageRegistry? _settingsPageRegistry;
+    /// <summary>The Settings window's page registry. Optional so a host without a Settings window still composes.</summary>
+    [Import(AllowDefault = true)] public ISettingsPageRegistry? SettingsPageRegistry { get => _settingsPageRegistry; set => _settingsPageRegistry = value; }
+
+    private ISettingsWindowService? _settingsWindowService;
+    /// <summary>Opens the Settings window. Optional so a host without one still composes.</summary>
+    [Import(AllowDefault = true)] public ISettingsWindowService? SettingsWindowService { get => _settingsWindowService; set => _settingsWindowService = value; }
+
+    /// <summary>Adds a page to the Settings window. Call from <c>StartUp</c>.</summary>
+    protected void AddSettingsPage(SettingsPage page) => _settingsPageRegistry?.Register(page);
+
+    /// <summary>Opens the Settings window, on <paramref name="pageId"/> (see <see cref="SettingsPageIds"/>) when given.</summary>
+    protected void ShowSettingsWindow(string? pageId = null) => _settingsWindowService?.Show(pageId);
 
     // Leaf items this plugin added, so turning the plugin off can disable them (a top-level menu
     // returned for a one-part path may be shared with other plugins, so it is not tracked).

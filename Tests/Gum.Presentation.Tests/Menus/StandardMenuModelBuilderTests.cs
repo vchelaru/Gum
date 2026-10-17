@@ -6,6 +6,7 @@ using Gum.Menus;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.SettingsWindow;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -80,6 +81,34 @@ public class StandardMenuModelBuilderTests
 
         editCommands.Verify(e => e.ShowAddScreenDialog(), Times.Once);
         editCommands.Verify(e => e.ShowAddComponentDialog(), Times.Once);
+    }
+
+    [Fact]
+    public void Build_FileSettings_ShowsTheSettingsWindow()
+    {
+        AutoMocker mocker = new AutoMocker();
+        Mock<IDialogService> dialogService = mocker.GetMock<IDialogService>();
+        StandardMenuModelBuilder builder = mocker.CreateInstance<StandardMenuModelBuilder>();
+
+        MenuItemModel settings = builder.Build().GetItem("File")!.Items.Single(item => item.Header == "Settings...");
+        settings.Invoke();
+
+        dialogService.Verify(
+            d => d.Show(It.IsAny<Action<SettingsDialogViewModel>?>(), out It.Ref<SettingsDialogViewModel>.IsAny),
+            Times.Once);
+    }
+
+    [Fact]
+    public void Build_SettingsMovedToTheSettingsWindow_LeavesNoMenuItemsForThem()
+    {
+        AutoMocker mocker = new AutoMocker();
+        StandardMenuModelBuilder builder = mocker.CreateInstance<StandardMenuModelBuilder>();
+
+        MenuModel model = builder.Build();
+
+        model.GetItem("View")!.Items.Select(item => item.Header).ShouldNotContain("Theming");
+        model.GetItem("View")!.Items.Select(item => item.Header).ShouldNotContain("Standards palette");
+        model.GetItem("Plugins").ShouldBeNull();
     }
 
     [Fact]

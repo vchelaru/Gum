@@ -91,6 +91,8 @@ internal static class PluginBridgedServiceTypes
 
         typeof(ISetVariableLogic),
         typeof(IHotkeyManager),
+        typeof(Gum.SettingsWindow.ISettingsPageRegistry),
+        typeof(Gum.SettingsWindow.ISettingsWindowService),
         typeof(IEditCommands),
         typeof(ICopyPasteLogic),
         typeof(IVariableInCategoryPropagationLogic),

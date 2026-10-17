@@ -8,7 +8,6 @@ namespace Gum.Managers;
 /// enabled/checked state for <see cref="MenuStripManager"/>'s selection-dependent menu items.
 /// </summary>
 public record MenuStripRefreshState(
-    bool StandardsPaletteChecked,
     string RemoveStateHeader,
     bool RemoveStateEnabled,
     string RemoveElementHeader,
@@ -25,17 +24,15 @@ public record MenuStripRefreshState(
 public class MenuStripStateLogic
 {
     private readonly ISelectedState _selectedState;
-    private readonly IProjectManager _projectManager;
 
-    public MenuStripStateLogic(ISelectedState selectedState, IProjectManager projectManager)
+    public MenuStripStateLogic(ISelectedState selectedState)
     {
         _selectedState = selectedState;
-        _projectManager = projectManager;
     }
 
     /// <summary>
-    /// Computes the header text and enabled/checked state for the menu strip's
-    /// selection-dependent items based on the current selection and project settings.
+    /// Computes the header text and enabled state for the menu strip's
+    /// selection-dependent items based on the current selection.
     /// </summary>
     public MenuStripRefreshState GetRefreshState()
     {
@@ -87,7 +84,6 @@ public class MenuStripStateLogic
         }
 
         return new MenuStripRefreshState(
-            _projectManager.EffectiveUseStandardsPalette,
             removeStateHeader, removeStateEnabled,
             removeElementHeader, removeElementEnabled,
             removeVariableHeader, removeVariableEnabled);

@@ -164,6 +164,37 @@ public class SettingsDialogViewModelTests
     }
 
     [Fact]
+    public void SelectedScopeText_ForApplicationPage_SaysItAppliesToTheMachine()
+    {
+        SettingsDialogViewModel viewModel = CreateViewModel();
+
+        viewModel.SelectedScopeText.ShouldBe("Applies to this machine, whatever project is open.");
+    }
+
+    [Fact]
+    public void SelectedScopeText_ForProjectPage_NamesTheProjectFile()
+    {
+        _projectState.SetupGet(x => x.GumProjectSave).Returns(new GumProjectSave { FullFileName = "C:/games/MyGame/MyGame.gumx" });
+        _registry.Register(CreatePage("canvas", "Canvas", SettingsSection.Project));
+        SettingsDialogViewModel viewModel = CreateViewModel();
+
+        viewModel.SelectPage("canvas");
+
+        viewModel.SelectedScopeText.ShouldBe("Saved in MyGame.gumx.");
+    }
+
+    [Fact]
+    public void SelectedScopeText_ForProjectPageOfUnsavedProject_SaysSavedInTheProject()
+    {
+        _registry.Register(CreatePage("canvas", "Canvas", SettingsSection.Project));
+        SettingsDialogViewModel viewModel = CreateViewModel();
+
+        viewModel.SelectPage("canvas");
+
+        viewModel.SelectedScopeText.ShouldBe("Saved in the project.");
+    }
+
+    [Fact]
     public void SearchText_FiltersPagesByTitle()
     {
         _registry.Register(CreatePage("canvas", "Canvas", SettingsSection.Project));

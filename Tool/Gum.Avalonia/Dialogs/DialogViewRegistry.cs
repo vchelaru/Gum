@@ -33,6 +33,7 @@ public class DialogViewRegistry
         Register<GetUserStringDialogBaseViewModel>(() => new GetUserStringDialogView());
         Register<ChoiceDialogViewModel>(() => new ChoiceDialogView());
         Register<PluginsDialogViewModel>(() => new PluginsDialogView());
+        Register<Gum.SettingsWindow.SettingsDialogViewModel>(() => new SettingsDialogView());
 
         // Phase 80.
         Register<NewProjectDialogViewModel>(() => new NewProjectDialogView());
