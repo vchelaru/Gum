@@ -52,6 +52,7 @@
     <!-- Per-process temp folder for the tool's per-user files (#5337). -->
     <Compile Include="..\Shared\**\*.cs" Link="Shared\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- Seed-driven test class and method order for the weekly shuffled-order workflow (#5820, #5840). -->
+    <Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />
     <Compile Include="..\TestOrdering\ShuffledTestCollectionOrderer.cs" Link="TestOrdering\ShuffledTestCollectionOrderer.cs" />
     <Compile Include="..\TestOrdering\ShuffledTestCaseOrderer.cs" Link="TestOrdering\ShuffledTestCaseOrderer.cs" />
     <!-- GumPreview is an executable that publishes itself on a Debug build, so its pure logic is linked. -->

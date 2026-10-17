@@ -27,14 +27,14 @@ public class ShuffledTestCaseOrderer : ITestCaseOrderer
     {
         IEnumerable<TTestCase> defaultOrder = _defaultOrderer.OrderTestCases(testCases);
 
-        if (!ShuffledTestCollectionOrderer.TryReadSeed(out int seed))
+        if (!TestShuffle.TryReadSeed(out int seed))
         {
             return defaultOrder;
         }
 
         // Shuffling the default (sorted) order keeps a seed reproducible on any machine.
         List<TTestCase> shuffled = defaultOrder.ToList();
-        ShuffledTestCollectionOrderer.Shuffle(shuffled, seed);
+        TestShuffle.Shuffle(shuffled, seed);
         return shuffled;
     }
 }

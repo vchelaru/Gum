@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using GumTestSupport;
 using Xunit.Runner.InProc.SystemConsole;
 using Xunit.Sdk;
 using Xunit.v3;
@@ -75,6 +76,14 @@ public class MainThreadTestFrameworkExecutor : XunitTestFrameworkExecutor
         ITestFrameworkExecutionOptions executionOptions,
         CancellationToken cancellationToken)
     {
+        // Every class is in the one SharedGame collection, so this is the only place the class order
+        // can change (#6106). The collection runner takes the classes in the order they first appear.
+        if (TestShuffle.TryReadSeed(out int seed))
+        {
+            testCases = TestShuffle.OrderByShuffledKey(testCases, testCase => testCase.TestClassName ?? "", seed, out List<string> classOrder);
+            TestShuffle.WriteOrderFile(classOrder);
+        }
+
         TaskCompletionSource completion = new TaskCompletionSource();
 
         MainThreadSynchronizationContext.Instance.Post(async _ =>

@@ -41,6 +41,9 @@
 	<ItemGroup>
 		<!-- Linked rather than referencing MonoGameGum.TestsCommon, which pulls in xunit v2. -->
 		<Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="AllocationMeasurer.cs" />
+		<!-- Seed-driven test order for the weekly shuffled-order workflow (#6106). The xunit v3 orderers, not the v2 ones. -->
+		<Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />
+		<Compile Include="..\TestOrdering\Xunit3\ShuffledTestCaseOrderer.cs" Link="TestOrdering\ShuffledTestCaseOrderer.cs" />
 		<!-- A real code-generated runtime component (a ContainerRuntime), for the wrong-service ownership test. -->
 		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.cs" Link="GeneratedSample\ButtonStandardRuntime.cs" />
 		<Compile Include="..\..\Samples\GumFormsSample\GumFormsSampleCommon\Components\Controls\ButtonStandardRuntime.Generated.cs" Link="GeneratedSample\ButtonStandardRuntime.Generated.cs" />
