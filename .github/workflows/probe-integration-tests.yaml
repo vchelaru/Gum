@@ -35,7 +35,7 @@ jobs:
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe
-        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "FullyQualifiedName~NativeGrowthProbe" --logger "trx" --results-directory "TestResults"
 
       - name: Upload results
         if: always()
@@ -43,6 +43,11 @@ jobs:
         with:
           name: probe-results
           path: TestResults
+
+      - name: Native growth
+        if: always()
+        shell: pwsh
+        run: Get-Content TestResults/native-growth.txt
 
       - name: Slowest tests
         if: always()
