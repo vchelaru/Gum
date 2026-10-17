@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Layout;
+using AvaloniaDataUi;
 using FluentIcons.Avalonia;
 using Gum.Avalonia.Themes;
 using WpfDataUi.DataTypes;
@@ -18,6 +19,18 @@ namespace Gum.Avalonia.Plugins.VariableGrid;
 internal static class VariableGridRows
 {
     private static readonly IValueConverter DefaultToOpacity = new FuncValueConverter<bool, double>(isDefault => isDefault ? 0 : 1);
+
+    /// <summary>
+    /// Variables that share a row: a position and a size read, and tab, as pairs. The nullable Min and
+    /// Max sizes stay single rows, since each carries an "Is Null" check box.
+    /// </summary>
+    public static readonly RowPair[] Pairs =
+    {
+        new RowPair("X", "Y"),
+        new RowPair("Width", "Height"),
+        new RowPair("TextureLeft", "TextureTop"),
+        new RowPair("TextureWidth", "TextureHeight"),
+    };
 
     // The WPF IconInline size: 1.25 times the base font.
     private static readonly IValueConverter IconSize = GumChromeStyles.ScaleFontSize(1.25);

@@ -96,14 +96,19 @@ public sealed class DataUiCategoryView : StackPanel
 
         Rows = new ItemsControl
         {
-            ItemTemplate = new FuncDataTemplate<InstanceMember>((_, _) =>
+            ItemsSource = new RowProjection(category.Members, grid.RowPairs),
+            ItemTemplate = new FuncDataTemplate<object>((row, _) =>
             {
+                if (row is PairedRow pairedRow)
+                {
+                    return new PairedRowView(grid, pairedRow);
+                }
+
                 SingleDataUiContainer editor = new SingleDataUiContainer(grid);
                 return grid.RowDecorator?.Invoke(editor) ?? editor;
             }),
         };
         Rows.Classes.Add(RowsClass);
-        Rows.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(MemberCategory.Members)));
         Rows.Bind(IsVisibleProperty, new Binding(nameof(MemberCategory.IsExpanded)));
         Children.Add(Rows);
     }

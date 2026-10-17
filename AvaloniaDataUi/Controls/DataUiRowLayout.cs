@@ -28,6 +28,14 @@ public static class DataUiRowLayout
         column.MaxWidth = width;
     }
 
+    /// <summary>Makes <paramref name="column"/> the label column of a row cell shared with another member: as wide as its text.</summary>
+    public static void ConfigureCompactLabelColumn(ColumnDefinition column)
+    {
+        column.Width = GridLength.Auto;
+        column.MinWidth = 0;
+        column.MaxWidth = double.PositiveInfinity;
+    }
+
     /// <summary>Makes <paramref name="column"/> the stretching value column, never narrower than <paramref name="minWidth"/>.</summary>
     public static void ConfigureValueColumn(ColumnDefinition column, double minWidth)
     {
