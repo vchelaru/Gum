@@ -1,0 +1,63 @@
+name: probe-gencode
+on:
+  push:
+    branches: [6092-gencode-job-faster]
+jobs:
+  base:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Install full maui
+        shell: bash
+        run: |
+          s=$(date +%s)
+          bash .github/scripts/install-workloads.sh maui
+          echo "INSTALL_SECONDS=$(( $(date +%s) - s ))"
+          du -sm "C:/Program Files/dotnet/packs" "C:/Program Files/dotnet/metadata" "C:/Program Files/dotnet/sdk-manifests" || true
+          ls "C:/Program Files/dotnet/packs"
+      - name: Instrumented baseline
+        shell: pwsh
+        run: |
+          function T($n, [scriptblock]$b) { $sw=[Diagnostics.Stopwatch]::StartNew(); & $b; Write-Host "TIMING $n $([int]$sw.Elapsed.TotalSeconds)s" }
+          T "cli build" { dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0 }
+          $cli = "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
+          $g = @("Tests/CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx","Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx","Tests/CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx","Tests/CodeGen_Skia_ByReference/Content/GumProject/CodeGenTestProject.gumx")
+          foreach ($x in $g) { T "codegen $x" { & $cli codegen $x } }
+          T "restore maui sln" { dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --verbosity quiet }
+          T "build maui" { dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0 --framework net9.0-windows10.0.19041.0 }
+          $s = @("Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln","Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln","Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj","Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln","Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln","Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln")
+          foreach ($x in $s) {
+            T "restore $x" { dotnet restore $x --verbosity quiet }
+            T "build $x" { dotnet build $x --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0 }
+          }
+          T "themes" { pwsh Tools/build-theme-projects.ps1 -Cli $cli }
+  slim:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Install slim maui
+        shell: bash
+        run: |
+          s=$(date +%s)
+          bash .github/scripts/install-workloads.sh maui-windows maui-android
+          echo "INSTALL_SECONDS=$(( $(date +%s) - s ))"
+          du -sm "C:/Program Files/dotnet/packs" "C:/Program Files/dotnet/metadata" "C:/Program Files/dotnet/sdk-manifests" || true
+          ls "C:/Program Files/dotnet/packs"
+      - name: Restore maui only
+        shell: pwsh
+        run: |
+          $sw=[Diagnostics.Stopwatch]::StartNew()
+          dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --verbosity quiet
+          Write-Host "TIMING slim maui restore $([int]$sw.Elapsed.TotalSeconds)s exit=$LASTEXITCODE"
+          dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0 --framework net9.0-windows10.0.19041.0
+          Write-Host "TIMING slim maui build $([int]$sw.Elapsed.TotalSeconds)s exit=$LASTEXITCODE"
