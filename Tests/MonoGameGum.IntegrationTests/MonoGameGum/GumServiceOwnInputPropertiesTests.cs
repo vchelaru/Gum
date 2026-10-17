@@ -14,6 +14,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 /// A service's Cursor, Keyboard, Gamepads, PopupRoot and ModalRoot answer for that service whichever one is the
 /// current default, and reading them never changes the default (#6066).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class GumServiceOwnInputPropertiesTests : BaseTestClass
 {
     private readonly string _root;

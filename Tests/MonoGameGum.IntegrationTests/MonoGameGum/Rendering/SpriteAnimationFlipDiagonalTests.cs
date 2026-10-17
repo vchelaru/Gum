@@ -16,6 +16,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// shape, flipping horizontally and vertically first and stretching to the sprite's footprint, as
 /// Skia and raylib do (#6064).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class SpriteAnimationFlipDiagonalTests : BaseTestClass
 {
     // One letter per texel, the first row of the texture first. R, G, B and W are the only
@@ -240,35 +241,18 @@ public class SpriteAnimationFlipDiagonalTests : BaseTestClass
         return samples.Select(sample => data[(sample.Y * w) + sample.X]).ToArray();
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public Gum.GumService GumService { get; }
+        public Gum.GumService GumService { get; } = new Gum.GumService();
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new Gum.GumService();
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

@@ -15,6 +15,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// from an atlas region) must be <see cref="LineRectangle.LinePixelWidth"/> screen pixels thick at any
 /// camera zoom, the same as when no source rectangle is set.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class SinglePixelSourceRectangleStrokeWidthTests : BaseTestClass
 {
     [Theory]
@@ -84,33 +85,18 @@ public class SinglePixelSourceRectangleStrokeWidthTests : BaseTestClass
         return (thickness, columnDump);
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override Microsoft.Xna.Framework.Color ClearColor => XnaColor.CornflowerBlue;
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
+        protected override void OnInitialize() => Gum.GumService.Default.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (Gum.GumService.Default.IsInitialized)
             {
                 Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

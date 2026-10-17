@@ -30,6 +30,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// See <c>.claude/skills/gum-monogame-rendering/SKILL.md</c> for the architectural
 /// rationale and the past wrong turns these tests guard against.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class MatrixRoutingTests : BaseTestClass
 {
     [Fact]
@@ -147,33 +148,18 @@ public class MatrixRoutingTests : BaseTestClass
     /// (singleton <c>GumService.Default</c> can only be initialized once per process).
     /// We don't draw anything — we just need <c>BeginSpriteBatch</c> to be callable.
     /// </summary>
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public GumService GumService { get; }
+        public GumService GumService { get; } = new GumService();
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new GumService();
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
+            {
                 GumService.Uninitialize();
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
+            }
         }
     }
 }

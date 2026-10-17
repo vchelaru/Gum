@@ -21,10 +21,8 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum;
 // Harness for MultiGumServiceCollisionSpikeTests (#6066 spike).
 
 /// <summary>A game holding two <see cref="Gum.GumService"/> instances, each initialized on demand.</summary>
-internal sealed class CollisionGame : Game
+internal sealed class CollisionGame : SharedGameLease
 {
-    private readonly GraphicsDeviceManager _graphics;
-
     public Gum.GumService ServiceA { get; }
     public Gum.GumService ServiceB { get; }
     public GumProjectSave? ProjectA { get; private set; }
@@ -35,28 +33,23 @@ internal sealed class CollisionGame : Game
 
     public CollisionGame()
     {
-        LoaderManager.Self?.DisposeAndClear();
-        _graphics = new GraphicsDeviceManager(this);
         ServiceA = new Gum.GumService();
         ServiceB = new Gum.GumService();
     }
 
     public GumProjectSave InitializeA(string gumxPath)
     {
-        ProjectA = ServiceA.Initialize(this, gumxPath)!;
+        ProjectA = ServiceA.Initialize(Game, gumxPath)!;
         return ProjectA;
     }
 
     public GumProjectSave InitializeB(string gumxPath)
     {
-        ProjectB = ServiceB.Initialize(this, gumxPath)!;
+        ProjectB = ServiceB.Initialize(Game, gumxPath)!;
         return ProjectB;
     }
 
-    protected override void Update(GameTime gameTime) { }
-    protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-    protected override void Dispose(bool disposing)
+    protected override void OnDispose()
     {
         // Failures here are teardown after a red test.
         if (ServiceB.IsInitialized)
@@ -76,7 +69,6 @@ internal sealed class CollisionGame : Game
         FrameworkElement.ModalRoot = null!;
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
         FileManager_ResetRelativeDirectory();
-        base.Dispose(disposing);
     }
 
     private static void FileManager_ResetRelativeDirectory() =>

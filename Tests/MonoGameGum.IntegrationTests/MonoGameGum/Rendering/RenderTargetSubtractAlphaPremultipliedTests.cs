@@ -19,6 +19,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// color at (dest - maskColor) rather than dest * (1 - alpha), so it disagreed with the lowered alpha.
 /// Premultiplied input is authored directly in the mask color (this harness has no FRB shader).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class RenderTargetSubtractAlphaPremultipliedTests : BaseTestClass
 {
     private const int CaptureSize = 100;
@@ -100,36 +101,18 @@ public class RenderTargetSubtractAlphaPremultipliedTests : BaseTestClass
         return pixels;
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override Microsoft.Xna.Framework.Color ClearColor => XnaColor.Black;
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                GraphicsProfile = GraphicsProfile.HiDef,
-            };
-        }
+        protected override void OnInitialize() => Gum.GumService.Default.Initialize(Game, DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.Black);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (Gum.GumService.Default.IsInitialized)
             {
                 Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

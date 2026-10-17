@@ -19,6 +19,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// wrong. The fix flushes the pending batch before any shared-effect mutation
 /// (<c>SpriteBatchStack.FlushIfBegan</c>, called at the top of <c>SpriteRenderer.BeginSpriteBatch</c>).
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class SpriteColorOperationLeakTests : BaseTestClass
 {
     [Fact]
@@ -108,35 +109,18 @@ public class SpriteColorOperationLeakTests : BaseTestClass
         return data[(sampleY * w) + sampleX];
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public GumService GumService { get; }
+        public GumService GumService { get; } = new GumService();
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new GumService();
-        }
+        protected override void OnInitialize() => GumService.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

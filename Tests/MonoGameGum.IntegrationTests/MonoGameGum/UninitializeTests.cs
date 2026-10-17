@@ -13,6 +13,7 @@ using Shouldly;
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
+[Collection(SharedGame.CollectionName)]
 public class UninitializeTests : BaseTestClass
 {
     // -------------------------------------------------------------------------
@@ -52,6 +53,25 @@ public class UninitializeTests : BaseTestClass
             if (disposable is Texture2D texture)
                 texture.IsDisposed.ShouldBeTrue();
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Radio button groups
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void Uninitialize_ClearsRadioButtonGroups()
+    {
+        using var game = new GameForUninitializeTest();
+        game.RunOneFrame();
+        Gum.Forms.Controls.RadioButton radio = new Gum.Forms.Controls.RadioButton("group");
+        game.GumService.Root.AddChild(radio.Visual);
+        // The groups are keyed by each button's parent visual, so a group left behind keeps that whole tree alive.
+        Gum.Forms.Controls.RadioButton.RadioButtonDictionary.Count.ShouldBeGreaterThan(0);
+
+        game.GumService.Uninitialize();
+
+        Gum.Forms.Controls.RadioButton.RadioButtonDictionary.Count.ShouldBe(0);
     }
 
     // -------------------------------------------------------------------------
@@ -234,68 +254,44 @@ public class UninitializeTests : BaseTestClass
     // Nested Game classes
     // -------------------------------------------------------------------------
 
-    private class TwoServiceGame : Game
+    private sealed class TwoServiceGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
         public GumService ServiceA { get; }
         public GumService ServiceB { get; }
 
         public TwoServiceGame()
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
             // ServiceA is the static GumService.Default so its lifetime can be checked too.
             ServiceA = GumService.Default;
             ServiceB = new GumService();
         }
 
-        protected override void Initialize()
+        protected override void OnInitialize()
         {
-            base.Initialize();
-            ServiceA.Initialize(this, DefaultVisualsVersion.V3);
-            ServiceB.Initialize(this, DefaultVisualsVersion.V3);
+            ServiceA.Initialize(Game, DefaultVisualsVersion.V3);
+            ServiceB.Initialize(Game, DefaultVisualsVersion.V3);
         }
 
-        protected override void Draw(GameTime gameTime) =>
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (ServiceB.IsInitialized)
                 ServiceB.Uninitialize();
             if (ServiceA.IsInitialized)
                 ServiceA.Uninitialize();
-            base.Dispose(disposing);
         }
     }
 
-    private class GameForUninitializeTest : Game
+    private sealed class GameForUninitializeTest : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public GumService GumService { get; }
+        public GumService GumService { get; } = new GumService();
 
-        public GameForUninitializeTest()
+        protected override void OnInitialize() => GumService.Initialize(Game, DefaultVisualsVersion.V3);
+
+        protected override void OnDispose()
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new GumService();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, DefaultVisualsVersion.V3);
-        }
-
-        protected override void Draw(GameTime gameTime) =>
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
-        {
-            // Uninitialize may have already been called by the test; guard against double-dispose.
+            // The test may already have called Uninitialize.
             if (GumService.IsInitialized)
-                LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
+                GumService.Uninitialize();
         }
     }
 
@@ -303,35 +299,23 @@ public class UninitializeTests : BaseTestClass
     /// Calls Uninitialize inside Initialize, then re-initializes — used to verify
     /// that Uninitialize leaves the system in a state where Initialize can run again.
     /// </summary>
-    private class GameForReinitializeTest : Game
+    private sealed class GameForReinitializeTest : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public GumService GumService { get; }
+        public GumService GumService { get; } = new GumService();
 
-        public GameForReinitializeTest()
+        protected override void OnInitialize()
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-            GumService = new GumService();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, DefaultVisualsVersion.V3);
+            GumService.Initialize(Game, DefaultVisualsVersion.V3);
             GumService.Uninitialize();
 
             // Second initialization on a fresh instance.
-            GumService.Initialize(this, DefaultVisualsVersion.V3);
+            GumService.Initialize(Game, DefaultVisualsVersion.V3);
         }
 
-        protected override void Draw(GameTime gameTime) =>
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
+            if (GumService.IsInitialized)
+                GumService.Uninitialize();
         }
     }
 
@@ -340,46 +324,28 @@ public class UninitializeTests : BaseTestClass
     /// re-initializes both — used to verify that GumService.Uninitialize() resets ShapeRenderer.Self
     /// so a host-driven second Initialize (#4416) does not throw.
     /// </summary>
-    private class GameForShapeRendererReinitializeTest : Game
+    private sealed class GameForShapeRendererReinitializeTest : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
-        public GumService GumService { get; }
+        public GumService GumService { get; } = new GumService();
 
-        public GameForShapeRendererReinitializeTest()
+        protected override void OnInitialize()
         {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this)
-            {
-                // Apos.Shapes uses an SM4 effect that the default Reach profile can't load - #4403.
-                GraphicsProfile = GraphicsProfile.HiDef,
-            };
-            GumService = new GumService();
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            GumService.Initialize(this, DefaultVisualsVersion.V3);
+            GumService.Initialize(Game, DefaultVisualsVersion.V3);
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 
             GumService.Uninitialize();
 
             // Second initialization on a fresh instance.
-            GumService.Initialize(this, DefaultVisualsVersion.V3);
+            GumService.Initialize(Game, DefaultVisualsVersion.V3);
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
         }
 
-        protected override void Draw(GameTime gameTime) =>
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (GumService.IsInitialized)
             {
                 GumService.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 

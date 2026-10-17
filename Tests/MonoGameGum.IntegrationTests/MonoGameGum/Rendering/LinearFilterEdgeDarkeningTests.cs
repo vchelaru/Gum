@@ -24,6 +24,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// background. With the fix the whole draw stays white; without it a gray band appears down the
 /// middle where linear sampling crosses the opaque/transparent boundary.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class LinearFilterEdgeDarkeningTests : BaseTestClass
 {
     public override void Dispose()
@@ -206,33 +207,18 @@ public class LinearFilterEdgeDarkeningTests : BaseTestClass
         return data[(sy * w) + sx];
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override Microsoft.Xna.Framework.Color ClearColor => XnaColor.CornflowerBlue;
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
+        protected override void OnInitialize() => Gum.GumService.Default.Initialize(Game, Gum.Forms.DefaultVisualsVersion.V3);
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Gum.GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(XnaColor.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (Gum.GumService.Default.IsInitialized)
             {
                 Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }

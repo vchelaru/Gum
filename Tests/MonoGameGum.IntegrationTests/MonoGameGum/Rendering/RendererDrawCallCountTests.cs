@@ -17,6 +17,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// <see cref="GraphicsDevice.Metrics"/>. Counts are asserted as deltas against a baseline frame so
 /// each test is isolated from residue left by earlier tests.
 /// </summary>
+[Collection(SharedGame.CollectionName)]
 public class RendererDrawCallCountTests : BaseTestClass
 {
     private static int DrawAndCountDrawCalls()
@@ -146,33 +147,16 @@ public class RendererDrawCallCountTests : BaseTestClass
         }
     }
 
-    private class MinimalGame : Game
+    private sealed class MinimalGame : SharedGameLease
     {
-        private readonly GraphicsDeviceManager _graphics;
+        protected override void OnInitialize() => global::Gum.GumService.Default.Initialize(Game, global::Gum.Forms.DefaultVisualsVersion.V3);
 
-        public MinimalGame()
-        {
-            LoaderManager.Self?.DisposeAndClear();
-            _graphics = new GraphicsDeviceManager(this);
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            global::Gum.GumService.Default.Initialize(this, global::Gum.Forms.DefaultVisualsVersion.V3);
-        }
-
-        protected override void Update(GameTime gameTime) { }
-        protected override void Draw(GameTime gameTime) => GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        protected override void Dispose(bool disposing)
+        protected override void OnDispose()
         {
             if (global::Gum.GumService.Default.IsInitialized)
             {
                 global::Gum.GumService.Default.Uninitialize();
             }
-            LoaderManager.Self?.DisposeAndClear();
-            base.Dispose(disposing);
         }
     }
 }
