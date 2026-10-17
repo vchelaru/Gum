@@ -1161,11 +1161,13 @@ public class BitmapFont : IDisposable
                         // SpriteRenderer.Draw snaps again, but on already-snapped positions that is a no-op.
                         // Snapping each glyph's absolute position instead lets a sub-pixel move of the
                         // block flip individual glyphs (uneven spacing, mismatched baselines).
+                        // Y snaps the glyph's bottom edge, so glyphs of different heights that sit on the
+                        // same baseline end on the same pixel row.
                         float glyphX = destRect.X + lineOffset;
-                        float glyphY = destRect.Y;
+                        float glyphBottom = destRect.Y + destRect.Height;
 
                         destRect.X = (xOffsetAsScreenPixels + MathFunctions.RoundToInt(glyphX * zoom)) / zoom;
-                        destRect.Y = (yOffsetAsScreenPixels + MathFunctions.RoundToInt(glyphY * zoom)) / zoom;
+                        destRect.Y = (yOffsetAsScreenPixels + MathFunctions.RoundToInt(glyphBottom * zoom)) / zoom - destRect.Height;
 
                         finalPosition = new Vector2(destRect.X, destRect.Y);
                     }

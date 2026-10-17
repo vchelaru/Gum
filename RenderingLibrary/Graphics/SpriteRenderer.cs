@@ -675,6 +675,14 @@ public class SpriteRenderer
 
             if (!isIntegerScale && dimensionSnapping == DimensionSnapping.DimensionSnapping)
             {
+                if (MathFunctions.RoundToInt(quarterRotations) % 2 == 0)
+                {
+                    // Snap the bottom edge so glyphs of different heights on one baseline end on the same row.
+                    float worldHeight = (sourceRectangle?.Height ?? textureToUse.Height) * scale.Y;
+                    y = MathFunctions.RoundToInt((position.Y + worldHeight) * CurrentZoom) / CurrentZoom - worldHeight +
+                        effectivePixelOffsetY / CurrentZoom;
+                }
+
                 x += GlyphTieBreakBiasInScreenPixels / CurrentZoom;
                 y += GlyphTieBreakBiasInScreenPixels / CurrentZoom;
             }

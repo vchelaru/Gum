@@ -73,6 +73,107 @@ public class TextSubpixelShiftTests : BaseTestClass
         }
     }
 
+    [Theory]
+    [InlineData(0.75f, 5)]
+    [InlineData(1.5f, 3)]
+    public void GlyphsOnTheSameBaseline_HaveTheirBottomOnTheSamePixelRow_AtZoom(float zoom, int lineCount)
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+        managers.Renderer.Camera.Zoom = zoom;
+
+        // None of these glyphs has a descender, and the spaces keep the glyphs apart on screen.
+        const string line = "H T h t W";
+        TextRuntime text = new();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = DimensionUnitType.RelativeToChildren;
+        text.Text = string.Join("\n", System.Linq.Enumerable.Repeat(line, lineCount));
+        text.AddToManagers(managers, null);
+
+        try
+        {
+            List<string> failures = new();
+
+            foreach (float shift in new[] { 0f, 0.3f, 0.6f, 0.9f })
+            {
+                XnaColor[] pixels = RenderAt(game.GraphicsDevice, managers, text, 5f + shift, 5f + shift);
+
+                List<(int Top, int Bottom)> bands = FindLitRuns(pixels, isRow: true, 0, CaptureWidth, 0, CaptureHeight);
+                bands.Count.ShouldBe(lineCount, $"expected one band of glyphs per line at zoom {zoom}");
+
+                for (int bandIndex = 0; bandIndex < bands.Count; bandIndex++)
+                {
+                    (int top, int bottom) = bands[bandIndex];
+                    List<(int Left, int Right)> glyphs = FindLitRuns(pixels, isRow: false, 0, CaptureWidth, top, bottom + 1);
+                    glyphs.Count.ShouldBe(5, $"expected 5 glyphs in line {bandIndex} at zoom {zoom}");
+
+                    List<int> bottoms = new();
+                    foreach ((int left, int right) in glyphs)
+                    {
+                        List<(int Top, int Bottom)> rows = FindLitRuns(pixels, isRow: true, left, right + 1, top, bottom + 1);
+                        bottoms.Add(rows[rows.Count - 1].Bottom);
+                    }
+
+                    if (bottoms.Distinct().Count() > 1)
+                    {
+                        failures.Add($"shift {shift}, line {bandIndex}: bottom rows {string.Join(",", bottoms)}");
+                    }
+                }
+            }
+
+            failures.ShouldBeEmpty($"glyphs on one baseline ended on different pixel rows at zoom {zoom}: " +
+                string.Join("; ", failures));
+        }
+        finally
+        {
+            text.RemoveFromManagers();
+            managers.Renderer.Camera.Zoom = 1f;
+        }
+    }
+
+    /// <summary>
+    /// Finds runs of consecutive rows (or columns) in the region that contain a lit pixel, separated by
+    /// fully dark rows (or columns).
+    /// </summary>
+    private static List<(int Start, int End)> FindLitRuns(XnaColor[] pixels, bool isRow, int left, int right, int top, int bottom)
+    {
+        List<(int Start, int End)> runs = new();
+        int runStart = -1;
+        int from = isRow ? top : left;
+        int to = isRow ? bottom : right;
+
+        for (int i = from; i < to; i++)
+        {
+            bool lit = false;
+            int crossFrom = isRow ? left : top;
+            int crossTo = isRow ? right : bottom;
+            for (int j = crossFrom; j < crossTo && !lit; j++)
+            {
+                XnaColor pixel = isRow ? pixels[(i * CaptureWidth) + j] : pixels[(j * CaptureWidth) + i];
+                lit = pixel.R > 0;
+            }
+
+            if (lit && runStart < 0)
+            {
+                runStart = i;
+            }
+            else if (!lit && runStart >= 0)
+            {
+                runs.Add((runStart, i - 1));
+                runStart = -1;
+            }
+        }
+
+        if (runStart >= 0)
+        {
+            runs.Add((runStart, to - 1));
+        }
+
+        return runs;
+    }
+
     private static XnaColor[] RenderAt(GraphicsDevice gd, SystemManagers managers, TextRuntime text, float x, float y)
     {
         text.X = x;
