@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using CommunityToolkit.Mvvm.Input;
 using Gum.Dialogs;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -58,6 +59,7 @@ public class SettingsDialogViewModel : DialogViewModel
         AffirmativeText = "Close";
         NegativeText = null;
         _searchText = "";
+        ClearSearchCommand = new RelayCommand(() => SearchText = "", () => HasSearchText);
 
         bool hasProject = projectState.GumProjectSave != null;
         _projectFileName = System.IO.Path.GetFileName(projectState.GumProjectSave?.FullFileName ?? "");
@@ -148,9 +150,17 @@ public class SettingsDialogViewModel : DialogViewModel
             }
             _searchText = value;
             NotifyPropertyChanged();
+            NotifyPropertyChanged(nameof(HasSearchText));
+            ClearSearchCommand.NotifyCanExecuteChanged();
             RebuildNavigation();
         }
     }
+
+    /// <summary>True while there is text in the search box.</summary>
+    public bool HasSearchText => _searchText.Length > 0;
+
+    /// <summary>Empties the search box, so every page is listed again; the box's X button runs it.</summary>
+    public RelayCommand ClearSearchCommand { get; }
 
     /// <summary>Shows the page with <paramref name="pageId"/>; an unknown id, or a page that is not listed, changes nothing.</summary>
     public void SelectPage(string pageId)

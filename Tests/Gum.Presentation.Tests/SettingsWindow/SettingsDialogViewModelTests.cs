@@ -300,6 +300,32 @@ public class SettingsDialogViewModelTests
     }
 
     [Fact]
+    public void ClearSearchCommand_EmptiesTheSearch_AndListsEveryPageAgain()
+    {
+        _registry.Register(CreatePage("canvas", "Canvas", SettingsSection.Project));
+        SettingsDialogViewModel viewModel = CreateViewModel();
+        viewModel.SearchText = "canv";
+
+        viewModel.ClearSearchCommand.Execute(null);
+
+        viewModel.SearchText.ShouldBe("");
+        PageTitles(viewModel).Count.ShouldBe(4);
+    }
+
+    [Fact]
+    public void ClearSearchCommand_IsOnlyAvailable_WhileThereIsSearchText()
+    {
+        SettingsDialogViewModel viewModel = CreateViewModel();
+        viewModel.HasSearchText.ShouldBeFalse();
+        viewModel.ClearSearchCommand.CanExecute(null).ShouldBeFalse();
+
+        viewModel.SearchText = "plug";
+
+        viewModel.HasSearchText.ShouldBeTrue();
+        viewModel.ClearSearchCommand.CanExecute(null).ShouldBeTrue();
+    }
+
+    [Fact]
     public void SearchText_Cleared_RestoresAllPagesAndKeepsSelection()
     {
         _registry.Register(CreatePage("canvas", "Canvas", SettingsSection.Project));

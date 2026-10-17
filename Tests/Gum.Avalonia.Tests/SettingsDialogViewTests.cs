@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
 using Gum.Avalonia.Dialogs;
+using Gum.Avalonia.Dialogs.Views;
 using Gum.Avalonia.Tests.EndToEnd;
 using Gum.SettingsWindow;
 using Microsoft.Extensions.DependencyInjection;
@@ -135,6 +136,25 @@ public class SettingsDialogViewTests
         TextBlock title = window.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Plugins" && text.FontSize >= 16);
 
         title.GetVisualAncestors().OfType<ScrollViewer>().ShouldBeEmpty("a page with its own scrolling gets the bounded height instead");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void SearchBox_HasAnXThatClearsTheSearch_ShownOnlyWhileThereIsText()
+    {
+        SettingsDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<SettingsDialogViewModel>();
+        DialogWindow window = Open(viewModel);
+        Button clear = window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == SettingsDialogView.ClearSearchButtonName);
+        clear.IsEffectivelyVisible.ShouldBeFalse("nothing to clear yet");
+
+        viewModel.SearchText = "plug";
+        Layout(window);
+        clear.IsEffectivelyVisible.ShouldBeTrue();
+        Click(window, clear);
+
+        viewModel.SearchText.ShouldBe("");
+        clear.IsEffectivelyVisible.ShouldBeFalse();
+        window.GetVisualDescendants().OfType<TextBox>().First().Text.ShouldBeNullOrEmpty();
         window.Close();
     }
 

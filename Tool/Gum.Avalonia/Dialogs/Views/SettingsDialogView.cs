@@ -22,6 +22,9 @@ public sealed class SettingsDialogView : Grid
     /// <summary>Height the window opens at (shrinks on a shorter screen).</summary>
     public const double WindowHeight = 560;
 
+    /// <summary>Name of the X button in the search box that clears the search.</summary>
+    public const string ClearSearchButtonName = "PART_ClearSearch";
+
     private const double TitleScale = 1.5;
 
     private readonly SettingsPageViewRegistry _pageViews;
@@ -48,6 +51,18 @@ public sealed class SettingsDialogView : Grid
     {
         TextBox search = new TextBox { Watermark = "Search", Margin = new Thickness(0, 0, 0, 8) };
         search.Bind(TextBox.TextProperty, new Binding(nameof(SettingsDialogViewModel.SearchText)) { Mode = BindingMode.TwoWay });
+
+        Button clear = new Button
+        {
+            Name = ClearSearchButtonName,
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Dismiss, 12),
+            Classes = { GumChromeStyles.IconButtonClass },
+            Focusable = false,
+        };
+        ToolTip.SetTip(clear, "Clear the search");
+        clear.Bind(Button.CommandProperty, new Binding(nameof(SettingsDialogViewModel.ClearSearchCommand)));
+        clear.Bind(IsVisibleProperty, new Binding(nameof(SettingsDialogViewModel.HasSearchText)));
+        search.InnerRightContent = clear;
         DockPanel.SetDock(search, Dock.Top);
 
         ListBox pages = new ListBox
