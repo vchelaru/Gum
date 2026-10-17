@@ -102,16 +102,19 @@ jobs:
   # pass on all three desktop OSes from the first PR that adds it. Plain net10.0, no submodules, no
   # workloads; the matrix is what proves the purity guard (a WPF/WinForms leak fails on macOS/Linux).
   #
-  # Pull requests run Windows and Linux only: macOS is the scarcest runner pool and Build-and-Test
-  # (macos-15) already proves the shared code there. The nightly run and workflow_dispatch run all
-  # three, so a macOS-only break shows up within a day.
+  # Pull requests run Linux only, to save about 7 runner-minutes per OS dropped. Linux is the OS
+  # the maintainers develop on least, so it is the one a PR is most likely to break unnoticed; the
+  # Linux leg also runs the Xvfb head and device tests. Windows and macOS get their coverage from
+  # the nightly run and workflow_dispatch, which run all three, so a Windows- or macOS-only break
+  # shows up within a day. The shared logic (Gum.Presentation.Tests, Gum.ProjectServices.Tests)
+  # still runs on Windows and macOS in Build-and-Test on every PR.
   Build-Avalonia-Head:
     needs: Changes
     if: github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true'
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(github.event_name == 'pull_request' && '["windows-latest","ubuntu-latest"]' || '["windows-latest","macos-latest","ubuntu-latest"]') }}
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["windows-latest","macos-latest","ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
