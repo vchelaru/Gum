@@ -1,0 +1,26 @@
+{
+  "solution": {
+    "path": "..\\AllLibraries.sln",
+    "projects": [
+      "MonoGameGum.Tests\\MonoGameGum.Tests.csproj",
+      "Tests\\Gum.Bundle.Tests\\Gum.Bundle.Tests.csproj",
+      "Tests\\Gum.ProjectServices.Tests\\Gum.ProjectServices.Tests.csproj",
+      "Tests\\Gum.ImageDiff.Tests\\Gum.ImageDiff.Tests.csproj",
+      "Tests\\Gum.Presentation.Tests\\Gum.Presentation.Tests.csproj",
+      "Tests\\Gum.AssemblyNameGuard.Tests\\Gum.AssemblyNameGuard.Tests.csproj",
+      "Tests\\Gum.RepoHygiene.Tests\\Gum.RepoHygiene.Tests.csproj",
+      "Tests\\Gum.Analyzers.Tests\\Gum.Analyzers.Tests.csproj",
+      "Tests\\SkiaGum.Tests\\SkiaGum.Tests.csproj",
+      "Tests\\Gum.NetStandard.Tests\\Gum.NetStandard.Tests.csproj",
+      "Tests\\SilkNetGum.Tests\\SilkNetGum.Tests.csproj",
+      "Tests\\UnityGum.Tests\\UnityGum.Tests.csproj",
+      "Tests\\Gum.ProjectServices.SkiaGum.Tests\\Gum.ProjectServices.SkiaGum.Tests.csproj",
+      "Tests\\Gum.Cli.Tests\\Gum.Cli.Tests.csproj",
+      "Tests\\RaylibGum.Tests\\RaylibGum.Tests.csproj",
+      "Tests\\Gum.ProjectServices.Raylib.Tests\\Gum.ProjectServices.Raylib.Tests.csproj",
+      "Tests\\Gum.ProjectServices.MonoGame.Tests\\Gum.ProjectServices.MonoGame.Tests.csproj",
+      "Tests\\MonoGameGum.IntegrationTests\\MonoGameGum.IntegrationTests.csproj",
+      "Tests\\MonoGameGum.Shapes.Tests\\MonoGameGum.Shapes.Tests.csproj"
+    ]
+  }
+}
