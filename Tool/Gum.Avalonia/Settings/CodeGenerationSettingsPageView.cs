@@ -1,5 +1,7 @@
 using Avalonia.Controls;
 using AvaloniaDataUi;
+using Avalonia;
+using Avalonia.VisualTree;
 using CodeOutputPlugin;
 
 namespace Gum.Avalonia.Settings;
@@ -11,6 +13,7 @@ namespace Gum.Avalonia.Settings;
 public sealed class CodeGenerationSettingsPageView : DockPanel
 {
     private CodeGenerationSettingsViewModel? _viewModel;
+    private bool _isListening;
 
     /// <summary>Builds the view.</summary>
     public CodeGenerationSettingsPageView()
@@ -24,18 +27,49 @@ public sealed class CodeGenerationSettingsPageView : DockPanel
     /// <summary>The property grid.</summary>
     public DataUiGrid Grid { get; }
 
+    // The view model lives as long as the plugin, while a view lives as long as its Settings window,
+    // so the view listens only while it is on screen. A listener left behind by a closed window
+    // would keep rebuilding that window's rows on every later change.
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        Listen();
+        Rebuild();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        StopListening();
+    }
+
     private void HandleDataContextChanged()
     {
-        if (_viewModel != null)
-        {
-            _viewModel.Reloaded -= Rebuild;
-        }
+        StopListening();
         _viewModel = DataContext as CodeGenerationSettingsViewModel;
-        if (_viewModel != null)
+        if (this.IsAttachedToVisualTree())
+        {
+            Listen();
+            Rebuild();
+        }
+    }
+
+    private void Listen()
+    {
+        if (_viewModel != null && !_isListening)
         {
             _viewModel.Reloaded += Rebuild;
+            _isListening = true;
         }
-        Rebuild();
+    }
+
+    private void StopListening()
+    {
+        if (_viewModel != null && _isListening)
+        {
+            _viewModel.Reloaded -= Rebuild;
+            _isListening = false;
+        }
     }
 
     private void Rebuild()
