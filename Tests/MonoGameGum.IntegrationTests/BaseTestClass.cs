@@ -14,8 +14,6 @@ public class BaseTestClass : IDisposable
 {
     public virtual void Dispose()
     {
-        global::MonoGameGum.IntegrationTests.MonoGameGum.ProbeLog.LogProcess();
-
         // GumService.Default follows IGumService.Default, the current service. A test that initialized a service
         // and left it initialized would make the next test's GumService.Default.Initialize throw, so a service
         // that is still the initialized default is uninitialized here.
