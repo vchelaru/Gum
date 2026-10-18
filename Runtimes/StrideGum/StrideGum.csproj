@@ -25,7 +25,7 @@
 		<NoWarn>1591</NoWarn>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<!-- Overrides RuntimePackage.props' shared net8.0: Stride's own packages (Stride.Input,
-		     Stride.CommunityToolkit) only ship net10.0(+platform)-targeted builds. A net10.0 project
+		     Stride.Engine) only ship net10.0(+platform)-targeted builds. A net10.0 project
 		     referencing the net8.0 GumCommon/SkiaGum is fine (same modern .NET family, no
 		     netstandard-style compat gap).
 		     Two TFMs (#4617): SkiaGameRendering.Stride.D3D11 (the zero-copy GPU path) only ships
@@ -87,12 +87,10 @@
 		<!-- Needs the halo stroke-join fix (#114) for per-run outline thickness (#4037).
 		     Must track SkiaGum.csproj's reference: see SilkNetGum.csproj's identical comment. -->
 		<PackageReference Include="Topten.RichTextKit" Version="0.6.170" />
-		<!-- Input + the AddSceneRenderer/AddGraphicsCompositor extension methods GumService.Stride.cs
-		     uses to self-register its GumSceneRenderer. Stride.CommunityToolkit.Windows/.Bepu (window
-		     backend, physics) are a consuming game's choice, not this adapter's concern. -->
-		<PackageReference Include="Stride.Engine" Version="4.4.0" />
-		<PackageReference Include="Stride.Input" Version="4.4.0" />
-		<PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.66" />
+		<!-- Stride only: the renderer registers itself into the compositor directly, so a game's
+		     Stride.CommunityToolkit version cannot break this package (#6149). -->
+		<PackageReference Include="Stride.Engine" Version="4.4.1" />
+		<PackageReference Include="Stride.Input" Version="4.4.1" />
 		<!-- Stride's runtime (unlike its WPF GameStudio editor) exposes no clipboard API; this is the
 		     cross-platform fallback for Gum.Input.StrideGumClipboard. -->
 		<PackageReference Include="TextCopy" Version="6.2.1" />

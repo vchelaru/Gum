@@ -11,7 +11,7 @@
 
   <ItemGroup>
     {{GumReference}}
-    <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
+    <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.66" />
   </ItemGroup>
 
   <ItemGroup>

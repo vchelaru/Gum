@@ -13,7 +13,6 @@ using RenderingLibrary;
 using SkiaGameRendering.Stride.D3D11;
 #endif
 using SkiaSharp;
-using Stride.CommunityToolkit.Engine;
 using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Graphics;
@@ -172,10 +171,34 @@ public class GumService : GumServiceSkiaBase, IGumService
 
         if (registerSceneRenderer)
         {
-            game.AddSceneRenderer(new GumSceneRenderer());
+            GraphicsCompositor compositor = game.SceneSystem.GraphicsCompositor
+                ?? throw new InvalidOperationException(
+                    "Gum needs a GraphicsCompositor on game.SceneSystem before Initialize. " +
+                    "Set one up first (for example with game.AddGraphicsCompositor()), or pass registerSceneRenderer: false.");
+            AddSceneRenderer(compositor, new GumSceneRenderer());
         }
 
         _clock.Start();
+    }
+
+    /// <summary>
+    /// Adds <paramref name="renderer"/> after whatever the compositor already draws, so the UI draws
+    /// over the scene. Done against Stride directly so Gum.Stride does not depend on
+    /// Stride.CommunityToolkit (#6149).
+    /// </summary>
+    internal static void AddSceneRenderer(GraphicsCompositor compositor, SceneRendererBase renderer)
+    {
+        if (compositor.Game is SceneRendererCollection collection)
+        {
+            collection.Children.Add(renderer);
+        }
+        else
+        {
+            SceneRendererCollection wrapper = new SceneRendererCollection();
+            wrapper.Children.Add(compositor.Game);
+            wrapper.Children.Add(renderer);
+            compositor.Game = wrapper;
+        }
     }
 
     /// <summary>
