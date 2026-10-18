@@ -92,6 +92,7 @@ public class Renderer : IRenderer
     private bool _referencedRenderTargetsCollectedForHostFrame;
     private bool _perfStatsResetForHostFrame;
     private readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new();
+    private readonly List<IRenderableIpso> _preRenderRootsBuffer = new();
 
     // GumBatchDrawMode.Deferred scratch state for the current Begin/End cycle (immediate-mode
     // path only - RenderLayer has its own _scratchCommands). Separate buffers rather than reusing
@@ -553,6 +554,45 @@ public class Renderer : IRenderer
         {
             PreRenderLayersCore(layers);
             _allLayersPreRenderedForHostFrame = true;
+        }
+    }
+
+    /// <summary>
+    /// Bakes render targets for roots drawn through <see cref="GumBatch"/> (or
+    /// <see cref="Begin"/>/<see cref="Draw(IRenderableIpso)"/>/<see cref="End"/>), which does not
+    /// bake them itself. Bakes every <see cref="IRenderableIpso.IsRenderTarget"/> container under
+    /// <paramref name="roots"/>, including targets referenced by a
+    /// <see cref="IRenderTargetTextureReferencer.RenderTargetTextureSource"/> in the roots. The
+    /// roots do not need to be in a <see cref="Layer"/>. Call it once per frame (or once per
+    /// batch of roots) before the <c>Begin</c> that draws them, never between <c>Begin</c> and
+    /// <c>End</c>.
+    /// </summary>
+    /// <param name="roots">The roots about to be drawn.</param>
+    public void PreRenderRoots(IEnumerable<IRenderableIpso> roots)
+    {
+        lock (LockObject)
+        {
+            _preRenderRootsBuffer.Clear();
+            _preRenderRootsBuffer.AddRange(roots);
+
+            mCamera.ClientWidth = InitializedGraphicsDevice.Viewport.Width;
+            mCamera.ClientHeight = InitializedGraphicsDevice.Viewport.Height;
+            mCamera.ClientLeft = InitializedGraphicsDevice.Viewport.X;
+            mCamera.ClientTop = InitializedGraphicsDevice.Viewport.Y;
+
+            TrySweepUnusedRenderTargetsAtFrameBoundary();
+
+            mRenderStateVariables.BlendState = Renderer.NormalBlendState;
+            mRenderStateVariables.Wrap = false;
+            mRenderStateVariables.Filtering = EffectiveTextureFilter == TextureFilter.Linear;
+
+            // Collect the layers' references first so the flag is set; the roots' references are
+            // added on top and survive until the next host frame.
+            EnsureReferencedRenderTargetsCollected();
+            CollectReferencedRenderTargets(_preRenderRootsBuffer);
+
+            PreRender(_preRenderRootsBuffer);
+            _preRenderRootsBuffer.Clear();
         }
     }
 
