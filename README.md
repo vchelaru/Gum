@@ -13,7 +13,7 @@
 </div>
 <br/>
 
-![image](https://github.com/vchelaru/Gum/assets/729631/9f1d16b2-47a0-47d4-a6bc-0a3d6f100699)
+![Gum tool](docs/.gitbook/assets/GumToolMainScreenshot.png)
 
 Specifically it supports:
 
