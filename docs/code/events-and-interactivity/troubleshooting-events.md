@@ -32,7 +32,7 @@ slot.HasEvents = false;
 buttonVisual.AddChild(slot);
 ```
 
-Without the `HasEvents = false` line, clicking the area covered by `slot` does nothing, and `GetEventFailureReason` reports that the cursor is over a child of the button. Set `HasEvents = false` on every container inside a control's visual that only groups or sizes other children.
+Without the `HasEvents = false` line, `slot` consumes clicks on its area, so they never reach the `Button` and its `Click` event does not fire. `GetEventFailureReason` reports this as the cursor being over a child of the button. Set `HasEvents = false` on every container inside a control's visual that only groups or sizes other children.
 
 `HasEvents` is a deliberate, single switch, and Gum does not guess whether a container is layout-only. A container may be a click target on purpose, for example when you subscribe to its `Click` event to toggle part of a custom control. Gum cannot tell that apart from a container you forgot about, so the container keeps receiving events until you turn them off.
 
