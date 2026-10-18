@@ -1330,14 +1330,14 @@ public class FrameworkElement : INotifyPropertyChanged
             leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) == true ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) == true))
         {
-            this.HandleTab(TabDirection.Down, this);
+            this.HandleTab(TabDirection.Down, this, loop: true);
         }
         else if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left)) ||
             leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) == true ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) == true))
         {
-            this.HandleTab(TabDirection.Up, this);
+            this.HandleTab(TabDirection.Up, this, loop: true);
         }
     }
     protected void HandleInputDeviceNavigation(IInputDevice inputDevice)
@@ -1350,11 +1350,11 @@ public class FrameworkElement : INotifyPropertyChanged
 
         if (wasDownPressed)
         {
-            this.HandleTab(TabDirection.Down, this);
+            this.HandleTab(TabDirection.Down, this, loop: true);
         }
         else if (wasUpPressed)
         {
-            this.HandleTab(TabDirection.Up, this);
+            this.HandleTab(TabDirection.Up, this, loop: true);
         }
     }
 #endif
@@ -1652,18 +1652,22 @@ public class FrameworkElement : INotifyPropertyChanged
                                 // start back down the children of the parent:
                                 // requestingVisualSiblings is the parent's children, or the top-level
                                 // contained elements when there is no parent.
-                                InteractiveGue? firstChild = null;
-                                foreach(var child in requestingVisualSiblings)
+                                // Going Down we enter at the first visible child and going Up at the last, so the search
+                                // continues in the direction of travel when that child holds nothing focusable (for example
+                                // a background).
+                                InteractiveGue? entryChild = null;
+                                for (int i = 0; i < requestingVisualSiblings.Count; i++)
                                 {
-                                    if (child is InteractiveGue ig && ig.Visible && ig.IsEnabled)
+                                    int siblingIndex = tabDirection == TabDirection.Down ? i : requestingVisualSiblings.Count - 1 - i;
+                                    if (requestingVisualSiblings[siblingIndex] is InteractiveGue ig && ig.Visible && ig.IsEnabled)
                                     {
-                                        firstChild = ig;
+                                        entryChild = ig;
                                         break;
                                     }
                                 }
-                                firstChild = firstChild ?? requestingVisual;
+                                entryChild = entryChild ?? requestingVisual;
 
-                                didFocusNewItem = HandleTab(tabDirection, null, firstChild, shouldAskParent: true, loop: false);
+                                didFocusNewItem = HandleTab(tabDirection, null, entryChild, shouldAskParent: true, loop: false);
                             }
                         }
                     }
