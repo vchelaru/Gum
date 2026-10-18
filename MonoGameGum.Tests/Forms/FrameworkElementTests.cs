@@ -647,6 +647,214 @@ public class FrameworkElementTests : BaseTestClass
         playButton.IsFocused.ShouldBeTrue();
     }
 
+    // A menu screen is typically a background that holds nothing focusable, followed by the
+    // container with the buttons. Wrapping must work in both directions regardless of what
+    // sits before or after the buttons among the top-level siblings.
+    private static void AddNonFocusableContainerToRoot()
+    {
+        ContainerRuntime background = new();
+        background.AddToRoot();
+    }
+
+    private static void AddBackgroundRectangleToRoot()
+    {
+        ColoredRectangleRuntime background = new();
+        background.AddToRoot();
+    }
+
+    private static (Button First, Button Middle, Button Last) AddThreeButtonStackToRoot()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+        Button first = new();
+        stackPanel.AddChild(first);
+        Button middle = new();
+        stackPanel.AddChild(middle);
+        Button last = new();
+        stackPanel.AddChild(last);
+        return (first, middle, last);
+    }
+
+    [Fact]
+    public void HandleTab_ShouldWrapToLast_WhenTabbingUpFromFirst()
+    {
+        var (first, _, last) = AddThreeButtonStackToRoot();
+
+        first.IsFocused = true;
+        first.HandleTab(TabDirection.Up, loop: true);
+
+        first.IsFocused.ShouldBeFalse();
+        last.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldWrapToLast_WhenTabbingUpFromFirst_AndFirstRootSiblingHasNoFocusables()
+    {
+        AddNonFocusableContainerToRoot();
+        var (first, _, last) = AddThreeButtonStackToRoot();
+
+        first.IsFocused = true;
+        first.HandleTab(TabDirection.Up, loop: true);
+
+        first.IsFocused.ShouldBeFalse();
+        last.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldWrapToLast_WhenTabbingUpFromFirst_AndFirstRootSiblingIsNotInteractive()
+    {
+        AddBackgroundRectangleToRoot();
+        var (first, _, last) = AddThreeButtonStackToRoot();
+
+        first.IsFocused = true;
+        first.HandleTab(TabDirection.Up, loop: true);
+
+        first.IsFocused.ShouldBeFalse();
+        last.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldWrapToFirst_WhenTabbingDownFromLast_AndFirstRootSiblingHasNoFocusables()
+    {
+        AddNonFocusableContainerToRoot();
+        var (first, _, last) = AddThreeButtonStackToRoot();
+
+        last.IsFocused = true;
+        last.HandleTab(TabDirection.Down, loop: true);
+
+        last.IsFocused.ShouldBeFalse();
+        first.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldWrapInBothDirections_WhenLastRootSiblingHasNoFocusables()
+    {
+        var (first, _, last) = AddThreeButtonStackToRoot();
+        AddNonFocusableContainerToRoot();
+
+        last.IsFocused = true;
+        last.HandleTab(TabDirection.Down, loop: true);
+        first.IsFocused.ShouldBeTrue();
+        last.IsFocused.ShouldBeFalse();
+
+        first.HandleTab(TabDirection.Up, loop: true);
+        last.IsFocused.ShouldBeTrue();
+        first.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldWrapBetweenContainers_WhenTabbingUpFromFirstOfFirstContainer()
+    {
+        AddNonFocusableContainerToRoot();
+
+        StackPanel panelA = new();
+        panelA.AddToRoot();
+        Button a1 = new();
+        panelA.AddChild(a1);
+        Button a2 = new();
+        panelA.AddChild(a2);
+
+        StackPanel panelB = new();
+        panelB.AddToRoot();
+        Button b1 = new();
+        panelB.AddChild(b1);
+        Button b2 = new();
+        panelB.AddChild(b2);
+
+        a1.IsFocused = true;
+        a1.HandleTab(TabDirection.Up, loop: true);
+
+        a1.IsFocused.ShouldBeFalse();
+        b2.IsFocused.ShouldBeTrue();
+
+        // And back the other way:
+        b2.HandleTab(TabDirection.Down, loop: true);
+        b2.IsFocused.ShouldBeFalse();
+        a1.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldWrapToDeepestLast_WhenTabbingUpAndLastContainerIsNested()
+    {
+        AddNonFocusableContainerToRoot();
+
+        StackPanel first = new();
+        first.AddToRoot();
+        Button firstButton = new();
+        first.AddChild(firstButton);
+
+        StackPanel outer = new();
+        outer.AddToRoot();
+        Button outerButton = new();
+        outer.AddChild(outerButton);
+        StackPanel inner = new();
+        outer.AddChild(inner);
+        Button innerButton1 = new();
+        inner.AddChild(innerButton1);
+        Button innerButton2 = new();
+        inner.AddChild(innerButton2);
+
+        firstButton.IsFocused = true;
+        firstButton.HandleTab(TabDirection.Up, loop: true);
+
+        firstButton.IsFocused.ShouldBeFalse();
+        innerButton2.IsFocused.ShouldBeTrue();
+        innerButton1.IsFocused.ShouldBeFalse();
+        outerButton.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotWrapToInvisibleOrDisabledLastContainer_WhenTabbingUp()
+    {
+        AddNonFocusableContainerToRoot();
+        var (first, _, last) = AddThreeButtonStackToRoot();
+
+        StackPanel invisibleContainer = new();
+        invisibleContainer.IsVisible = false;
+        invisibleContainer.AddToRoot();
+        Button hiddenButton = new();
+        invisibleContainer.AddChild(hiddenButton);
+
+        StackPanel disabledContainer = new();
+        disabledContainer.IsEnabled = false;
+        disabledContainer.AddToRoot();
+        Button disabledButton = new();
+        disabledContainer.AddChild(disabledButton);
+
+        first.IsFocused = true;
+        first.HandleTab(TabDirection.Up, loop: true);
+
+        last.IsFocused.ShouldBeTrue();
+        hiddenButton.IsFocused.ShouldBeFalse();
+        disabledButton.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotUnfocus_OnTabUpOfOnlyElementAfterBackground()
+    {
+        AddNonFocusableContainerToRoot();
+        Button playButton = new();
+        playButton.AddToRoot();
+
+        playButton.IsFocused = true;
+        playButton.HandleTab(TabDirection.Up, loop: true);
+
+        playButton.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotWrap_WhenTabbingUpFromFirstWithoutLoop()
+    {
+        AddNonFocusableContainerToRoot();
+        var (first, _, last) = AddThreeButtonStackToRoot();
+
+        first.IsFocused = true;
+        first.HandleTab(TabDirection.Up);
+
+        first.IsFocused.ShouldBeTrue();
+        last.IsFocused.ShouldBeFalse();
+    }
+
     #endregion
 
     #region Loaded
