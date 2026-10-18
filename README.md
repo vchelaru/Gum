@@ -23,7 +23,7 @@ Specifically it supports:
 * States (categorized and uncategorized)
 * Incredibly flexible layout engine
 
-Gum exports to human-readable XML, and can be extended either using MEF or by modifying the source code directly.
+Gum exports to human-readable JSON, and can be extended either using MEF or by modifying the source code directly.
 
 ## Beautiful UI, styled in one line
 
