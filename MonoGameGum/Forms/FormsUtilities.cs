@@ -369,6 +369,17 @@ public class FormsUtilities
 
         RefreshPopupModalRootPairs();
 
+        // Sized even while empty: a popup is clamped to its root's bounds the moment it is added,
+        // which happens during input handling below, after any size-if-populated check would run.
+        foreach (var (popupRoot, modalRoot) in popupModalRootPairs)
+        {
+            SetDimensionsToCanvas(modalRoot);
+            if (roots?.Contains(popupRoot) != true)
+            {
+                SetDimensionsToCanvas(popupRoot);
+            }
+        }
+
         // The global pair is checked first so it keeps priority (matching prior behavior) if a
         // custom pair registered via FrameworkElement.AdditionalPopupRootPairs also has an open modal.
         // A pair is only a candidate winner if it has a visible top child — otherwise (e.g. every
@@ -402,8 +413,6 @@ public class FormsUtilities
                     throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
                 }
 #endif
-                SetDimensionsToCanvas(modalRoot);
-
                 // make sure this is the last:
                 foreach (var layer in SystemManagers.Default.Renderer.Layers)
                 {
@@ -447,7 +456,6 @@ public class FormsUtilities
                     }
 #endif
 
-                    SetDimensionsToCanvas(popupRoot);
                     // make sure this is the last:
                     foreach (var layer in SystemManagers.Default.Renderer.Layers)
                     {
