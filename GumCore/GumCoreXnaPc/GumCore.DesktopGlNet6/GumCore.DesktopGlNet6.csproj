@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFramework>net8.0</TargetFramework>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>12.0</LangVersion>
 		<NoWarn>1591</NoWarn>
@@ -18,9 +18,6 @@
 
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-		<OutputPath>bin\$(Configuration)\</OutputPath>
-	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>$(DefineConstants)TRACE;MONOGAME;FRB</DefineConstants>
 	</PropertyGroup>
@@ -33,7 +30,7 @@
 		<None Remove="Content\**" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303">
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="BrotliSharpLib" Version="0.3.3" />
