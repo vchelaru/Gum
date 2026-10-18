@@ -12,6 +12,30 @@ Rather than walking the visual tree by hand, Gum exposes a diagnostic extension 
 
 `ContainerRuntime` defaults to `HasEvents = true`, so even one with no visible content or handlers of its own still claims the cursor over its entire bounds — including empty space — and can block a sibling behind it. If a container only groups or positions other controls, set `HasEvents = false` on it so clicks pass through to what it actually contains.
 
+## A Container Inside a Control's Visual Can Swallow the Control's Clicks
+
+The same default applies to containers you add to a Forms control's visual. If a plain `ContainerRuntime` has `HasEvents = true`, the cursor treats the container as the visual under it, so clicks on the container never reach the control. The control appears to work in some places (such as its text) and not in others (such as the area covered by the container).
+
+The following code adds a layout-only container to a `Button`. Because the container has `HasEvents = false`, clicks on its area reach the `Button`:
+
+```csharp
+// Initialize
+var button = new Button();
+button.AddToRoot();
+
+var buttonVisual = (ButtonVisual)button.Visual;
+var slot = new ContainerRuntime();
+slot.Width = 20;
+slot.Height = 20;
+// Only positions its children, so let clicks pass through to the Button:
+slot.HasEvents = false;
+buttonVisual.AddChild(slot);
+```
+
+Without the `HasEvents = false` line, clicking the area covered by `slot` does nothing, and `GetEventFailureReason` reports that the cursor is over a child of the button. Set `HasEvents = false` on every container inside a control's visual that only groups or sizes other children.
+
+`HasEvents` is a deliberate, single switch, and Gum does not guess whether a container is layout-only. A container may be a click target on purpose, for example when you subscribe to its `Click` event to toggle part of a custom control. Gum cannot tell that apart from a container you forgot about, so the container keeps receiving events until you turn them off.
+
 ## Quick Check
 
 If a control is not responding, paste one of the following into your update loop, put a breakpoint on the line, and hover the control while the game runs. Inspect `reason`: if it is `null`, events should be working; otherwise the string tells you exactly what is blocking them.
