@@ -102,6 +102,8 @@ A direct `InnerPanel.Children.Move` (hot reload does this) reaches `HandleInnerP
 
 `SelectionMode` controls click behavior: `Single` (default), `Multiple` (each click toggles), `Extended` (Ctrl/Shift modifier keys). Gamepad/keyboard input always uses single-selection behavior regardless of mode.
 
+Selection resolves rows through `ListBoxItem.DataObject`, so every row-creation path must set it: `CreateNewItemFrameworkElement` and `HandleCreatedItemVisual` (the `VisualTemplate` path) both do. A row that removal discards while selected is reported through `HandleCollectionItemsRemoved`, which raises `SelectionChanged` with `RemovedItems`; `ComboBox` relies on that event to clear its text.
+
 ## DisplayMemberPath
 
 When set, `DisplayMemberPath` causes `listBoxItem.UpdateToObject(property_value_as_string)` instead of `UpdateToObject(the_object_itself)`. This applies both on initial creation and when `DisplayMemberPath` is changed after items are already loaded.

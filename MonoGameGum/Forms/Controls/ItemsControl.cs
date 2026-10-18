@@ -410,6 +410,8 @@ public class ItemsControl : ScrollViewer
                                 HandleCollectionItemRemoved(indexInItems, newFrameworkItem);
                             }
                         }
+
+                        HandleCollectionItemsRemoved();
                     }
                 }
                 break;
@@ -911,6 +913,12 @@ public class ItemsControl : ScrollViewer
 
     protected virtual void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex) { }
     protected virtual void HandleCollectionItemRemoved(int indexToRemoveFrom, FrameworkElement removedItem) { }
+
+    /// <summary>
+    /// Called once after <see cref="HandleCollectionItemRemoved"/> has run for every visual removed
+    /// from InnerPanel by a single change, so derived controls can react to the removal as a whole.
+    /// </summary>
+    protected virtual void HandleCollectionItemsRemoved() { }
     protected virtual void HandleCollectionReset() { }
     protected virtual void HandleCollectionReplace(int index) { }
     protected virtual void HandleCollectionItemMoved(int oldIndex, int newIndex) { }

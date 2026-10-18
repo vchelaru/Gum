@@ -1611,6 +1611,224 @@ public class ListBoxTests : BaseTestClass
 
     #endregion
 
+    #region VisualTemplate rows (issue #6138)
+
+    [Fact]
+    public void VisualTemplate_Items_ShouldSetDataObjectOnEachRow()
+    {
+        ListBox listBox = CreateVisualTemplateListBox("a", "b", "c");
+
+        listBox.ListBoxItems.Select(i => i.DataObject).ShouldBe(new object[] { "a", "b", "c" });
+    }
+
+    [Fact]
+    public void VisualTemplate_SelectedIndex_ShouldSetSelectedObject()
+    {
+        ListBox listBox = CreateVisualTemplateListBox("a", "b", "c");
+
+        listBox.SelectedIndex = 1;
+
+        listBox.SelectedObject.ShouldBe("b");
+        listBox.SelectedItems.Cast<object>().ShouldBe(new object[] { "b" });
+    }
+
+    [Fact]
+    public void VisualTemplate_SelectedObject_ShouldSelectRowAndSetSelectedIndex()
+    {
+        ListBox listBox = CreateVisualTemplateListBox("a", "b", "c");
+
+        listBox.SelectedObject = "c";
+
+        listBox.SelectedIndex.ShouldBe(2);
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void VisualTemplate_RowSelected_ShouldSetSelectedObjectAndRaiseSelectionChangedWithItems()
+    {
+        ListBox listBox = CreateVisualTemplateListBox("a", "b", "c");
+        listBox.SelectedIndex = 0;
+        List<SelectionChangedEventArgs> raised = new();
+        listBox.SelectionChanged += (_, args) => raised.Add(args);
+
+        listBox.ListBoxItems[2].IsSelected = true;
+
+        listBox.SelectedObject.ShouldBe("c");
+        raised.Count.ShouldBe(1);
+        raised[0].AddedItems.Cast<object?>().ShouldBe(new object?[] { "c" });
+        raised[0].RemovedItems.Cast<object?>().ShouldBe(new object?[] { "a" });
+    }
+
+    [Fact]
+    public void VisualTemplate_MultipleSelection_ShouldSelectEveryClickedItem()
+    {
+        ListBox listBox = CreateVisualTemplateListBox("a", "b", "c");
+        listBox.SelectionMode = SelectionMode.Multiple;
+
+        listBox.ListBoxItems[0].IsSelected = true;
+        listBox.ListBoxItems[2].IsSelected = true;
+
+        listBox.SelectedItems.Cast<object>().ShouldBe(new object[] { "a", "c" });
+    }
+
+    [Fact]
+    public void VisualTemplate_InsertItem_ShouldSetDataObjectAndKeepSelectionOnSameItem()
+    {
+        ListBox listBox = CreateVisualTemplateListBox("a", "b", "c");
+        listBox.SelectedIndex = 1;
+
+        listBox.Items!.Insert(0, "z");
+
+        listBox.ListBoxItems[0].DataObject.ShouldBe("z");
+        listBox.SelectedObject.ShouldBe("b");
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void VisualTemplate_RemoveSelectedItem_ShouldClearSelection()
+    {
+        ListBox listBox = CreateVisualTemplateListBox("a", "b", "c");
+        listBox.SelectedIndex = 1;
+
+        listBox.Items!.RemoveAt(1);
+
+        listBox.SelectedObject.ShouldBeNull();
+        listBox.SelectedIndex.ShouldBe(-1);
+        listBox.SelectedItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void VisualTemplate_AssignedAfterItemsAdded_ShouldSetDataObjectOnRebuiltRows()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+
+        listBox.VisualTemplate = new Gum.Forms.VisualTemplate(() => new ListBoxItem().Visual);
+
+        listBox.ListBoxItems.Select(i => i.DataObject).ShouldBe(new object[] { "a", "b" });
+    }
+
+    [Fact]
+    public void VisualTemplate_AssignedAfterSelection_ShouldNotLeaveStaleSelection()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.SelectedIndex = 1;
+
+        listBox.VisualTemplate = new Gum.Forms.VisualTemplate(() => new ListBoxItem().Visual);
+
+        // The old rows were discarded. SelectedItems must not keep describing a row that no
+        // longer exists while SelectedIndex says nothing is selected.
+        (listBox.SelectedIndex == -1).ShouldBe(listBox.SelectedObject == null);
+        listBox.SelectedItems.Count.ShouldBe(listBox.SelectedIndex == -1 ? 0 : 1);
+        listBox.ListBoxItems.Count(i => i.IsSelected).ShouldBe(listBox.SelectedItems.Count);
+    }
+
+    [Fact]
+    public void FrameworkElementTemplate_AssignedAfterSelection_ShouldNotLeaveStaleSelection()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.SelectedIndex = 1;
+
+        listBox.FrameworkElementTemplate = new Gum.Forms.FrameworkElementTemplate(() => new ListBoxItem());
+
+        (listBox.SelectedIndex == -1).ShouldBe(listBox.SelectedObject == null);
+        listBox.SelectedItems.Count.ShouldBe(listBox.SelectedIndex == -1 ? 0 : 1);
+        listBox.ListBoxItems.Count(i => i.IsSelected).ShouldBe(listBox.SelectedItems.Count);
+    }
+
+    [Fact]
+    public void Items_RemoveSelectedItem_ShouldRaiseSelectionChangedWithRemovedItem()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.SelectedIndex = 1;
+        List<SelectionChangedEventArgs> raised = new();
+        listBox.SelectionChanged += (_, args) => raised.Add(args);
+
+        listBox.Items.RemoveAt(1);
+
+        raised.Count.ShouldBe(1);
+        raised[0].RemovedItems.Cast<object?>().ShouldBe(new object?[] { "b" });
+        raised[0].AddedItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Items_RemoveUnselectedItem_ShouldNotRaiseSelectionChanged()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.SelectedIndex = 1;
+        int raisedCount = 0;
+        listBox.SelectionChanged += (_, _) => raisedCount++;
+
+        listBox.Items.RemoveAt(0);
+
+        raisedCount.ShouldBe(0);
+        listBox.SelectedObject.ShouldBe("b");
+    }
+
+    [Fact]
+    public void Items_ClearWithMultipleSelected_ShouldRaiseSelectionChangedOnceWithAllRemovedItems()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.SelectionMode = SelectionMode.Multiple;
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.Items.Add("c");
+        listBox.ListBoxItems[0].IsSelected = true;
+        listBox.ListBoxItems[2].IsSelected = true;
+        List<SelectionChangedEventArgs> raised = new();
+        listBox.SelectionChanged += (_, args) => raised.Add(args);
+
+        listBox.Items.Clear();
+
+        raised.Count.ShouldBe(1);
+        raised[0].RemovedItems.Cast<object?>().ShouldBe(new object?[] { "a", "c" }, ignoreOrder: true);
+        listBox.SelectedItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Items_ClearWithNothingSelected_ShouldNotRaiseSelectionChanged()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        int raisedCount = 0;
+        listBox.SelectionChanged += (_, _) => raisedCount++;
+
+        listBox.Items.Clear();
+
+        raisedCount.ShouldBe(0);
+    }
+
+    private static ListBox CreateVisualTemplateListBox(params string[] items)
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.VisualTemplate = new Gum.Forms.VisualTemplate(() => new ListBoxItem().Visual);
+        foreach (string item in items)
+        {
+            listBox.Items!.Add(item);
+        }
+        return listBox;
+    }
+
+    #endregion
+
     #region Setup Methods
 
     private static Mock<ICursor> SetupForPush()

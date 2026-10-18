@@ -625,6 +625,9 @@ public class ListBox : ItemsControl, IInputReceiver
 
         if(listBoxItem != null)
         {
+            // Selection resolves rows by DataObject, so a templated row needs it just like a row
+            // made by CreateNewItemFrameworkElement (issue #6138).
+            listBoxItem.DataObject = item;
             CallUpdateToObject(item, listBoxItem);
         }
     }
@@ -1493,8 +1496,41 @@ public class ListBox : ItemsControl, IInputReceiver
 
             // Row-exact - always the correct occurrence even when the row's value is duplicated
             // elsewhere in Items (issue #3509).
-            _selectedRowsInternal.Remove(listBoxItem);
+            if (_selectedRowsInternal.Remove(listBoxItem))
+            {
+                _removedSelectedData.Add(listBoxItem.DataObject);
+            }
         }
+    }
+
+    // Data of selected rows removed during the current removal, reported together once it finishes.
+    private readonly List<object?> _removedSelectedData = new List<object?>();
+
+    /// <inheritdoc/>
+    protected override void HandleCollectionItemsRemoved()
+    {
+        if (_removedSelectedData.Count == 0)
+        {
+            return;
+        }
+
+        // A removed row that was selected is a selection change: this covers an item removed from
+        // Items, Items cleared or replaced, and rows discarded by a template change. Reporting it
+        // lets listeners (such as a ComboBox showing the selected item's text) react, and keeps
+        // SelectedItems from describing rows that no longer exist.
+        var args = new SelectionChangedEventArgs();
+        foreach (var data in _removedSelectedData)
+        {
+            args.RemovedItems.Add(data);
+        }
+        _removedSelectedData.Clear();
+
+        RebuildSelectedItemsCollectionFromRows();
+
+        SelectionChanged?.Invoke(this, args);
+
+        PushValueToViewModel(nameof(SelectedObject));
+        PushValueToViewModel(nameof(SelectedIndex));
     }
 
     protected override void HandleCollectionReset()
