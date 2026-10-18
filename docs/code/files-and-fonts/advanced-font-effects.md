@@ -2,14 +2,14 @@
 
 ## Introduction
 
-KernSmith can generate fonts with effects that the `TextRuntime` property surface does not expose — outline color, gradient fills, SDF, color fonts, custom glyph subsets, and a choice of rasterizer backend. Drop shadow is on the property path when `HasDropshadow` is set (see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow)); the fields below cover the rest. They all live on `KernSmith.FontGeneratorOptions`, but `BmfcSave` (the descriptor that drives the property path) only carries a small slice of those fields.
+KernSmith can generate fonts with effects that the `TextRuntime` property surface does not expose — outline color, outline shape, gradient fills, SDF, color fonts, custom glyph subsets, and a choice of rasterizer backend. Drop shadow is on the property path when `HasDropshadow` is set (see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow)); the fields below cover the rest. They all live on `KernSmith.FontGeneratorOptions`, but `BmfcSave` (the descriptor that drives the property path) only carries a small slice of those fields.
 
 This page catalogs the effects available today and shows the `FontGeneratorOptions` fields that drive each one.
 
 {% hint style="info" %}
 **Property path vs direct KernSmith:** `TextRuntime` exposes baked drop shadow through `HasDropshadow`, `DropshadowColor` (+ channel mirrors), `DropshadowOffsetX/Y`, and `DropshadowBlur` when an `InMemoryFontCreator` is registered — see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
 
-Everything else on this page still requires constructing a `BitmapFont` via KernSmith yourself and assigning it directly to `TextRuntime.BitmapFont` — outline color, gradient fills, SDF, color fonts, custom glyphs, backend selection, `HardShadow`, and custom `Padding`. `BmfcSave` does not carry those fields.
+Everything else on this page still requires constructing a `BitmapFont` via KernSmith yourself and assigning it directly to `TextRuntime.BitmapFont` — outline color, outline shape, gradient fills, SDF, color fonts, custom glyphs, backend selection, `HardShadow`, and custom `Padding`. `BmfcSave` does not carry those fields.
 
 For the full construction walkthrough (helper method, channel layout caveat, and `BmfcSave`-vs-from-scratch flows), see [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment). This page focuses on the per-effect options without repeating that setup.
 {% endhint %}
@@ -47,6 +47,33 @@ options.Channels = new KernSmith.Output.ChannelConfig(
     Green: KernSmith.Output.ChannelContent.Glyph,
     Blue:  KernSmith.Output.ChannelContent.Glyph);
 ```
+
+## Outline Shape
+
+`FontGeneratorOptions.OutlineShape` controls the corner shape of the outline. It matters most when `UseFontSmoothing` is false, because the outline is then a hard edge and the shape of every corner is visible. This suits pixel fonts, where an outline of thickness `N` is exactly `N` fully opaque pixels around each glyph.
+
+```csharp
+// Initialize
+bmfcSave.UseSmoothing = false;
+bmfcSave.OutlineThickness = 1;
+
+var options = KernSmith.Gum.GumFontGenerator.BuildOptions(bmfcSave);
+options.OutlineShape = KernSmith.OutlineShape.Square;
+
+KernSmith.BmFontResult result =
+    KernSmith.BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
+```
+
+The available shapes are:
+
+* `Round` is the default. The outline follows a circle around each glyph pixel, so a thickness of 1 does not fill the diagonal pixels.
+* `Square` fills the diagonal pixels, so the outline forms a square around each glyph pixel. This is the shape most pixel artists draw by hand.
+* `Plus` keeps only the pixels reached by moving up, down, left or right, which gives a diamond shape as the thickness grows.
+
+{% hint style="info" %}
+`OutlineShape` requires KernSmith 0.24.0 or newer. Gum packages reference 0.24.0 starting in November 2026, or now if you build Gum from source. Until then, reference KernSmith 0.24.0 directly in your project.
+{% endhint %}
 
 ## Drop Shadow
 
