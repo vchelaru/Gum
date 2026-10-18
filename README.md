@@ -8,6 +8,9 @@
   <a href="https://twitter.com/FlatRedBall"><img src="https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FFlatRedBall" alt="Twitter"/></a>
   <img src="https://img.shields.io/github/last-commit/vchelaru/Gum/main" alt="Activity" />
 </div>
+<div align="center">
+  <a href="https://alternativeto.net/software/gum-ui/about/?utm_source=badge&utm_medium=referral"><img src="https://alternativeto.net/static/badges/badge-compact-color.svg" alt="Gum UI | AlternativeTo" width="150" /></a>
+</div>
 <br/>
 
 ![image](https://github.com/vchelaru/Gum/assets/729631/9f1d16b2-47a0-47d4-a6bc-0a3d6f100699)
