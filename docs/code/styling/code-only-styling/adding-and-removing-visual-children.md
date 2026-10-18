@@ -58,6 +58,10 @@ coloredRectangle.Height = 2;
 
 <figure><img src="../../../.gitbook/assets/26_09 08 52.png" alt=""><figcaption><p>Button with red underline under its text</p></figcaption></figure>
 
+{% hint style="warning" %}
+A `ContainerRuntime` has `HasEvents` set to `true` by default, so a container added to a control's visual takes the control's clicks when the cursor is over it. If the container only groups or positions other children, set `HasEvents = false`. See [Troubleshooting Events](../../events-and-interactivity/troubleshooting-events.md#a-container-inside-a-controls-visual-can-swallow-the-controls-clicks) for details.
+{% endhint %}
+
 ## Removing Children Visuals
 
 Gum controls are very flexible and can function even if children are removed. Of course, removing children may limit the behavior of a control. For example, removing the TextInstance from a ButtonVisual results in the Button no longer displaying its Text string.
