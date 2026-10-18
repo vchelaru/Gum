@@ -23,10 +23,10 @@
          tests. -->
     <!-- Matches Gum.Stride's own bump: SkiaGameRendering.Stride.D3D11 pins 4.153.1 exactly. -->
     <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
-    <PackageReference Include="Stride.Input" VersionOverride="4.4.0" />
+    <PackageReference Include="Stride.Input" VersionOverride="4.4.1" />
     <!-- GraphicsPlatform, for GumServiceGpuPathTests. Not otherwise pulled in transitively by
          Stride.Input. -->
-    <PackageReference Include="Stride.Graphics" VersionOverride="4.4.0" />
+    <PackageReference Include="Stride.Graphics" VersionOverride="4.4.1" />
   </ItemGroup>
 
   <ItemGroup>
