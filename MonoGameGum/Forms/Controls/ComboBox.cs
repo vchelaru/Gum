@@ -57,6 +57,9 @@ public class ComboBox :
     public ListBox ListBox
     {
         get => listBox;
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "Only forwards a DisplayMemberPath the caller already set, and that " +
+                "setter carries the RequiresUnreferencedCode warning at the caller.")]
         set
         {
             if (value == null)
@@ -73,6 +76,11 @@ public class ComboBox :
                 listBox.IsVisible = false;
 
                 SubscribeToListBox();
+
+                if (!string.IsNullOrEmpty(_displayMemberPath))
+                {
+                    listBox.DisplayMemberPath = _displayMemberPath;
+                }
 
                 if (!IsDataBound(nameof(Text)))
                 {

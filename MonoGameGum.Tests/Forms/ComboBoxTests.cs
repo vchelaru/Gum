@@ -956,6 +956,19 @@ public  class ComboBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void ListBox_ReplacedAfterDisplayMemberPathSet_ShouldShowPropertyInRows()
+    {
+        ComboBox comboBox = new();
+        comboBox.AddToRoot();
+        comboBox.DisplayMemberPath = nameof(Fruit.Name);
+
+        comboBox.ListBox = new ListBox();
+        comboBox.Items!.Add(new Fruit("Apple"));
+
+        GetRowText(comboBox.ListBox.ListBoxItems[0]).ShouldBe("Apple");
+    }
+
+    [Fact]
     public void ListBox_Replaced_SelectingRowInOldListBoxShouldNotUpdateText()
     {
         ComboBox comboBox = CreateComboBox("Apple", "Banana");
