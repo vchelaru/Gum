@@ -474,6 +474,21 @@ public  class ComboBoxTests : BaseTestClass
         GetRowText(comboBox.ListBox.ListBoxItems[1]).ShouldBe("Banana");
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void DisplayMemberPath_ClearedAfterSet_ShouldRevertToToString(string? clearedValue)
+    {
+        ComboBox comboBox = CreateFruitComboBox();
+        comboBox.DisplayMemberPath = nameof(Fruit.Name);
+        comboBox.SelectedIndex = 1;
+
+        comboBox.DisplayMemberPath = clearedValue;
+
+        comboBox.Text.ShouldBe("Fruit:Banana");
+        GetRowText(comboBox.ListBox.ListBoxItems[0]).ShouldBe("Fruit:Apple");
+    }
+
     [Fact]
     public void DisplayMemberPath_SetBeforeItemsAdded_ShouldShowPropertyInRows()
     {
@@ -938,6 +953,51 @@ public  class ComboBoxTests : BaseTestClass
         replacement.ListBoxItems[1].IsSelected = true;
 
         comboBox.Text.ShouldBe("Banana");
+    }
+
+    [Fact]
+    public void ListBox_Replaced_SelectingRowInOldListBoxShouldNotUpdateText()
+    {
+        ComboBox comboBox = CreateComboBox("Apple", "Banana");
+        ListBox original = comboBox.ListBox;
+        comboBox.ListBox = new ListBox();
+
+        original.ListBoxItems[1].IsSelected = true;
+
+        string.IsNullOrEmpty(comboBox.Text).ShouldBeTrue(
+            "because the combo box no longer owns the original list box");
+    }
+
+    [Fact]
+    public void ListBox_ReplacedWithListBoxThatHasSelection_ShouldShowSelectedText()
+    {
+        ComboBox comboBox = new();
+        comboBox.AddToRoot();
+        ListBox replacement = new();
+        replacement.Items!.Add("Apple");
+        replacement.Items.Add("Banana");
+        replacement.SelectedIndex = 1;
+
+        comboBox.ListBox = replacement;
+
+        comboBox.Text.ShouldBe("Banana");
+    }
+
+    [Fact]
+    public void ListBox_Replaced_PushOnRowShouldCloseDropDown()
+    {
+        ComboBox comboBox = new();
+        comboBox.AddToRoot();
+        ListBox replacement = new();
+        comboBox.ListBox = replacement;
+        comboBox.Items!.Add("Apple");
+        comboBox.Items.Add("Banana");
+        comboBox.IsDropDownOpen = true;
+
+        PushOn(replacement.ListBoxItems[1].Visual);
+
+        comboBox.Text.ShouldBe("Banana");
+        comboBox.IsDropDownOpen.ShouldBeFalse();
     }
 
     #endregion

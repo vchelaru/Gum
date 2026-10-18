@@ -1745,6 +1745,76 @@ public class ListBoxTests : BaseTestClass
         listBox.ListBoxItems.Count(i => i.IsSelected).ShouldBe(listBox.SelectedItems.Count);
     }
 
+    [Fact]
+    public void Items_RemoveSelectedItem_ShouldRaiseSelectionChangedWithRemovedItem()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.SelectedIndex = 1;
+        List<SelectionChangedEventArgs> raised = new();
+        listBox.SelectionChanged += (_, args) => raised.Add(args);
+
+        listBox.Items.RemoveAt(1);
+
+        raised.Count.ShouldBe(1);
+        raised[0].RemovedItems.Cast<object?>().ShouldBe(new object?[] { "b" });
+        raised[0].AddedItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Items_RemoveUnselectedItem_ShouldNotRaiseSelectionChanged()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.SelectedIndex = 1;
+        int raisedCount = 0;
+        listBox.SelectionChanged += (_, _) => raisedCount++;
+
+        listBox.Items.RemoveAt(0);
+
+        raisedCount.ShouldBe(0);
+        listBox.SelectedObject.ShouldBe("b");
+    }
+
+    [Fact]
+    public void Items_ClearWithMultipleSelected_ShouldRaiseSelectionChangedOnceWithAllRemovedItems()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.SelectionMode = SelectionMode.Multiple;
+        listBox.Items!.Add("a");
+        listBox.Items.Add("b");
+        listBox.Items.Add("c");
+        listBox.ListBoxItems[0].IsSelected = true;
+        listBox.ListBoxItems[2].IsSelected = true;
+        List<SelectionChangedEventArgs> raised = new();
+        listBox.SelectionChanged += (_, args) => raised.Add(args);
+
+        listBox.Items.Clear();
+
+        raised.Count.ShouldBe(1);
+        raised[0].RemovedItems.Cast<object?>().ShouldBe(new object?[] { "a", "c" }, ignoreOrder: true);
+        listBox.SelectedItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Items_ClearWithNothingSelected_ShouldNotRaiseSelectionChanged()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("a");
+        int raisedCount = 0;
+        listBox.SelectionChanged += (_, _) => raisedCount++;
+
+        listBox.Items.Clear();
+
+        raisedCount.ShouldBe(0);
+    }
+
     private static ListBox CreateVisualTemplateListBox(params string[] items)
     {
         ListBox listBox = new();

@@ -71,7 +71,34 @@ public class ComboBox :
                 listBox = value;
 
                 listBox.IsVisible = false;
+
+                SubscribeToListBox();
+
+                if (!IsDataBound(nameof(Text)))
+                {
+                    UpdateToObject(listBox.SelectedObject);
+                }
             }
+        }
+    }
+
+    // The list box whose events this combo box is currently subscribed to, so the subscription
+    // can move when the list box is replaced.
+    ListBox? _subscribedListBox;
+
+    private void SubscribeToListBox()
+    {
+        if (_subscribedListBox != listBox)
+        {
+            if (_subscribedListBox != null)
+            {
+                _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
+                _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
+            }
+
+            listBox.SelectionChanged += HandleSelectionChanged;
+            listBox.ItemPushed += HandleListBoxItemPushed;
+            _subscribedListBox = listBox;
         }
     }
 
@@ -107,6 +134,10 @@ public class ComboBox :
         set
         {
             _displayMemberPath = value;
+
+            // The drop-down rows show the same member as the text box.
+            listBox.DisplayMemberPath = value ?? string.Empty;
+
             UpdateToObject(SelectedObject);
         }
     }
@@ -299,9 +330,7 @@ public class ComboBox :
         Visual.RollOff += this.HandleRollOff;
 #endif
 
-        listBox.SelectionChanged += HandleSelectionChanged;
-        listBox.ItemPushed += HandleListBoxItemPushed;
-
+        SubscribeToListBox();
 
         base.ReactToVisualChanged();
 
