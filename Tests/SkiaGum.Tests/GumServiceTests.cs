@@ -481,6 +481,30 @@ public class GumServiceTests
         PixelAt(surface, 40, 40).Alpha.ShouldBe((byte)0);
     }
 
+    // Games that zoom shrink the canvas coordinate space after Initialize (CanvasWidth = ClientWidth / zoom)
+    // and rely on Update to resize Root to it, as MonoGame and raylib do. Without it, a bottom-aligned
+    // child is laid out against the full-size root and lands off screen.
+    [Fact]
+    public void Update_ShouldSizeRootToTheCurrentCanvas()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+        ContainerRuntime child = new()
+        {
+            Width = 10, Height = 10, YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+            YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge,
+        };
+        GumService.Default.Root.AddChild(child);
+
+        GraphicalUiElement.CanvasWidth = 100;
+        GraphicalUiElement.CanvasHeight = 50;
+        GumService.Default.Update(0);
+
+        GumService.Default.Root.GetAbsoluteWidth().ShouldBe(100);
+        GumService.Default.Root.GetAbsoluteHeight().ShouldBe(50);
+        child.GetAbsoluteBottom().ShouldBe(50);
+    }
+
     private static SKColor PixelAt(SKSurface surface, int x, int y)
     {
         using SKImage image = surface.Snapshot();

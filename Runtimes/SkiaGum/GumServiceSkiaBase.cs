@@ -674,6 +674,13 @@ public abstract class GumServiceSkiaBase : IGumService
     {
         _windowFit?.PollAndApplyFit();
 
+        // Like the MonoGame and raylib Update: a game that zooms changes the canvas size after Initialize,
+        // and the root has to follow it or its children lay out against the old size.
+        if (Root != null)
+        {
+            FormsUtilities.SetDimensionsToCanvas(Root);
+        }
+
         _syncContext?.Update();
         DeferredQueue?.ProcessPending();
         if (_hotReloadManager != null)
