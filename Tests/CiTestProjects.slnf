@@ -14,6 +14,7 @@
       "Tests\\Gum.NetStandard.Tests\\Gum.NetStandard.Tests.csproj",
       "Tests\\SilkNetGum.Tests\\SilkNetGum.Tests.csproj",
       "Tests\\UnityGum.Tests\\UnityGum.Tests.csproj",
+      "Tests\\KniSkiaGum.Tests\\KniSkiaGum.Tests.csproj",
       "Tests\\Gum.ProjectServices.SkiaGum.Tests\\Gum.ProjectServices.SkiaGum.Tests.csproj",
       "Tests\\Gum.Cli.Tests\\Gum.Cli.Tests.csproj",
       "Tests\\RaylibGum.Tests\\RaylibGum.Tests.csproj",
