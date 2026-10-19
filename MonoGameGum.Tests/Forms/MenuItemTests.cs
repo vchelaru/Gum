@@ -1,5 +1,8 @@
-﻿using Gum.Forms.Controls;
+﻿using Gum.DataTypes;
+using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using Shouldly;
 using System;
@@ -110,6 +113,44 @@ public class MenuItemTests : BaseTestClass
 
         childMenuItem.ParentMenuItem.ShouldNotBeNull();
         childMenuItem.GetVisual("SubmenuIndicatorInstance")!.Visible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SubmenuIndicatorIcon_ShouldUseArrow2Sprite()
+    {
+        MenuItem sut = new();
+        MenuItemVisual visual = (MenuItemVisual)sut.Visual;
+
+        SpriteRuntime expected = new();
+        expected.ApplyState(Styling.ActiveStyle.Icons.Arrow2);
+
+        visual.SubmenuIndicatorIcon.TextureLeft.ShouldBe(expected.TextureLeft);
+        visual.SubmenuIndicatorIcon.TextureTop.ShouldBe(expected.TextureTop);
+        visual.SubmenuIndicatorIcon.TextureWidth.ShouldBe(expected.TextureWidth);
+        visual.SubmenuIndicatorIcon.TextureHeight.ShouldBe(expected.TextureHeight);
+    }
+
+    [Fact]
+    public void SubmenuIndicatorIcon_ShouldNotEnlargeItemBeyondTextHeight()
+    {
+        // The arrow sprite is 32x32 on the sheet; if it sized the row, every item with a
+        // submenu would be taller than the text it carries.
+        MenuItem sut = new();
+        MenuItemVisual visual = (MenuItemVisual)sut.Visual;
+
+        visual.SubmenuIndicatorInstance.Height.ShouldBeLessThan(32);
+        visual.SubmenuIndicatorInstance.HeightUnits.ShouldBe(DimensionUnitType.Absolute);
+    }
+
+    [Fact]
+    public void SubmenuIndicatorColor_ShouldTintIcon()
+    {
+        MenuItem sut = new();
+        MenuItemVisual visual = (MenuItemVisual)sut.Visual;
+
+        visual.SubmenuIndicatorColor = Color.Red;
+
+        visual.SubmenuIndicatorIcon.Color.ShouldBe(Color.Red);
     }
 
     [Fact]

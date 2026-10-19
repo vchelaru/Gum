@@ -98,7 +98,7 @@ public class MenuItemVisual : BaseMenuItemVisual
     {
         _fill.FillColor = fill;
         TextInstance.Color = text;
-        SubmenuIndicatorInstance.Color = text;
+        SubmenuIndicatorIcon.Color = text;
     }
 
     private static RectangleRuntime CreateFill()
