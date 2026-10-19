@@ -299,7 +299,7 @@ public class FormsUtilities
     /// Used by GetEventFailureReason to provide useful diagnostics in GumBatch scenarios
     /// where elements are not added to managers.
     /// </summary>
-    internal static IReadOnlyList<GraphicalUiElement> LastEventRoots => _lastEventRoots;
+    public static IReadOnlyList<GraphicalUiElement> LastEventRoots => _lastEventRoots;
     static List<GraphicalUiElement> _lastEventRoots = new List<GraphicalUiElement>();
 
 #if XNALIKE

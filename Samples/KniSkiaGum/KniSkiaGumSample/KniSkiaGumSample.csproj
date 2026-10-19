@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<!-- Differs from the referenced Runtimes/KniSkiaGum project's assembly name ("KniSkiaGum") so the
+		     two outputs never overwrite each other in this project's bin folder (#3652, #4311). -->
+		<AssemblyName>KniSkiaGumSample</AssemblyName>
+		<TargetFramework>net8.0</TargetFramework>
+		<RollForward>Major</RollForward>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<KniPlatform>DesktopGL</KniPlatform>
+		<TieredCompilation>false</TieredCompilation>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="nkast.Xna.Framework" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="[4.3.9001]" />
+		<PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="[4.3.9001]" />
+		<!-- Draws Skia into a KNI Texture2D render target. Gum draws into that target's SKCanvas. -->
+		<PackageReference Include="SkiaGameRendering.Kni.DesktopGL" Version="0.19.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+	</ItemGroup>
+
+</Project>

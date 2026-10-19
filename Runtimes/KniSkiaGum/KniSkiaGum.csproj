@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.KniSkia: a KNI desktop host that renders Gum through SkiaGum. The caller owns the Skia
+		canvas (typically a SkiaGameRendering SkiaRenderTarget2D) and passes its SKCanvas to
+		GumService.Initialize; this project reads KNI's mouse, keyboard and gamepad. It is the fourth
+		interactive Skia host, modeled on SilkNetGum: it references SkiaGum for the render and Forms
+		source, and imports SkiaInputHost.props for the shared cursor and GumService halves.
+
+		It deliberately does NOT define KNI or XNALIKE: those symbols switch the shared Cursor.cs to
+		XNA types and cannot be compiled next to SkiaGum. The KNI types appear only inside this
+		project's own Cursor/Keyboard/GumService files, fully qualified or aliased.
+	-->
+	<Import Project="..\RuntimePackage.props" />
+
+	<PropertyGroup>
+		<PackageId>Gum.KniSkia</PackageId>
+		<Version>2026.4.5.1</Version>
+		<NoWarn>1591</NoWarn>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<GumSkiaHostSymbol>KNISKIA</GumSkiaHostSymbol>
+	</PropertyGroup>
+
+	<Import Project="..\SkiaHost.props" />
+	<Import Project="..\SkiaInputHost.props" />
+	<Import Project="..\SkiaPackages.props" />
+
+	<ItemGroup>
+		<!-- Same KNI version as KniGum. Compile-time only: the game brings its own KNI platform package. -->
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="TextCopy" Version="6.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The TextCopy clipboard is XNA-free, so it is shared by link instead of copied. -->
+		<Compile Include="..\..\MonoGameGum\Clipboard\MonoGameGumClipboard.cs" Link="Clipboard\MonoGameGumClipboard.cs" />
+		<Compile Include="..\..\MonoGameGum\Clipboard\ClipboardImplementation.cs" Link="Clipboard\ClipboardImplementation.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+	<ItemGroup>
+		<None Include="build\Gum.KniSkia.targets" Pack="true" PackagePath="buildTransitive\Gum.KniSkia.targets" Visible="false" />
+	</ItemGroup>
+
+</Project>

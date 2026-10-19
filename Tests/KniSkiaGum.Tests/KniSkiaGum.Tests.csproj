@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net10.0 to match SkiaGum.Tests: the Skia Forms render path hits a native AccessViolation
+         under the net8.0 SkiaSharp runtime but is clean on net10.0. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <!-- SKSurface for the in-memory raster canvas. -->
+    <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
+    <!-- KNI's device state structs (KeyboardState, MouseState, GamePadState), built directly by the
+         tests. No platform package: nothing here creates a Game or a window. -->
+    <PackageReference Include="nkast.Xna.Framework" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" VersionOverride="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" VersionOverride="4.2.9001" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

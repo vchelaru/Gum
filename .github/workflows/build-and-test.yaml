@@ -526,6 +526,9 @@ jobs:
       #   - SilkNetGum.Tests               (Gum.SilkNet runtime: SkiaGum renderer +
       #                                     Silk.NET.Input host. CPU raster SKSurface
       #                                     + mocked input, fully headless. #3605)
+      #   - KniSkiaGum.Tests               (KNI desktop runtime: SkiaGum renderer + KNI
+      #                                     input host. CPU raster SKSurface + device
+      #                                     state fed through test seams, headless)
       #   - UnityGum.Tests                 (Unity runtime: SkiaGum renderer + host-
       #                                     pushed input; no Unity needed. #5506)
       #   - RaylibGum.Tests                (raylib runtime; Windows-only. Needs an
@@ -648,6 +651,13 @@ jobs:
       - name: SilkNetGum.Tests
         if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/SilkNetGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # KniSkiaGum.Tests is the KNI desktop runtime (SkiaGum renderer + KNI input host). No KNI platform
+      # package or window: it renders into a CPU raster SKSurface and feeds mouse, keyboard and gamepad
+      # state through test seams, so it runs headless.
+      - name: KniSkiaGum.Tests
+        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        run: dotnet test "Tests/KniSkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # UnityGum.Tests is the Unity runtime (SkiaGum renderer + host-pushed input). No Unity needed:
       # the runtime references no Unity assembly, and the tests draw into a CPU raster SKSurface. #5506

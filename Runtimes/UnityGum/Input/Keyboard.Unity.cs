@@ -35,16 +35,9 @@ public class Keyboard : PolledKeyboard
 
     /// <summary>
     /// Adds a character the OS typed (including its own key repeat), which TextBox reads on the next
-    /// Activity. Control characters 0-29 (Backspace, Enter, Ctrl+letter) are dropped, as MonoGame's
-    /// keyboard does: TextBox handles those through the keys.
+    /// Activity. <see cref="PolledKeyboard"/> drops control characters.
     /// </summary>
-    public void AddTypedText(char character)
-    {
-        if (character > 29)
-        {
-            AppendTypedText(character);
-        }
-    }
+    public void AddTypedText(char character) => AppendTypedText(character);
 
     /// <inheritdoc/>
     protected override IEnumerable<GumKeys> SupportedKeys => _reportedKeys;

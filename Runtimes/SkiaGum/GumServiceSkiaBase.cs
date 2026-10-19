@@ -591,9 +591,24 @@ public abstract class GumServiceSkiaBase : IGumService
         Root?.UpdateLayout();
     }
 
+    /// <summary>
+    /// Draws Gum into the canvas it was initialized with.
+    /// </summary>
     public void Draw()
     {
         SystemManagers.Default.Draw();
+    }
+
+    /// <summary>
+    /// Draws Gum into <paramref name="canvas"/> and keeps drawing into it on later <see cref="Draw()"/>
+    /// calls. For a host whose canvas is only readable inside a render pass, such as a
+    /// SkiaGameRendering target: pass the pass's canvas each frame.
+    /// </summary>
+    /// <param name="canvas">The canvas to draw into this frame.</param>
+    public void Draw(SKCanvas canvas)
+    {
+        SystemManagers.Default.Canvas = canvas;
+        Draw();
     }
 
     private double _previousTotalSeconds;

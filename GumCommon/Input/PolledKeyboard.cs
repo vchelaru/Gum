@@ -46,6 +46,15 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
     protected abstract IEnumerable<GumKeys> SupportedKeys { get; }
 
     /// <summary>
+    /// Called once at the start of each <see cref="Activity"/>, before any <see cref="IsDeviceKeyDown"/>
+    /// query. A host whose device is read as one snapshot (a keyboard-state struct, say) reads it here
+    /// instead of once per key.
+    /// </summary>
+    protected virtual void BeginPoll()
+    {
+    }
+
+    /// <summary>
     /// Returns whether the host's device currently reports <paramref name="key"/> as held.
     /// Called for each of <see cref="SupportedKeys"/> during <see cref="Activity"/>.
     /// </summary>
@@ -53,14 +62,30 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
 
     /// <summary>
     /// Adds text the host received from its text-input event. It is returned by
-    /// <see cref="GetStringTyped"/> after the next <see cref="Activity"/>.
+    /// <see cref="GetStringTyped"/> after the next <see cref="Activity"/>. Control characters 0-29 are
+    /// dropped, as MonoGame's keyboard does: some hosts report Backspace, Enter and Ctrl+letter (Ctrl+A
+    /// is 1) as characters, and TextBox handles those through the keys.
     /// </summary>
-    protected void AppendTypedText(string text) => _charsTyped.Append(text);
+    protected void AppendTypedText(string text)
+    {
+        foreach (char character in text)
+        {
+            AppendTypedText(character);
+        }
+    }
 
     /// <summary>
     /// Adds one typed character. See <see cref="AppendTypedText(string)"/>.
     /// </summary>
-    protected void AppendTypedText(char character) => _charsTyped.Append(character);
+    protected void AppendTypedText(char character)
+    {
+        if (character > LastIgnoredControlCharacter)
+        {
+            _charsTyped.Append(character);
+        }
+    }
+
+    private const char LastIgnoredControlCharacter = (char)29;
 
     /// <summary>
     /// Returns true if either the left or right shift key is currently pressed down.
@@ -148,6 +173,8 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
 
         _previousDown.Clear();
         _previousDown.UnionWith(_currentDown);
+
+        BeginPoll();
 
         _currentDown.Clear();
         foreach (GumKeys key in SupportedKeys)
