@@ -14,7 +14,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <RollForward>Major</RollForward>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <!-- Off because the sample code was written without nullable annotations (it carried ~40 warnings). -->
+    <Nullable>disable</Nullable>
     <KniPlatform>DesktopGL</KniPlatform>
     <TieredCompilation>false</TieredCompilation>
     <ApplicationManifest>app.manifest</ApplicationManifest>
