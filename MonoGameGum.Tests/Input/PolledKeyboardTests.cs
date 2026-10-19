@@ -19,11 +19,25 @@ public class PolledKeyboardTests
 
         protected override IEnumerable<GumKeys> SupportedKeys => new[] { GumKeys.A, GumKeys.B, GumKeys.Left };
 
-        protected override bool IsDeviceKeyDown(GumKeys key) => DeviceDown.Contains(key);
+        protected override bool IsDeviceKeyDown(GumKeys key)
+        {
+            KeyQueriesSinceBeginPoll++;
+            return DeviceDown.Contains(key);
+        }
 
         public void Type(string text) => AppendTypedText(text);
 
         public void Type(char character) => AppendTypedText(character);
+
+        public int BeginPollCount;
+
+        public int KeyQueriesSinceBeginPoll;
+
+        protected override void BeginPoll()
+        {
+            BeginPollCount++;
+            KeyQueriesSinceBeginPoll = 0;
+        }
     }
 
     [Fact]
@@ -92,5 +106,21 @@ public class PolledKeyboardTests
         keyboard.Activity(0);
 
         keyboard.GetStringTyped().ShouldBe("hi ");
+    }
+
+    [Fact]
+    public void Activity_CallsBeginPollOncePerFrameBeforeQueryingKeys()
+    {
+        var keyboard = new FakeHostKeyboard();
+
+        keyboard.Activity(0);
+
+        keyboard.BeginPollCount.ShouldBe(1);
+        // All three supported keys were queried after the single BeginPoll, not before it.
+        keyboard.KeyQueriesSinceBeginPoll.ShouldBe(3);
+
+        keyboard.Activity(0.1);
+
+        keyboard.BeginPollCount.ShouldBe(2);
     }
 }

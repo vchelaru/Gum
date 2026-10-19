@@ -46,6 +46,15 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
     protected abstract IEnumerable<GumKeys> SupportedKeys { get; }
 
     /// <summary>
+    /// Called once at the start of each <see cref="Activity"/>, before any <see cref="IsDeviceKeyDown"/>
+    /// query. A host whose device is read as one snapshot (a keyboard-state struct, say) reads it here
+    /// instead of once per key.
+    /// </summary>
+    protected virtual void BeginPoll()
+    {
+    }
+
+    /// <summary>
     /// Returns whether the host's device currently reports <paramref name="key"/> as held.
     /// Called for each of <see cref="SupportedKeys"/> during <see cref="Activity"/>.
     /// </summary>
@@ -164,6 +173,8 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
 
         _previousDown.Clear();
         _previousDown.UnionWith(_currentDown);
+
+        BeginPoll();
 
         _currentDown.Clear();
         foreach (GumKeys key in SupportedKeys)
