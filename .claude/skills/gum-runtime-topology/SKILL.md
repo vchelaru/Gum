@@ -58,8 +58,10 @@ Consequence for themes: a rounded/shadowed theme's visual code (`new RectangleRu
 
 ## Adding a Skia-based host
 
-Model it on `Runtimes/SilkNetGum`: reference `GumCommon` + `SkiaGum`, import `Runtimes/CursorInput.props`, and add a `Cursor.<Host>.cs` partial (mouse/touch reads) and a `Keyboard` deriving from `GumCommon/Input/PolledKeyboard.cs` (key map plus a down query). `GumService` subclasses `GumServiceSkiaBase` and pumps `FormsUtilities.Update` in `Update`. For GPU rendering, draw into a SkiaGameRendering canvas (see `StrideGum`).
+Model it on `Runtimes/KniSkiaGum` or `Runtimes/SilkNetGum`: reference `GumCommon` and `SkiaGum`, set `GumSkiaHostSymbol` and import `Runtimes/SkiaHost.props`, `SkiaInputHost.props` and `SkiaPackages.props`, and derive `GumService` from `GumServiceSkiaInteractiveBase`. The host writes only its device translation: a `Cursor.<Host>.cs` partial (`GetMouseState`, optionally `ApplyHostCustomCursor`), a `Keyboard` deriving from `GumCommon/Input/PolledKeyboard.cs`, and a gamepad driver that fills `GamePadSnapshot`. For GPU rendering, draw into a SkiaGameRendering canvas and pass it to `GumServiceSkiaBase.Draw(SKCanvas)` each frame (see `StrideGum`, `Samples/KniSkiaGum`).
 
+- ⚠ **A host must not define `KNI`, `XNALIKE` or `MONOGAME`.** Those symbols switch the shared `Cursor.cs` to XNA types, which cannot compile next to SkiaGum. Alias the engine's types inside the host's own files instead.
+- ⚠ **A new host is registered by hand in four places:** `AllLibraries.sln`, `Tests/CiTestProjects.slnf` (a missing entry fails the Windows `--no-build` test step), a step in `.github/workflows/build-and-test.yaml`, and a test project that derives from `Tests/SkiaHost.TestsCommon` (`SkiaHostTestBase`, `SkiaHostTestFramework`).
 - ⚠ **netstandard2.1 builds (Unity) compile out `OperatingSystem.Is*`.** The host sets `Cursor.IsMobile` and `TextBoxBase.ShowNativeKeyboardOnFocus` itself, and supplies files through `FileManager.CustomGetStreamFromFile` when it can't read from disk.
 - `Runtimes/UnityGum` is the push-model example: the host pushes input in each frame rather than the runtime polling a device.
 - ⚠ **Unity IL2CPP needs a `link.xml` preserving `netstandard`.**

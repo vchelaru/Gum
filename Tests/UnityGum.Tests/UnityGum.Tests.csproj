@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Runtimes\UnityGum\UnityGum.csproj" />
+    <ProjectReference Include="..\SkiaHost.TestsCommon\SkiaHost.TestsCommon.csproj" />
   </ItemGroup>
 
   <ItemGroup>
