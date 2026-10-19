@@ -483,6 +483,9 @@ public class AllControlsScreen : ShowcaseScreen
         var newItem = new MenuItem(); newItem.Header = "New"; fileMenu.Items.Add(newItem);
         var openItem = new MenuItem(); openItem.Header = "Open"; fileMenu.Items.Add(openItem);
         var saveItem = new MenuItem(); saveItem.Header = "Save"; fileMenu.Items.Add(saveItem);
+        var exportItem = new MenuItem(); exportItem.Header = "Export"; fileMenu.Items.Add(exportItem);
+        var exportPngItem = new MenuItem(); exportPngItem.Header = "PNG"; exportItem.Items.Add(exportPngItem);
+        var exportSvgItem = new MenuItem(); exportSvgItem.Header = "SVG"; exportItem.Items.Add(exportSvgItem);
         var exitItem = new MenuItem(); exitItem.Header = "Exit"; fileMenu.Items.Add(exitItem);
         menu.Items.Add(fileMenu);
 
