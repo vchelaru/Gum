@@ -174,15 +174,6 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="SkiaGum.Tests" />
-		<!-- Lets SilkNetGum's CursorExtensions reach FormsUtilities.LastEventRoots (internal) across
-		     the assembly boundary — SilkNetGum references this project for GumServiceSkiaBase
-		     instead of file-linking FormsUtilities.cs (issue #4452 phase 2). -->
-		<InternalsVisibleTo Include="SilkNetGum" />
-		<!-- Same reason, for the Stride runtime host (issue #4600): StrideGum.csproj also
-		     ProjectReferences this project for GumServiceSkiaBase instead of file-linking. -->
-		<InternalsVisibleTo Include="StrideGum" />
-		<!-- Same reason, for the Unity runtime host (Runtimes/UnityGum). -->
-		<InternalsVisibleTo Include="UnityGum" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />
