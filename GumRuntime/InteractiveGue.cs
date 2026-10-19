@@ -938,6 +938,26 @@ public partial class InteractiveGue : GraphicalUiElement
         nextPushActionHoldingList.Add(action);
     }
 
+    /// <summary>
+    /// Adds an action to be called the next time the Cursor performs a push action, like
+    /// <see cref="AddNextPushAction(Action)"/>, but the action is dropped without running if
+    /// <paramref name="owner"/> has left the tree (it has no <see cref="GraphicalUiElement.EffectiveManagers"/>)
+    /// by the time the push happens. Use this for handlers that touch the owner so they cannot
+    /// run against a control that was removed or disposed.
+    /// </summary>
+    /// <param name="action">The action to invoke one time.</param>
+    /// <param name="owner">The visual the action belongs to.</param>
+    public static void AddNextPushAction(Action action, GraphicalUiElement owner)
+    {
+        AddNextPushAction(() =>
+        {
+            if (owner.EffectiveManagers != null)
+            {
+                action();
+            }
+        });
+    }
+
     public static void ClearNextPushActions()
     {
         nextPushActionHoldingList.Clear();
@@ -971,6 +991,25 @@ public partial class InteractiveGue : GraphicalUiElement
         }
 #endif
         nextClickActionHoldingList.Add(action);
+    }
+
+    /// <summary>
+    /// Adds an action to be called the next time the Cursor performs a click action, like
+    /// <see cref="AddNextClickAction(Action)"/>, but the action is dropped without running if
+    /// <paramref name="owner"/> has left the tree (it has no <see cref="GraphicalUiElement.EffectiveManagers"/>)
+    /// by the time the click happens.
+    /// </summary>
+    /// <param name="action">The action to invoke one time.</param>
+    /// <param name="owner">The visual the action belongs to.</param>
+    public static void AddNextClickAction(Action action, GraphicalUiElement owner)
+    {
+        AddNextClickAction(() =>
+        {
+            if (owner.EffectiveManagers != null)
+            {
+                action();
+            }
+        });
     }
 
     internal static void DoNextClickAndPushActions(ICursor cursor, bool isInWindow)

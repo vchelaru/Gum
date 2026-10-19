@@ -620,7 +620,7 @@ public abstract class TextBoxBase :
         }
         else
         {
-            InteractiveGue.AddNextPushAction(HandlePushOff);
+            InteractiveGue.AddNextPushAction(HandlePushOff, Visual);
         }
     }
 
@@ -1428,7 +1428,7 @@ public abstract class TextBoxBase :
 
         if (isFocused)
         {
-            InteractiveGue.AddNextPushAction(HandlePushOff);
+            InteractiveGue.AddNextPushAction(HandlePushOff, Visual);
 
             if (InteractiveGue.CurrentInputReceiver != this)
             {

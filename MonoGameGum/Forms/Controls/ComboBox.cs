@@ -480,7 +480,7 @@ public class ComboBox :
 
 #else
 
-        InteractiveGue.AddNextPushAction(TryHideFromPush);
+        InteractiveGue.AddNextPushAction(TryHideFromPush, Visual);
 #endif
 
 
@@ -513,7 +513,7 @@ public class ComboBox :
 #if FRB
             GuiManager.AddNextPushAction(TryHideFromPush);
 #else
-            InteractiveGue.AddNextPushAction(TryHideFromPush);
+            InteractiveGue.AddNextPushAction(TryHideFromPush, Visual);
 #endif
         }
     }
