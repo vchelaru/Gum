@@ -434,6 +434,53 @@ public class GumServiceTests
         void IUpdateEveryFrame.Activity(double secondDifference) => Seconds += secondDifference;
     }
 
+    // Game code written for the other runtimes sizes the canvas from the camera when it zooms:
+    // CanvasWidth = Camera.ClientWidth / zoom. That reads 0 unless the host reports the canvas size.
+    [Fact]
+    public void Initialize_ShouldSetCameraClientSizeAndTopLeftOrigin()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        camera.ClientWidth.ShouldBe(300);
+        camera.ClientHeight.ShouldBe(150);
+        camera.CameraCenterOnScreen.ShouldBe(CameraCenterOnScreen.TopLeft);
+    }
+
+    [Fact]
+    public void HandleResize_ShouldUpdateCameraClientSize()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+
+        GumService.Default.HandleResize(640, 480);
+
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        camera.ClientWidth.ShouldBe(640);
+        camera.ClientHeight.ShouldBe(480);
+    }
+
+    [Fact]
+    public void Draw_WithCameraZoomedAfterInitialize_ShouldKeepTopLeftAtOrigin()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        camera.Zoom = 3;
+        GraphicalUiElement.CanvasWidth = camera.ClientWidth / 3f;
+        GraphicalUiElement.CanvasHeight = camera.ClientHeight / 3f;
+        RectangleRuntime rectangle = new() { X = 0, Y = 0, Width = 10, Height = 10, FillColor = SKColors.Red, IsFilled = true };
+        GumService.Default.Root.AddChild(rectangle);
+
+        GumService.Default.Draw(surface.Canvas);
+
+        // 10 units at zoom 3 cover pixels 0-29.
+        PixelAt(surface, 15, 15).ShouldBe(SKColors.Red);
+        PixelAt(surface, 40, 40).Alpha.ShouldBe((byte)0);
+    }
+
     private static SKColor PixelAt(SKSurface surface, int x, int y)
     {
         using SKImage image = surface.Snapshot();

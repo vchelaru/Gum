@@ -100,7 +100,9 @@ namespace RenderingLibrary.Graphics
 
         public Renderer()
         {
-            Camera = new Camera();
+            // The same origin MonoGame, raylib and Sokol use. Center only looked like top-left here
+            // because nothing set the camera's client size.
+            Camera = new Camera { CameraCenterOnScreen = CameraCenterOnScreen.TopLeft };
             mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         }
         public bool ClearsCanvas { get; set; } = true;
