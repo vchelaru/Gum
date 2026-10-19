@@ -192,7 +192,7 @@ public static class TemplateTheme
         styling.Colors.Accent = colors.Accent;
     }
 
-    private static void RegisterVisuals()
+    internal static void RegisterVisuals()
     {
         // ---- "Rich" Variants gallery (OPT-IN, not registered) ---------------
         // The Variants\ folder holds richly-decorated alternates of a subset of
@@ -209,6 +209,8 @@ public static class TemplateTheme
         // ---- Styled by this theme -------------------------------------------
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
+        FrameworkElement.DefaultFormsTemplates[typeof(Thumb)] =
+            new VisualTemplate((_, c) => new ThumbVisual(tryCreateFormsObject: c));
         // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(Button)] = new VisualTemplate((_, c) => new Variants.ButtonVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] =

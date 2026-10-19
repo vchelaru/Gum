@@ -165,11 +165,13 @@ public static class HazardTheme
         styling.Colors.Accent = colors.Accent;
     }
 
-    private static void RegisterVisuals()
+    internal static void RegisterVisuals()
     {
         // ---- Styled by this theme -------------------------------------------
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
+        FrameworkElement.DefaultFormsTemplates[typeof(Thumb)] =
+            new VisualTemplate((_, c) => new ThumbVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] =
             new VisualTemplate((_, c) => new TextBoxVisual(tryCreateFormsObject: c));

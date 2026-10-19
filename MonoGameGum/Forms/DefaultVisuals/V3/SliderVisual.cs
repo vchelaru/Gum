@@ -150,7 +150,7 @@ public class SliderVisual : InteractiveGue
         TrackBackground.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         TrackInstance.AddChild(TrackBackground);
 
-        var thumbButton = new Button();
+        var thumbButton = new Thumb();
         var thumbVisual = thumbButton.Visual;
 
         thumbVisual.Name = "ThumbInstance";
