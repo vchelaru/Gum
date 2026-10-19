@@ -148,10 +148,12 @@ public class OrphanCodeFileReporter
     }
 
     /// <summary>
-    /// Builds one Errors tab entry per orphan, each carrying an action that resolves it.
+    /// Builds one Errors tab entry per orphan, each carrying an action that resolves it. An orphan
+    /// whose file has since vanished (deleted outside the tool) is left out, since the scan result
+    /// is only a snapshot (#6167).
     /// </summary>
     public IEnumerable<ErrorViewModel> CreateErrors() =>
-        _orphans.ToList().Select(orphan =>
+        _orphans.ToList().Where(orphan => orphan.FilePath.Exists()).Select(orphan =>
         {
             Action? migrate = MigrateAction;
             bool isMigratable = migrate != null && orphan.ElementName != null
@@ -194,8 +196,12 @@ public class OrphanCodeFileReporter
         }
         catch (IOException)
         {
-            // Already reported to Output; the orphan stays listed so the user can retry.
-            return;
+            if (orphan.FilePath.Exists())
+            {
+                // Already reported to Output; the orphan stays listed so the user can retry.
+                return;
+            }
+            // The file vanished since the scan, so there is nothing left to delete (#6167).
         }
         _orphans.Remove(orphan);
         OrphansChanged?.Invoke();
