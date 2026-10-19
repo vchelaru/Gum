@@ -150,7 +150,7 @@
     </State>
   </Category>
   <Instance Name="TrackInstance" BaseType="Container" />
-  <Instance Name="ThumbInstance" BaseType="Hazard/Controls/Button" />
+  <Instance Name="ThumbInstance" BaseType="Hazard/Controls/Thumb" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ScrollBarBehavior</BehaviorName>

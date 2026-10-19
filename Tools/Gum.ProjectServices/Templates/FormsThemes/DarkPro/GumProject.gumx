@@ -81,6 +81,7 @@
   <ComponentReference Name="DarkPro/Controls/Splitter" />
   <ComponentReference Name="DarkPro/Controls/StackPanel" />
   <ComponentReference Name="DarkPro/Controls/TextBox" />
+  <ComponentReference Name="DarkPro/Controls/Thumb" />
   <ComponentReference Name="DarkPro/Controls/Toast" />
   <ComponentReference Name="DarkPro/Controls/UserControl" />
   <ComponentReference Name="DarkPro/Controls/Window" />
