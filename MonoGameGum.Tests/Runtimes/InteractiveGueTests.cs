@@ -88,6 +88,113 @@ public class InteractiveGueTests : BaseTestClass
         Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
     }
 
+    // Game time must advance between frames: TextBox ignores a push on the same game time it was focused.
+    // The clock keeps counting across tests so a frame never lands on the time a previous test left behind.
+    private static double _seconds = 100;
+
+    private static void UpdateTwoFrames()
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            _seconds += 1;
+            Gum.GumService.Default.Update(
+                new Microsoft.Xna.Framework.GameTime(TimeSpan.FromSeconds(_seconds), TimeSpan.FromSeconds(1)));
+        }
+    }
+
+    [Fact]
+    public void AddNextPushAndClickAction_ShouldRunOnlyWhileOwnerIsInRoot()
+    {
+        _cursor.Setup(x => x.PrimaryPush).Returns(true);
+        _cursor.Setup(x => x.PrimaryClick).Returns(true);
+
+        Button inRoot = new();
+        inRoot.AddToRoot();
+        Button removed = new();
+        removed.AddToRoot();
+        Gum.GumService.Default.Root.Children!.Remove(removed.Visual);
+
+        int pushCount = 0;
+        int clickCount = 0;
+        InteractiveGue.AddNextPushAction(() => pushCount++, inRoot.Visual);
+        InteractiveGue.AddNextClickAction(() => clickCount++, inRoot.Visual);
+        InteractiveGue.AddNextPushAction(() => pushCount += 100, removed.Visual);
+        InteractiveGue.AddNextClickAction(() => clickCount += 100, removed.Visual);
+        UpdateTwoFrames();
+
+        pushCount.ShouldBe(1);
+        clickCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void NextPushAction_ShouldNotRun_IfOwningControlWasRemovedFromRoot()
+    {
+        _cursor.Setup(x => x.PrimaryPush).Returns(true);
+
+        TextBox box = new();
+        box.AddToRoot();
+        box.IsFocused = true;
+        Gum.GumService.Default.Root.Children!.Clear();
+        InteractiveGue.CurrentInputReceiver = null;
+        // a host that tears down its scene can leave the removed box still flagged as focused
+        box.IsFocused = true;
+        InteractiveGue.CurrentInputReceiver = null;
+
+        int enabledApplyCount = 0;
+        Gum.Forms.DefaultVisuals.V3.TextBoxVisual boxVisual = (Gum.Forms.DefaultVisuals.V3.TextBoxVisual)box.Visual;
+        Action enabledApply = boxVisual.States.Enabled.Apply!;
+        boxVisual.States.Enabled.Apply = () =>
+        {
+            enabledApplyCount++;
+            enabledApply();
+        };
+
+        Button other = new();
+        other.AddToRoot();
+        UpdateTwoFrames();
+
+        enabledApplyCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void NextPushAction_ShouldNotThrow_IfOpenMenuWasRemovedFromRoot()
+    {
+        _cursor.Setup(x => x.PrimaryPush).Returns(true);
+
+        Menu menu = new();
+        menu.AddToRoot();
+        MenuItem file = new();
+        file.Header = "File";
+        file.Items!.Add("New");
+        menu.Items!.Add(file);
+        file.IsSelected = true;
+        Gum.GumService.Default.Root.Children!.Clear();
+
+        Button other = new();
+        other.AddToRoot();
+
+        Should.NotThrow(() => UpdateTwoFrames());
+    }
+
+    [Fact]
+    public void NextPushAction_ShouldStillRun_IfOwningControlIsInRoot()
+    {
+        _cursor.Setup(x => x.PrimaryPush).Returns(true);
+
+        TextBox box = new();
+        box.AddToRoot();
+        box.Visual.Y = 300;
+        box.IsFocused = true;
+        box.IsFocused.ShouldBeTrue();
+
+        // the mock cursor sits at 0,0 so this push lands on 'other', not on the box
+        Button other = new();
+        other.AddToRoot();
+        UpdateTwoFrames();
+
+        box.IsFocused.ShouldBeFalse();
+    }
+
     #region CurrentInputReceiver
     [Fact]
     public void CurrentInputReceiver_ShouldGetUnset_IfRootIsReset()
@@ -420,8 +527,7 @@ public class InteractiveGueTests : BaseTestClass
         int draggingCount = 0;
         button.Visual.Dragging += (_, _) => draggingCount++;
 
-        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
-        Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        UpdateTwoFrames();
 
         draggingCount.ShouldBe(2);
     }

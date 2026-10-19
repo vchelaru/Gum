@@ -244,7 +244,20 @@ public class ScrollViewerTests : BaseTestClass
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
         GueInteractiveExtensionMethods.DoUiActivityRecursively(scrollViewer.Visual, cursor.Object, keyboard.Object, 0);
 
-        scrollViewer.VerticalScrollBarValue.ShouldBe(500, tolerance: 0.01);
+        // This test failed intermittently in CI (0 instead of 500) without reproducing locally, so a failure
+        // reports the static state the roll-over path depends on.
+        var cam = global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera;
+        string diagnostics =
+            $"zoom={cam.Zoom} x={cam.X} y={cam.Y} clientSize={cam.ClientWidth}x{cam.ClientHeight} " +
+            $"canvas={GraphicalUiElement.CanvasWidth}x{GraphicalUiElement.CanvasHeight} " +
+            $"visualOver={cursor.Object.VisualOver} mainCursorIsMock={ReferenceEquals(FrameworkElement.MainCursor, cursor.Object)} " +
+            $"svAbs={scrollViewer.Visual.AbsoluteLeft},{scrollViewer.Visual.AbsoluteTop} " +
+            $"svSize={scrollViewer.Visual.GetAbsoluteWidth()}x{scrollViewer.Visual.GetAbsoluteHeight()} " +
+            $"hasEvents={scrollViewer.Visual.HasEvents} visible={scrollViewer.Visual.AbsoluteVisible} " +
+            $"hasManagers={scrollViewer.Visual.EffectiveManagers != null} rootChildren={Gum.GumService.Default.Root.Children!.Count} " +
+            $"maxScroll={scrollViewer.VerticalScrollBarMaximum}";
+
+        scrollViewer.VerticalScrollBarValue.ShouldBe(500, tolerance: 0.01, customMessage: diagnostics);
     }
 
     private static ScrollViewer BuildTallScrollViewerForTouch()
