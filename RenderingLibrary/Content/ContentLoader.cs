@@ -103,7 +103,14 @@ public sealed class ContentLoader : IContentLoader
         // content pipeline premultiplies by default. Bleeding it would corrupt the game's own draws.
         if (!isFromContentManager)
         {
-            ApplyEdgeBleed(toReturn);
+            if (Graphics.Renderer.UsePremultipliedAlpha)
+            {
+                ApplyPremultiply(toReturn);
+            }
+            else
+            {
+                ApplyEdgeBleed(toReturn);
+            }
         }
 
         if (LoaderManager.Self.CacheTextures && toReturn != null)
@@ -133,6 +140,23 @@ public sealed class ContentLoader : IContentLoader
         var pixels = new Microsoft.Xna.Framework.Color[texture.Width * texture.Height];
         texture.GetData(pixels);
         TextureEdgeBleed.Bleed(pixels, texture.Width, texture.Height);
+        texture.SetData(pixels);
+    }
+
+    /// <summary>
+    /// Premultiplies the texture's color by its alpha in place (issue #6154). Only applies to
+    /// uncompressed <see cref="SurfaceFormat.Color"/> textures. Callers skip ContentManager textures.
+    /// </summary>
+    private static void ApplyPremultiply(Texture2D? texture)
+    {
+        if (texture == null || texture.Format != SurfaceFormat.Color)
+        {
+            return;
+        }
+
+        var pixels = new Microsoft.Xna.Framework.Color[texture.Width * texture.Height];
+        texture.GetData(pixels);
+        TexturePremultiply.Premultiply(pixels);
         texture.SetData(pixels);
     }
 

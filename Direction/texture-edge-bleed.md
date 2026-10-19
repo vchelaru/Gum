@@ -46,6 +46,14 @@ shipped was a third option, a runtime bleed on every file-loaded texture, on by 
 - **Long-term fix.** Bleed at bake time in KernSmith (existing `FontCache` atlases would need
   regenerating), or premultiply on load and draw with `AlphaBlend`. Either would let the runtime bleed go.
 
+## Premultiplied mode
+
+`Renderer.UsePremultipliedAlpha` (#6154) is the opt-out from the bleed: when true, `ContentLoader`
+premultiplies file/URL/bitmap textures instead of bleeding them (ContentManager textures are still left
+alone), `NormalBlendState` becomes `AlphaBlend`, and a font creator implementing
+`IPremultipliableFontCreator` (KernSmith's `KernSmithFontCreator`) is told to emit premultiplied atlases.
+Default is off. Set it at startup, before loading content.
+
 ## Log
 
 - **2026-09-25.** A user's game (MonoGame, pipeline textures built with `PremultiplyAlpha=True`,

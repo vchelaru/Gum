@@ -15,7 +15,7 @@ namespace KernSmith.Gum;
 /// Creates <see cref="BitmapFont"/> instances in memory using KernSmith for Gum games.
 /// Generates font textures and metadata without any disk I/O.
 /// </summary>
-public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator
+public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator, IPremultipliableFontCreator
 {
     private readonly GraphicsDevice _graphicsDevice;
     private readonly RasterizerBackend? _backend;
@@ -47,6 +47,15 @@ public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator
         _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
         _backend = backend;
     }
+
+    /// <summary>
+    /// When true, atlas textures (initial pages and glyphs added by <see cref="TryAddGlyphs(BitmapFont, BmfcSave, string)"/>)
+    /// hold premultiplied-alpha pixels, for a pipeline drawing with <c>BlendState.AlphaBlend</c>.
+    /// Gum sets this from <c>Renderer.UsePremultipliedAlpha</c> when the creator is registered and when
+    /// that switch changes; it can also be set directly. Defaults to false (straight alpha). Fonts
+    /// already created keep the mode they were created with.
+    /// </summary>
+    public bool PremultiplyAlpha { get; set; }
 
     /// <summary>
     /// Registers raw font data (TTF/OTF/WOFF) under a family name so that
@@ -157,7 +166,7 @@ public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator
             Texture2D texture = new Texture2D(_graphicsDevice, page.Width, page.Height,
                 false, SurfaceFormat.Color);
             texture.Name = $"{baseName}_{i}";
-            texture.SetData(page.PixelData);
+            texture.SetData(PremultiplyAlpha ? page.GetPremultipliedRgbaPixelData() : page.PixelData);
             textures[i] = texture;
         }
 
@@ -251,9 +260,11 @@ public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator
         {
             Texture2D page = font.Textures[glyph.PageIndex];
             Rectangle destRect = new Rectangle(glyph.X, glyph.Y, glyph.Width, glyph.Height);
-            // Pixels is tightly-packed straight-alpha RGBA32 -- reinterpret as Color[] rather than
-            // handing SetData the raw byte[] (which would need elementCount in bytes, not pixels).
-            Color[] glyphPixels = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, Color>(glyph.Pixels).ToArray();
+            // Pixels is tightly-packed RGBA32 (straight alpha, or premultiplied when PremultiplyAlpha is
+            // set) -- reinterpret as Color[] rather than handing SetData the raw byte[] (which would
+            // need elementCount in bytes, not pixels).
+            byte[] glyphBytes = PremultiplyAlpha ? glyph.PremultipliedPixels : glyph.Pixels;
+            Color[] glyphPixels = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, Color>(glyphBytes).ToArray();
             page.SetData(0, destRect, glyphPixels, 0, glyph.Width * glyph.Height);
 
             font.AddOrUpdateCharacter(ToFontFileCharLine(glyph.Char), page.Width, page.Height);

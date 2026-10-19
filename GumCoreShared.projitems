@@ -119,6 +119,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Camera.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\ContentLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\TextureEdgeBleed.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\TexturePremultiply.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\IContentLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\LoaderManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationChain.cs" />

@@ -196,9 +196,29 @@ public partial class CustomSetPropertyOnRenderable
             // #4563: same reasoning as FontService's setter above -- a new (or removed) creator gets
             // a fresh attempt at any signature previously marked unresolvable.
             _knownUnresolvableFontKeys.Clear();
+
+            // #6154: keep the creator's alpha mode in step with Renderer.UsePremultipliedAlpha.
+            // Unsubscribe first so repeated assignment never subscribes twice. A switch that is off
+            // is not pushed on assignment, so a creator the host configured itself is left alone.
+            Renderer.UsePremultipliedAlphaChanged -= PushPremultiplyAlphaToFontCreator;
+            Renderer.UsePremultipliedAlphaChanged += PushPremultiplyAlphaToFontCreator;
+            if (Renderer.UsePremultipliedAlpha)
+            {
+                PushPremultiplyAlphaToFontCreator(true);
+            }
 #endif
         }
     }
+
+#if !RAYLIB
+    private static void PushPremultiplyAlphaToFontCreator(bool premultiply)
+    {
+        if (_inMemoryFontCreator is IPremultipliableFontCreator premultipliable)
+        {
+            premultipliable.PremultiplyAlpha = premultiply;
+        }
+    }
+#endif
 
     public static event Action<string>? PropertyAssignmentError;
 

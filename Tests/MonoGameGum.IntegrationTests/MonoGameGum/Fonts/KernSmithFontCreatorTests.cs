@@ -1,5 +1,7 @@
 using KernSmith.Gum;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System.Linq;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -65,6 +67,55 @@ public class KernSmithFontCreatorTests : BaseTestClass
 
         font.ShouldNotBeNull();
         font!.ShadowFont.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryCreateFont_WithPremultiplyAlpha_StoresColorScaledByAlpha()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        KernSmithFontCreator creator = new KernSmithFontCreator(game.GraphicsDevice)
+        {
+            PremultiplyAlpha = true,
+        };
+
+        Color[] pixels = CreateAtlasPixels(creator, game);
+
+        pixels.Count(p => p.A > 0 && p.A < 255).ShouldBeGreaterThan(0, "because anti-aliased edges need partial alpha");
+        pixels.All(p => p.R == p.A && p.G == p.A && p.B == p.A).ShouldBeTrue("because grayscale coverage a premultiplies to (a,a,a,a)");
+    }
+
+    [Fact]
+    public void TryCreateFont_WithoutPremultiplyAlpha_KeepsStraightAlpha()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        KernSmithFontCreator creator = new KernSmithFontCreator(game.GraphicsDevice);
+
+        Color[] pixels = CreateAtlasPixels(creator, game);
+
+        pixels.Any(p => p.A > 0 && p.A < 255 && p.R > p.A).ShouldBeTrue("because straight-alpha edge texels keep full color");
+    }
+
+    private static Color[] CreateAtlasPixels(KernSmithFontCreator creator, MinimalGame game)
+    {
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 32,
+            UseSmoothing = true,
+            Ranges = "65",
+        };
+
+        BitmapFont? font = creator.TryCreateFont(bmfcSave);
+        font.ShouldNotBeNull();
+
+        Texture2D page = font!.Textures[0];
+        Color[] pixels = new Color[page.Width * page.Height];
+        page.GetData(pixels);
+        return pixels;
     }
 
     /// <summary>

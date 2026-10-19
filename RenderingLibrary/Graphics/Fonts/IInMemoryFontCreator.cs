@@ -13,3 +13,16 @@ public interface IInMemoryFontCreator
     /// </summary>
     BitmapFont? TryCreateFont(BmfcSave bmfcSave);
 }
+
+/// <summary>
+/// Optional extension for an <see cref="IInMemoryFontCreator"/> that can produce premultiplied-alpha
+/// atlases. Gum sets <see cref="PremultiplyAlpha"/> from <c>Renderer.UsePremultipliedAlpha</c> when
+/// the creator is registered and whenever that switch changes.
+/// </summary>
+public interface IPremultipliableFontCreator
+{
+    /// <summary>
+    /// When true, atlas pixels (initial pages and any glyphs added later) are premultiplied by alpha.
+    /// </summary>
+    bool PremultiplyAlpha { get; set; }
+}
