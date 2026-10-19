@@ -1,6 +1,7 @@
 using Gum;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Moq;
 using RenderingLibrary;
 using Shouldly;
 
@@ -69,5 +70,46 @@ public class GumServiceTests : BaseTestClass
         // keyboard.Activity() unconditionally, does not NRE on the first frame.
         GumService.Default.Keyboard.ShouldNotBeNull();
         Should.NotThrow(() => GumService.Default.Update(0));
+    }
+
+    [Fact]
+    public void Update_PumpsFormsInput_ThroughTheCursor()
+    {
+        Mock<Gum.Wireframe.ICursor> cursor = new Mock<Gum.Wireframe.ICursor>();
+        Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
+
+        GumService.Default.Update(5);
+
+        cursor.Verify(c => c.Activity(5), Times.Once());
+    }
+
+    [Fact]
+    public void Cursor_IsNull_WhileACustomCursorIsInstalled()
+    {
+        Gum.Forms.FormsUtilities.SetCursor(new Mock<Gum.Wireframe.ICursor>().Object);
+
+        GumService.Default.Cursor.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Keyboard_IsNull_WhileACustomKeyboardIsInstalled()
+    {
+        Gum.Wireframe.IInputReceiverKeyboard original = Gum.Forms.FormsUtilities.Keyboard!;
+        try
+        {
+            Gum.Forms.FormsUtilities.SetKeyboard(new Mock<Gum.Wireframe.IInputReceiverKeyboard>().Object);
+
+            GumService.Default.Keyboard.ShouldBeNull();
+        }
+        finally
+        {
+            Gum.Forms.FormsUtilities.SetKeyboard(original);
+        }
+    }
+
+    [Fact]
+    public void Default_IsOneInstance()
+    {
+        GumService.Default.ShouldBeSameAs(GumService.Default);
     }
 }

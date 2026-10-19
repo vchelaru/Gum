@@ -3,6 +3,7 @@ using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Wireframe;
+using Moq;
 using RenderingLibrary;
 using Shouldly;
 using Keys = Gum.Forms.Input.Keys;
@@ -77,6 +78,39 @@ public class GumServiceTests : BaseTestClass
         gamepad.LeftStick.X.ShouldBeGreaterThan(0);
         gamepad.LeftStick.Y.ShouldBeLessThan(0);
         GumService.Default.Gamepads[0].IsConnected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Update_PumpsFormsInput_ThroughTheCursor()
+    {
+        Mock<ICursor> cursor = new Mock<ICursor>();
+        FormsUtilities.SetCursor(cursor.Object);
+
+        GumService.Default.Update(5);
+
+        cursor.Verify(c => c.Activity(5), Times.Once());
+    }
+
+    [Fact]
+    public void Cursor_IsNull_WhileACustomCursorIsInstalled()
+    {
+        FormsUtilities.SetCursor(new Mock<ICursor>().Object);
+
+        GumService.Default.Cursor.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Keyboard_IsNull_WhileACustomKeyboardIsInstalled()
+    {
+        FormsUtilities.SetKeyboard(new Mock<IInputReceiverKeyboard>().Object);
+
+        GumService.Default.Keyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Default_IsOneInstance()
+    {
+        GumService.Default.ShouldBeSameAs(GumService.Default);
     }
 
     [Fact]

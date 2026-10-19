@@ -23,21 +23,14 @@
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
-	<!-- SKIA selects the Skia render aliases in the shared source; UNITY selects this project's input host. -->
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;UNITY;FULL_DIAGNOSTICS</DefineConstants>
+	<PropertyGroup>
+		<GumSkiaHostSymbol>UNITY</GumSkiaHostSymbol>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;UNITY;FULL_DIAGNOSTICS</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;UNITY</DefineConstants>
-	</PropertyGroup>
+	<Import Project="..\SkiaHost.props" />
 
 	<!-- The input host half SkiaGum omits because it is render-only. -->
-	<Import Project="..\CursorInput.props" />
+	<Import Project="..\SkiaInputHost.props" />
 
 	<!-- HarfBuzzSharp's native library for each supported Unity platform (Windows x64, macOS), which the Unity package's build
 	     script copies into Plugins/. Must match the HarfBuzzSharp version this project resolves; the

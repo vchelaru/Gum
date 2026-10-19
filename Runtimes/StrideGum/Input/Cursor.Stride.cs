@@ -16,11 +16,6 @@ public partial class Cursor : IInputEventListener<MouseWheelEvent>
 {
     private IMouseDevice? _mouse;
 
-    // Stride only reports a per-event wheel delta (MouseWheelEvent.WheelDelta), not a running
-    // total, so accumulate here and scale to the XNA detent convention (120 units per notch) so
-    // the shared ScrollWheelChange delta math in Cursor.cs works unchanged. Matches Cursor.Silk.cs.
-    private int _scrollWheelValue;
-
     /// <summary>
     /// Attaches this cursor to the supplied mouse device (<c>inputManager.Mouse</c>, or
     /// <see langword="null"/> in the degenerate no-mouse case). Called by
@@ -32,7 +27,7 @@ public partial class Cursor : IInputEventListener<MouseWheelEvent>
     internal void AttachStrideInput(IMouseDevice? mouse) => _mouse = mouse;
 
     void IInputEventListener<MouseWheelEvent>.ProcessEvent(MouseWheelEvent inputEvent) =>
-        _scrollWheelValue += (int)(inputEvent.WheelDelta * 120);
+        AddScrollUnits((int)(inputEvent.WheelDelta * ScrollUnitsPerNotch));
 
     private MouseState GetMouseState()
     {
@@ -48,17 +43,9 @@ public partial class Cursor : IInputEventListener<MouseWheelEvent>
             state.LeftButton = _mouse.DownButtons.Contains(MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
             state.MiddleButton = _mouse.DownButtons.Contains(MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
             state.RightButton = _mouse.DownButtons.Contains(MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
-            state.ScrollWheelValue = _scrollWheelValue;
+            state.ScrollWheelValue = ScrollWheelValue;
         }
 
         return state;
     }
-
-    // Stride's desktop mouse device already surfaces the pointer; touch is not wired for this
-    // runtime (matches Cursor.Silk.cs).
-    private TouchCollection GetTouchCollection() => new TouchCollection();
-
-    private int? GetViewportLeft() => 0;
-
-    private int? GetViewportTop() => 0;
 }

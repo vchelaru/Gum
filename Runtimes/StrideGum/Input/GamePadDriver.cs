@@ -1,5 +1,4 @@
 using Stride.Input;
-using GumGamepadButton = Gum.Input.GamepadButton;
 
 namespace Gum.Input;
 
@@ -19,39 +18,39 @@ internal static class GamePadDriver
     /// </summary>
     public static void Apply(GamePad gamepad, IGamePadDevice strideGamePad, double time)
     {
-        var state = strideGamePad.State;
-
-        gamepad.SetConnected(true);
-
-        gamepad.SetButtonState(GumGamepadButton.DPadUp, (state.Buttons & GamePadButton.PadUp) != 0);
-        gamepad.SetButtonState(GumGamepadButton.DPadDown, (state.Buttons & GamePadButton.PadDown) != 0);
-        gamepad.SetButtonState(GumGamepadButton.DPadLeft, (state.Buttons & GamePadButton.PadLeft) != 0);
-        gamepad.SetButtonState(GumGamepadButton.DPadRight, (state.Buttons & GamePadButton.PadRight) != 0);
-
-        gamepad.SetButtonState(GumGamepadButton.A, (state.Buttons & GamePadButton.A) != 0);
-        gamepad.SetButtonState(GumGamepadButton.B, (state.Buttons & GamePadButton.B) != 0);
-        gamepad.SetButtonState(GumGamepadButton.X, (state.Buttons & GamePadButton.X) != 0);
-        gamepad.SetButtonState(GumGamepadButton.Y, (state.Buttons & GamePadButton.Y) != 0);
-
-        gamepad.SetButtonState(GumGamepadButton.LeftShoulder, (state.Buttons & GamePadButton.LeftShoulder) != 0);
-        gamepad.SetButtonState(GumGamepadButton.RightShoulder, (state.Buttons & GamePadButton.RightShoulder) != 0);
-
-        gamepad.SetButtonState(GumGamepadButton.Start, (state.Buttons & GamePadButton.Start) != 0);
-        gamepad.SetButtonState(GumGamepadButton.Back, (state.Buttons & GamePadButton.Back) != 0);
-
-        gamepad.SetButtonState(GumGamepadButton.LeftStick, (state.Buttons & GamePadButton.LeftThumb) != 0);
-        gamepad.SetButtonState(GumGamepadButton.RightStick, (state.Buttons & GamePadButton.RightThumb) != 0);
-
-        // Threshold to the digital LeftTrigger/RightTrigger semantics Gum's GamePad models,
-        // matching the MonoGame/Silk drivers' TriggerThreshold.
-        const float TriggerThreshold = 0.5f;
-        gamepad.SetButtonState(GumGamepadButton.LeftTrigger, state.LeftTrigger >= TriggerThreshold);
-        gamepad.SetButtonState(GumGamepadButton.RightTrigger, state.RightTrigger >= TriggerThreshold);
+        GamePadState state = strideGamePad.State;
 
         // Stride's LeftThumb/RightThumb are already XNA/Gum-convention (Y positive-up), unlike
         // Silk's SDL/GLFW backends which report Y positive-down.
-        gamepad.SetLeftStickPosition(state.LeftThumb.X, state.LeftThumb.Y);
-        gamepad.SetRightStickPosition(state.RightThumb.X, state.RightThumb.Y);
+        gamepad.SetState(new GamePadSnapshot
+        {
+            IsConnected = true,
+
+            DPadUp = (state.Buttons & GamePadButton.PadUp) != 0,
+            DPadDown = (state.Buttons & GamePadButton.PadDown) != 0,
+            DPadLeft = (state.Buttons & GamePadButton.PadLeft) != 0,
+            DPadRight = (state.Buttons & GamePadButton.PadRight) != 0,
+
+            A = (state.Buttons & GamePadButton.A) != 0,
+            B = (state.Buttons & GamePadButton.B) != 0,
+            X = (state.Buttons & GamePadButton.X) != 0,
+            Y = (state.Buttons & GamePadButton.Y) != 0,
+
+            LeftShoulder = (state.Buttons & GamePadButton.LeftShoulder) != 0,
+            RightShoulder = (state.Buttons & GamePadButton.RightShoulder) != 0,
+            Start = (state.Buttons & GamePadButton.Start) != 0,
+            Back = (state.Buttons & GamePadButton.Back) != 0,
+            LeftStick = (state.Buttons & GamePadButton.LeftThumb) != 0,
+            RightStick = (state.Buttons & GamePadButton.RightThumb) != 0,
+
+            LeftTrigger = state.LeftTrigger,
+            RightTrigger = state.RightTrigger,
+
+            LeftStickX = state.LeftThumb.X,
+            LeftStickY = state.LeftThumb.Y,
+            RightStickX = state.RightThumb.X,
+            RightStickY = state.RightThumb.Y,
+        });
 
         gamepad.Activity(time);
     }

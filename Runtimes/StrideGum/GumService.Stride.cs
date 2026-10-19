@@ -36,15 +36,8 @@ namespace Gum;
 /// simpler than the Initialize-then-per-frame-Update/Draw shape elsewhere, not a broken version of
 /// it. Mirrors Gum/Runtimes/SilkNetGum/GumService.Silk.cs for the input side.
 /// </summary>
-public class GumService : GumServiceSkiaBase, IGumService
+public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 {
-    private static GumService? _default;
-
-    /// <summary>
-    /// The singleton service instance.
-    /// </summary>
-    public static GumService Default => _default ??= new GumService();
-
     private InputManager? _inputManager;
     private GraphicsDevice? _graphicsDevice;
 
@@ -86,20 +79,6 @@ public class GumService : GumServiceSkiaBase, IGumService
     /// and every net10.0 (non-Windows-TFM) build.
     /// </summary>
     public bool IsUsingGpuPath => _useGpuPath;
-
-    /// <summary>
-    /// Gets the default cursor, which represents the mouse.
-    /// </summary>
-    public Cursor Cursor => (FormsUtilities.Cursor as Cursor)!;
-
-    /// <summary>
-    /// Gets the default keyboard.
-    /// </summary>
-    /// <remarks>
-    /// Null while a custom keyboard is installed with <see cref="FormsUtilities.SetKeyboard"/>.
-    /// <see cref="FormsUtilities.Keyboard"/> returns whichever keyboard is active.
-    /// </remarks>
-    public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
     /// <inheritdoc/>
     ICursor? IGumService.CreateCursor()
@@ -342,18 +321,6 @@ public class GumService : GumServiceSkiaBase, IGumService
         _skSurface?.Dispose();
         _skiaTexture?.Dispose();
         _spriteBatch?.Dispose();
-    }
-
-    /// <summary>
-    /// Per-frame tick, called automatically by <see cref="DrawStrideFrame"/> -- not called by
-    /// application code (see the class remarks). Runs the base's deferred-queue/animation tick, then
-    /// pumps Forms input (cursor/keyboard activity, control events).
-    /// </summary>
-    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
-    public override void Update(double totalSeconds)
-    {
-        base.Update(totalSeconds);
-        FormsUtilities.Update(totalSeconds, Root);
     }
 }
 
