@@ -22,6 +22,8 @@ public class PolledKeyboardTests
         protected override bool IsDeviceKeyDown(GumKeys key) => DeviceDown.Contains(key);
 
         public void Type(string text) => AppendTypedText(text);
+
+        public void Type(char character) => AppendTypedText(character);
     }
 
     [Fact]
@@ -73,5 +75,22 @@ public class PolledKeyboardTests
 
         keyboard.Activity(0.1);
         keyboard.GetStringTyped().ShouldBe("");
+    }
+
+    [Fact]
+    public void GetStringTyped_DropsControlCharactersAndKeepsPrintableOnes()
+    {
+        var keyboard = new FakeHostKeyboard();
+
+        // Backspace, Enter and Ctrl+A are reported as characters by some hosts. TextBox handles
+        // those through the keys, so they must not land in the text.
+        keyboard.Type('h');
+        keyboard.Type('\b');
+        keyboard.Type('\r');
+        keyboard.Type((char)1);
+        keyboard.Type("i\u001d ");
+        keyboard.Activity(0);
+
+        keyboard.GetStringTyped().ShouldBe("hi ");
     }
 }

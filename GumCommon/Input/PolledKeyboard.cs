@@ -53,14 +53,30 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
 
     /// <summary>
     /// Adds text the host received from its text-input event. It is returned by
-    /// <see cref="GetStringTyped"/> after the next <see cref="Activity"/>.
+    /// <see cref="GetStringTyped"/> after the next <see cref="Activity"/>. Control characters 0-29 are
+    /// dropped, as MonoGame's keyboard does: some hosts report Backspace, Enter and Ctrl+letter (Ctrl+A
+    /// is 1) as characters, and TextBox handles those through the keys.
     /// </summary>
-    protected void AppendTypedText(string text) => _charsTyped.Append(text);
+    protected void AppendTypedText(string text)
+    {
+        foreach (char character in text)
+        {
+            AppendTypedText(character);
+        }
+    }
 
     /// <summary>
     /// Adds one typed character. See <see cref="AppendTypedText(string)"/>.
     /// </summary>
-    protected void AppendTypedText(char character) => _charsTyped.Append(character);
+    protected void AppendTypedText(char character)
+    {
+        if (character > LastIgnoredControlCharacter)
+        {
+            _charsTyped.Append(character);
+        }
+    }
+
+    private const char LastIgnoredControlCharacter = (char)29;
 
     /// <summary>
     /// Returns true if either the left or right shift key is currently pressed down.
