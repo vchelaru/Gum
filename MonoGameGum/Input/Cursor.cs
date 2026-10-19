@@ -29,6 +29,8 @@ public partial class Cursor : ICursor
 {
     Cursors? _customCursor;
 
+    partial void ApplyHostCustomCursor(Cursors? value);
+
     /// <summary>
     /// Gets or sets the custom mouse cursor to display within the application window.
     /// </summary>
@@ -98,32 +100,8 @@ public partial class Cursor : ICursor
             }
 #endif
 
-#if SILK
-            if (_mouse != null)
-            {
-                var silkCursor = _mouse.Cursor;
-                silkCursor.Type = Silk.NET.Input.CursorType.Standard;
-                switch (value)
-                {
-                    case Cursors.Arrow:
-                    case null:
-                        silkCursor.StandardCursor = Silk.NET.Input.StandardCursor.Arrow;
-                        break;
-                    case Cursors.SizeNS:
-                        silkCursor.StandardCursor = Silk.NET.Input.StandardCursor.VResize;
-                        break;
-                    case Cursors.SizeWE:
-                        silkCursor.StandardCursor = Silk.NET.Input.StandardCursor.HResize;
-                        break;
-                    case Cursors.SizeNWSE:
-                        silkCursor.StandardCursor = Silk.NET.Input.StandardCursor.NwseResize;
-                        break;
-                    case Cursors.SizeNESW:
-                        silkCursor.StandardCursor = Silk.NET.Input.StandardCursor.NeswResize;
-                        break;
-                }
-            }
-#endif
+            // Hosts with their own cursor API (Silk) implement this in their Cursor.<Host>.cs.
+            ApplyHostCustomCursor(value);
 
 #if SOKOL
             switch (value)

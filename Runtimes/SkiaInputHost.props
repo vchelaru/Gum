@@ -10,5 +10,6 @@
 
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)SkiaHost\GumService.SkiaHost.cs" Link="GumService.SkiaHost.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SkiaHost\Cursor.SkiaHost.cs" Link="Input\Cursor.SkiaHost.cs" />
   </ItemGroup>
 </Project>

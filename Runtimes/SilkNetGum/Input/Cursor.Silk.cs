@@ -1,3 +1,4 @@
+using Gum.Wireframe;
 using Silk.NET.Input;
 
 namespace Gum.Input;
@@ -13,11 +14,6 @@ public partial class Cursor
 {
     private IMouse? _mouse;
 
-    // Silk exposes only a per-event scroll delta (IMouse.Scroll), not a running total, so we
-    // accumulate here and scale to the XNA detent convention (120 units per notch) so the shared
-    // ScrollWheelChange delta math in Cursor.cs works unchanged. Matches Cursor.Sokol.cs.
-    private int _scrollWheelValue;
-
     /// <summary>
     /// Attaches this cursor to the first mouse of the supplied Silk input context. Called by
     /// <c>GumService.CreateCursor</c> after constructing the cursor. If the context has no mice
@@ -29,7 +25,8 @@ public partial class Cursor
 
         if (_mouse != null)
         {
-            _mouse.Scroll += (_, wheel) => _scrollWheelValue += (int)(wheel.Y * 120);
+            // Silk reports a per-event scroll delta in notches; the shared half keeps the running total.
+            _mouse.Scroll += (_, wheel) => AddScrollUnits((int)(wheel.Y * ScrollUnitsPerNotch));
         }
     }
 
@@ -44,16 +41,41 @@ public partial class Cursor
             state.LeftButton = _mouse.IsButtonPressed(MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
             state.MiddleButton = _mouse.IsButtonPressed(MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
             state.RightButton = _mouse.IsButtonPressed(MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
-            state.ScrollWheelValue = _scrollWheelValue;
+            state.ScrollWheelValue = ScrollWheelValue;
         }
 
         return state;
     }
 
-    // Silk.NET desktop input surfaces the pointer as a mouse; touch is not wired for this runtime.
-    private TouchCollection GetTouchCollection() => new TouchCollection();
+    // Maps the engine-neutral cursor shape onto the Silk standard cursors. Called from the
+    // CustomCursor setter in the shared Cursor.cs.
+    partial void ApplyHostCustomCursor(Cursors? value)
+    {
+        if (_mouse == null)
+        {
+            return;
+        }
 
-    private int? GetViewportLeft() => 0;
-
-    private int? GetViewportTop() => 0;
+        var silkCursor = _mouse.Cursor;
+        silkCursor.Type = CursorType.Standard;
+        switch (value)
+        {
+            case Cursors.Arrow:
+            case null:
+                silkCursor.StandardCursor = StandardCursor.Arrow;
+                break;
+            case Cursors.SizeNS:
+                silkCursor.StandardCursor = StandardCursor.VResize;
+                break;
+            case Cursors.SizeWE:
+                silkCursor.StandardCursor = StandardCursor.HResize;
+                break;
+            case Cursors.SizeNWSE:
+                silkCursor.StandardCursor = StandardCursor.NwseResize;
+                break;
+            case Cursors.SizeNESW:
+                silkCursor.StandardCursor = StandardCursor.NeswResize;
+                break;
+        }
+    }
 }

@@ -9,10 +9,6 @@ namespace Gum.Input;
 public partial class Cursor
 {
     private MouseState _pushedMouseState = new MouseState();
-    private TouchCollection _pushedTouches = new TouchCollection();
-
-    // Running scroll total in XNA units (120 per notch), which the shared ScrollWheelChange math expects.
-    private float _scrollWheelValue;
 
     /// <summary>
     /// Sets the mouse state the next <see cref="Activity(double)"/> reads.
@@ -38,24 +34,18 @@ public partial class Cursor
     /// Adds scroll wheel movement, in notches (Unity's Input System reports one per notch). Positive
     /// scrolls up.
     /// </summary>
-    public void AddScrollNotches(float notches) => _scrollWheelValue += notches * 120;
+    public void AddScrollNotches(float notches) => AddScrollUnits(notches * ScrollUnitsPerNotch);
 
     /// <summary>
     /// Sets the touches the next <see cref="Activity(double)"/> reads when <see cref="IsMobile"/> is true,
     /// in canvas pixels from the top left.
     /// </summary>
-    public void SetTouches(TouchCollection touches) => _pushedTouches = touches;
+    public void SetTouches(TouchCollection touches) => _hostTouches = touches;
 
     private MouseState GetMouseState()
     {
         MouseState state = _pushedMouseState;
-        state.ScrollWheelValue = (int)_scrollWheelValue;
+        state.ScrollWheelValue = ScrollWheelValue;
         return state;
     }
-
-    private TouchCollection GetTouchCollection() => _pushedTouches;
-
-    private int? GetViewportLeft() => 0;
-
-    private int? GetViewportTop() => 0;
 }
