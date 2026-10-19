@@ -1,0 +1,110 @@
+//Code for Controls/RadioButton (Container)
+using GameUiSamples.Components;
+using Gum;
+using Gum.Converters;
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
+using GumRuntime;
+using RenderingLibrary.Graphics;
+using System.Linq;
+namespace GameUiSamples.Components;
+partial class RadioButton : global::Gum.Forms.Controls.RadioButton
+{
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
+    public static void RegisterRuntimeType()
+    {
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
+        {
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton") ?? throw new System.InvalidOperationException("Could not find an element named Controls/RadioButton - did you forget to load a Gum project?");
+            element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
+            if(createForms) visual.FormsControlAsObject = new RadioButton(visual);
+            return visual;
+        });
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("Controls/RadioButton", () => 
+        {
+            var gue = template.CreateContent(null, true) as InteractiveGue;
+            return gue;
+        });
+    }
+    public enum RadioButtonCategory
+    {
+        EnabledOn,
+        EnabledOff,
+        DisabledOn,
+        DisabledOff,
+        HighlightedOn,
+        HighlightedOff,
+        PushedOn,
+        PushedOff,
+        FocusedOn,
+        FocusedOff,
+        HighlightedFocusedOn,
+        HighlightedFocusedOff,
+        DisabledFocusedOn,
+        DisabledFocusedOff,
+    }
+
+    RadioButtonCategory? _radioButtonCategoryState;
+    public RadioButtonCategory? RadioButtonCategoryState
+    {
+        get => _radioButtonCategoryState;
+        set
+        {
+            _radioButtonCategoryState = value;
+            if(value != null)
+            {
+                if(Visual.Categories.ContainsKey("RadioButtonCategory"))
+                {
+                    var category = Visual.Categories["RadioButtonCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "RadioButtonCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+            }
+        }
+    }
+    public NineSliceRuntime RadioBackground { get; protected set; }
+    public Icon Radio { get; protected set; }
+    public TextRuntime TextInstance { get; protected set; }
+    public NineSliceRuntime FocusedIndicator { get; protected set; }
+
+    public string RadioDisplayText
+    {
+        get => TextInstance.Text;
+        set => TextInstance.Text = value;
+    }
+
+    public RadioButton(InteractiveGue visual) : base(visual)
+    {
+    }
+    public RadioButton()
+    {
+
+
+
+    }
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+        RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as global::Gum.GueDeriving.NineSliceRuntime;
+        Radio = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"Radio");
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
+        CustomInitialize();
+    }
+    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    partial void CustomInitialize();
+}

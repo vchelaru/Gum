@@ -1,0 +1,111 @@
+//Code for Elements/PercentBarIcon (Container)
+using GameUiSamples.Components;
+using Gum;
+using Gum.Converters;
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
+using GumRuntime;
+using RenderingLibrary.Graphics;
+using System.Linq;
+namespace GameUiSamples.Components;
+partial class PercentBarIcon : global::Gum.Forms.Controls.FrameworkElement
+{
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
+    public static void RegisterRuntimeType()
+    {
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
+        {
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("Elements/PercentBarIcon") ?? throw new System.InvalidOperationException("Could not find an element named Elements/PercentBarIcon - did you forget to load a Gum project?");
+            element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
+            if(createForms) visual.FormsControlAsObject = new PercentBarIcon(visual);
+            return visual;
+        });
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PercentBarIcon)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("Elements/PercentBarIcon", () => 
+        {
+            var gue = template.CreateContent(null, true) as InteractiveGue;
+            return gue;
+        });
+    }
+    public enum BarDecorCategory
+    {
+        None,
+        CautionLines,
+        VerticalLines,
+    }
+
+    BarDecorCategory? _barDecorCategoryState;
+    public BarDecorCategory? BarDecorCategoryState
+    {
+        get => _barDecorCategoryState;
+        set
+        {
+            _barDecorCategoryState = value;
+            if(value != null)
+            {
+                if(Visual.Categories.ContainsKey("BarDecorCategory"))
+                {
+                    var category = Visual.Categories["BarDecorCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "BarDecorCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+            }
+        }
+    }
+    public NineSliceRuntime Background { get; protected set; }
+    public Icon IconInstance { get; protected set; }
+    public NineSliceRuntime BarContainer { get; protected set; }
+    public NineSliceRuntime Bar { get; protected set; }
+    public CautionLines CautionLinesInstance { get; protected set; }
+    public VerticalLines VerticalLinesInstance { get; protected set; }
+
+
+    public float BarPercent
+    {
+        get => Bar.Width;
+        set => Bar.Width = value;
+    }
+
+    public Icon.IconCategory? BarIcon
+    {
+        get => IconInstance.IconCategoryState;
+        set => IconInstance.IconCategoryState = value;
+    }
+
+
+    public PercentBarIcon(InteractiveGue visual) : base(visual)
+    {
+    }
+    public PercentBarIcon()
+    {
+
+
+
+    }
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"IconInstance");
+        BarContainer = this.Visual?.GetGraphicalUiElementByName("BarContainer") as global::Gum.GueDeriving.NineSliceRuntime;
+        Bar = this.Visual?.GetGraphicalUiElementByName("Bar") as global::Gum.GueDeriving.NineSliceRuntime;
+        CautionLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CautionLines>(this.Visual,"CautionLinesInstance");
+        VerticalLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<VerticalLines>(this.Visual,"VerticalLinesInstance");
+        CustomInitialize();
+    }
+    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    partial void CustomInitialize();
+}

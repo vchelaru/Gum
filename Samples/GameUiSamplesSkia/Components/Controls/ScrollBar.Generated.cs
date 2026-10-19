@@ -1,0 +1,92 @@
+//Code for Controls/ScrollBar (Container)
+using GameUiSamples.Components;
+using Gum;
+using Gum.Converters;
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
+using GumRuntime;
+using RenderingLibrary.Graphics;
+using System.Linq;
+namespace GameUiSamples.Components;
+partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
+{
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
+    public static void RegisterRuntimeType()
+    {
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
+        {
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("Controls/ScrollBar") ?? throw new System.InvalidOperationException("Could not find an element named Controls/ScrollBar - did you forget to load a Gum project?");
+            element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
+            if(createForms) visual.FormsControlAsObject = new ScrollBar(visual);
+            return visual;
+        });
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("Controls/ScrollBar", () => 
+        {
+            var gue = template.CreateContent(null, true) as InteractiveGue;
+            return gue;
+        });
+    }
+    public enum ScrollBarCategory
+    {
+    }
+
+    ScrollBarCategory? _scrollBarCategoryState;
+    public ScrollBarCategory? ScrollBarCategoryState
+    {
+        get => _scrollBarCategoryState;
+        set
+        {
+            _scrollBarCategoryState = value;
+            if(value != null)
+            {
+                if(Visual.Categories.ContainsKey("ScrollBarCategory"))
+                {
+                    var category = Visual.Categories["ScrollBarCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "ScrollBarCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+            }
+        }
+    }
+    public ButtonIcon UpButtonInstance { get; protected set; }
+    public ButtonIcon DownButtonInstance { get; protected set; }
+    public ContainerRuntime TrackInstance { get; protected set; }
+    public NineSliceRuntime TrackBackground { get; protected set; }
+    public ButtonStandard ThumbInstance { get; protected set; }
+
+    public ScrollBar(InteractiveGue visual) : base(visual)
+    {
+    }
+    public ScrollBar()
+    {
+
+
+
+    }
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+        UpButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonIcon>(this.Visual,"UpButtonInstance");
+        DownButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonIcon>(this.Visual,"DownButtonInstance");
+        TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        TrackBackground = this.Visual?.GetGraphicalUiElementByName("TrackBackground") as global::Gum.GueDeriving.NineSliceRuntime;
+        ThumbInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandard>(this.Visual,"ThumbInstance");
+        CustomInitialize();
+    }
+    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    partial void CustomInitialize();
+}

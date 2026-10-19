@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>ScrollBarBehavior</Name>
+  <RequiredVariables />
+  <Category>
+    <Name>ScrollBarCategory</Name>
+  </Category>
+  <RequiredInstances>
+    <InstanceSave>
+      <Name>UpButtonInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors>
+        <BehaviorReference>
+          <Name>ButtonBehavior</Name>
+        </BehaviorReference>
+      </Behaviors>
+    </InstanceSave>
+    <InstanceSave>
+      <Name>DownButtonInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors>
+        <BehaviorReference>
+          <Name>ButtonBehavior</Name>
+        </BehaviorReference>
+      </Behaviors>
+    </InstanceSave>
+    <InstanceSave>
+      <Name>ThumbInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors>
+        <BehaviorReference>
+          <Name>ButtonBehavior</Name>
+        </BehaviorReference>
+      </Behaviors>
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+</BehaviorSave>
