@@ -181,6 +181,36 @@ public class FormsThemesTemplateTests
             .ShouldBe($"{prefix}Controls/Thumb");
     }
 
+    // The scroll bar's up and down arrows get their own ScrollBarButton component (a copy of ButtonIcon)
+    // so restyling them does not restyle every icon button (#6165). Only the template, Editor and
+    // Retro95 have arrows; the other themes' scroll bars have none.
+    [Theory]
+    [InlineData("FormsTemplate", "")]
+    [InlineData("FormsThemes/Editor", "Editor/")]
+    [InlineData("FormsThemes/Retro95", "Retro95/")]
+    public void ScrollBarArrows_ShouldUseScrollBarButtonCopiedFromButtonIcon(string templateFolder, string prefix)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = new ProjectLoader()
+            .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+
+        ComponentSave buttonIcon = project.Components.Single(c => c.Name == prefix + "Controls/ButtonIcon");
+        ComponentSave scrollBarButton = project.Components.Single(c => c.Name == prefix + "Controls/ScrollBarButton");
+        ComponentSave scrollBar = project.Components.Single(c => c.Name == prefix + "Controls/ScrollBar");
+
+        scrollBarButton.BaseType.ShouldBe(buttonIcon.BaseType);
+        scrollBarButton.Instances.Select(i => (i.Name, i.BaseType))
+            .ShouldBe(buttonIcon.Instances.Select(i => (i.Name, i.BaseType)));
+        scrollBarButton.Behaviors.Select(b => b.BehaviorName)
+            .ShouldBe(buttonIcon.Behaviors.Select(b => b.BehaviorName));
+        scrollBarButton.DefaultState!.Variables.Count.ShouldBe(buttonIcon.DefaultState!.Variables.Count);
+
+        scrollBar.Instances.Single(i => i.Name == "UpButtonInstance").BaseType
+            .ShouldBe(prefix + "Controls/ScrollBarButton");
+        scrollBar.Instances.Single(i => i.Name == "DownButtonInstance").BaseType
+            .ShouldBe(prefix + "Controls/ScrollBarButton");
+    }
+
     // GumFormsPlugin copies each template folder, FontCache included, into the release's
     // Content/FormsThemes. A cached font no element needs ships for nothing, and the Standard
     // theme's leftovers were rendered from Arial and Wasco Sans, which may not be redistributed (#5430).

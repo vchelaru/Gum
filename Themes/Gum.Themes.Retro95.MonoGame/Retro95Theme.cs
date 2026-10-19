@@ -154,6 +154,8 @@ public static class Retro95Theme
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
         FrameworkElement.DefaultFormsTemplates[typeof(Thumb)] =
             new VisualTemplate((_, c) => new ThumbVisual(tryCreateFormsObject: c));
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollBarButton)] =
+            new VisualTemplate((_, c) => new ScrollBarButtonVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
             new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));

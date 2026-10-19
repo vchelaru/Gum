@@ -74,6 +74,7 @@
   <ComponentReference Name="Retro95/Controls/PasswordBox" />
   <ComponentReference Name="Retro95/Controls/RadioButton" />
   <ComponentReference Name="Retro95/Controls/ScrollBar" />
+  <ComponentReference Name="Retro95/Controls/ScrollBarButton" />
   <ComponentReference Name="Retro95/Controls/ScrollViewer" />
   <ComponentReference Name="Retro95/Controls/Slider" />
   <ComponentReference Name="Retro95/Controls/SliderThumb" />

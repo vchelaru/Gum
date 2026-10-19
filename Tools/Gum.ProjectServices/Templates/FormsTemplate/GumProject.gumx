@@ -82,6 +82,7 @@
   <ComponentReference Name="Controls/PasswordBox" />
   <ComponentReference Name="Controls/RadioButton" />
   <ComponentReference Name="Controls/ScrollBar" />
+  <ComponentReference Name="Controls/ScrollBarButton" />
   <ComponentReference Name="Controls/ScrollViewer" />
   <ComponentReference Name="Controls/SettingsView" />
   <ComponentReference Name="Controls/Slider" />

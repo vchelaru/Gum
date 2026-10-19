@@ -56,6 +56,7 @@ Components/Controls/Panel.gucx
 Components/Controls/PasswordBox.gucx
 Components/Controls/RadioButton.gucx
 Components/Controls/ScrollBar.gucx
+Components/Controls/ScrollBarButton.gucx
 Components/Controls/ScrollViewer.gucx
 Components/Controls/SettingsView.gucx
 Components/Controls/Slider.gucx

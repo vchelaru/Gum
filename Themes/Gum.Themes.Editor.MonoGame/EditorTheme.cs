@@ -93,6 +93,7 @@ public static class EditorTheme
         TryAdd(typeof(TextBox), (_, c) => new TextBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Button), (_, c) => new ButtonVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Thumb), (_, c) => new ThumbVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ScrollBarButton), (_, c) => new ScrollBarButtonVisual(tryCreateFormsObject: c));
         TryAdd(typeof(CheckBox), (_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ComboBox), (_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Expander), (_, c) => new ExpanderVisual(tryCreateFormsObject: c));

@@ -172,7 +172,7 @@ public class ScrollBarVisual : InteractiveGue
         UpButtonIcon.Visible = true;
         UpButtonIcon.Rotation = 90;
 
-        var upButton = new Button();
+        var upButton = new ScrollBarButton();
         var upButtonVisual = upButton.Visual;
 
         upButtonVisual.Name = "UpButtonInstance";
@@ -205,7 +205,7 @@ public class ScrollBarVisual : InteractiveGue
         DownButtonIcon.Visible = true;
         DownButtonIcon.Rotation = -90;
 
-        var downButton = new Button();
+        var downButton = new ScrollBarButton();
         var downButtonVisual = downButton.Visual;
 
         downButtonVisual.Name = "DownButtonInstance";
