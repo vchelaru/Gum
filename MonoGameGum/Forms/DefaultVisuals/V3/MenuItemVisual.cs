@@ -45,9 +45,17 @@ public class MenuItemVisual : InteractiveGue
     public TextRuntime TextInstance { get; private set; }
 
     /// <summary>
-    /// The text runtime displaying a '>' character to indicate the item has a submenu.
+    /// The fixed-size container holding the submenu arrow. Forms toggles this container's visibility to show
+    /// the arrow only when the item has a submenu. Its size is independent of the sprite so the 32x32 arrow
+    /// does not enlarge the row.
     /// </summary>
-    public TextRuntime SubmenuIndicatorInstance { get; private set; }
+    public ContainerRuntime SubmenuIndicatorInstance { get; private set; }
+
+    /// <summary>
+    /// The sprite (<see cref="Icons.Arrow2"/>, pointing right) inside <see cref="SubmenuIndicatorInstance"/>
+    /// indicating the item has a submenu.
+    /// </summary>
+    public SpriteRuntime SubmenuIndicatorIcon { get; private set; }
 
     public class MenuItemCategoryStates
     {
@@ -200,20 +208,35 @@ public class MenuItemVisual : InteractiveGue
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ContainerInstance.AddChild(TextInstance);
 
-        SubmenuIndicatorInstance = new TextRuntime();
+        SubmenuIndicatorInstance = new ContainerRuntime();
         SubmenuIndicatorInstance.Name = "SubmenuIndicatorInstance";
         SubmenuIndicatorInstance.Dock(Gum.Wireframe.Dock.Left);
         SubmenuIndicatorInstance.X = 8;
         SubmenuIndicatorInstance.Y = 0;
         SubmenuIndicatorInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         SubmenuIndicatorInstance.YOrigin = VerticalAlignment.Center;
-        SubmenuIndicatorInstance.Width = 2f;
-        SubmenuIndicatorInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        SubmenuIndicatorInstance.Height = 0f;
-        SubmenuIndicatorInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        SubmenuIndicatorInstance.Text = @">";
-        SubmenuIndicatorInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        SubmenuIndicatorInstance.Width = 16f;
+        SubmenuIndicatorInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        SubmenuIndicatorInstance.Height = 16f;
+        SubmenuIndicatorInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        SubmenuIndicatorInstance.HasEvents = false;
         ContainerInstance.AddChild(SubmenuIndicatorInstance);
+
+        SubmenuIndicatorIcon = new SpriteRuntime();
+        SubmenuIndicatorIcon.Name = "SubmenuIndicatorIcon";
+        SubmenuIndicatorIcon.X = 0;
+        SubmenuIndicatorIcon.XUnits = GeneralUnitType.PixelsFromMiddle;
+        SubmenuIndicatorIcon.XOrigin = HorizontalAlignment.Center;
+        SubmenuIndicatorIcon.Y = 0;
+        SubmenuIndicatorIcon.YUnits = GeneralUnitType.PixelsFromMiddle;
+        SubmenuIndicatorIcon.YOrigin = VerticalAlignment.Center;
+        SubmenuIndicatorIcon.Width = 100;
+        SubmenuIndicatorIcon.WidthUnits = global::Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        SubmenuIndicatorIcon.Height = 100;
+        SubmenuIndicatorIcon.HeightUnits = global::Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        SubmenuIndicatorIcon.Texture = uiSpriteSheetTexture;
+        SubmenuIndicatorIcon.ApplyState(Styling.ActiveStyle.Icons.Arrow2);
+        SubmenuIndicatorInstance.AddChild(SubmenuIndicatorIcon);
 
         MenuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         MenuItemCategory.Name = "MenuItemCategory";
@@ -282,7 +305,7 @@ public class MenuItemVisual : InteractiveGue
         Background.Visible = isBackgroundVisible;
         Background.Color = backgroundColor;
         TextInstance.Color = foregroundColor;
-        SubmenuIndicatorInstance.Color = submenuIndicatorColor;
+        SubmenuIndicatorIcon.Color = submenuIndicatorColor;
     }
 
     /// <summary>
