@@ -297,7 +297,7 @@ public class ScrollBar : RangeBase
             {
                 Value -= LargeChange;
             }
-            else if(MainCursor.XRespectingGumZoomAndBounds() > thumb.AbsoluteLeft + thumb.ActualHeight)
+            else if(MainCursor.XRespectingGumZoomAndBounds() > thumb.AbsoluteLeft + thumb.ActualWidth)
             {
                 Value += LargeChange;
             }
