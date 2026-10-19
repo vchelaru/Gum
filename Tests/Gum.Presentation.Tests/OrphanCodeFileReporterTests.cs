@@ -9,6 +9,7 @@ using OrphanCodeFilePlugin;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ public class OrphanCodeFileReporterTests : BaseTestClass
     public async Task CreateErrors_ShouldIncludeFilePathAndActionPerOrphan()
     {
         OrphanCodeFile orphan = new OrphanCodeFile(
-            new FilePath("/game/Screens/DeletedScreen.Generated.cs"), OrphanCodeFileKind.Generated, "DeletedScreen");
+            CreateExistingFile("DeletedScreen.Generated.cs"), OrphanCodeFileKind.Generated, "DeletedScreen");
         ArrangeScan(orphan);
         await RefreshAndApplyAsync();
 
@@ -209,7 +210,7 @@ public class OrphanCodeFileReporterTests : BaseTestClass
     [Fact]
     public async Task Resolve_WhenTheFileCannotBeTrashed_KeepsTheOrphanInsteadOfThrowing()
     {
-        FilePath filePath = new FilePath("/game/Screens/DeletedScreen.Generated.cs");
+        FilePath filePath = CreateExistingFile("DeletedScreen.Generated.cs");
         OrphanCodeFile orphan = new OrphanCodeFile(filePath, OrphanCodeFileKind.Generated, "DeletedScreen");
         ArrangeScan(orphan);
         await RefreshAndApplyAsync();
@@ -218,6 +219,37 @@ public class OrphanCodeFileReporterTests : BaseTestClass
         _sut.Resolve(orphan);
 
         _sut.Orphans.ShouldBe(new[] { orphan });
+    }
+
+    [Fact]
+    public async Task Resolve_WhenTheFileIsAlreadyGone_DropsTheOrphan()
+    {
+        // #6167: the file was deleted outside the tool, the recycle bin throws for a missing file, and
+        // the row stayed forever because Delete File could never succeed.
+        FilePath filePath = new FilePath(Path.Combine(Path.GetTempPath(), "Gum6167", "Gone.Generated.cs"));
+        OrphanCodeFile orphan = new OrphanCodeFile(filePath, OrphanCodeFileKind.Generated, "Gone");
+        ArrangeScan(orphan);
+        await RefreshAndApplyAsync();
+        _fileCommands.Setup(x => x.MoveToRecycleBin(filePath)).Throws(new FileNotFoundException("gone"));
+
+        _sut.Resolve(orphan);
+
+        _sut.Orphans.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateErrors_OmitsAnOrphan_WhoseFileWasDeletedAfterTheScan()
+    {
+        // #6167: any Errors tab refresh should re-check the disk instead of replaying the old scan.
+        FilePath filePath = CreateExistingFile("Hud.Generated.cs");
+        OrphanCodeFile orphan = new OrphanCodeFile(filePath, OrphanCodeFileKind.Generated, "Hud");
+        ArrangeScan(orphan);
+        await RefreshAndApplyAsync();
+        File.Delete(filePath.FullPath);
+
+        List<ErrorViewModel> errors = _sut.CreateErrors().ToList();
+
+        errors.ShouldBeEmpty();
     }
 
     [Fact]
@@ -277,8 +309,8 @@ public class OrphanCodeFileReporterTests : BaseTestClass
         project.Components.Add(new ComponentSave { Name = "Controls/Button" });
         Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
         ArrangeScan(
-            new OrphanCodeFile(new FilePath("/game/Components/Controls/ButtonRuntime.cs"), OrphanCodeFileKind.CustomCode, "Controls/Button"),
-            new OrphanCodeFile(new FilePath("/game/Components/Gone.cs"), OrphanCodeFileKind.CustomCode, "Gone"));
+            new OrphanCodeFile(CreateExistingFile("ButtonRuntime.cs"), OrphanCodeFileKind.CustomCode, "Controls/Button"),
+            new OrphanCodeFile(CreateExistingFile("Gone.cs"), OrphanCodeFileKind.CustomCode, "Gone"));
         await RefreshAndApplyAsync();
         int migrations = 0;
         _sut.MigrateAction = () => migrations++;
@@ -290,6 +322,16 @@ public class OrphanCodeFileReporterTests : BaseTestClass
         errors[0].Message.ShouldStartWith("Custom code file left at an old path by a code settings change:");
         migrations.ShouldBe(1);
         _fileCommands.Verify(x => x.MoveToRecycleBin(It.IsAny<FilePath>()), Times.Never);
+    }
+
+    // The reporter drops orphans whose file is gone, so a row that should show needs a real file.
+    private static FilePath CreateExistingFile(string name)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "Gum6167", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, name);
+        File.WriteAllText(path, "// code");
+        return new FilePath(path);
     }
 
     private async Task RefreshAndApplyAsync()
