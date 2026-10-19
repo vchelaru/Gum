@@ -164,3 +164,16 @@ public class Thumb : Button
 
     public Thumb(InteractiveGue visual) : base(visual) { }
 }
+
+/// <summary>
+/// The up or down arrow button of a <see cref="ScrollBar"/>. It behaves exactly like a
+/// <see cref="Button"/> and looks like one by default: until a template is registered for
+/// <c>typeof(ScrollBarButton)</c> in <see cref="FrameworkElement.DefaultFormsTemplates"/>, an arrow uses
+/// the Button template. Registering one restyles the arrows without restyling every button.
+/// </summary>
+public class ScrollBarButton : Button
+{
+    public ScrollBarButton() : base() { }
+
+    public ScrollBarButton(InteractiveGue visual) : base(visual) { }
+}

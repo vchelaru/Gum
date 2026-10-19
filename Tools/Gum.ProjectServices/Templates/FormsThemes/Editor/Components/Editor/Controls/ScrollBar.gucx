@@ -345,8 +345,8 @@
       </Variable>
     </State>
   </Category>
-  <Instance Name="UpButtonInstance" BaseType="Editor/Controls/ButtonIcon" />
-  <Instance Name="DownButtonInstance" BaseType="Editor/Controls/ButtonIcon" />
+  <Instance Name="UpButtonInstance" BaseType="Editor/Controls/ScrollBarButton" />
+  <Instance Name="DownButtonInstance" BaseType="Editor/Controls/ScrollBarButton" />
   <Instance Name="TrackInstance" BaseType="Container" />
   <Instance Name="TrackBackground" BaseType="NineSlice" />
   <Instance Name="ThumbInstance" BaseType="Editor/Controls/Thumb" />

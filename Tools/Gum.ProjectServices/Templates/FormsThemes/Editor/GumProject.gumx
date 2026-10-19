@@ -82,6 +82,7 @@
   <ComponentReference Name="Editor/Controls/PasswordBox" />
   <ComponentReference Name="Editor/Controls/RadioButton" />
   <ComponentReference Name="Editor/Controls/ScrollBar" />
+  <ComponentReference Name="Editor/Controls/ScrollBarButton" />
   <ComponentReference Name="Editor/Controls/ScrollViewer" />
   <ComponentReference Name="Editor/Controls/SettingsView" />
   <ComponentReference Name="Editor/Controls/Slider" />
