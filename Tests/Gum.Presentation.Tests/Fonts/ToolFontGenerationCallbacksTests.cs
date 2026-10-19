@@ -79,13 +79,25 @@ public class ToolFontGenerationCallbacksTests
     }
 
     [Fact]
-    public void ShowSpinner_Dispose_ActivatesMainWindow()
+    public void ShowSpinner_Dispose_ActivatesMainWindow_WhenSpinnerIsFloatingWindow()
     {
+        _spinner.SetupGet(s => s.IsFloatingWindow).Returns(true);
         IDisposable? handle = _callbacks.ShowSpinner();
 
         handle!.Dispose();
 
         _guiCommands.Verify(g => g.ActivateMainWindow(), Times.Once);
+    }
+
+    [Fact]
+    public void ShowSpinner_Dispose_DoesNotActivateMainWindow_WhenSpinnerIsNotFloatingWindow()
+    {
+        _spinner.SetupGet(s => s.IsFloatingWindow).Returns(false);
+        IDisposable? handle = _callbacks.ShowSpinner();
+
+        handle!.Dispose();
+
+        _guiCommands.Verify(g => g.ActivateMainWindow(), Times.Never);
     }
 
     [Fact]

@@ -23,4 +23,12 @@ public interface ISpinner
     /// Hides the progress indicator. Safe to call from any thread.
     /// </summary>
     void Hide();
+
+    /// <summary>
+    /// True when the indicator is its own top-level window. Hiding one can hand focus to another
+    /// app, so the caller re-activates the main window afterward; indicators that are part of the
+    /// main window must not trigger that, because activating a window while another app is in the
+    /// foreground makes Windows flash its taskbar button.
+    /// </summary>
+    bool IsFloatingWindow { get; }
 }

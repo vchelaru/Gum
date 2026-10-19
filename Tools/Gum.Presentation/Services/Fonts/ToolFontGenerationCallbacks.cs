@@ -71,10 +71,15 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
             _owner._currentSpinner = null;
             _spinner.Hide();
 
-            // The spinner is a top-level WPF window (Spinner.xaml); Window.Hide() doesn't restore
-            // focus to its owner, so the OS can hand focus to whatever else is in the z-order
+            // A top-level spinner window (WPF Spinner.xaml): Window.Hide() doesn't restore focus
+            // to its owner, so the OS can hand focus to whatever else is in the z-order
             // (e.g. Visual Studio when running Gum under the debugger). See issue #4078.
-            _owner._guiCommands.ActivateMainWindow();
+            // A spinner inside the main window never takes focus, and activating the main window
+            // while another app is in front flashes the taskbar button (#6168).
+            if (_spinner.IsFloatingWindow)
+            {
+                _owner._guiCommands.ActivateMainWindow();
+            }
         }
     }
 }

@@ -48,6 +48,9 @@ public partial class Spinner : Window, ISpinner
     }
 
     /// <inheritdoc/>
+    public bool IsFloatingWindow => true;
+
+    /// <inheritdoc/>
     public void IncrementProgress()
     {
         Dispatcher.BeginInvoke(() =>

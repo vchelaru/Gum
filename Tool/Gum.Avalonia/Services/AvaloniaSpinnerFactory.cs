@@ -52,6 +52,8 @@ public class AvaloniaSpinnerFactory : ISpinnerFactory
             Report();
         }
 
+        public bool IsFloatingWindow => false;
+
         public void Hide() => _dispatcher.Post(() => _shell.ProgressText = "");
 
         private void Report()
