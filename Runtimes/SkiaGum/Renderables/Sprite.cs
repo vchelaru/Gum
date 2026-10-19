@@ -91,10 +91,16 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         set => SourceRectangle = value;
     }
 
+    /// <summary>
+    /// Whether a <see cref="SourceRectangle"/> that reaches past the texture repeats the texture, as on
+    /// MonoGame, instead of drawing only the part inside it. Used by scrolling and tiled backgrounds.
+    /// </summary>
+    public bool Wrap { get; set; }
+
     bool ITextureCoordinate.Wrap
     {
-        get => false;
-        set { } // don't support this yet...
+        get => Wrap;
+        set => Wrap = value;
     }
 
     public float AspectRatio
@@ -304,6 +310,52 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             persp0: 0, persp1: 0, persp2: 1);
     }
 
+    private bool ExtendsPastTexture(SKRect source)
+    {
+        float? textureWidth = Image?.Width ?? Texture?.Width;
+        float? textureHeight = Image?.Height ?? Texture?.Height;
+        return source.Left < 0 || source.Top < 0 ||
+            source.Right > textureWidth || source.Bottom > textureHeight;
+    }
+
+    // Fills the destination with the texture repeated, positioned so that the source rectangle's top left
+    // lands on the destination's top left and one source unit covers one destination-sized share of it.
+    private void DrawTiled(SKCanvas canvas, SKRect source, SKRect destination, SKPaint paint)
+    {
+        if (source.Width <= 0 || source.Height <= 0)
+        {
+            return;
+        }
+
+        SKImage? image = Image;
+        SKImage? temporaryImage = null;
+        if (image == null)
+        {
+            temporaryImage = SKImage.FromBitmap(Texture);
+            image = temporaryImage;
+        }
+
+        try
+        {
+            float scaleX = destination.Width / source.Width;
+            float scaleY = destination.Height / source.Height;
+            SKMatrix imageToDestination = new SKMatrix(
+                scaleX, 0, destination.Left - source.Left * scaleX,
+                0, scaleY, destination.Top - source.Top * scaleY,
+                0, 0, 1);
+
+            using SKShader shader = image.ToShader(
+                SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, Renderer.TextureSampling, imageToDestination);
+            using SKPaint tiledPaint = paint.Clone();
+            tiledPaint.Shader = shader;
+            canvas.DrawRect(destination, tiledPaint);
+        }
+        finally
+        {
+            temporaryImage?.Dispose();
+        }
+    }
+
     private void DrawBoundAtOrigin(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         // Render-target pull (#3988): display the baked texture of the referenced container instead of
@@ -345,8 +397,14 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             var isFlippedHorizontal =
                 sourceRectangle.Left > sourceRectangle.Right;
 
-            var isFlippedVertical = 
+            var isFlippedVertical =
                 sourceRectangle.Top > sourceRectangle.Bottom;
+
+            if (Wrap && !isFlippedHorizontal && !isFlippedVertical && ExtendsPastTexture(sourceRectangle))
+            {
+                DrawTiled(canvas, sourceRectangle, boundingRect, paint);
+                return;
+            }
 
             if (isFlippedHorizontal || isFlippedVertical)
             {
