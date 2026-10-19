@@ -311,6 +311,45 @@ public class Renderer : IRenderer
     }
     = false;
 
+    private static bool _usePremultipliedAlpha;
+
+    /// <summary>
+    /// Raised when <see cref="UsePremultipliedAlpha"/> changes. Used to push the value to the
+    /// registered in-memory font creator.
+    /// </summary>
+    public static event Action<bool>? UsePremultipliedAlphaChanged;
+
+    /// <summary>
+    /// The single switch for a premultiplied-alpha pipeline (issue #6154). When true:
+    /// <list type="bullet">
+    /// <item><see cref="NormalBlendState"/> becomes <c>BlendState.AlphaBlend</c> (back to
+    /// <c>NonPremultiplied</c> when set false).</item>
+    /// <item>Textures Gum loads from a file, URL or bitmap are premultiplied after load
+    /// (<c>SurfaceFormat.Color</c> only; ContentManager textures are left alone).</item>
+    /// <item><see cref="BleedTransparentTextureEdgesOnLoad"/> is ignored, since the bleed is wrong on
+    /// premultiplied data.</item>
+    /// <item>A font creator implementing <c>IPremultipliableFontCreator</c> is told to produce
+    /// premultiplied atlases.</item>
+    /// </list>
+    /// Defaults to false (straight alpha). Set it once at startup, before loading content or creating
+    /// fonts; textures and fonts that already exist are not converted.
+    /// </summary>
+    public static bool UsePremultipliedAlpha
+    {
+        get => _usePremultipliedAlpha;
+        set
+        {
+            if (_usePremultipliedAlpha == value)
+            {
+                return;
+            }
+
+            _usePremultipliedAlpha = value;
+            NormalBlendState = value ? BlendState.AlphaBlend : BlendState.NonPremultiplied;
+            UsePremultipliedAlphaChanged?.Invoke(value);
+        }
+    }
+
     /// <summary>
     /// Use the custom effect for rendering. This setting takes priority if 
     /// both UseCustomEffectRendering and UseBasicEffectRendering are enabled.

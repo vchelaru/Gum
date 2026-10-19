@@ -63,6 +63,40 @@ public class KernSmithFontCreatorGrowthTests : BaseTestClass
     }
 
     [Fact]
+    public void TryAddGlyphs_WithPremultiplyAlpha_BlitsColorScaledByAlpha()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        KernSmithFontCreator creator = new(game.GraphicsDevice) { PremultiplyAlpha = true };
+
+        BmfcSave bmfcSave = BuildBmfcSave(ranges: "65");
+        BitmapFont? font = creator.TryCreateFont(bmfcSave);
+        font.ShouldNotBeNull();
+
+        creator.TryAddGlyphs(font!, bmfcSave, "B").ShouldNotBeNull();
+
+        BitmapCharacterInfo bInfo = font!.GetCharacterInfo('B');
+        Texture2D page = font.Textures[0];
+        Color[] pixels = new Color[page.Width * page.Height];
+        page.GetData(pixels);
+
+        int partialAlphaTexels = 0;
+        for (int y = bInfo.PixelTop; y < bInfo.PixelBottom; y++)
+        {
+            for (int x = bInfo.PixelLeft; x < bInfo.PixelRight; x++)
+            {
+                Color pixel = pixels[y * page.Width + x];
+                pixel.R.ShouldBe(pixel.A, "because an added glyph must be premultiplied like the initial atlas");
+                if (pixel.A > 0 && pixel.A < 255)
+                {
+                    partialAlphaTexels++;
+                }
+            }
+        }
+        partialAlphaTexels.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
     public void TryAddGlyphs_WhenFontWasNotCreatedByThisCreator_ReturnsNull()
     {
         using MinimalGame game = new();
