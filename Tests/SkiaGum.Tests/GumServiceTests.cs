@@ -391,4 +391,28 @@ public class GumServiceTests
     {
         typeof(GumServiceSkiaBase).IsAssignableFrom(typeof(GumService)).ShouldBeTrue();
     }
+
+    // A host whose canvas is only readable inside a render pass (a SkiaGameRendering target) passes it
+    // each frame instead of pointing Gum at one canvas for good.
+    [Fact]
+    public void Draw_WithACanvas_DrawsIntoThatCanvasAndNotTheInitializeCanvas()
+    {
+        using SKSurface initializeSurface = SKSurface.Create(new SKImageInfo(100, 100));
+        using SKSurface frameSurface = SKSurface.Create(new SKImageInfo(100, 100));
+        GumService.Default.Initialize(initializeSurface.Canvas, 100, 100);
+        RectangleRuntime rectangle = new() { Width = 100, Height = 100, FillColor = SKColors.Red, IsFilled = true };
+        GumService.Default.Root.AddChild(rectangle);
+
+        GumService.Default.Draw(frameSurface.Canvas);
+
+        PixelAt(frameSurface, 50, 50).ShouldBe(SKColors.Red);
+        PixelAt(initializeSurface, 50, 50).Alpha.ShouldBe((byte)0);
+    }
+
+    private static SKColor PixelAt(SKSurface surface, int x, int y)
+    {
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        return bitmap.GetPixel(x, y);
+    }
 }
