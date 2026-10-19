@@ -226,7 +226,7 @@ public class ScrollViewerTests : BaseTestClass
     {
         ScrollViewer scrollViewer = BuildTallScrollViewerForTouch();
 
-        Mock<ICursor> cursor = BuildTouchCursorMock(isPush: true, yChange: -500);
+        Mock<ICursor> cursor = BuildTouchCursorMock(scrollViewer, isPush: true, yChange: -500);
 
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
         GueInteractiveExtensionMethods.DoUiActivityRecursively(scrollViewer.Visual, cursor.Object, keyboard.Object, 0);
@@ -239,7 +239,7 @@ public class ScrollViewerTests : BaseTestClass
     {
         ScrollViewer scrollViewer = BuildTallScrollViewerForTouch();
 
-        Mock<ICursor> cursor = BuildTouchCursorMock(isPush: false, yChange: -500);
+        Mock<ICursor> cursor = BuildTouchCursorMock(scrollViewer, isPush: false, yChange: -500);
 
         Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
         GueInteractiveExtensionMethods.DoUiActivityRecursively(scrollViewer.Visual, cursor.Object, keyboard.Object, 0);
@@ -279,16 +279,22 @@ public class ScrollViewerTests : BaseTestClass
         return scrollViewer;
     }
 
-    private static Mock<ICursor> BuildTouchCursorMock(bool isPush, int yChange)
+    private static Mock<ICursor> BuildTouchCursorMock(ScrollViewer scrollViewer, bool isPush, int yChange)
     {
+        // The touch lands on the middle of the viewer wherever it ended up. In CI the viewer sat at
+        // -400,-180 (the shared GumService Root is not at the origin there), so a fixed 100,100
+        // touch missed it and no roll-over fired.
+        int touchX = (int)scrollViewer.Visual.AbsoluteLeft + 100;
+        int touchY = (int)scrollViewer.Visual.AbsoluteTop + 100;
+
         Mock<ICursor> cursor = new();
         cursor.SetupProperty(x => x.VisualOver);
         cursor.SetupProperty(x => x.WindowPushed);
         cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.TouchScreen);
         cursor.Setup(x => x.PrimaryDown).Returns(true);
         cursor.Setup(x => x.PrimaryPush).Returns(isPush);
-        cursor.Setup(x => x.X).Returns(100);
-        cursor.Setup(x => x.Y).Returns(100);
+        cursor.Setup(x => x.X).Returns(touchX);
+        cursor.Setup(x => x.Y).Returns(touchY);
         cursor.Setup(x => x.XChange).Returns(0);
         cursor.Setup(x => x.YChange).Returns(yChange);
 
