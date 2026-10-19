@@ -344,8 +344,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
                 0, scaleY, destination.Top - source.Top * scaleY,
                 0, 0, 1);
 
-            using SKShader shader = image.ToShader(
-                SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, Renderer.TextureSampling, imageToDestination);
+            // Repeat only on an axis the source actually runs past: repeating the other one would let
+            // linear filtering blend the texture's opposite edge into this one.
+            SKShaderTileMode tileX = source.Left < 0 || source.Right > image.Width
+                ? SKShaderTileMode.Repeat : SKShaderTileMode.Clamp;
+            SKShaderTileMode tileY = source.Top < 0 || source.Bottom > image.Height
+                ? SKShaderTileMode.Repeat : SKShaderTileMode.Clamp;
+            using SKShader shader = image.ToShader(tileX, tileY, Renderer.TextureSampling, imageToDestination);
             using SKPaint tiledPaint = paint.Clone();
             tiledPaint.Shader = shader;
             canvas.DrawRect(destination, tiledPaint);

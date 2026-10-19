@@ -87,6 +87,44 @@ public class SpriteWrapTests
         pixels.ShouldBe([SKColors.Blue, SKColors.Red]);
     }
 
+    // The mana wave: wider than its texture only horizontally, positioned at a fractional Y. Repeating
+    // vertically too would blend its bottom row (opaque) into the top edge under linear filtering.
+    [Fact]
+    public void Draw_WithWrapAndLinearFilter_DoesNotBleedTheBottomRowIntoTheTopEdge()
+    {
+        using SKBitmap texture = new(2, 2);
+        texture.SetPixel(0, 0, SKColors.Transparent);
+        texture.SetPixel(1, 0, SKColors.Transparent);
+        texture.SetPixel(0, 1, SKColors.Red);
+        texture.SetPixel(1, 1, SKColors.Red);
+        SpriteRuntime sprite = new()
+        {
+            Texture = texture,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+            Width = 4,
+            Height = 2,
+            Y = 0.25f,
+            TextureAddress = TextureAddress.Custom,
+            TextureLeft = 0,
+            TextureTop = 0,
+            TextureWidth = 4,
+            TextureHeight = 2,
+        };
+        sprite.SetProperty("Wrap", true);
+
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(4, 3));
+        GumService.Default.Initialize(surface.Canvas, 4, 3);
+        global::RenderingLibrary.Graphics.Renderer.TextureFilter = SKFilterMode.Linear;
+        GumService.Default.Root.Children.Add(sprite);
+
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        bitmap.GetPixel(1, 0).Alpha.ShouldBe((byte)0);
+    }
+
     [Fact]
     public void Draw_WithoutWrap_DoesNotRepeatTheTexture()
     {

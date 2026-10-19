@@ -481,6 +481,29 @@ public class GumServiceTests
         PixelAt(surface, 40, 40).Alpha.ShouldBe((byte)0);
     }
 
+    // A ColoredRectangle is a hard-edged solid fill on every other runtime, so the pixel row whose center
+    // is inside the rectangle is filled completely. Anti-aliased, a rectangle at a fractional edge leaves
+    // a partly covered row, which shows as a seam against a sprite that ends at the same edge.
+    [Fact]
+    public void ColoredRectangle_AtFractionalEdge_FillsWholePixelRows()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(4, 4));
+        GumService.Default.Initialize(surface.Canvas, 4, 4);
+        ColoredRectangleRuntime rectangle = new()
+        {
+            X = 0, Y = 1.4f, Width = 4, Height = 2, Color = SKColors.White,
+        };
+        GumService.Default.Root.AddChild(rectangle);
+
+        GumService.Default.Draw();
+
+        // Rows 1 and 2 have their centers (1.5, 2.5) inside 1.4..3.4.
+        PixelAt(surface, 1, 1).ShouldBe(SKColors.White);
+        PixelAt(surface, 1, 2).ShouldBe(SKColors.White);
+        PixelAt(surface, 1, 0).Alpha.ShouldBe((byte)0);
+        PixelAt(surface, 1, 3).Alpha.ShouldBe((byte)0);
+    }
+
     // Games that zoom shrink the canvas coordinate space after Initialize (CanvasWidth = ClientWidth / zoom)
     // and rely on Update to resize Root to it, as MonoGame and raylib do. Without it, a bottom-aligned
     // child is laid out against the full-size root and lands off screen.

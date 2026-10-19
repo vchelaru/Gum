@@ -164,6 +164,10 @@ public class ColoredRectangleRuntime : GraphicalUiElement
 
 #if SKIA
             rectangle.CornerRadius = 0;
+            // MonoGame and raylib draw a ColoredRectangle with hard pixel edges. Anti-aliased, a rectangle
+            // at a fractional edge leaves a partly covered row that shows as a seam against a sprite
+            // ending at the same edge.
+            rectangle.IsAntialiased = false;
             rectangle.Color = SkiaSharp.SKColors.White;
 #elif RAYLIB
             rectangle.Color = Raylib_cs.Color.White;
