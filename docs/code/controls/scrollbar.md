@@ -52,3 +52,7 @@ scrollBar.ValueChanged += (_, _) =>
 ## ScrollBar and ScrollViewer
 
 In most cases you do not need to create a ScrollBar directly. [ScrollViewer](scrollviewer/) instantiates and manages one internally, and exposes `VerticalScrollBarValue` to read or set the scroll position in code. Use a standalone ScrollBar only when you need fine-grained control over a scrollable range that is not tied to a ScrollViewer's content panel.
+
+## Custom Visuals
+
+ScrollBar assigns the thumb's size and position along the scroll direction directly, so a custom Visual's states must set the thumb's size across the scroll direction. See [Properties Set by Forms Controls](../styling/properties-set-by-forms-controls.md) for the full list.

@@ -293,6 +293,7 @@
     * [Customizing ListBox and ComboBox](code/styling/code-only-styling/customizing-listbox-and-combobox.md)
     * [Customizing Menu and MenuItem](code/styling/code-only-styling/customizing-menu-and-menuitem.md)
   * [Control Customization in Gum Tool](code/styling/control-customization-in-gum-tool.md)
+  * [Properties Set by Forms Controls](code/styling/properties-set-by-forms-controls.md)
   * [Runtime Variable References](code/styling/runtime-variable-references.md)
   * [Themes](code/styling/themes/README.md)
     * [Editor Theme](code/styling/themes/editor-theme.md)

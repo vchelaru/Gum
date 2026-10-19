@@ -201,3 +201,5 @@ If you prefer to use a texture that is not grayscale, you should set the Backgro
 ## Advanced styling
 
 For more control over colors and states, see the [Styling Using States](styling-using-states.md) page.
+
+For the properties each control assigns on its Visual, see [Properties Set by Forms Controls](../properties-set-by-forms-controls.md).
