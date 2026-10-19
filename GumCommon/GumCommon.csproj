@@ -108,6 +108,7 @@
 		<Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" Link="Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\Forms\Input\Keys.cs" Link="Forms\Input\Keys.cs" />
 		<Compile Include="..\GumRuntime\Input\GamePad.cs" Link="Input\GamePad.cs" />
+		<Compile Include="..\GumRuntime\Input\GamePadSnapshot.cs" Link="Input\GamePadSnapshot.cs" />
 		<Compile Include="..\GumRuntime\Input\IGamePad.cs" Link="Input\IGamePad.cs" />
 		<Compile Include="..\GumRuntime\InteractiveGue.cs" Link="InteractiveGue.cs" />
 		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\AnimationChainListSave.cs" />

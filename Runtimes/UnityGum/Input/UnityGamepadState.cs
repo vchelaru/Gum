@@ -44,7 +44,7 @@ public struct UnityGamepadState
 public static class UnityGamepadMapper
 {
     /// <summary>Triggers at or past this value count as pressed, matching the other runtimes.</summary>
-    public const float TriggerThreshold = 0.5f;
+    public const float TriggerThreshold = GamePadSnapshot.TriggerThreshold;
 
     /// <summary>
     /// Gamepads fill Gum's slots in order; slots past the connected pads are disconnected and released.
@@ -63,31 +63,36 @@ public static class UnityGamepadMapper
 
     static void Apply(GamePad gumGamepad, UnityGamepadState pad, bool isConnected)
     {
-        gumGamepad.SetConnected(isConnected);
+        // Gum uses Xbox face-button names; Unity names them by position. Unity's stick Y is
+        // positive-up, the same convention as Gum's, so sticks pass through.
+        gumGamepad.SetState(new GamePadSnapshot
+        {
+            IsConnected = isConnected,
 
-        gumGamepad.SetButtonState(GamepadButton.DPadUp, pad.DPadUp);
-        gumGamepad.SetButtonState(GamepadButton.DPadDown, pad.DPadDown);
-        gumGamepad.SetButtonState(GamepadButton.DPadLeft, pad.DPadLeft);
-        gumGamepad.SetButtonState(GamepadButton.DPadRight, pad.DPadRight);
+            DPadUp = pad.DPadUp,
+            DPadDown = pad.DPadDown,
+            DPadLeft = pad.DPadLeft,
+            DPadRight = pad.DPadRight,
 
-        // Gum uses Xbox face-button names; Unity names them by position.
-        gumGamepad.SetButtonState(GamepadButton.A, pad.ButtonSouth);
-        gumGamepad.SetButtonState(GamepadButton.B, pad.ButtonEast);
-        gumGamepad.SetButtonState(GamepadButton.X, pad.ButtonWest);
-        gumGamepad.SetButtonState(GamepadButton.Y, pad.ButtonNorth);
+            A = pad.ButtonSouth,
+            B = pad.ButtonEast,
+            X = pad.ButtonWest,
+            Y = pad.ButtonNorth,
 
-        gumGamepad.SetButtonState(GamepadButton.LeftShoulder, pad.LeftShoulder);
-        gumGamepad.SetButtonState(GamepadButton.RightShoulder, pad.RightShoulder);
-        gumGamepad.SetButtonState(GamepadButton.Start, pad.Start);
-        gumGamepad.SetButtonState(GamepadButton.Back, pad.Select);
-        gumGamepad.SetButtonState(GamepadButton.LeftStick, pad.LeftStickButton);
-        gumGamepad.SetButtonState(GamepadButton.RightStick, pad.RightStickButton);
+            LeftShoulder = pad.LeftShoulder,
+            RightShoulder = pad.RightShoulder,
+            Start = pad.Start,
+            Back = pad.Select,
+            LeftStick = pad.LeftStickButton,
+            RightStick = pad.RightStickButton,
 
-        gumGamepad.SetButtonState(GamepadButton.LeftTrigger, pad.LeftTrigger >= TriggerThreshold);
-        gumGamepad.SetButtonState(GamepadButton.RightTrigger, pad.RightTrigger >= TriggerThreshold);
+            LeftTrigger = pad.LeftTrigger,
+            RightTrigger = pad.RightTrigger,
 
-        // Unity's stick Y is positive-up, the same convention as Gum's.
-        gumGamepad.SetLeftStickPosition(pad.LeftStickX, pad.LeftStickY);
-        gumGamepad.SetRightStickPosition(pad.RightStickX, pad.RightStickY);
+            LeftStickX = pad.LeftStickX,
+            LeftStickY = pad.LeftStickY,
+            RightStickX = pad.RightStickX,
+            RightStickY = pad.RightStickY,
+        });
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Silk.NET.Input;
-using GumGamepadButton = Gum.Input.GamepadButton;
 
 namespace Gum.Input;
 
@@ -18,12 +17,6 @@ namespace Gum.Input;
 /// </summary>
 internal static class GamePadDriver
 {
-    // Silk has no digital trigger buttons -- ButtonName has no LeftTrigger/RightTrigger member --
-    // so triggers are only exposed as the analog Triggers[].Position (0..1). Threshold to the
-    // digital LeftTrigger/RightTrigger semantics Gum's GamePad models, matching the MonoGame
-    // driver's TriggerThreshold.
-    const float TriggerThreshold = 0.5f;
-
     // Works around a Silk.NET.Input.Sdl bug: SdlGamepad's DoEvent handler writes its internal
     // _buttons/_triggers arrays as a side effect INSIDE the argument list of
     // `ButtonDown?.Invoke(this, _buttons[i] = new Button(...))` (and the equivalent for
@@ -57,39 +50,44 @@ internal static class GamePadDriver
     {
         EnsureButtonAndTriggerEventsAreLive(silkGamepad);
 
-        gamepad.SetConnected(silkGamepad.IsConnected);
-
-        gamepad.SetButtonState(GumGamepadButton.DPadUp, IsDown(silkGamepad, ButtonName.DPadUp));
-        gamepad.SetButtonState(GumGamepadButton.DPadDown, IsDown(silkGamepad, ButtonName.DPadDown));
-        gamepad.SetButtonState(GumGamepadButton.DPadLeft, IsDown(silkGamepad, ButtonName.DPadLeft));
-        gamepad.SetButtonState(GumGamepadButton.DPadRight, IsDown(silkGamepad, ButtonName.DPadRight));
-
-        gamepad.SetButtonState(GumGamepadButton.A, IsDown(silkGamepad, ButtonName.A));
-        gamepad.SetButtonState(GumGamepadButton.B, IsDown(silkGamepad, ButtonName.B));
-        gamepad.SetButtonState(GumGamepadButton.X, IsDown(silkGamepad, ButtonName.X));
-        gamepad.SetButtonState(GumGamepadButton.Y, IsDown(silkGamepad, ButtonName.Y));
-
-        gamepad.SetButtonState(GumGamepadButton.LeftShoulder, IsDown(silkGamepad, ButtonName.LeftBumper));
-        gamepad.SetButtonState(GumGamepadButton.RightShoulder, IsDown(silkGamepad, ButtonName.RightBumper));
-
-        gamepad.SetButtonState(GumGamepadButton.Start, IsDown(silkGamepad, ButtonName.Start));
-        gamepad.SetButtonState(GumGamepadButton.Back, IsDown(silkGamepad, ButtonName.Back));
-
-        gamepad.SetButtonState(GumGamepadButton.LeftStick, IsDown(silkGamepad, ButtonName.LeftStick));
-        gamepad.SetButtonState(GumGamepadButton.RightStick, IsDown(silkGamepad, ButtonName.RightStick));
-
-        // Silk.NET's SDL/GLFW backends both fix Triggers[0] = left, Triggers[1] = right.
-        gamepad.SetButtonState(GumGamepadButton.LeftTrigger, TriggerPosition(silkGamepad, 0) >= TriggerThreshold);
-        gamepad.SetButtonState(GumGamepadButton.RightTrigger, TriggerPosition(silkGamepad, 1) >= TriggerThreshold);
-
-        // Silk.NET's SDL/GLFW backends both fix Thumbsticks[0] = left, Thumbsticks[1] = right, and
-        // report Y as positive-down (SDL native convention); flip to the XNA/Gum convention
-        // (positive-up), matching the Raylib driver.
+        // Silk has no digital trigger buttons (ButtonName has no LeftTrigger/RightTrigger), so the
+        // triggers go in as analog positions and GamePad.SetState thresholds them. Silk.NET's
+        // SDL/GLFW backends both fix Triggers[0] = left, Triggers[1] = right, and
+        // Thumbsticks[0] = left, Thumbsticks[1] = right.
         Thumbstick left = Stick(silkGamepad, 0);
-        gamepad.SetLeftStickPosition(left.X, -left.Y);
-
         Thumbstick right = Stick(silkGamepad, 1);
-        gamepad.SetRightStickPosition(right.X, -right.Y);
+
+        gamepad.SetState(new GamePadSnapshot
+        {
+            IsConnected = silkGamepad.IsConnected,
+
+            DPadUp = IsDown(silkGamepad, ButtonName.DPadUp),
+            DPadDown = IsDown(silkGamepad, ButtonName.DPadDown),
+            DPadLeft = IsDown(silkGamepad, ButtonName.DPadLeft),
+            DPadRight = IsDown(silkGamepad, ButtonName.DPadRight),
+
+            A = IsDown(silkGamepad, ButtonName.A),
+            B = IsDown(silkGamepad, ButtonName.B),
+            X = IsDown(silkGamepad, ButtonName.X),
+            Y = IsDown(silkGamepad, ButtonName.Y),
+
+            LeftShoulder = IsDown(silkGamepad, ButtonName.LeftBumper),
+            RightShoulder = IsDown(silkGamepad, ButtonName.RightBumper),
+            Start = IsDown(silkGamepad, ButtonName.Start),
+            Back = IsDown(silkGamepad, ButtonName.Back),
+            LeftStick = IsDown(silkGamepad, ButtonName.LeftStick),
+            RightStick = IsDown(silkGamepad, ButtonName.RightStick),
+
+            LeftTrigger = TriggerPosition(silkGamepad, 0),
+            RightTrigger = TriggerPosition(silkGamepad, 1),
+
+            // Silk reports stick Y as positive-down (SDL native); flip to the XNA/Gum convention
+            // (positive-up), matching the Raylib driver.
+            LeftStickX = left.X,
+            LeftStickY = -left.Y,
+            RightStickX = right.X,
+            RightStickY = -right.Y,
+        });
 
         gamepad.Activity(time);
     }

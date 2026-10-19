@@ -131,6 +131,39 @@ public class GamePad : IGamePad
     }
 
     /// <summary>
+    /// Pushes a whole frame of controller state: connection, every button, the analog triggers
+    /// (thresholded at <see cref="GamePadSnapshot.TriggerThreshold"/> into the digital trigger
+    /// buttons) and both sticks. Call <see cref="Activity"/> afterwards to commit the frame.
+    /// </summary>
+    public void SetState(in GamePadSnapshot snapshot)
+    {
+        SetConnected(snapshot.IsConnected);
+
+        SetButtonState(GamepadButton.DPadUp, snapshot.DPadUp);
+        SetButtonState(GamepadButton.DPadDown, snapshot.DPadDown);
+        SetButtonState(GamepadButton.DPadLeft, snapshot.DPadLeft);
+        SetButtonState(GamepadButton.DPadRight, snapshot.DPadRight);
+
+        SetButtonState(GamepadButton.A, snapshot.A);
+        SetButtonState(GamepadButton.B, snapshot.B);
+        SetButtonState(GamepadButton.X, snapshot.X);
+        SetButtonState(GamepadButton.Y, snapshot.Y);
+
+        SetButtonState(GamepadButton.LeftShoulder, snapshot.LeftShoulder);
+        SetButtonState(GamepadButton.RightShoulder, snapshot.RightShoulder);
+        SetButtonState(GamepadButton.Start, snapshot.Start);
+        SetButtonState(GamepadButton.Back, snapshot.Back);
+        SetButtonState(GamepadButton.LeftStick, snapshot.LeftStick);
+        SetButtonState(GamepadButton.RightStick, snapshot.RightStick);
+
+        SetButtonState(GamepadButton.LeftTrigger, snapshot.LeftTrigger >= GamePadSnapshot.TriggerThreshold);
+        SetButtonState(GamepadButton.RightTrigger, snapshot.RightTrigger >= GamePadSnapshot.TriggerThreshold);
+
+        SetLeftStickPosition(snapshot.LeftStickX, snapshot.LeftStickY);
+        SetRightStickPosition(snapshot.RightStickX, snapshot.RightStickY);
+    }
+
+    /// <summary>
     /// Commits the state pushed in via the setters and advances repeat-rate timing.
     /// Called once per frame by the platform input driver after the setters.
     /// </summary>

@@ -228,4 +228,67 @@ public class UnityGamepadMapperTests : BaseTestClass
         first.IsFocused = true;
         return (first, second);
     }
+
+    private static readonly GamepadButton[] MappedButtons =
+    {
+        GamepadButton.DPadUp, GamepadButton.DPadDown, GamepadButton.DPadLeft, GamepadButton.DPadRight,
+        GamepadButton.A, GamepadButton.B, GamepadButton.X, GamepadButton.Y,
+        GamepadButton.LeftShoulder, GamepadButton.RightShoulder,
+        GamepadButton.Start, GamepadButton.Back,
+        GamepadButton.LeftStick, GamepadButton.RightStick,
+        GamepadButton.LeftTrigger, GamepadButton.RightTrigger,
+    };
+
+    public static IEnumerable<object[]> EachButtonCase()
+    {
+        yield return new object[] { new UnityGamepadState { DPadUp = true }, GamepadButton.DPadUp };
+        yield return new object[] { new UnityGamepadState { DPadDown = true }, GamepadButton.DPadDown };
+        yield return new object[] { new UnityGamepadState { DPadLeft = true }, GamepadButton.DPadLeft };
+        yield return new object[] { new UnityGamepadState { DPadRight = true }, GamepadButton.DPadRight };
+        yield return new object[] { new UnityGamepadState { ButtonSouth = true }, GamepadButton.A };
+        yield return new object[] { new UnityGamepadState { ButtonEast = true }, GamepadButton.B };
+        yield return new object[] { new UnityGamepadState { ButtonWest = true }, GamepadButton.X };
+        yield return new object[] { new UnityGamepadState { ButtonNorth = true }, GamepadButton.Y };
+        yield return new object[] { new UnityGamepadState { LeftShoulder = true }, GamepadButton.LeftShoulder };
+        yield return new object[] { new UnityGamepadState { RightShoulder = true }, GamepadButton.RightShoulder };
+        yield return new object[] { new UnityGamepadState { Start = true }, GamepadButton.Start };
+        yield return new object[] { new UnityGamepadState { Select = true }, GamepadButton.Back };
+        yield return new object[] { new UnityGamepadState { LeftStickButton = true }, GamepadButton.LeftStick };
+        yield return new object[] { new UnityGamepadState { RightStickButton = true }, GamepadButton.RightStick };
+        yield return new object[] { new UnityGamepadState { LeftTrigger = 1f }, GamepadButton.LeftTrigger };
+        yield return new object[] { new UnityGamepadState { RightTrigger = 1f }, GamepadButton.RightTrigger };
+    }
+
+    [Theory]
+    [MemberData(nameof(EachButtonCase))]
+    public void Push_MapsEachUnityControl_ToExactlyOneGumButton(UnityGamepadState state, GamepadButton expected)
+    {
+        Frame(0, state);
+
+        foreach (GamepadButton button in MappedButtons)
+        {
+            Slots[0].ButtonDown(button).ShouldBe(button == expected, button.ToString());
+        }
+    }
+
+    [Fact]
+    public void Push_RightStickY_IsPositiveUp()
+    {
+        Frame(0, new UnityGamepadState { RightStickX = 0.9f, RightStickY = 0.9f });
+
+        Slots[0].RightStick.X.ShouldBeGreaterThan(0.5f);
+        Slots[0].RightStick.Y.ShouldBeGreaterThan(0.5f);
+    }
+
+    [Fact]
+    public void Push_DoesNotCommitTheFrame_UntilUpdate()
+    {
+        UnityGamepadMapper.Push(Slots, new[] { new UnityGamepadState { ButtonSouth = true } });
+
+        Slots[0].ButtonDown(GamepadButton.A).ShouldBeFalse();
+
+        GumService.Default.Update(0);
+
+        Slots[0].ButtonDown(GamepadButton.A).ShouldBeTrue();
+    }
 }
