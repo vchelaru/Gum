@@ -182,7 +182,7 @@ public static class NeonTheme
         styling.Colors.Accent = colors.Accent;
     }
 
-    private static void RegisterVisuals()
+    internal static void RegisterVisuals()
     {
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));

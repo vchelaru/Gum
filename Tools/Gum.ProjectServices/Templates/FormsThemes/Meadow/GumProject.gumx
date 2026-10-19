@@ -80,6 +80,7 @@
   <ComponentReference Name="Meadow/Controls/Splitter" />
   <ComponentReference Name="Meadow/Controls/StackPanel" />
   <ComponentReference Name="Meadow/Controls/TextBox" />
+  <ComponentReference Name="Meadow/Controls/Thumb" />
   <ComponentReference Name="Meadow/Controls/Toast" />
   <ComponentReference Name="Meadow/Controls/UserControl" />
   <ComponentReference Name="Meadow/Controls/Window" />

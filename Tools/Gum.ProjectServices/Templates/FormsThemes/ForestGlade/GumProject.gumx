@@ -80,6 +80,7 @@
   <ComponentReference Name="ForestGlade/Controls/Splitter" />
   <ComponentReference Name="ForestGlade/Controls/StackPanel" />
   <ComponentReference Name="ForestGlade/Controls/TextBox" />
+  <ComponentReference Name="ForestGlade/Controls/Thumb" />
   <ComponentReference Name="ForestGlade/Controls/Toast" />
   <ComponentReference Name="ForestGlade/Controls/UserControl" />
   <ComponentReference Name="ForestGlade/Controls/Window" />

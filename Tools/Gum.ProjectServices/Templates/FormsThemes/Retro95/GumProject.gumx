@@ -80,6 +80,7 @@
   <ComponentReference Name="Retro95/Controls/Splitter" />
   <ComponentReference Name="Retro95/Controls/StackPanel" />
   <ComponentReference Name="Retro95/Controls/TextBox" />
+  <ComponentReference Name="Retro95/Controls/Thumb" />
   <ComponentReference Name="Retro95/Controls/Toast" />
   <ComponentReference Name="Retro95/Controls/UserControl" />
   <ComponentReference Name="Retro95/Controls/Window" />

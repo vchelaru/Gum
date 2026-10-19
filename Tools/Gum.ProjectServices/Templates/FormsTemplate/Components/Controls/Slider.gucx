@@ -268,7 +268,7 @@
   </Category>
   <Instance Name="TrackInstance" BaseType="Container" />
   <Instance Name="TrackBackground" BaseType="NineSlice" />
-  <Instance Name="ThumbInstance" BaseType="Controls/ButtonStandard" />
+  <Instance Name="ThumbInstance" BaseType="Controls/Thumb" />
   <Instance Name="FocusedIndicator" BaseType="NineSlice" />
   <Behaviors>
     <ElementBehaviorReference>

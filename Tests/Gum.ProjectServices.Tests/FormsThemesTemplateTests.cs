@@ -126,6 +126,61 @@ public class FormsThemesTemplateTests
             $"FormsTemplate/{subfolder}: manifest.txt vs files on disk");
     }
 
+    // DarkPro and Neon already have separate, styled SliderThumb and ScrollBarThumb components, so they
+    // have no Thumb.
+    public static IEnumerable<object[]> TemplateFoldersWithThumb => AllTemplateFolders
+        .Where(folder => folder != "FormsThemes/DarkPro" && folder != "FormsThemes/Neon")
+        .Select(folder => new object[] { folder });
+
+    // Slider and ScrollBar thumbs get their own Thumb component (a copy of the button) so restyling
+    // a thumb does not restyle every button (#6165).
+    [Theory]
+    [MemberData(nameof(TemplateFoldersWithThumb))]
+    public void Load_ShouldHaveThumbComponentCopiedFromTheButton(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = new ProjectLoader()
+            .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+
+        string prefix = templateFolder.StartsWith("FormsThemes/", StringComparison.Ordinal)
+            ? templateFolder.Substring("FormsThemes/".Length) + "/"
+            : string.Empty;
+        string buttonName = prefix + (prefix.Length == 0 ? "Controls/ButtonStandard" : "Controls/Button");
+
+        ComponentSave button = project.Components.Single(c => c.Name == buttonName);
+        ComponentSave thumb = project.Components.Single(c => c.Name == prefix + "Controls/Thumb");
+
+        thumb.BaseType.ShouldBe(button.BaseType);
+        thumb.Instances.Select(i => (i.Name, i.BaseType))
+            .ShouldBe(button.Instances.Select(i => (i.Name, i.BaseType)));
+        thumb.Behaviors.Select(b => b.BehaviorName)
+            .ShouldBe(button.Behaviors.Select(b => b.BehaviorName));
+        thumb.DefaultState!.Variables.Count.ShouldBe(button.DefaultState!.Variables.Count);
+    }
+
+    // Themes that already have their own SliderThumb / ScrollBarThumb keep them; the rest use Thumb.
+    [Theory]
+    [InlineData("FormsTemplate", "", "Slider")]
+    [InlineData("FormsTemplate", "", "ScrollBar")]
+    [InlineData("FormsThemes/Editor", "Editor/", "Slider")]
+    [InlineData("FormsThemes/Editor", "Editor/", "ScrollBar")]
+    [InlineData("FormsThemes/Bubblegum", "Bubblegum/", "ScrollBar")]
+    [InlineData("FormsThemes/ForestGlade", "ForestGlade/", "ScrollBar")]
+    [InlineData("FormsThemes/Hazard", "Hazard/", "ScrollBar")]
+    [InlineData("FormsThemes/Meadow", "Meadow/", "ScrollBar")]
+    [InlineData("FormsThemes/Retro95", "Retro95/", "ScrollBar")]
+    public void ThumbInstance_ShouldUseThumbComponent(string templateFolder, string prefix, string controlName)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = new ProjectLoader()
+            .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+
+        ComponentSave control = project.Components.Single(c => c.Name == $"{prefix}Controls/{controlName}");
+
+        control.Instances.Single(i => i.Name == "ThumbInstance").BaseType
+            .ShouldBe($"{prefix}Controls/Thumb");
+    }
+
     // GumFormsPlugin copies each template folder, FontCache included, into the release's
     // Content/FormsThemes. A cached font no element needs ships for nothing, and the Standard
     // theme's leftovers were rendered from Arial and Wasco Sans, which may not be redistributed (#5430).
