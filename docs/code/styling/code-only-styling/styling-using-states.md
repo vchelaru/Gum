@@ -109,5 +109,4 @@ highlightedState.Apply = () =>
 
 Any property on a control's Visual can be changed through state. For more information on working with the standard visual types which make up controls, see the [Standard Visuals](../../standard-visuals/) page.
 
-
-
+States are the main way controls change their appearance, but a few controls also assign properties on their Visual directly, such as a ScrollBar's thumb size or a TextBox's caret position. A state that sets one of those properties is overwritten. See [Properties Set by Forms Controls](../properties-set-by-forms-controls.md) for each control's list.
