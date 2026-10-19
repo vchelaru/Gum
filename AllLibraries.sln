@@ -203,6 +203,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KniSkiaGum", "Runtimes\KniS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KniSkiaGum.Tests", "Tests\KniSkiaGum.Tests\KniSkiaGum.Tests.csproj", "{FB3C1090-5637-49BB-B2BF-521DCE94475A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaHost.TestsCommon", "Tests\SkiaHost.TestsCommon\SkiaHost.TestsCommon.csproj", "{FADB425D-0845-477F-8C3A-55243E431A37}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1872,6 +1874,24 @@ Global
 		{FB3C1090-5637-49BB-B2BF-521DCE94475A}.Release|x64.Build.0 = Release|Any CPU
 		{FB3C1090-5637-49BB-B2BF-521DCE94475A}.Release|x86.ActiveCfg = Release|Any CPU
 		{FB3C1090-5637-49BB-B2BF-521DCE94475A}.Release|x86.Build.0 = Release|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Debug|x64.Build.0 = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Debug|x86.Build.0 = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release_No_Diagnostics|Any CPU.ActiveCfg = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release_No_Diagnostics|Any CPU.Build.0 = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release_No_Diagnostics|x64.ActiveCfg = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release_No_Diagnostics|x64.Build.0 = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release_No_Diagnostics|x86.ActiveCfg = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release_No_Diagnostics|x86.Build.0 = Debug|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release|x64.ActiveCfg = Release|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release|x64.Build.0 = Release|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release|x86.ActiveCfg = Release|Any CPU
+		{FADB425D-0845-477F-8C3A-55243E431A37}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1967,6 +1987,7 @@ Global
 		{E507050B-0632-48B6-A462-62A5B06137C3} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{81FFB818-F27A-419A-B8F6-62D5F78A4E99} = {BB4FD3E1-BF37-801A-7591-DC4DC6E3BB2D}
 		{FB3C1090-5637-49BB-B2BF-521DCE94475A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{FADB425D-0845-477F-8C3A-55243E431A37} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01002AE6-0158-417E-9B83-D4234361EC1B}

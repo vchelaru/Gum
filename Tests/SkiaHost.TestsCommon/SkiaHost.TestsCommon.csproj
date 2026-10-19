@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Test scaffolding the interactive Skia host test projects share (SilkNetGum.Tests, StrideGum.Tests,
+    UnityGum.Tests, KniSkiaGum.Tests): the assembly bootstrap and the per-test reset of shared static
+    state. It references SkiaGum and GumCommon only, never a host, because every host compiles its own
+    Gum.GumService and Gum.Input types; the host-specific parts are overrides in each test project.
+  -->
+  <PropertyGroup>
+    <!-- net10.0 to match the host test projects. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" />
+    <PackageReference Include="SkiaSharp" VersionOverride="4.153.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
+  </ItemGroup>
+
+</Project>

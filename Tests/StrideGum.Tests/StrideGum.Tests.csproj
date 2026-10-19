@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Runtimes\StrideGum\StrideGum.csproj" />
+    <ProjectReference Include="..\SkiaHost.TestsCommon\SkiaHost.TestsCommon.csproj" />
   </ItemGroup>
 
   <ItemGroup>
