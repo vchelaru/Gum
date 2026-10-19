@@ -21,21 +21,11 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	</PropertyGroup>
 
-	<!--
-		SKIA selects the Skia render aliases (Texture2D=SKBitmap, Color=SKColor) in the shared
-		source; SILK selects this project's input host. Both are required.
-	-->
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;SILK;FULL_DIAGNOSTICS</DefineConstants>
+	<PropertyGroup>
+		<GumSkiaHostSymbol>SILK</GumSkiaHostSymbol>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;SILK;FULL_DIAGNOSTICS</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;SILK</DefineConstants>
-	</PropertyGroup>
+	<Import Project="..\SkiaHost.props" />
 
 	<!-- ===== SkiaGum's render/GueDeriving/Forms source (issue #4452 phase 2): the V3 default
 	     visuals, DefaultFromFileVisuals, and FormsUtilities.cs are no longer file-linked here —
@@ -58,16 +48,9 @@
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
 	<Import Project="..\CursorInput.props" />
 
+	<Import Project="..\SkiaPackages.props" />
+
 	<ItemGroup>
-		<PackageReference Include="SkiaSharp" Version="4.153.1" />
-		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="4.153.1" />
-		<PackageReference Include="Svg.Skia" Version="5.2.3" />
-		<!-- Needs the halo stroke-join fix (#114) for per-run outline thickness (#4037).
-		     Must track SkiaGum.csproj's reference: this project links SkiaGum's Renderables/*.cs
-		     source directly, so a mismatched RichTextKit version here means the shared Text.cs runs
-		     against different behavior despite compiling clean. -->
-		<PackageReference Include="Topten.RichTextKit" Version="0.6.170" />
 		<!-- Input only: the backend-agnostic IInputContext lives here. Silk.NET.Windowing (which
 		     picks GLFW vs SDL and owns the window) is intentionally NOT referenced. -->
 		<PackageReference Include="Silk.NET.Input" Version="2.21.0" />

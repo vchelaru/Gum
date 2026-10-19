@@ -1,0 +1,20 @@
+<Project>
+  <!--
+    The Skia package set every Skia-family runtime compiles SkiaGum's renderable source against:
+    SkiaGum, SilkNetGum and StrideGum (UnityGum gets them through its SkiaGum reference). Those
+    projects share the same source files, so a version that differs between them changes the
+    behavior of the shared Text.cs and friends with no compile error. Bump versions here only.
+  -->
+  <ItemGroup>
+    <!-- Pinned to SkiaGameRendering's SkiaSharp version (its eng/Versions.props): StrideGum's GPU
+         path (SkiaGameRendering.Stride.D3D11 pins it exactly) and the Unity package load
+         SkiaGameRendering's SkiaSharp, so every Skia-family project moves with it. -->
+    <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
+    <PackageReference Include="SkiaSharp.Skottie" Version="4.153.1" />
+    <PackageReference Include="Svg.Skia" Version="5.2.3" />
+    <!-- Needs the halo stroke-join fix (#114) for per-run outline thickness (#4037). It requires
+         SkiaSharp 4.153.1, which brings SkiaSharp.HarfBuzz 4.153.1 with it. -->
+    <PackageReference Include="Topten.RichTextKit" Version="0.6.170" />
+  </ItemGroup>
+</Project>

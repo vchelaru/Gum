@@ -33,21 +33,7 @@
 		<EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;FULL_DIAGNOSTICS</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;FULL_DIAGNOSTICS</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
-	  <DefineConstants>TRACE;SKIA</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
-	  <DefineConstants>TRACE;SKIA</DefineConstants>
-	</PropertyGroup>
+	<Import Project="..\SkiaHost.props" />
 
 	<ItemGroup>
 		<Compile Include="..\..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
@@ -180,18 +166,7 @@
 		<EmbeddedResource Include="Content\UISpriteSheet.png" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<!-- Pinned to SkiaGameRendering's SkiaSharp version (its eng/Versions.props): StrideGum's GPU path
-		     and the Unity package load SkiaGameRendering's SkiaSharp, so every Skia-family project
-		     moves with it. -->
-		<PackageReference Include="SkiaSharp" Version="4.153.1" />
-		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="4.153.1" />
-		<PackageReference Include="Svg.Skia" Version="5.2.3" />
-		<!-- Needs the halo stroke-join fix (#114) for per-run outline thickness. It requires SkiaSharp
-		     4.153.1, which brings SkiaSharp.HarfBuzz 4.153.1 with it. -->
-		<PackageReference Include="Topten.RichTextKit" Version="0.6.170" />
-	</ItemGroup>
+	<Import Project="..\SkiaPackages.props" />
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />

@@ -40,21 +40,11 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<!--
-		SKIA selects the Skia render aliases (Texture2D=SKBitmap, Color=SKColor) in the shared
-		source; STRIDE selects this project's input host. Both are required.
-	-->
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;STRIDE;FULL_DIAGNOSTICS</DefineConstants>
+	<PropertyGroup>
+		<GumSkiaHostSymbol>STRIDE</GumSkiaHostSymbol>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;STRIDE;FULL_DIAGNOSTICS</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
-		<DefineConstants>TRACE;SKIA;STRIDE</DefineConstants>
-	</PropertyGroup>
+	<Import Project="..\SkiaHost.props" />
 
 	<!-- Selects the zero-copy GPU path's source in GumService.Stride.cs (#4617), gated to the TFM
 	     that actually references SkiaGameRendering.Stride.D3D11 above. -->
@@ -77,16 +67,11 @@
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
 	<Import Project="..\CursorInput.props" />
 
+	<!-- SkiaSharp 4.153.1 is pinned in SkiaPackages.props because SkiaGameRendering.Stride.D3D11 (below,
+	     windows7.0 only) pins it exactly, and NuGet flags anything lower as a downgrade. -->
+	<Import Project="..\SkiaPackages.props" />
+
 	<ItemGroup>
-		<!-- Must match SkiaGum.csproj: SkiaGameRendering.Stride.D3D11 (below, windows7.0 only) pins
-		     SkiaSharp 4.153.1 exactly, and NuGet flags anything lower as a downgrade. -->
-		<PackageReference Include="SkiaSharp" Version="4.153.1" />
-		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="4.153.1" />
-		<PackageReference Include="Svg.Skia" Version="5.2.3" />
-		<!-- Needs the halo stroke-join fix (#114) for per-run outline thickness (#4037).
-		     Must track SkiaGum.csproj's reference: see SilkNetGum.csproj's identical comment. -->
-		<PackageReference Include="Topten.RichTextKit" Version="0.6.170" />
 		<!-- Stride only: the renderer registers itself into the compositor directly, so a game's
 		     Stride.CommunityToolkit version cannot break this package (#6149). -->
 		<PackageReference Include="Stride.Engine" Version="4.4.1" />
