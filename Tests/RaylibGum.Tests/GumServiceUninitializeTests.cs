@@ -18,6 +18,10 @@ public class GumServiceUninitializeTests
 
         try
         {
+            // Uninitialize is a no-op on a service that is not initialized (#6066), so the test must
+            // not depend on an earlier test having initialized it.
+            GumService.Default.InitializeForTesting();
+
             Text.DefaultFont = Raylib.GetFontDefault();
             Text.DefaultFont.BaseSize.ShouldBeGreaterThan(0);
 

@@ -349,7 +349,7 @@
   <Instance Name="DownButtonInstance" BaseType="Controls/ButtonIcon" />
   <Instance Name="TrackInstance" BaseType="Container" />
   <Instance Name="TrackBackground" BaseType="NineSlice" />
-  <Instance Name="ThumbInstance" BaseType="Controls/ButtonStandard" />
+  <Instance Name="ThumbInstance" BaseType="Controls/Thumb" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ScrollBarBehavior</BehaviorName>

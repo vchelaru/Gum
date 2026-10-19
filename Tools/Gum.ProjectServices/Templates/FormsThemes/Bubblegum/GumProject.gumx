@@ -80,6 +80,7 @@
   <ComponentReference Name="Bubblegum/Controls/Splitter" />
   <ComponentReference Name="Bubblegum/Controls/StackPanel" />
   <ComponentReference Name="Bubblegum/Controls/TextBox" />
+  <ComponentReference Name="Bubblegum/Controls/Thumb" />
   <ComponentReference Name="Bubblegum/Controls/Toast" />
   <ComponentReference Name="Bubblegum/Controls/UserControl" />
   <ComponentReference Name="Bubblegum/Controls/Window" />

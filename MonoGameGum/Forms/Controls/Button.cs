@@ -151,3 +151,16 @@ public class Button : ButtonBase
 
     #endregion
 }
+
+/// <summary>
+/// The draggable thumb of a <see cref="Slider"/> or <see cref="ScrollBar"/>. It behaves exactly like a
+/// <see cref="Button"/> and looks like one by default: until a template is registered for
+/// <c>typeof(Thumb)</c> in <see cref="FrameworkElement.DefaultFormsTemplates"/>, a thumb uses the
+/// Button template. Registering one restyles thumbs without restyling every button.
+/// </summary>
+public class Thumb : Button
+{
+    public Thumb() : base() { }
+
+    public Thumb(InteractiveGue visual) : base(visual) { }
+}

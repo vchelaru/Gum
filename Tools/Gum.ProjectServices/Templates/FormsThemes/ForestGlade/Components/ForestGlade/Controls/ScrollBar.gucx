@@ -242,7 +242,7 @@
   </Category>
   <Instance Name="TrackInstance" BaseType="Container" />
   <Instance Name="TrackFill" BaseType="Rectangle" />
-  <Instance Name="ThumbInstance" BaseType="ForestGlade/Controls/Button" />
+  <Instance Name="ThumbInstance" BaseType="ForestGlade/Controls/Thumb" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ScrollBarBehavior</BehaviorName>

@@ -277,3 +277,20 @@ public class ButtonVisual : InteractiveGue
     /// </summary>
     public Button FormsControl => (Button)FormsControlAsObject!;
 }
+
+/// <summary>
+/// The default visual for a <see cref="Thumb"/>, the slider and scroll bar thumb. It is a
+/// <see cref="ButtonVisual"/> and looks the same, so restyling thumbs is a separate change from
+/// restyling buttons.
+/// </summary>
+public class ThumbVisual : ButtonVisual
+{
+    public ThumbVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        : base(fullInstantiation, tryCreateFormsObject: false)
+    {
+        if (tryCreateFormsObject)
+        {
+            FormsControlAsObject = new Thumb(this);
+        }
+    }
+}

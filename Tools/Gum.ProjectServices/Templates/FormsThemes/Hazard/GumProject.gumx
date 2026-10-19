@@ -80,6 +80,7 @@
   <ComponentReference Name="Hazard/Controls/Splitter" />
   <ComponentReference Name="Hazard/Controls/StackPanel" />
   <ComponentReference Name="Hazard/Controls/TextBox" />
+  <ComponentReference Name="Hazard/Controls/Thumb" />
   <ComponentReference Name="Hazard/Controls/Toast" />
   <ComponentReference Name="Hazard/Controls/UserControl" />
   <ComponentReference Name="Hazard/Controls/Window" />
