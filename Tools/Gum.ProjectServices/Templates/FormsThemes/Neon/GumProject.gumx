@@ -81,7 +81,6 @@
   <ComponentReference Name="Neon/Controls/Splitter" />
   <ComponentReference Name="Neon/Controls/StackPanel" />
   <ComponentReference Name="Neon/Controls/TextBox" />
-  <ComponentReference Name="Neon/Controls/Thumb" />
   <ComponentReference Name="Neon/Controls/Toast" />
   <ComponentReference Name="Neon/Controls/UserControl" />
   <ComponentReference Name="Neon/Controls/Window" />

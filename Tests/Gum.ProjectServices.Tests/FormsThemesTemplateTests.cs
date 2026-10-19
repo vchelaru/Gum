@@ -126,10 +126,16 @@ public class FormsThemesTemplateTests
             $"FormsTemplate/{subfolder}: manifest.txt vs files on disk");
     }
 
+    // DarkPro and Neon already have separate, styled SliderThumb and ScrollBarThumb components, so they
+    // have no Thumb.
+    public static IEnumerable<object[]> TemplateFoldersWithThumb => AllTemplateFolders
+        .Where(folder => folder != "FormsThemes/DarkPro" && folder != "FormsThemes/Neon")
+        .Select(folder => new object[] { folder });
+
     // Slider and ScrollBar thumbs get their own Thumb component (a copy of the button) so restyling
     // a thumb does not restyle every button (#6165).
     [Theory]
-    [MemberData(nameof(TemplateFolders))]
+    [MemberData(nameof(TemplateFoldersWithThumb))]
     public void Load_ShouldHaveThumbComponentCopiedFromTheButton(string templateFolder)
     {
         StandardElementsManager.Self.Initialize();
