@@ -48,7 +48,7 @@ public static class UnityGamepadMapper
 
     /// <summary>
     /// Gamepads fill Gum's slots in order; slots past the connected pads are disconnected and released.
-    /// Call every frame, before <see cref="GumService.Update"/>.
+    /// Call every frame, before <see cref="GumServiceSkiaInteractiveBase.Update"/>.
     /// </summary>
     public static void Push(GamePad[] gumGamepads, IReadOnlyList<UnityGamepadState> unityGamepads)
     {

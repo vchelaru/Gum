@@ -65,7 +65,7 @@
 	     same-FQN-fork reasoning: the same trap this project would otherwise repeat. -->
 
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
-	<Import Project="..\CursorInput.props" />
+	<Import Project="..\SkiaInputHost.props" />
 
 	<!-- SkiaSharp 4.153.1 is pinned in SkiaPackages.props because SkiaGameRendering.Stride.D3D11 (below,
 	     windows7.0 only) pins it exactly, and NuGet flags anything lower as a downgrade. -->

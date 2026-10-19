@@ -1,11 +1,11 @@
-// Silk.NET's GumService, as a subclass of GumServiceSkiaBase (issue #4452 phase 2). Overrides the
+// Silk.NET's GumService, as a subclass of GumServiceSkiaInteractiveBase. Overrides the
 // CreateCursor/CreateKeyboard/ApplyGamePadState capability hooks with real Silk.NET.Input-backed
-// implementations, and Update to also pump FormsUtilities' per-frame cursor/keyboard/gamepad
-// activity (the base's Update is render-only and has no input to pump). Everything else --
-// rendering, .gumx loading, non-interactive Forms controls, hot reload, window-fit, the sync
-// context -- comes from the shared base, the same way SkiaGum.Wpf/SkiaGum.Maui/any bring-your-own
-// -canvas consumer gets it, so this class also serves as the reference example for writing a custom
-// interactive Skia host.
+// implementations. The per-frame Forms input pump in Update comes from the base, and the typed
+// Default/Cursor/Keyboard accessors from Runtimes/SkiaHost/GumService.SkiaHost.cs. Everything else
+// -- rendering, .gumx loading, non-interactive Forms controls, hot reload, window-fit, the sync
+// context -- comes from GumServiceSkiaBase, the same way SkiaGum.Wpf/SkiaGum.Maui/any
+// bring-your-own-canvas consumer gets it, so this class also serves as the reference example for
+// writing a custom interactive Skia host.
 #if SILK
 #nullable enable
 
@@ -21,30 +21,9 @@ using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
-public class GumService : GumServiceSkiaBase, IGumService
+public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 {
-    private static GumService? _default;
-
-    /// <summary>
-    /// The singleton service instance.
-    /// </summary>
-    public static GumService Default => _default ??= new GumService();
-
     private IInputContext? _inputContext;
-
-    /// <summary>
-    /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
-    /// </summary>
-    public Cursor Cursor => (FormsUtilities.Cursor as Cursor)!;
-
-    /// <summary>
-    /// Gets the default keyboard.
-    /// </summary>
-    /// <remarks>
-    /// Null while a custom keyboard is installed with <see cref="FormsUtilities.SetKeyboard"/>.
-    /// <see cref="FormsUtilities.Keyboard"/> returns whichever keyboard is active.
-    /// </remarks>
-    public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
     /// <inheritdoc/>
     ICursor? IGumService.CreateCursor()
@@ -125,18 +104,6 @@ public class GumService : GumServiceSkiaBase, IGumService
         Clipboard = new SilkGumClipboard(inputContext);
 
         base.Initialize(canvas, width, height, gumProjectFile);
-    }
-
-    /// <summary>
-    /// Per-frame tick. Call once per frame, before <see cref="GumServiceSkiaBase.Draw"/>, with total
-    /// elapsed seconds since startup. Runs the base's deferred-queue/animation tick, then pumps Forms
-    /// input (cursor/keyboard activity, control events) — the base has no input to pump.
-    /// </summary>
-    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
-    public override void Update(double totalSeconds)
-    {
-        base.Update(totalSeconds);
-        FormsUtilities.Update(totalSeconds, Root);
     }
 }
 #endif

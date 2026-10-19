@@ -46,7 +46,7 @@
 	     fork trap the FormsUtilities/IAnimatable comments above already call out. -->
 
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
-	<Import Project="..\CursorInput.props" />
+	<Import Project="..\SkiaInputHost.props" />
 
 	<Import Project="..\SkiaPackages.props" />
 

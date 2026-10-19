@@ -30,7 +30,7 @@
 	<Import Project="..\SkiaHost.props" />
 
 	<!-- The input host half SkiaGum omits because it is render-only. -->
-	<Import Project="..\CursorInput.props" />
+	<Import Project="..\SkiaInputHost.props" />
 
 	<!-- HarfBuzzSharp's native library for each supported Unity platform (Windows x64, macOS), which the Unity package's build
 	     script copies into Plugins/. Must match the HarfBuzzSharp version this project resolves; the

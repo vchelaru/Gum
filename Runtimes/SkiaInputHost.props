@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    The input half an interactive Skia host (SilkNetGum, StrideGum, UnityGum) compiles on top of
+    SkiaGum: the shared cursor source from CursorInput.props plus the host-independent parts of
+    GumService and Cursor. The host adds its own Cursor.<Host>.cs, Keyboard and GumService partial.
+    GumService derives from GumServiceSkiaInteractiveBase (in SkiaGum). A new host imports this
+    instead of copying the list.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)CursorInput.props" />
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)SkiaHost\GumService.SkiaHost.cs" Link="GumService.SkiaHost.cs" />
+  </ItemGroup>
+</Project>
