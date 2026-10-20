@@ -93,6 +93,10 @@ Since alpha-only blends operate directly on the alpha of whatever is below, they
 
 Using an alpha-only Blend outside of a container with Is Render Target set to true typically results in the instance either being drawn as pure black or being invisible.
 
+{% hint style="warning" %}
+On MonoGame, KNI, and FNA, text drawn with `Replace Alpha` or `Min Alpha` writes alpha one glyph box at a time. Glyph boxes that overlap (tight kerning, italics, large outlines) can overwrite each other's alpha. This is a known limitation that may change in a future version. Text with these blends is not a use case we currently see, so it is not being addressed now.
+{% endhint %}
+
 ## Subtract Alpha Blend
 
 **Subtract Alpha** **Blend** subtracts, or "cuts out", the alpha of whatever is below.
