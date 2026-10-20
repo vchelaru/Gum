@@ -90,6 +90,27 @@ public class ScrollBarTests : BaseTestClass
     }
 
     [Fact]
+    public void Visual_ShouldClearButtonsAndUnhookOldOnes_WhenReassignedToVisualWithoutButtons()
+    {
+        ScrollBar scrollBar = new();
+        scrollBar.Minimum = 0;
+        scrollBar.Maximum = 100;
+        scrollBar.SmallChange = 2;
+        Button oldDownButton = scrollBar.DownButton!;
+        oldDownButton.Visual.TryCallPush();
+        scrollBar.Value.ShouldBe(2);
+
+        scrollBar.Visual = new InteractiveGue();
+
+        scrollBar.UpButton.ShouldBeNull();
+        scrollBar.DownButton.ShouldBeNull();
+        scrollBar.Maximum = 100;
+        double valueBeforePush = scrollBar.Value;
+        oldDownButton.Visual.TryCallPush();
+        scrollBar.Value.ShouldBe(valueBeforePush);
+    }
+
+    [Fact]
     public void Orientation_ShouldStayHorizontal_WhenVisualIsReassigned()
     {
         ScrollBar scrollBar = new();

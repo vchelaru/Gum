@@ -1254,19 +1254,11 @@ public class ScrollViewer :
 
     private void UpdateToSizeMode()
     {
-        if(VerticalSizeMode == SizeMode.Auto)
-        {
-            string state = VerticalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
-            const string category = "VerticalSizeModeState";
-            Visual.SetProperty(category, state);
-        }
-        if(HorizontalSizeMode == SizeMode.Auto)
-        {
-            string state = HorizontalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
-            const string category = "HorizontalSizeModeState";
-            Visual.SetProperty(category, state);
-        }
+        string verticalState = VerticalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
+        Visual.SetProperty("VerticalSizeModeState", verticalState);
 
+        string horizontalState = HorizontalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
+        Visual.SetProperty("HorizontalSizeModeState", horizontalState);
     }
 
     // Currently this is public because Gum objects don't have events

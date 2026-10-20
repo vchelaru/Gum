@@ -874,6 +874,58 @@ public class ScrollViewerTests : BaseTestClass
         appliedState.ShouldBe("Auto");
     }
 
+    [Theory]
+    [InlineData("HorizontalSizeMode")]
+    [InlineData("VerticalSizeMode")]
+    public void SizeMode_ShouldApplyFixedState_WhenChangedFromAutoToFixed(string categoryName)
+    {
+        ScrollViewer sut = new();
+        string? appliedState = null;
+        AddSizeModeCategory(sut, categoryName, applied => appliedState = applied);
+        SetSizeMode(sut, categoryName, SizeMode.Auto);
+
+        SetSizeMode(sut, categoryName, SizeMode.Fixed);
+
+        appliedState.ShouldBe("Fixed");
+    }
+
+    [Theory]
+    [InlineData("HorizontalSizeMode")]
+    [InlineData("VerticalSizeMode")]
+    public void SizeMode_ShouldApplyAutoState_WhenChangedFromFixedToAuto(string categoryName)
+    {
+        ScrollViewer sut = new();
+        string? appliedState = null;
+        AddSizeModeCategory(sut, categoryName, applied => appliedState = applied);
+
+        SetSizeMode(sut, categoryName, SizeMode.Auto);
+
+        appliedState.ShouldBe("Auto");
+    }
+
+    private static void AddSizeModeCategory(ScrollViewer sut, string categoryName, Action<string> onApplied)
+    {
+        StateSaveCategory category = new() { Name = categoryName };
+        foreach (string stateName in new[] { "Fixed", "Auto" })
+        {
+            string captured = stateName;
+            category.States.Add(new StateSave { Name = captured, Apply = () => onApplied(captured) });
+        }
+        sut.Visual.AddCategory(category);
+    }
+
+    private static void SetSizeMode(ScrollViewer sut, string categoryName, SizeMode mode)
+    {
+        if (categoryName == "HorizontalSizeMode")
+        {
+            sut.HorizontalSizeMode = mode;
+        }
+        else
+        {
+            sut.VerticalSizeMode = mode;
+        }
+    }
+
     [Fact]
     public void InnerPanelSizeChanged_ShouldUpdateHorizontalScrollBar_WhenOnlyHorizontalSizeModeIsFixed()
     {

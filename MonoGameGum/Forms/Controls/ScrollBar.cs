@@ -213,6 +213,9 @@ public class ScrollBar : RangeBase
     // See the comment on RangeBase.RefreshInternalVisualReferences for why this isn't changed to a proper chain.
     protected override void RefreshInternalVisualReferences()
     {
+        upButton = null;
+        downButton = null;
+
         var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;
 #if FULL_DIAGNOSTICS
         //if (upButtonVisual == null)
