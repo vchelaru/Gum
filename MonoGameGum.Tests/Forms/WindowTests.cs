@@ -1,4 +1,6 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Collections;
+using Gum.Wireframe;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Moq;
@@ -452,4 +454,55 @@ public class WindowTests : BaseTestClass
     }
 
     #endregion
+
+    [Fact]
+    public void ResizeMode_Toggled_ShouldNotStackPushHandlers()
+    {
+        Mock<ICursor> cursor = new();
+        FrameworkElement.MainCursor = cursor.Object;
+        Window sut = new();
+
+        sut.ResizeMode = ResizeMode.NoResize;
+        sut.ResizeMode = ResizeMode.CanResize;
+
+        InteractiveGue border = (InteractiveGue)sut.GetVisual("BorderTopInstance")!;
+        border.TryCallPush();
+
+        cursor.Verify(c => c.XRespectingGumZoomAndBounds(), Times.Once);
+    }
+
+    [Fact]
+    public void Visual_Reassigned_ShouldStopReactingToOldVisualInput()
+    {
+        Mock<ICursor> cursor = new();
+        FrameworkElement.MainCursor = cursor.Object;
+        Window sut = new();
+        InteractiveGue oldTitleBar = (InteractiveGue)sut.GetVisual("TitleBarInstance")!;
+        InteractiveGue oldBorder = (InteractiveGue)sut.GetVisual("BorderLeftInstance")!;
+
+        sut.Visual = new WindowVisual(tryCreateFormsObject: false);
+
+        oldTitleBar.TryCallPush();
+        oldBorder.TryCallPush();
+
+        cursor.Verify(c => c.XRespectingGumZoomAndBounds(), Times.Never);
+    }
+
+    [Fact]
+    public void Visual_Reassigned_ShouldStopReactingToOldInnerPanelChildren()
+    {
+        Window sut = new();
+        GraphicalUiElement oldInnerPanel = sut.InnerPanel;
+        WindowVisual newVisual = new(tryCreateFormsObject: false);
+        sut.Visual = newVisual;
+
+        // Added without notification so only a stale handler on the old inner panel could pick it up.
+        Button child = new();
+        ((RenderingLibrary.Graphics.ObservableCollectionNoReset<GraphicalUiElement>)newVisual.Children!)
+            .InsertWithoutNotification(0, child.Visual);
+
+        oldInnerPanel.Children!.Add(new InteractiveGue(new RenderingLibrary.Graphics.InvisibleRenderable()));
+
+        sut.Children.ShouldNotContain(child);
+    }
 }

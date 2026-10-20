@@ -2,6 +2,7 @@
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,24 +72,31 @@ public class Panel :
             Visual.HasEvents = true;
             Visual.ExposeChildrenEvents = true;
 
-            // Note - if Visual is changed multiple times, this causes a slight
-            // memory leak. However there is no way around this unless we have an
-            // event for when the visual is removed.
-            Visual.Children.CollectionChanged += (s, e) =>
-            {
-                // When the children change, we need to update our internal list
-                // to match the visual's children
-                _children.Clear();
-                foreach (var child in Visual.Children)
-                {
-                    if (child is InteractiveGue gue && gue.FormsControlAsObject is FrameworkElement frameworkElement)
-                    {
-                        _children.Add(frameworkElement);
-                    }
-                }
-            };
+            Visual.Children.CollectionChanged += HandleVisualChildrenChanged;
         }
 
         base.ReactToVisualChanged();
+    }
+
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        Visual.Children.CollectionChanged -= HandleVisualChildrenChanged;
+    }
+
+    private void HandleVisualChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // When the children change, we need to update our internal list
+        // to match the visual's children
+        _children.Clear();
+        foreach (var child in Visual.Children)
+        {
+            if (child is InteractiveGue gue && gue.FormsControlAsObject is FrameworkElement frameworkElement)
+            {
+                _children.Add(frameworkElement);
+            }
+        }
     }
 }

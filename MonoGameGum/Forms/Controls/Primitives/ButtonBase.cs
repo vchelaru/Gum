@@ -127,6 +127,21 @@ public class ButtonBase :
         UpdateState();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+#if !FRB
+        Visual.Click -= this.HandleClick;
+        Visual.Push -= this.HandlePush;
+        Visual.LosePush -= this.HandleLosePush;
+        Visual.RemovedAsPushed -= this.HandleRemovedAsPushed;
+        Visual.RollOn -= this.HandleRollOn;
+        Visual.RollOff -= this.HandleRollOff;
+#endif
+    }
+
     #endregion
 
     #region Event Handler Methods

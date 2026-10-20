@@ -154,6 +154,24 @@ public class ColorPicker : FrameworkElement
         RefreshVisuals();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        if (_saturationValueContainer != null)
+        {
+            _saturationValueContainer.Push -= HandleSaturationValueInput;
+            _saturationValueContainer.Dragging -= HandleSaturationValueInput;
+        }
+
+        if (_hueContainer != null)
+        {
+            _hueContainer.Push -= HandleHueInput;
+            _hueContainer.Dragging -= HandleHueInput;
+        }
+    }
+
     #endregion
 
     #region Event Handlers

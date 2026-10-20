@@ -445,11 +445,6 @@ public abstract class TextBoxBase :
 
     protected override void ReactToVisualChanged()
     {
-        if (textComponent != null)
-        {
-            // unsubscribe on old:
-            textComponent.PropertyChanged -= HandleTextComponentPropertyChanged;
-        }
         RefreshInternalVisualReferences();
 
 
@@ -481,6 +476,27 @@ public abstract class TextBoxBase :
         //OffsetTextToKeepCaretInView();
 
         IsFocused = false;
+    }
+
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+#if !FRB
+        Visual.Click -= this.HandleClick;
+        Visual.Push -= this.HandlePush;
+        Visual.RollOn -= this.HandleRollOn;
+        Visual.RollOver -= this.HandleRollOver;
+        Visual.Dragging -= this.HandleDrag;
+        Visual.RollOff -= this.HandleRollOff;
+#endif
+        Visual.SizeChanged -= HandleVisualSizeChanged;
+
+        if (textComponent != null)
+        {
+            textComponent.PropertyChanged -= HandleTextComponentPropertyChanged;
+        }
     }
 
     protected override void RefreshInternalVisualReferences()

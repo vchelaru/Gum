@@ -1,6 +1,7 @@
 ﻿using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -132,11 +133,6 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
 
             titleBar = Visual.GetGraphicalUiElementByName("TitleBarInstance") as InteractiveGue;
-            if (titleBar != null)
-            {
-                titleBar.Push += HandleVisualPush;
-                titleBar.Dragging += HandleVisualDragging;
-            }
 
             _borderTopLeft = Visual.GetGraphicalUiElementByName("BorderTopLeftInstance") as InteractiveGue;
 
@@ -154,6 +150,15 @@ public class Window : Gum.Forms.Controls.FrameworkElement
 
             _borderBottomRight = Visual.GetGraphicalUiElementByName("BorderBottomRightInstance") as InteractiveGue;
 
+            foreach (InteractiveGue? dragSource in GetDragSources())
+            {
+                if (dragSource != null)
+                {
+                    dragSource.Push += HandleVisualPush;
+                    dragSource.Dragging += HandleVisualDragging;
+                }
+            }
+
             AssignCursorsOnBorders();
 
 #if FULL_DIAGNOSTICS
@@ -165,25 +170,57 @@ public class Window : Gum.Forms.Controls.FrameworkElement
 
             Visual.ExposeChildrenEvents = true;
 
-            // Note - if Visual is changed multiple times, this causes a slight
-            // memory leak. However there is no way around this unless we have an
-            // event for when the visual is removed.
-            InnerPanel.Children.CollectionChanged += (s, e) =>
-            {
-                // When the children change, we need to update our internal list
-                // to match the visual's children
-                _children.Clear();
-                foreach (var child in Visual.Children)
-                {
-                    if (child is InteractiveGue gue && gue.FormsControlAsObject is FrameworkElement frameworkElement)
-                    {
-                        _children.Add(frameworkElement);
-                    }
-                }
-            };
+            InnerPanel.Children.CollectionChanged += HandleInnerPanelChildrenChanged;
         }
 
         base.ReactToVisualChanged();
+    }
+
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        foreach (InteractiveGue? dragSource in GetDragSources())
+        {
+            if (dragSource != null)
+            {
+                dragSource.Push -= HandleVisualPush;
+                dragSource.Dragging -= HandleVisualDragging;
+            }
+        }
+
+        if (innerPanel != null)
+        {
+            innerPanel.Children.CollectionChanged -= HandleInnerPanelChildrenChanged;
+        }
+    }
+
+    private IEnumerable<InteractiveGue?> GetDragSources()
+    {
+        yield return titleBar;
+        yield return _borderTopLeft;
+        yield return _borderTop;
+        yield return _borderTopRight;
+        yield return _borderLeft;
+        yield return _borderRight;
+        yield return _borderBottomLeft;
+        yield return _borderBottom;
+        yield return _borderBottomRight;
+    }
+
+    private void HandleInnerPanelChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // When the children change, we need to update our internal list
+        // to match the visual's children
+        _children.Clear();
+        foreach (var child in Visual.Children)
+        {
+            if (child is InteractiveGue gue && gue.FormsControlAsObject is FrameworkElement frameworkElement)
+            {
+                _children.Add(frameworkElement);
+            }
+        }
     }
 
     private void AssignCursorsOnBorders()
@@ -215,8 +252,6 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             {
                 if (interactiveGue == null) return;
 
-                interactiveGue.Push += HandleVisualPush;
-                interactiveGue.Dragging += HandleVisualDragging;
                 var frameworkElement = interactiveGue.FormsControlAsObject as FrameworkElement;
                 if (frameworkElement != null)
                 {

@@ -345,6 +345,20 @@ public class ComboBox :
         UpdateState();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+#if !FRB
+        Visual.Click -= this.HandleClick;
+        Visual.Push -= this.HandlePush;
+        Visual.LosePush -= this.HandleLosePush;
+        Visual.RollOn -= this.HandleRollOn;
+        Visual.RollOff -= this.HandleRollOff;
+#endif
+    }
+
     protected override void RefreshInternalVisualReferences()
     {
         var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue
