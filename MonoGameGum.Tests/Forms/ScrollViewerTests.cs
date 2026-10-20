@@ -1,4 +1,5 @@
-﻿using Gum.Forms.Controls;
+﻿using Gum.DataTypes.Variables;
+using Gum.Forms.Controls;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using Gum.GueDeriving;
@@ -848,6 +849,56 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.UpdateVerticalScrollBarValues();
 
         return scrollViewer;
+    }
+
+    #endregion
+
+    #region SizeMode
+
+    [Fact]
+    public void HorizontalSizeMode_Auto_ShouldApplyAutoStateRegardlessOfVerticalSizeMode()
+    {
+        ScrollViewer sut = new();
+        StateSaveCategory category = new() { Name = "HorizontalSizeMode" };
+        string? appliedState = null;
+        foreach (string stateName in new[] { "Fixed", "Auto" })
+        {
+            string captured = stateName;
+            category.States.Add(new StateSave { Name = captured, Apply = () => appliedState = captured });
+        }
+        sut.Visual.AddCategory(category);
+        sut.VerticalSizeMode = SizeMode.Fixed;
+
+        sut.HorizontalSizeMode = SizeMode.Auto;
+
+        appliedState.ShouldBe("Auto");
+    }
+
+    [Fact]
+    public void InnerPanelSizeChanged_ShouldUpdateHorizontalScrollBar_WhenOnlyHorizontalSizeModeIsFixed()
+    {
+        ScrollViewer sut = new();
+        sut.Visual.Width = 100;
+        sut.Visual.Height = 100;
+        sut.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        sut.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        sut.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+        sut.HorizontalSizeMode = SizeMode.Fixed;
+        sut.VerticalSizeMode = SizeMode.Auto;
+        sut.InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        sut.InnerPanel.Width = 0;
+        sut.Visual.UpdateLayout();
+        double maximumBefore = sut.HorizontalScrollBar!.Maximum;
+
+        ContainerRuntime wideContent = new();
+        wideContent.Width = 500;
+        wideContent.Height = 20;
+        wideContent.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        wideContent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        sut.AddChild(wideContent);
+        sut.Visual.UpdateLayout();
+
+        sut.HorizontalScrollBar!.Maximum.ShouldBeGreaterThan(maximumBefore);
     }
 
     #endregion

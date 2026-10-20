@@ -752,7 +752,7 @@ public class ScrollViewer :
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
-            if(this.VerticalSizeMode == SizeMode.Fixed)
+            if(this.HorizontalSizeMode == SizeMode.Fixed)
             {
                 UpdateHorizontalScrollBarValues();
             }
@@ -1262,7 +1262,7 @@ public class ScrollViewer :
         }
         if(HorizontalSizeMode == SizeMode.Auto)
         {
-            string state = VerticalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
+            string state = HorizontalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
             const string category = "HorizontalSizeModeState";
             Visual.SetProperty(category, state);
         }

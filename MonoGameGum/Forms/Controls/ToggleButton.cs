@@ -191,6 +191,32 @@ public class ToggleButton : ButtonBase
 
     #region Update To Methods
 
+    // Manual save/restore rather than RegisterRuntimeProperty because
+    // ReactToVisualChanged can fire multiple times (visual reassignment),
+    // which would accumulate duplicate registrations.
+    private string? _savedText;
+    private bool _hasSavedText;
+
+    /// <inheritdoc/>
+    public override void SaveRuntimeProperties()
+    {
+        _savedText = coreTextObject?.RawText;
+        _hasSavedText = coreTextObject != null;
+        base.SaveRuntimeProperties();
+    }
+
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        if (_hasSavedText && textComponent != null)
+        {
+            textComponent.SetProperty("Text", _savedText);
+        }
+        _savedText = null;
+        _hasSavedText = false;
+        base.ApplyRuntimeProperties();
+    }
+
     /// <inheritdoc/>
     public override void UpdateState()
     {

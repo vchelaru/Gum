@@ -1262,6 +1262,7 @@ public abstract class TextBoxBase :
     #region UpdateTo Methods
 
     private string? _savedText;
+    private string? _savedPlaceholder;
     private int _savedCaretIndex;
     private int _savedSelectionLength;
 
@@ -1269,6 +1270,7 @@ public abstract class TextBoxBase :
     public override void SaveRuntimeProperties()
     {
         _savedText = coreTextObject?.RawText;
+        _savedPlaceholder = placeholderTextObject?.RawText;
         _savedCaretIndex = caretIndex;
         _savedSelectionLength = selectionLength;
         base.SaveRuntimeProperties();
@@ -1277,6 +1279,12 @@ public abstract class TextBoxBase :
     /// <inheritdoc/>
     public override void ApplyRuntimeProperties()
     {
+        if (_savedPlaceholder != null && placeholderComponent != null)
+        {
+            placeholderComponent.SetProperty("Text", _savedPlaceholder);
+        }
+        _savedPlaceholder = null;
+
         if (_savedText != null && coreTextObject != null)
         {
             textComponent?.SetProperty("Text", _savedText);
