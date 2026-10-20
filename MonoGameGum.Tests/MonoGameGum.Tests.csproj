@@ -11,6 +11,11 @@
 
   </PropertyGroup>
 
+  <!-- Mirrors MonoGameGum's own FULL_DIAGNOSTICS, which every configuration except Release_No_Diagnostics defines. -->
+  <PropertyGroup Condition="'$(Configuration)' != 'Release_No_Diagnostics'">
+    <DefineConstants>$(DefineConstants);FULL_DIAGNOSTICS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
 	  <PackageReference Include="AutoFixture.AutoMoq" />
 	  <PackageReference Include="coverlet.collector" />

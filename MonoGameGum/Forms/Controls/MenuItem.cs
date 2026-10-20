@@ -83,14 +83,14 @@ public class MenuItem : ItemsControl
 #if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
-            return coreText!.RawText;
+            return coreText?.RawText;
         }
         set
         {
 #if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
-            if (value != coreText!.RawText)
+            if (value != coreText?.RawText)
             {
                 // go through the component instead of the core text object to apply localization and force a layout refresh
                 text?.SetProperty("Text", value);
@@ -108,7 +108,7 @@ public class MenuItem : ItemsControl
     /// </remarks>
     public void SetHeaderNoTranslate(string? value)
     {
-        if (value != coreText!.RawText)
+        if (value != coreText?.RawText)
         {
             text?.SetProperty("TextNoTranslate", value);
         }
