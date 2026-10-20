@@ -23,7 +23,7 @@ public class CollapsedShapeCodeGenLogic : ICollapsedShapeCodeGenLogic
         }
 
         bool isMonoGameFamily = projectSettings.OutputLibrary == OutputLibrary.MonoGame ||
-            projectSettings.OutputLibrary == OutputLibrary.MonoGameForms;
+            projectSettings.OutputLibrary == OutputLibrary.GumForms;
 
         // FindByName casts must match what the runtime .gumx loader instantiates, which is still
         // the legacy type — only fully-in-code instantiation may target the collapsed runtimes.

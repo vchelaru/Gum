@@ -25,11 +25,11 @@ public class PlatformProjectScaffolderTests : IDisposable
     }
 
     [Theory]
-    [InlineData(HostPlatform.MonoGame, "Gum.MonoGame", OutputLibrary.MonoGameForms)]
-    [InlineData(HostPlatform.Kni, "Gum.KNI", OutputLibrary.MonoGameForms)]
-    [InlineData(HostPlatform.Raylib, "Gum.raylib", OutputLibrary.MonoGameForms)]
-    [InlineData(HostPlatform.Stride, "Gum.Stride", OutputLibrary.MonoGameForms)]
-    [InlineData(HostPlatform.SilkNet, "Gum.SilkNet", OutputLibrary.MonoGameForms)]
+    [InlineData(HostPlatform.MonoGame, "Gum.MonoGame", OutputLibrary.GumForms)]
+    [InlineData(HostPlatform.Kni, "Gum.KNI", OutputLibrary.GumForms)]
+    [InlineData(HostPlatform.Raylib, "Gum.raylib", OutputLibrary.GumForms)]
+    [InlineData(HostPlatform.Stride, "Gum.Stride", OutputLibrary.GumForms)]
+    [InlineData(HostPlatform.SilkNet, "Gum.SilkNet", OutputLibrary.GumForms)]
     public void Create_ShouldReferenceGumPackageAndPointCodegenAtHostProject(
         HostPlatform platform, string expectedPackage, OutputLibrary expectedLibrary)
     {

@@ -1,5 +1,5 @@
 {
-  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing MonoGameGum.GueDeriving;\nusing MonoGameGumCodeGeneration.Components;\nusing System.Linq;",
+  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing Gum.GueDeriving;\nusing MonoGameGumCodeGeneration.Components;\nusing System.Linq;",
   "CodeProjectRoot": "..\\..\\",
   "RootNamespace": "MonoGameGumCodeGeneration",
   "AppendFolderToNamespace": false,

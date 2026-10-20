@@ -385,7 +385,7 @@ public class CodeOutputTabControllerTests : BaseTestClass
             new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateManually });
         CodeOutputTabController controller = CreateController();
 
-        controller.RefreshCodeDisplay(new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms });
+        controller.RefreshCodeDisplay(new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms });
 
         _viewModel.Code.ShouldContain("must either inherit from Container");
         _viewModel.Code.ShouldNotContain("partial class");

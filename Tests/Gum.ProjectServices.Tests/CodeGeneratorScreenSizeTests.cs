@@ -11,7 +11,7 @@ namespace Gum.ProjectServices.Tests;
 /// <summary>
 /// Regression: GenerateApplyDefaultVariables has a "October 5, 2025 - Generate the screen size"
 /// block that makes a FullyInCode Screen fill its parent (Width/HeightUnits = RelativeToParent),
-/// but it only emitted that for OutputLibrary.MonoGameForms ("this.Visual.Width = ..."). Every
+/// but it only emitted that for OutputLibrary.GumForms ("this.Visual.Width = ..."). Every
 /// other Gum-API output library (plain MonoGame - which KNI/FNA projects also select, Raylib,
 /// Skia) fell into an empty else branch, so a Screen with no explicit Width/Height in its .gusx
 /// kept Gum.Wireframe.GraphicalUiElement's hardcoded 32x32 constructor default instead of filling
@@ -103,9 +103,9 @@ public class CodeGeneratorScreenSizeTests : BaseTestClass
     }
 
     [Fact]
-    public void FullyInCode_MonoGameForms_ScreenWithNoExplicitSize_StillFillsParentThroughVisual()
+    public void FullyInCode_GumForms_ScreenWithNoExplicitSize_StillFillsParentThroughVisual()
     {
-        // Pin the pre-existing MonoGameForms behavior so the fix above doesn't regress it.
+        // Pin the pre-existing GumForms behavior so the fix above doesn't regress it.
         GumProjectSave project = Project;
         ScreenSave screen = CreateScreenWithNoSize(project);
 
@@ -115,7 +115,7 @@ public class CodeGeneratorScreenSizeTests : BaseTestClass
             string code = CreateCodeGenerator().GetGeneratedCodeForElement(
                 screen,
                 elementSettings: null!,
-                new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, RootNamespace = "MyGame" });
+                new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms, RootNamespace = "MyGame" });
 
             code.ShouldContain("this.Visual.Width = 0f;");
             code.ShouldContain("this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");

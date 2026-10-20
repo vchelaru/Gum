@@ -1,5 +1,5 @@
 {
-  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing System.Linq;\nusing MonoGameGum.GueDeriving;\n",
+  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing System.Linq;\nusing Gum.GueDeriving;\n",
   "CodeProjectRoot": "..\\..\\",
   "RootNamespace": "FnaSample",
   "InheritanceLocation": 1,

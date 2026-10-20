@@ -225,7 +225,7 @@ public class CodeFileMigrationApplierTests : BaseTestClass
     {
         CodeProjectRoot = "./",
         RootNamespace = "MyGame",
-        OutputLibrary = OutputLibrary.MonoGameForms
+        OutputLibrary = OutputLibrary.GumForms
     };
 
     private FilePath WriteFile(string relativePath, string contents)

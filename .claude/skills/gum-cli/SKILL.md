@@ -86,7 +86,7 @@ Any command that runs `HeadlessErrorChecker` must call `GumExpressionService.Ini
 
 `ProjectLoader` runs `DetectSilentlyDroppedContent` after deserialization to catch incorrect XML element names (e.g., `<States>` instead of `<State>`, `<InstanceSave>` instead of `<Instance>`) that `XmlSerializer` silently ignores. Without this, AI-generated files with wrong structure load as empty elements with no error.
 
-`CodeGenerationAutoSetupService` does not detect the output library: it leaves `OutputLibrary` at the `MonoGameForms` default (Gum Forms, correct for every runtime) and always uses `ObjectInstantiationType.FindByName`. Namespace falls back to the `.csproj` filename (dots/dashes/spaces replaced with underscores) when `<RootNamespace>` is absent.
+`CodeGenerationAutoSetupService` does not detect the output library: it leaves `OutputLibrary` at the `GumForms` default (Gum Forms, correct for every runtime) and always uses `ObjectInstantiationType.FindByName`. Namespace falls back to the `.csproj` filename (dots/dashes/spaces replaced with underscores) when `<RootNamespace>` is absent.
 
 `codegen` fails fast with exit code 1 if the resolved settings request an unsupported combination (currently: `OutputLibrary.Raylib` + `ObjectInstantiationType.FullyInCode`) — `CodeGenerator.AssertSupportedCombination` throws `NotSupportedException`, and `CodegenCommand` catches it before touching the file system.
 

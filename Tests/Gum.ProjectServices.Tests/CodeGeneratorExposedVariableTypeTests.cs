@@ -44,7 +44,7 @@ public class CodeGeneratorExposedVariableTypeTests : BaseTestClass
         string standardName,
         string variableName,
         string variableType,
-        OutputLibrary library = OutputLibrary.MonoGameForms)
+        OutputLibrary library = OutputLibrary.GumForms)
     {
         GumProjectSave project = Project;
 
@@ -103,7 +103,7 @@ public class CodeGeneratorExposedVariableTypeTests : BaseTestClass
 
     [Theory]
     [InlineData(OutputLibrary.MonoGame)]
-    [InlineData(OutputLibrary.MonoGameForms)]
+    [InlineData(OutputLibrary.GumForms)]
     [InlineData(OutputLibrary.Raylib)]
     public void ExposedBlend_TypesPropertyAsRuntimeBlend(OutputLibrary library)
     {
@@ -144,14 +144,14 @@ public class CodeGeneratorExposedVariableTypeTests : BaseTestClass
     }
 
     [Theory]
-    [InlineData("Sprite", OutputLibrary.MonoGameForms, "HasEvents", false)]
-    [InlineData("Sprite", OutputLibrary.MonoGameForms, "ExposeChildrenEvents", false)]
-    [InlineData("Circle", OutputLibrary.MonoGameForms, "HasEvents", false)]
+    [InlineData("Sprite", OutputLibrary.GumForms, "HasEvents", false)]
+    [InlineData("Sprite", OutputLibrary.GumForms, "ExposeChildrenEvents", false)]
+    [InlineData("Circle", OutputLibrary.GumForms, "HasEvents", false)]
     [InlineData("Rectangle", OutputLibrary.MonoGame, "ExposeChildrenEvents", false)]
     [InlineData("Sprite", OutputLibrary.Skia, "HasEvents", false)]
     // InteractiveGue-based runtimes do have the properties:
-    [InlineData("Container", OutputLibrary.MonoGameForms, "HasEvents", true)]
-    [InlineData("Text", OutputLibrary.MonoGameForms, "ExposeChildrenEvents", true)]
+    [InlineData("Container", OutputLibrary.GumForms, "HasEvents", true)]
+    [InlineData("Text", OutputLibrary.GumForms, "ExposeChildrenEvents", true)]
     [InlineData("Circle", OutputLibrary.Skia, "HasEvents", true)]
     public void ExposedEventVariable_GeneratedOnlyWhenRuntimeHasProperty(
         string standardName, OutputLibrary library, string variableName, bool expectGenerated)

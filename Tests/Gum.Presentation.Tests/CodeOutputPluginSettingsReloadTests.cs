@@ -73,10 +73,10 @@ public class CodeOutputPluginSettingsReloadTests : BaseTestClass
         WriteSettings(OutputLibrary.MonoGame, "BeforePull");
         _plugin.CallProjectLoad(new GumProjectSave());
 
-        WriteSettings(OutputLibrary.MonoGameForms, "AfterPull");
+        WriteSettings(OutputLibrary.GumForms, "AfterPull");
         _plugin.CallReactToFileChanged(_settingsFile);
 
-        _plugin.CurrentProjectSettings.OutputLibrary.ShouldBe(OutputLibrary.MonoGameForms);
+        _plugin.CurrentProjectSettings.OutputLibrary.ShouldBe(OutputLibrary.GumForms);
         _plugin.CurrentProjectSettings.RootNamespace.ShouldBe("AfterPull");
     }
 
@@ -86,7 +86,7 @@ public class CodeOutputPluginSettingsReloadTests : BaseTestClass
         WriteSettings(OutputLibrary.MonoGame, "BeforePull");
         _plugin.CallProjectLoad(new GumProjectSave());
 
-        WriteSettings(OutputLibrary.MonoGameForms, "AfterPull");
+        WriteSettings(OutputLibrary.GumForms, "AfterPull");
         // An element's own settings file shares the extension but is not the project's.
         _plugin.CallReactToFileChanged(new FilePath(Path.Combine(_projectDirectory, "Components", "Button.codsj")));
 

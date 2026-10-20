@@ -29,7 +29,7 @@ public class FormsCodegenBaseTypeErrorSourceTests : IDisposable
     public void GetErrors_BehaviorlessComponent_ErrorsOnlyForNonContainerStandard(string baseType)
     {
         ComponentSave component = new ComponentSave { Name = "Components/MyComponent", BaseType = baseType };
-        FormsCodegenBaseTypeErrorSource source = CreateSource(OutputLibrary.MonoGameForms);
+        FormsCodegenBaseTypeErrorSource source = CreateSource(OutputLibrary.GumForms);
 
         List<ErrorResult> errors = source.GetErrors(component, _project).ToList();
 
@@ -53,7 +53,7 @@ public class FormsCodegenBaseTypeErrorSourceTests : IDisposable
     {
         ComponentSave component = new ComponentSave { Name = "Components/MySpriteButton", BaseType = "Sprite" };
         component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
-        FormsCodegenBaseTypeErrorSource source = CreateSource(OutputLibrary.MonoGameForms);
+        FormsCodegenBaseTypeErrorSource source = CreateSource(OutputLibrary.GumForms);
 
         source.GetErrors(component, _project).ShouldBeEmpty();
     }
@@ -71,7 +71,7 @@ public class FormsCodegenBaseTypeErrorSourceTests : IDisposable
     public void GetErrors_Screen_ReturnsNoErrors()
     {
         ScreenSave screen = new ScreenSave { Name = "MyScreen", BaseType = "Sprite" };
-        FormsCodegenBaseTypeErrorSource source = CreateSource(OutputLibrary.MonoGameForms);
+        FormsCodegenBaseTypeErrorSource source = CreateSource(OutputLibrary.GumForms);
 
         source.GetErrors(screen, _project).ShouldBeEmpty();
     }

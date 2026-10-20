@@ -48,6 +48,10 @@ compile against older runtimes still reporting that version. See `AddFindByNameA
 `CodeGenerator.cs`, which gates `FindFormsControl<T>` on `ResolvedSyntaxVersion >= 1` even though the
 method shipped mid-version-0.
 
+## User-supplied usings follow the same gates
+
+`CodeGenerator.TranslateLegacyUsingStatements` rewrites legacy namespaces in the `.codsj` `CommonUsingStatements` and element `UsingStatements` at the versions where generated code itself switches (`MonoGameGum.GueDeriving`/`SkiaGum.GueDeriving` -> `Gum.GueDeriving` at >= 1, `MonoGameGum` -> `Gum` at >= 3). A new namespace-unification bump that changes `GetGueDerivingNamespace` or `GetGumServiceNamespace` must extend that translation with the same threshold.
+
 ## When NOT to bump
 
 Pure renderable / Forms / sample changes that the codegen doesn't pattern-match against. The version is for **codegen gates**, not a general changelog.

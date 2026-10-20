@@ -10,7 +10,7 @@ namespace Gum.ProjectServices.Tests;
 
 /// <summary>
 /// <see cref="CodeGenerator.AddFindByNameAssignment"/> emits a Forms-control lookup for
-/// <see cref="ObjectInstantiationType.FindByName"/> + <see cref="OutputLibrary.MonoGameForms"/>
+/// <see cref="ObjectInstantiationType.FindByName"/> + <see cref="OutputLibrary.GumForms"/>
 /// component instances. <c>GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName&lt;T&gt;</c>
 /// is <c>[Obsolete]</c> in favor of <c>FindFormsControl&lt;T&gt;(name)</c>, which shipped mid
 /// syntax-version-0 (May 2026, before the version-1 bump in June). Gating on
@@ -66,7 +66,7 @@ public class CodeGeneratorFindFormsControlTests : BaseTestClass
         {
             CodeOutputProjectSettings settings = new CodeOutputProjectSettings
             {
-                OutputLibrary = OutputLibrary.MonoGameForms,
+                OutputLibrary = OutputLibrary.GumForms,
                 ObjectInstantiationType = ObjectInstantiationType.FindByName,
                 RootNamespace = "MyGame",
                 SyntaxVersion = syntaxVersion.ToString(),

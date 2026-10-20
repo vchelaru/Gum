@@ -14,7 +14,7 @@ public class CodeFileLocationChangeTests
     public void Describe_NamesEachSettingThatMovesFiles_FromOldToNew()
     {
         CodeOutputProjectSettings before = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGame, CodeProjectRoot = "../Old/", GeneratedCodeFolder = "" };
-        CodeOutputProjectSettings after = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, CodeProjectRoot = "../New/", GeneratedCodeFolder = "Generated" };
+        CodeOutputProjectSettings after = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms, CodeProjectRoot = "../New/", GeneratedCodeFolder = "Generated" };
 
         string? description = new CodeFileLocationChange().Describe(before, after);
 
@@ -40,8 +40,8 @@ public class CodeFileLocationChangeTests
     public void Describe_ReturnsNull_WhenNoSettingThatMovesFilesChanged()
     {
         // The namespace changes what is inside the files, not where they are.
-        CodeOutputProjectSettings before = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, RootNamespace = "Old" };
-        CodeOutputProjectSettings after = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, RootNamespace = "New" };
+        CodeOutputProjectSettings before = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms, RootNamespace = "Old" };
+        CodeOutputProjectSettings after = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms, RootNamespace = "New" };
 
         new CodeFileLocationChange().Describe(before, after).ShouldBeNull();
     }

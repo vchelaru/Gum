@@ -181,21 +181,21 @@ setting back to `FindByName` instead.
 
 ## Output libraries
 
-Use `MonoGameForms` for every runtime. The Code tab labels it "Gum Forms (recommended)"; the name
-predates runtime unification. Forms controls live in `GumCommon` and every runtime exposes the same
+Use `GumForms` for every runtime. The Code tab labels it "Gum Forms (recommended)".
+`MonoGameForms` is an obsolete alias with the same value (5). Forms controls live in `GumCommon` and every runtime exposes the same
 `Gum.GueDeriving` and `GumService` names, so one generated shape serves MonoGame, KNI, FNA, raylib,
 Skia, Silk.NET, Stride and Unity. `MonoGame`, `Skia`, `Raylib`, `Silk`, `WPF`, `XamarinForms` and `Maui`
 are legacy values kept so existing projects keep generating.
 
 Two consequences worth knowing:
 
-* **MonoGameForms wraps visuals.** Property access on a Forms object goes through `.Visual`
+* **GumForms wraps visuals.** Property access on a Forms object goes through `.Visual`
   (`this.Visual`, `this.MyInstance.Visual`). The generator treats anything that is not a Standard
   Element as a Forms object.
-* **Forms base types come from behaviors.** For MonoGameForms, the generated base class is chosen by
+* **Forms base types come from behaviors.** For GumForms, the generated base class is chosen by
   scanning the element's behaviors, so a component carrying `ButtonBehavior` generates as a `Button`.
   Screen inheritance resolves in the order `element.BaseType`, then `DefaultScreenBase`, then a
-  library-appropriate fallback (`FrameworkElement` for MonoGameForms, `GraphicalUiElement` otherwise).
+  library-appropriate fallback (`FrameworkElement` for GumForms, `GraphicalUiElement` otherwise).
 
 The legacy `MonoGame`, `Raylib` and `Silk` values emit an identical shape (no Forms wrapping), because
 the runtime API is unified across them. Code that needs to branch on this uses
@@ -220,7 +220,7 @@ The generated file is written in a fixed order:
 11. `ApplyState()` methods.
 12. `ApplyLocalization()`, when `LocalizeElement` is set.
 
-State code is deliberately **not** generated when the output library is MonoGameForms and the state
+State code is deliberately **not** generated when the output library is GumForms and the state
 container is a Standard Element; the Forms framework handles those itself.
 
 ## Anatomy of the custom file

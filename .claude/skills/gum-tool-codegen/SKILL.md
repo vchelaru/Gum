@@ -11,7 +11,7 @@ Full walkthrough in [codegen-deep-dive.md](codegen-deep-dive.md): placement and 
 
 The code generation system produces C# partial classes from Gum Screens and Components. Two files per element: `.Generated.cs` (auto-regenerated, never hand-edit) and `.cs` (user-editable stub with `partial void CustomInitialize()` hook). StandardElements are never generated.
 
-**Use `OutputLibrary.MonoGameForms` on every runtime.** The Code tab labels it "Gum Forms (recommended)"; the enum name predates the unification. Forms controls live in `GumCommon` and every runtime exposes the same `Gum.GueDeriving` and `GumService` names, so one generated shape serves MonoGame, KNI, FNA, raylib, Skia, Silk.NET, Stride and Unity. Only each runtime's input layer differs. The other `OutputLibrary` values are legacy, kept so existing projects keep generating. See [gum-architecture-layers](../gum-architecture-layers/SKILL.md) and [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md).
+**Use `OutputLibrary.GumForms` on every runtime.** The Code tab labels it "Gum Forms (recommended)". `MonoGameForms` is an `[Obsolete]` alias with the same persisted value (5); `OutputLibrary.GetName()` prints the current name, since `Enum.ToString()` may return either member of a shared value. Forms controls live in `GumCommon` and every runtime exposes the same `Gum.GueDeriving` and `GumService` names, so one generated shape serves MonoGame, KNI, FNA, raylib, Skia, Silk.NET, Stride and Unity. Only each runtime's input layer differs. The other `OutputLibrary` values are legacy, kept so existing projects keep generating. See [gum-architecture-layers](../gum-architecture-layers/SKILL.md) and [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md).
 
 ## Architecture
 
@@ -42,10 +42,10 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 | Enum | Values | Notes |
 |------|--------|-------|
-| `OutputLibrary` | XamarinForms(0), WPF(1), Skia(2), Maui(3), MonoGame(4), MonoGameForms(5), Raylib(6), Silk(7) | MonoGameForms ("Gum Forms") is the value for new projects on any runtime; the rest are legacy. Raylib and Silk support only `ObjectInstantiationType.FindByName` (see below) |
+| `OutputLibrary` | XamarinForms(0), WPF(1), Skia(2), Maui(3), MonoGame(4), GumForms(5), Raylib(6), Silk(7) | GumForms ("Gum Forms") is the value for new projects on any runtime; the rest are legacy. Raylib and Silk support only `ObjectInstantiationType.FindByName` (see below) |
 | `ObjectInstantiationType` | FullyInCode, FindByName | FullyInCode generates all creation; FindByName wires references to externally-created instances |
 | `InheritanceLocation` | InGeneratedCode, InCustomCode | Controls which partial class file declares the base class |
-| `VisualApi` | Gum, XamarinForms | Internal enum; Gum for MonoGame/MonoGameForms/Skia/raylib, XamarinForms for Xamarin/MAUI |
+| `VisualApi` | Gum, XamarinForms | Internal enum; Gum for MonoGame/GumForms/Skia/raylib, XamarinForms for Xamarin/MAUI |
 | `GenerationBehavior` | NeverGenerate, GenerateManually, GenerateAutomaticallyOnPropertyChange | Per-element setting |
 
 ## Generated Code Structure (in order)
@@ -65,21 +65,23 @@ A Code tab settings edit is the other trigger: `CodeFileLocationWatcher` sends o
 
 ## Non-Obvious Behavior
 
-**MonoGameForms `.Visual` wrapping** -- When OutputLibrary is MonoGameForms, property access on instances goes through `.Visual` (e.g., `this.Visual` for root, `this.InstanceName.Visual` for children). The generated code treats everything that is not a StandardElement as a Forms object.
+**GumForms `.Visual` wrapping** -- When OutputLibrary is GumForms, property access on instances goes through `.Visual` (e.g., `this.Visual` for root, `this.InstanceName.Visual` for children). The generated code treats everything that is not a StandardElement as a Forms object.
 
 **Label `.Visual` is typed `InteractiveGue`** -- A component rooted in the Text standard (Label) has Text-only members (Font, FontSize, IsBold, ...) on `TextRuntime`, not on `Visual`. Both the element's own code (`BaseStandardRuntimeTypeName`) and instances of it (`InstanceStandardRuntimeTypeName`, plus the exposed-variable getter/setter) cast `Visual` to `TextRuntime`; `PrefixCastsVisualToTextRuntime` stops `GetVisualCast` from casting twice. Don't extend a per-variable whitelist for this.
 
-**Forms base type from behaviors** -- MonoGameForms determines the generated base class by scanning the element's behaviors (e.g., ButtonBehavior maps to Button). The method `GetGumFormsTypeFromBehaviors` drives this.
+**Forms base type from behaviors** -- GumForms determines the generated base class by scanning the element's behaviors (e.g., ButtonBehavior maps to Button). The method `GetGumFormsTypeFromBehaviors` drives this.
 
 **Unsupported Forms base type** -- A component on a non-Container standard (Sprite, NineSlice, ...) with no Forms behavior has no valid Forms base class. `gumcli codegen` reports it as an element error through `FormsCodegenBaseTypeErrorSource` and skips the element; `GetInheritance` still writes the same message into the class for callers that skip the error pass (the tool). `gumcli check` does not run it, since it depends on the output library.
 
 **Unsupported Forms base type** -- A component on a non-Container standard with no Forms behavior has no valid Forms base class. `CodeGenerator.GetUnsupportedFormsBaseTypeError` is the one check: `gumcli codegen` reports it via `FormsCodegenBaseTypeErrorSource` and skips the element, and the tool's `CodeGenerationService` and Code tab display call it directly, since the tool's Code tab runs no error checker.
 
-**Screen inheritance resolution order** -- `CodeGenerator.GetInheritance` for `ScreenSave` resolves inheritance in this priority: `element.BaseType` > `projectSettings.DefaultScreenBase` > library-appropriate fallback (`FrameworkElement` for MonoGameForms, `GraphicalUiElement` otherwise). `DefaultScreenBase` defaults to empty string so users can switch `OutputLibrary` without stale base classes bleeding through.
+**Screen inheritance resolution order** -- `CodeGenerator.GetInheritance` for `ScreenSave` resolves inheritance in this priority: `element.BaseType` > `projectSettings.DefaultScreenBase` > library-appropriate fallback (`FrameworkElement` for GumForms, `GraphicalUiElement` otherwise). `DefaultScreenBase` defaults to empty string so users can switch `OutputLibrary` without stale base classes bleeding through.
 
-**State generation suppressed for Forms standards** -- When OutputLibrary is MonoGameForms and the state container is a `StandardElementSave`, state code is not generated; the Forms framework handles it.
+**State generation suppressed for Forms standards** -- When OutputLibrary is GumForms and the state container is a `StandardElementSave`, state code is not generated; the Forms framework handles it.
 
 **Forms placeholders** -- `Gum.ProjectServices` can't reference MonoGameGum, so `FormsControlPlaceholders.cs` hand-mirrors the real Forms controls' members. Codegen reflects on it to skip or `new`-mark generated members that would hide an inherited one (CS0108/CS0114). When a template component gains an exposed variable or state category that collides with a real base member, mirror that member (and its base class) there; `FormsTemplateCodegenHidingTests` in `Gum.Cli.Tests` compares generated output to the real types and fails on a miss.
+
+**Legacy usings are translated at codegen time** -- `CodeGenerator.TranslateLegacyUsingStatements` rewrites `MonoGameGum.GueDeriving`/`SkiaGum.GueDeriving` to `Gum.GueDeriving` at resolved syntax version >= 1 and `MonoGameGum` to `Gum` at >= 3 (the thresholds `GetGueDerivingNamespace`/`GetGumServiceNamespace` use), in both the generated file and the custom `.cs` stub. It filters the output only; the saved `.codsj` text is never rewritten, and older versions keep their usings. Keep the thresholds in step with those two methods.
 
 **Checked-in generated output** -- Any change to generated-code output also requires regenerating the `Tests/CodeGen_*` projects (`Tests/GenerateAllCodeGenProjects.bat`: build `Gum.Cli`, run `gumcli codegen` on each) and committing the diff, or CI's "Codegen Drift Check" fails. On macOS the CLI writes CRLF; `git add` normalizes it, so judge the diff with `git diff --cached --stat`, not `git status`.
 

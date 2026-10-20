@@ -13,7 +13,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-// Issue #4947: under OutputLibrary.MonoGameForms, CodeGenerator.FillWithNewVariables puts a
+// Issue #4947: under OutputLibrary.GumForms, CodeGenerator.FillWithNewVariables puts a
 // custom ("new") variable's property on the generated Forms class, while the element's state is
 // applied to a separate ContainerRuntime visual. Issue #4891's fallback reflects onto the visual,
 // so it never found the property and the authored value was dropped. Compounding it, the generated

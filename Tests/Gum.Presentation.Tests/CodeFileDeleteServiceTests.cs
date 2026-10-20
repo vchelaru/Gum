@@ -322,9 +322,9 @@ public class CodeFileDeleteServiceTests : BaseTestClass
         {
             CodeProjectRoot = Path.Combine(_projectDirectory, "Code") + Path.DirectorySeparatorChar,
             RootNamespace = "MyGame",
-            // MonoGameForms names a component's class after the element with no "Runtime" suffix,
+            // GumForms names a component's class after the element with no "Runtime" suffix,
             // so the file names above read the same as the element names.
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
     }
 }

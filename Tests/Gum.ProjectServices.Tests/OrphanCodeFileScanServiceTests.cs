@@ -525,7 +525,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
     {
         CodeProjectRoot = "./",
         RootNamespace = "MyGame",
-        OutputLibrary = OutputLibrary.MonoGameForms
+        OutputLibrary = OutputLibrary.GumForms
     };
 
     private static ScreenSave CreateScreen(string name)

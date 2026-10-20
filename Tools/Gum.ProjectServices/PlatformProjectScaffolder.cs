@@ -164,14 +164,14 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             .Replace("{{RootNamespace}}", rootNamespace);
     }
 
-    // Every runtime uses the same Gum Forms output (MonoGameForms), so the library does not depend on the platform.
+    // Every runtime uses the same Gum Forms output (GumForms), so the library does not depend on the platform.
     private static void WriteCodeGenerationSettings(string gumProjectPath, string csprojPath)
     {
         AutoSetupResult setup = new CodeGenerationAutoSetupService().Run(gumProjectPath, csprojPath);
         CodeOutputProjectSettings settings = setup.Settings
             ?? throw new InvalidOperationException(setup.ErrorMessage);
 
-        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        settings.OutputLibrary = OutputLibrary.GumForms;
 
         string gumFolder = Path.GetDirectoryName(gumProjectPath)! + Path.DirectorySeparatorChar;
         new CodeOutputProjectSettingsManager(new NullCodeGenLogger(), new FixedProjectDirectoryProvider(gumFolder))

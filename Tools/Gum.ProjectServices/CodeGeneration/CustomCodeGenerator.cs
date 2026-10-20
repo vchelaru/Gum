@@ -27,14 +27,18 @@ namespace Gum.ProjectServices.CodeGeneration
 
             #region Using Statements
 
+            int resolvedSyntaxVersion = _codeGenerator.ResolveSyntaxVersion(projectSettings);
+
             if (!string.IsNullOrWhiteSpace(projectSettings.CommonUsingStatements))
             {
-                stringBuilder.AppendLine(projectSettings.CommonUsingStatements);
+                stringBuilder.AppendLine(CodeGenerator.TranslateLegacyUsingStatements(
+                    projectSettings.CommonUsingStatements, resolvedSyntaxVersion));
             }
 
             if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
             {
-                stringBuilder.AppendLine(elementSettings.UsingStatements);
+                stringBuilder.AppendLine(CodeGenerator.TranslateLegacyUsingStatements(
+                    elementSettings.UsingStatements, resolvedSyntaxVersion));
             }
             #endregion
 
