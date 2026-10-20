@@ -445,6 +445,14 @@ public abstract class TextBoxBase :
 
     protected override void ReactToVisualChanged()
     {
+        // The new visual starts in whatever line mode it was authored with. Apply the mode
+        // only when it was changed from the default, so a freshly created control does not
+        // override an authored Multi state.
+        if (textWrapping != TextWrapping.NoWrap || AcceptsReturn)
+        {
+            UpdateStateForSingleOrMultiLine();
+        }
+
         RefreshInternalVisualReferences();
 
 
@@ -471,6 +479,9 @@ public abstract class TextBoxBase :
             this.textComponent.PropertyChanged += HandleTextComponentPropertyChanged;
         }
         base.ReactToVisualChanged();
+
+        // The box's text, not the visual's authored state, decides placeholder visibility.
+        UpdatePlaceholderVisibility();
 
         // don't do this, the layout may not have yet been performed yet:
         //OffsetTextToKeepCaretInView();
@@ -512,6 +523,10 @@ public abstract class TextBoxBase :
         {
             _selectionInstances = new List<GraphicalUiElement>();
         }
+
+        // The previous visual's selection instances do not belong to this one.
+        _selectionInstances.Clear();
+        selectionTemplate = null;
 
         selectionInstance = base.Visual.GetGraphicalUiElementByName("SelectionInstance");
         if (selectionInstance != null)
@@ -568,6 +583,11 @@ public abstract class TextBoxBase :
                 var toRemove = _selectionInstances[i];
                 var parent = toRemove.Parent;
                 parent?.Children.Remove(toRemove);
+            }
+
+            if (_selectionInstances.Count > 1)
+            {
+                _selectionInstances.RemoveRange(1, _selectionInstances.Count - 1);
             }
         }
     }
