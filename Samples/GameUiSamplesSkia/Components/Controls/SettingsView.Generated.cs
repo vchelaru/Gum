@@ -1,0 +1,64 @@
+//Code for Controls/SettingsView (Container)
+using GameUiSamples.Components;
+using Gum;
+using Gum.Converters;
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
+using GumRuntime;
+using RenderingLibrary.Graphics;
+using System.Linq;
+namespace GameUiSamples.Components;
+partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
+{
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
+    public static void RegisterRuntimeType()
+    {
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
+        {
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("Controls/SettingsView") ?? throw new System.InvalidOperationException("Could not find an element named Controls/SettingsView - did you forget to load a Gum project?");
+            element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
+            if(createForms) visual.FormsControlAsObject = new SettingsView(visual);
+            return visual;
+        });
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(SettingsView)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("Controls/SettingsView", () => 
+        {
+            var gue = template.CreateContent(null, true) as InteractiveGue;
+            return gue;
+        });
+    }
+    public CheckBox FullscreenCheckboxInstance { get; protected set; }
+    public Label MusicVolumeLabel { get; protected set; }
+    public Slider MusicSliderInstance { get; protected set; }
+    public Label SoundVolumeLabel { get; protected set; }
+    public Slider SoundSliderInstance { get; protected set; }
+
+    public SettingsView(InteractiveGue visual) : base(visual)
+    {
+    }
+    public SettingsView()
+    {
+
+
+
+    }
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+        FullscreenCheckboxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CheckBox>(this.Visual,"FullscreenCheckboxInstance");
+        MusicVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"MusicVolumeLabel");
+        MusicSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"MusicSliderInstance");
+        SoundVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"SoundVolumeLabel");
+        SoundSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"SoundSliderInstance");
+        CustomInitialize();
+    }
+    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    partial void CustomInitialize();
+}

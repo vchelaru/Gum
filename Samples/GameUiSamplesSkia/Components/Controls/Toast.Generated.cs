@@ -1,0 +1,57 @@
+//Code for Controls/Toast (Container)
+using Gum;
+using Gum.Converters;
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
+using GumRuntime;
+using RenderingLibrary.Graphics;
+using System.Linq;
+namespace GameUiSamples.Components;
+partial class Toast : global::Gum.Forms.Controls.FrameworkElement
+{
+    #if UNITY_5_3_OR_NEWER
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    #else
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    #endif
+    public static void RegisterRuntimeType()
+    {
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
+        {
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("Controls/Toast") ?? throw new System.InvalidOperationException("Could not find an element named Controls/Toast - did you forget to load a Gum project?");
+            element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
+            if(createForms) visual.FormsControlAsObject = new Toast(visual);
+            return visual;
+        });
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Toast)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("Controls/Toast", () => 
+        {
+            var gue = template.CreateContent(null, true) as InteractiveGue;
+            return gue;
+        });
+    }
+    public NineSliceRuntime Background { get; protected set; }
+    public TextRuntime TextInstance { get; protected set; }
+
+    public Toast(InteractiveGue visual) : base(visual)
+    {
+    }
+    public Toast()
+    {
+
+
+
+    }
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        CustomInitialize();
+    }
+    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    partial void CustomInitialize();
+}

@@ -84,6 +84,9 @@
 			reference. Window.cs itself arrives via the GumCommon ProjectReference.
 		-->
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
+		<!-- IndexOf for IReadOnlyList (GraphicalUiElement.Children has none). Game code ported from the
+		     XNA-family runtimes calls it, and every Skia host reaches it through this project. -->
+		<Compile Include="..\..\MonoGameGum\ExtensionMethods\IReadOnlyListExtensionMethods.cs" Link="ExtensionMethods\IReadOnlyListExtensionMethods.cs" />
 	</ItemGroup>
 
 	<!--

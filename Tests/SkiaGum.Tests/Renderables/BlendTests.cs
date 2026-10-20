@@ -1,3 +1,4 @@
+using Gum.GueDeriving;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using Shouldly;
@@ -78,9 +79,9 @@ public class BlendTests
         paint.BlendMode.ShouldBe(SKBlendMode.DstOut);
     }
 
-    // ReplaceAlpha and MinAlpha have no clean SkiaSharp equivalent — SKBlendMode has no separate
-    // per-channel blend-factor/equation override the way raylib's rlgl does (see
-    // Runtimes/RaylibGum/Renderables/BlendModeExtensions.cs, issue #3470), so fall through to the
+    // ReplaceAlpha has no clean SkiaSharp equivalent — SKBlendMode has no separate per-channel
+    // blend-factor/equation override the way raylib's rlgl does (see
+    // Runtimes/RaylibGum/Renderables/BlendModeExtensions.cs, issue #3470), so it falls through to the
     // default SrcOver rather than picking a Skia mode that would silently change visuals.
     [Fact]
     public void Sprite_GetPaint_ReplaceAlpha_FallsThroughToSrcOver()
@@ -94,14 +95,48 @@ public class BlendTests
     }
 
     [Fact]
-    public void Sprite_GetPaint_MinAlpha_FallsThroughToSrcOver()
+    public void Sprite_GetPaint_MinAlpha_MapsToDstIn()
     {
         TestableSprite sut = new();
         sut.Blend = Blend.MinAlpha;
 
         using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
 
-        paint.BlendMode.ShouldBe(SKBlendMode.SrcOver);
+        paint.BlendMode.ShouldBe(SKBlendMode.DstIn);
+    }
+
+    // The mask use: inside a render-target container, a MinAlpha shape erases what is under it
+    // where the shape is transparent and leaves it where the shape is opaque (GameUiSamples' mana orb).
+    [Fact]
+    public void MinAlphaShape_InRenderTargetContainer_MasksPixelsBelowIt()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(40, 20));
+        Gum.GumService.Default.Initialize(surface.Canvas, 40, 20);
+        ContainerRuntime renderTarget = new() { Width = 40, Height = 20, IsRenderTarget = true };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 40, Height = 20, IsFilled = true, FillColor = SKColors.Red,
+        });
+        RectangleRuntime transparentMask = new()
+        {
+            X = 0, Width = 20, Height = 20, IsFilled = true, FillColor = new SKColor(255, 255, 255, 0),
+        };
+        transparentMask.SetProperty(nameof(RenderableShapeBase.Blend), Blend.MinAlpha);
+        renderTarget.Children.Add(transparentMask);
+        RectangleRuntime opaqueMask = new()
+        {
+            X = 20, Width = 20, Height = 20, IsFilled = true, FillColor = SKColors.White,
+        };
+        opaqueMask.SetProperty(nameof(RenderableShapeBase.Blend), Blend.MinAlpha);
+        renderTarget.Children.Add(opaqueMask);
+        Gum.GumService.Default.Root.Children.Add(renderTarget);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
+        bitmap.GetPixel(30, 10).ShouldBe(SKColors.Red);
     }
 
     // Blend lives on RenderableShapeBase so every shape derivative gets it, not just Sprite/NineSlice.

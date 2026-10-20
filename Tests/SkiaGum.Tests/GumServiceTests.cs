@@ -434,6 +434,100 @@ public class GumServiceTests
         void IUpdateEveryFrame.Activity(double secondDifference) => Seconds += secondDifference;
     }
 
+    // Game code written for the other runtimes sizes the canvas from the camera when it zooms:
+    // CanvasWidth = Camera.ClientWidth / zoom. That reads 0 unless the host reports the canvas size.
+    [Fact]
+    public void Initialize_ShouldSetCameraClientSizeAndTopLeftOrigin()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        camera.ClientWidth.ShouldBe(300);
+        camera.ClientHeight.ShouldBe(150);
+        camera.CameraCenterOnScreen.ShouldBe(CameraCenterOnScreen.TopLeft);
+    }
+
+    [Fact]
+    public void HandleResize_ShouldUpdateCameraClientSize()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+
+        GumService.Default.HandleResize(640, 480);
+
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        camera.ClientWidth.ShouldBe(640);
+        camera.ClientHeight.ShouldBe(480);
+    }
+
+    [Fact]
+    public void Draw_WithCameraZoomedAfterInitialize_ShouldKeepTopLeftAtOrigin()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        camera.Zoom = 3;
+        GraphicalUiElement.CanvasWidth = camera.ClientWidth / 3f;
+        GraphicalUiElement.CanvasHeight = camera.ClientHeight / 3f;
+        RectangleRuntime rectangle = new() { X = 0, Y = 0, Width = 10, Height = 10, FillColor = SKColors.Red, IsFilled = true };
+        GumService.Default.Root.AddChild(rectangle);
+
+        GumService.Default.Draw(surface.Canvas);
+
+        // 10 units at zoom 3 cover pixels 0-29.
+        PixelAt(surface, 15, 15).ShouldBe(SKColors.Red);
+        PixelAt(surface, 40, 40).Alpha.ShouldBe((byte)0);
+    }
+
+    // A ColoredRectangle is a hard-edged solid fill on every other runtime, so the pixel row whose center
+    // is inside the rectangle is filled completely. Anti-aliased, a rectangle at a fractional edge leaves
+    // a partly covered row, which shows as a seam against a sprite that ends at the same edge.
+    [Fact]
+    public void ColoredRectangle_AtFractionalEdge_FillsWholePixelRows()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(4, 4));
+        GumService.Default.Initialize(surface.Canvas, 4, 4);
+        ColoredRectangleRuntime rectangle = new()
+        {
+            X = 0, Y = 1.4f, Width = 4, Height = 2, Color = SKColors.White,
+        };
+        GumService.Default.Root.AddChild(rectangle);
+
+        GumService.Default.Draw();
+
+        // Rows 1 and 2 have their centers (1.5, 2.5) inside 1.4..3.4.
+        PixelAt(surface, 1, 1).ShouldBe(SKColors.White);
+        PixelAt(surface, 1, 2).ShouldBe(SKColors.White);
+        PixelAt(surface, 1, 0).Alpha.ShouldBe((byte)0);
+        PixelAt(surface, 1, 3).Alpha.ShouldBe((byte)0);
+    }
+
+    // Games that zoom shrink the canvas coordinate space after Initialize (CanvasWidth = ClientWidth / zoom)
+    // and rely on Update to resize Root to it, as MonoGame and raylib do. Without it, a bottom-aligned
+    // child is laid out against the full-size root and lands off screen.
+    [Fact]
+    public void Update_ShouldSizeRootToTheCurrentCanvas()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(300, 150));
+        GumService.Default.Initialize(surface.Canvas, 300, 150);
+        ContainerRuntime child = new()
+        {
+            Width = 10, Height = 10, YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+            YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge,
+        };
+        GumService.Default.Root.AddChild(child);
+
+        GraphicalUiElement.CanvasWidth = 100;
+        GraphicalUiElement.CanvasHeight = 50;
+        GumService.Default.Update(0);
+
+        GumService.Default.Root.GetAbsoluteWidth().ShouldBe(100);
+        GumService.Default.Root.GetAbsoluteHeight().ShouldBe(50);
+        child.GetAbsoluteBottom().ShouldBe(50);
+    }
+
     private static SKColor PixelAt(SKSurface surface, int x, int y)
     {
         using SKImage image = surface.Snapshot();

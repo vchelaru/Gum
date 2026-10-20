@@ -45,6 +45,10 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 `Samples/MultiGumServiceSample/` runs two `GumService`s in one MonoGame window, each loading its own `.gumj` from `Content/Game` and `Content/Editor`. Its screens are generated JSON, so edit them in the Gum tool or by script, and run `gumcli check` on both projects afterward.
 
+## GameUiSamplesSkia (a game ported to the KNI Skia host)
+
+`Samples/GameUiSamplesSkia/` is `Samples/GameUiSamples/` (Stardew, HyTale, Hollow Knight, FRB clicker) drawn by SkiaGum through `Runtimes/KniSkiaGum` instead of the XNA-family renderer. It is a copy with its own generated code (`SyntaxVersion` 5, so `Gum.GueDeriving`, not `MonoGameGum.GueDeriving`), so a change to the game's screens has to be made in both. Porting traps: Skia colors are `SKColor` (XNA `Color` in a state `Value` or property assignment fails at run time or compile time), Gum can only initialize inside a render pass because the canvas exists only there, and the Skia `GumService` has no `GameTime`. Verify without running the exe by rendering each screen to an `SKSurface` and comparing against `gumcli screenshot` of the original project.
+
 ## Host-embedded samples (SkiaGumWpfSample, MauiSkiaGum)
 
 `Samples/SkiaGumWpfSample/` and `Samples/MauiSkiaGum/` aren't feature samples — they demo Gum embedded inside a host UI framework (WPF, MAUI) that already has its own native controls. There, Gum is typically the visualization/canvas layer, not a Forms-control replacement for the host's own buttons/text boxes — see `GumSKElement`/`SkiaGumCanvasView` (`Runtimes/SkiaGum.Wpf/`, `Runtimes/SkiaGum.Maui/`), each owning its own `SystemManagers` so one host app can embed multiple independent Gum canvases. Don't add a Forms-control (Button, TextBox) demo here just because Forms exist on this backend.

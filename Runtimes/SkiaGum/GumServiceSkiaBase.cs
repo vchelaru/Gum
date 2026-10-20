@@ -433,6 +433,7 @@ public abstract class GumServiceSkiaBase : IGumService
         // something to resolve against.
         GraphicalUiElement.CanvasWidth = width;
         GraphicalUiElement.CanvasHeight = height;
+        SetCameraClientSize(width, height);
 
         Root = new ContainerRuntime
         {
@@ -603,7 +604,18 @@ public abstract class GumServiceSkiaBase : IGumService
     {
         GraphicalUiElement.CanvasWidth = width;
         GraphicalUiElement.CanvasHeight = height;
+        SetCameraClientSize(width, height);
         Root?.UpdateLayout();
+    }
+
+    // Game code that zooms sizes the canvas from the camera (CanvasWidth = Camera.ClientWidth / zoom), as
+    // it does on MonoGame, where the renderer reads the viewport. Skia has no viewport to read, so the
+    // host's reported canvas size is the client size.
+    private static void SetCameraClientSize(int width, int height)
+    {
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        camera.ClientWidth = width;
+        camera.ClientHeight = height;
     }
 
     /// <summary>
@@ -661,6 +673,13 @@ public abstract class GumServiceSkiaBase : IGumService
     protected void UpdateFrame(double totalSeconds, IEnumerable<GraphicalUiElement> roots)
     {
         _windowFit?.PollAndApplyFit();
+
+        // Like the MonoGame and raylib Update: a game that zooms changes the canvas size after Initialize,
+        // and the root has to follow it or its children lay out against the old size.
+        if (Root != null)
+        {
+            FormsUtilities.SetDimensionsToCanvas(Root);
+        }
 
         _syncContext?.Update();
         DeferredQueue?.ProcessPending();

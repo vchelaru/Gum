@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The GameUiSamples game UI (Stardew inventory, HyTale, Hollow Knight HUD, FRB clicker) drawn by
+    SkiaGum through the KNI desktop Skia host (Runtimes/KniSkiaGum) instead of the XNA-family
+    renderer. The original, unported sample stays in ../GameUiSamples.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Differs from the referenced Runtimes/KniSkiaGum project's assembly name ("KniSkiaGum") so the
+         two outputs never overwrite each other in this project's bin folder. -->
+    <AssemblyName>GameUiSamplesSkia</AssemblyName>
+    <RootNamespace>GameUiSamples</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- Off because the sample code was written without nullable annotations (it carried ~40 warnings). -->
+    <Nullable>disable</Nullable>
+    <KniPlatform>DesktopGL</KniPlatform>
+    <TieredCompilation>false</TieredCompilation>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Icon.ico" />
+    <None Remove="Icon.bmp" />
+    <EmbeddedResource Include="Icon.ico" />
+    <EmbeddedResource Include="Icon.bmp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nkast.Xna.Framework" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Devices" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Xna.Framework.Storage" Version="[4.3.9001]" />
+    <PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="[4.3.9001]" />
+    <!-- Draws Skia into a KNI Texture2D render target. Gum draws into that target's SKCanvas. -->
+    <PackageReference Include="SkiaGameRendering.Kni.DesktopGL" Version="0.19.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Runtimes\KniSkiaGum\KniSkiaGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
