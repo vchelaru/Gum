@@ -199,6 +199,8 @@ public partial class InteractiveGue : GraphicalUiElement
         set
         {
             _formsControlAsObject = value;
+            // The control may need a callback every frame (IUpdateEveryFrame), which an idle subtree skips.
+            InvalidateIdleSubtrees();
 
             if (value != null)
             {

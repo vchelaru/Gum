@@ -167,6 +167,8 @@ public partial class GraphicalUiElement
 
     private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        InvalidateIdleSubtrees();
+
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
             // Index rather than foreach: NotifyCollectionChangedEventArgs.NewItems is a non-generic

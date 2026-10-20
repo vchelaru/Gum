@@ -15,7 +15,7 @@ using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, ICloneable
+public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable, ITextureCoordinate, ICloneable
 {
     /// <summary>
     /// Shared AnimationChain playback state. The constructor wires
@@ -122,6 +122,10 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
     }
 
     /// <inheritdoc/>
+    bool IAnimationChainRenderable.IsChainAnimationEnabled => AnimationLogic.Animate;
+
+    void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
+
     public bool AnimateSelf(double secondDifference)
     {
         if (!Visible)

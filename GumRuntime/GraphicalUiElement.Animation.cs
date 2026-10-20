@@ -17,6 +17,7 @@ using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.ComponentModel;
+using System.Threading;
 using ToolsUtilitiesStandard.Helpers;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
@@ -51,9 +52,36 @@ public partial class GraphicalUiElement
     /// <param name="secondDifference">The time elapsed since the last update, in seconds.</param>
     private void RunAnimation(double secondDifference)
     {
-        AnimationController.Update(secondDifference, this);
+        // Not created here: an element nobody has played an animation on has nothing to run.
+        _animationController?.Update(secondDifference, this);
     }
 #endif
+
+    // Idle-subtree skipping (#6177). An element sets _isIdle when it and everything under it had nothing to
+    // animate at the end of AnimateSelf, and AnimateSelf then returns immediately until something clears it.
+    // Everything that can give an element work, or add an element to its subtree, calls
+    // InvalidateIdleSubtrees on the affected element, which clears the flag on it and its ancestors:
+    // starting or resuming a state animation, turning an AnimationChain's Animate on, assigning a Forms
+    // control, replacing the renderable, adding a child, and showing a hidden element.
+    bool _isIdle;
+
+    // Cached so SetContainedObject can hand the same delegate to each renderable it holds.
+    Action? _invalidateIdleSubtreesAction;
+
+    // Counts invalidations so a walk can tell that something changed while it ran.
+    static int s_idleInvalidationCount;
+
+    internal void InvalidateIdleSubtrees()
+    {
+        Interlocked.Increment(ref s_idleInvalidationCount);
+        for (GraphicalUiElement? element = this; element != null; element = element._parent)
+        {
+            element._isIdle = false;
+        }
+    }
+
+    // True when AnimateSelf would do nothing for this element's subtree right now.
+    bool IsIdle => _isIdle || (mContainedObjectAsIVisible != null && Visible == false);
 
     /// <summary>
     /// Performs AnimationChain (.achx) animation on this and all children recurisvely.
@@ -80,9 +108,18 @@ public partial class GraphicalUiElement
         {
             return;
         }
+
+        if (_isIdle)
+        {
+            return;
+        }
         ////////////////End Early Out///////////////////
+
+        int invalidationCountAtStart = Volatile.Read(ref s_idleInvalidationCount);
+        bool isSelfIdle = true;
 #if !FRB
         RunAnimation(secondDifference);
+        isSelfIdle = _animationController?.IsPlaying != true;
 #endif
 
         var didSpriteUpdate = asAnimatable?.AnimateSelf(secondDifference) ?? false;
@@ -94,17 +131,26 @@ public partial class GraphicalUiElement
             UpdateTextureValuesFrom(asSprite!);
         }
 
+        // Only a renderable that reports its AnimationChain playback flag can be skipped. Any other
+        // IAnimatable might have work at any time without telling Gum.
+        if (asAnimatable != null && !(asAnimatable is IAnimationChainRenderable { IsChainAnimationEnabled: false }))
+        {
+            isSelfIdle = false;
+        }
+
 #if !FRB
         if (this is InteractiveGue interactive
             && interactive.FormsControlAsObject is IUpdateEveryFrame updatable)
         {
             updatable.Activity(secondDifference);
+            isSelfIdle = false;
         }
 #endif
 
+        bool areChildrenIdle;
         if (mContainedObjectAsIpso != null)
         {
-            AnimateEach(Children, secondDifference);
+            areChildrenIdle = AnimateEach(Children, secondDifference, parentlessOnly: false);
         }
         else
         {
@@ -112,6 +158,16 @@ public partial class GraphicalUiElement
             // held instances are reached through mWhatThisContains. Only the parentless ones: the rest
             // are reached through their parent's Children.
             AnimateEach(mWhatThisContains, secondDifference, parentlessOnly: true);
+            // That list can be changed directly (generated code adds to it) with nothing to invalidate,
+            // so this element is always walked. The elements it holds still skip themselves.
+            areChildrenIdle = false;
+        }
+
+        // An invalidation during the walk (an event handler playing an animation or adding a child)
+        // can make the result above stale, so the element is only marked when none happened.
+        if (isSelfIdle && areChildrenIdle && Volatile.Read(ref s_idleInvalidationCount) == invalidationCountAtStart)
+        {
+            _isIdle = true;
         }
     }
 
@@ -127,8 +183,10 @@ public partial class GraphicalUiElement
     public static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference) =>
         AnimateEach(elements, secondDifference, parentlessOnly: false);
 
-    static void AnimateEach(IList<GraphicalUiElement> elements, double secondDifference, bool parentlessOnly)
+    // Returns whether every element it walked ended up with nothing left to animate (hidden ones count).
+    static bool AnimateEach(IList<GraphicalUiElement> elements, double secondDifference, bool parentlessOnly)
     {
+        bool areAllIdle = true;
         for (int i = 0; i < elements.Count; i++)
         {
             GraphicalUiElement element = elements[i];
@@ -138,8 +196,13 @@ public partial class GraphicalUiElement
             }
             GraphicalUiElement? next = i + 1 < elements.Count ? elements[i + 1] : null;
             element.AnimateSelf(secondDifference);
+            if (!element.IsIdle)
+            {
+                areAllIdle = false;
+            }
             i = GetIndexToResumeAfter(elements, element, next, i);
         }
+        return areAllIdle;
     }
 
     // Returns where element now sits in elements after it was processed at index, so a loop
