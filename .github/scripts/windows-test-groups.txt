@@ -1,0 +1,34 @@
+# The Windows CI test projects and the stream each runs in (read by test-concurrent.sh).
+# Format: <stream> <project directory> [timeout-minutes] [extra dotnet test args...]
+#
+# Streams run at the same time; projects inside one stream run one after another. A stream whose
+# name starts with "mesa" gets GALLIUM_DRIVER=llvmpipe (Mesa's software GL, copied beside the test
+# binaries by the "Install Mesa llvmpipe" step) and nothing else does. Every project in
+# Tests/CiTestProjects.slnf must appear here exactly once, and the script fails fast otherwise.
+#
+# Keep the streams roughly balanced when adding a project; the slowest stream sets the wall time.
+
+headless MonoGameGum.Tests
+headless Tests/Gum.Bundle.Tests
+headless Tests/Gum.ProjectServices.Tests
+headless Tests/Gum.ImageDiff.Tests
+headless Tests/Gum.Presentation.Tests
+headless Tests/Gum.AssemblyNameGuard.Tests
+headless Tests/Gum.RepoHygiene.Tests
+headless Tests/Gum.Analyzers.Tests
+headless Tests/SkiaGum.Tests
+headless Tests/Gum.NetStandard.Tests
+headless Tests/SilkNetGum.Tests
+headless Tests/KniSkiaGum.Tests
+headless Tests/UnityGum.Tests
+headless Tests/Gum.ProjectServices.SkiaGum.Tests
+
+# console;verbosity=normal streams every test's duration as it finishes, so a timeout still shows
+# where the time went (#6078).
+mesa-1 Tests/MonoGameGum.IntegrationTests 15 --logger "console;verbosity=normal"
+mesa-1 Tests/MonoGameGum.Shapes.Tests 10
+
+mesa-2 Tests/Gum.Cli.Tests
+mesa-2 Tests/RaylibGum.Tests 10
+mesa-2 Tests/Gum.ProjectServices.Raylib.Tests 10
+mesa-2 Tests/Gum.ProjectServices.MonoGame.Tests 10
