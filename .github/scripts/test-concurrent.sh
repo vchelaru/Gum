@@ -32,6 +32,27 @@ fi
 
 mkdir -p "$results"
 streams="$(grep -vE '^\s*(#|$)' "$manifest" | awk '{print $1}' | sort -u)"
+# STREAMS (space separated) limits the run to those streams; the manifest check above still covers all.
+if [ -n "${STREAMS:-}" ]; then
+  wanted=""
+  for want in $STREAMS; do
+    echo "$streams" | grep -qFx "$want" || { echo "::error::Unknown stream $want"; exit 1; }
+    wanted="$wanted $want"
+  done
+  streams="$wanted"
+fi
+# SPLIT="<stream>=<n>" deals one stream's projects round-robin into n streams named <stream>-1..n
+# (manifest order), for runs where the other streams are skipped and the cores would sit idle.
+if [ -n "${SPLIT:-}" ]; then
+  split_stream="${SPLIT%%=*}"; split_n="${SPLIT##*=}"
+  if echo $streams | tr ' ' '\n' | grep -qFx "$split_stream"; then
+    awk -v s="$split_stream" -v n="$split_n" '$1 == s { k++; sub(/^[^ \t]+/, s "-" ((k - 1) % n + 1)) } { print }' "$manifest" > "$manifest.split"
+    mv "$manifest.split" "$manifest"
+    parts=""; for ((i = 1; i <= split_n; i++)); do parts="$parts $split_stream-$i"; done
+    streams="$(echo $streams | tr ' ' '\n' | grep -vFx "$split_stream" | tr '\n' ' ')$parts"
+  fi
+fi
+echo "Streams:" $streams
 pids=(); names=()
 
 run_stream() {
@@ -73,7 +94,7 @@ for i in "${!pids[@]}"; do
 done
 
 summary="$(grep -h '^=== .* finished in ' "$results"/stream-*.log | sed -E 's/^=== (.*) finished in ([0-9]+) s, exit ([0-9]+) ===$/\2 s\t\1\texit \3/' | sort -rn)"
-echo "Wall time $((SECONDS - total_start)) s across $(echo "$streams" | wc -l) streams."
+echo "Wall time $((SECONDS - total_start)) s across $(echo $streams | wc -w) streams."
 echo "$summary"
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
   { echo "### Windows test streams (wall $((SECONDS - total_start)) s)"; echo '```'; echo "$summary"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
