@@ -157,6 +157,24 @@ public class CursorHitTestIdleCostTests : BaseTestClass
     }
 
     [Fact]
+    public void DoUiActivityRecursively_ShouldTestEachChildOnce_WhenCursorIsOverACard()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: true);
+        foreach (CountingInteractive child in children)
+        {
+            child.HasEvents = true;
+        }
+        // The children overlap the card's origin; the last one added is on top and takes the cursor.
+        Mock<ICursor> cursor = CreateCursor(cards[10].X + 5, 5);
+
+        Walk(roots, cursor);
+
+        cursor.Object.VisualOver.ShouldBe(children[10 * 8 + 7]);
+        children[10 * 8 + 7].HasCursorOverCalls.ShouldBe(1);
+    }
+
+    [Fact]
     public void DoUiActivityRecursively_ShouldReadTheCursorPositionOnce_WhenManyRootsAreTested()
     {
         (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
@@ -324,6 +342,75 @@ public class CursorHitTestIdleCostTests : BaseTestClass
         Walk(roots, cursor);
 
         cursor.Object.VisualOver.ShouldBe(shiftedChild);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldConvertPerCamera_WhenRootsBelongToDifferentManagers()
+    {
+        Camera otherCamera = new()
+        {
+            ClientWidth = 800,
+            ClientHeight = 600,
+            CameraCenterOnScreen = CameraCenterOnScreen.TopLeft,
+            X = 300
+        };
+        Mock<IRenderer> otherRenderer = new();
+        otherRenderer.Setup(item => item.Camera).Returns(otherCamera);
+        Mock<ISystemManagers> otherManagers = new();
+        otherManagers.Setup(item => item.Renderer).Returns(otherRenderer.Object);
+        otherCamera.ScreenToWorld(100, 50, out float otherWorldX, out float otherWorldY);
+        (float mainWorldX, float mainWorldY) = ScreenToWorld(100, 50);
+        otherWorldX.ShouldNotBe(mainWorldX, "the test needs the cameras to disagree");
+
+        // The roots are walked last to first: the main camera's root misses, then the other camera's
+        // root must be tested against its own camera's world point.
+        CountingInteractive onOther = CreateBox(otherWorldX - 5, otherWorldY - 5, 10, hasEvents: true);
+        onOther.AttachManagersOnly(otherManagers.Object);
+        CountingInteractive onMain = CreateBox(mainWorldX + 5000, mainWorldY, 10, hasEvents: true);
+        List<GraphicalUiElement> roots = new() { onOther, onMain };
+        Mock<ICursor> cursor = CreateCursor(100, 50);
+
+        Walk(roots, cursor);
+
+        cursor.Object.VisualOver.ShouldBe(onOther);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldConvertPerHitTestTransform_WhenOnlyOneRootHasOne()
+    {
+        (float mainWorldX, float mainWorldY) = ScreenToWorld(100, 50);
+        (float shiftedWorldX, float shiftedWorldY) = ScreenToWorld(300, 50);
+        CountingInteractive transformed = CreateBox(shiftedWorldX - 5, shiftedWorldY - 5, 10, hasEvents: true);
+        transformed.HitTestTransformMatrix = System.Numerics.Matrix3x2.CreateTranslation(200, 0);
+        CountingInteractive plain = CreateBox(mainWorldX + 5000, mainWorldY, 10, hasEvents: true);
+        // The plain root is walked first and misses; the transformed one must not reuse its conversion.
+        List<GraphicalUiElement> roots = new() { transformed, plain };
+        Mock<ICursor> cursor = CreateCursor(100, 50);
+
+        Walk(roots, cursor);
+
+        cursor.Object.VisualOver.ShouldBe(transformed);
+    }
+
+    [Fact]
+    public void HasCursorOver_ShouldUseTheCurrentCamera_WhenCalledAfterAWalk()
+    {
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        float originalX = camera.X;
+        (float worldX, float worldY) = ScreenToWorld(100, 50);
+        CountingInteractive box = CreateBox(worldX - 5, worldY - 5, 10, hasEvents: true);
+        Mock<ICursor> cursor = CreateCursor(100, 50);
+        Walk(new List<GraphicalUiElement> { box }, cursor);
+        try
+        {
+            camera.X = originalX + 100;
+
+            box.HasCursorOver(cursor.Object).ShouldBeFalse();
+        }
+        finally
+        {
+            camera.X = originalX;
+        }
     }
 
     [Fact]
