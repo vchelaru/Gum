@@ -171,6 +171,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             Visual.ExposeChildrenEvents = true;
 
             InnerPanel.Children.CollectionChanged += HandleInnerPanelChildrenChanged;
+            RefreshChildren();
         }
 
         base.ReactToVisualChanged();
@@ -194,6 +195,8 @@ public class Window : Gum.Forms.Controls.FrameworkElement
         {
             innerPanel.Children.CollectionChanged -= HandleInnerPanelChildrenChanged;
         }
+
+        _children.Clear();
     }
 
     private IEnumerable<InteractiveGue?> GetDragSources()
@@ -211,10 +214,14 @@ public class Window : Gum.Forms.Controls.FrameworkElement
 
     private void HandleInnerPanelChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // When the children change, we need to update our internal list
-        // to match the visual's children
+        RefreshChildren();
+    }
+
+    private void RefreshChildren()
+    {
+        // Keeps the internal list matching the inner panel's children.
         _children.Clear();
-        foreach (var child in Visual.Children)
+        foreach (var child in InnerPanel.Children)
         {
             if (child is InteractiveGue gue && gue.FormsControlAsObject is FrameworkElement frameworkElement)
             {

@@ -1250,4 +1250,19 @@ public  class ComboBoxTests : BaseTestClass
         {
         }
     }
+
+    [Fact]
+    public void Visual_SetToNull_ShouldStopListeningToListBox()
+    {
+        ComboBox sut = new();
+        ListBox listBox = sut.ListBox;
+        listBox.Items!.Add("A");
+        int selectionChangedCount = 0;
+        sut.SelectionChanged += (_, _) => selectionChangedCount++;
+
+        sut.Visual = null!;
+        listBox.SelectedIndex = 0;
+
+        selectionChangedCount.ShouldBe(0);
+    }
 }

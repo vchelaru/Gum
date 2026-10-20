@@ -505,4 +505,31 @@ public class WindowTests : BaseTestClass
 
         sut.Children.ShouldNotContain(child);
     }
+
+    [Fact]
+    public void Visual_SetToNull_ShouldClearChildren()
+    {
+        Window sut = new();
+        Button child = new();
+        sut.AddChild(child);
+        sut.Children.ShouldContain(child);
+
+        sut.Visual = null!;
+
+        sut.Children.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Visual_Reassigned_ShouldReflectNewInnerPanelChildren()
+    {
+        Window sut = new();
+        sut.AddChild(new Button());
+        WindowVisual newVisual = new(tryCreateFormsObject: false);
+        Button newChild = new();
+        newVisual.GetGraphicalUiElementByName("InnerPanelInstance")!.Children!.Add(newChild.Visual);
+
+        sut.Visual = newVisual;
+
+        sut.Children.ShouldBe(new FrameworkElement[] { newChild });
+    }
 }

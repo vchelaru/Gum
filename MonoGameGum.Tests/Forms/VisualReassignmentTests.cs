@@ -42,6 +42,28 @@ public class VisualReassignmentTests : BaseTestClass
     }
 
     [Fact]
+    public void ListBoxItem_ListBoxDraggingAssigned_ShouldMoveToNewVisualOnReassign()
+    {
+        ListBoxItemVisual oldVisual = new(tryCreateFormsObject: false);
+        ListBoxItem sut = new(oldVisual);
+        int draggingCount = 0;
+        sut.AssignListBoxEvents(
+            (_, _) => { },
+            (_, _) => { },
+            (_, _) => { },
+            (_, _) => { },
+            (_, _) => draggingCount++);
+        ListBoxItemVisual newVisual = new(tryCreateFormsObject: false);
+        sut.Visual = newVisual;
+
+        oldVisual.TryCallDragging();
+        draggingCount.ShouldBe(0);
+
+        newVisual.TryCallDragging();
+        draggingCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void TextBox_Reassigned_ShouldIgnoreOldVisualClick()
     {
         TextBoxVisual oldVisual = new(tryCreateFormsObject: false);

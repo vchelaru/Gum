@@ -73,6 +73,7 @@ public class Panel :
             Visual.ExposeChildrenEvents = true;
 
             Visual.Children.CollectionChanged += HandleVisualChildrenChanged;
+            RefreshChildren();
         }
 
         base.ReactToVisualChanged();
@@ -84,12 +85,17 @@ public class Panel :
         base.ReactToVisualRemoved();
 
         Visual.Children.CollectionChanged -= HandleVisualChildrenChanged;
+        _children.Clear();
     }
 
     private void HandleVisualChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // When the children change, we need to update our internal list
-        // to match the visual's children
+        RefreshChildren();
+    }
+
+    private void RefreshChildren()
+    {
+        // Keeps the internal list matching the visual's children.
         _children.Clear();
         foreach (var child in Visual.Children)
         {

@@ -108,6 +108,9 @@ public class ListBoxItem :
 #endif
         RefreshInternalVisualReferences();
 
+        // A Visual assigned after the ListBox wired this item needs the drag handler too.
+        SubscribeListBoxDragging();
+
         // Just in case it needs to set the state to "enabled"
         UpdateState();
 
@@ -126,6 +129,10 @@ public class ListBoxItem :
         Visual.RollOn -= this.HandleRollOn;
         Visual.RollOff -= this.HandleRollOff;
         Visual.RollOver -= this.HandleRollOver;
+        if (_listBoxDraggingHandler != null)
+        {
+            Visual.Dragging -= _listBoxDraggingHandler;
+        }
 #endif
     }
 
@@ -143,6 +150,23 @@ public class ListBoxItem :
     #region Event Handlers
 
     bool hasHadListBoxEventsAssigned = false;
+
+    // Dragging is raised by the Visual, so it follows the Visual when it is reassigned.
+    EventHandler? _listBoxDraggingHandler;
+
+    private void SubscribeListBoxDragging()
+    {
+        if (_listBoxDraggingHandler != null)
+        {
+#if FRB
+            EventHandler handler = _listBoxDraggingHandler;
+            Visual.DragOver += window => handler(this, EventArgs.Empty);
+#else
+            Visual.Dragging += _listBoxDraggingHandler;
+#endif
+        }
+    }
+
     internal void AssignListBoxEvents(
         EventHandler handleItemSelected, 
         EventHandler handleItemFocused, 
@@ -156,11 +180,8 @@ public class ListBoxItem :
             GotFocus += handleItemFocused;
             Pushed += handleListBoxItemPushed;
             Clicked += handleListBoxItemClicked;
-#if FRB
-            Visual.DragOver += window => handleListBoxItemDragging(this, EventArgs.Empty);
-#else
-            Visual.Dragging += handleListBoxItemDragging;
-#endif
+            _listBoxDraggingHandler = handleListBoxItemDragging;
+            SubscribeListBoxDragging();
             hasHadListBoxEventsAssigned = true;
         }
     }
@@ -249,7 +270,9 @@ public class ListBoxItem :
     {
         var cursor = MainCursor;
 
-        const string category = "ListBoxItemCategoryState";
+        // SetProperty takes the category name plus "State"; Categories is keyed by the bare name.
+        const string categoryName = "ListBoxItemCategory";
+        const string category = categoryName + "State";
 
         if (this.Visual.IsEnabledRecursively == false)
         {
@@ -266,9 +289,9 @@ public class ListBoxItem :
             // but fall back to Selected if SelectedHighlighted
             // doesn't exist
             var stateToSet = SelectedStateName;
-            if (Visual.Categories.ContainsKey(category) && IsHighlighted)
+            if (IsHighlighted && Visual.Categories.TryGetValue(categoryName, out var stateCategory))
             {
-                var selectedHighlighted = Visual.Categories[category].States.FirstOrDefault(
+                var selectedHighlighted = stateCategory.States.FirstOrDefault(
                     item => item.Name == SelectedHighlightedStateName);
                 if(selectedHighlighted != null)
                 {

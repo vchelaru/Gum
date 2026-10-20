@@ -46,4 +46,31 @@ public class PanelTests : BaseTestClass
 
         sut.Children.Count.ShouldBe(0);
     }
+
+    [Fact]
+    public void Visual_SetToNull_ShouldClearChildren()
+    {
+        Panel sut = new();
+        Button child = new();
+        sut.Visual.Children!.Add(child.Visual);
+        sut.Children.Count.ShouldBe(1);
+
+        sut.Visual = null!;
+
+        sut.Children.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Visual_Reassigned_ShouldReflectNewVisualChildren()
+    {
+        Panel sut = new();
+        sut.Visual.Children!.Add(new Button().Visual);
+        InteractiveGue newVisual = new(new InvisibleRenderable());
+        Button newChild = new();
+        newVisual.Children!.Add(newChild.Visual);
+
+        sut.Visual = newVisual;
+
+        sut.Children.ShouldBe(new FrameworkElement[] { newChild });
+    }
 }
