@@ -167,7 +167,7 @@ public partial class GraphicalUiElement
 
     private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        InvalidateIdleSubtrees();
+        InvalidateSubtreeCaches();
 
         if (e.Action == NotifyCollectionChangedAction.Add)
         {

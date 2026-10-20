@@ -139,7 +139,20 @@ public partial class InteractiveGue : GraphicalUiElement
     /// determining what it is over. Typically this is assigned once based 
     /// on its type, usually when objects are created from a Gum project.
     /// </summary>
-    public bool HasEvents { get; set; } = false;
+    public bool HasEvents
+    {
+        get => _hasEvents;
+        set
+        {
+            if (_hasEvents != value)
+            {
+                _hasEvents = value;
+                // The cursor walk skips subtrees with no events, so it has to look at this one again.
+                InvalidateSubtreeCaches();
+            }
+        }
+    }
+    bool _hasEvents;
     public bool ExposeChildrenEvents { get; set; } = true;
 
     /// <summary>
@@ -200,7 +213,7 @@ public partial class InteractiveGue : GraphicalUiElement
         {
             _formsControlAsObject = value;
             // The control may need a callback every frame (IUpdateEveryFrame), which an idle subtree skips.
-            InvalidateIdleSubtrees();
+            InvalidateSubtreeCaches();
 
             if (value != null)
             {
@@ -378,13 +391,39 @@ public partial class InteractiveGue : GraphicalUiElement
 
     #endregion
 
-    internal static bool DoUiActivityRecursively(ICursor cursor, ref HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer)
+    // Whether this element or anything visible under it can react to the cursor (has HasEvents set).
+    // Cached on the element until something under it changes.
+    internal static bool SubtreeHasEvents(GraphicalUiElement element)
+    {
+        if (element._subtreeEventsState == 0)
+        {
+            bool hasEvents = (element as InteractiveGue)?.HasEvents == true;
+            if (!hasEvents)
+            {
+                ObservableCollection<GraphicalUiElement> children = element.Children;
+                for (int i = 0; i < children.Count; i++)
+                {
+                    GraphicalUiElement child = children[i];
+                    // A hidden child is skipped by the cursor walk. Showing it invalidates this.
+                    if (!child.IsHiddenForCaches && SubtreeHasEvents(child))
+                    {
+                        hasEvents = true;
+                        break;
+                    }
+                }
+            }
+            element._subtreeEventsState = hasEvents ? (byte)2 : (byte)1;
+        }
+        return element._subtreeEventsState == 2;
+    }
+
+    internal static bool DoUiActivityRecursively(ICursor cursor, ref HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer, bool isKnownToBeOver = false)
     {
         bool handledByChild = false;
         bool handledByThis = false;
 
         var asInteractive = currentItem as InteractiveGue;
-        bool isOver = asInteractive?.HasCursorOver(cursor, layer) ?? HasCursorOver(cursor, currentItem, layer);
+        bool isOver = isKnownToBeOver || (asInteractive?.HasCursorOver(cursor, layer) ?? HasCursorOver(cursor, currentItem, layer));
 
         // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
         if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
@@ -396,6 +435,7 @@ public partial class InteractiveGue : GraphicalUiElement
                 {
                     var args = new InputEventArgs() { InputDevice = cursor };
                     asInteractive.ClickPreview(asInteractive, args);
+                    InvalidateCursorWorldCache();
 
                     if (args.Handled)
                     {
@@ -410,6 +450,7 @@ public partial class InteractiveGue : GraphicalUiElement
                 {
                     var args = new InputEventArgs() { InputDevice = cursor };
                     asInteractive.PushPreview(asInteractive, args);
+                    InvalidateCursorWorldCache();
 
                     if (args.Handled)
                     {
@@ -448,6 +489,11 @@ public partial class InteractiveGue : GraphicalUiElement
                     // Children should always have the opportunity to handle activity,
                     // even if they are not components, because they may contain components as their children
 
+                    // A child with no events anywhere under it cannot handle anything, so it is not tested.
+                    if (child == null || !SubtreeHasEvents(child))
+                    {
+                        continue;
+                    }
 
                     // If the child either has events or exposes children events, then give it a chance to handle this activity.
                     bool hasCursorOver = false;
@@ -455,14 +501,14 @@ public partial class InteractiveGue : GraphicalUiElement
                     {
                         hasCursorOver = interactiveGue.HasCursorOver(cursor, layer);
                     }
-                    else if(child != null)
+                    else
                     {
                         hasCursorOver = HasCursorOver(cursor, child, layer);
                     }
                     if (hasCursorOver)
                     {
-                        // hasCursorOver is only true when child is non-null.
-                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child!, layer);
+                        // The child was just tested, so the recursion does not test it again.
+                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child!, layer, isKnownToBeOver: true);
 
                         if (handledByChild)
                         {
@@ -701,6 +747,24 @@ public partial class InteractiveGue : GraphicalUiElement
         return toReturn;
     }
 
+    // The cursor's world position for the cursor walk in progress on this thread, if any.
+    [ThreadStatic]
+    static CursorWorldCache s_cursorWorldCache;
+
+    // Starts caching the world position of cursor until EndCursorWalk. Returns the cache that was active, if
+    // a walk was already running, so a nested walk can restore it.
+    internal static CursorWorldCache BeginCursorWalk(ICursor cursor)
+    {
+        CursorWorldCache previous = s_cursorWorldCache;
+        s_cursorWorldCache = new CursorWorldCache { Cursor = cursor };
+        return previous;
+    }
+
+    internal static void EndCursorWalk(CursorWorldCache previous) => s_cursorWorldCache = previous;
+
+    // Event handlers can move the camera, so what was converted before one ran can no longer be trusted.
+    static void InvalidateCursorWorldCache() => s_cursorWorldCache.Invalidate();
+
     private static bool CheckHasCursorOverOnThis(GraphicalUiElement thisInstance, ICursor cursor, Layer? layer, bool toReturn)
     {
         // If this is a touch screen, then the only way the cursor is over any
@@ -730,43 +794,50 @@ public partial class InteractiveGue : GraphicalUiElement
 
             if (managers != null)
             {
-                float cursorScreenX = cursor.X;
-                float cursorScreenY = cursor.Y;
                 float worldX;
                 float worldY;
-                // Adjust by viewport values:
-                // todo ...
-                //cursorScreenX -= managers.Renderer.GraphicsDevice.Viewport.X;
-                //cursorScreenY -= managers.Renderer.GraphicsDevice.Viewport.Y;
-
                 // A subtree drawn into an externally-scaled render target can supply a transform
                 // that maps the raw window pixel back into the space it was drawn in (issue #4096).
                 // Apply it before screen-to-world so the camera/layer transform still composes on
                 // top. Resolved by climbing to the nearest ancestor that set one.
                 var hitTestTransform = thisInstance.EffectiveHitTestTransformMatrix;
-                if (hitTestTransform != null)
-                {
-                    var transformed = System.Numerics.Vector2.Transform(
-                        new System.Numerics.Vector2(cursorScreenX, cursorScreenY),
-                        hitTestTransform.Value);
-                    cursorScreenX = transformed.X;
-                    cursorScreenY = transformed.Y;
-                }
-
                 var camera = managers.Renderer.Camera;
 
-                if (layer != null)
+                // During a walk over many elements the cursor sits in the same world position for all
+                // of them that share a camera, layer and transform, so it is converted once.
+                if (!s_cursorWorldCache.TryGet(cursor, camera, layer, hitTestTransform, out worldX, out worldY))
                 {
-                    layer.ScreenToWorld(
-                        camera,
-                        cursorScreenX, cursorScreenY,
-                        out worldX, out worldY);
-                }
-                else
-                {
-                    camera.ScreenToWorld(
-                        cursorScreenX, cursorScreenY,
-                        out worldX, out worldY);
+                    float cursorScreenX = cursor.X;
+                    float cursorScreenY = cursor.Y;
+                    // Adjust by viewport values:
+                    // todo ...
+                    //cursorScreenX -= managers.Renderer.GraphicsDevice.Viewport.X;
+                    //cursorScreenY -= managers.Renderer.GraphicsDevice.Viewport.Y;
+
+                    if (hitTestTransform != null)
+                    {
+                        var transformed = System.Numerics.Vector2.Transform(
+                            new System.Numerics.Vector2(cursorScreenX, cursorScreenY),
+                            hitTestTransform.Value);
+                        cursorScreenX = transformed.X;
+                        cursorScreenY = transformed.Y;
+                    }
+
+                    if (layer != null)
+                    {
+                        layer.ScreenToWorld(
+                            camera,
+                            cursorScreenX, cursorScreenY,
+                            out worldX, out worldY);
+                    }
+                    else
+                    {
+                        camera.ScreenToWorld(
+                            cursorScreenX, cursorScreenY,
+                            out worldX, out worldY);
+                    }
+
+                    s_cursorWorldCache.Store(cursor, camera, layer, hitTestTransform, worldX, worldY);
                 }
 
 
@@ -1370,6 +1441,51 @@ public interface IInputReceiverKeyboard
 
 
 
+// The cursor's position in world space, kept for one cursor walk for the camera, layer and hit-test
+// transform it was converted for. A struct so starting a walk allocates nothing.
+internal struct CursorWorldCache
+{
+    public ICursor? Cursor;
+    private bool _hasValue;
+    private global::RenderingLibrary.Camera? _camera;
+    private Layer? _layer;
+    private System.Numerics.Matrix3x2? _hitTestTransform;
+    private float _worldX;
+    private float _worldY;
+
+    public bool TryGet(ICursor cursor, global::RenderingLibrary.Camera camera, Layer? layer,
+        System.Numerics.Matrix3x2? hitTestTransform, out float worldX, out float worldY)
+    {
+        if (_hasValue && ReferenceEquals(cursor, Cursor) && ReferenceEquals(camera, _camera) &&
+            ReferenceEquals(layer, _layer) && hitTestTransform == _hitTestTransform)
+        {
+            worldX = _worldX;
+            worldY = _worldY;
+            return true;
+        }
+        worldX = 0;
+        worldY = 0;
+        return false;
+    }
+
+    public void Store(ICursor cursor, global::RenderingLibrary.Camera camera, Layer? layer,
+        System.Numerics.Matrix3x2? hitTestTransform, float worldX, float worldY)
+    {
+        // Only a walk that began caching for this cursor keeps what it converted.
+        if (ReferenceEquals(cursor, Cursor))
+        {
+            _hasValue = true;
+            _camera = camera;
+            _layer = layer;
+            _hitTestTransform = hitTestTransform;
+            _worldX = worldX;
+            _worldY = worldY;
+        }
+    }
+
+    public void Invalidate() => _hasValue = false;
+}
+
 // "Already handled" flags threaded through the DoUiActivityRecursively walk. A struct passed by ref
 // so the walk allocates it on the stack rather than the heap each frame; ref threading preserves the
 // shared-mutable-reference semantics the class had, and each Update gets its own instance.
@@ -1408,6 +1524,43 @@ public static class GueInteractiveExtensionMethods
     }
 
     static List<IInputReceiver> previewList = new();
+
+    // Tests the roots from the topmost down until one takes the cursor.
+    static void DoUiActivityOnRoots(IList<GraphicalUiElement> gues, ICursor cursor, ref HandledActions actions)
+    {
+        CursorWorldCache previousWorldCache = InteractiveGue.BeginCursorWalk(cursor);
+        try
+        {
+            for (int i = gues.Count - 1; i > -1; i--)
+            {
+                var gue = gues[i];
+
+                // Other platforms besides FRB are more explicit on their additions to roots or GumBatch, so
+                // process this every time
+
+#if FRB
+                // This check allows the user to remove a GUE from managers and not null it out.
+                // Even though it might be proper to null it out, this removes "yet another thing to remember"
+                if (gue.EffectiveManagers != null)
+#endif
+                {
+                    // A root with no events anywhere under it cannot handle anything, so it is not tested.
+                    if (InteractiveGue.SubtreeHasEvents(gue))
+                    {
+                        InteractiveGue.DoUiActivityRecursively(cursor, ref actions, gue, gue.Layer);
+                    }
+                }
+                if (cursor.VisualOver != null)
+                {
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            InteractiveGue.EndCursorWalk(previousWorldCache);
+        }
+    }
     public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
     {
 #if FULL_DIAGNOSTICS
@@ -1434,26 +1587,7 @@ public static class GueInteractiveExtensionMethods
 
 
         cursor.VisualOver = null;
-        for(int i = gues.Count-1; i > -1; i--)
-        {
-            var gue = gues[i];
-
-            // Other platforms besides FRB are more explicit on their additions to roots or GumBatch, so
-            // process this every time
-
-#if FRB
-            // This check allows the user to remove a GUE from managers and not null it out.
-            // Even though it might be proper to null it out, this removes "yet another thing to remember"
-            if(gue.EffectiveManagers != null)
-#endif
-            {
-                InteractiveGue.DoUiActivityRecursively(cursor, ref actions, gue, gue.Layer);
-            }
-            if(cursor.VisualOver != null)
-            {
-                break;
-            }
-        }
+        DoUiActivityOnRoots(gues, cursor, ref actions);
 
         var visualOverAsInteractive = cursor.VisualOver as InteractiveGue;
         if (visualOverAsInteractive != null)

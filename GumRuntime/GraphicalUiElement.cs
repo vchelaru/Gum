@@ -451,12 +451,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             throw new ArgumentException("The argument containedObject cannot be 'this'");
         }
 
-        InvalidateIdleSubtrees();
+        InvalidateSubtreeCaches();
         mContainedObjectAsIpso = containedObject as IRenderableIpso;
 
         if (containedObject is IAnimationChainRenderable chainRenderable)
         {
-            chainRenderable.SetChainAnimationEnabledCallback(_invalidateIdleSubtreesAction ??= InvalidateIdleSubtrees);
+            chainRenderable.SetChainAnimationEnabledCallback(_invalidateSubtreeCachesAction ??= InvalidateSubtreeCaches);
         }
 
         if (mContainedObjectAsIpso == null)
@@ -548,7 +548,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.mLayer = null;
         // Skip-cache state and the controller belong to the source: the clone starts not idle and builds its own.
         newClone._isIdle = false;
-        newClone._invalidateIdleSubtreesAction = null;
+        newClone._subtreeEventsState = 0;
+        newClone._invalidateSubtreeCachesAction = null;
 #if !FRB
         newClone._animationController = null;
 #endif

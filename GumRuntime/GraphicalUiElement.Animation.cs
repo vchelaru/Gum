@@ -57,32 +57,6 @@ public partial class GraphicalUiElement
     }
 #endif
 
-    // Idle-subtree skipping (#6177). An element sets _isIdle when it and everything under it had nothing to
-    // animate at the end of AnimateSelf, and AnimateSelf then returns immediately until something clears it.
-    // Everything that can give an element work, or add an element to its subtree, calls
-    // InvalidateIdleSubtrees on the affected element, which clears the flag on it and its ancestors:
-    // starting or resuming a state animation, turning an AnimationChain's Animate on, assigning a Forms
-    // control, replacing the renderable, adding a child, and showing a hidden element.
-    bool _isIdle;
-
-    // Cached so SetContainedObject can hand the same delegate to each renderable it holds.
-    Action? _invalidateIdleSubtreesAction;
-
-    // Counts invalidations so a walk can tell that something changed while it ran.
-    static int s_idleInvalidationCount;
-
-    internal void InvalidateIdleSubtrees()
-    {
-        Interlocked.Increment(ref s_idleInvalidationCount);
-        for (GraphicalUiElement? element = this; element != null; element = element._parent)
-        {
-            element._isIdle = false;
-        }
-    }
-
-    // True when AnimateSelf would do nothing for this element's subtree right now.
-    bool IsIdle => _isIdle || (mContainedObjectAsIVisible != null && Visible == false);
-
     /// <summary>
     /// Performs AnimationChain (.achx) animation on this and all children recurisvely.
     /// This is typically called on the top-level object (usually Screen) when Gum is running
@@ -115,7 +89,7 @@ public partial class GraphicalUiElement
         }
         ////////////////End Early Out///////////////////
 
-        int invalidationCountAtStart = Volatile.Read(ref s_idleInvalidationCount);
+        int invalidationCountAtStart = Volatile.Read(ref s_invalidationCount);
         bool isSelfIdle = true;
 #if !FRB
         RunAnimation(secondDifference);
@@ -165,7 +139,7 @@ public partial class GraphicalUiElement
 
         // An invalidation during the walk (an event handler playing an animation or adding a child)
         // can make the result above stale, so the element is only marked when none happened.
-        if (isSelfIdle && areChildrenIdle && Volatile.Read(ref s_idleInvalidationCount) == invalidationCountAtStart)
+        if (isSelfIdle && areChildrenIdle && Volatile.Read(ref s_invalidationCount) == invalidationCountAtStart)
         {
             _isIdle = true;
         }

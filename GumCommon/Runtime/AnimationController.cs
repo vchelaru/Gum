@@ -101,7 +101,7 @@ public class AnimationController
         CurrentAnimation = animation;
         CurrentTime = 0;
         _state = AnimationState.Playing;
-        _owner?.InvalidateIdleSubtrees();
+        _owner?.InvalidateSubtreeCaches();
         OnStarted?.Invoke();
     }
 
@@ -178,7 +178,7 @@ public class AnimationController
         if (_state == AnimationState.Paused)
         {
             _state = AnimationState.Playing;
-            _owner?.InvalidateIdleSubtrees();
+            _owner?.InvalidateSubtreeCaches();
             OnResumed?.Invoke();
         }
     }
@@ -208,7 +208,7 @@ public class AnimationController
             if (_state != AnimationState.Playing)
             {
                 _state = AnimationState.Playing;
-                _owner?.InvalidateIdleSubtrees();
+                _owner?.InvalidateSubtreeCaches();
                 OnStarted?.Invoke();
             }
         }

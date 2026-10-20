@@ -124,7 +124,7 @@ public partial class GraphicalUiElement
                 if (value)
                 {
                     // The element may have been given work while it was hidden and skipped.
-                    InvalidateIdleSubtrees();
+                    InvalidateSubtreeCaches();
                 }
 
                 var absoluteVisible = AbsoluteVisible;
