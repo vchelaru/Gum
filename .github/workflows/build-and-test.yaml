@@ -41,11 +41,39 @@ jobs:
   # legs cannot skip at job level (their matrix names would not report), so they guard their own
   # steps instead - see "Detect docs-only PR" there. Not a path filter on the trigger, for the reason
   # in the top-of-file comment. Outputs 'true' for every event other than pull_request.
+  #
+  # It also outputs `scope`: 'fast' when the PR carries the `fast-ci` label, else 'full' (and always
+  # 'full' for any event other than pull_request). Nothing reads it yet (#6282). The label is read
+  # live from the API, so re-running a job after adding or removing the label sees the new value
+  # rather than the stale event payload. Adding or removing the label reruns the PR's run through
+  # .github/workflows/fast-ci-label.yaml, so no extra pull_request run exists to mask the required contexts.
   Changes:
     runs-on: ubuntu-latest
     outputs:
       non-docs: ${{ github.event_name != 'pull_request' || steps.filter.outputs.non-docs == 'true' }}
+      scope: ${{ steps.scope.outputs.scope }}
     steps:
+      - name: Scope (fast-ci label)
+        id: scope
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          PAYLOAD_LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
+        run: |
+          scope=full
+          if [ "$EVENT" = "pull_request" ]; then
+            if ! labels="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --jq '.[].name')"; then
+              echo "Could not read the PR labels from the API; using the event payload."
+              labels="$(echo "$PAYLOAD_LABELS" | tr ' ' '\n')"
+            fi
+            if echo "$labels" | grep -qx 'fast-ci'; then scope=fast; fi
+          fi
+          echo "scope=$scope" >> "$GITHUB_OUTPUT"
+          echo "Scope: $scope"
+          echo "### Scope: $scope" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Detect docs-only PR
         if: github.event_name == 'pull_request'
         id: filter
