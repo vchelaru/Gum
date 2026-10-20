@@ -1167,6 +1167,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         maskTopLeft, maskSize, maskRotation, this);
                 }
 
+                // Known limitation (#6261): ReplaceAlpha/MinAlpha write alpha per glyph box, so overlapping
+                // boxes (tight kerning, italics, large outlines) can overwrite each other's alpha. Not addressed.
                 try
                 {
                     RenderCharacterByCharacter(spriteRenderer);
