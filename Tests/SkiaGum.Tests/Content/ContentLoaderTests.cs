@@ -133,6 +133,7 @@ public class ContentLoaderTests
         }
     }
 
+#pragma warning disable CS0618 // The obsolete loader must keep working until it is removed.
     [Fact]
     public void EmbeddedResourceContentLoader_StillLoadsContent()
     {

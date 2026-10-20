@@ -23,7 +23,7 @@ public class SvgRuntimeTests
         File.WriteAllText(svgPath,
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\" fill=\"red\"/></svg>");
         IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
-        LoaderManager.Self.ContentLoader = new EmbeddedResourceContentLoader();
+        LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
 
         try
         {

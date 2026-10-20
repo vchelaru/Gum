@@ -6,6 +6,9 @@ using System.IO;
 using ToolsUtilities;
 using Xunit;
 
+// These tests cover the obsolete EmbeddedResourceContentLoader until it is removed.
+#pragma warning disable CS0618
+
 namespace SkiaGum.Tests.Content;
 
 // #3567: TryLoadContent used to unconditionally throw NotImplementedException, breaking the

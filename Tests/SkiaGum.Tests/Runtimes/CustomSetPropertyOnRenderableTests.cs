@@ -105,4 +105,36 @@ public class CustomSetPropertyOnRenderableTests
             File.Delete(filePath);
         }
     }
+
+    [Fact]
+    public void SetProperty_SourceFileOnSvg_ShouldHonorAdjustContentName()
+    {
+        const string svgMarkup = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 100\"><rect width=\"200\" height=\"100\" /></svg>";
+        string filePath = Path.Combine(Path.GetTempPath(), $"gum-svg-adjust-{Guid.NewGuid():N}.svg");
+        File.WriteAllText(filePath, svgMarkup);
+        Func<string, string>? previousAdjust = RenderingLibrary.Content.ContentLoader.AdjustContentName;
+
+        try
+        {
+            RenderingLibrary.Content.ContentLoader.AdjustContentName =
+                contentName => contentName == "alias.svg" ? filePath : contentName;
+            GraphicalUiElement graphicalUiElement = new();
+            VectorSprite vectorSprite = new();
+            graphicalUiElement.SetContainedObject(vectorSprite);
+            graphicalUiElement.Width = 200;
+            graphicalUiElement.Height = 100;
+            graphicalUiElement.HeightUnits = Gum.DataTypes.DimensionUnitType.MaintainFileAspectRatio;
+            graphicalUiElement.UpdateLayout();
+
+            graphicalUiElement.SetProperty("SourceFile", "alias.svg");
+
+            vectorSprite.Texture.ShouldNotBeNull();
+            graphicalUiElement.AbsoluteHeight.ShouldBe(100);
+        }
+        finally
+        {
+            RenderingLibrary.Content.ContentLoader.AdjustContentName = previousAdjust;
+            File.Delete(filePath);
+        }
+    }
 }
