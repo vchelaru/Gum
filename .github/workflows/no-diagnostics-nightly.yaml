@@ -12,8 +12,6 @@ on:
   schedule:
     - cron: '53 3 * * *'
   workflow_dispatch:
-  push:
-    branches: [6202-ci-release-no-diagnostics]
 
 jobs:
   Test-No-Diagnostics:
