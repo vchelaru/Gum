@@ -76,6 +76,67 @@ public class StrokedShapeAlphaMaskSceneTests : BaseTestClass
         AssertPixel(pixels, left + 3, top + (ShapeSize / 2), XnaColor.White, "ring");
     }
 
+    // A 50% stroke over an opaque fill replaces the fill under the ring, to the ring's inner edge (the same pixels as
+    // SkiaGum.Tests' BlendTests): the ring is 6px, x 12 to 17 on this row, then the fill from x 18.
+    [Theory]
+    [InlineData(Gum.RenderingLibrary.Blend.ReplaceAlpha)]
+    [InlineData(Gum.RenderingLibrary.Blend.MinAlpha)]
+    public void TranslucentStrokeOverOpaqueFill_ReplacesTheFillUnderTheRing(Gum.RenderingLibrary.Blend blend)
+    {
+        using ShapeGameLease game = new ShapeGameLease();
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+
+        ContainerRuntime root = new();
+        root.Width = 70;
+        root.Height = 52;
+#pragma warning disable CS0618 // ColoredRectangleRuntime is obsolete; simplest solid fill.
+        root.AddChild(new ColoredRectangleRuntime { Width = 70, Height = 52, Color = Backdrop });
+        ContainerRuntime renderTarget = new();
+        renderTarget.Width = 70;
+        renderTarget.Height = 52;
+        renderTarget.IsRenderTarget = true;
+        renderTarget.AddChild(new ColoredRectangleRuntime { Width = 70, Height = 52, Color = Red });
+#pragma warning restore CS0618
+        CircleRuntime circle = new();
+        circle.X = 4;
+        circle.Y = 4;
+        circle.Width = 60;
+        circle.Height = 44;
+        circle.IsFilled = true;
+        circle.FillColor = XnaColor.White;
+        circle.StrokeWidth = 6;
+        circle.StrokeColor = new XnaColor((byte)255, (byte)255, (byte)255, (byte)128);
+        circle.Blend = blend;
+        renderTarget.AddChild(circle);
+        root.AddChild(renderTarget);
+        root.AddToManagers(managers, null);
+        root.UpdateLayout();
+
+        using RenderTarget2D capture = new(gd, 70, 52, false, SurfaceFormat.Color,
+            DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+        for (int i = 0; i < 2; i++)
+        {
+            gd.SetRenderTarget(capture);
+            gd.Clear(XnaColor.Black);
+            managers.Renderer.Draw(managers);
+        }
+        gd.SetRenderTarget(null);
+        XnaColor[] pixels = new XnaColor[70 * 52];
+        capture.GetData(pixels);
+        root.RemoveFromManagers();
+
+        // Width of the capture is 70 here, not Width.
+        void AssertAt(int x, int y, XnaColor expected, string name)
+        {
+            XnaColor actual = pixels[(y * 70) + x];
+            System.Math.Abs(actual.R - expected.R).ShouldBeLessThanOrEqualTo(3, $"{name}: R at ({x}, {y}) was {actual.R}");
+        }
+        AssertAt(13, 26, HalfRed, "ring");
+        AssertAt(17, 26, HalfRed, "ring, next to the fill");
+        AssertAt(19, 26, Red, "fill");
+    }
+
     // A transparent stroke draws nothing, so the fill is not inset and covers the ring zone itself.
     [Theory]
     [InlineData(Gum.RenderingLibrary.Blend.ReplaceAlpha)]

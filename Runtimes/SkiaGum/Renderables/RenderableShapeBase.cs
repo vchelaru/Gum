@@ -729,6 +729,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             return;
         }
 
+        ReplacesPaintBelow = false;
+
         if (CanRender)
         {
             var absoluteX = this.GetAbsoluteX();
@@ -768,7 +770,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 canvas.SaveLayer(layerPaint);
                 DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
                 RenderableShapeBase? pairedStroke = PairedStrokeInLayer;
-                pairedStroke?.DrawBound(pairedStroke.GetStrokeAdjustedBounds(blendBounds), canvas, pairedStroke.GetAbsoluteRotation());
+                // A fully transparent ring draws nothing (replacing the fill with it would erase the ring zone).
+                if (pairedStroke != null && !pairedStroke.IsTransparentStroke)
+                {
+                    pairedStroke.ReplacesPaintBelow = true;
+                    pairedStroke.DrawBound(pairedStroke.GetStrokeAdjustedBounds(blendBounds), canvas, pairedStroke.GetAbsoluteRotation());
+                }
                 canvas.Restore();
                 canvas.Restore();
             }
@@ -792,15 +799,35 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     // If this is stroke-only, then the stroke is centered around the bounds we pass in, so the bounds
     // move "in" by half of the stroke width.
+    private bool IsTransparentStroke => Color.Alpha == 0 && !UseGradient && !HasDropshadow;
+
+    private bool _replacesPaintBelow;
+
+    // Set by the fill slot while it draws this stroke slot into its blend layer: the ring replaces the fill under
+    // it, as one shape with a ring where it is stroked, instead of compositing over it (#6246). The fill slot overlaps
+    // the ring by a pixel to hide the antialiasing seam, so a translucent ring would otherwise show the fill there.
+    private bool ReplacesPaintBelow
+    {
+        get => _replacesPaintBelow;
+        set
+        {
+            if (_replacesPaintBelow != value)
+            {
+                _replacesPaintBelow = value;
+                ClearCachedPaint();
+            }
+        }
+    }
+
+    private float StrokeBoundsInset => IsFilled == false && IsOffsetAppliedForStroke ? StrokeWidth / 2.0f : 0f;
+
     private SKRect GetStrokeAdjustedBounds(SKRect bounds)
     {
-        if (IsFilled == false && IsOffsetAppliedForStroke)
-        {
-            bounds.Left += StrokeWidth / 2.0f;
-            bounds.Top += StrokeWidth / 2.0f;
-            bounds.Right -= StrokeWidth / 2.0f;
-            bounds.Bottom -= StrokeWidth / 2.0f;
-        }
+        float inset = StrokeBoundsInset;
+        bounds.Left += inset;
+        bounds.Top += inset;
+        bounds.Right -= inset;
+        bounds.Bottom -= inset;
         return bounds;
     }
 
@@ -926,6 +953,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
         }
 
+        if (_replacesPaintBelow)
+        {
+            paint.BlendMode = SKBlendMode.Src;
+        }
+
         // The whole-bounds blends are applied by Render, to a layer; see BlendsWholeBounds.
         if (Blend.HasValue && !UsesBoundsLayer)
         {
@@ -1036,10 +1068,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         {
             // If we apply rotation, then the camera coordinates are adjusted such that the gradient coordiantes are relative to the object.
             // Otherwise, they are not so we need to offset:
-            effectiveGradientX1 += rectToUse.Left;
-            effectiveGradientY1 += rectToUse.Top;
-            effectiveGradientX2 += rectToUse.Left;
-            effectiveGradientY2 += rectToUse.Top;
+            // boundingRect is pulled in by half the stroke width for a stroke-only shape; the gradient is placed from the shape's box.
+            float strokeInset = StrokeBoundsInset;
+            effectiveGradientX1 += rectToUse.Left - strokeInset;
+            effectiveGradientY1 += rectToUse.Top - strokeInset;
+            effectiveGradientX2 += rectToUse.Left - strokeInset;
+            effectiveGradientY2 += rectToUse.Top - strokeInset;
         }
 
         if (GradientType == GradientType.Linear)

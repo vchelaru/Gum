@@ -293,6 +293,68 @@ public class BlendTests
         AssertPixel(bitmap, 90, 10, 70, 70, 90);
     }
 
+    // A 50% stroke over an opaque fill replaces the fill under the ring, to the ring's inner edge: the ring pixel
+    // next to the fill is the ring's 50% and not the opaque fill showing through (the same pixels as MonoGame, where
+    // the ring is 6px, x 12 to 17 on this row, then the fill from x 18).
+    [Theory]
+    [InlineData(Blend.ReplaceAlpha)]
+    [InlineData(Blend.MinAlpha)]
+    public void TranslucentStrokeOverOpaqueFill_ReplacesTheFillUnderTheRing_MatchesMonoGamePixels(Blend blend)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(70, 52));
+        Gum.GumService.Default.Initialize(surface.Canvas, 70, 52);
+        ContainerRuntime root = new() { Width = 70, Height = 52 };
+        root.Children.Add(new RectangleRuntime
+        {
+            Width = 70, Height = 52, IsFilled = true, StrokeWidth = 0, FillColor = new SKColor(70, 70, 90),
+        });
+        ContainerRuntime renderTarget = new() { Width = 70, Height = 52, IsRenderTarget = true };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 70, Height = 52, IsFilled = true, StrokeWidth = 0, FillColor = new SKColor(200, 30, 30),
+        });
+        CircleRuntime circle = new()
+        {
+            X = 4, Y = 4, Width = 60, Height = 44, IsFilled = true, FillColor = SKColors.White,
+            StrokeWidth = 6, StrokeColor = new SKColor(255, 255, 255, 128),
+        };
+        circle.Blend = blend;
+        renderTarget.Children.Add(circle);
+        root.Children.Add(renderTarget);
+        Gum.GumService.Default.Root.Children.Add(root);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        SKColor halfRed = new SKColor(135, 50, 60);
+        AssertPixel(bitmap, 13, 26, halfRed, "ring");
+        AssertPixel(bitmap, 17, 26, halfRed, "ring, next to the fill");
+        AssertPixel(bitmap, 19, 26, new SKColor(200, 30, 30), "fill");
+    }
+
+    // The gradient of a stroke-only shape is placed from the shape's box, not from the box pulled in by half the
+    // stroke width: at 30px of a 60px box an alpha 255 to 0 gradient is at 50% (MonoGame gives the same).
+    [Fact]
+    public void StrokeGradient_StartsAtTheShapesBox_NotTheInsetStrokeCenterline()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(70, 52));
+        Gum.GumService.Default.Initialize(surface.Canvas, 70, 52);
+        RectangleRuntime shape = new()
+        {
+            X = 4, Y = 4, Width = 60, Height = 44, IsFilled = false, StrokeWidth = 6, StrokeColor = SKColors.White,
+            UseGradient = true, GradientX1 = 0, GradientY1 = 0, GradientX2 = 60, GradientY2 = 0,
+            Red2 = 255, Green2 = 255, Blue2 = 255, Alpha2 = 0,
+        };
+        Gum.GumService.Default.Root.Children.Add(shape);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        ((int)bitmap.GetPixel(34, 6).Alpha).ShouldBeInRange(125 - 3, 125 + 3);
+    }
+
     // The Skia runtimes keep a fill slot and a stroke slot (#6246). The blend has to reach the stroke slot, or the
     // ring draws unblended, and it has to survive a Clone, which builds a new stroke slot.
     [Fact]
