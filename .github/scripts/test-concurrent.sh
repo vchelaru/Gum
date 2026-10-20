@@ -41,6 +41,17 @@ if [ -n "${STREAMS:-}" ]; then
   done
   streams="$wanted"
 fi
+# SPLIT="<stream>=<n>" deals one stream's projects round-robin into n streams named <stream>-1..n
+# (manifest order), for runs where the other streams are skipped and the cores would sit idle.
+if [ -n "${SPLIT:-}" ]; then
+  split_stream="${SPLIT%%=*}"; split_n="${SPLIT##*=}"
+  if echo $streams | tr ' ' '\n' | grep -qFx "$split_stream"; then
+    awk -v s="$split_stream" -v n="$split_n" '$1 == s { k++; sub(/^[^ \t]+/, s "-" ((k - 1) % n + 1)) } { print }' "$manifest" > "$manifest.split"
+    mv "$manifest.split" "$manifest"
+    parts=""; for ((i = 1; i <= split_n; i++)); do parts="$parts $split_stream-$i"; done
+    streams="$(echo $streams | tr ' ' '\n' | grep -vFx "$split_stream" | tr '\n' ' ')$parts"
+  fi
+fi
 echo "Streams:" $streams
 pids=(); names=()
 
