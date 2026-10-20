@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Gum.Bundle;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Shouldly;
 
@@ -209,6 +210,37 @@ public class FormsThemesTemplateTests
             .ShouldBe(prefix + "Controls/ScrollBarButton");
         scrollBar.Instances.Single(i => i.Name == "DownButtonInstance").BaseType
             .ShouldBe(prefix + "Controls/ScrollBarButton");
+    }
+
+    // The submenu indicator is a fixed-size Icon showing Arrow2, not a '>' in a font (#6164, #6173). Only
+    // the template and Editor are covered: the other themes' Icon elements have no ColorCategory (or
+    // no Icon at all), so the arrow cannot follow the per-state text color there yet.
+    [Theory]
+    [InlineData("FormsTemplate", "")]
+    [InlineData("FormsThemes/Editor", "Editor/")]
+    public void SubmenuIndicatorInstance_ShouldBeAnArrow2Icon(string templateFolder, string prefix)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = new ProjectLoader()
+            .Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
+
+        ComponentSave menuItem = project.Components.Single(c => c.Name == prefix + "Controls/MenuItem");
+        StateSave defaultState = menuItem.DefaultState!;
+
+        menuItem.Instances.Single(i => i.Name == "SubmenuIndicatorInstance").BaseType
+            .ShouldBe(prefix + "Elements/Icon");
+        defaultState.GetValue("SubmenuIndicatorInstance.IconCategoryState").ShouldBe("Arrow2");
+        defaultState.GetValue("SubmenuIndicatorInstance.Width").ShouldBe(16f);
+        defaultState.GetValue("SubmenuIndicatorInstance.Height").ShouldBe(16f);
+        defaultState.GetValue("SubmenuIndicatorInstance.WidthUnits").ShouldBe(DimensionUnitType.Absolute);
+        defaultState.GetValue("SubmenuIndicatorInstance.HeightUnits").ShouldBe(DimensionUnitType.Absolute);
+        defaultState.GetValue("SubmenuIndicatorInstance.Text").ShouldBeNull();
+
+        foreach (StateSave state in menuItem.Categories.Single(c => c.Name == "MenuItemCategory").States)
+        {
+            state.GetValue("SubmenuIndicatorInstance.ColorCategoryState")
+                .ShouldNotBeNull($"{prefix}MenuItem state {state.Name}");
+        }
     }
 
     // GumFormsPlugin copies each template folder, FontCache included, into the release's
