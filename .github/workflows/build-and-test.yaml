@@ -22,11 +22,7 @@ on:
   push:
     branches: [main, 'release/**']
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
-  # labeled/unlabeled exist for the `fast-ci` label (see the Changes job). A label event for any other
-  # label does nothing: Changes and Build-and-Test skip themselves, and the concurrency group below
-  # keeps it from cancelling the run that is in flight.
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
   # The nightly run covers the Avalonia head on macOS, which pull requests skip to save runner
   # time (see Build-Avalonia-Head). Every other job skips the schedule event.
   schedule:
@@ -36,7 +32,7 @@ on:
 # A new push to a PR cancels the run it supersedes. Pushes to main, the nightly run and manual
 # dispatches each get their own group so they are never cancelled.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && !(contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && github.event.label.name != 'fast-ci') && github.ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -49,9 +45,9 @@ jobs:
   # It also outputs `scope`: 'fast' when the PR carries the `fast-ci` label, else 'full' (and always
   # 'full' for any event other than pull_request). Nothing reads it yet (#6282). The label is read
   # live from the API, so re-running a job after adding or removing the label sees the new value
-  # rather than the stale event payload.
+  # rather than the stale event payload. Adding or removing the label reruns the PR's run through
+  # .github/workflows/fast-ci-label.yaml, so no extra pull_request run exists to mask the required contexts.
   Changes:
-    if: ${{ !(contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && github.event.label.name != 'fast-ci') }}
     runs-on: ubuntu-latest
     outputs:
       non-docs: ${{ github.event_name != 'pull_request' || steps.filter.outputs.non-docs == 'true' }}
@@ -337,7 +333,7 @@ jobs:
         run: dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
 
   Build-and-Test:
-    if: ${{ github.event_name != 'schedule' && !(contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && github.event.label.name != 'fast-ci') }}
+    if: github.event_name != 'schedule'
     strategy:
       matrix:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos

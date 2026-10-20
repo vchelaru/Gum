@@ -1,0 +1,40 @@
+name: Fast CI label
+
+# Adding or removing the `fast-ci` label re-runs the PR's Test Runtimes run so its Changes job picks up
+# the new scope (#6282). This is a separate workflow on purpose: a labeled/unlabeled trigger on
+# build-and-test.yaml itself would create a new run on the same commit for EVERY label, and that newest
+# run (with no Build-and-Test (windows-latest) / (macos-15) reports) makes the required checks "expected"
+# again, blocking merge. Here those events only start this workflow, which is not a required check.
+on:
+  pull_request:
+    types: [labeled, unlabeled]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  Rerun:
+    if: github.event.label.name == 'fast-ci'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-run the PR's run on its head commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          id="$(gh run list --workflow build-and-test.yaml --event pull_request --commit "$SHA" --limit 1 --json databaseId --jq '.[0].databaseId')"
+          if [ -z "$id" ]; then echo "No run on $SHA yet; its Changes job will read the label itself."; exit 0; fi
+          status="$(gh run view "$id" --json status --jq .status)"
+          if [ "$status" != completed ]; then
+            echo "Cancelling in-flight run $id so the new scope applies."
+            gh run cancel "$id"
+            for i in $(seq 1 30); do
+              status="$(gh run view "$id" --json status --jq .status)"
+              [ "$status" = completed ] && break
+              sleep 5
+            done
+          fi
+          echo "Re-running run $id."
+          gh run rerun "$id"
