@@ -1,5 +1,9 @@
 using Gum;
+using Gum.DataTypes;
 using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using SkiaGameRendering;
 using SkiaSharp;
@@ -9,14 +13,16 @@ namespace KniSkiaGumSample;
 /// <summary>
 /// A KNI desktop game whose UI is Gum drawn by Skia. SkiaGameRendering gives a <see cref="SkiaRenderTarget2D"/>:
 /// a KNI texture with an SKCanvas. Gum draws into that canvas, then the target is composited onto the
-/// back buffer. Mouse, keyboard and gamepad reach Gum through KNI, with no Apos.Shapes involved.
+/// back buffer. Gum initializes from the game, like MonoGameGum, so the first screen is built in
+/// <see cref="Initialize"/>; the canvas arrives with the first <c>Draw</c>. Mouse, keyboard and gamepad
+/// reach Gum through KNI, with no Apos.Shapes involved.
 /// </summary>
 public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private SkiaRenderTarget2D? _canvas;
-    private bool _gumInitialized;
     private int _clicks;
+    private Label? _sizeLabel;
 
     public Game1()
     {
@@ -29,12 +35,24 @@ public class Game1 : Game
         Window.AllowUserResizing = true;
     }
 
+    protected override void Initialize()
+    {
+        // The graphics device exists once the base Initialize has run.
+        base.Initialize();
+
+        GumService.Default.Initialize(this);
+        GumService.Default.UseKeyboardDefaults();
+        BuildUi();
+    }
+
     protected override void Update(GameTime gameTime)
     {
-        if (_gumInitialized)
-        {
-            GumService.Default.Update(gameTime.TotalGameTime.TotalSeconds);
-        }
+        GumService.Default.Update(gameTime);
+
+        // Gum's canvas size should always equal the back buffer size, including after a resize.
+        _sizeLabel!.Text =
+            $"Gum canvas: {GraphicalUiElement.CanvasWidth} x {GraphicalUiElement.CanvasHeight}\n" +
+            $"Back buffer: {GraphicsDevice.PresentationParameters.BackBufferWidth} x {GraphicsDevice.PresentationParameters.BackBufferHeight}";
 
         base.Update(gameTime);
     }
@@ -75,14 +93,7 @@ public class Game1 : Game
         SKCanvas canvas = _canvas.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        if (!_gumInitialized)
-        {
-            GumService.Default.Initialize(this, canvas, width, height);
-            GumService.Default.UseKeyboardDefaults();
-            BuildUi();
-            _gumInitialized = true;
-        }
-        else if (resized)
+        if (resized)
         {
             GumService.Default.HandleResize(width, height);
         }
@@ -95,6 +106,43 @@ public class Game1 : Game
 
     private void BuildUi()
     {
+        // Added first so it draws behind everything. It stretches to the root, so its edges sit on the
+        // window edges when the canvas size is right.
+        RectangleRuntime outline = new RectangleRuntime();
+        outline.Width = 0;
+        outline.Height = 0;
+        outline.WidthUnits = DimensionUnitType.RelativeToParent;
+        outline.HeightUnits = DimensionUnitType.RelativeToParent;
+        outline.IsFilled = false;
+        outline.StrokeWidth = 4;
+        outline.StrokeColor = SKColors.Red;
+        GumService.Default.Root.AddChild(outline);
+
+        Button bottomRight = new Button();
+        bottomRight.Text = "Bottom right";
+        bottomRight.AddToRoot();
+        bottomRight.Visual.XOrigin = HorizontalAlignment.Right;
+        bottomRight.Visual.YOrigin = VerticalAlignment.Bottom;
+        bottomRight.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        bottomRight.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        bottomRight.Visual.X = -10;
+        bottomRight.Visual.Y = -10;
+
+        Button center = new Button();
+        center.Text = "Centered";
+        center.AddToRoot();
+        center.Visual.XOrigin = HorizontalAlignment.Center;
+        center.Visual.YOrigin = VerticalAlignment.Center;
+        center.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        center.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+
+        _sizeLabel = new Label();
+        _sizeLabel.AddToRoot();
+        _sizeLabel.Visual.XOrigin = HorizontalAlignment.Right;
+        _sizeLabel.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        _sizeLabel.Visual.X = -24;
+        _sizeLabel.Visual.Y = 24;
+
         StackPanel panel = new StackPanel();
         panel.Spacing = 10;
         panel.AddToRoot();
