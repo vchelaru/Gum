@@ -801,9 +801,8 @@ public class ListBox : ItemsControl, IInputReceiver
 #if !FRB
         // Use the same pattern as KeyCombo and TextBox - check KeyboardsForUiControl.
         // If the list is empty, no modifiers are detected (consistent with the rest of Gum's keyboard input handling).
-        // KeyboardsForUiControl is typed List<IInputReceiverKeyboard>. The modifier-key properties
-        // below are XNA Keys on MonoGame; XnaKeyboardExtensions provides the overload that
-        // forwards to the underlying Gum.Forms.Input.Keys API.
+        // KeyboardsForUiControl is typed List<IInputReceiverKeyboard>; outside FRB the modifier-key
+        // properties below are Gum.Forms.Input.Keys, so the shared interface overloads apply.
         var keyboards = FrameworkElement.KeyboardsForUiControl;
         foreach (var keyboard in keyboards)
         {

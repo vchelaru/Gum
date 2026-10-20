@@ -916,9 +916,6 @@ public class FrameworkElementTests : BaseTestClass
         textBox1.IsFocused = true;
 
         var keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        keyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Tab))
-            .Returns(true);
         // KeyCombo.IsComboPushed (used for Tab navigation) now routes through
         // the shared IInputReceiverKeyboard.KeyPushed(Gum.Forms.Input.Keys) overload.
         keyboard.As<IInputReceiverKeyboard>()
