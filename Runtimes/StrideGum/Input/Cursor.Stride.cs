@@ -19,12 +19,22 @@ public partial class Cursor : IInputEventListener<MouseWheelEvent>
     /// <summary>
     /// Attaches this cursor to the supplied mouse device (<c>inputManager.Mouse</c>, or
     /// <see langword="null"/> in the degenerate no-mouse case). Called by
-    /// <c>GumService.CreateCursor</c> after constructing the cursor; that same call site separately
-    /// registers this cursor as an <c>InputManager</c> listener so <see cref="MouseWheelEvent"/>s
-    /// reach <see cref="IInputEventListener{MouseWheelEvent}.ProcessEvent"/> -- kept out of this
-    /// method so it stays callable from a test with just a mocked <see cref="IMouseDevice"/>.
+    /// <c>GumService.CreateCursor</c> after constructing the cursor. When
+    /// <paramref name="inputManager"/> is supplied, the cursor also registers as its listener so
+    /// <see cref="MouseWheelEvent"/>s reach <see cref="IInputEventListener{MouseWheelEvent}.ProcessEvent"/>,
+    /// and <see cref="Dispose"/> unregisters it. It is optional so a test can attach a mocked
+    /// <see cref="IMouseDevice"/> alone.
     /// </summary>
-    internal void AttachStrideInput(IMouseDevice? mouse) => _mouse = mouse;
+    internal void AttachStrideInput(IMouseDevice? mouse, InputManager? inputManager = null)
+    {
+        _mouse = mouse;
+
+        if (inputManager != null)
+        {
+            inputManager.AddListener(this);
+            OnDispose(() => inputManager.RemoveListener(this));
+        }
+    }
 
     void IInputEventListener<MouseWheelEvent>.ProcessEvent(MouseWheelEvent inputEvent) =>
         AddScrollUnits((int)(inputEvent.WheelDelta * ScrollUnitsPerNotch));

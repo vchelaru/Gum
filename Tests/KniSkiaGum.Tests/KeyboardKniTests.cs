@@ -74,4 +74,29 @@ public class KeyboardKniTests
         keyboard.Activity(0.1);
         keyboard.KeyReleased(GumKeys.A).ShouldBeTrue();
     }
+
+    [Fact]
+    public void Activity_CapturesTypedTextFromTheWindow()
+    {
+        TestGameWindow window = new TestGameWindow();
+        Keyboard keyboard = new Keyboard(window) { ReadKeyboard = () => new XnaKeyboardState() };
+
+        window.RaiseTextInput('a');
+        keyboard.Activity(0);
+
+        keyboard.GetStringTyped().ShouldBe("a");
+    }
+
+    [Fact]
+    public void Dispose_StopsCapturingTypedTextFromTheWindow()
+    {
+        TestGameWindow window = new TestGameWindow();
+        Keyboard keyboard = new Keyboard(window) { ReadKeyboard = () => new XnaKeyboardState() };
+
+        keyboard.Dispose();
+        window.RaiseTextInput('a');
+        keyboard.Activity(0);
+
+        keyboard.GetStringTyped().ShouldBe("");
+    }
 }

@@ -5,7 +5,6 @@ using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Wireframe;
 using RenderingLibrary;
-using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
@@ -13,16 +12,14 @@ namespace Gum;
 /// Unity's GumService: a <see cref="GumServiceSkiaBase"/> whose cursor, keyboard and gamepads are fed by
 /// the host. Each frame the host pushes Unity's input into <see cref="Cursor"/>, <see cref="Keyboard"/>
 /// and <see cref="GumServiceSkiaBase.Gamepads"/>,
-/// calls <see cref="GumServiceSkiaInteractiveBase.Update"/>, then draws with <see cref="GumServiceSkiaBase.Draw"/> into the canvas
+/// calls <see cref="GumServiceSkiaInteractiveBase.Update"/>, then draws with <see cref="GumServiceSkiaBase.Draw()"/> into the canvas
 /// it owns. The Unity package's <c>GumRenderer</c> and <c>GumInput</c> components do all of this.
 /// </summary>
 public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 {
-    /// <inheritdoc/>
-    ICursor? IGumService.CreateCursor() => new Cursor();
+    private partial Cursor CreateHostCursor() => new Cursor();
 
-    /// <inheritdoc/>
-    IInputReceiverKeyboard? IGumService.CreateKeyboard() => new Keyboard();
+    private partial Keyboard? CreateHostKeyboard() => new Keyboard();
 
     /// <summary>
     /// Commits the state the host pushed into <paramref name="gamepad"/> with its driver-facing setters

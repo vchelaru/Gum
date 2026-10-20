@@ -14,7 +14,7 @@ namespace Gum.Input;
 /// and latches the text the host appended with <see cref="AppendTypedText(string)"/>. A host supplies its key
 /// map through <see cref="SupportedKeys"/> and <see cref="IsDeviceKeyDown"/>.
 /// </summary>
-public abstract class PolledKeyboard : IInputReceiverKeyboard
+public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
 {
     private readonly HashSet<GumKeys> _currentDown = new();
     private readonly HashSet<GumKeys> _previousDown = new();
@@ -27,6 +27,9 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
     // clears it so the frame's DoKeyboardAction reads exactly this frame's input.
     private readonly StringBuilder _charsTyped = new();
     private string _frameChars = "";
+
+    // Undoes the host event subscriptions registered with OnDispose.
+    private Action? _unsubscribe;
 
     /// <summary>
     /// Delay after the initial key press before repeat typing begins.
@@ -59,6 +62,23 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard
     /// Called for each of <see cref="SupportedKeys"/> during <see cref="Activity"/>.
     /// </summary>
     protected abstract bool IsDeviceKeyDown(GumKeys key);
+
+    /// <summary>
+    /// Registers what <see cref="Dispose"/> runs to undo a host event subscription, such as
+    /// <c>window.TextInput -= handler</c>. A host that subscribes in its constructor registers the
+    /// matching unsubscribe here, so the keyboard stops receiving text once it is replaced.
+    /// </summary>
+    protected void OnDispose(Action unsubscribe) => _unsubscribe += unsubscribe;
+
+    /// <summary>
+    /// Undoes the host event subscriptions. <c>GumService.Uninitialize</c> and a second
+    /// <c>Initialize</c> call this on the keyboard the service created.
+    /// </summary>
+    public void Dispose()
+    {
+        _unsubscribe?.Invoke();
+        _unsubscribe = null;
+    }
 
     /// <summary>
     /// Adds text the host received from its text-input event. It is returned by
