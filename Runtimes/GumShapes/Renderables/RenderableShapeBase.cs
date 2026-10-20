@@ -870,29 +870,138 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         Blend == Gum.RenderingLibrary.Blend.MinAlpha || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha;
 
     /// <summary>
+    /// True for the stroke slot of a Rectangle or Circle runtime, the child of that runtime's fill slot (set by
+    /// the slot factories in <c>AposShapeRuntime</c>). The two slots are one shape, so an alpha-only
+    /// <see cref="Blend"/> gives them one bounds mask (#6246), opened by the fill slot and closed by this one.
+    /// </summary>
+    internal bool IsPairedStroke { get; set; }
+
+    // The slot drawn right after this fill slot, when it will draw into this slot's mask. Children[0] is the
+    // stroke slot the runtime adds at construction; a shape a user adds under a standalone shape is not marked.
+    private bool HasPairedStrokeDrawnNext =>
+        !IsPairedStroke
+        && _children.Count > 0
+        && _children[0] is RenderableShapeBase { IsPairedStroke: true, Visible: true, HasVisibleOutput: true, IsHiddenPairedStroke: false } stroke
+        && stroke.Blend == Blend;
+
+    /// <summary>
+    /// True for a paired stroke slot under an alpha-only blend that is fully transparent: it draws nothing, as it
+    /// would not on Skia, where a transparent ring changes nothing. Without this its own mask would erase the fill.
+    /// </summary>
+    protected bool IsHiddenPairedStroke =>
+        IsPairedStroke && RequiresStencilBuffer && Color.A == 0 && !ShouldPaintGradient(null) && !HasDropshadow;
+
+    /// <summary>
     /// Issue #5689 — call from <c>Render</c> after <c>ShapeRenderer.EnsureBlend</c>, before any draw,
     /// so an alpha-only <see cref="Blend"/> (MinAlpha, ReplaceAlpha) applies to the shape's whole
     /// bounding rectangle and not just the pixels the shape itself draws, and to nothing outside it
-    /// (#6235). Pair with <see cref="EndAlphaBoundsMask"/>. No-op for other blends.
+    /// (#6235). Returns a scope to dispose after the shape's last draw (<c>using</c>); a no-op for other blends.
     /// </summary>
-    protected void BeginAlphaBoundsMask(float absoluteLeft, float absoluteTop, float width, float height, float rotationRadians)
+    /// <remarks>
+    /// A Rectangle or Circle is two slots, a fill slot then its stroke slot (#6246). Apos.Shapes writes zero
+    /// alpha around each shape it draws, and under an alpha-only blend that wipes what an earlier draw left, so
+    /// two slots drawing separately erase each other. Instead the fill slot opens the mask and the stroke slot
+    /// joins it, closes it, and draws the whole shape in one call (its ring around the fill slot's fill, see
+    /// <see cref="GetStrokePaint"/>), while the fill slot draws no body.
+    /// </remarks>
+    protected AlphaBoundsMaskScope BeginAlphaBoundsMask(float absoluteLeft, float absoluteTop, float width, float height, float rotationRadians)
     {
-        if (Blend == Gum.RenderingLibrary.Blend.MinAlpha || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha)
+        if (!RequiresStencilBuffer)
+        {
+            return default;
+        }
+
+        RenderableShapeBase? joinedFill = IsPairedStroke && Parent is RenderableShapeBase fill && ShapeRenderer.IsAlphaBoundsMaskOpenFor(fill)
+            ? fill
+            : null;
+        if (joinedFill == null)
         {
             Vector2 size = new(width, height);
             ShapeRenderer.BeginAlphaBoundsMask(
-                AdjustPositionForCenterRotation(new Vector2(absoluteLeft, absoluteTop), size, rotationRadians), size, rotationRadians);
+                this, AdjustPositionForCenterRotation(new Vector2(absoluteLeft, absoluteTop), size, rotationRadians), size, rotationRadians);
+        }
+        bool strokeDrawsBody = HasPairedStrokeDrawnNext && ShapeRenderer.IsAlphaBoundsMaskOpenFor(this);
+        return new AlphaBoundsMaskScope(this, joinedFill, strokeDrawsBody);
+    }
+
+    /// <summary>
+    /// Ends the bounds mask opened by <see cref="BeginAlphaBoundsMask"/>, unless a paired stroke slot closes it.
+    /// </summary>
+    protected readonly ref struct AlphaBoundsMaskScope
+    {
+        private readonly RenderableShapeBase? _shape;
+
+        internal AlphaBoundsMaskScope(RenderableShapeBase shape, RenderableShapeBase? mergedFill, bool bodyDrawnByPairedStroke)
+        {
+            _shape = shape;
+            MergedFill = mergedFill;
+            BodyDrawnByPairedStroke = bodyDrawnByPairedStroke;
+        }
+
+        /// <summary>For a stroke slot that joined its fill slot's mask: the fill slot, whose fill the stroke slot draws.</summary>
+        public RenderableShapeBase? MergedFill { get; }
+
+        /// <summary>For a fill slot: true when its stroke slot draws the fill too, so the body is skipped.</summary>
+        public bool BodyDrawnByPairedStroke { get; }
+
+        public void Dispose()
+        {
+            if (_shape != null && !_shape.HasPairedStrokeDrawnNext)
+            {
+                _shape.ShapeRenderer.EndAlphaBoundsMask();
+            }
         }
     }
 
-    /// <summary>Second half of <see cref="BeginAlphaBoundsMask"/>; call after the shape's last draw.</summary>
-    protected void EndAlphaBoundsMask()
+    /// <summary>The Apos.Shapes colors for one stroke-style draw: an interior and a border, solid or gradient.</summary>
+    protected readonly struct StrokePaint
     {
-        if (Blend == Gum.RenderingLibrary.Blend.MinAlpha || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha)
-        {
-            ShapeRenderer.EndAlphaBoundsMask();
-        }
+        public bool UseGradient { get; init; }
+        public Color InteriorColor { get; init; }
+        public Color BorderColor { get; init; }
+        public Gradient InteriorGradient { get; init; }
+        public Gradient BorderGradient { get; init; }
     }
+
+    /// <summary>
+    /// The colors for a stroke-style draw (<see cref="IsFilled"/> false). The interior is transparent, so only
+    /// the ring shows, or, for the stroke slot that draws its fill slot's fill (<paramref name="mergedFill"/>,
+    /// see <see cref="BeginAlphaBoundsMask"/>), that fill. A shadow pass (<paramref name="forcedColor"/>) never
+    /// takes the fill.
+    /// </summary>
+    protected StrokePaint GetStrokePaint(float absoluteLeft, float absoluteTop, float rotationRadians, Color? forcedColor, RenderableShapeBase? mergedFill)
+    {
+        RenderableShapeBase? fill = forcedColor == null ? mergedFill : null;
+        Color border = forcedColor ?? Color;
+        Color interior = fill != null ? fill.Color : new Color(border.R, border.G, border.B, (byte)0);
+        bool borderIsGradient = ShouldPaintGradient(forcedColor);
+        bool interiorIsGradient = fill != null && fill.ShouldPaintGradient(null);
+
+        if (!borderIsGradient && !interiorIsGradient)
+        {
+            return new StrokePaint { InteriorColor = interior, BorderColor = border };
+        }
+
+        Gradient borderGradient = borderIsGradient
+            ? GetGradient(absoluteLeft, absoluteTop, rotationRadians)
+            : SolidGradient(border);
+        Gradient interiorGradient;
+        if (fill != null)
+        {
+            interiorGradient = interiorIsGradient
+                ? fill.GetGradient(absoluteLeft, absoluteTop, rotationRadians)
+                : SolidGradient(interior);
+        }
+        else
+        {
+            interiorGradient = borderGradient;
+            interiorGradient.AC = new Color((int)borderGradient.AC.R, borderGradient.AC.G, borderGradient.AC.B, 0);
+            interiorGradient.BC = new Color((int)borderGradient.BC.R, borderGradient.BC.G, borderGradient.BC.B, 0);
+        }
+        return new StrokePaint { UseGradient = true, InteriorGradient = interiorGradient, BorderGradient = borderGradient };
+    }
+
+    private static Gradient SolidGradient(Color color) => new Gradient(Vector2.Zero, color, Vector2.UnitX, color);
 
     /// <summary>
     /// Adjusts a top-left position so that Apos.Shapes' center-based rotation

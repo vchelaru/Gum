@@ -68,11 +68,7 @@ public class ShapeEdgePixelTests : BaseTestClass
                 {
                     foreach (EdgePlacement placement in Enum.GetValues<EdgePlacement>())
                     {
-                        EdgeCase edgeCase = new(kind, paint, blend, placement);
-                        if (!edgeCase.IsStrokeSlotMask)
-                        {
-                            yield return edgeCase;
-                        }
+                        yield return new EdgeCase(kind, paint, blend, placement);
                     }
                 }
             }
@@ -175,13 +171,6 @@ public class ShapeEdgePixelTests : BaseTestClass
     internal sealed record EdgeCase(EdgeShapeKind Kind, EdgePaint Paint, EdgeBlend Blend, EdgePlacement Placement)
     {
         public override string ToString() => $"{Kind}/{Paint}/{Blend}/{Placement}";
-
-        /// <summary>
-        /// Rectangle and Circle with a stroke draw a separate stroke renderable, and under ReplaceAlpha and MinAlpha
-        /// its bounds mask wipes what the fill drew, or the color under a stroke-only ring (#6246). Not covered here.
-        /// </summary>
-        public bool IsStrokeSlotMask => Blend != EdgeBlend.Normal && Paint != EdgePaint.Fill
-            && Kind is EdgeShapeKind.Rectangle or EdgeShapeKind.RoundedRectangle or EdgeShapeKind.Circle;
     }
 
     internal sealed record AuditResult(EdgeCase Case, XnaColor[] Pixels, XnaColor[] Baseline, Geometry Geometry);

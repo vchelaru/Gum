@@ -149,7 +149,7 @@ internal class Arc : RenderableShapeBase
         var stretchesToBox = System.Math.Abs(Width - Height) > SquareTolerance;
 
         var radius = shortSide / 2 - StrokeWidth / 2;
-        BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
+        using AlphaBoundsMaskScope mask = BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         var cameraZoom = (managers as global::RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
 
@@ -190,7 +190,6 @@ internal class Arc : RenderableShapeBase
                 GetAntiAliasWorldOffset(IsAntialiased ? 1 : 0, cameraZoom))
             : null;
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, cameraZoom, stretch);
-        EndAlphaBoundsMask();
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,
