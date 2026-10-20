@@ -32,8 +32,8 @@ public enum EdgePlacement { Integer, Square, Fractional, Rotated }
 /// the backdrop. With ReplaceAlpha and MinAlpha the render target holds the fill and the shape is an
 /// opaque mask, so the fill shows where the mask is and the backdrop where it erased.
 /// Limits: a pixel the bounds only partly cover (fractional or rotated edges) cannot be exact, because
-/// the alpha-replacing blends write the whole pixel, so those get a wide tolerance; Arc and Line
-/// anti-aliasing is centered on the edge, so half a pixel of fringe outside their bounds is accepted.
+/// the alpha-replacing blends write the whole pixel, so those get a wide tolerance; Line
+/// anti-aliasing is centered on the edge, so half a pixel of fringe outside its bounds is accepted.
 /// </summary>
 [Collection(SharedGame.CollectionName)]
 public class ShapeEdgePixelTests : BaseTestClass
@@ -267,12 +267,12 @@ public class ShapeEdgePixelTests : BaseTestClass
 
         public double BoundsCoverage(int pixelX, int pixelY) => Coverage(pixelX, pixelY, InBounds);
 
-        // Arc and Line anti-aliasing is centred on the geometric edge (no half-pixel inset like Rectangle and
-        // Circle), so up to half a pixel of fringe outside the bounds is accepted for them. Polygon is a
+        // Line anti-aliasing is centred on the geometric edge (no half-pixel inset like Rectangle, Circle and
+        // Arc), so up to half a pixel of fringe outside the bounds is accepted for it. Polygon is a
         // one-pixel SpriteBatch outline.
         private double Fringe => Case.Kind switch
         {
-            EdgeShapeKind.Arc or EdgeShapeKind.Line => 0.5,
+            EdgeShapeKind.Line => 0.5,
             EdgeShapeKind.Polygon => 1,
             _ => 0,
         };
@@ -394,8 +394,8 @@ public class ShapeEdgePixelTests : BaseTestClass
 
                 if (edgeCase.Kind == EdgeShapeKind.Polygon || geometry.BoundsCoverage(x, y) == 0)
                 {
-                    // Polygon is a one-pixel outline. Elsewhere this is only the anti-aliasing fringe Arc and Line
-                    // draw up to half a pixel past their bounds.
+                    // Polygon is a one-pixel outline. Elsewhere this is only the anti-aliasing fringe Line
+                    // draws up to half a pixel past its bounds.
                     continue;
                 }
 
@@ -404,7 +404,7 @@ public class ShapeEdgePixelTests : BaseTestClass
                 double expected = isMask ? 1 - bounds + body : body;
                 double measured = (actual.R - Backdrop.R) / (double)(Fill.R - Backdrop.R);
                 // A pixel the bounds only partly cover cannot be exact: a blend that replaces alpha writes the
-                // whole pixel. Arc and Line anti-aliasing is centred on the edge, so they also differ a little.
+                // whole pixel. Line anti-aliasing and an Arc's radial end edges are centred on the edge, so they also differ a little.
                 double tolerance = crisp ? 0.05 : (bounds is > 0 and < 1) || edgeCase.Kind is EdgeShapeKind.Arc or EdgeShapeKind.Line ? 0.8 : 0.5;
                 if (Math.Abs(measured - expected) > tolerance)
                 {

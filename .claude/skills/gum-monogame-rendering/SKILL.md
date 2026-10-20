@@ -297,3 +297,7 @@ When changing batch logic:
 10. Investigating draw-call/batching cost? Check `Renderer.SiblingOrdering`, not just `BatchOrchestrator` — they're separate layers (see "Draw Order Is a Separate, Pluggable Layer" above).
 11. Reset immediate-mode perf stats once per host frame, not on every `Begin`. Per-`Begin` reset wipes out an earlier camera pass's stats instead of accumulating them within the frame.
 12. Touching the `Deferred` flush? It owns its own scratch buffers (`_deferredImmediateModeRoots`/`_deferredImmediateModeCommands`), not `_scratchCommands`/`_bakeCommands` — those are already claimed by `RenderLayer`/the render-target bake.
+
+## Stroke Geometry: Arc Matches Circle
+
+`DrawCircle` draws a stroke exactly as wide as asked (inset by `GetAntiAliasWorldOffset`); `DrawRing`/`DrawArc` draw it wider by that offset on each side. `Arc.RenderInternal` takes the offset off the half thickness (`RenderableShapeBase.GetRingHalfThickness`) so a 360 degree arc covers the same pixels as a stroked Circle. A new stroked shape built on `DrawRing`/`DrawArc` must use the helper; `ArcMatchesCircleTests` pins the equality. Arc and Circle disagree on non-square boxes (Arc keys off Width, Circle centers `min(Width, Height)`); tracked in #6256.
