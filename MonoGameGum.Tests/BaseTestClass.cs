@@ -4,7 +4,9 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using Gum.Input;
+using Microsoft.Xna.Framework.Graphics;
 using Moq;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +31,9 @@ public class BaseTestClass : IDisposable
         // Same reasoning: a test outside this hierarchy that builds a GumProjectSave in memory and
         // never clears it changes how the next test resolves fonts and elements (see Dispose).
         ObjectFinder.Self.GumProjectSave = null;
+        // Renderer.TextureFilter is process-wide; a test (or a project it loads) that sets Linear
+        // would change how every later test's sprites sample.
+        Renderer.TextureFilter = TextureFilter.Point;
         // The shared roots are laid out against the canvas, so restore it before laying them out.
         ResetCanvasAndRoots();
 
@@ -90,6 +95,7 @@ public class BaseTestClass : IDisposable
         GraphicalUiElement.CanvasWidth = 800;
         GraphicalUiElement.CanvasHeight = 600;
         GraphicalUiElement.GlobalFontScale = 1;
+        Renderer.TextureFilter = TextureFilter.Point;
 
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.GamePadsForUiControl.Clear();

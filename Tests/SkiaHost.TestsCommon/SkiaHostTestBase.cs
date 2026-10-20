@@ -1,4 +1,5 @@
 using Gum;
+using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Input;
@@ -40,6 +41,46 @@ public abstract class SkiaHostTestBase : IDisposable
             {
                 BaselineRenderables.Add(renderable);
             }
+        }
+    }
+
+    protected SkiaHostTestBase()
+    {
+        // Dispose resets this too, but only for tests that derive from this class. A class that does
+        // not can leave the canvas and roots resized, so start from the bootstrap state as well.
+        ResetCanvasAndRoots();
+    }
+
+    /// <summary>
+    /// Restores the canvas and the shared Root, PopupRoot and ModalRoot to the bootstrap state.
+    /// Update sizes the roots to the canvas, so a test that resizes the canvas, calls Update and does
+    /// not restore it leaves Root, PopupRoot and ModalRoot sized for it, and every element added under
+    /// them is laid out against the wrong size in whichever test runs next (issue #6212).
+    /// </summary>
+    private static void ResetCanvasAndRoots()
+    {
+        GraphicalUiElement.CanvasWidth = SkiaHostTestFramework.CanvasWidth;
+        GraphicalUiElement.CanvasHeight = SkiaHostTestFramework.CanvasHeight;
+
+        // Root is created RelativeToParent with no size; Update turns it into an absolute canvas size.
+        Service.Root.X = 0;
+        Service.Root.Y = 0;
+        Service.Root.Width = 0;
+        Service.Root.WidthUnits = DimensionUnitType.RelativeToParent;
+        Service.Root.Height = 0;
+        Service.Root.HeightUnits = DimensionUnitType.RelativeToParent;
+        Service.Root.UpdateLayout();
+
+        // Popup and modal roots are left-origin and sized to the canvas by Update.
+        foreach (InteractiveGue popupOrModalRoot in new InteractiveGue[] { Service.PopupRoot, Service.ModalRoot })
+        {
+            popupOrModalRoot.X = 0;
+            popupOrModalRoot.Y = 0;
+            popupOrModalRoot.WidthUnits = DimensionUnitType.Absolute;
+            popupOrModalRoot.HeightUnits = DimensionUnitType.Absolute;
+            popupOrModalRoot.Width = GraphicalUiElement.CanvasWidth;
+            popupOrModalRoot.Height = GraphicalUiElement.CanvasHeight;
+            popupOrModalRoot.UpdateLayout();
         }
     }
 
@@ -113,5 +154,8 @@ public abstract class SkiaHostTestBase : IDisposable
         // AccessViolationException. Leaving the cache intact keeps the sprite sheet valid across tests.
 
         FileManager.CustomGetStreamFromFile = null;
+
+        // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
+        ResetCanvasAndRoots();
     }
 }
