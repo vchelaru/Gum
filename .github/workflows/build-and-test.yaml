@@ -22,7 +22,11 @@ on:
   push:
     branches: [main, 'release/**']
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
+  # labeled/unlabeled exist for the `fast-ci` label (see the Changes job). A label event for any other
+  # label does nothing: Changes and Build-and-Test skip themselves, and the concurrency group below
+  # keeps it from cancelling the run that is in flight.
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   # The nightly run covers the Avalonia head on macOS, which pull requests skip to save runner
   # time (see Build-Avalonia-Head). Every other job skips the schedule event.
   schedule:
@@ -32,7 +36,7 @@ on:
 # A new push to a PR cancels the run it supersedes. Pushes to main, the nightly run and manual
 # dispatches each get their own group so they are never cancelled.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && !(contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && github.event.label.name != 'fast-ci') && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -41,11 +45,39 @@ jobs:
   # legs cannot skip at job level (their matrix names would not report), so they guard their own
   # steps instead - see "Detect docs-only PR" there. Not a path filter on the trigger, for the reason
   # in the top-of-file comment. Outputs 'true' for every event other than pull_request.
+  #
+  # It also outputs `scope`: 'fast' when the PR carries the `fast-ci` label, else 'full' (and always
+  # 'full' for any event other than pull_request). Nothing reads it yet (#6282). The label is read
+  # live from the API, so re-running a job after adding or removing the label sees the new value
+  # rather than the stale event payload.
   Changes:
+    if: ${{ !(contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && github.event.label.name != 'fast-ci') }}
     runs-on: ubuntu-latest
     outputs:
       non-docs: ${{ github.event_name != 'pull_request' || steps.filter.outputs.non-docs == 'true' }}
+      scope: ${{ steps.scope.outputs.scope }}
     steps:
+      - name: Scope (fast-ci label)
+        id: scope
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          PAYLOAD_LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
+        run: |
+          scope=full
+          if [ "$EVENT" = "pull_request" ]; then
+            if ! labels="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --jq '.[].name')"; then
+              echo "Could not read the PR labels from the API; using the event payload."
+              labels="$(echo "$PAYLOAD_LABELS" | tr ' ' '\n')"
+            fi
+            if echo "$labels" | grep -qx 'fast-ci'; then scope=fast; fi
+          fi
+          echo "scope=$scope" >> "$GITHUB_OUTPUT"
+          echo "Scope: $scope"
+          echo "### Scope: $scope" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Detect docs-only PR
         if: github.event_name == 'pull_request'
         id: filter
@@ -305,7 +337,7 @@ jobs:
         run: dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
 
   Build-and-Test:
-    if: github.event_name != 'schedule'
+    if: ${{ github.event_name != 'schedule' && !(contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && github.event.label.name != 'fast-ci') }}
     strategy:
       matrix:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos
