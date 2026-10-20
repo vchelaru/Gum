@@ -151,9 +151,12 @@ public class MenuItem : ItemsControl
 
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
 
-    // The sub-item container removed from the Visual in UpdateMenuItems; kept so its CollectionChanged
-    // can be unhooked when the Visual changes.
+    // The sub-item container removed from the Visual in UpdateMenuItems. Kept so its CollectionChanged
+    // can be unhooked, and so it can be put back (with its original parent and position) when the Visual
+    // is replaced, leaving that Visual intact if it is assigned again.
     GraphicalUiElement? _subscribedSubItemContainer;
+    GraphicalUiElement? _subItemContainerOriginalParent;
+    int _subItemContainerOriginalIndex;
 
     #endregion
 
@@ -208,6 +211,9 @@ public class MenuItem : ItemsControl
         // The popup belongs to the Visual being removed, so close it before the Visual goes.
         CloseSubmenuForVisualRemoved();
 
+        // Before the base call, which drops the authored sub-items from Items.
+        RestoreSubItemContainer();
+
         base.ReactToVisualRemoved();
 
         // FRB1 only: these lambdas cannot be unsubscribed when the Visual is replaced, so the old
@@ -220,12 +226,6 @@ public class MenuItem : ItemsControl
         Visual.RollOver -= this.HandleRollOver;
 #endif
         Visual.Children.CollectionChanged -= HandleVisualChildrenChanged;
-
-        if (_subscribedSubItemContainer != null)
-        {
-            _subscribedSubItemContainer.Children.CollectionChanged -= HandleSubItemContainerChanged;
-            _subscribedSubItemContainer = null;
-        }
 
         text = null;
         coreText = null;
@@ -252,7 +252,44 @@ public class MenuItem : ItemsControl
             containerInstance.Children.CollectionChanged += HandleSubItemContainerChanged;
             _subscribedSubItemContainer = containerInstance;
 
+            _subItemContainerOriginalParent = containerInstance.Parent as GraphicalUiElement;
+            _subItemContainerOriginalIndex = _subItemContainerOriginalParent?.Children.IndexOf(containerInstance) ?? -1;
             containerInstance.Parent = null;
+        }
+    }
+
+    /// <summary>
+    /// Puts the authored sub-items and their container back into the Visual being removed, so the
+    /// Visual is unchanged if it is assigned again.
+    /// </summary>
+    private void RestoreSubItemContainer()
+    {
+        GraphicalUiElement? container = _subscribedSubItemContainer;
+        if (container == null)
+        {
+            return;
+        }
+
+        container.Children.CollectionChanged -= HandleSubItemContainerChanged;
+        _subscribedSubItemContainer = null;
+
+        if (Items != null)
+        {
+            foreach (object item in Items)
+            {
+                if (item is MenuItem menuItem && IsVisualAuthoredItem(menuItem))
+                {
+                    menuItem.Visual.Parent = container;
+                }
+            }
+        }
+
+        GraphicalUiElement? originalParent = _subItemContainerOriginalParent;
+        _subItemContainerOriginalParent = null;
+        if (originalParent != null && _subItemContainerOriginalIndex > -1)
+        {
+            originalParent.Children.Insert(
+                Math.Min(_subItemContainerOriginalIndex, originalParent.Children.Count), container);
         }
     }
 
