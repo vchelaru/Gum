@@ -95,6 +95,16 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         base.ReactToVisualChanged();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        Visual.RollOn -= HandleRollOn;
+        Visual.Push -= HandleVisualPush;
+        Visual.Dragging -= HandleVisualDragging;
+    }
+
     float? leftGrabbedInOffset;
     float? topGrabbedInOffset;
 

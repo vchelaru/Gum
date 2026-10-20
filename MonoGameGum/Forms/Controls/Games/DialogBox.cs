@@ -178,6 +178,16 @@ public class DialogBox : FrameworkElement, IInputReceiver
         base.ReactToVisualChanged();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+#if !FRB
+        Visual.Click -= this.HandleClick;
+#endif
+    }
+
     #endregion
 
     #region Show Methods

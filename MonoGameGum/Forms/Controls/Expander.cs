@@ -100,6 +100,17 @@ public class Expander : FrameworkElement
         UpdateState();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        if (headerContainer is InteractiveGue interactiveHeader)
+        {
+            interactiveHeader.Click -= HandleHeaderClick;
+        }
+    }
+
     protected override void RefreshInternalVisualReferences()
     {
         headerContainer = Visual.GetGraphicalUiElementByName("HeaderContainer");

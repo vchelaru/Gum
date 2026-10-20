@@ -330,4 +330,20 @@ public class DialogBoxTests : BaseTestClass
 
         wasRaised.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Visual_Reassigned_ShouldIgnoreOldVisualClick()
+    {
+        var (dialogBox, oldVisual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 10;
+        InteractiveGue newVisual = new(new InvisibleRenderable());
+        TextRuntime newText = new() { Name = "TextInstance", Text = string.Empty };
+        newVisual.AddChild(newText);
+        dialogBox.Visual = newVisual;
+        dialogBox.Show("hello world");
+
+        oldVisual.CallClick();
+
+        newText.MaxLettersToShow.ShouldBe(0, "because only the current visual should advance the dialog");
+    }
 }

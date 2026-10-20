@@ -115,6 +115,20 @@ public class ListBoxItem :
         base.ReactToVisualChanged();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+#if !FRB
+        Visual.Push -= this.HandlePush;
+        Visual.Click -= this.HandleClick;
+        Visual.RollOn -= this.HandleRollOn;
+        Visual.RollOff -= this.HandleRollOff;
+        Visual.RollOver -= this.HandleRollOver;
+#endif
+    }
+
     protected override void RefreshInternalVisualReferences()
     {
         // optional

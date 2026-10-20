@@ -137,8 +137,17 @@ public class Slider : RangeBase, IInputReceiver
         if (Track != null)
         {
             Track.Push -= HandleTrackPush;
+#if !FRB
+            Track.RemovedAsPushed -= HandleTrackRemovedAsPushedWindow;
+#endif
         }
 
+#if !FRB
+        if (thumb != null)
+        {
+            thumb.Visual.RemovedAsPushed -= HandleThumbRemovedAsPushedWindow;
+        }
+#endif
     }
 
 #endregion

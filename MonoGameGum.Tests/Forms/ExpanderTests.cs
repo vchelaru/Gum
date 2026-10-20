@@ -1,6 +1,9 @@
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Forms.Controls;
 using Gum.Forms.DefaultFromFileVisuals;
+using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
 
@@ -26,5 +29,28 @@ public class ExpanderTests : BaseTestClass
         var gue = expanderComponent.ToGraphicalUiElement();
 
         (gue is DefaultFromFileExpanderRuntime).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Visual_Reassigned_ShouldOnlyToggleFromNewHeader()
+    {
+        InteractiveGue oldVisual = CreateVisual(out InteractiveGue oldHeader);
+        Expander sut = new(oldVisual);
+        InteractiveGue newVisual = CreateVisual(out InteractiveGue newHeader);
+        sut.Visual = newVisual;
+
+        oldHeader.CallClick();
+        sut.IsExpanded.ShouldBeFalse();
+
+        newHeader.CallClick();
+        sut.IsExpanded.ShouldBeTrue();
+
+        static InteractiveGue CreateVisual(out InteractiveGue header)
+        {
+            InteractiveGue visual = new(new InvisibleRenderable());
+            header = new InteractiveGue(new InvisibleRenderable()) { Name = "HeaderContainer" };
+            visual.Children!.Add(header);
+            return visual;
+        }
     }
 }
