@@ -22,7 +22,7 @@ Most projects do not need to run `codegen-init` explicitly. The `codegen` comman
 - If that folder has several `.csproj` files, uses `Assembly-CSharp.csproj`, then the shortest name
 - Derives `CodeProjectRoot` as a relative path from the `.gumj` directory to the `.csproj` directory
 - Extracts `RootNamespace` from the `.csproj`, falling back to the `.csproj` filename (with `.`, `-`, and spaces replaced by `_`)
-- Sets `OutputLibrary` to `MonoGameForms` (shown as **Gum Forms** in the Code tab), the preferred output for every runtime including MonoGame, KNI, FNA, Skia, and Raylib
+- Sets `OutputLibrary` to `GumForms` (shown as **Gum Forms** in the Code tab), the preferred output for every runtime including MonoGame, KNI, FNA, Skia, and Raylib
 - For a Unity project (`Assembly-CSharp.csproj` next to an `Assets` folder), sets `GeneratedCodeFolder` to `Assets/`, because Unity compiles only code under `Assets`
 
 {% hint style="info" %}
@@ -43,7 +43,7 @@ Output on success:
 Code generation settings initialized successfully.
   CodeProjectRoot : ../
   RootNamespace   : MyGame
-  OutputLibrary   : MonoGameForms
+  OutputLibrary   : GumForms
   Settings saved to: /full/path/to/MyProject/ProjectCodeSettings.codsj
 ```
 

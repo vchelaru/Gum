@@ -26,12 +26,17 @@ When using generated code, Gum generates all file loads relative to the .gumj lo
 To do this, add the following code to where you initialize your code project, such as the CreateMauiApp function:
 
 ```csharp
-SkiaResourceManager.CustomResourceAssembly = typeof(MauiProgram).Assembly;
-SkiaResourceManager.AdjustContentName = (contentName) =>
+// Initialize
+RenderingLibrary.Content.ContentLoader.CustomResourceAssembly = typeof(MauiProgram).Assembly;
+RenderingLibrary.Content.ContentLoader.AdjustContentName = (contentName) =>
 {
     return "MauiSkiaGum.GumProject." + contentName;
 };
 ```
+
+{% hint style="info" %}
+`ContentLoader` is available in November 2026, or now if building Gum from source. Earlier releases use `SkiaResourceManager` for the same two settings, and it still compiles with a warning in November. See [Migrating to 2026 November](../../gum-tool/upgrading/migrating-to-2026-november.md#skiaresourcemanager-and-embeddedresourcecontentloader-are-obsolete).
+{% endhint %}
 
 Notice that resource loading uses the period separator for paths, so the adjusted content name should take form of `YourProjectName.Subfolder.Subfolder2.AdditionalSubFolder`.
 
