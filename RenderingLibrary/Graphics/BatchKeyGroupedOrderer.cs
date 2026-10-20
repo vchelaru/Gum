@@ -65,6 +65,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// </summary>
     public int HardBoundaryTransitionCount { get; private set; }
 
+    /// <summary>
+    /// Number of bounds-intersection tests <see cref="FlushWindow"/> performed building precedence
+    /// graphs during the last <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call.
+    /// A deterministic stand-in for the cost of that step (#6179).
+    /// </summary>
+    internal int PairTestCount { get; private set; }
+
     /// <summary>Why a <see cref="BatchBreakGroup"/> break happened.</summary>
     public enum BreakReason
     {
@@ -355,6 +362,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     public void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null)
     {
         destination.Clear();
+        PairTestCount = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -374,6 +382,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         ClipBoundsSource clipBounds = default)
     {
         destination.Clear();
+        PairTestCount = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -620,6 +629,115 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         _successorsBuffer = newSuccessors;
     }
 
+    // BuildPrecedenceEdges scratch: each entry's bounds edges split into int arrays (a cheap inner
+    // test, no struct copies), plus the sweep's sorted keys and index order. Sized like the graph.
+    private int[] _left = Array.Empty<int>();
+    private int[] _right = Array.Empty<int>();
+    private int[] _top = Array.Empty<int>();
+    private int[] _bottom = Array.Empty<int>();
+    private int[] _sweepKeys = Array.Empty<int>();
+    private int[] _sweepOrder = Array.Empty<int>();
+
+    private void EnsureSweepCapacity(int n)
+    {
+        if (_left.Length >= n)
+        {
+            return;
+        }
+
+        int newSize = System.Math.Max(n, _left.Length * 2);
+        _left = new int[newSize];
+        _right = new int[newSize];
+        _top = new int[newSize];
+        _bottom = new int[newSize];
+        _sweepKeys = new int[newSize];
+        _sweepOrder = new int[newSize];
+    }
+
+    /// <summary>
+    /// Adds the edge i -> j (i before j in DFS order) to <paramref name="successors"/> for every
+    /// pair of window entries whose bounds intersect, and counts each target's incoming edges in
+    /// <paramref name="indegree"/>. A sweep-and-prune over the axis the entries cover more sparsely:
+    /// entries are sorted by their start on that axis, and each is only tested against the following
+    /// entries that start before it ends, since any later one cannot intersect it. The test applied
+    /// to those candidates is the same strict-inequality test as
+    /// <see cref="System.Drawing.Rectangle.IntersectsWith"/>, so the edge set is exactly the all-pairs one.
+    /// </summary>
+    private void BuildPrecedenceEdges(List<Entry> window, int n, int[] indegree, List<int>[] successors)
+    {
+        EnsureSweepCapacity(n);
+        int[] left = _left;
+        int[] right = _right;
+        int[] top = _top;
+        int[] bottom = _bottom;
+
+        int minLeft = int.MaxValue;
+        int maxRight = int.MinValue;
+        int minTop = int.MaxValue;
+        int maxBottom = int.MinValue;
+        long widthSum = 0;
+        long heightSum = 0;
+        for (int i = 0; i < n; i++)
+        {
+            System.Drawing.Rectangle bounds = window[i].Bounds;
+            left[i] = bounds.Left;
+            right[i] = bounds.Right;
+            top[i] = bounds.Top;
+            bottom[i] = bounds.Bottom;
+            minLeft = System.Math.Min(minLeft, left[i]);
+            maxRight = System.Math.Max(maxRight, right[i]);
+            minTop = System.Math.Min(minTop, top[i]);
+            maxBottom = System.Math.Max(maxBottom, bottom[i]);
+            widthSum += (long)right[i] - left[i];
+            heightSum += (long)bottom[i] - top[i];
+        }
+
+        // Fewer candidates on the axis where entries fill less of the total extent:
+        // widthSum / xExtent < heightSum / yExtent, cross-multiplied.
+        long xExtent = (long)maxRight - minLeft;
+        long yExtent = (long)maxBottom - minTop;
+        bool sweepX = widthSum * yExtent <= heightSum * xExtent;
+
+        int[] lo = sweepX ? left : top;
+        int[] hi = sweepX ? right : bottom;
+        int[] otherLo = sweepX ? top : left;
+        int[] otherHi = sweepX ? bottom : right;
+
+        int[] keys = _sweepKeys;
+        int[] order = _sweepOrder;
+        for (int i = 0; i < n; i++)
+        {
+            keys[i] = lo[i];
+            order[i] = i;
+        }
+        Array.Sort(keys, order, 0, n);
+
+        int pairTests = 0;
+        for (int a = 0; a < n; a++)
+        {
+            int ia = order[a];
+            int hiA = hi[ia];
+            for (int b = a + 1; b < n; b++)
+            {
+                int ib = order[b];
+                if (lo[ib] >= hiA)
+                {
+                    break;
+                }
+
+                pairTests++;
+                if (lo[ia] < hi[ib] && otherLo[ia] < otherHi[ib] && otherHi[ia] > otherLo[ib])
+                {
+                    int first = ia < ib ? ia : ib;
+                    int second = ia < ib ? ib : ia;
+                    successors[first].Add(second);
+                    indegree[second]++;
+                }
+            }
+        }
+        PairTestCount += pairTests;
+    }
+
     private void FlushWindow(List<Entry> window, List<DrawCommand> destination)
     {
         int n = window.Count;
@@ -642,18 +760,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             successors[i].Clear();
         }
 
-        for (int i = 0; i < n; i++)
-        {
-            System.Drawing.Rectangle bi = window[i].Bounds;
-            for (int j = i + 1; j < n; j++)
-            {
-                if (bi.IntersectsWith(window[j].Bounds))
-                {
-                    successors[i].Add(j);
-                    indegree[j]++;
-                }
-            }
-        }
+        BuildPrecedenceEdges(window, n, indegree, successors);
 
         // Kahn's topological sort with a "stay on the current batch key" tiebreaker.
         // Among items with indegree 0, prefer one whose (BatchKey, BatchSortKey) matches the
