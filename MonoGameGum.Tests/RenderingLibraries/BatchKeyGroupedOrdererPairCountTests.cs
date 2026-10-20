@@ -29,7 +29,7 @@ public class BatchKeyGroupedOrdererPairCountTests : BaseTestClass
 
         nodes.ShouldBe(165);
         // All pairs would be 165 * 164 / 2 = 13530. Each row only overlaps its own five nodes.
-        pairTests.ShouldBeLessThan(1000);
+        pairTests.ShouldBeLessThan(500);
     }
 
     [Fact]
@@ -38,7 +38,17 @@ public class BatchKeyGroupedOrdererPairCountTests : BaseTestClass
         int pairTests = CountPairTests(BuildHorizontalList(33, new object(), new object()), out int nodes);
 
         nodes.ShouldBe(165);
-        pairTests.ShouldBeLessThan(1000);
+        pairTests.ShouldBeLessThan(500);
+    }
+
+    [Fact]
+    public void BuildDrawList_500NodeVerticalList_PairTestsGrowLinearly()
+    {
+        int pairTests = CountPairTests(BuildVerticalList(100, new object(), new object()), out int nodes);
+
+        nodes.ShouldBe(500);
+        // All pairs would be 124750.
+        pairTests.ShouldBeLessThan(1500);
     }
 
     [Fact]
