@@ -76,6 +76,62 @@ public class RenderTargetBakeBlendStateTests : BaseTestClass
         }
     }
 
+    // The target is premultiplied, so the blit's Additive must be the premultiplied one or group alpha
+    // is applied twice (a 50% container added 25%, #6277).
+    [Fact]
+    public void GetRenderTargetCompositeBlendState_SwapsAdditiveForPremultipliedAdditive_WhenStraightPipeline()
+    {
+        BlendState previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.NonPremultiplied;
+
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.Additive).ShouldBeSameAs(BlendState.AdditivePremultiplied);
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    // FRB resolves Blend.Additive to AdditivePremultiplied already; a plain Additive there is left alone.
+    [Fact]
+    public void GetRenderTargetCompositeBlendState_KeepsAdditive_WhenPremultipliedPipeline()
+    {
+        BlendState previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.AlphaBlend;
+
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.Additive).ShouldBeNull();
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.AdditivePremultiplied).ShouldBeNull();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
+    [Fact]
+    public void GetRenderTargetCompositeBlendState_AlphaBlendsUnconfigured_AndKeepsOtherCustomBlends()
+    {
+        BlendState previous = Renderer.NormalBlendState;
+        try
+        {
+            Renderer.NormalBlendState = BlendState.NonPremultiplied;
+
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.NonPremultiplied).ShouldBeSameAs(BlendState.AlphaBlend);
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.AdditivePremultiplied).ShouldBeNull();
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.Opaque).ShouldBeNull();
+            Renderer.GetRenderTargetCompositeBlendState(BlendState.SubtractAlpha).ShouldBeNull();
+            Renderer.GetRenderTargetCompositeBlendState(null).ShouldBeNull();
+        }
+        finally
+        {
+            Renderer.NormalBlendState = previous;
+        }
+    }
+
     // Sprite.Render premultiplies the tint on a premultiplied pipeline, so the composite tint must be
     // handed over straight there; otherwise container alpha scales color twice (50% drew as 25%).
     [Fact]

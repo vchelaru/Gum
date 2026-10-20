@@ -1427,17 +1427,11 @@ public class Renderer : IRenderer
             ?.RenderTargetEffect as Effect;
 
         // The blit must composite with a premultiplied blend since the target's contents are
-        // premultiplied by construction (see the `color` comment above). Only override the
-        // container's own default (unconfigured) blend — a container with an explicitly-configured
-        // custom BlendState (e.g. Additive) is left alone; making that combination correct against
-        // premultiplied content is that container's own concern, not this composite step's (#1696).
-        // A nested render target composites into its parent's bake while _isBakingRenderTarget is
-        // still true for that outer bake, so an unconfigured nested container's ambient blend has
-        // already been substituted to _bakeToRenderTargetBlendState by AdjustRenderStates — treat
-        // that the same as NormalBlendState here.
-        bool needsPremultipliedBlend = IsUnconfiguredRenderTargetCompositeBlend(mRenderStateVariables.BlendState);
+        // premultiplied by construction (see the `color` comment above). Only the container's own
+        // default (unconfigured) blend and Additive are swapped, see GetRenderTargetCompositeBlendState.
+        BlendState? compositeBlendState = GetRenderTargetCompositeBlendState(mRenderStateVariables.BlendState);
 
-        if (renderTargetEffect == null && !needsPremultipliedBlend)
+        if (renderTargetEffect == null && compositeBlendState == null)
         {
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
         }
@@ -1451,9 +1445,9 @@ public class Renderer : IRenderer
             _batchOrchestrator.FlushAndReset(managers);
 
             var previousBlendState = mRenderStateVariables.BlendState;
-            if (needsPremultipliedBlend)
+            if (compositeBlendState != null)
             {
-                mRenderStateVariables.BlendState = BlendState.AlphaBlend;
+                mRenderStateVariables.BlendState = compositeBlendState;
             }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
@@ -1577,6 +1571,27 @@ public class Renderer : IRenderer
         !UseCustomEffectRendering && NormalBlendState == BlendState.AlphaBlend
             ? System.Drawing.Color.FromArgb(alpha, 255, 255, 255)
             : System.Drawing.Color.FromArgb(alpha, alpha, alpha, alpha);
+
+    // The blend the composite-back blit substitutes for the container's own, or null to keep it. The
+    // target is premultiplied by construction, so Additive (SourceAlpha, One) would apply the group
+    // alpha a second time on top of the tint (a 50% container added 25%, #6277); a premultiplied
+    // additive adds the target once, as Skia's Plus does. Other custom blends are left alone; making
+    // them correct against premultiplied content is that container's own concern (#1696). Additive
+    // on a premultiplied pipeline (FRB) already resolves to AdditivePremultiplied, so it stays as is.
+    internal static BlendState? GetRenderTargetCompositeBlendState(BlendState? blendState)
+    {
+        if (IsUnconfiguredRenderTargetCompositeBlend(blendState))
+        {
+            return BlendState.AlphaBlend;
+        }
+
+        if (blendState != null && NormalBlendState != BlendState.AlphaBlend && IsFieldEquivalent(blendState, BlendState.Additive))
+        {
+            return BlendState.AdditivePremultiplied;
+        }
+
+        return null;
+    }
 
     // Whether a render-target container's blend is its unconfigured default, so the composite-back
     // blit can substitute a premultiplied blend. A container's renderable defaults to

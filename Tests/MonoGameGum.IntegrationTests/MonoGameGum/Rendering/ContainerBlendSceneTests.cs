@@ -14,8 +14,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// <c>SkiaGum.Tests.Renderables.ContainerBlendTests</c> and must give the same pixels. A render-target
 /// container with its own <c>Blend</c> (a white square at group alpha 128) is composited either into
 /// a parent render target holding a red fill over the left 55px (nested), or straight onto an opaque
-/// backdrop (top level). Additive runs at group alpha 255 because the MonoGame composite multiplies
-/// the premultiplied bake by its alpha a second time.
+/// backdrop (top level). Additive applies the group alpha once, like Skia's Plus (#6277).
 /// </summary>
 [Collection(SharedGame.CollectionName)]
 public class ContainerBlendSceneTests : BaseTestClass
@@ -31,6 +30,7 @@ public class ContainerBlendSceneTests : BaseTestClass
     [InlineData(GumBlend.ReplaceAlpha, 128, 135, 50, 60, 35, 35, 45)]
     [InlineData(GumBlend.MinAlpha, 128, 135, 50, 60, 70, 70, 90)]
     [InlineData(GumBlend.Additive, 255, 255, 255, 255, 255, 255, 255)]
+    [InlineData(GumBlend.Additive, 128, 255, 158, 158, 163, 163, 173)]
     public void NestedContainerBlend_HasExpectedPixels(
         GumBlend blend, int alpha, int ar, int ag, int ab, int br, int bg, int bb)
     {
@@ -40,6 +40,45 @@ public class ContainerBlendSceneTests : BaseTestClass
         AssertPixel(pixels, 70, 70, br, bg, bb);
         AssertPixel(pixels, 5, 5, 200, 30, 30);
         AssertPixel(pixels, 90, 10, 70, 70, 90);
+    }
+
+    // The content's own translucency is the other half of the same fault: a 50% fill in an opaque
+    // Additive container must add 50% of its color, not 25%.
+    [Fact]
+    public void NestedAdditiveContainer_WithTranslucentFill_AddsFillAlphaOnce()
+    {
+        XnaColor[] pixels = Render(GumBlend.Additive, 255, nested: true, fillAlpha: 128);
+
+        AssertPixel(pixels, 30, 30, 255, 158, 158);
+        AssertPixel(pixels, 70, 70, 163, 163, 173);
+    }
+
+    // Not a render target: a plain additive fill already adds its alpha once (the path the container fix
+    // makes the render-target composite agree with).
+    [Fact]
+    public void AdditiveFillWithoutRenderTarget_AddsAlphaOnce()
+    {
+        ContainerRuntime root = new() { Width = Size, Height = Size };
+#pragma warning disable CS0618
+        root.AddChild(new ColoredRectangleRuntime { Width = Size, Height = Size, Color = new XnaColor((byte)200, (byte)30, (byte)30, (byte)255) });
+        root.AddChild(new ColoredRectangleRuntime { X = 20, Y = 20, Width = 60, Height = 60, Color = XnaColor.White, Alpha = 128, Blend = GumBlend.Additive });
+#pragma warning restore CS0618
+
+        XnaColor[] pixels = Capture(root);
+
+        AssertPixel(pixels, 30, 30, 255, 158, 158);
+        AssertPixel(pixels, 5, 5, 200, 30, 30);
+    }
+
+    // Top level: Additive adds the premultiplied bake straight onto the backdrop.
+    [Fact]
+    public void TopLevelAdditiveContainer_AddsGroupAlphaOnce()
+    {
+        XnaColor[] pixels = Render(GumBlend.Additive, 128, nested: false);
+
+        AssertPixel(pixels, 30, 30, 255, 158, 158);
+        AssertPixel(pixels, 70, 70, 198, 198, 218);
+        AssertPixel(pixels, 5, 5, 200, 30, 30);
     }
 
     // Top level: the alpha-only blends change the alpha channel of the capture and leave its color.
@@ -66,14 +105,8 @@ public class ContainerBlendSceneTests : BaseTestClass
         System.Math.Abs(actual.B - b).ShouldBeLessThanOrEqualTo(2, $"B at ({x}, {y}) was {actual.B}");
     }
 
-    private static XnaColor[] Render(GumBlend blend, int alpha, bool nested)
+    private static XnaColor[] Render(GumBlend blend, int alpha, bool nested, int fillAlpha = 255)
     {
-        using ShapeGameLease game = new ShapeGameLease();
-
-        GraphicsDevice gd = game.GraphicsDevice;
-        SystemManagers managers = SystemManagers.Default;
-        Renderer renderer = managers.Renderer;
-
         ContainerRuntime root = new();
         root.Width = Size;
         root.Height = Size;
@@ -88,7 +121,7 @@ public class ContainerBlendSceneTests : BaseTestClass
         inner.IsRenderTarget = true;
         inner.Alpha = alpha;
         inner.Blend = blend;
-        inner.AddChild(new ColoredRectangleRuntime { Width = 60, Height = 60, Color = XnaColor.White });
+        inner.AddChild(new ColoredRectangleRuntime { Width = 60, Height = 60, Color = XnaColor.White, Alpha = fillAlpha });
 
         ColoredRectangleRuntime redFill = new() { Width = 55, Height = Size, Color = new XnaColor((byte)200, (byte)30, (byte)30, (byte)255) };
 #pragma warning restore CS0618
@@ -107,6 +140,17 @@ public class ContainerBlendSceneTests : BaseTestClass
             root.AddChild(redFill);
             root.AddChild(inner);
         }
+
+        return Capture(root);
+    }
+
+    private static XnaColor[] Capture(ContainerRuntime root)
+    {
+        using ShapeGameLease game = new ShapeGameLease();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
 
         root.AddToManagers(managers, null);
         root.UpdateLayout();

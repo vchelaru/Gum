@@ -42,6 +42,16 @@ public class BlendMathTests
     private static XnaColor AddRed() =>
         new(System.Math.Min(255, BackdropColor.R + (int)System.Math.Round(255 * Alpha / 255f)), BackdropColor.G, BackdropColor.B);
 
+    // The fill color at alpha 128 added to the backdrop, clamped.
+    private static XnaColor AddFill()
+    {
+        float a = Alpha / 255f;
+        return new XnaColor(
+            System.Math.Min(255, (int)System.Math.Round(BackdropColor.R + Fill.R * a)),
+            System.Math.Min(255, (int)System.Math.Round(BackdropColor.G + Fill.G * a)),
+            System.Math.Min(255, (int)System.Math.Round(BackdropColor.B + Fill.B * a)));
+    }
+
     // A half-alpha mask leaves the opaque fill at alpha 128 for all three alpha-mask modes, over the backdrop.
     private static XnaColor MaskedFill() => Over(new XnaColor(Fill.R, Fill.G, Fill.B), BackdropColor);
 
@@ -69,6 +79,35 @@ public class BlendMathTests
         target.SetProperty("Alpha", Alpha);
         root.Children.Add(target);
         Assert(MaskedFill(), Center(FrbGumHost.Instance.Render(root)));
+    }
+
+    // Additive container at Alpha 128 (the blend set on the container's renderable, since FRB's string
+    // property path has no container "Blend" dispatch): the opaque fill is added once at half strength (#6277). FRB resolves
+    // Additive to the premultiplied additive, so group alpha is not applied a second time.
+    [Fact]
+    public void RenderTarget_AdditiveContainerAlpha_AddsOnce()
+    {
+        GraphicalUiElement root = Container(renderTarget: false);
+        root.Children.Add(Solid(Backdrop));
+        GraphicalUiElement target = Container(renderTarget: true);
+        target.Children.Add(Solid(Fill));
+        SetContainerBlend(target, Blend.Additive);
+        target.SetProperty("Alpha", Alpha);
+        root.Children.Add(target);
+        Assert(AddFill(), Center(FrbGumHost.Instance.Render(root)));
+    }
+
+    // The same through the content's own alpha: a half-alpha fill in an opaque Additive container adds once.
+    [Fact]
+    public void RenderTarget_AdditiveContainer_HalfAlphaContent_AddsOnce()
+    {
+        GraphicalUiElement root = Container(renderTarget: false);
+        root.Children.Add(Solid(Backdrop));
+        GraphicalUiElement target = Container(renderTarget: true);
+        target.Children.Add(Solid(DrawingColor.FromArgb(Alpha, Fill.R, Fill.G, Fill.B)));
+        SetContainerBlend(target, Blend.Additive);
+        root.Children.Add(target);
+        Assert(AddFill(), Center(FrbGumHost.Instance.Render(root)));
     }
 
     [Fact]
@@ -136,6 +175,10 @@ public class BlendMathTests
         root.Children.Add(target);
         return Center(FrbGumHost.Instance.Render(root));
     }
+
+    private static void SetContainerBlend(GraphicalUiElement container, Blend blend) =>
+        ((InvisibleRenderable)container.RenderableComponent).BlendState =
+            global::Gum.RenderingLibrary.BlendExtensions.ToBlendState(blend);
 
     private static XnaColor Center(XnaColor[] pixels) => pixels[50 * FrbGumHost.Width + 50];
 
