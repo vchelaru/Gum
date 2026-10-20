@@ -72,6 +72,14 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// </summary>
     internal int PairTestCount { get; private set; }
 
+    /// <summary>
+    /// Number of window entries <see cref="FlushWindow"/> examined while picking the next draw
+    /// (candidate comparisons, heap steps, blocked-candidate checks) during the last
+    /// <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call. A deterministic
+    /// stand-in for the cost of the Kahn loop (#6302).
+    /// </summary>
+    internal int PickStepCount { get; private set; }
+
     /// <summary>Why a <see cref="BatchBreakGroup"/> break happened.</summary>
     public enum BreakReason
     {
@@ -363,6 +371,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     {
         destination.Clear();
         PairTestCount = 0;
+        PickStepCount = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -383,6 +392,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     {
         destination.Clear();
         PairTestCount = 0;
+        PickStepCount = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -793,6 +803,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         while (available.Count > 0)
         {
             int chosen = -1;
+            PickStepCount += available.Count;
             for (int k = 0; k < available.Count; k++)
             {
                 int idx = available[k];
@@ -806,6 +817,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
             if (chosen == -1)
             {
+                PickStepCount += available.Count;
                 for (int k = 0; k < available.Count; k++)
                 {
                     int idx = available[k];
@@ -820,6 +832,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
             if (chosen == -1)
             {
+                PickStepCount += available.Count;
                 for (int k = 0; k < available.Count; k++)
                 {
                     int idx = available[k];
@@ -834,6 +847,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
             if (chosen == -1)
             {
+                PickStepCount += available.Count;
                 for (int k = 0; k < available.Count; k++)
                 {
                     int idx = available[k];
@@ -901,6 +915,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                         bool blockedCandidateExists = false;
                         for (int k = 0; k < n; k++)
                         {
+                            PickStepCount++;
                             if (!drawn[k] && k != chosen &&
                                 window[k].BatchKey == _runningBatchKey && Equals(window[k].BatchSortKey, _runningSortKey))
                             {
@@ -943,6 +958,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 // override), so whatever comes next is forced too, regardless of its own key.
                 _forceNextTransition = true;
             }
+            PickStepCount += available.IndexOf(chosen) + 1;
             available.Remove(chosen);
 
             List<int> succ = successors[chosen];
