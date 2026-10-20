@@ -149,7 +149,9 @@ public class MenuItem : ItemsControl
 
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
 
-    InteractiveGue? lastVisual;
+    // The sub-item container removed from the Visual in UpdateMenuItems; kept so its CollectionChanged
+    // can be unhooked when the Visual changes.
+    GraphicalUiElement? _subscribedSubItemContainer;
 
     #endregion
 
@@ -198,6 +200,27 @@ public class MenuItem : ItemsControl
         base.ReactToVisualChanged();
     }
 
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+#if !FRB
+        Visual.Push -= this.HandlePush;
+        Visual.Click -= this.HandleClick;
+        Visual.RollOn -= this.HandleRollOn;
+        Visual.RollOff -= this.HandleRollOff;
+        Visual.RollOver -= this.HandleRollOver;
+#endif
+        Visual.Children.CollectionChanged -= HandleVisualChildrenChanged;
+
+        if (_subscribedSubItemContainer != null)
+        {
+            _subscribedSubItemContainer.Children.CollectionChanged -= HandleSubItemContainerChanged;
+            _subscribedSubItemContainer = null;
+        }
+    }
+
     private void UpdateMenuItems()
     {
         var containerInstance = Visual.GetGraphicalUiElementByName(
@@ -215,6 +238,7 @@ public class MenuItem : ItemsControl
             }
 
             containerInstance.Children.CollectionChanged += HandleSubItemContainerChanged;
+            _subscribedSubItemContainer = containerInstance;
 
             containerInstance.Parent = null;
         }
@@ -260,19 +284,15 @@ public class MenuItem : ItemsControl
 
     protected override void RefreshInternalVisualReferences()
     {
-        if (lastVisual != null && lastVisual != Visual)
-        {
-            lastVisual.Children.CollectionChanged -= HandleVisualChildrenChanged;
-        }
-
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
         coreText = text?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
         SubmenuIndicatorInstance = Visual.GetGraphicalUiElementByName("SubmenuIndicatorInstance");
 
+        // ScrollViewer.ReactToVisualChanged runs this again through the virtual call, so unhook first
+        // to keep a single subscription.
+        Visual.Children.CollectionChanged -= HandleVisualChildrenChanged;
         Visual.Children.CollectionChanged += HandleVisualChildrenChanged;
-
-        lastVisual = Visual;
 
         RefreshSubmenuIndicatorVisibility();
     }
@@ -656,6 +676,32 @@ public class MenuItem : ItemsControl
         {
             coreText.RawText = o?.ToString() ?? string.Empty;
         }
+    }
+
+    // Manual save/restore rather than RegisterRuntimeProperty because
+    // ReactToVisualChanged can fire multiple times (visual reassignment),
+    // which would accumulate duplicate registrations.
+    private string? _savedText;
+    private bool _hasSavedText;
+
+    /// <inheritdoc/>
+    public override void SaveRuntimeProperties()
+    {
+        _savedText = coreText?.RawText;
+        _hasSavedText = coreText != null;
+        base.SaveRuntimeProperties();
+    }
+
+    /// <inheritdoc/>
+    public override void ApplyRuntimeProperties()
+    {
+        if (_hasSavedText && text != null)
+        {
+            text.SetProperty("Text", _savedText);
+        }
+        _savedText = null;
+        _hasSavedText = false;
+        base.ApplyRuntimeProperties();
     }
 
     public override void UpdateState()

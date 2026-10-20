@@ -1,6 +1,7 @@
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Input;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
@@ -136,5 +137,84 @@ public class VisualReassignmentTests : BaseTestClass
         ((InteractiveGue)oldVisual.GetGraphicalUiElementByName("SaturationValueContainer")!).TryCallPush();
 
         cursor.Verify(c => c.YRespectingGumZoomAndBounds(), Times.Never);
+    }
+
+    [Fact]
+    public void ScrollBar_Reassigned_ShouldIgnoreOldUpAndDownButtonPush()
+    {
+        ScrollBarVisual oldVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        ScrollBar sut = new(oldVisual);
+        InteractiveGue oldUpVisual = sut.UpButton!.Visual;
+        InteractiveGue oldDownVisual = sut.DownButton!.Visual;
+        sut.Visual = new ScrollBarVisual(fullInstantiation: true, tryCreateFormsObject: false);
+        sut.Value = 50;
+
+        oldUpVisual.TryCallPush();
+        sut.Value.ShouldBe(50);
+        oldDownVisual.TryCallPush();
+        sut.Value.ShouldBe(50);
+    }
+
+    [Fact]
+    public void ScrollBar_Reassigned_ShouldIgnoreOldTrackPush()
+    {
+        Mock<ICursor> cursor = new();
+        FrameworkElement.MainCursor = cursor.Object;
+        ScrollBarVisual oldVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        ScrollBar sut = new(oldVisual);
+        InteractiveGue oldTrack = sut.Track!;
+        sut.Visual = new ScrollBarVisual(fullInstantiation: true, tryCreateFormsObject: false);
+        cursor.Invocations.Clear();
+
+        oldTrack.TryCallPush();
+
+        cursor.Verify(c => c.YRespectingGumZoomAndBounds(), Times.Never);
+    }
+
+    [Fact]
+    public void MenuItem_Reassigned_ShouldIgnoreOldVisualPushClickAndRollOver()
+    {
+        Mock<ICursor> cursor = new();
+        FrameworkElement.MainCursor = cursor.Object;
+        MenuItemVisual oldVisual = new(tryCreateFormsObject: false);
+        MenuItem sut = new(oldVisual);
+        sut.Visual = new MenuItemVisual(tryCreateFormsObject: false);
+        cursor.Invocations.Clear();
+
+        oldVisual.TryCallPush();
+        oldVisual.CallClick();
+        oldVisual.TryCallRollOn();
+        oldVisual.TryCallRollOver();
+
+        cursor.Invocations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void MenuItem_Reassigned_ShouldIgnoreOldVisualRollOff()
+    {
+        MenuItemVisual oldVisual = new(tryCreateFormsObject: false);
+        MenuItem sut = new(oldVisual);
+        sut.Visual = new MenuItemVisual(tryCreateFormsObject: false);
+        sut.IsHighlighted = true;
+
+        oldVisual.TryCallRollOff();
+
+        sut.IsHighlighted.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void MenuItem_Reassigned_ShouldIgnoreOldSubItemContainerChanges()
+    {
+        ContainerRuntime oldVisual = new();
+        ContainerRuntime oldSubItemContainer = new() { Name = "SubItemContainerInstance" };
+        oldVisual.AddChild(oldSubItemContainer);
+        MenuItem sut = new(oldVisual);
+        sut.Visual = new ContainerRuntime();
+        MenuItem subItem = new();
+
+        oldSubItemContainer.Children.Add(subItem.Visual);
+        Gum.GumService.Default.DeferredQueue.ProcessPending();
+
+        sut.Items!.Count.ShouldBe(0);
     }
 }

@@ -5,6 +5,7 @@ using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Gum.GueDeriving;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Linq;
 using Xunit;
@@ -615,6 +616,110 @@ public class RefreshStylesTests : BaseTestClass
         parent.RefreshStyles();
 
         button.Text.ShouldBe("RuntimeText");
+    }
+
+    [Fact]
+    public void RefreshStyles_ShouldPreserveCheckBoxTextWhenComponentHasTextDefault()
+    {
+        CheckBox checkBox = new();
+        ContainerRuntime parent = AttachToScreenWithComponentTextDefault(
+            checkBox.Visual, "Controls/CheckBox", "TextInstance.Text", "DesignTimeText");
+        checkBox.Text = "RuntimeText";
+
+        parent.RefreshStyles();
+
+        checkBox.Text.ShouldBe("RuntimeText");
+    }
+
+    [Fact]
+    public void RefreshStyles_ShouldPreserveRadioButtonTextWhenComponentHasTextDefault()
+    {
+        RadioButton radioButton = new();
+        ContainerRuntime parent = AttachToScreenWithComponentTextDefault(
+            radioButton.Visual, "Controls/RadioButton", "TextInstance.Text", "DesignTimeText");
+        radioButton.Text = "RuntimeText";
+
+        parent.RefreshStyles();
+
+        radioButton.Text.ShouldBe("RuntimeText");
+    }
+
+    [Fact]
+    public void RefreshStyles_ShouldPreserveExpanderHeaderWhenComponentHasTextDefault()
+    {
+        InteractiveGue visual = new(new InvisibleRenderable());
+        TextRuntime textInstance = new() { Name = "TextInstance" };
+        visual.Children!.Add(textInstance);
+        Expander expander = new(visual);
+        ContainerRuntime parent = AttachToScreenWithComponentTextDefault(
+            visual, "Controls/Expander", "TextInstance.Text", "DesignTimeText");
+        expander.Header = "RuntimeHeader";
+
+        parent.RefreshStyles();
+
+        expander.Header.ShouldBe("RuntimeHeader");
+    }
+
+    [Fact]
+    public void RefreshStyles_ShouldPreserveMenuItemHeaderWhenComponentHasTextDefault()
+    {
+        MenuItem menuItem = new();
+        ContainerRuntime parent = AttachToScreenWithComponentTextDefault(
+            menuItem.Visual, "Controls/MenuItem", "TextInstance.Text", "DesignTimeText");
+        menuItem.Header = "RuntimeHeader";
+
+        parent.RefreshStyles();
+
+        menuItem.Header.ShouldBe("RuntimeHeader");
+    }
+
+    [Fact]
+    public void RefreshStyles_ShouldPreserveTextBoxPlaceholderWhenComponentHasTextDefault()
+    {
+        TextBox textBox = new();
+        ContainerRuntime parent = AttachToScreenWithComponentTextDefault(
+            textBox.Visual, "Controls/TextBox", "PlaceholderTextInstance.Text", "DesignTimePlaceholder");
+        textBox.Placeholder = "RuntimePlaceholder";
+
+        parent.RefreshStyles();
+
+        textBox.Placeholder.ShouldBe("RuntimePlaceholder");
+    }
+
+    /// <summary>
+    /// Parents the visual to a screen and gives it a component whose Default state sets a design-time
+    /// text value, like a Gum project does. Refreshing the returned screen re-applies that value.
+    /// </summary>
+    private static ContainerRuntime AttachToScreenWithComponentTextDefault(
+        InteractiveGue visual, string componentName, string textVariableName, string designTimeText)
+    {
+        ContainerRuntime parent = new();
+        visual.Name = "ControlInstance";
+        visual.Parent = parent;
+
+        ComponentSave component = new();
+        component.Name = componentName;
+        StateSave componentDefault = new();
+        componentDefault.Name = "Default";
+        componentDefault.Variables.Add(new VariableSave
+        {
+            Name = textVariableName,
+            Value = designTimeText,
+            SetsValue = true
+        });
+        component.States.Add(componentDefault);
+        visual.AddStates(new System.Collections.Generic.List<StateSave> { componentDefault });
+        visual.ElementSave = component;
+
+        StateSave parentDefault = new();
+        parentDefault.Name = "Default";
+        ScreenSave parentElement = new();
+        parentElement.Name = "TestScreen";
+        parentElement.States.Add(parentDefault);
+        parent.AddStates(new System.Collections.Generic.List<StateSave> { parentDefault });
+        parent.ElementSave = parentElement;
+
+        return parent;
     }
 
     [Fact]

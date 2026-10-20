@@ -24,6 +24,11 @@ public class ScrollBar : RangeBase
     Button? upButton;
     Button? downButton;
 
+    // The buttons whose Push/Click we are subscribed to, so they can be unhooked when the Visual
+    // changes even though upButton/downButton are re-resolved from the new Visual.
+    Button? _subscribedUpButton;
+    Button? _subscribedDownButton;
+
     public Button? UpButton => upButton;
     public Button? DownButton => downButton;
     public float MinimumThumbSize { get; set; } = 16;
@@ -111,14 +116,6 @@ public class ScrollBar : RangeBase
     bool hasAssignedOrientation = false;
     protected override void ReactToVisualChanged()
     {
-        // Visual may be reassigned at runtime, which swaps Track. Unhook from the previously
-        // tracked instance before resolving the new one so we don't leak a subscription.
-        if (_subscribedTrack != null)
-        {
-            _subscribedTrack.SizeChanged -= HandleTrackSizeChanged;
-            _subscribedTrack = null;
-        }
-
         if(!hasAssignedOrientation)
         {
             // default it!
@@ -149,39 +146,16 @@ public class ScrollBar : RangeBase
             // didn't reliably exclude the mouse path, producing a double
             // scroll per click. Pinning to the keyboard device type leaves
             // the mouse path untouched.
-            upButton.Push += (_, _) => this.Value -= this.SmallChange;
-            upButton.Click += (_, e) =>
-            {
-#if !FRB
-                if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
-                {
-                    this.Value -= this.SmallChange;
-                }
-#endif
-            };
+            _subscribedUpButton = upButton;
+            upButton.Push += HandleUpButtonPush;
+            upButton.Click += HandleUpButtonClick;
         }
 
         if(downButton != null)
         {
-            downButton.Push += (_, _) => this.Value += this.SmallChange;
-            downButton.Click += (_, e) =>
-            {
-#if !FRB
-                if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
-                {
-                    this.Value += this.SmallChange;
-                }
-#endif
-            };
-        }
-
-        if(Track != null)
-        {
-#if FRB
-            Track.Push += _ => HandleTrackPush(this, EventArgs.Empty);
-#else
-            Track.Push += HandleTrackPush;
-#endif
+            _subscribedDownButton = downButton;
+            downButton.Push += HandleDownButtonPush;
+            downButton.Click += HandleDownButtonClick;
         }
 
         // Subscribe to Track.SizeChanged rather than Visual.SizeChanged because Track size is what
@@ -194,6 +168,11 @@ public class ScrollBar : RangeBase
         {
             _subscribedTrack = track;
             track.SizeChanged += HandleTrackSizeChanged;
+#if FRB
+            track.Push += HandleScrollBarTrackPushFrb;
+#else
+            track.Push += HandleTrackPush;
+#endif
         }
 
 
@@ -294,6 +273,35 @@ public class ScrollBar : RangeBase
         }
     }
 
+    private void HandleUpButtonPush(object? sender, EventArgs args) => this.Value -= this.SmallChange;
+
+    private void HandleDownButtonPush(object? sender, EventArgs args) => this.Value += this.SmallChange;
+
+    private void HandleUpButtonClick(object? sender, EventArgs e)
+    {
+#if !FRB
+        if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
+        {
+            this.Value -= this.SmallChange;
+        }
+#endif
+    }
+
+    private void HandleDownButtonClick(object? sender, EventArgs e)
+    {
+#if !FRB
+        if (e is InputEventArgs iea && iea.InputDevice is IInputReceiverKeyboard)
+        {
+            this.Value += this.SmallChange;
+        }
+#endif
+    }
+
+#if FRB
+    // Named wrapper rather than a lambda so it can be unsubscribed.
+    private void HandleScrollBarTrackPushFrb(IWindow _) => HandleTrackPush(this, EventArgs.Empty);
+#endif
+
     private void HandleTrackPush(object? sender, EventArgs args)
     {
         // Early out, can't calulate without this
@@ -335,9 +343,28 @@ public class ScrollBar : RangeBase
     {
         base.ReactToVisualRemoved();
 
+        if (_subscribedUpButton != null)
+        {
+            _subscribedUpButton.Push -= HandleUpButtonPush;
+            _subscribedUpButton.Click -= HandleUpButtonClick;
+            _subscribedUpButton = null;
+        }
+
+        if (_subscribedDownButton != null)
+        {
+            _subscribedDownButton.Push -= HandleDownButtonPush;
+            _subscribedDownButton.Click -= HandleDownButtonClick;
+            _subscribedDownButton = null;
+        }
+
         if (_subscribedTrack != null)
         {
             _subscribedTrack.SizeChanged -= HandleTrackSizeChanged;
+#if FRB
+            _subscribedTrack.Push -= HandleScrollBarTrackPushFrb;
+#else
+            _subscribedTrack.Push -= HandleTrackPush;
+#endif
             _subscribedTrack = null;
         }
     }
