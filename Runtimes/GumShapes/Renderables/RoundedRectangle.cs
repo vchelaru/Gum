@@ -217,7 +217,7 @@ public class RoundedRectangle : RenderableShapeBase,
 
         var size = new Microsoft.Xna.Framework.Vector2(Width, Height);
 
-        BeginAlphaBoundsMask();
+        BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         // Resolve camera zoom once: it scales the pixel-center AA inset (RenderInternal) and the
         // dropshadow halo/geometry so both hold a constant on-screen size as the tool zooms.
@@ -256,7 +256,7 @@ public class RoundedRectangle : RenderableShapeBase,
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom);
-        EndAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
+        EndAlphaBoundsMask();
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,
