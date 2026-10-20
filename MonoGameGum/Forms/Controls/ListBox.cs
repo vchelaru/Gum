@@ -564,48 +564,35 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
-    /// <summary>
-    /// Brings ListBoxItems authored on the Visual into Items and ListBoxItems, ahead of any item added
-    /// in code.
-    /// </summary>
-    protected override void AdoptVisualAuthoredItems()
+    /// <inheritdoc/>
+    protected override bool IsAuthoredRow(FrameworkElement control) => control is ListBoxItem;
+
+    /// <inheritdoc/>
+    protected override void AdoptAuthoredRow(FrameworkElement row, int rowIndex)
     {
-        if (InnerPanel == null || Items == null)
+        ListBoxItem listBoxItem = (ListBoxItem)row;
+
+        // A directly-added ListBoxItem is its own backing object in Items (issue #556).
+        listBoxItem.DataObject = listBoxItem;
+
+        // The row already has its visual in the panel, so Items must not create another.
+        _suppressCollectionChangedToBase = true;
+        try
         {
-            return;
+            AdoptVisualAuthoredItem(listBoxItem, rowIndex);
+        }
+        finally
+        {
+            _suppressCollectionChangedToBase = false;
         }
 
-        int adoptedCount = 0;
-        foreach (GraphicalUiElement child in InnerPanel.Children.ToList())
-        {
-            if (child is InteractiveGue interactiveGue &&
-                interactiveGue.FormsControlAsObject is ListBoxItem listBoxItem &&
-                !Items.Contains(listBoxItem))
-            {
-                // A directly-added ListBoxItem is its own backing object in Items (issue #556).
-                listBoxItem.DataObject = listBoxItem;
-
-                // The row already has its visual in the panel, so Items must not create another.
-                _suppressCollectionChangedToBase = true;
-                try
-                {
-                    AdoptVisualAuthoredItem(listBoxItem, adoptedCount);
-                }
-                finally
-                {
-                    _suppressCollectionChangedToBase = false;
-                }
-
-                ListBoxItemsInternal.Insert(adoptedCount, listBoxItem);
-                listBoxItem.AssignListBoxEvents(
-                    HandleItemSelected,
-                    HandleItemFocused,
-                    HandleListBoxItemPushed,
-                    HandleListBoxItemClicked,
-                    HandleListBoxItemDragging);
-                adoptedCount++;
-            }
-        }
+        ListBoxItemsInternal.Insert(rowIndex, listBoxItem);
+        listBoxItem.AssignListBoxEvents(
+            HandleItemSelected,
+            HandleItemFocused,
+            HandleListBoxItemPushed,
+            HandleListBoxItemClicked,
+            HandleListBoxItemDragging);
     }
 
     private void RestoreSelectionAfterVisualChanged(List<object?> selectedData)

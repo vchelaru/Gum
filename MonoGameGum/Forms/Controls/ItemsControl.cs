@@ -49,6 +49,10 @@ public class ItemsControl : ScrollViewer
     } = string.Empty;
 
     IList? items = new ObservableCollection<object>();
+
+    // Set once Items is assigned, so the collection is the caller's rather than the control's own
+    // default. Never cleared: the default is not reachable again by assignment.
+    private bool _isItemsAssigned;
     /// <summary>
     /// The items contained by this ItemsControl. This can contain regular
     /// data such as strings, instances of ViewModels, or FrameworkElement instances
@@ -97,6 +101,7 @@ public class ItemsControl : ScrollViewer
                         notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
                     }
                     items = value;
+                    _isItemsAssigned = true;
                     _visualAuthoredItems.Clear();
                     ForceUpdateToItems();
                 }
@@ -266,13 +271,27 @@ public class ItemsControl : ScrollViewer
 
         if (InnerPanel != null)
         {
+            List<(GraphicalUiElement Visual, FrameworkElement Row)> authoredRows = FindAuthoredRows();
+
+            if (items != null && _isItemsAssigned)
+            {
+                // Before subscribing, so the panel handler does not read the removal as an item removal.
+                DetachAuthoredRows(authoredRows);
+            }
+
             InnerPanel.Children.CollectionChanged += HandleInnerPanelCollectionChanged;
 
             // Items added in code are control data, not template, so they follow the control to the
             // new Visual's panel. Items the previous Visual authored were dropped when it was removed.
             List<object>? codeAddedItems = items?.Count > 0 ? items.Cast<object>().ToList() : null;
 
-            AdoptVisualAuthoredItems();
+            if (CanAdoptVisualAuthoredItems)
+            {
+                for (int i = 0; i < authoredRows.Count; i++)
+                {
+                    AdoptAuthoredRow(authoredRows[i].Row, i);
+                }
+            }
 
             if (codeAddedItems != null)
             {
@@ -282,11 +301,71 @@ public class ItemsControl : ScrollViewer
     }
 
     /// <summary>
-    /// Called when a Visual with an InnerPanel is assigned, so derived controls can bring content the
-    /// Visual authored into <see cref="Items"/>. Adopted items must be recorded with
-    /// <see cref="AdoptVisualAuthoredItem"/> so they are dropped again if the Visual is replaced.
+    /// Whether the control is the kind of row a derived control brings over from content a Visual
+    /// authored (such as a ListBoxItem in a ListBox). Rows that are not already in
+    /// <see cref="Items"/> are adopted with <see cref="AdoptAuthoredRow"/>.
     /// </summary>
-    protected virtual void AdoptVisualAuthoredItems() { }
+    protected virtual bool IsAuthoredRow(FrameworkElement control) => false;
+
+    /// <summary>
+    /// Brings a row the Visual authored into <see cref="Items"/> and the derived control's row list.
+    /// Implementations record the item with <see cref="AdoptVisualAuthoredItem"/> so it is dropped
+    /// again if the Visual is replaced. Only called when <see cref="CanAdoptVisualAuthoredItems"/> is true.
+    /// </summary>
+    /// <param name="row">The authored row, whose visual is already in the panel.</param>
+    /// <param name="rowIndex">The position among the rows being adopted, which is also their index at the front of Items.</param>
+    protected virtual void AdoptAuthoredRow(FrameworkElement row, int rowIndex) { }
+
+    /// <summary>
+    /// Whether content the Visual authored may be inserted into <see cref="Items"/>. False when Items
+    /// is a collection the caller assigned (such as a bound view model collection): the control does
+    /// not write its template content into data it does not own, and a typed collection could not
+    /// hold the authored controls at all.
+    /// </summary>
+    protected bool CanAdoptVisualAuthoredItems => items != null && !_isItemsAssigned;
+
+    private List<(GraphicalUiElement Visual, FrameworkElement Row)> FindAuthoredRows()
+    {
+        List<(GraphicalUiElement Visual, FrameworkElement Row)> rows = new();
+        if (InnerPanel == null || items == null)
+        {
+            return rows;
+        }
+
+        foreach (GraphicalUiElement child in InnerPanel.Children)
+        {
+            if (child is InteractiveGue interactiveGue &&
+                interactiveGue.FormsControlAsObject is FrameworkElement control &&
+                IsAuthoredRow(control) &&
+                !items.Contains(control))
+            {
+                rows.Add((child, control));
+            }
+        }
+        return rows;
+    }
+
+    // Authored rows removed from a panel because Items is user-assigned; they go back when the Visual is removed.
+    private readonly List<(GraphicalUiElement Panel, GraphicalUiElement Row, int Index)> _detachedAuthoredRows = new();
+
+    private void DetachAuthoredRows(List<(GraphicalUiElement Visual, FrameworkElement Row)> authoredRows)
+    {
+        foreach ((GraphicalUiElement visual, _) in authoredRows)
+        {
+            int index = InnerPanel.Children.IndexOf(visual);
+            InnerPanel.Children.RemoveAt(index);
+            _detachedAuthoredRows.Add((InnerPanel, visual, index));
+        }
+    }
+
+    private void RestoreDetachedAuthoredRows()
+    {
+        foreach ((GraphicalUiElement panel, GraphicalUiElement row, int index) in _detachedAuthoredRows)
+        {
+            panel.Children.Insert(Math.Min(index, panel.Children.Count), row);
+        }
+        _detachedAuthoredRows.Clear();
+    }
 
     // Items that came from the Visual's authored content rather than from code. Compared by reference.
     private readonly List<object> _visualAuthoredItems = new List<object>();
@@ -499,6 +578,7 @@ public class ItemsControl : ScrollViewer
             InnerPanel.Children.CollectionChanged -= HandleInnerPanelCollectionChanged;
         }
 
+        RestoreDetachedAuthoredRows();
         DropVisualAuthoredItems();
     }
 

@@ -80,9 +80,11 @@ When a `Button`, `CheckBox`, or other `FrameworkElement` is added to `Items`, it
 
 `HandleInnerPanelCollectionChanged` fires and can populate `ListBoxItemsInternal` if the child's `FormsControlAsObject` is a `ListBoxItem`. But **`Items` is never updated** — it stays at 0 (or whatever it was). This is the case when a ListBox's visual is constructed by the Gum tool with pre-filled children.
 
-### 3. Gum tool pre-filled ListBox and Menu (AdoptVisualAuthoredItems)
+### 3. Gum tool pre-filled ListBox and Menu (IsAuthoredRow / AdoptAuthoredRow)
 
-When a Visual with an InnerPanel is assigned, `ItemsControl.ReactToVisualChanged` calls `AdoptVisualAuthoredItems`. ListBox and Menu override it to put the `ListBoxItem`/`MenuItem` children authored in the panel at the front of `Items` and the row list, and to hook their events. Adopted items are tracked through `AdoptVisualAuthoredItem`; `MenuItem` adopts its `SubItemContainerInstance` children the same way. Adoption runs only on assignment, so later direct panel adds follow the normal panel path.
+When a Visual with an InnerPanel is assigned, `ItemsControl.ReactToVisualChanged` finds the panel children whose control passes `IsAuthoredRow` (`ListBoxItem` in ListBox, `MenuItem` in Menu) and calls `AdoptAuthoredRow` for each, which puts them at the front of `Items` and the row list and hooks their events. Adopted items are tracked through `AdoptVisualAuthoredItem`; `MenuItem` adopts its `SubItemContainerInstance` children the same way. Adoption runs only on assignment, so later direct panel adds follow the normal panel path.
+
+Adoption happens only while `Items` is the control's own default collection. Once `Items` has been assigned (a bound `ObservableCollection`, for example), `CanAdoptVisualAuthoredItems` is false: authored rows are taken out of the new panel (put back when the Visual is removed) and a MenuItem leaves its authored sub-items alone, so the assigned collection is never written to by a Visual swap.
 
 On a Visual swap, the old Visual's adopted items are dropped from `Items` and items added in code are re-added after the new Visual's own children. Rows for data objects are recreated, and a ListBox keeps its selection by data object.
 

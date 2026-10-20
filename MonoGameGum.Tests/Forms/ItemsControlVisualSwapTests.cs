@@ -376,6 +376,156 @@ public class ItemsControlVisualSwapTests : BaseTestClass
 
     #endregion
 
+    #region User-assigned Items (#6243)
+
+    [Fact]
+    public void ListBox_ShouldNotThrowOrTouchTypedCollection_WhenSwappedToVisualWithAuthoredItems()
+    {
+        ObservableCollection<string> source = new() { "a", "b" };
+        ListBox sut = new();
+        sut.Items = source;
+        int changeCount = 0;
+        source.CollectionChanged += (_, _) => changeCount++;
+        ListBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.InnerPanelInstance.Children.Add(new ListBoxItem().Visual);
+
+        Should.NotThrow(() => sut.Visual = newVisual);
+
+        source.ShouldBe(new[] { "a", "b" });
+        changeCount.ShouldBe(0);
+        sut.Items.ShouldBeSameAs(source);
+        sut.Items!.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ListBox_ShouldNotAdoptAuthoredItemIntoObjectCollection_WhenVisualSwapped()
+    {
+        ObservableCollection<object> source = new() { "a", "b" };
+        ListBox sut = new();
+        sut.Items = source;
+        int changeCount = 0;
+        source.CollectionChanged += (_, _) => changeCount++;
+        ListBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.InnerPanelInstance.Children.Add(new ListBoxItem().Visual);
+
+        sut.Visual = newVisual;
+
+        source.Count.ShouldBe(2);
+        changeCount.ShouldBe(0);
+        sut.ListBoxItems.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ListBox_ShouldReachNewPanelAndKeepSelection_WhenUserCollectionChangesAfterSwapToVisualWithAuthoredItems()
+    {
+        ObservableCollection<string> source = new() { "a", "b" };
+        ListBox sut = new();
+        sut.Items = source;
+        sut.SelectedIndex = 1;
+        ListBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.InnerPanelInstance.Children.Add(new ListBoxItem().Visual);
+        sut.Visual = newVisual;
+
+        sut.SelectedObject.ShouldBe("b");
+        source.Add("c");
+        source.RemoveAt(0);
+
+        sut.ListBoxItems.Count.ShouldBe(2);
+        sut.ListBoxItems[1].DataObject.ShouldBe("c");
+        sut.SelectedObject.ShouldBe("b");
+    }
+
+    [Fact]
+    public void ListBox_ShouldLeaveAuthoredRowOutOfPanelAndRestoreItOnSwapAway_WhenItemsIsUserAssigned()
+    {
+        ObservableCollection<string> source = new() { "a" };
+        ListBox sut = new();
+        sut.Items = source;
+        ListBoxVisual visualA = new(tryCreateFormsObject: false);
+        ListBoxItem authoredItem = new();
+        visualA.InnerPanelInstance.Children.Add(authoredItem.Visual);
+
+        sut.Visual = visualA;
+
+        visualA.InnerPanelInstance.Children.Count.ShouldBe(1);
+        visualA.InnerPanelInstance.Children.ShouldNotContain(authoredItem.Visual);
+
+        sut.Visual = new ListBoxVisual(tryCreateFormsObject: false);
+
+        visualA.InnerPanelInstance.Children.ShouldContain(authoredItem.Visual);
+        authoredItem.Visual.Parent.ShouldBe(visualA.InnerPanelInstance);
+    }
+
+    [Fact]
+    public void Menu_ShouldNotThrowOrTouchTypedCollection_WhenSwappedToVisualWithAuthoredItems()
+    {
+        ObservableCollection<string> source = new() { "File", "Edit" };
+        Menu sut = new();
+        sut.Items = source;
+        int changeCount = 0;
+        source.CollectionChanged += (_, _) => changeCount++;
+        MenuVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.InnerPanelInstance.Children.Add(new MenuItem().Visual);
+
+        Should.NotThrow(() => sut.Visual = newVisual);
+
+        source.ShouldBe(new[] { "File", "Edit" });
+        changeCount.ShouldBe(0);
+        sut.MenuItems.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Menu_ShouldReachNewPanel_WhenUserCollectionAddedToAfterSwapToVisualWithAuthoredItems()
+    {
+        ObservableCollection<string> source = new() { "File" };
+        Menu sut = new();
+        sut.Items = source;
+        MenuVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.InnerPanelInstance.Children.Add(new MenuItem().Visual);
+        sut.Visual = newVisual;
+
+        source.Add("Edit");
+
+        sut.MenuItems.Count.ShouldBe(2);
+        sut.MenuItems[1].Visual.Parent.ShouldBe(newVisual.InnerPanelInstance);
+    }
+
+    [Fact]
+    public void MenuItem_ShouldNotThrowOrTouchTypedCollection_WhenSwappedToVisualWithAuthoredSubItems()
+    {
+        ObservableCollection<string> source = new() { "Open" };
+        MenuItem sut = new();
+        sut.Items = source;
+        int changeCount = 0;
+        source.CollectionChanged += (_, _) => changeCount++;
+
+        Should.NotThrow(() => sut.Visual = CreateMenuItemVisualWithSubItem(new MenuItem()));
+        Gum.GumService.Default.DeferredQueue.ProcessPending();
+
+        source.ShouldBe(new[] { "Open" });
+        changeCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void MenuItem_ShouldNotAdoptAddedSubItem_WhenItemsIsUserAssigned()
+    {
+        ObservableCollection<object> source = new() { "Open" };
+        ContainerRuntime visual = CreateMenuItemVisualWithSubItem(new MenuItem());
+        GraphicalUiElement container = visual.GetGraphicalUiElementByName("SubItemContainerInstance")!;
+        MenuItem sut = new(visual);
+        sut.Items = source;
+        int changeCount = 0;
+        source.CollectionChanged += (_, _) => changeCount++;
+
+        container.Children.Add(new MenuItem().Visual);
+        Gum.GumService.Default.DeferredQueue.ProcessPending();
+
+        source.Count.ShouldBe(1);
+        changeCount.ShouldBe(0);
+    }
+
+    #endregion
+
     #region RefreshStyles after swap
 
     [Fact]
