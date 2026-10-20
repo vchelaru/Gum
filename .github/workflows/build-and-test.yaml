@@ -466,12 +466,17 @@ jobs:
       # A test project added to the list below must be added to the filter too, or its `--no-build`
       # step fails for want of a binary.
       # EXPERIMENT (#6282): NuGet package cache, saved from this branch to measure a warm restore.
+      - name: NuGet packages folder on the runner temp drive
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
+        shell: bash
+        run: echo "NUGET_PACKAGES=${RUNNER_TEMP}\nuget-packages" >> "$GITHUB_ENV"
+
       - name: Cache NuGet packages (experiment)
         id: cache-nuget
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         uses: actions/cache@v4
         with:
-          path: ~/.nuget/packages
+          path: ${{ runner.temp }}\nuget-packages
           key: nuget-${{ runner.os }}-${{ hashFiles('global.json', 'NuGet.config', 'Directory.Packages.props', 'Directory.Build.props', '**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
