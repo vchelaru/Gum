@@ -281,6 +281,10 @@ When reading a trace:
 
 Apos.Shapes draws a quad larger than the shape and does not discard zero-coverage fragments, so ReplaceAlpha and MinAlpha write alpha 0 in a margin outside the shape's bounds. `ShapeRenderer.BeginAlphaBoundsMask`/`EndAlphaBoundsMask` clip every draw of the shape to its bounds with a stencil bit (a pixel counts when its center is inside) and then cover the rest of the bounds. A new shape renderable must call both, passing its own bounds. `ShapeEdgePixelTests` audits every shape type for pixels changed outside the bounds.
 
+## Alpha-Only Blends on Text Mask the Whole Text Bounds
+
+Text with ReplaceAlpha or MinAlpha (character-by-character mode, while baking a render target) masks its measured block plus 2px (plus the drop shadow offset), like Skia, not just the glyph cells. A bounds quad drawn before the glyphs would wipe the color they read, so `SpriteRenderer.BeginAlphaBoundsMask`/`EndAlphaBoundsMask` use the same stencil scheme as shapes: mark the bounds, draw the glyphs inside them, then cover the unmarked part with an alpha-0 quad. `Text` implements `IStencilRenderable` so the bake target gets a stencil buffer. Glyph quads still overwrite neighbors they overlap (a `t` crossbar under the next letter), which `TextAlphaBoundsMaskTests` avoids by using non-overlapping glyphs.
+
 ## Known Pitfalls Checklist
 
 When changing batch logic:

@@ -574,6 +574,110 @@ public class SpriteRenderer
         mSpriteBatch.End();
     }
 
+    // Issue #6237: an alpha-only blend (ReplaceAlpha, MinAlpha) on text applies to the text's whole
+    // bounds, not just the glyph cells. Unlike a shape, glyph quads never draw outside their cells, but
+    // ReplaceAlpha and MinAlpha rewrite the destination color from the source alpha, so a bounds quad
+    // drawn before the glyphs would wipe what they then read. So, as for shapes (ShapeRenderer), the
+    // stencil buffer carries the work: bit 0 marks the bounds, the glyphs then draw only inside them and
+    // set bit 1, and a last bounds quad with alpha 0 draws where bit 1 is unset. Stencil exists only on
+    // a bake target that asked for it (IStencilRenderable).
+    private readonly DepthStencilState _maskMarkBoundsState = new DepthStencilState
+    {
+        DepthBufferEnable = false,
+        StencilEnable = true,
+        StencilFunction = CompareFunction.Always,
+        StencilPass = StencilOperation.Replace,
+        ReferenceStencil = 1,
+        StencilWriteMask = 1,
+    };
+
+    private readonly DepthStencilState _maskClipToBoundsState = new DepthStencilState
+    {
+        DepthBufferEnable = false,
+        StencilEnable = true,
+        StencilFunction = CompareFunction.Equal,
+        StencilPass = StencilOperation.Replace,
+        ReferenceStencil = 3,
+        StencilMask = 1,
+        StencilWriteMask = 2,
+    };
+
+    private readonly DepthStencilState _maskCoverOutsideGlyphsState = new DepthStencilState
+    {
+        DepthBufferEnable = false,
+        StencilEnable = true,
+        StencilFunction = CompareFunction.Equal,
+        StencilPass = StencilOperation.Keep,
+        ReferenceStencil = 1,
+        StencilMask = 3,
+    };
+
+    private static readonly Gum.BlendState _maskNoColorWriteBlendState = new Gum.BlendState
+    {
+        ColorWriteChannels = Gum.ColorWriteChannels.None,
+        ColorWriteChannels1 = Gum.ColorWriteChannels.None,
+        ColorWriteChannels2 = Gum.ColorWriteChannels.None,
+        ColorWriteChannels3 = Gum.ColorWriteChannels.None,
+    };
+
+    private Gum.BlendState? _maskRestoreBlendState;
+    private DepthStencilState? _maskRestoreDepthStencilState;
+
+    /// <summary>
+    /// Call before drawing text whose blend is alpha-only, with the bounds the blend applies to
+    /// (<paramref name="topLeft"/> before rotation, <paramref name="rotationRadians"/> as a SpriteBatch
+    /// rotation). Clips the draws that follow to the bounds. Pair with <see cref="EndAlphaBoundsMask"/>.
+    /// </summary>
+    internal void BeginAlphaBoundsMask(Texture2D pixelTexture, Rectangle? pixelSource, Vector2 topLeft, Vector2 size,
+        float rotationRadians, object objectRequestingChange)
+    {
+        BeginParameters? current = mSpriteBatch.CurrentParameters;
+        if (current == null)
+        {
+            return;
+        }
+
+        _maskRestoreBlendState = current.Value.BlendState;
+        _maskRestoreDepthStencilState = current.Value.DepthStencilState;
+
+        // The clear needs the batch ended; the replace below begins it again.
+        mSpriteBatch.FlushIfBegan();
+        mSpriteBatch.GraphicsDevice.Clear(ClearOptions.Stencil, Microsoft.Xna.Framework.Color.Transparent, 0f, 0);
+
+        mSpriteBatch.ReplaceBlendAndDepthStencilState(_maskNoColorWriteBlendState, _maskMarkBoundsState);
+        DrawMaskBounds(pixelTexture, pixelSource, topLeft, size, rotationRadians, Color.White, objectRequestingChange);
+        mSpriteBatch.ReplaceBlendAndDepthStencilState(_maskRestoreBlendState, _maskClipToBoundsState);
+    }
+
+    /// <summary>
+    /// Second half of <see cref="BeginAlphaBoundsMask"/>, with the same bounds: applies the blend, with
+    /// alpha 0, to the part of the bounds the text did not draw, and restores the render states.
+    /// </summary>
+    internal void EndAlphaBoundsMask(Texture2D pixelTexture, Rectangle? pixelSource, Vector2 topLeft, Vector2 size,
+        float rotationRadians, object objectRequestingChange)
+    {
+        if (_maskRestoreDepthStencilState == null)
+        {
+            return;
+        }
+
+        mSpriteBatch.ReplaceBlendAndDepthStencilState(_maskRestoreBlendState, _maskCoverOutsideGlyphsState);
+        DrawMaskBounds(pixelTexture, pixelSource, topLeft, size, rotationRadians, Color.FromArgb(0, 0, 0, 0), objectRequestingChange);
+        mSpriteBatch.ReplaceBlendAndDepthStencilState(_maskRestoreBlendState, _maskRestoreDepthStencilState);
+        _maskRestoreDepthStencilState = null;
+    }
+
+    private void DrawMaskBounds(Texture2D pixelTexture, Rectangle? pixelSource, Vector2 topLeft, Vector2 size,
+        float rotationRadians, Color color, object objectRequestingChange)
+    {
+        // Not snapped to pixels: the bounds are not a sprite, and the pixel-center rule is what clips them.
+        Vector2 scale = new Vector2(
+            size.X / (pixelSource?.Width ?? pixelTexture.Width),
+            size.Y / (pixelSource?.Height ?? pixelTexture.Height));
+        mSpriteBatch.Draw(pixelTexture, topLeft, pixelSource, color, rotationRadians, Vector2.Zero, scale,
+            SpriteEffects.None, 0, objectRequestingChange);
+    }
+
     internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle sourceRectangle, Color color, object objectRequestingChange)
     {
         mSpriteBatch.Draw(texture2D, destinationRectangle, sourceRectangle, color, objectRequestingChange);

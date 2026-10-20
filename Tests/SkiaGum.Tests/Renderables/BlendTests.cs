@@ -214,6 +214,56 @@ public class BlendTests
         bitmap.GetPixel(110, 50).ShouldBe(SKColors.Red);
     }
 
+    // The rule MonoGame text follows too (MonoGameGum.IntegrationTests' TextAlphaBoundsMaskTests): the
+    // blend changes the measured text block plus 2 pixels on every side, and nothing outside it.
+    [Theory]
+    [InlineData(Blend.ReplaceAlpha)]
+    [InlineData(Blend.MinAlpha)]
+    public void AlphaOnlyText_InRenderTargetContainer_ChangesItsMeasuredBlockPlusTwoPixels(Blend blend)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 80));
+        Gum.GumService.Default.Initialize(surface.Canvas, 200, 80);
+        ContainerRuntime renderTarget = new() { Width = 200, Height = 80, IsRenderTarget = true };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 200, Height = 80, IsFilled = true, StrokeWidth = 0, FillColor = SKColors.Red,
+        });
+        TextRuntime text = new()
+        {
+            X = 20, Y = 20, Text = "HOUZ 0123\nNLM", Blend = blend,
+            WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren,
+            HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren,
+        };
+        renderTarget.Children.Add(text);
+        Gum.GumService.Default.Root.Children.Add(renderTarget);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        int left = int.MaxValue, top = int.MaxValue, right = int.MinValue, bottom = int.MinValue;
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                if (bitmap.GetPixel(x, y) != SKColors.Red)
+                {
+                    left = Math.Min(left, x);
+                    top = Math.Min(top, y);
+                    right = Math.Max(right, x + 1);
+                    bottom = Math.Max(bottom, y + 1);
+                }
+            }
+        }
+
+        float width = text.GetAbsoluteWidth();
+        float height = text.GetAbsoluteHeight();
+        ((float)left).ShouldBe(18, 1, "left");
+        ((float)top).ShouldBe(18, 1, "top");
+        ((float)(right - left)).ShouldBe(width + 4, 1, $"width, text measured {width}");
+        ((float)(bottom - top)).ShouldBe(height + 4, 1, $"height, text measured {height}");
+    }
+
     // The same scene and expected pixels as MonoGameGum.IntegrationTests' AlphaBlendSceneTests, so the
     // two runtimes stay in step. Alpha-only blends apply to a shape's whole bounds: the circle's
     // corner (40, 52) is erased as well as the circle itself.

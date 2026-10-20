@@ -1680,6 +1680,26 @@ public class Renderer : IRenderer
         && blendState.AlphaBlendFunction == preset.AlphaBlendFunction
         && blendState.AlphaDestinationBlend == preset.AlphaDestinationBlend;
 
+    /// <summary>
+    /// True for ReplaceAlpha and MinAlpha, on either pipeline: the blends that rewrite the destination's
+    /// alpha from the source's, and so apply to a whole bounds rather than only the pixels drawn (#6237).
+    /// </summary>
+    internal static bool IsAlphaOnlyBlend(BlendState? blendState)
+    {
+        if (blendState == null)
+        {
+            return false;
+        }
+
+        // Same split as AdjustBlendStateForRenderTargetBake: the premultiplied pipeline hands out the
+        // *Premultiplied states, and ReplaceAlphaPremultiplied is field-identical to Opaque.
+        return NormalBlendState == BlendState.AlphaBlend
+            ? IsFieldEquivalent(blendState, BlendState.ReplaceAlphaPremultiplied)
+                || IsFieldEquivalent(blendState, BlendState.MinAlphaPremultiplied)
+            : IsFieldEquivalent(blendState, BlendState.ReplaceAlpha)
+                || IsFieldEquivalent(blendState, BlendState.MinAlpha);
+    }
+
     private void AdjustNonClipRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
         BlendState renderBlendState = renderable.BlendState ?? Renderer.NormalBlendState;

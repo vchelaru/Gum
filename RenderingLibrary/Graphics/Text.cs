@@ -91,7 +91,7 @@ public class ParameterizedLetterCustomizationCall
 
 #endregion
 
-public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrappedText, IFormsText, ICloneable
+public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrappedText, IFormsText, ICloneable, IStencilRenderable
 {
     #region Fields
 
@@ -1153,7 +1153,27 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
             if (TextRenderingMode == TextRenderingMode.CharacterByCharacter)
             {
+                // Issue #6237: ReplaceAlpha and MinAlpha apply to the whole bounds, as they do on Skia.
+                // Only a bake target has the stencil buffer this needs, and the blends mean nothing elsewhere.
+                bool masksBounds = RequiresStencilBuffer && systemManagers.Renderer.IsBakingRenderTarget;
+                Vector2 maskTopLeft = default;
+                Vector2 maskSize = default;
+                float maskRotation = 0;
+                Texture2D pixelTexture = systemManagers.Renderer.SinglePixelTexture;
+                if (masksBounds)
+                {
+                    GetAlphaMaskBounds(out maskTopLeft, out maskSize, out maskRotation);
+                    spriteRenderer.BeginAlphaBoundsMask(pixelTexture, systemManagers.Renderer.SinglePixelSourceRectangle,
+                        maskTopLeft, maskSize, maskRotation, this);
+                }
+
                 RenderCharacterByCharacter(spriteRenderer);
+
+                if (masksBounds)
+                {
+                    spriteRenderer.EndAlphaBoundsMask(pixelTexture, systemManagers.Renderer.SinglePixelSourceRectangle,
+                        maskTopLeft, maskSize, maskRotation, this);
+                }
             }
             else // RenderTarget
             {
@@ -1168,6 +1188,35 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             }
         }
 
+    }
+
+    /// <summary>
+    /// True while the blend is ReplaceAlpha or MinAlpha, which mask the whole text bounds (#6237) through
+    /// the stencil buffer of the render target the text bakes into.
+    /// </summary>
+    public bool RequiresStencilBuffer =>
+        TextRenderingMode == TextRenderingMode.CharacterByCharacter && Renderer.IsAlphaOnlyBlend(BlendState);
+
+    // The block the alpha-only blends apply to: the measured text plus 2 pixels, plus the drop shadow
+    // offset, matching the clip Skia's Text uses. The origin and rotation are the ones DrawTextLines uses.
+    private void GetAlphaMaskBounds(out Vector2 topLeft, out Vector2 size, out float rotationRadians)
+    {
+        UpdateIpsoForRendering();
+
+        float padding = 2;
+        if (HasDropshadow)
+        {
+            padding += System.Math.Max(System.Math.Abs(DropshadowOffsetX), System.Math.Abs(DropshadowOffsetY)) * EffectiveFontScale;
+        }
+
+        rotationRadians = -MathHelper.ToRadians(this.GetAbsoluteRotation());
+        float cos = (float)System.Math.Cos(rotationRadians);
+        float sin = (float)System.Math.Sin(rotationRadians);
+
+        Vector2 origin = new Vector2(mTempForRendering!.GetAbsoluteLeft(), mTempForRendering.GetAbsoluteTop());
+        // Step back by the padding along the text's own x and y axes.
+        topLeft = origin + new Vector2(-padding * cos + padding * sin, -padding * sin - padding * cos);
+        size = new Vector2(WrappedTextWidth + 2 * padding, WrappedTextHeight + 2 * padding);
     }
 
     // todo: reduce allocs by using a static here (static is prob okay since it can't be multithreaded)
