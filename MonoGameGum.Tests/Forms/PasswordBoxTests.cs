@@ -74,6 +74,33 @@ public class PasswordBoxTests : BaseTestClass
         passwordBox.GetUseNativeKeyboardPasswordMode().ShouldBeTrue();
     }
 
+    [Fact]
+    public void Visual_ShouldShowPlaceholder_WhenAssignedVisualWithHiddenPlaceholderToEmptyPasswordBox()
+    {
+        PasswordBox passwordBox = new();
+        Gum.Forms.DefaultVisuals.V3.PasswordBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.PlaceholderTextInstance.Visible = false;
+
+        passwordBox.Visual = newVisual;
+
+        newVisual.PlaceholderTextInstance.Visible.ShouldBeTrue(
+            "because the password is empty, regardless of the placeholder state the visual was authored with");
+    }
+
+    [Fact]
+    public void Visual_ShouldHidePlaceholder_WhenAssignedVisualToPasswordBoxWithPassword()
+    {
+        PasswordBox passwordBox = new();
+        passwordBox.Password = "secret";
+        Gum.Forms.DefaultVisuals.V3.PasswordBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.PlaceholderTextInstance.Visible = true;
+
+        passwordBox.Visual = newVisual;
+
+        newVisual.PlaceholderTextInstance.Visible.ShouldBeFalse(
+            "because the password box has a password, so the placeholder must not draw over it");
+    }
+
     class NativeKeyboardAccessPasswordBox : PasswordBox
     {
         public void InvokeSetTextFromNativeKeyboardInput(string value)

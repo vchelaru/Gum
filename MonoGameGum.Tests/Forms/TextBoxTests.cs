@@ -1210,4 +1210,125 @@ public class TextBoxTests : BaseTestClass
 
         receivedKey.ShouldBe(Gum.Forms.Input.Keys.Left);
     }
+
+    [Fact]
+    public void SelectionLength_ShouldShowSelectionOnEachLine_AfterTextWrappingChanged()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+        textBox.Text = "line1\nline2\nline3";
+        NineSliceRuntime selection = textBox.Visual.Find<NineSliceRuntime>("SelectionInstance")!;
+        GraphicalUiElement selectionParent = selection.Parent!;
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 14;
+
+        textBox.TextWrapping = Gum.Forms.TextWrapping.NoWrap;
+        textBox.SelectionLength = 0;
+        textBox.SelectionLength = 14;
+
+        int visibleSelectionCount = selectionParent.Children
+            .Count(item => item.Name == "SelectionInstance" && item.Visible);
+        visibleSelectionCount.ShouldBe(3,
+            "because changing TextWrapping removes the per-line clones from the visual, so the selection must create new ones");
+    }
+
+    [Fact]
+    public void SelectionLength_ShouldShowSelectionOnEachLine_AfterAcceptsReturnChanged()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+        textBox.Text = "line1\nline2\nline3";
+        NineSliceRuntime selection = textBox.Visual.Find<NineSliceRuntime>("SelectionInstance")!;
+        GraphicalUiElement selectionParent = selection.Parent!;
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 14;
+
+        textBox.AcceptsReturn = false;
+        textBox.AcceptsReturn = true;
+        textBox.SelectionLength = 0;
+        textBox.SelectionLength = 14;
+
+        int visibleSelectionCount = selectionParent.Children
+            .Count(item => item.Name == "SelectionInstance" && item.Visible);
+        visibleSelectionCount.ShouldBe(3);
+    }
+
+    [Fact]
+    public void SelectionLength_ShouldShowSelectionOnEachLine_AfterVisualSwapped()
+    {
+        TextBox textBox = new(new TextBoxVisual(tryCreateFormsObject: false));
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+        TextBoxVisual newVisual = new(tryCreateFormsObject: false);
+
+        textBox.Visual = newVisual;
+        textBox.Text = "line1\nline2\nline3";
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 14;
+
+        int visibleSelectionCount = newVisual.SelectionInstance.Parent!.Children
+            .Count(item => item.Name == "SelectionInstance" && item.Visible);
+        visibleSelectionCount.ShouldBe(3,
+            "because the selection lines must be drawn on the new visual, not the replaced one");
+        newVisual.SelectionInstance.Visible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Visual_ShouldApplyMultiLineState_WhenSwappedAfterTextWrappingSet()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        TextBoxVisual newVisual = new(tryCreateFormsObject: false);
+
+        textBox.Visual = newVisual;
+
+        newVisual.Categories["LineModeCategory"].States
+            .Any(item => item.Name == "Multi").ShouldBeTrue("sanity: the default visual defines a Multi state");
+        newVisual.TextInstance.WidthUnits.ShouldBe(
+            global::Gum.DataTypes.DimensionUnitType.RelativeToParent,
+            "because the Multi line mode makes the text instance wrap to its parent");
+    }
+
+    [Fact]
+    public void Visual_ShouldStopRespondingToReplacedVisualEvents_WhenSwapped()
+    {
+        TextBox textBox = new();
+        InteractiveGue oldVisual = textBox.Visual;
+        textBox.Visual = new TextBoxVisual(tryCreateFormsObject: false);
+        InteractiveGue.CurrentInputReceiver = null;
+
+        oldVisual.CallClick();
+
+        InteractiveGue.CurrentInputReceiver.ShouldBeNull(
+            "because the replaced visual should no longer be wired to the text box");
+    }
+
+    [Fact]
+    public void Visual_ShouldShowPlaceholder_WhenAssignedEmptyVisualWithHiddenPlaceholder()
+    {
+        TextBox textBox = new();
+        TextBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.PlaceholderTextInstance.Visible = false;
+
+        textBox.Visual = newVisual;
+
+        newVisual.PlaceholderTextInstance.Visible.ShouldBeTrue(
+            "because the box is empty, regardless of the placeholder state the visual was authored with");
+    }
+
+    [Fact]
+    public void Visual_ShouldHidePlaceholder_WhenAssignedVisualWithTextAndVisiblePlaceholder()
+    {
+        TextBox textBox = new();
+        TextBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "hello";
+        newVisual.PlaceholderTextInstance.Visible = true;
+
+        textBox.Visual = newVisual;
+
+        newVisual.PlaceholderTextInstance.Visible.ShouldBeFalse(
+            "because the box has text, so the placeholder must not draw over it");
+    }
 }
