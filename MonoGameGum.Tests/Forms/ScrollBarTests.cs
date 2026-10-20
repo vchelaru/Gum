@@ -1,4 +1,5 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using Gum.Input;
@@ -43,6 +44,118 @@ public class ScrollBarTests : BaseTestClass
         sut.Visual.HasEvents.ShouldBeTrue();
     }
 
+
+    [Fact]
+    public void IsEnabled_ShouldDisableAndRestoreUpAndDownButtons()
+    {
+        ScrollBar scrollBar = new();
+
+        scrollBar.IsEnabled = false;
+
+        scrollBar.UpButton!.IsEnabled.ShouldBeFalse();
+        scrollBar.DownButton!.IsEnabled.ShouldBeFalse();
+
+        scrollBar.IsEnabled = true;
+
+        scrollBar.UpButton.IsEnabled.ShouldBeTrue();
+        scrollBar.DownButton.IsEnabled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void VisualIsEnabled_ShouldDisableUpAndDownButtons_WhenSetToFalse()
+    {
+        ScrollBar scrollBar = new();
+
+        scrollBar.Visual.IsEnabled = false;
+
+        scrollBar.IsEnabled.ShouldBeFalse();
+        scrollBar.UpButton!.IsEnabled.ShouldBeFalse();
+        scrollBar.DownButton!.IsEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Visual_ShouldDisableButtonsAndThumb_WhenReassignedWhileDisabled()
+    {
+        ScrollBar scrollBar = new();
+        scrollBar.IsEnabled = false;
+
+        ScrollBarVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        scrollBar.Visual = newVisual;
+
+        Button newThumb = (Button)newVisual.ThumbInstance.FormsControlAsObject!;
+        scrollBar.UpButton!.Visual.ShouldBe(newVisual.UpButtonInstance);
+        scrollBar.UpButton.IsEnabled.ShouldBeFalse();
+        scrollBar.DownButton!.IsEnabled.ShouldBeFalse();
+        newThumb.IsEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Orientation_ShouldStayHorizontal_WhenVisualIsReassigned()
+    {
+        ScrollBar scrollBar = new();
+        scrollBar.Orientation = Orientation.Horizontal;
+
+        ScrollBarVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        scrollBar.Visual = newVisual;
+
+        scrollBar.Orientation.ShouldBe(Orientation.Horizontal);
+        // The Horizontal state (not the Vertical one) must be applied to the new visual.
+        newVisual.Width.ShouldBe(128f);
+        newVisual.Height.ShouldBe(24f);
+    }
+
+    [Fact]
+    public void Orientation_ShouldStayVertical_WhenVisualIsReassigned()
+    {
+        ScrollBar scrollBar = new();
+
+        ScrollBarVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.States.OrientationStates.Horizontal.Apply!();
+        scrollBar.Visual = newVisual;
+
+        scrollBar.Orientation.ShouldBe(Orientation.Vertical);
+        newVisual.Width.ShouldBe(24f);
+        newVisual.Height.ShouldBe(128f);
+    }
+
+    [Fact]
+    public void MinimumThumbSize_ShouldNotMakeVerticalThumbExceedTrack()
+    {
+        ScrollBarVisual visual = new();
+        ScrollBar scrollBar = visual.FormsControl;
+        visual.Height = 74; // two 24 px buttons leave a 26 px track
+        scrollBar.MinimumThumbSize = 40;
+        scrollBar.Minimum = 0;
+        scrollBar.Maximum = 100;
+        scrollBar.ViewportSize = 20;
+        scrollBar.Value = 100;
+        visual.UpdateLayout();
+
+        float trackHeight = scrollBar.Track!.AbsoluteHeight;
+        trackHeight.ShouldBe(26f);
+        visual.ThumbInstance.AbsoluteHeight.ShouldBe(trackHeight);
+        visual.ThumbInstance.Y.ShouldBe(0f, 0.01f);
+    }
+
+    [Fact]
+    public void MinimumThumbSize_ShouldNotMakeHorizontalThumbExceedTrack()
+    {
+        ScrollBarVisual visual = new();
+        ScrollBar scrollBar = visual.FormsControl;
+        scrollBar.Orientation = Orientation.Horizontal;
+        visual.Width = 74; // two 24 px buttons leave a 26 px track
+        scrollBar.MinimumThumbSize = 40;
+        scrollBar.Minimum = 0;
+        scrollBar.Maximum = 100;
+        scrollBar.ViewportSize = 20;
+        scrollBar.Value = 100;
+        visual.UpdateLayout();
+
+        float trackWidth = scrollBar.Track!.AbsoluteWidth;
+        trackWidth.ShouldBe(26f);
+        visual.ThumbInstance.AbsoluteWidth.ShouldBe(trackWidth);
+        visual.ThumbInstance.X.ShouldBe(0f, 0.01f);
+    }
 
     [Fact]
     public void ScrollBar_Orientation_ShouldDefaultToVertical()
