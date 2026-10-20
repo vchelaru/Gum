@@ -117,4 +117,35 @@ public class PasswordBoxTests : BaseTestClass
             set => Set(value);
         }
     }
+
+    [Fact]
+    public void Visual_ShouldTakeAuthoredPlaceholderAndHideAuthoredSelection_WhenAssignedToFreshPasswordBox()
+    {
+        Gum.Forms.DefaultVisuals.V3.PasswordBoxVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.PlaceholderTextInstance.Text = "authored placeholder";
+        authoredVisual.SelectionInstance.Visible = true;
+
+        PasswordBox passwordBox = new(authoredVisual);
+
+        passwordBox.Placeholder.ShouldBe("authored placeholder");
+        passwordBox.CaretIndex.ShouldBe(0);
+        passwordBox.SelectionLength.ShouldBe(0);
+        authoredVisual.SelectionInstance.Visible.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Visual_ShouldKeepCaretAndSelection_WhenReassignedWithPassword()
+    {
+        PasswordBox passwordBox = new();
+        passwordBox.Password = "secret";
+        passwordBox.SelectionStart = 1;
+        passwordBox.SelectionLength = 3;
+        passwordBox.CaretIndex = 4;
+
+        passwordBox.Visual = new Gum.Forms.DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: false);
+
+        passwordBox.CaretIndex.ShouldBe(4);
+        passwordBox.SelectionStart.ShouldBe(1);
+        passwordBox.SelectionLength.ShouldBe(3);
+    }
 }

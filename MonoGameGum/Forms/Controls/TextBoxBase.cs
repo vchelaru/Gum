@@ -487,6 +487,28 @@ public abstract class TextBoxBase :
         //OffsetTextToKeepCaretInView();
 
         IsFocused = false;
+
+        SyncCaretAndSelectionToVisual();
+    }
+
+    // The new visual shows its own text, so the caret and selection are clamped to it,
+    // as OnTextChanged does for the caret, and then drawn on the new visual.
+    private void SyncCaretAndSelectionToVisual()
+    {
+        int textLength = DisplayedText?.Length ?? 0;
+
+        int oldSelectionLength = selectionLength;
+        selectionStart = System.Math.Min(selectionStart, textLength);
+        selectionLength = System.Math.Min(selectionLength, textLength - selectionStart);
+
+        CaretIndex = System.Math.Min(caretIndex, textLength);
+        UpdateToSelection();
+        UpdateCaretVisibility();
+
+        if (selectionLength != oldSelectionLength)
+        {
+            RaiseSelectionChanged();
+        }
     }
 
     /// <inheritdoc/>

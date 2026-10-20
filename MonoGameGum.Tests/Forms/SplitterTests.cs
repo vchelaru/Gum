@@ -331,4 +331,54 @@ public class SplitterTests : BaseTestClass
         _secondPanel.Visual.HeightUnits = DimensionUnitType.Absolute;
 
     }
+
+    [Fact]
+    public void Visual_ShouldChooseColumnResize_WhenAuthoredVisualIsStretchedVertically()
+    {
+        Gum.Forms.DefaultVisuals.V3.SplitterVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.HeightUnits = DimensionUnitType.RelativeToParent;
+
+        Splitter sut = new(authoredVisual);
+        authoredVisual.TryCallRollOn();
+
+        sut.CustomCursor.ShouldBe(Gum.Wireframe.Cursors.SizeWE);
+    }
+
+    [Fact]
+    public void Visual_ShouldChooseRowResize_WhenAuthoredVisualIsStretchedHorizontally()
+    {
+        Gum.Forms.DefaultVisuals.V3.SplitterVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.WidthUnits = DimensionUnitType.RelativeToParent;
+
+        Splitter sut = new(authoredVisual);
+        authoredVisual.TryCallRollOn();
+
+        sut.CustomCursor.ShouldBe(Gum.Wireframe.Cursors.SizeNS);
+    }
+
+    [Fact]
+    public void Visual_Reassigned_ShouldForgetGrabOffsetFromOldVisual()
+    {
+        SetupVerticalStack();
+        _firstPanel!.Visual.HeightUnits = DimensionUnitType.Absolute;
+        _firstPanel.Height = 100;
+        _secondPanel!.Visual.HeightUnits = DimensionUnitType.Absolute;
+        _secondPanel.Height = 100;
+        Moq.Mock<Gum.Wireframe.ICursor> cursor = Moq.Mock.Get(Gum.Forms.Controls.FrameworkElement.MainCursor);
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(0);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(50);
+        _splitter!.Visual.TryCallPush();
+        Gum.Wireframe.InteractiveGue newVisual = new Gum.Forms.DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: false);
+        newVisual.Dock(Gum.Wireframe.Dock.FillHorizontally);
+        Gum.Wireframe.GraphicalUiElement parent = (Gum.Wireframe.GraphicalUiElement)_splitter.Visual.Parent!;
+        parent.Children.Insert(1, newVisual);
+        parent.Children.Remove(_splitter.Visual);
+        _splitter.Visual = newVisual;
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(80);
+
+        newVisual.TryCallDragging();
+
+        _firstPanel.Height.ShouldBe(100,
+            "because the grab began on the old visual, so the new visual has not been grabbed");
+    }
 }

@@ -185,16 +185,6 @@ public class TextBox : TextBoxBase
     public TextBox(InteractiveGue visual) : base(visual) { }
 
 
-    protected override void ReactToVisualChanged()
-    {
-        base.ReactToVisualChanged();
-
-        if (selectionInstance != null)
-        {
-            selectionInstance.Visible = false;
-        }
-    }
-
     #endregion
 
     #region Event Handler Methods

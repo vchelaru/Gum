@@ -1331,4 +1331,93 @@ public class TextBoxTests : BaseTestClass
         newVisual.PlaceholderTextInstance.Visible.ShouldBeFalse(
             "because the box has text, so the placeholder must not draw over it");
     }
+
+    [Fact]
+    public void Visual_ShouldClampCaretAndSelectionToNewText_WhenSwappedToVisualWithShorterText()
+    {
+        TextBox textBox = new();
+        textBox.Text = "hello";
+        textBox.SelectionStart = 1;
+        textBox.SelectionLength = 3;
+        textBox.CaretIndex = 4;
+        int selectionChangedCount = 0;
+        textBox.SelectionChanged += (_, _) => selectionChangedCount++;
+        TextBoxVisual newVisual = new(tryCreateFormsObject: false);
+
+        textBox.Visual = newVisual;
+
+        textBox.CaretIndex.ShouldBe(0);
+        textBox.SelectionStart.ShouldBe(0);
+        textBox.SelectionLength.ShouldBe(0);
+        newVisual.SelectionInstance.Visible.ShouldBeFalse();
+        selectionChangedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Visual_ShouldKeepCaretAndSelectionOnNewVisual_WhenSwappedToVisualWithSameText()
+    {
+        TextBox textBox = new();
+        textBox.Text = "hello";
+        textBox.SelectionStart = 1;
+        textBox.SelectionLength = 3;
+        textBox.CaretIndex = 4;
+        TextBoxVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "hello";
+
+        textBox.Visual = newVisual;
+
+        textBox.CaretIndex.ShouldBe(4);
+        textBox.SelectionStart.ShouldBe(1);
+        textBox.SelectionLength.ShouldBe(3);
+        newVisual.SelectionInstance.Visible.ShouldBeTrue(
+            "because the preserved selection must be drawn on the new visual");
+        newVisual.SelectionInstance.Width.ShouldBeGreaterThan(0);
+        newVisual.CaretInstance.X.ShouldBeGreaterThan(0,
+            "because the caret must be positioned on the new visual to match CaretIndex");
+    }
+
+    [Fact]
+    public void Visual_ShouldTakeAuthoredTextAndPlaceholder_WhenAssignedToFreshTextBox()
+    {
+        TextBoxVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.TextInstance.Text = "authored text";
+        authoredVisual.PlaceholderTextInstance.Text = "authored placeholder";
+
+        TextBox textBox = new(authoredVisual);
+
+        textBox.Text.ShouldBe("authored text");
+        textBox.Placeholder.ShouldBe("authored placeholder");
+        textBox.CaretIndex.ShouldBe(0);
+        textBox.SelectionStart.ShouldBe(0);
+        textBox.SelectionLength.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Visual_ShouldTakeAuthoredText_WhenReassignedOnFreshTextBox()
+    {
+        TextBox textBox = new();
+        TextBoxVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.TextInstance.Text = "authored text";
+
+        textBox.Visual = authoredVisual;
+
+        textBox.Text.ShouldBe("authored text");
+        textBox.CaretIndex.ShouldBe(0);
+        textBox.SelectionLength.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Visual_ShouldHideAuthoredSelectionAndCaret_WhenAssignedToFreshTextBox()
+    {
+        TextBoxVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.TextInstance.Text = "authored text";
+        authoredVisual.SelectionInstance.Visible = true;
+        authoredVisual.CaretInstance.Visible = true;
+
+        TextBox textBox = new(authoredVisual);
+
+        authoredVisual.SelectionInstance.Visible.ShouldBeFalse();
+        authoredVisual.CaretInstance.Visible.ShouldBeFalse(
+            "because the unfocused text box does not show a caret");
+    }
 }
