@@ -83,11 +83,11 @@ internal class Arc : RenderableShapeBase
     /// axis until it fills the box, as a view matrix pre-multiplied onto the camera view. The stretch runs
     /// along the box's own long axis, so a rotated arc is not sheared.
     /// </summary>
-    /// <param name="antiAliasWorldOffset">
-    /// The inset <see cref="RenderableShapeBase.GetAntiAliasWorldOffset"/> gives the circle's outer edge. The
-    /// stretch is measured between the inset edges so the long ends land on the box like the short ones do,
-    /// instead of being pulled in by the offset times the stretch.
-    /// </param>
+    /// <remarks>
+    /// <c>antiAliasWorldOffset</c> is the inset <see cref="RenderableShapeBase.GetAntiAliasWorldOffset"/> gives
+    /// the circle's outer edge. The stretch is measured between the inset edges so the long ends land on the
+    /// box like the short ones do, instead of being pulled in by the offset times the stretch.
+    /// </remarks>
     internal static Matrix CreateStretchToBoxMatrix(float width, float height, Vector2 center, float rotationRadians,
         float antiAliasWorldOffset)
     {
