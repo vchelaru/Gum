@@ -98,12 +98,36 @@ Future versions of Gum may provide shortcuts to create required types.
 
 ## Behavior Properties
 
-Beyond categories, states, and instances, a behavior can declare **Behavior Properties** — design-time properties that appear in a **Behavior** category in the Variables tab and flow through to the matching property on the runtime Forms control. For example, `TextBoxBehavior` declares properties matching `TextBox`'s `TextWrapping`, `AcceptsReturn`, `IsReadOnly`, and `MaxLength`; `SliderBehavior` declares properties matching `Slider`'s `Minimum` and `Maximum`. Setting one of these in the Variables tab sets the corresponding property on the control when your game runs.
+Beyond categories, states, and instances, a behavior can declare **Behavior Properties**, which are design-time properties that appear in a **Behavior** category in the Variables tab and flow through to the matching property on the runtime Forms control. For example, `TextBoxBehavior` declares properties matching `TextBox`'s `TextWrapping`, `AcceptsReturn`, `IsReadOnly`, and `MaxLength`; `SliderBehavior` declares properties matching `Slider`'s `Minimum` and `Maximum`, and `ScrollBarBehavior` declares `Orientation`. Setting one of these in the Variables tab sets the corresponding property on the control when your game runs.
 
 Some Behavior Properties also drive a visual state automatically, so you get a design-time preview even though Forms controls don't run inside the tool. For example, setting `TextWrapping` in the Behavior category updates the component's visual line-mode state immediately. See [Behavior-Driven References](../general-properties/variable-references.md#behavior-driven-references) for how this works.
 
 {% hint style="info" %}
 Standard Forms components (Button, TextBox, Slider, and so on) are **copied into your project** the first time you add a Forms control, rather than referenced live from the Gum tool install. If a later Gum version adds a new Behavior Property to a standard control, that property only reaches components added to your project _after_ upgrading — components already in your project keep whatever properties they had when they were added.
+{% endhint %}
+
+### ScrollBar Orientation
+
+A ScrollBar instance has an `Orientation` setting in the **Behavior** category. It defaults to `Vertical`. Set it to `Horizontal` to place the buttons left and right of the track, both in the tool and in your game. The instance does not list the scroll bar's orientation state, so set `Orientation` instead.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+### Container Settings on Forms Controls
+
+Forms components in the standard templates show the container settings `Contained Type`, `Children Layout`, `Clips Children`, `Is Render Target`, and `Expose Children Events` on an instance only when the control is a bare container:
+
+* `Panel` shows all five.
+* `UserControl` shows `Clips Children`, `Is Render Target`, and `Expose Children Events`.
+* `StackPanel` shows `Contained Type`, `Clips Children`, `Is Render Target`, and `Expose Children Events`. Its `Orientation` setting drives `Children Layout`.
+
+Every other control hides all five, including `ItemsControl`, `ListBox`, `ScrollViewer`, `Window`, and `DialogBox`. These controls have internal containers of their own.
+
+An instance that already sets one of these values keeps showing and using it.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
 ### Custom Behaviors

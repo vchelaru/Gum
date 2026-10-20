@@ -89,11 +89,28 @@ These properties are Forms-level backing fields that are not overwritten by Gum 
 
 Some controls hold runtime values that *are* stored on the visual layer and would be overwritten by default state re-application. These are explicitly saved before the refresh and restored afterward:
 
-* Button and Label `Text`
-* TextBox and PasswordBox text content, caret position, and selection
+* TextBox and PasswordBox caret position and selection
 * ComboBox displayed text
 * Slider and ScrollBar `Value` (thumb position)
 * ScrollViewer scroll offset (both vertical and horizontal)
+
+### Text After RefreshStyles
+
+Controls restore text after `RefreshStyles` only when code supplied it. This covers:
+
+* `Text` on `Button`, `Label`, `ToggleButton` (and so `CheckBox` and `RadioButton`), `TextBox`, and `PasswordBox`
+* `Header` on `Expander` and `MenuItem`
+* `Placeholder` on `TextBox` and `PasswordBox`
+
+Text counts as supplied by code when you set it through the property or its `NoTranslate` method (such as `SetTextNoTranslate`), when a binding sets it, or when the user types it into a `TextBox`.
+
+Text authored on the Visual is not restored. `RefreshStyles` re-applies it from the Visual, so if you change the authored text (for example through a variable reference), the control shows the new text.
+
+Text set in code does not carry over when you assign a new Visual to a control. The control shows the text the new Visual authors.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source. Before this, `Button`, `Label`, `TextBox`, and `PasswordBox` always restored their text, so a changed authored text was overwritten.
+{% endhint %}
 
 ## Preserving Custom Runtime Properties
 
@@ -144,7 +161,7 @@ this.AfterRefreshStyles += (_, _) => ApplyLocalizedText();
 A corresponding `BeforeRefreshStyles` event fires before default state values are re-applied, allowing you to capture state if needed.
 
 {% hint style="info" %}
-Built-in controls like Label and Button already preserve their `Text` across `RefreshStyles` automatically. You only need `AfterRefreshStyles` when the value should be *recomputed* rather than restored — for example, when the locale may have changed between refreshes.
+Built-in controls like Label and Button already preserve text you set in code across `RefreshStyles` automatically. You only need `AfterRefreshStyles` when the value should be *recomputed* rather than restored, for example when the locale may have changed between refreshes.
 {% endhint %}
 
 ## Expression Support (Optional)
