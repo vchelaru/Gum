@@ -6,6 +6,9 @@
 // size from the game and needs no canvas, Update takes a GameTime, and GameTime exposes the last one.
 // The caller draws Skia into its own canvas (typically a SkiaGameRendering SkiaRenderTarget2D) and
 // passes that SKCanvas to Draw each frame.
+//
+// Not mirrored from KniGum: Initialize(game, SystemManagers). Skia has one global
+// SystemManagers.Default, so there is no SystemManagers to pass in.
 #if KNISKIA
 #nullable enable
 
@@ -22,6 +25,8 @@ using SkiaSharp;
 using XnaGame = Microsoft.Xna.Framework.Game;
 using XnaGameTime = Microsoft.Xna.Framework.GameTime;
 using XnaGameWindow = Microsoft.Xna.Framework.GameWindow;
+using XnaGraphicsDevice = Microsoft.Xna.Framework.Graphics.GraphicsDevice;
+using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
@@ -30,6 +35,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     private XnaGameWindow? _window;
     private XnaGame? _game;
     private readonly List<GraphicalUiElement> _gameTimeRoots = new();
+    private XnaGraphicsDevice? _graphicsDevice;
 
     /// <summary>
     /// The GameTime of the most recent Update call, or null before the first Update.
@@ -51,6 +57,17 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 
     private partial Keyboard? CreateHostKeyboard() => new Keyboard(_window);
 
+    // Same messages as KniGum/MonoGameGum: the host-agnostic Initialize needs a Game here, too.
+    void IGumService.Initialize() =>
+        throw new NotSupportedException(
+            "This runtime requires a Game instance. Call " +
+            "GumService.Default.Initialize(Game) on the concrete GumService instead.");
+
+    void IGumService.Initialize(string gumProjectFile) =>
+        throw new NotSupportedException(
+            "This runtime requires a Game instance. Call " +
+            "GumService.Default.Initialize(Game, gumProjectFile) on the concrete GumService instead.");
+
     /// <inheritdoc/>
     void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) =>
         GamePadDriver.Apply(gamepad, index, time);
@@ -70,6 +87,36 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     {
         (int width, int height) = GetSize(game);
         return InitializeHost(game, game.Window, null, width, height, gumProjectFile);
+    }
+
+    /// <summary>
+    /// Initializes Gum for a KNI desktop game with the given default Forms visuals, as
+    /// <c>Initialize(Game, DefaultVisualsVersion)</c> does in KniGum. Only
+    /// <see cref="DefaultVisualsVersion.V3"/> (and <see cref="DefaultVisualsVersion.Newest"/>, which is
+    /// V3) exists.
+    /// </summary>
+    /// <param name="game">The game, used for its graphics device and its window's typed-text events.</param>
+    /// <param name="defaultVisualsVersion">The default Forms visuals to register.</param>
+    /// <exception cref="NotSupportedException"><paramref name="defaultVisualsVersion"/> is not supported on Skia.</exception>
+    public void Initialize(XnaGame game, DefaultVisualsVersion defaultVisualsVersion)
+    {
+        (int width, int height) = GetSize(game);
+        InitializeHost(game, game.Window, null, width, height, null, defaultVisualsVersion);
+    }
+
+    /// <summary>
+    /// Initializes Gum from a graphics device, with no <c>Game</c>, as <c>Initialize(GraphicsDevice, ...)</c>
+    /// does in KniGum. Typed text does not arrive without a window; use
+    /// <see cref="Initialize(XnaGame, string?)"/> for an interactive game.
+    /// </summary>
+    /// <param name="graphicsDevice">The device whose viewport sets the root container and canvas size.</param>
+    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
+    /// <returns>The loaded project, or null if no project is loaded.</returns>
+    public GumProjectSave? Initialize(XnaGraphicsDevice graphicsDevice, string? gumProjectFile = null)
+    {
+        (int width, int height) = GetSize(graphicsDevice);
+        _graphicsDevice = graphicsDevice;
+        return InitializeHost(null, null, null, width, height, gumProjectFile);
     }
 
     /// <summary>
@@ -121,11 +168,19 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         InitializeHost(null, null, canvas, width, height, gumProjectFile);
 
     /// <summary>
+    /// Initializes with a window but no game, so a test can raise typed text without a platform package.
+    /// </summary>
+    internal GumProjectSave? InitializeWithWindow(XnaGameWindow window, int width, int height, string? gumProjectFile = null) =>
+        InitializeHost(null, window, null, width, height, gumProjectFile);
+
+    /// <summary>
     /// Initializes without a game or canvas, as <see cref="Initialize(XnaGame, string?)"/> does once it
     /// has read the size from the game.
     /// </summary>
-    internal GumProjectSave? InitializeWithoutWindow(int width, int height, string? gumProjectFile = null) =>
-        InitializeHost(null, null, null, width, height, gumProjectFile);
+    internal GumProjectSave? InitializeWithoutWindow(
+        int width, int height, string? gumProjectFile = null,
+        DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest) =>
+        InitializeHost(null, null, null, width, height, gumProjectFile, visualsVersion);
 
     private static (int width, int height) GetSize(XnaGame game)
     {
@@ -137,19 +192,33 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
                 "so that the Game has a valid GraphicsDevice");
         }
 
-        return (game.GraphicsDevice.Viewport.Width, game.GraphicsDevice.Viewport.Height);
+        return GetSize(game.GraphicsDevice);
+    }
+
+    private static (int width, int height) GetSize(XnaGraphicsDevice? graphicsDevice)
+    {
+        if (graphicsDevice == null)
+        {
+            throw new ArgumentNullException(nameof(graphicsDevice));
+        }
+
+        return (graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);
     }
 
     private GumProjectSave? InitializeHost(
-        XnaGame? game, XnaGameWindow? window, SKCanvas? canvas, int width, int height, string? gumProjectFile)
+        XnaGame? game, XnaGameWindow? window, SKCanvas? canvas, int width, int height, string? gumProjectFile,
+        DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest)
     {
+        // Before any state changes, so an unsupported version leaves the service uninitialized.
+        ResolveVisualsVersion(visualsVersion);
+
         // Stored before InitializeCore, which calls FormsUtilities.InitializeDefaults, which
         // dispatches back to this instance's CreateCursor/CreateKeyboard overrides above.
         _game = game;
         _window = window;
         Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
 
-        InitializeCore(canvas, width, height, gumProjectFile);
+        InitializeCore(canvas, width, height, gumProjectFile, visualsVersion);
 
         return string.IsNullOrEmpty(gumProjectFile) ? null : ObjectFinder.Self.GumProjectSave;
     }
@@ -172,12 +241,13 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
             return WindowSizeOverride();
         }
 
-        if (_game?.GraphicsDevice == null)
+        XnaGraphicsDevice? graphicsDevice = _game?.GraphicsDevice ?? _graphicsDevice;
+        if (graphicsDevice == null)
         {
             return base.GetWindowSize();
         }
 
-        Microsoft.Xna.Framework.Graphics.PresentationParameters presentation = _game.GraphicsDevice.PresentationParameters;
+        Microsoft.Xna.Framework.Graphics.PresentationParameters presentation = graphicsDevice.PresentationParameters;
         return (presentation.BackBufferWidth, presentation.BackBufferHeight);
     }
 
@@ -249,6 +319,7 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 
         GameTime = null;
         _game = null;
+        _graphicsDevice = null;
         _window = null;
     }
 }

@@ -303,6 +303,30 @@ public class GameInitializationTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void Uninitialize_UnsubscribesTheKeyboard_FromTheWindowsTypedText()
+    {
+        TestGameWindow window = new TestGameWindow();
+        try
+        {
+            GumService.Default.Uninitialize();
+            GumService.Default.InitializeWithWindow(window, Width, Height);
+            Keyboard first = GumService.Default.Keyboard;
+            first.ReadKeyboard = () => default;
+
+            GumService.Default.Uninitialize();
+            GumService.Default.InitializeWithWindow(window, Width, Height);
+            window.RaiseTextInput('a');
+            first.Activity(0);
+
+            first.GetStringTyped().ShouldBe("");
+        }
+        finally
+        {
+            RestoreSharedService();
+        }
+    }
+
     private class FrameCounter : FrameworkElement, IUpdateEveryFrame
     {
         public FrameCounter() : base(new ContainerRuntime())

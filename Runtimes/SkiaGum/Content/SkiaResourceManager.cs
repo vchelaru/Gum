@@ -9,6 +9,10 @@ using ToolsUtilities;
 
 namespace SkiaGum.Content;
 
+/// <summary>
+/// The cache behind <see cref="RenderingLibrary.Content.ContentLoader"/>.
+/// </summary>
+[Obsolete("Use RenderingLibrary.Content.ContentLoader (LoadContent<T>, CustomResourceAssembly, AdjustContentName) instead. SkiaResourceManager will be removed in a future release.")]
 public static class SkiaResourceManager
 {
     public static Assembly? CustomResourceAssembly { get; set; }
