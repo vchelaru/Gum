@@ -448,8 +448,6 @@ public partial class GraphicalUiElement
                 }
 
                 var oldParent = _parent;
-                // Only the new parent chain can gain work; removing a child never does.
-                value?.InvalidateIdleSubtrees();
                 _isSettingParent = true;
                 try
                 {

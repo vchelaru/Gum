@@ -406,6 +406,45 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
     }
 
     [Fact]
+    public void AnimateSelf_ShouldContinueStateAnimation_WhenRestartedWhilePaused()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        GraphicalUiElement card = root.Children[0];
+        AnimationRuntime animation = CreateMoveXAnimation(card);
+        card.PlayAnimation(animation);
+        RunFrames(root, 1, secondDifference: 0.5);
+        card.AnimationController.Pause();
+        RunFrames(root, 3);
+
+        card.AnimationController.Restart();
+        RunFrames(root, 1, secondDifference: 0.25);
+
+        card.X.ShouldBe(25, 0.01f);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldRunStateAnimation_WhenHandlerStartsItOnAnElementAlreadyWalkedThisFrame()
+    {
+        ContainerRuntime root = new();
+        GraphicalUiElement walkedFirst = new ContainerRuntime();
+        AnimationRuntime animation = CreateMoveXAnimation(walkedFirst);
+        CountingSprite finisher = new();
+        finisher.AnimationLogic.AnimationChains = CreateChains(loops: false, 0.25f, 0.25f);
+        finisher.IsAnimationChainLooping = false;
+        root.AddChild(walkedFirst);
+        root.AddChild(new GraphicalUiElement(finisher));
+        RunFrames(root, 3);
+        finisher.AnimationChainFinished += () => walkedFirst.PlayAnimation(animation);
+        finisher.Animate = true;
+
+        // The finisher ends during this walk, after walkedFirst was already found idle.
+        RunFrames(root, 1, secondDifference: 1);
+        RunFrames(root, 1, secondDifference: 0.5);
+
+        walkedFirst.X.ShouldBe(50, 0.01f);
+    }
+
+    [Fact]
     public void AnimateSelf_ShouldRunStateAnimation_WhenAnimationCompletedHandlerStartsAnother()
     {
         (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
