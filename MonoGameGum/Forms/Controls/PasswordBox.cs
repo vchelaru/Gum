@@ -300,6 +300,10 @@ public class PasswordBox : TextBoxBase
     private void UpdateDisplayedCharacters()
     {
         var newText = new string(PasswordChar, SecurePassword.Length);
+
+        // The masked text always comes from the password, never from the Visual, so it is always restored.
+        _textSetInCode.Record(newText, translate: false);
+
         if (this.coreTextObject.RawText != newText)
         {
             // Use TextNoTranslate because mask characters (e.g. "●●●●") should never be translated

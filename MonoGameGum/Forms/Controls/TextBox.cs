@@ -52,13 +52,16 @@ public class TextBox : TextBoxBase
         get => coreTextObject.RawText;
         set
         {
-            if (value != Text)
+            bool isChange = value != Text;
+            if (isChange && value?.Length > MaxLength)
             {
-                if (value?.Length > MaxLength)
-                {
-                    value = value.Substring(0, MaxLength.Value);
-                }
+                value = value.Substring(0, MaxLength.Value);
+            }
 
+            _textSetInCode.Record(value, translate: true);
+
+            if (isChange)
+            {
                 // go through the component instead of the core text object to force a layout refresh if necessary.
                 // SetProperty raises textComponent's PropertyChanged("Text"), which TextBoxBase's
                 // HandleTextComponentPropertyChanged forwards into OnTextChanged -- no explicit call needed here.
@@ -78,13 +81,17 @@ public class TextBox : TextBoxBase
     /// </remarks>
     public void SetTextNoTranslate(string? value)
     {
-        if (value != Text)
+        bool isChange = value != Text;
+        if (isChange && value?.Length > MaxLength)
         {
-            if (value?.Length > MaxLength)
-            {
-                value = value.Substring(0, MaxLength.Value);
-            }
+            value = value.Substring(0, MaxLength.Value);
+        }
 
+        // Typing, paste and delete come through here, so user input survives RefreshStyles too.
+        _textSetInCode.Record(value, translate: false);
+
+        if (isChange)
+        {
             // See the Text setter above: PropertyChanged("Text") drives OnTextChanged.
             textComponent.SetProperty("TextNoTranslate", value);
         }
@@ -426,7 +433,12 @@ public class TextBox : TextBoxBase
 
     protected override void TruncateTextToMaxLength()
     {
-        Text = TruncateTextToMaxLength(Text);
+        string? truncated = TruncateTextToMaxLength(Text);
+        if (truncated != Text)
+        {
+            // The text is already translated, so it must not go through translation again.
+            SetTextNoTranslate(truncated);
+        }
     }
 
     private string? TruncateTextToMaxLength(string? text)

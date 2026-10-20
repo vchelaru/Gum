@@ -63,7 +63,7 @@ public class Expander : FrameworkElement
         get => coreTextObject?.RawText;
         set
         {
-            _isTextSetInCode = true;
+            _codeText.Record(value, translate: true);
             textComponent?.SetProperty("Text", value);
         }
     }
@@ -117,6 +117,9 @@ public class Expander : FrameworkElement
 
     protected override void RefreshInternalVisualReferences()
     {
+        // The new visual's text is authoritative; text set on the previous visual does not carry over.
+        _codeText.Clear();
+
         headerContainer = Visual.GetGraphicalUiElementByName("HeaderContainer");
         contentContainer = Visual.GetGraphicalUiElementByName("ContentContainer");
         textComponent = Visual.GetGraphicalUiElementByName("TextInstance");
@@ -136,33 +139,17 @@ public class Expander : FrameworkElement
 
     #region UpdateTo Methods
 
-    // Manual save/restore rather than RegisterRuntimeProperty because
+    // Manual restore rather than RegisterRuntimeProperty because
     // ReactToVisualChanged can fire multiple times (visual reassignment),
-    // which would accumulate duplicate registrations.
-    private string? _savedText;
-    private bool _hasSavedText;
-
-    // Only text assigned through the property is restored after RefreshStyles; text the Visual
-    // authored is re-applied from the Visual's state instead.
-    private bool _isTextSetInCode;
-
-    /// <inheritdoc/>
-    public override void SaveRuntimeProperties()
-    {
-        _savedText = coreTextObject?.RawText;
-        _hasSavedText = _isTextSetInCode && coreTextObject != null;
-        base.SaveRuntimeProperties();
-    }
+    // which would accumulate duplicate registrations. Only text assigned through
+    // the property is restored; text the Visual authored is re-applied from the
+    // Visual's state instead.
+    private CodeAssignedText _codeText;
 
     /// <inheritdoc/>
     public override void ApplyRuntimeProperties()
     {
-        if (_hasSavedText && textComponent != null)
-        {
-            textComponent.SetProperty("Text", _savedText);
-        }
-        _savedText = null;
-        _hasSavedText = false;
+        _codeText.Restore(textComponent);
         base.ApplyRuntimeProperties();
     }
 

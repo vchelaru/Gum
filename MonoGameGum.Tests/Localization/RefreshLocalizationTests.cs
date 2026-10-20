@@ -132,6 +132,88 @@ public class RefreshLocalizationTests : BaseTestClass
     }
 
     [Fact]
+    public void RefreshStyles_ButtonTextSetInCode_KeepsTranslationAndStaysTranslatable()
+    {
+        Button button = new();
+        button.Visual.AddToRoot();
+        button.Text = "Greeting";
+
+        button.Visual.RefreshStyles();
+
+        button.Text.ShouldBe("Hello");
+        _localizationService.CurrentLanguage = 1;
+        button.Text.ShouldBe("Hola");
+    }
+
+    [Fact]
+    public void RefreshStyles_ToggleButtonTextSetInCode_KeepsTranslationAndStaysTranslatable()
+    {
+        ToggleButton toggleButton = new();
+        toggleButton.Visual.AddToRoot();
+        toggleButton.Text = "Greeting";
+
+        toggleButton.Visual.RefreshStyles();
+
+        toggleButton.Text.ShouldBe("Hello");
+        _localizationService.CurrentLanguage = 1;
+        toggleButton.Text.ShouldBe("Hola");
+    }
+
+    [Fact]
+    public void RefreshStyles_TextBoxPlaceholderSetInCode_KeepsTranslationAndStaysTranslatable()
+    {
+        TextBox textBox = new();
+        textBox.Visual.AddToRoot();
+        textBox.Placeholder = "Greeting";
+
+        textBox.Visual.RefreshStyles();
+
+        textBox.Placeholder.ShouldBe("Hello");
+        _localizationService.CurrentLanguage = 1;
+        textBox.Placeholder.ShouldBe("Hola");
+    }
+
+    [Fact]
+    public void RefreshStyles_ButtonTextSetNoTranslate_StaysUntranslated()
+    {
+        Button button = new();
+        button.Visual.AddToRoot();
+        button.SetTextNoTranslate("Greeting");
+
+        button.Visual.RefreshStyles();
+
+        button.Text.ShouldBe("Greeting");
+    }
+
+    [Fact]
+    public void RefreshStyles_LabelTextSetInCode_KeepsTranslationAndStaysTranslatable()
+    {
+        Label label = new();
+        label.Visual.AddToRoot();
+        label.Text = "Greeting";
+
+        label.Visual.RefreshStyles();
+
+        label.Text.ShouldBe("Hello");
+        _localizationService.CurrentLanguage = 1;
+        label.Text.ShouldBe("Hola");
+    }
+
+    [Fact]
+    public void RefreshStyles_TextBoxTextSetInCode_KeepsTranslationAndStaysTranslatable()
+    {
+        TextBox textBox = new();
+        textBox.Visual.AddToRoot();
+        textBox.Text = "Greeting";
+
+        textBox.Visual.RefreshStyles();
+
+        textBox.Text.ShouldBe("Hello");
+        _localizationService.CurrentLanguage = 1;
+        textBox.Text.ShouldBe("Hola");
+    }
+
+    [Fact]
     public void RefreshLocalization_ShouldRefresh_PopupRootAndModalRoot()
     {
         TextRuntime popupText = new();

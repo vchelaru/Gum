@@ -620,6 +620,13 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.InheritedBindingContextChanged += OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange += HandleEnabledChanged;
                     visual.ParentChanged += HandleParentChanged;
+
+                    // A disabled control stays disabled when its visual is replaced. Only disable
+                    // here: an enabled control must not override a visual authored as disabled.
+                    if (!isEnabled)
+                    {
+                        visual.IsEnabled = false;
+                    }
                 }
 
                 if (oldVisual?.BindingContext != value?.BindingContext)
@@ -2074,6 +2081,41 @@ public class FrameworkElement : INotifyPropertyChanged
     /// call <c>base.ApplyRuntimeProperties()</c> to keep this event firing.
     /// </summary>
     public event EventHandler? AfterRefreshStyles;
+
+    /// <summary>
+    /// Text a control received through its property or its no-translate method. RefreshStyles
+    /// restores only this text; text authored on the Visual is re-applied from the Visual's
+    /// state instead. Remembers the original value and whether it was translated, so a
+    /// restore does not translate an already-translated string or translate no-translate text.
+    /// </summary>
+    internal struct CodeAssignedText
+    {
+        private string? _value;
+        private bool _translate;
+        private bool _isSet;
+
+        public void Record(string? value, bool translate)
+        {
+            _value = value;
+            _translate = translate;
+            _isSet = true;
+        }
+
+        public void Clear()
+        {
+            _value = null;
+            _translate = false;
+            _isSet = false;
+        }
+
+        public void Restore(GraphicalUiElement? textComponent)
+        {
+            if (_isSet && textComponent != null)
+            {
+                textComponent.SetProperty(_translate ? "Text" : "TextNoTranslate", _value);
+            }
+        }
+    }
 
     #region Runtime Property Registration
 
