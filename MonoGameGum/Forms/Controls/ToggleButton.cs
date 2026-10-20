@@ -63,6 +63,7 @@ public class ToggleButton : ButtonBase
 #if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
+            _isTextSetInCode = true;
             // go through the component instead of the core text object to force a layout refresh if necessary
             textComponent?.SetProperty("Text", value);
         }
@@ -78,6 +79,7 @@ public class ToggleButton : ButtonBase
     /// </remarks>
     public void SetTextNoTranslate(string? value)
     {
+        _isTextSetInCode = true;
         textComponent?.SetProperty("TextNoTranslate", value);
     }
 
@@ -197,11 +199,15 @@ public class ToggleButton : ButtonBase
     private string? _savedText;
     private bool _hasSavedText;
 
+    // Only text assigned through the property is restored after RefreshStyles; text the Visual
+    // authored is re-applied from the Visual's state instead.
+    private bool _isTextSetInCode;
+
     /// <inheritdoc/>
     public override void SaveRuntimeProperties()
     {
         _savedText = coreTextObject?.RawText;
-        _hasSavedText = coreTextObject != null;
+        _hasSavedText = _isTextSetInCode && coreTextObject != null;
         base.SaveRuntimeProperties();
     }
 

@@ -324,6 +324,7 @@ public abstract class TextBoxBase :
         get => placeholderTextObject?.RawText;
         set
         {
+            _isPlaceholderSetInCode = true;
             if (placeholderComponent != null)
             {
                 // go through the component instead of the renderable to apply localization and force a layout refresh
@@ -342,6 +343,7 @@ public abstract class TextBoxBase :
     /// </remarks>
     public void SetPlaceholderNoTranslate(string? value)
     {
+        _isPlaceholderSetInCode = true;
         if (placeholderComponent != null)
         {
             placeholderComponent.SetProperty("TextNoTranslate", value);
@@ -1285,6 +1287,10 @@ public abstract class TextBoxBase :
 
     private string? _savedText;
     private string? _savedPlaceholder;
+
+    // Only a placeholder assigned through the property is restored after RefreshStyles; one the
+    // Visual authored is re-applied from the Visual's state instead.
+    private bool _isPlaceholderSetInCode;
     private int _savedCaretIndex;
     private int _savedSelectionLength;
 
@@ -1292,7 +1298,7 @@ public abstract class TextBoxBase :
     public override void SaveRuntimeProperties()
     {
         _savedText = coreTextObject?.RawText;
-        _savedPlaceholder = placeholderTextObject?.RawText;
+        _savedPlaceholder = _isPlaceholderSetInCode ? placeholderTextObject?.RawText : null;
         _savedCaretIndex = caretIndex;
         _savedSelectionLength = selectionLength;
         base.SaveRuntimeProperties();

@@ -275,8 +275,12 @@ public abstract class RangeBase :
                 thumb.Push += HandleThumbPush;
 
                 // A visual assigned (or reassigned) while this control is disabled
-                // must start out disabled too.
-                thumb.IsEnabled = IsEnabled;
+                // must start out disabled too. Only disable here: an enabled control
+                // must not re-enable a thumb the Visual authored as disabled.
+                if (!IsEnabled)
+                {
+                    thumb.IsEnabled = false;
+                }
             }
         }
 #if FRB

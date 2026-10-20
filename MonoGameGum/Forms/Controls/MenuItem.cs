@@ -90,6 +90,7 @@ public class MenuItem : ItemsControl
 #if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
+            _isTextSetInCode = true;
             if (value != coreText?.RawText)
             {
                 // go through the component instead of the core text object to apply localization and force a layout refresh
@@ -108,6 +109,7 @@ public class MenuItem : ItemsControl
     /// </remarks>
     public void SetHeaderNoTranslate(string? value)
     {
+        _isTextSetInCode = true;
         if (value != coreText?.RawText)
         {
             text?.SetProperty("TextNoTranslate", value);
@@ -689,11 +691,15 @@ public class MenuItem : ItemsControl
     private string? _savedText;
     private bool _hasSavedText;
 
+    // Only text assigned through the property is restored after RefreshStyles; text the Visual
+    // authored is re-applied from the Visual's state instead.
+    private bool _isTextSetInCode;
+
     /// <inheritdoc/>
     public override void SaveRuntimeProperties()
     {
         _savedText = coreText?.RawText;
-        _hasSavedText = coreText != null;
+        _hasSavedText = _isTextSetInCode && coreText != null;
         base.SaveRuntimeProperties();
     }
 
