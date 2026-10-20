@@ -31,13 +31,20 @@ public class ShapeRenderer
     // Issue #5689 — alpha-only blends (MinAlpha, ReplaceAlpha) on a shape apply to the shape's whole
     // bounding rectangle, not just the pixels the shape draws: Apos.Shapes only shades pixels within
     // the shape's own AA margin, so the rest of the bounds is covered by an extra alpha-0 rectangle
-    // drawn with the same blend. ReplaceAlpha does not read the destination, so the cover goes down
-    // first and the body then writes its alpha over it. MinAlpha does (min(dst, 0) would also wipe the
-    // body), so the body marks the stencil buffer and the cover then draws only where it is unmarked.
-    // Stencil exists only while baking a render target (bake targets carry a stencil buffer), which is
-    // also the only place an alpha-only blend on a shape means anything.
+    // drawn with the same blend.
+    //
+    // Issue #6235 — Apos.Shapes draws a quad larger than the shape and does not discard the fragments
+    // with zero coverage, so those write alpha 0 (ReplaceAlpha) or min(dst, 0) (MinAlpha) in a margin
+    // around the shape, outside its bounds. A stencil bit therefore clips every draw of the shape to
+    // its bounds: bit 0 marks the bounds, bit 1 marks what the body drew, and the cover then draws only
+    // where bit 0 is set and bit 1 is not. The stencil is cleared per masked shape, so the bits never
+    // outlive it. Stencil exists only while baking a render target (bake targets carry a stencil
+    // buffer), which is also the only place an alpha-only blend on a shape means anything.
     DepthStencilState? _currentDepthStencilState;
-    byte _stencilReference;
+    Microsoft.Xna.Framework.Vector2 _maskTopLeft;
+    Microsoft.Xna.Framework.Vector2 _maskSize;
+    float _maskRotationRadians;
+    bool _isMaskActive;
 
     // Issue #4509 — the view the batch was opened with, saved while a single renderable draws
     // through a transformed one. Apos.Shapes has no per-draw transform, so a non-uniformly scaled
@@ -81,6 +88,7 @@ public class ShapeRenderer
         _isBatchBegun = true;
         _isViewPushed = false;
         _currentDepthStencilState = null;
+        _isMaskActive = false;
         _statistics = statistics;
         _statistics?.RecordShapeBatchBegin();
         _sb.Begin(view: view, blendState: _currentXnaBlendState, rasterizerState: rasterizerState);
@@ -88,27 +96,35 @@ public class ShapeRenderer
 
     /// <summary>
     /// Issue #5689 — call from a shape's <c>Render</c> right after <see cref="EnsureBlend"/>, before
-    /// any of its draws. For an alpha-only blend while baking, starts marking the stencil buffer
-    /// with every pixel the shape draws, so <see cref="EndAlphaBoundsMask"/> can apply the blend to
-    /// the rest of the shape's bounding rectangle. Pair with <see cref="EndAlphaBoundsMask"/>.
-    /// Internal use: only Gum's own shape renderables call this; game code should not.
+    /// any of its draws, with the shape's bounding rectangle (<paramref name="topLeft"/> already
+    /// adjusted for Apos.Shapes' rotation around the center). For an alpha-only blend while baking,
+    /// clips the shape's draws to those bounds and marks what they draw, so
+    /// <see cref="EndAlphaBoundsMask"/> can apply the blend to the rest of the bounds. Pair with
+    /// <see cref="EndAlphaBoundsMask"/>. Internal use: only Gum's own shape renderables call this;
+    /// game code should not.
     /// </summary>
-    public void BeginAlphaBoundsMask()
+    /// <param name="topLeft">Top-left of the bounds before rotation around its center.</param>
+    /// <param name="size">Size of the bounds.</param>
+    /// <param name="rotationRadians">Rotation of the bounds around its center.</param>
+    public void BeginAlphaBoundsMask(Microsoft.Xna.Framework.Vector2 topLeft, Microsoft.Xna.Framework.Vector2 size, float rotationRadians)
     {
         if (!_isBatchBegun || !_isBakingRenderTarget)
         {
             return;
         }
 
-        // A fresh reference per shape means stencil left by earlier masks never needs clearing,
-        // except when the byte wraps.
-        _stencilReference++;
-        if (_stencilReference == 0)
-        {
-            _sb.GraphicsDevice.Clear(ClearOptions.Stencil, Microsoft.Xna.Framework.Color.Transparent, 0f, 0);
-            _stencilReference = 1;
-        }
-        ReopenWithDepthStencil(GetStencilState(_stencilReference, markBody: true));
+        _isMaskActive = true;
+        _maskTopLeft = topLeft;
+        _maskSize = size;
+        _maskRotationRadians = rotationRadians;
+
+        _sb.End();
+        _sb.GraphicsDevice.Clear(ClearOptions.Stencil, Microsoft.Xna.Framework.Color.Transparent, 0f, 0);
+        _currentDepthStencilState = _markBoundsState;
+        _statistics?.RecordShapeBatchBegin();
+        _sb.Begin(view: _currentView, blendState: _noColorWriteBlendState, depthStencilState: _currentDepthStencilState, rasterizerState: _currentRasterizerState);
+        DrawMaskRectangle(Microsoft.Xna.Framework.Color.White);
+        ReopenWithDepthStencil(_clipToBoundsState);
     }
 
     /// <summary>
@@ -117,38 +133,62 @@ public class ShapeRenderer
     /// where the shape did not draw: MinAlpha erases there (min(dst, 0)) and ReplaceAlpha sets alpha 0.
     /// Internal use: only Gum's own shape renderables call this; game code should not.
     /// </summary>
-    public void EndAlphaBoundsMask(Microsoft.Xna.Framework.Vector2 topLeft, Microsoft.Xna.Framework.Vector2 size, float rotationRadians)
+    public void EndAlphaBoundsMask()
     {
-        if (!_isBatchBegun || !_isBakingRenderTarget)
+        if (!_isMaskActive)
         {
             return;
         }
+        _isMaskActive = false;
 
-        ReopenWithDepthStencil(GetStencilState(_stencilReference, markBody: false));
+        ReopenWithDepthStencil(_coverOutsideBodyState);
         // Alpha 1/255, not 0: Apos.Shapes.KNI drops draws whose colors are fully transparent, so a
         // true alpha-0 cover would never reach the GPU there. 1/255 is invisible after compositing.
-        Microsoft.Xna.Framework.Color nearlyTransparent = new Microsoft.Xna.Framework.Color((byte)0, (byte)0, (byte)0, (byte)1);
-        _sb.DrawRectangle(topLeft, size, nearlyTransparent, nearlyTransparent, 1, 0f, rotationRadians, 0);
+        DrawMaskRectangle(new Microsoft.Xna.Framework.Color((byte)0, (byte)0, (byte)0, (byte)1));
         ReopenWithDepthStencil(null);
     }
 
-    // Cached per reference value: XNA states are immutable once bound, and a mask shape would
-    // otherwise allocate two of them every frame.
-    private readonly DepthStencilState?[] _markBodyStates = new DepthStencilState?[256];
-    private readonly DepthStencilState?[] _outsideBodyStates = new DepthStencilState?[256];
-
-    private DepthStencilState GetStencilState(byte reference, bool markBody)
+    private void DrawMaskRectangle(Microsoft.Xna.Framework.Color color)
     {
-        DepthStencilState?[] cache = markBody ? _markBodyStates : _outsideBodyStates;
-        return cache[reference] ??= new DepthStencilState
-        {
-            DepthBufferEnable = false,
-            StencilEnable = true,
-            StencilFunction = markBody ? CompareFunction.Always : CompareFunction.NotEqual,
-            StencilPass = markBody ? StencilOperation.Replace : StencilOperation.Keep,
-            ReferenceStencil = reference,
-        };
+        _sb.DrawRectangle(_maskTopLeft, _maskSize, color, color, 1, 0f, _maskRotationRadians, 0);
     }
+
+    // A pixel belongs to the bounds when its center is inside them (the bounds rectangle is drawn without
+    // anti-aliasing), so a pixel the bounds only partly cover is left as it was.
+    // Stencil bit 0 marks the shape's bounds; bit 1 marks what the body drew. The read mask picks the bits a
+    // test looks at and the write mask the bits a pass changes, so one fixed reference serves every shape.
+    private readonly DepthStencilState _markBoundsState = new DepthStencilState
+    {
+        DepthBufferEnable = false,
+        StencilEnable = true,
+        StencilFunction = CompareFunction.Always,
+        StencilPass = StencilOperation.Replace,
+        ReferenceStencil = 1,
+        StencilWriteMask = 1,
+    };
+
+    private readonly DepthStencilState _clipToBoundsState = new DepthStencilState
+    {
+        DepthBufferEnable = false,
+        StencilEnable = true,
+        StencilFunction = CompareFunction.Equal,
+        StencilPass = StencilOperation.Replace,
+        ReferenceStencil = 3,
+        StencilMask = 1,
+        StencilWriteMask = 2,
+    };
+
+    private readonly DepthStencilState _coverOutsideBodyState = new DepthStencilState
+    {
+        DepthBufferEnable = false,
+        StencilEnable = true,
+        StencilFunction = CompareFunction.Equal,
+        StencilPass = StencilOperation.Keep,
+        ReferenceStencil = 1,
+        StencilMask = 3,
+    };
+
+    private readonly BlendState _noColorWriteBlendState = new BlendState { ColorWriteChannels = ColorWriteChannels.None };
 
     private void ReopenWithDepthStencil(DepthStencilState? depthStencilState)
     {

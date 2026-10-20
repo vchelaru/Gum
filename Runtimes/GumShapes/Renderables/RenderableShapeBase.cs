@@ -862,25 +862,25 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// <summary>
     /// Issue #5689 — call from <c>Render</c> after <c>ShapeRenderer.EnsureBlend</c>, before any draw,
     /// so an alpha-only <see cref="Blend"/> (MinAlpha, ReplaceAlpha) applies to the shape's whole
-    /// bounding rectangle and not just the pixels the shape itself draws. Pair with
-    /// <see cref="EndAlphaBoundsMask"/>. No-op for other blends.
+    /// bounding rectangle and not just the pixels the shape itself draws, and to nothing outside it
+    /// (#6235). Pair with <see cref="EndAlphaBoundsMask"/>. No-op for other blends.
     /// </summary>
-    protected void BeginAlphaBoundsMask()
-    {
-        if (Blend == Gum.RenderingLibrary.Blend.MinAlpha || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha)
-        {
-            ShapeRenderer.BeginAlphaBoundsMask();
-        }
-    }
-
-    /// <summary>Second half of <see cref="BeginAlphaBoundsMask"/>; call after the shape's last draw.</summary>
-    protected void EndAlphaBoundsMask(float absoluteLeft, float absoluteTop, float width, float height, float rotationRadians)
+    protected void BeginAlphaBoundsMask(float absoluteLeft, float absoluteTop, float width, float height, float rotationRadians)
     {
         if (Blend == Gum.RenderingLibrary.Blend.MinAlpha || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha)
         {
             Vector2 size = new(width, height);
-            ShapeRenderer.EndAlphaBoundsMask(
+            ShapeRenderer.BeginAlphaBoundsMask(
                 AdjustPositionForCenterRotation(new Vector2(absoluteLeft, absoluteTop), size, rotationRadians), size, rotationRadians);
+        }
+    }
+
+    /// <summary>Second half of <see cref="BeginAlphaBoundsMask"/>; call after the shape's last draw.</summary>
+    protected void EndAlphaBoundsMask()
+    {
+        if (Blend == Gum.RenderingLibrary.Blend.MinAlpha || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha)
+        {
+            ShapeRenderer.EndAlphaBoundsMask();
         }
     }
 

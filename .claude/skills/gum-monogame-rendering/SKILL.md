@@ -277,6 +277,10 @@ When reading a trace:
 - Actual GPU draw happens at `>> ShapeBatch.End` and `>> spriteRenderer.End()` lines.
 - Cross-reference these against the renderable order to see when each pixel actually hits the framebuffer.
 
+## Alpha-Only Blends on Shapes Need a Bounds Clip
+
+Apos.Shapes draws a quad larger than the shape and does not discard zero-coverage fragments, so ReplaceAlpha and MinAlpha write alpha 0 in a margin outside the shape's bounds. `ShapeRenderer.BeginAlphaBoundsMask`/`EndAlphaBoundsMask` clip every draw of the shape to its bounds with a stencil bit (a pixel counts when its center is inside) and then cover the rest of the bounds. A new shape renderable must call both, passing its own bounds. `ShapeEdgePixelTests` audits every shape type for pixels changed outside the bounds.
+
 ## Known Pitfalls Checklist
 
 When changing batch logic:
