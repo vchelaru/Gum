@@ -62,7 +62,7 @@ public class BaseTestClass : IDisposable
         GraphicalUiElement.CanvasWidth = 800;
         GraphicalUiElement.CanvasHeight = 600;
 
-        Gum.GumService gumService = GumService.Default;
+        Gum.GumService gumService = Gum.GumService.Default;
         gumService.Root.Dock(Dock.Fill);
         gumService.Root.UpdateLayout();
 

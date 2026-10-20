@@ -61,7 +61,7 @@ public class BaseTestClassTests
         {
             child.GetAbsoluteX().ShouldBe(0);
             child.GetAbsoluteY().ShouldBe(0);
-            GumService.Default.Root.GetAbsoluteWidth().ShouldBe(SkiaHostTestFramework.CanvasWidth);
+            GumService.Default.Root.AbsoluteWidth.ShouldBe(SkiaHostTestFramework.CanvasWidth);
             GumService.Default.PopupRoot.Width.ShouldBe(SkiaHostTestFramework.CanvasWidth);
             GumService.Default.ModalRoot.Height.ShouldBe(SkiaHostTestFramework.CanvasHeight);
         }
