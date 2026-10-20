@@ -205,6 +205,9 @@ public class MenuItem : ItemsControl
     /// <inheritdoc/>
     protected override void ReactToVisualRemoved()
     {
+        // The popup belongs to the Visual being removed, so close it before the Visual goes.
+        CloseSubmenuForVisualRemoved();
+
         base.ReactToVisualRemoved();
 
 #if !FRB
@@ -240,7 +243,7 @@ public class MenuItem : ItemsControl
                 if (child is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is MenuItem menuItem)
                 {
                     child.Parent = null;
-                    Items?.Add(menuItem);
+                    AdoptVisualAuthoredItem(menuItem);
                 }
             }
 
@@ -253,6 +256,7 @@ public class MenuItem : ItemsControl
 
     private void HandleSubItemContainerChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        GraphicalUiElement? container = _subscribedSubItemContainer;
         List<MenuItem>? items = null;
         if(e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
@@ -277,13 +281,17 @@ public class MenuItem : ItemsControl
                 .DeferredQueue.Enqueue(() =>
 #endif
             {
-                foreach (var item in items)
+                // The Visual may have been replaced before the queue ran.
+                if (container != null && _subscribedSubItemContainer == container)
                 {
-                    // This item could have been added through a state. 
-                    // If that's the case, layout will be suspended. Let's
-                    // force resume it now:
-                    item.Visual.ResumeLayout(recursive:true);
-                    this.Items?.Add(item);
+                    foreach (var item in items)
+                    {
+                        // This item could have been added through a state.
+                        // If that's the case, layout will be suspended. Let's
+                        // force resume it now:
+                        item.Visual.ResumeLayout(recursive:true);
+                        AdoptVisualAuthoredItem(item);
+                    }
                 }
             });
         }
@@ -658,6 +666,42 @@ public class MenuItem : ItemsControl
             {
                 item.IsSelected = false;
             }
+        }
+    }
+
+    /// <summary>
+    /// Closes the sub-item popup when this item's Visual is replaced or removed. Unlike
+    /// <see cref="HidePopupRecursively"/> this raises no events and does not require the Visual to
+    /// have managers, because the Visual it would update is going away.
+    /// </summary>
+    private void CloseSubmenuForVisualRemoved()
+    {
+        TearDownPopup();
+        isSelected = false;
+    }
+
+    private void TearDownPopup()
+    {
+        foreach (MenuItem item in MenuItemsInternal)
+        {
+            item.TearDownPopup();
+            if (item.isSelected)
+            {
+                item.isSelected = false;
+                item.UpdateState(force: true);
+            }
+        }
+
+        if (itemsPopup != null)
+        {
+            itemsPopup.IsVisible = false;
+            if (Visual.EffectiveManagers != null)
+            {
+                itemsPopup.Visual.RemoveFromManagers();
+                Visual.EffectiveManagers.Renderer.MainLayer.Remove(itemsPopup.Visual);
+            }
+            itemsPopup.Visual.Parent = null;
+            itemsPopup = null;
         }
     }
 

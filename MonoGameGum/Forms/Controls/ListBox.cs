@@ -550,31 +550,94 @@ public class ListBox : ItemsControl, IInputReceiver
 
     protected override void ReactToVisualChanged()
     {
+        // Rows are rebuilt for the new Visual, so remember what was selected by data object.
+        List<object?>? selectedData = _selectedRowsInternal?.Count > 0
+            ? _selectedRowsInternal.Select(row => row.DataObject).ToList()
+            : null;
+
         // do base first, so InnerPanel can get assigned by the base
         base.ReactToVisualChanged();
 
-        if (InnerPanel?.Children.Count > 0 && this.Items != null && this.Items.Count == 0)
+        if (selectedData != null)
         {
-            foreach(var item in InnerPanel.Children)
+            RestoreSelectionAfterVisualChanged(selectedData);
+        }
+    }
+
+    /// <summary>
+    /// Brings ListBoxItems authored on the Visual into Items and ListBoxItems, ahead of any item added
+    /// in code.
+    /// </summary>
+    protected override void AdoptVisualAuthoredItems()
+    {
+        if (InnerPanel == null || Items == null)
+        {
+            return;
+        }
+
+        int adoptedCount = 0;
+        foreach (GraphicalUiElement child in InnerPanel.Children.ToList())
+        {
+            if (child is InteractiveGue interactiveGue &&
+                interactiveGue.FormsControlAsObject is ListBoxItem listBoxItem &&
+                !Items.Contains(listBoxItem))
             {
-                if(item is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is ListBoxItem listBoxItem)
+                // A directly-added ListBoxItem is its own backing object in Items (issue #556).
+                listBoxItem.DataObject = listBoxItem;
+
+                // The row already has its visual in the panel, so Items must not create another.
+                _suppressCollectionChangedToBase = true;
+                try
                 {
-                    // A directly-added ListBoxItem is its own backing object in Items (issue #556).
-                    listBoxItem.DataObject = listBoxItem;
-                    this.Items.Add(listBoxItem);
-                    if(this.Items is not INotifyCollectionChanged )
-                    {
-                        ListBoxItemsInternal.Add(listBoxItem);
-                        listBoxItem.AssignListBoxEvents(
-                            HandleItemSelected, 
-                            HandleItemFocused, 
-                            HandleListBoxItemPushed, 
-                            HandleListBoxItemClicked,
-                            HandleListBoxItemDragging);
-                    }
+                    AdoptVisualAuthoredItem(listBoxItem, adoptedCount);
                 }
+                finally
+                {
+                    _suppressCollectionChangedToBase = false;
+                }
+
+                ListBoxItemsInternal.Insert(adoptedCount, listBoxItem);
+                listBoxItem.AssignListBoxEvents(
+                    HandleItemSelected,
+                    HandleItemFocused,
+                    HandleListBoxItemPushed,
+                    HandleListBoxItemClicked,
+                    HandleListBoxItemDragging);
+                adoptedCount++;
             }
         }
+    }
+
+    private void RestoreSelectionAfterVisualChanged(List<object?> selectedData)
+    {
+        _selectedRowsInternal.Clear();
+        SelectionChangedEventArgs droppedArgs = new SelectionChangedEventArgs();
+        foreach (object? data in selectedData)
+        {
+            ListBoxItem? row = GetListBoxItemForData(data);
+            if (row != null)
+            {
+                if (!_selectedRowsInternal.Contains(row))
+                {
+                    _selectedRowsInternal.Add(row);
+                }
+            }
+            else
+            {
+                droppedArgs.RemovedItems.Add(data);
+            }
+        }
+
+        RebuildSelectedItemsCollectionFromRows();
+        SyncIsSelectedFromSelectedItems(raiseSelectionChanged: false);
+
+        if (droppedArgs.RemovedItems.Count > 0)
+        {
+            SelectionChanged?.Invoke(this, droppedArgs);
+        }
+
+        PushValueToViewModel(nameof(SelectedObject));
+        PushValueToViewModel(nameof(SelectedIndex));
     }
 
 
