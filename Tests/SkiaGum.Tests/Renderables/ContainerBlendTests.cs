@@ -34,6 +34,25 @@ public class ContainerBlendTests
         AssertPixel(bitmap, 90, 10, 70, 70, 90);
     }
 
+    [Fact]
+    public void NestedAdditiveContainer_WithTranslucentFill_AddsFillAlphaOnce_MatchesMonoGame()
+    {
+        using SKBitmap bitmap = RenderToBitmap(Blend.Additive, 255, nested: true, fillAlpha: 128);
+
+        AssertPixel(bitmap, 30, 30, 255, 158, 158);
+        AssertPixel(bitmap, 70, 70, 163, 163, 173);
+    }
+
+    [Fact]
+    public void TopLevelAdditiveContainer_AddsGroupAlphaOnce_MatchesMonoGame()
+    {
+        using SKBitmap bitmap = RenderToBitmap(Blend.Additive, 128, nested: false);
+
+        AssertPixel(bitmap, 30, 30, 255, 158, 158);
+        AssertPixel(bitmap, 70, 70, 198, 198, 218);
+        AssertPixel(bitmap, 5, 5, 200, 30, 30);
+    }
+
     // The capture is premultiplied, so reading it as straight color gives MonoGame's top-level
     // result: the alpha-only blends change the alpha channel and leave the color.
     [Theory]
@@ -65,6 +84,14 @@ public class ContainerBlendTests
         GoldenImageAssert.Matches(surface, $"ContainerBlend_{blend}");
     }
 
+    [Fact]
+    public void NestedAdditiveContainerAtHalfAlpha_MatchesGoldenBaseline()
+    {
+        using SKSurface surface = RenderToSurface(Blend.Additive, 128, nested: true);
+
+        GoldenImageAssert.Matches(surface, "ContainerBlend_AdditiveHalfAlpha");
+    }
+
     private static void AssertPixel(SKBitmap bitmap, int x, int y, int red, int green, int blue)
     {
         SKColor actual = bitmap.GetPixel(x, y);
@@ -73,14 +100,14 @@ public class ContainerBlendTests
         ((int)actual.Blue).ShouldBeInRange(blue - 2, blue + 2, $"blue at ({x}, {y})");
     }
 
-    private static SKBitmap RenderToBitmap(Blend blend, int alpha, bool nested)
+    private static SKBitmap RenderToBitmap(Blend blend, int alpha, bool nested, int fillAlpha = 255)
     {
-        using SKSurface surface = RenderToSurface(blend, alpha, nested);
+        using SKSurface surface = RenderToSurface(blend, alpha, nested, fillAlpha);
         using SKImage image = surface.Snapshot();
         return SKBitmap.FromImage(image);
     }
 
-    private static SKSurface RenderToSurface(Blend blend, int alpha, bool nested)
+    private static SKSurface RenderToSurface(Blend blend, int alpha, bool nested, int fillAlpha = 255)
     {
         SKSurface surface = SKSurface.Create(new SKImageInfo(100, 100));
         Gum.GumService.Default.Initialize(surface.Canvas, 100, 100);
@@ -92,7 +119,7 @@ public class ContainerBlendTests
         {
             X = 20, Y = 20, Width = 60, Height = 60, IsRenderTarget = true, Alpha = alpha, Blend = blend,
         };
-        inner.Children.Add(NewFill(0, 60, SKColors.White));
+        inner.Children.Add(NewFill(0, 60, SKColors.White.WithAlpha((byte)fillAlpha)));
 
         RectangleRuntime redFill = NewFill(0, 55, new SKColor(200, 30, 30));
         redFill.Height = 100;
