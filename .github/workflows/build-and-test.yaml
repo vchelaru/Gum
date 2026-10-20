@@ -465,11 +465,14 @@ jobs:
       # AllLibraries.sln), plus whatever they reference. They are plain net8.0/net10.0, so no workloads.
       # A test project added to the list below must be added to the filter too, or its `--no-build`
       # step fails for want of a binary.
-      - name: Build test projects (Windows)
+      # Restore and compile are separate steps so the run page shows each one's seconds (#6282).
+      - name: Restore test projects (Windows)
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
-        run: |
-          dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
-          dotnet build "Tests/CiTestProjects.slnf" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
+        run: dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
+
+      - name: Compile test projects (Windows)
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
+        run: dotnet build "Tests/CiTestProjects.slnf" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
 
       # ---------------------------------------------------------------------
       # Test allow-list policy
@@ -773,8 +776,9 @@ jobs:
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
       # page alone (#6092).
+      # Skipped on PR runs to save its few seconds; push and nightly runs keep it (#6282).
       - name: Slowest tests
-        if: always() && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: always() && github.event_name != 'pull_request' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         continue-on-error: true
         shell: pwsh
         run: ./.github/scripts/trx-slowest.ps1 -ResultsDirectory TestResults
