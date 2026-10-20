@@ -12,6 +12,20 @@ public class AnimationController
 {
     private AnimationState _state = AnimationState.Stopped;
     private TaskCompletionSource<bool>? _asyncCompletionSource;
+    private readonly GraphicalUiElement? _owner;
+
+    /// <summary>
+    /// Creates a controller that is not tied to an element. <see cref="GraphicalUiElement.AnimationController"/>
+    /// is the usual way to get one.
+    /// </summary>
+    public AnimationController()
+    {
+    }
+
+    internal AnimationController(GraphicalUiElement owner)
+    {
+        _owner = owner;
+    }
 
     /// <summary>
     /// Gets the currently playing or paused animation, or null if no animation is loaded.
@@ -87,6 +101,7 @@ public class AnimationController
         CurrentAnimation = animation;
         CurrentTime = 0;
         _state = AnimationState.Playing;
+        _owner?.InvalidateSubtreeCaches();
         OnStarted?.Invoke();
     }
 
@@ -163,6 +178,7 @@ public class AnimationController
         if (_state == AnimationState.Paused)
         {
             _state = AnimationState.Playing;
+            _owner?.InvalidateSubtreeCaches();
             OnResumed?.Invoke();
         }
     }
@@ -192,6 +208,7 @@ public class AnimationController
             if (_state != AnimationState.Playing)
             {
                 _state = AnimationState.Playing;
+                _owner?.InvalidateSubtreeCaches();
                 OnStarted?.Invoke();
             }
         }

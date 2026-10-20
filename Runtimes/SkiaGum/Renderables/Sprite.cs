@@ -9,7 +9,7 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, IRenderTargetTextureReferencer
+public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, IAnimationChainRenderable, IRenderTargetTextureReferencer
 {
     /// <summary>
     /// The bitmap this sprite draws. Setting it builds a new <see cref="Image"/> that the sprite owns
@@ -216,6 +216,10 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             ColorOperation = ColorOperation.Modulate;
         }
     }
+
+    bool IAnimationChainRenderable.IsChainAnimationEnabled => AnimationLogic.Animate;
+
+    void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
 
     public bool AnimateSelf(double secondDifference)
     {

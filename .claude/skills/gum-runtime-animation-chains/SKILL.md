@@ -27,6 +27,8 @@ State lives entirely on `AnimationChainLogic`:
 
 `AnimateSelf` is driven once per frame by `GraphicalUiElement.AnimateSelf` (recursively). Event handlers may add or remove elements mid-walk, so a list of elements is animated through `GraphicalUiElement.AnimateEach` (children and `GumService.AnimateRoots`), which resumes after the element it just animated wherever it now is; Sokol's `Renderer.TickEach` walks renderables and keeps its own copy. Never `foreach` or snapshot the list (throws or allocates per frame).
 
+**Idle subtrees are skipped.** An element whose whole subtree had nothing to animate sets `_isIdle` and `AnimateSelf` returns at once until `InvalidateSubtreeCaches` (`GraphicalUiElement.SubtreeCaches.cs`) clears it. Anything new that can give an element per-frame work must call it: a new playback flag on a renderable (implement `IAnimationChainRenderable` and raise the callback when it turns on, as `AnimationChainLogic.Animate` does), a new `IUpdateEveryFrame`-style hook, or a new way to add or show children. An `IAnimatable` that does not implement `IAnimationChainRenderable` is ticked every frame and keeps its ancestors from going idle.
+
 ## Frame application is split across two times
 
 Sprite handles each frame in **two phases**:

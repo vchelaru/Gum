@@ -451,7 +451,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             throw new ArgumentException("The argument containedObject cannot be 'this'");
         }
 
+        InvalidateSubtreeCaches();
         mContainedObjectAsIpso = containedObject as IRenderableIpso;
+
+        if (containedObject is IAnimationChainRenderable chainRenderable)
+        {
+            chainRenderable.SetChainAnimationEnabledCallback(_invalidateSubtreeCachesAction ??= InvalidateSubtreeCaches);
+        }
 
         if (mContainedObjectAsIpso == null)
         {
@@ -540,6 +546,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // AddToManagers treat the clone as already added, so it never reaches a layer.
         newClone.mManagers = null;
         newClone.mLayer = null;
+        // Skip-cache state and the controller belong to the source: the clone starts not idle and builds its own.
+        newClone._isIdle = false;
+        newClone._subtreeEventsState = 0;
+        newClone._invalidateSubtreeCachesAction = null;
+#if !FRB
+        newClone._animationController = null;
+#endif
         newClone.SetContainedObject(clonedRenderable);
         // Per-instance state gets its own copy, so changes to one element can't reach the other.
         // The clone keeps the source's pending layout, definitions and pending Forms values; the
@@ -561,7 +574,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         newClone.mCategories = new Dictionary<string, StateSaveCategory>(mCategories);
 #if !FRB
         newClone.Animations = Animations == null ? null : new List<AnimationRuntime>(Animations);
-        newClone.AnimationController = new AnimationController();
 #endif
         // The copied handlers belong to whoever subscribed to the source (its binding handler, its
         // Forms control, user code), so raising them on the clone would act on the source. Re-run

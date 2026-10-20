@@ -212,6 +212,7 @@
 		<Compile Include="..\GumRuntime\GraphicalUiElement.RequiredSize.cs" Link="GraphicalUiElement.RequiredSize.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElement.SetValuesAndStates.cs" Link="GraphicalUiElement.SetValuesAndStates.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElement.Stacking.cs" Link="GraphicalUiElement.Stacking.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.SubtreeCaches.cs" Link="GraphicalUiElement.SubtreeCaches.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElement.Suspension.cs" Link="GraphicalUiElement.Suspension.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElement.Text.cs" Link="GraphicalUiElement.Text.cs" />
 		<Compile Include="..\GumRuntime\GraphicalUiElement.UpdateLayout.cs" Link="GraphicalUiElement.UpdateLayout.cs" />

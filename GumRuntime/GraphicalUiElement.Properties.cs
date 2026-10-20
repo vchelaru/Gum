@@ -121,6 +121,11 @@ public partial class GraphicalUiElement
             if (mContainedObjectAsIVisible != null && value != mContainedObjectAsIVisible.Visible)
             {
                 mContainedObjectAsIVisible.Visible = value;
+                if (value)
+                {
+                    // The element may have been given work while it was hidden and skipped.
+                    InvalidateSubtreeCaches();
+                }
 
                 var absoluteVisible = AbsoluteVisible;
                 // See if this has a parent that stacks children. If so, update its layout:
@@ -992,7 +997,10 @@ public partial class GraphicalUiElement
     /// Gets the AnimationController that manages animation playback for this element.
     /// Use this to control animations (play, pause, stop), check playback state, and subscribe to animation events.
     /// </summary>
-    public AnimationController AnimationController { get; private set; } = new();
+    public AnimationController AnimationController => _animationController ??= new AnimationController(this);
+
+    // Built on first use: most elements never play a state animation.
+    AnimationController? _animationController;
 
     /// <summary>
     /// Convenience wrapper for <see cref="AnimationController.Play(AnimationRuntime)"/>.

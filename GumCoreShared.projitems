@@ -89,6 +89,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.RequiredSize.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.SetValuesAndStates.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.Stacking.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.SubtreeCaches.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.Suspension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.Text.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.UpdateLayout.cs" />

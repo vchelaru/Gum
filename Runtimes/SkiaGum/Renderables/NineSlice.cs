@@ -9,7 +9,7 @@ using System.Drawing;
 
 namespace SkiaGum.Renderables;
 
-public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
+public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRenderable, ITextureCoordinate
 {
     /// <summary>
     /// Shared AnimationChain playback state. The constructor wires
@@ -121,6 +121,10 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
     }
 
     /// <inheritdoc/>
+    bool IAnimationChainRenderable.IsChainAnimationEnabled => AnimationLogic.Animate;
+
+    void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
+
     public bool AnimateSelf(double secondDifference)
     {
         if (!Visible)

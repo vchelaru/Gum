@@ -131,7 +131,22 @@ public class AnimationChainLogic
         }
     }
 
-    public bool Animate { get => _animate; set => _animate = value; }
+    public bool Animate
+    {
+        get => _animate;
+        set
+        {
+            bool didTurnOn = value && !_animate;
+            _animate = value;
+            if (didTurnOn)
+            {
+                AnimateEnabled?.Invoke();
+            }
+        }
+    }
+
+    // Raised when Animate turns on. The owning GraphicalUiElement uses it to stop skipping this renderable.
+    internal Action? AnimateEnabled;
     public bool IsAnimationChainLooping { get => _isLooping; set => _isLooping = value; }
 
     /// <summary>
@@ -255,6 +270,7 @@ public class AnimationChainLogic
         clone.ApplyKeyframeColor = applyKeyframeColor;
         clone.AnimationChainCycled = null;
         clone.AnimationChainFinished = null;
+        clone.AnimateEnabled = null;
         return clone;
     }
 

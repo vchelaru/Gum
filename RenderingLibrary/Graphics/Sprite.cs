@@ -23,6 +23,7 @@ public class Sprite : SpriteBatchRenderableBase,
     IAspectRatio, 
     ITextureCoordinate, 
     IAnimatable, 
+    IAnimationChainRenderable,
     IAnimatingRenderable,
     ICloneable,
     IRenderTargetTextureReferencer
@@ -259,6 +260,10 @@ public class Sprite : SpriteBatchRenderableBase,
     }
 
     bool IAnimatingRenderable.IsAnimating => Animate && CurrentChain?.Count > 1;
+
+    bool IAnimationChainRenderable.IsChainAnimationEnabled => AnimationLogic.Animate;
+
+    void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
 
     public bool IsAnimationChainLooping
     {

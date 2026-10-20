@@ -15,7 +15,7 @@ using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable, IRenderableIpso, IRenderTargetTextureReferencer
+public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable, IAnimationChainRenderable, IRenderableIpso, IRenderTargetTextureReferencer
 {
     public Texture2D? Texture { get; set; }
 
@@ -642,6 +642,10 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             ColorOperation = ColorOperation.Modulate;
         }
     }
+
+    bool IAnimationChainRenderable.IsChainAnimationEnabled => AnimationLogic.Animate;
+
+    void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
 
     public bool AnimateSelf(double secondDifference)
     {
