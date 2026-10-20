@@ -1236,6 +1236,19 @@ public class FrameworkElement : INotifyPropertyChanged
 
     protected virtual void OnBindingContextChanged(object? sender, BindingContextChangedEventArgs args) { }
 
+    /// <summary>
+    /// Runs the action on the next cursor push, unless this control's Visual has left the tree by then.
+    /// FRB1 has no owner overload, so there the action always runs.
+    /// </summary>
+    protected void AddNextPushAction(Action action)
+    {
+#if FRB
+        InteractiveGue.AddNextPushAction(action);
+#else
+        InteractiveGue.AddNextPushAction(action, Visual);
+#endif
+    }
+
     protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
         OnPropertyChanged(uiPropertyName ?? string.Empty);

@@ -130,7 +130,7 @@ public class Menu : ItemsControl
             }
         }
 
-        InteractiveGue.AddNextPushAction(HandleNextPush, Visual);
+        AddNextPushAction(HandleNextPush);
     }
 
     #endregion
@@ -188,7 +188,7 @@ public class Menu : ItemsControl
         }
         else
         {
-            InteractiveGue.AddNextPushAction(HandleNextPush, Visual);
+            AddNextPushAction(HandleNextPush);
         }
     }
 
