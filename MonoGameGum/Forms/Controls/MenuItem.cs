@@ -242,7 +242,8 @@ public class MenuItem : ItemsControl
             // Snapshot: detaching a child from the container modifies Children while it is enumerated.
             foreach (var child in containerInstance.Children.ToList())
             {
-                if (child is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is MenuItem menuItem)
+                if (CanAdoptVisualAuthoredItems &&
+                    child is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is MenuItem menuItem)
                 {
                     child.Parent = null;
                     AdoptVisualAuthoredItem(menuItem);
@@ -289,7 +290,7 @@ public class MenuItem : ItemsControl
         if (originalParent != null && _subItemContainerOriginalIndex > -1)
         {
             originalParent.Children.Insert(
-                Math.Min(_subItemContainerOriginalIndex, originalParent.Children.Count), container);
+                global::System.Math.Min(_subItemContainerOriginalIndex, originalParent.Children.Count), container);
         }
     }
 
@@ -297,7 +298,7 @@ public class MenuItem : ItemsControl
     {
         GraphicalUiElement? container = _subscribedSubItemContainer;
         List<MenuItem>? items = null;
-        if(e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
+        if(CanAdoptVisualAuthoredItems && e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
             items = new List<MenuItem>();
 
@@ -321,7 +322,7 @@ public class MenuItem : ItemsControl
 #endif
             {
                 // The Visual may have been replaced before the queue ran.
-                if (container != null && _subscribedSubItemContainer == container)
+                if (container != null && _subscribedSubItemContainer == container && CanAdoptVisualAuthoredItems)
                 {
                     foreach (var item in items)
                     {

@@ -130,7 +130,7 @@ public class Menu : ItemsControl
             }
         }
 
-        InteractiveGue.AddNextPushAction(HandleNextPush, Visual);
+        AddNextPushAction(HandleNextPush);
     }
 
     #endregion
@@ -188,38 +188,26 @@ public class Menu : ItemsControl
         }
         else
         {
-            InteractiveGue.AddNextPushAction(HandleNextPush, Visual);
+            AddNextPushAction(HandleNextPush);
         }
     }
 
     #region Collection Changed
 
-    /// <summary>
-    /// Brings MenuItems authored on the Visual into Items and MenuItems, ahead of any item added in code.
-    /// </summary>
-    protected override void AdoptVisualAuthoredItems()
+    /// <inheritdoc/>
+    protected override bool IsAuthoredRow(FrameworkElement control) => control is MenuItem;
+
+    /// <inheritdoc/>
+    protected override void AdoptAuthoredRow(FrameworkElement row, int rowIndex)
     {
-        if (InnerPanel == null || Items == null)
-        {
-            return;
-        }
+        MenuItem menuItem = (MenuItem)row;
 
-        int adoptedCount = 0;
-        foreach (GraphicalUiElement child in InnerPanel.Children.ToList())
-        {
-            if (child is InteractiveGue interactiveGue &&
-                interactiveGue.FormsControlAsObject is MenuItem menuItem &&
-                !Items.Contains(menuItem))
-            {
-                // The item already has its visual in the panel, so Items must not create another.
-                AdoptVisualAuthoredItem(menuItem, adoptedCount);
+        // The item already has its visual in the panel, so Items must not create another.
+        AdoptVisualAuthoredItem(menuItem, rowIndex);
 
-                MenuItemsInternal.Insert(adoptedCount, menuItem);
-                menuItem.Selected -= HandleItemSelected;
-                menuItem.Selected += HandleItemSelected;
-                adoptedCount++;
-            }
-        }
+        MenuItemsInternal.Insert(rowIndex, menuItem);
+        menuItem.Selected -= HandleItemSelected;
+        menuItem.Selected += HandleItemSelected;
     }
 
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)
