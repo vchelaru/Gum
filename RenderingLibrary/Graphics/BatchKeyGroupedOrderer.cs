@@ -65,6 +65,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// </summary>
     public int HardBoundaryTransitionCount { get; private set; }
 
+    /// <summary>
+    /// Number of bounds-intersection tests <see cref="FlushWindow"/> performed building precedence
+    /// graphs during the last <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call.
+    /// A deterministic stand-in for the cost of that step (#6179).
+    /// </summary>
+    internal int PairTestCount { get; private set; }
+
     /// <summary>Why a <see cref="BatchBreakGroup"/> break happened.</summary>
     public enum BreakReason
     {
@@ -355,6 +362,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     public void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null)
     {
         destination.Clear();
+        PairTestCount = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -374,6 +382,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         ClipBoundsSource clipBounds = default)
     {
         destination.Clear();
+        PairTestCount = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -642,11 +651,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             successors[i].Clear();
         }
 
+        int pairTests = 0;
         for (int i = 0; i < n; i++)
         {
             System.Drawing.Rectangle bi = window[i].Bounds;
             for (int j = i + 1; j < n; j++)
             {
+                pairTests++;
                 if (bi.IntersectsWith(window[j].Bounds))
                 {
                     successors[i].Add(j);
@@ -654,6 +665,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 }
             }
         }
+        PairTestCount += pairTests;
 
         // Kahn's topological sort with a "stay on the current batch key" tiebreaker.
         // Among items with indegree 0, prefer one whose (BatchKey, BatchSortKey) matches the
