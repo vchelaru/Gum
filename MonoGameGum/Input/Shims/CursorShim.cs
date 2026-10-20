@@ -18,7 +18,8 @@ namespace MonoGameGum.Input;
 /// <c>CursorExtensions</c> has no shim, because a duplicate extension class would make every call
 /// ambiguous in files that import both namespaces. Add <c>using Gum.Input;</c> for those calls.
 /// </remarks>
-[Obsolete("Use Gum.Input.Cursor instead. The MonoGameGum.Input namespace will be removed in a future release.")]
+// Obsoleted 2026-10-14. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+[Obsolete("Use Gum.Input.Cursor instead. The MonoGameGum.Input namespace becomes an error no earlier than May 2027 and is removed no earlier than November 2027.")]
 public class Cursor : Gum.Input.Cursor
 {
     /// <inheritdoc/>

@@ -75,7 +75,25 @@ internal static class NamespaceMigrationMapping
         new TypeMigration("MonoGameGum.Input", "Gum.Input", "DeadzoneType"),
         new TypeMigration("MonoGameGum.Input", "Gum.Input", "DeadzoneInterpolationType"),
         new TypeMigration("MonoGameGum.Input", "Gum.Input", "Cursor"),
-        new TypeMigration("MonoGameGum.Input", "Gum.Input", "CursorExtensions")
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "CursorExtensions"),
+        // Renderables and extension methods (MonoGameGum.Renderables / .ExtensionMethods → Gum.*).
+        new TypeMigration("MonoGameGum.Renderables", "Gum.Renderables", "RenderableCreator"),
+        new TypeMigration("MonoGameGum.Renderables", "Gum.Renderables", "DefaultFilledRectangleRenderable"),
+        new TypeMigration("MonoGameGum.Renderables", "Gum.Renderables", "DefaultStrokedCircleRenderable"),
+        new TypeMigration("MonoGameGum.Renderables", "Gum.Renderables", "DefaultStrokedRectangleRenderable"),
+        new TypeMigration("MonoGameGum.ExtensionMethods", "Gum.ExtensionMethods", "IReadOnlyListExtensionMethods"),
+        // Apos.Shapes package (MonoGameAndGum.* → Gum.Renderables / Gum.Content).
+        new TypeMigration("MonoGameAndGum.Renderables", "Gum.Renderables", "ShapeRenderer"),
+        new TypeMigration("MonoGameAndGum.Renderables", "Gum.Renderables", "RenderableShapeBase"),
+        new TypeMigration("MonoGameAndGum.Renderables", "Gum.Renderables", "Circle"),
+        new TypeMigration("MonoGameAndGum.Renderables", "Gum.Renderables", "RoundedRectangle"),
+        new TypeMigration("MonoGameAndGum.Content", "Gum.Content", "ShapeSvgLoader"),
+        // The legacy root namespace holds the GumService shim (permanent, see GumServiceCompat.cs)
+        // and two extension forwarders. `using Gum;` resolves GumService and ToGraphicalUiElement;
+        // AddChild needs no using at all because GraphicalUiElement has an instance AddChild.
+        new TypeMigration("MonoGameGum", "Gum", "GumService"),
+        new TypeMigration("MonoGameGum", "Gum", "GraphicalUiElementExtensionMethods"),
+        new TypeMigration("MonoGameGum", "Gum", "ElementSaveExtensionMethods")
     );
 
     /// <summary>

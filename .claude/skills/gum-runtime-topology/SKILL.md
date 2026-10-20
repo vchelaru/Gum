@@ -67,6 +67,10 @@ Model it on `Runtimes/KniSkiaGum` or `Runtimes/SilkNetGum`: reference `GumCommon
 - `Runtimes/UnityGum` is the push-model example: the host pushes input in each frame rather than the runtime polling a device.
 - ⚠ **Unity IL2CPP needs a `link.xml` preserving `netstandard`.**
 
+## Back-compat shims (`MonoGameGum.*`, `SkiaGum.GueDeriving`, `MonoGameAndGum.*`)
+
+Old names stay as `[Obsolete]` derived classes (or forwarding static classes) in `Shims/` folders: `MonoGameGum/*/Shims`, `Runtimes/GumShapes/*/Shims`, `Runtimes/SkiaGum/GueDeriving/Shims`, `MonoGameGum/GumServiceCompat.cs`. Every one carries a comment above the attribute (`Obsoleted <date>. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.`) and the same dates in its message; `Tests/Shared/ShimRetention.cs` fails the test for a new shim that skips them. `MonoGameGum.GumService` is the one permanent shim, because `Gum.GumService.Default` returns it. Runtime factories keep constructing shim runtimes so old generated casts succeed.
+
 ## Cross-references
 - [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md) — per-runtime file unification (`#if`/links).
 - [frb-build-verification](../frb-build-verification/SKILL.md) — projitems/Forms/net6 sync rules (authoritative).

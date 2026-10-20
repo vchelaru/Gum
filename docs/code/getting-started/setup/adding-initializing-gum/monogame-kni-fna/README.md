@@ -199,7 +199,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
 <strong>        GumUI.Initialize(this);
-</strong><strong>        MonoGameAndGum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
+</strong><strong>        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
 </strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
 </strong><strong>            new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice); // Recommended, optional: dynamic fonts
 </strong><strong>        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
@@ -236,7 +236,7 @@ public class Game1 : Core
         base.Initialize();
 
 <strong>        GumUI.Initialize(Core.GraphicsDevice);
-</strong><strong>        MonoGameAndGum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
+</strong><strong>        Gum.Renderables.ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
 </strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
 </strong><strong>            new KernSmith.Gum.KernSmithFontCreator(Core.GraphicsDevice); // Recommended, optional: dynamic fonts
 </strong><strong>        Gum.Expressions.GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameAndGum.Renderables;
+namespace Gum.Renderables;
 
 internal class Arc : RenderableShapeBase
 {
@@ -89,7 +89,7 @@ internal class Arc : RenderableShapeBase
         var radius = Width / 2 - StrokeWidth / 2;
         BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Width, rotationRadians);
 
-        var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+        var cameraZoom = (managers as global::RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
 
         if(HasDropshadow)
         {

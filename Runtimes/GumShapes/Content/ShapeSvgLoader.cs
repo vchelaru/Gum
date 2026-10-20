@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using ToolsUtilities;
 
-namespace MonoGameAndGum.Content;
+namespace Gum.Content;
 
 /// <summary>
 /// Cache entry for <see cref="ShapeSvg"/>. The document isn't IDisposable — it's parsed geometry

@@ -73,7 +73,9 @@ using Gum.GueDeriving;
 
 The `Gum.Analyzers` package ships a one-click code fix for `using` directives: place the cursor on the warning, trigger the lightbulb (Ctrl+.), and choose **Change to 'using Gum.GueDeriving'**. Use **Fix all in solution** to migrate the entire project at once.
 
-The compatibility shims will remain in place until at least the December 2026 release. After that window, they will be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them.
+{% hint style="warning" %}
+The compatibility shims will become `[Obsolete(error: true)]` no earlier than May 2027 and are removed no earlier than November 2027. See [Obsolete Shims Are Removed No Earlier Than November 2027](migrating-to-2026-november.md#obsolete-shims-are-removed-no-earlier-than-november-2027).
+{% endhint %}
 
 For full details, including handling of fully-qualified references and a `RenderingLibrary` namespace-shadowing gotcha, see [Syntax Version 1](syntax-version-1.md).
 

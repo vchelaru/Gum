@@ -9,7 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MonoGameAndGum.Renderables;
+namespace Gum.Renderables;
+
+// Declared inside the namespace so they win over the same-named Gum.* types, which an enclosing-namespace lookup would find first.
+using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
+using ColorWriteChannels = Microsoft.Xna.Framework.Graphics.ColorWriteChannels;
 
 public class ShapeRenderer
 {

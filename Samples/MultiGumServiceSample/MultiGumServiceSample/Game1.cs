@@ -8,7 +8,7 @@ using RenderingLibrary;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 
 namespace MultiGumServiceSample;
 

@@ -1,6 +1,6 @@
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 using Shouldly;
 
 namespace MonoGameGum.Shapes.Tests;

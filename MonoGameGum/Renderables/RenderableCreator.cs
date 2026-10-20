@@ -1,7 +1,4 @@
-﻿#if MONOGAME || KNI || FNA
-#define XNALIKE
-#endif
-using Gum.Wireframe;
+﻿using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using RenderingLibrary;
 using System;
@@ -10,13 +7,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if XNALIKE
-namespace MonoGameGum.Renderables;
-#else
 namespace Gum.Renderables;
-#endif
+
+/// <summary>
+/// Creates the renderable for a standard element base type. Assigned to
+/// <c>ElementSaveExtensions.CustomCreateGraphicalComponentFunc</c> when the project loads.
+/// </summary>
 public static class RenderableCreator
 {
+    /// <summary>
+    /// Returns the renderable for <paramref name="type"/>, or null when the type is not a standard
+    /// base type.
+    /// </summary>
     public static IRenderable? HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
     {
         return FallbackRenderableFactory.TryHandleAsBaseType(type, systemManagers as SystemManagers);

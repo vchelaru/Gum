@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using System;
 
-namespace MonoGameAndGum.Renderables;
+namespace Gum.Renderables;
 
 /// <remarks>
 /// Unlike Rectangle and Circle, a Line is not inset. Its anti-aliasing is centered on the geometric

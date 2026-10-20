@@ -5,7 +5,7 @@ using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;

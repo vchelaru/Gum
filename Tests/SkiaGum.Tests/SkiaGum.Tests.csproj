@@ -32,6 +32,7 @@
 
 	<ItemGroup>
 		<Compile Include="..\Shared\FontContainerTestWriter.cs" Link="Shared\FontContainerTestWriter.cs" />
+		<Compile Include="..\Shared\ShimRetention.cs" Link="Shared\ShimRetention.cs" />
 	</ItemGroup>
 
 	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->

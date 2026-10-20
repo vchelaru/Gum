@@ -37,6 +37,78 @@ using Gum.Input;
 Cursor cursor = GumService.Default.Cursor;
 ```
 
+### Shapes Package Types Moved to Gum.Renderables and Gum.Content
+
+The `Gum.Shapes.MonoGame` and `Gum.Shapes.KNI` packages now put their public types in the unified `Gum` namespaces:
+
+| Old | New |
+|---|---|
+| `MonoGameAndGum.Renderables.ShapeRenderer` | `Gum.Renderables.ShapeRenderer` |
+| `MonoGameAndGum.Renderables.RenderableShapeBase` | `Gum.Renderables.RenderableShapeBase` |
+| `MonoGameAndGum.Renderables.Circle` | `Gum.Renderables.Circle` |
+| `MonoGameAndGum.Renderables.RoundedRectangle` | `Gum.Renderables.RoundedRectangle` |
+| `MonoGameAndGum.Content.ShapeSvgLoader` | `Gum.Content.ShapeSvgLoader` |
+
+The old names remain as obsolete shims, so existing code keeps compiling with a `CS0618` warning. `ShapeRenderer`, `RenderableShapeBase`, `Circle` and `RoundedRectangle` are derived classes, and `ShapeRenderer.Self` is inherited, so it returns the same renderer. `ShapeSvgLoader` is a static class, so its shim forwards `Load` to the new loader and shares its cache. The `Arc`, `Line` and `Svg` renderables are internal and moved without a shim.
+
+The shims cannot cover everything, so these cases break:
+
+* A variable declared with an old renderable type no longer accepts a shape that Gum creates. `RenderableComponent` and the renderables inside a shape runtime are `Gum.Renderables` instances, and C# cannot assign a base class value to a derived class variable (`CS0266`). A cast such as `as MonoGameAndGum.Renderables.Circle` returns `null` for the same reason.
+* A file that imports both `MonoGameAndGum.Renderables` and `Gum.Renderables` reports `CS0104` on `ShapeRenderer`, `RenderableShapeBase`, `Circle` and `RoundedRectangle`, because both namespaces now contain them.
+
+To migrate, replace `using MonoGameAndGum.Renderables;` with `using Gum.Renderables;` and `using MonoGameAndGum.Content;` with `using Gum.Content;`. The `GUM001` analyzer flags the old directives, and its code fix makes this change. In code that names the type with a full path, as the setup docs do, change the namespace in the path.
+
+❌ Old:
+
+```csharp
+// Initialize
+MonoGameAndGum.Renderables.ShapeRenderer.Self.Initialize();
+```
+
+✅ New:
+
+```csharp
+// Initialize
+Gum.Renderables.ShapeRenderer.Self.Initialize();
+```
+
+### RenderableCreator Moved to Gum.Renderables
+
+`RenderableCreator` moved from `MonoGameGum.Renderables` to `Gum.Renderables` in MonoGame, KNI and FNA projects, where raylib already had it. `MonoGameGum.Renderables.RenderableCreator` remains as an obsolete shim that forwards `HandleCreateGraphicalComponent` to the new class, so code that assigns it to `ElementSaveExtensions.CustomCreateGraphicalComponentFunc` keeps compiling with a `CS0618` warning.
+
+To migrate, replace `using MonoGameGum.Renderables;` with `using Gum.Renderables;`. A file that imports both namespaces reports `CS0104` on `RenderableCreator`. The `GUM001` analyzer flags the old directive, and its code fix makes this change.
+
+### MonoGameGum AddChild Extension Is Obsolete
+
+The `AddChild` extension method in the `MonoGameGum` and `RaylibGum` namespaces is now `[Obsolete]`. Code generated at syntax versions 0 to 2 imports that namespace to call `AddChild` on a visual. The call `gue.AddChild(formsControl)` resolves to the instance method on `GraphicalUiElement`, which needs no `using` directive, so it produces no warning. Only a call that names `GraphicalUiElementExtensionMethods.AddChild` as a static method reports `CS0618`.
+
+To migrate, call the instance method, or regenerate your code so the generated files no longer import the old namespace.
+
+### Obsolete Shims Are Removed No Earlier Than November 2027
+
+The obsolete shims that keep the old `MonoGameGum`, `SkiaGum` and `MonoGameAndGum` names compiling are not permanent. Each one is a `CS0618` warning today, becomes `[Obsolete(error: true)]` no earlier than May 2027, and is removed no earlier than November 2027. The message on each shim states these dates. Gum announces the actual release in the migration page for that month.
+
+| Old name | Replacement | Obsoleted | Error no earlier than | Removed no earlier than |
+|---|---|---|---|---|
+| `MonoGameGum.GueDeriving` runtimes (`TextRuntime`, `ContainerRuntime`, `SpriteRuntime`, `ColoredRectangleRuntime`, `NineSliceRuntime`, `CircleRuntime`, `PolygonRuntime`, `RectangleRuntime`, and the shape runtimes) | `Gum.GueDeriving` | May 7, 2026 | May 2027 | November 2027 |
+| `SkiaGum.GueDeriving` runtimes | `Gum.GueDeriving` | May 7, 2026 | May 2027 | November 2027 |
+| `MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement` | `Gum.ElementSaveExtensionMethods` | June 12, 2026 | May 2027 | November 2027 |
+| `MonoGameGum.Renderables` default renderables | `Gum.Renderables` | June 13, 2026 | May 2027 | November 2027 |
+| `MonoGameGum.ExtensionMethods.IReadOnlyListExtensionMethods` | `Gum.ExtensionMethods` | June 13, 2026 | May 2027 | November 2027 |
+| `MonoGameGum.Input.Cursor` | `Gum.Input.Cursor` | October 14, 2026 | May 2027 | November 2027 |
+| `MonoGameGum.GraphicalUiElementExtensionMethods.AddChild` | `GraphicalUiElement.AddChild` | October 20, 2026 | May 2027 | November 2027 |
+| `MonoGameGum.Renderables.RenderableCreator` | `Gum.Renderables.RenderableCreator` | October 20, 2026 | May 2027 | November 2027 |
+| `MonoGameAndGum.Renderables` and `MonoGameAndGum.Content` types | `Gum.Renderables` and `Gum.Content` | October 20, 2026 | May 2027 | November 2027 |
+| `MonoGameGum.GumService` and `RaylibGum.GumService` | `Gum.GumService` | June 12, 2026 | Never | Never |
+
+The `GumService` shim stays because `GumService.Default` returns it. Declarations typed with the old name keep compiling with a `CS0618` warning, and you can change them to `Gum.GumService` whenever you like.
+
+{% hint style="info" %}
+The properties on the default Forms visuals (`TextInstance`, `Background`, and similar) are still typed as the obsolete `MonoGameGum.GueDeriving` shims. Gum changes them to the unified types in the release that removes the shims, so a variable declared with a shim type to hold one of them needs the new type by then.
+{% endhint %}
+
+To check what still uses an old name, build with the bundled `Gum.Analyzers` package and look for `GUM001` and `CS0618`.
+
 ### Stacked Children Ignore Their Origin on the Stacking Axis
 
 A child after the first in a stack now ignores its origin on the stacking axis:

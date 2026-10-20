@@ -13,7 +13,7 @@ For most projects, upgrading is a matter of swapping a few `using` directives:
 | Replace | With |
 |---|---|
 | `using MonoGameGum;` (for `GumService`, `WindowZoomMode`, hot-reload types) | `using Gum;` |
-| `using MonoGameGum.Forms.DefaultVisuals;` (and `MonoGameGum.ExtensionMethods` / `MonoGameGum.Renderables`) | `using Gum.Forms.DefaultVisuals;` (etc.) |
+| `using MonoGameGum.ExtensionMethods;` / `using MonoGameGum.Renderables;` | `using Gum.ExtensionMethods;` / `using Gum.Renderables;` |
 | `using MonoGameGum.Input;` (for `Keyboard`, gamepad types, deadzone enums) | `using Gum.Input;` |
 
 ### Steps for most projects
@@ -28,7 +28,11 @@ For most projects, upgrading is a matter of swapping a few `using` directives:
 
 ### Severity reference
 
-Most changes are **soft breaks**: a permanent `[Obsolete]` shim keeps the old name compiling with a `CS0618` warning until you migrate. A few are **hard breaks** that fail to compile and need a manual (or analyzer-assisted) edit — they are called out below.
+Most changes are **soft breaks**: an `[Obsolete]` shim keeps the old name compiling with a `CS0618` warning until you migrate. A few are **hard breaks** that fail to compile and need a manual (or analyzer-assisted) edit — they are called out below.
+
+{% hint style="warning" %}
+These shims are not permanent. They stay warnings until at least May 2027 and are removed no earlier than November 2027. The one exception is the `GumService` shim, which stays because `GumService.Default` returns it. See [Obsolete Shims Are Removed No Earlier Than November 2027](migrating-to-2026-november.md#obsolete-shims-are-removed-no-earlier-than-november-2027).
+{% endhint %}
 
 | Change | Old | New | Break type |
 |---|---|---|---|
@@ -37,7 +41,7 @@ Most changes are **soft breaks**: a permanent `[Obsolete]` shim keeps the old na
 | `AddToRoot` / `RemoveFromRoot` | platform extension method | instance method on `GraphicalUiElement` | None — call sites unchanged |
 | `AddChild` / `RemoveChild` (Forms control under a visual) | `Gum.Forms.Controls` extension / `MonoGameGum` shim | instance method on `GraphicalUiElement` | None — call sites unchanged |
 | `ElementSaveExtensionMethods.ToGraphicalUiElement` | `MonoGameGum` | `Gum` | Soft — obsolete forwarder (`CS0618`) |
-| `IReadOnlyListExtensionMethods`, default-filled/stroked renderables, default-visual runtimes | `MonoGameGum.ExtensionMethods` / `.Renderables` / `.Forms.DefaultVisuals` | `Gum.*` | Soft — obsolete shims (`CS0618`) |
+| `IReadOnlyListExtensionMethods`, default-filled/stroked renderables | `MonoGameGum.ExtensionMethods` / `.Renderables` | `Gum.*` | Soft — obsolete shims (`CS0618`) |
 | `Keyboard`, `KeyboardStateProcessor`, `AnalogButton`, deadzone enums, `IInputReceiverKeyboardMonoGame` | `MonoGameGum.Input` | `Gum.Input` | Namespace move — add `using Gum.Input;` (GUM001) |
 | Gamepad button query arguments | XNA `Buttons` | `Gum.Input.GamepadButton` | **Hard** — `CS1503` (no implicit conversion; GUM003) |
 
@@ -89,7 +93,7 @@ For other platforms you need to build Gum from source.
 
 #### `GumService` — soft break (obsolete shim)
 
-A permanent `[Obsolete]` subclass shim keeps `MonoGameGum.GumService` / `RaylibGum.GumService` compiling. Existing code that declares `MonoGameGum.GumService gumService = ...` or calls `MonoGameGum.GumService.Default` continues to work but will produce a `CS0618` compiler warning:
+A permanent `[Obsolete]` subclass shim keeps `MonoGameGum.GumService` / `RaylibGum.GumService` compiling. This is the only shim that is never removed, because `GumService.Default` returns it. Existing code that declares `MonoGameGum.GumService gumService = ...` or calls `MonoGameGum.GumService.Default` continues to work but will produce a `CS0618` compiler warning:
 
 ```
 warning CS0618: 'GumService' is obsolete: 'Use Gum.GumService instead.'
@@ -149,42 +153,45 @@ Parenting a Forms control under a visual — `gue.AddChild(formsControl)` / `gue
 
 Unlike `AddToRoot` / `RemoveFromRoot`, the existing `Gum.Forms.Controls.FrameworkElementExt.AddChild` extension and the legacy `MonoGameGum` / `RaylibGum` shim are **not** deleted — they remain for FlatRedBall and older generated code, so no existing call sites change.
 
+{% hint style="info" %}
+The `MonoGameGum` / `RaylibGum` forwarder is `[Obsolete]` as of `2026 November`. Calls such as `gue.AddChild(formsControl)` resolve to the instance method, so they produce no warning. See [Obsolete Shims Are Removed No Earlier Than November 2027](migrating-to-2026-november.md#obsolete-shims-are-removed-no-earlier-than-november-2027).
+{% endhint %}
+
 ### `MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement` Is Now `[Obsolete]`
 
 A back-compat forwarder in `MonoGameGum.ElementSaveExtensionMethods` now delegates to `Gum.ElementSaveExtensionMethods.ToGraphicalUiElement` and is marked `[Obsolete]`. Existing code keeps compiling with a `CS0618` warning. To migrate, add `using Gum;` and drop `using MonoGameGum;` if it is no longer needed for other symbols.
 
 ### More Public Types Moved to the Unified `Gum` Namespace
 
-Continuing the namespace unification, several more public types have moved from `MonoGameGum.*` namespaces to their unified `Gum.*` equivalents so you can drop `using MonoGameGum;` from more of your code. Each is a **soft break**: a permanent `[Obsolete]` shim remains in the old `MonoGameGum.*` namespace, so existing code keeps compiling and produces a `CS0618` warning that names the new namespace.
+Continuing the namespace unification, several more public types have moved from `MonoGameGum.*` namespaces to their unified `Gum.*` equivalents so you can drop `using MonoGameGum;` from more of your code. Each is a **soft break**: an `[Obsolete]` shim remains in the old `MonoGameGum.*` namespace, so existing code keeps compiling and produces a `CS0618` warning that names the new namespace.
 
 | Old namespace | New namespace | Types |
 |---|---|---|
 | `MonoGameGum.ExtensionMethods` | `Gum.ExtensionMethods` | `IReadOnlyListExtensionMethods` |
 | `MonoGameGum.Renderables` | `Gum.Renderables` | `DefaultFilledRectangleRenderable`, `DefaultStrokedCircleRenderable`, `DefaultStrokedRectangleRenderable` |
-| `MonoGameGum.Forms.DefaultVisuals` | `Gum.Forms.DefaultVisuals` | `DefaultButtonRuntime`, `DefaultCheckboxRuntime`, … `DefaultWindowRuntime` (all default-visual runtimes) |
 
 To migrate, change the `using` directive:
 
 ❌ Old:
 ```csharp
-using MonoGameGum.Forms.DefaultVisuals;
+using MonoGameGum.ExtensionMethods;
 
 // Initialize
-var visual = new DefaultButtonRuntime();
+int index = children.IndexOf(child);
 ```
 
 ✅ New:
 ```csharp
-using Gum.Forms.DefaultVisuals;
+using Gum.ExtensionMethods;
 
 // Initialize
-var visual = new DefaultButtonRuntime();
+int index = children.IndexOf(child);
 ```
 
 Because the moved type and its shim share a name, importing **both** the new `Gum.*` namespace and the old `MonoGameGum.*` namespace at the same time produces a `CS0104` ambiguity. Remove the old `MonoGameGum.*` `using` directive.
 
 {% hint style="info" %}
-The runtime classes these default visuals are built from — `TextRuntime`, `ContainerRuntime`, and so on — already live in `Gum.GueDeriving` (moved in `2026 May`; see the note in [What Changed at a Glance](#what-changed-at-a-glance)). For source compatibility, the child-runtime properties on a default visual (`TextInstance`, `Background`, etc.) are still **typed** as the `[Obsolete]` `MonoGameGum.GueDeriving` shim aliases, which derive from the unified classes. So if you captured those properties into shim-typed variables, that code keeps compiling unchanged.
+The runtime classes the default visuals are built from — `TextRuntime`, `ContainerRuntime`, and so on — already live in `Gum.GueDeriving` (moved in `2026 May`; see the note in [What Changed at a Glance](#what-changed-at-a-glance)). For source compatibility, the child-runtime properties on a default visual (`TextInstance`, `Background`, etc.) are still **typed** as the `[Obsolete]` `MonoGameGum.GueDeriving` shim aliases, which derive from the unified classes. So if you captured those properties into shim-typed variables, that code keeps compiling unchanged.
 {% endhint %}
 
 ### Gamepad and Keyboard Input Consolidated into `Gum.Input`

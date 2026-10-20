@@ -8,7 +8,8 @@ namespace SkiaGum.GueDeriving;
 /// This derived class exists so existing user code with <c>using SkiaGum.GueDeriving;</c>
 /// continues to compile during the deprecation window.
 /// </summary>
-[Obsolete("Use Gum.GueDeriving.ContainerRuntime instead. The SkiaGum.GueDeriving namespace will be removed in a future release.")]
+// Obsoleted 2026-05-07. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+[Obsolete("Use Gum.GueDeriving.ContainerRuntime instead. The SkiaGum.GueDeriving namespace becomes an error no earlier than May 2027 and is removed no earlier than November 2027.")]
 public class ContainerRuntime : Gum.GueDeriving.ContainerRuntime
 {
     /// <inheritdoc/>
