@@ -101,12 +101,23 @@ public class BlendTests
         paint.BlendMode.ShouldBe(SKBlendMode.DstIn);
     }
 
-    // ReplaceAlpha and MinAlpha are applied to a layer by Render (the whole bounds is the source),
-    // so the shape's own paint stays a plain draw.
     [Fact]
-    public void Sprite_GetPaint_ReplaceAlpha_LeavesPaintUnblended()
+    public void Sprite_GetPaint_ReplaceAlpha_UsesCustomBlender()
     {
         TestableSprite sut = new();
+        sut.Blend = Blend.ReplaceAlpha;
+
+        using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
+
+        paint.Blender.ShouldNotBeNull();
+    }
+
+    // A circle applies ReplaceAlpha to its whole bounds, which Render does with a layer, so the
+    // circle's own paint stays a plain draw.
+    [Fact]
+    public void Circle_GetPaint_ReplaceAlpha_LeavesPaintUnblended()
+    {
+        TestableCircle sut = new();
         sut.Blend = Blend.ReplaceAlpha;
 
         using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
@@ -230,6 +241,34 @@ public class BlendTests
         AssertPixel(bitmap, 40, 52, 70, 70, 90);
         AssertPixel(bitmap, 5, 5, 200, 30, 30);
         AssertPixel(bitmap, 90, 10, 70, 70, 90);
+    }
+
+    // MonoGame's bounds mask covers circles, rounded rectangles and arcs only. A line replaces alpha
+    // only where it draws, so the rest of its bounds is left alone.
+    [Fact]
+    public void ReplaceAlphaLine_InRenderTargetContainer_OnlyChangesPixelsItDraws()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(40, 40));
+        Gum.GumService.Default.Initialize(surface.Canvas, 40, 40);
+        ContainerRuntime renderTarget = new() { Width = 40, Height = 40, IsRenderTarget = true };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 40, Height = 40, IsFilled = true, StrokeWidth = 0, FillColor = SKColors.Red,
+        });
+        LineRuntime line = new() { X = 0, Y = 0, Width = 40, Height = 40, StrokeWidth = 4 };
+#pragma warning disable CS0618 // Color is obsolete; the line has no FillColor yet.
+        line.Color = new SKColor(255, 255, 255, 128);
+#pragma warning restore CS0618
+        line.SetProperty(nameof(RenderableShapeBase.Blend), Blend.ReplaceAlpha);
+        renderTarget.Children.Add(line);
+        Gum.GumService.Default.Root.Children.Add(renderTarget);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        bitmap.GetPixel(30, 5).ShouldBe(SKColors.Red);
+        bitmap.GetPixel(20, 20).Alpha.ShouldBeInRange((byte)120, (byte)136);
     }
 
     private static void AssertPixel(SKBitmap bitmap, int x, int y, int red, int green, int blue)

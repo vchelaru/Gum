@@ -51,6 +51,8 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
     /// <inheritdoc cref="RenderableShapeBase.Clone"/>
     public new RoundedRectangle Clone() => (RoundedRectangle)base.Clone();
 
+    protected override bool BlendsWholeBounds => true;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);

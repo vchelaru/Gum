@@ -68,6 +68,8 @@ public class Arc : RenderableShapeBase
         return paint;
     }
 
+    protected override bool BlendsWholeBounds => true;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);

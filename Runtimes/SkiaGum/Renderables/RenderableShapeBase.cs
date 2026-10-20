@@ -764,12 +764,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 boundingRect.Bottom -= StrokeWidth / 2.0f;
             }
 
-            if (AppliesToWholeBounds)
+            if (UsesBoundsLayer)
             {
-                // ReplaceAlpha and MinAlpha act on the shape's whole bounds, not just the pixels it
-                // draws (the corners of a circle's bounds are erased), the same as MonoGame's
-                // Apos.Shapes path (#5689). Draw the shape normally into a layer, clipped to the
-                // bounds, and composite that layer with the blend.
+                // See BlendsWholeBounds: draw the shape normally into a layer clipped to the bounds,
+                // then composite that layer with the blend.
                 using SKPaint layerPaint = new SKPaint();
                 layerPaint.ApplyBlend(Blend!.Value);
                 canvas.Save();
@@ -803,11 +801,17 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     public Gum.RenderingLibrary.Blend? Blend { get; set; }
 
     /// <summary>
-    /// True for the blends that treat the whole bounds as the source (ReplaceAlpha, MinAlpha): pixels
-    /// inside the bounds that the shape leaves transparent still write alpha 0.
+    /// Whether <c>ReplaceAlpha</c> and <c>MinAlpha</c> act on the shape's whole bounds, so pixels
+    /// inside the bounds that the shape leaves transparent still write alpha 0. True for the shapes
+    /// MonoGame's Apos.Shapes path masks the same way (#5689): circle, rounded rectangle and arc.
+    /// Sprites and nine-slices draw their whole bounds already; a line or polygon changes only the
+    /// pixels it draws.
     /// </summary>
-    private bool AppliesToWholeBounds =>
-        Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha || Blend == Gum.RenderingLibrary.Blend.MinAlpha;
+    protected virtual bool BlendsWholeBounds => false;
+
+    private bool UsesBoundsLayer =>
+        BlendsWholeBounds
+        && (Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha || Blend == Gum.RenderingLibrary.Blend.MinAlpha);
 
     public bool ClipsChildren { get; set; }
 
@@ -893,8 +897,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
         }
 
-        // The whole-bounds blends are applied by Render, to a layer; see AppliesToWholeBounds.
-        if (Blend.HasValue && !AppliesToWholeBounds)
+        // The whole-bounds blends are applied by Render, to a layer; see BlendsWholeBounds.
+        if (Blend.HasValue && !UsesBoundsLayer)
         {
             paint.ApplyBlend(Blend.Value);
         }

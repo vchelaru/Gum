@@ -36,6 +36,8 @@ public class Circle : RenderableShapeBase
     /// </summary>
     public float FillRadiusInset { get; set; }
 
+    protected override bool BlendsWholeBounds => true;
+
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
