@@ -60,6 +60,8 @@ public class ShapeEdgePixelTests : BaseTestClass
                 yield return new EdgeCase(EdgeShapeKind.Arc, EdgePaint.Stroke, blend, placement);
                 yield return new EdgeCase(EdgeShapeKind.Line, EdgePaint.Stroke, blend, placement);
             }
+            // An Arc fills its box like the other shapes (#6256), so it gets the rotated placement too.
+            yield return new EdgeCase(EdgeShapeKind.Arc, EdgePaint.Stroke, blend, EdgePlacement.Rotated);
             foreach (EdgeShapeKind kind in new[] { EdgeShapeKind.Rectangle, EdgeShapeKind.RoundedRectangle, EdgeShapeKind.Circle })
             {
                 foreach (EdgePaint paint in Enum.GetValues<EdgePaint>())
@@ -236,14 +238,17 @@ public class ShapeEdgePixelTests : BaseTestClass
                 }
                 case EdgeShapeKind.Arc:
                 {
-                    double cx = Width / 2.0;
-                    double d = Math.Sqrt(Math.Pow(lx - cx, 2) + Math.Pow(ly - cx, 2));
-                    if (d > Width / 2.0 || d <= Width / 2.0 - ArcThickness)
+                    // The arc is a circle at the shorter side stretched along the longer one to fill the box.
+                    double shortSide = Math.Min(Width, Height);
+                    double px = (lx - Width / 2.0) * shortSide / Width;
+                    double py = (ly - Height / 2.0) * shortSide / Height;
+                    double d = Math.Sqrt((px * px) + (py * py));
+                    if (d > shortSide / 2.0 || d <= shortSide / 2.0 - ArcThickness)
                     {
                         return false;
                     }
                     // Gum arc angles run counterclockwise on screen.
-                    double degrees = -Math.Atan2(ly - cx, lx - cx) * 180.0 / Math.PI;
+                    double degrees = -Math.Atan2(py, px) * 180.0 / Math.PI;
                     double along = ((degrees - ArcStart) % 360.0 + 360.0) % 360.0;
                     return along <= ArcSweep;
                 }
@@ -340,10 +345,6 @@ public class ShapeEdgePixelTests : BaseTestClass
 
         switch (edgeCase.Kind)
         {
-            case EdgeShapeKind.Arc:
-                geometry.Height = geometry.Width;
-                geometry.LocalBounds = (0, 0, geometry.Width, geometry.Width);
-                break;
             case EdgeShapeKind.Line:
                 geometry.Y += 22;
                 geometry.Height = 0;

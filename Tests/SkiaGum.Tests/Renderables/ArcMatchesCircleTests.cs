@@ -35,12 +35,46 @@ public class ArcMatchesCircleTests
         CountChangedPixelsOutsideBox(arc, 20f).ShouldBe(0);
     }
 
+    // #6256: Skia's arc is an ellipse that fills a box that is not square, with a uniform pen. The MonoGame arc
+    // matches the outer extent and has the exact stroke on the short axis only (ArcFillsBoxTests).
+    [Theory]
+    [InlineData(60f, 40f)]
+    [InlineData(40f, 60f)]
+    public void FullSweepArc_InNonSquareBox_FillsTheBoxWithAUniformStroke(float width, float height)
+    {
+        using SKBitmap arc = Render(20f, ShapeKind.FullSweepArc, width, height);
+
+        // Thickness along the horizontal and vertical lines through the box's center.
+        int row = 20 + ((int)height / 2);
+        int column = 20 + ((int)width / 2);
+        double horizontal = 0;
+        double vertical = 0;
+        for (int i = 0; i < 20; i++)
+        {
+            horizontal += Coverage(arc.GetPixel(18 + i, row));
+            vertical += Coverage(arc.GetPixel(column, 18 + i));
+        }
+        horizontal.ShouldBe(StrokeWidth, 0.3);
+        vertical.ShouldBe(StrokeWidth, 0.3);
+
+        Coverage(arc.GetPixel(20, row)).ShouldBeGreaterThan(0.8);
+        Coverage(arc.GetPixel(20 + (int)width - 1, row)).ShouldBeGreaterThan(0.8);
+        Coverage(arc.GetPixel(column, 20)).ShouldBeGreaterThan(0.8);
+        Coverage(arc.GetPixel(column, 20 + (int)height - 1)).ShouldBeGreaterThan(0.8);
+        Coverage(arc.GetPixel(19, row)).ShouldBeLessThan(0.1);
+        Coverage(arc.GetPixel(column, 19)).ShouldBeLessThan(0.1);
+        Coverage(arc.GetPixel(20 + (int)width, row)).ShouldBeLessThan(0.1);
+        Coverage(arc.GetPixel(column, 20 + (int)height)).ShouldBeLessThan(0.1);
+    }
+
+    private static double Coverage(SKColor color) => (color.Red - Backdrop.Red) / (double)(ShapeColor.Red - Backdrop.Red);
+
     internal enum ShapeKind { Circle, FullSweepArc }
 
     internal static SKColor Backdrop => new SKColor(70, 70, 90);
     internal static SKColor ShapeColor => new SKColor(255, 0, 0);
 
-    internal static SKBitmap Render(float position, ShapeKind kind)
+    internal static SKBitmap Render(float position, ShapeKind kind, float width = BoxSize, float height = BoxSize)
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(CanvasSize, CanvasSize));
         Gum.GumService.Default.Initialize(surface.Canvas, CanvasSize, CanvasSize);
@@ -68,8 +102,8 @@ public class ArcMatchesCircleTests
         }
         shape.X = position;
         shape.Y = position;
-        shape.Width = BoxSize;
-        shape.Height = BoxSize;
+        shape.Width = width;
+        shape.Height = height;
         root.Children.Add(shape);
         Gum.GumService.Default.Root.Children.Add(root);
 

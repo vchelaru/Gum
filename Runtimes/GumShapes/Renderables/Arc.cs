@@ -10,6 +10,13 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
+/// <summary>
+/// A stroked arc that fills its box on every runtime. In a square box it is a circle. In a box that is not
+/// square it is an ellipse that touches all four sides: the circle is drawn at the shorter side and the
+/// longer axis is stretched through the batch view (#6256), so the stroke is exact on the short axis and
+/// thicker along the long axis (Skia's pen is uniform). Strokes under 2 world units draw as 2 in that case.
+/// Dash and gap lengths, round caps and a radial gradient stretch with the arc.
+/// </summary>
 internal class Arc : RenderableShapeBase
 {
     public Arc()
@@ -60,12 +67,61 @@ internal class Arc : RenderableShapeBase
 
 
 
+    /// <summary>
+    /// Half the thinnest band a stretched arc is drawn with, in world units (one pixel wide).
+    /// </summary>
+    internal const float MinStretchedHalfThickness = 0.5f;
+
+    /// <summary>
+    /// Width and Height closer than this are one square box and take the plain circle path, so a square
+    /// arc pays no batch flushes.
+    /// </summary>
+    internal const float SquareTolerance = 0.01f;
+
+    /// <summary>
+    /// The transform that stretches the circle Apos.Shapes draws at the box's shorter side along the longer
+    /// axis until it fills the box, as a view matrix pre-multiplied onto the camera view. The stretch runs
+    /// along the box's own long axis, so a rotated arc is not sheared.
+    /// </summary>
+    /// <remarks>
+    /// <c>antiAliasWorldOffset</c> is the inset <see cref="RenderableShapeBase.GetAntiAliasWorldOffset"/> gives
+    /// the circle's outer edge. The stretch is measured between the inset edges so the long ends land on the
+    /// box like the short ones do, instead of being pulled in by the offset times the stretch.
+    /// </remarks>
+    internal static Matrix CreateStretchToBoxMatrix(float width, float height, Vector2 center, float rotationRadians,
+        float antiAliasWorldOffset)
+    {
+        float shortSide = System.Math.Min(width, height);
+        float longSide = System.Math.Max(width, height);
+
+        float stretch = longSide / shortSide;
+        if (shortSide / 2 - antiAliasWorldOffset > 0)
+        {
+            stretch = (longSide / 2 - antiAliasWorldOffset) / (shortSide / 2 - antiAliasWorldOffset);
+        }
+
+        float horizontalScale = width > height ? stretch : 1;
+        float verticalScale = height > width ? stretch : 1;
+
+        return Matrix.CreateTranslation(-center.X, -center.Y, 0)
+            * Matrix.CreateRotationZ(-rotationRadians)
+            * Matrix.CreateScale(horizontalScale, verticalScale, 1)
+            * Matrix.CreateRotationZ(rotationRadians)
+            * Matrix.CreateTranslation(center.X, center.Y, 0);
+    }
+
     public override void Render(ISystemManagers managers)
     {
         if (SweepAngle == 0) return;
 
         // Issue #2950 follow-up — see Circle.Render for the rationale on this gate.
         if (!HasVisibleOutput)
+        {
+            return;
+        }
+
+        // An empty box has nothing to fill, and a zero side would make the stretch below degenerate.
+        if (Width <= 0 || Height <= 0)
         {
             return;
         }
@@ -78,16 +134,22 @@ internal class Arc : RenderableShapeBase
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
 
-        // Issue #2925 — same rotation handling as Circle.Render: rotate the (Width/2, Width/2)
+        // Issue #2925 — same rotation handling as Circle.Render: rotate the (Width/2, Height/2)
         // offset from the GUE's top-left origin to the arc center. The arc's StartAngle is also
         // offset by the absolute rotation in RenderInternal so the swept arc orients correctly
-        // when the GUE is rotated. Preserves the original convention of using Width for both
-        // axes (arcs are drawn in a square box keyed off Width).
+        // when the GUE is rotated.
         var rotationRadians = MathHelper.ToRadians(-this.GetAbsoluteRotation());
-        var center = GetRotatedCenter(absoluteLeft, absoluteTop, Width, Width, rotationRadians);
+        var center = GetRotatedCenter(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
-        var radius = Width / 2 - StrokeWidth / 2;
-        BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Width, rotationRadians);
+        // Issue #6256 — Apos.Shapes has no elliptical arc, so a box that is not square is filled by
+        // drawing the circle at the shorter side (the stroke is exactly StrokeWidth on the short axis)
+        // and stretching the longer axis through the batch view, as Svg does for a mismatched aspect
+        // ratio. The stroke is thicker along the long axis by long / short. Square boxes skip all this.
+        var shortSide = System.Math.Min(Width, Height);
+        var stretchesToBox = System.Math.Abs(Width - Height) > SquareTolerance;
+
+        var radius = shortSide / 2 - StrokeWidth / 2;
+        BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
 
@@ -105,6 +167,12 @@ internal class Arc : RenderableShapeBase
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
             int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
 
+            // The shadow offset is a world-space shift, so the stretch is centered on the shadow.
+            Matrix? shadowStretch = stretchesToBox
+                ? CreateStretchToBoxMatrix(Width, Height, dropshadowCenter, rotationRadians,
+                    GetAntiAliasWorldOffset(shadowAaSize, cameraZoom))
+                : null;
+
             RenderInternal(sb,
                 absoluteLeft: shadowLeft,
                 absoluteTop: shadowTop,
@@ -113,10 +181,15 @@ internal class Arc : RenderableShapeBase
                 antiAliasSize: shadowAaSize,
                 lineThickness: shadowLineThickness,
                 cameraZoom: cameraZoom,
+                stretch: shadowStretch,
                 forcedColor: shadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, cameraZoom);
+        Matrix? stretch = stretchesToBox
+            ? CreateStretchToBoxMatrix(Width, Height, center, rotationRadians,
+                GetAntiAliasWorldOffset(IsAntialiased ? 1 : 0, cameraZoom))
+            : null;
+        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, cameraZoom, stretch);
         EndAlphaBoundsMask();
     }
 
@@ -128,6 +201,7 @@ internal class Arc : RenderableShapeBase
         int antiAliasSize,
         float lineThickness,
         float cameraZoom,
+        Matrix? stretch,
         Color? forcedColor = null)
     {
         // Issue #2925 — offset the swept arc by the GUE's absolute rotation so the arc tilts
@@ -148,6 +222,15 @@ internal class Arc : RenderableShapeBase
         // The band is drawn the way Circle draws a stroke (#6254): the same anti-aliasing offset
         // comes off the half thickness so a 360 degree arc covers the same pixels as a stroked Circle.
         float halfThickness = GetRingHalfThickness(lineThickness, antiAliasSize, cameraZoom);
+        if (stretch.HasValue && lineThickness > 0)
+        {
+            // A band thinner than the one pixel anti-aliasing ramp can fall between two pixel rows and
+            // vanish where the stretch carries it off the pixel centers, so a stretched stroke is at least
+            // one pixel wide. The radius moves in by what the band grew so the outer edge stays put.
+            float minimum = System.Math.Max(halfThickness, MinStretchedHalfThickness);
+            radius -= minimum - halfThickness;
+            halfThickness = minimum;
+        }
 
         // Issue #3972 — Apos.Shapes 0.7.5 added a native DashStyle parameter to both DrawArc and
         // DrawRing, so dashing flows through the same draw calls as a solid stroke instead of a
@@ -191,14 +274,33 @@ internal class Arc : RenderableShapeBase
             }
         }
 
+        // The stretch is a view push, which costs two batch flushes; it brackets only the draw call.
+        if (stretch.HasValue)
+        {
+            ShapeRenderer.PushView(stretch.Value);
+        }
+
         if (ShouldPaintGradient(forcedColor))
         {
-            DrawGradientBand(base.GetGradient(absoluteLeft, absoluteTop));
+            Gradient gradient = base.GetGradient(absoluteLeft, absoluteTop);
+            if (stretch.HasValue)
+            {
+                // Gradient points are read in the space before the view, so map the box-space points back.
+                Matrix inverse = Matrix.Invert(stretch.Value);
+                gradient.AXY = Vector2.Transform(gradient.AXY, inverse);
+                gradient.BXY = Vector2.Transform(gradient.BXY, inverse);
+            }
+            DrawGradientBand(gradient);
         }
         else
         {
             Color color = forcedColor ?? this.Color;
             DrawBand(color, color);
+        }
+
+        if (stretch.HasValue)
+        {
+            ShapeRenderer.PopView();
         }
     }
 }
