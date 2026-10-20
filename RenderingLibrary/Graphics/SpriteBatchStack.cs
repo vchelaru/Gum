@@ -250,6 +250,20 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Ends the batch and begins it again with the current parameters, except for the blend and
+        /// depth/stencil state. Does nothing when no parameters are active.
+        /// </summary>
+        public void ReplaceBlendAndDepthStencilState(BlendState? blendState, DepthStencilState depthStencilState)
+        {
+            if (currentParameters != null)
+            {
+                BeginParameters p = currentParameters.Value;
+                ReplaceRenderStates(p.SortMode, blendState, p.SamplerState, depthStencilState, p.RasterizerState,
+                    p.Effect, p.TransformMatrix, p.ScissorRectangle, p.ObjectChangingState);
+            }
+        }
+
         public void ReplaceRenderStates(SpriteSortMode sortMode,
             BlendState? blendState,
             SamplerState samplerState,
