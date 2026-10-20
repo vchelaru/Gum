@@ -9,6 +9,11 @@ using ToolsUtilities;
 
 namespace SkiaGum.Content;
 
+/// <summary>
+/// The cache behind <see cref="RenderingLibrary.Content.ContentLoader"/>.
+/// </summary>
+// Obsoleted on 2026-10-20. Keep until at least 2027-04-20 (six months) before removing it.
+[Obsolete("Use RenderingLibrary.Content.ContentLoader (LoadContent<T>, CustomResourceAssembly, AdjustContentName) instead. SkiaResourceManager will be removed no earlier than April 2027.")]
 public static class SkiaResourceManager
 {
     public static Assembly? CustomResourceAssembly { get; set; }

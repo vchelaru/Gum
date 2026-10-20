@@ -132,6 +132,13 @@ public abstract class GumServiceSkiaBase : IGumService
     }
 
     /// <summary>
+    /// The content loader that loads bitmaps, SVGs, animations and typefaces, or null if
+    /// <see cref="LoaderManager.ContentLoader"/> was replaced with a loader of another type.
+    /// Matches <c>GumService.ContentLoader</c> on the MonoGame/KNI and raylib runtimes.
+    /// </summary>
+    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
+
+    /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
     /// like <see cref="GraphicalUiElement.AddToRoot()"/>
     /// to guard against calls made before Initialize.
@@ -444,10 +451,15 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
     /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    protected void InitializeCore(SKCanvas? canvas, int width, int height, string? gumProjectFile)
+    /// <param name="visualsVersion">The default Forms visuals to register. See <see cref="ResolveVisualsVersion"/>.</param>
+    /// <exception cref="NotSupportedException"><paramref name="visualsVersion"/> is not supported on Skia.</exception>
+    protected void InitializeCore(
+        SKCanvas? canvas, int width, int height, string? gumProjectFile,
+        DefaultVisualsVersion visualsVersion = DefaultVisualsVersion.Newest)
     {
         // Input from a previous Initialize that was not followed by Uninitialize.
         DisposeOwnedInput();
+        DefaultVisualsVersion resolvedVisualsVersion = ResolveVisualsVersion(visualsVersion);
 
         // SkiaGum relies on ModuleInitializer instead of explicitly registering
         // runtimes.
@@ -489,7 +501,7 @@ public abstract class GumServiceSkiaBase : IGumService
         // PopupRoot/ModalRoot, same as every other backend's Initialize. Without this, a
         // code-only Forms control got no Visual unless a .gumx project happened to define one
         // for it (issue #4452).
-        FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
+        FormsUtilities.InitializeDefaults(SystemManagers.Default, resolvedVisualsVersion);
 
         // Lets RefreshStyles keep typed text, caret, and scroll positions (issue #5229). Installed
         // per Initialize rather than in the constructor so a re-initialize after teardown gets them.
@@ -561,6 +573,24 @@ public abstract class GumServiceSkiaBase : IGumService
         }
         _installedBundleHook = null;
         CurrentProjectResolution = null;
+    }
+
+    /// <summary>
+    /// Checks that a Skia host can register the given default visuals and returns the version to
+    /// register. Only V3 exists today; a new visuals version is one added case here. Hosts call this
+    /// before touching any state so an unsupported version leaves the service uninitialized.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The version is not supported on Skia.</exception>
+    protected static DefaultVisualsVersion ResolveVisualsVersion(DefaultVisualsVersion version)
+    {
+        switch (version)
+        {
+            case DefaultVisualsVersion.V3:
+                return DefaultVisualsVersion.V3;
+            default:
+                throw new NotSupportedException(
+                    $"DefaultVisualsVersion {version} is not supported by the Skia GumService.");
+        }
     }
 
     // The RelativeDirectory in effect before Initialize pointed it at a loaded project, restored by

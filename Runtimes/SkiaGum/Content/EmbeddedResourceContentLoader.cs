@@ -1,78 +1,25 @@
 ﻿using RenderingLibrary.Content;
-using SkiaSharp;
-using SkiaSharp.Skottie;
-using SKSvg = Svg.Skia.SKSvg;
 
 namespace SkiaGum.Content
 {
     /// <summary>
-    /// Loads Skia content out of embedded resources.
+    /// Loads Skia content out of embedded resources. Behaves as <see cref="RenderingLibrary.Content.ContentLoader"/>, which is the loader to use going forward.
     /// </summary>
     /// <remarks>
     /// Sealed on purpose: nothing here is virtual, so deriving from it gains nothing. To customize
     /// loading, implement <see cref="IContentLoader"/> and delegate to an instance of this class for
     /// the content names you do not handle.
     /// </remarks>
+    // Obsoleted on 2026-10-20. Keep until at least 2027-04-20 (six months) before removing it.
+    [System.Obsolete("Use RenderingLibrary.Content.ContentLoader instead. EmbeddedResourceContentLoader will be removed no earlier than April 2027.")]
     public sealed class EmbeddedResourceContentLoader : IContentLoader
     {
-        public T? LoadContent<T>(string contentName)
-        {
-            if (typeof(T) == typeof(SKTypeface))
-            {
-                return (T)(object)LoadSKTypeface(contentName);
-            }
-            else if (typeof(T) == typeof(SKSvg))
-            {
-                return (T)(object)LoadSKSvg(contentName);
-            }
-            else if (typeof(T) == typeof(SKBitmap))
-            {
-                return (T)(object)LoadSKBitmap(contentName);
-            }
-            else if (typeof(T) == typeof(Animation))
-            {
-                var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
-                return (T?)(object?)SkiaResourceManager.GetLottieAnimation(modifiedContentName);
-            }
-            else
-
-            {
-                return default(T);
-            }
-        }
-
-        private SKSvg LoadSKSvg(string contentName)
-        {
-            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
-
-            return SkiaResourceManager.GetSvg(modifiedContentName);
-        }
-
-        private SKBitmap LoadSKBitmap(string contentName)
-        {
-            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
-
-            return SkiaResourceManager.GetSKBitmap(modifiedContentName);
-        }
-
-        private SKTypeface LoadSKTypeface(string contentName)
-        {
-            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
-
-            return SkiaResourceManager.GetTypeface(modifiedContentName);
-        }
+        private readonly RenderingLibrary.Content.ContentLoader _contentLoader = new RenderingLibrary.Content.ContentLoader();
 
         /// <inheritdoc/>
-        public T? TryLoadContent<T>(string contentName)
-        {
-            try
-            {
-                return LoadContent<T>(contentName);
-            }
-            catch
-            {
-                return default(T);
-            }
-        }
+        public T? LoadContent<T>(string contentName) => _contentLoader.LoadContent<T>(contentName);
+
+        /// <inheritdoc/>
+        public T? TryLoadContent<T>(string contentName) => _contentLoader.TryLoadContent<T>(contentName);
     }
 }

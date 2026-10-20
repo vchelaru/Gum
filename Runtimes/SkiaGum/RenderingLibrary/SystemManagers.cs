@@ -110,8 +110,8 @@ namespace RenderingLibrary
 
                 GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
                 GraphicalUiElement.RemoveRenderableFromManagers = RemoveRenderableFromManagers;
-                SkiaResourceManager.Initialize(null);
-                LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new EmbeddedResourceContentLoader();
+                RenderingLibrary.Content.ContentLoader.MarkInitialized();
+                LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new RenderingLibrary.Content.ContentLoader();
                 RegisterComponentRuntimeInstantiations();
 
                 // #3670/#3703: route RichTextKit's family-name resolution through GumFontMapper so a

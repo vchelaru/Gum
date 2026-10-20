@@ -1547,7 +1547,7 @@ public partial class CustomSetPropertyOnRenderable
 
                 if(!string.IsNullOrEmpty(asString))
                 {
-                    asSvg.Texture = SkiaResourceManager.GetSvg(asString);
+                    asSvg.Texture = RenderingLibrary.Content.ContentLoader.LoadSvg(asString);
                 }
                 else
                 {

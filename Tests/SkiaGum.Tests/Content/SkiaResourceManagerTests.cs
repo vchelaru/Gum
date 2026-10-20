@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using ToolsUtilities;
 using Xunit;
 
+// These tests cover the obsolete SkiaResourceManager until it is removed.
+#pragma warning disable CS0618
+
 namespace SkiaGum.Tests.Content;
 
 public class SkiaResourceManagerTests

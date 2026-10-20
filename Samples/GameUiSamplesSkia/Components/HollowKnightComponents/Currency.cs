@@ -18,15 +18,13 @@ partial class Currency
     int money = 0;
     int moneyToAdd = 0;
     TimeSpan lastAddTime;
-    TimeSpan latestTotalTime;
     const int moneyToAddPerSecond = 400;
     const float secondsToPauseBeforeAdding = 0.5f;
 
     internal void AddMoney(int amount)
     {
         moneyToAdd += amount;
-        // The Skia GumService has no GameTime, so this tracks the time of the latest Update.
-        lastAddTime = latestTotalTime;
+        lastAddTime = GumService.Default.GameTime.TotalGameTime;
         UpdateTexts();
     }
 
@@ -38,8 +36,6 @@ partial class Currency
 
     public void Update(GameTime gameTime)
     {
-        latestTotalTime = gameTime.TotalGameTime;
-
         if (moneyToAdd > 0 &&
             (gameTime.TotalGameTime - lastAddTime) >
                 TimeSpan.FromSeconds(secondsToPauseBeforeAdding))
