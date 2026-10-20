@@ -853,6 +853,16 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     }
 
     /// <summary>
+    /// The half thickness to give Apos' <c>DrawRing</c>/<c>DrawArc</c> for a stroke of
+    /// <paramref name="strokeWidth"/>. Apos draws those bands wider than asked, by the anti-aliasing ramp
+    /// (<see cref="GetAntiAliasWorldOffset"/> on each side), while <c>DrawCircle</c> does not. Taking the offset
+    /// off the half thickness makes an arc cover the same pixels as a stroked Circle (#6254). Never returns 0,
+    /// because Apos draws nothing for a zero thickness.
+    /// </summary>
+    protected static float GetRingHalfThickness(float strokeWidth, int antiAliasSize, float cameraZoom) =>
+        System.Math.Max(0.005f, (strokeWidth / 2f) - GetAntiAliasWorldOffset(antiAliasSize, cameraZoom));
+
+    /// <summary>
     /// True for the alpha-only blends whose bounds mask marks the stencil buffer (#5689), so the
     /// render target this shape bakes into must have one (#5696).
     /// </summary>

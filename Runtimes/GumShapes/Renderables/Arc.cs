@@ -89,6 +89,8 @@ internal class Arc : RenderableShapeBase
         var radius = Width / 2 - StrokeWidth / 2;
         BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Width, rotationRadians);
 
+        var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+
         if(HasDropshadow)
         {
             var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX / 2f;
@@ -101,7 +103,6 @@ internal class Arc : RenderableShapeBase
             // Issue #2950 — stroke-only fade + world-anchored aaSize scaling (mirrors Circle).
             (float shadowLineThickness, Color shadowColor) =
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
-            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
             int shadowAaSize = GetShadowAntiAliasSize(cameraZoom);
 
             RenderInternal(sb,
@@ -111,10 +112,11 @@ internal class Arc : RenderableShapeBase
                 radius: radius,
                 antiAliasSize: shadowAaSize,
                 lineThickness: shadowLineThickness,
+                cameraZoom: cameraZoom,
                 forcedColor: shadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth);
+        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, cameraZoom);
         EndAlphaBoundsMask();
     }
 
@@ -125,6 +127,7 @@ internal class Arc : RenderableShapeBase
         float radius,
         int antiAliasSize,
         float lineThickness,
+        float cameraZoom,
         Color? forcedColor = null)
     {
         // Issue #2925 — offset the swept arc by the GUE's absolute rotation so the arc tilts
@@ -142,7 +145,9 @@ internal class Arc : RenderableShapeBase
             endAngleRadians = temp;
         }
 
-        var endpointRadius = lineThickness / 2;
+        // The band is drawn the way Circle draws a stroke (#6254): the same anti-aliasing offset
+        // comes off the half thickness so a 360 degree arc covers the same pixels as a stroked Circle.
+        float halfThickness = GetRingHalfThickness(lineThickness, antiAliasSize, cameraZoom);
 
         // Issue #3972 — Apos.Shapes 0.7.5 added a native DashStyle parameter to both DrawArc and
         // DrawRing, so dashing flows through the same draw calls as a solid stroke instead of a
@@ -157,73 +162,43 @@ internal class Arc : RenderableShapeBase
             dash = new DashStyle(StrokeDashLength, StrokeGapLength, cap: DashCap.Butt, snap: DashSnap.Off);
         }
 
-        if(_isEndRounded)
+        // A rounded end is a DrawArc, a butt end is a DrawRing; both take the same arguments.
+        void DrawBand(Color color1, Color color2)
         {
-            if (ShouldPaintGradient(forcedColor))
+            if (_isEndRounded)
             {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
-                sb.DrawArc(center,
-                    startAngleRadians,
-                    endAngleRadians,
-                    radius,
-                    endpointRadius,
-                    gradient,
-                    gradient,
-                    1,
-                    aaSize: antiAliasSize,
-                    dash: dash);
+                sb.DrawArc(center, startAngleRadians, endAngleRadians, radius, halfThickness,
+                    color1, color2, 1, aaSize: antiAliasSize, dash: dash);
             }
             else
             {
-                var color = forcedColor ?? this.Color;
-                sb.DrawArc(center,
-                    startAngleRadians,
-                    endAngleRadians,
-                    radius,
-                    endpointRadius,
-                    color,
-                    color,
-                    1,
-                    aaSize: antiAliasSize,
-                    dash: dash);
+                sb.DrawRing(center, startAngleRadians, endAngleRadians, radius, halfThickness,
+                    color1, color2, 1, aaSize: antiAliasSize, dash: dash);
             }
+        }
+
+        void DrawGradientBand(Gradient gradient)
+        {
+            if (_isEndRounded)
+            {
+                sb.DrawArc(center, startAngleRadians, endAngleRadians, radius, halfThickness,
+                    gradient, gradient, 1, aaSize: antiAliasSize, dash: dash);
+            }
+            else
+            {
+                sb.DrawRing(center, startAngleRadians, endAngleRadians, radius, halfThickness,
+                    gradient, gradient, 1, aaSize: antiAliasSize, dash: dash);
+            }
+        }
+
+        if (ShouldPaintGradient(forcedColor))
+        {
+            DrawGradientBand(base.GetGradient(absoluteLeft, absoluteTop));
         }
         else
         {
-            // Apos.Shapes 0.7.11+ radius1 is the exact centerline (the prior off-by-one that used
-            // to need a +1f compensation here is fixed upstream), and radius2 is the band's half
-            // thickness, matching DrawArc's endpointRadius convention below.
-            var ringThickness = lineThickness / 2;
-
-            if (ShouldPaintGradient(forcedColor))
-            {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
-                sb.DrawRing(center,
-                    startAngleRadians,
-                    endAngleRadians,
-                    radius,
-                    ringThickness,
-                    gradient,
-                    gradient,
-                    1,
-                    aaSize: antiAliasSize,
-                    dash: dash);
-            }
-            else
-            {
-                var color = forcedColor ?? this.Color;
-                sb.DrawRing(center,
-                    startAngleRadians,
-                    endAngleRadians,
-                    radius,
-                    ringThickness,
-                    color,
-                    color,
-                    1,
-                    aaSize: antiAliasSize,
-                    dash: dash);
-            }
+            Color color = forcedColor ?? this.Color;
+            DrawBand(color, color);
         }
-
     }
 }
