@@ -22,6 +22,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           id="$(gh run list --workflow build-and-test.yaml --event pull_request --commit "$SHA" --limit 1 --json databaseId --jq '.[0].databaseId')"
