@@ -17,10 +17,8 @@ namespace MonoGameGum.Tests.Forms;
 /// <summary>
 /// Pins that values authored on a Visual (the way the Gum tool saves them) are read by the Forms
 /// control on Visual assignment, survive RefreshStyles, and are not overridden by a Visual swap.
-/// Each test passes on the commit before the 2026-10 Visual-assignment / RefreshStyles fixes
-/// (#6200, #6203, #6204, #6214, #6221), except four that pin those fixes: the ScrollBar
-/// IsEnabled-forwarding test, the TextBox swap line-mode test, and the two "set in code" text
-/// preservation tests.
+/// RefreshStyles restores text and placeholders only when they were set through the control's
+/// property (code, binding or user input); authored text is re-applied from the Visual's state.
 /// </summary>
 public class VisualAuthoredPropertiesTests : BaseTestClass
 {
@@ -376,6 +374,233 @@ public class VisualAuthoredPropertiesTests : BaseTestClass
         menuItem.Visual = newVisual;
 
         menuItem.Header.ShouldBe("Authored on new visual");
+    }
+
+    #endregion
+
+    #region Button, Label, TextBox text
+
+    [Fact]
+    public void ButtonRefreshStyles_AuthoredTextNotSetInCode_KeepsAuthoredText()
+    {
+        ButtonVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Authored button";
+        Button button = new(visual);
+
+        visual.RefreshStyles();
+
+        button.Text.ShouldBe("Authored button");
+    }
+
+    [Fact]
+    public void ButtonRefreshStyles_AuthoredTextChanged_ShowsNewAuthoredText()
+    {
+        ButtonVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Old authored";
+        Button button = new(visual);
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        button.Text.ShouldBe("New authored");
+    }
+
+    [Fact]
+    public void ButtonRefreshStyles_TextSetInCodeAndAuthoredChanged_KeepsCodeText()
+    {
+        ButtonVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        Button button = new(visual);
+        button.Text = "From code";
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        button.Text.ShouldBe("From code");
+    }
+
+    [Fact]
+    public void ButtonRefreshStyles_TextSetNoTranslateAndAuthoredChanged_KeepsCodeText()
+    {
+        ButtonVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        Button button = new(visual);
+        button.SetTextNoTranslate("From code");
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        button.Text.ShouldBe("From code");
+    }
+
+    [Fact]
+    public void ButtonSwap_NewVisualAuthoredText_IsNotOverwritten()
+    {
+        Button button = new();
+        button.Text = "Old";
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        button.Visual = newVisual;
+
+        button.Text.ShouldBe("Authored on new visual");
+    }
+
+    [Fact]
+    public void ButtonRefreshStyles_TextSetBeforeVisualSwap_KeepsNewVisualAuthoredText()
+    {
+        Button button = new();
+        button.Text = "Old code text";
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+        button.Visual = newVisual;
+
+        newVisual.RefreshStyles();
+
+        button.Text.ShouldBe("Authored on new visual");
+    }
+
+    [Fact]
+    public void LabelRefreshStyles_AuthoredTextNotSetInCode_KeepsAuthoredText()
+    {
+        LabelVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.Text = "Authored label";
+        Label label = new(visual);
+
+        visual.RefreshStyles();
+
+        label.Text.ShouldBe("Authored label");
+    }
+
+    [Fact]
+    public void LabelRefreshStyles_AuthoredTextChanged_ShowsNewAuthoredText()
+    {
+        LabelVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.Text = "Old authored";
+        Label label = new(visual);
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "Text", "New authored");
+
+        screen.RefreshStyles();
+
+        label.Text.ShouldBe("New authored");
+    }
+
+    [Fact]
+    public void LabelRefreshStyles_TextSetInCodeAndAuthoredChanged_KeepsCodeText()
+    {
+        LabelVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        Label label = new(visual);
+        label.Text = "From code";
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "Text", "New authored");
+
+        screen.RefreshStyles();
+
+        label.Text.ShouldBe("From code");
+    }
+
+    [Fact]
+    public void LabelRefreshStyles_TextSetNoTranslateAndAuthoredChanged_KeepsCodeText()
+    {
+        LabelVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        Label label = new(visual);
+        label.SetTextNoTranslate("From code");
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "Text", "New authored");
+
+        screen.RefreshStyles();
+
+        label.Text.ShouldBe("From code");
+    }
+
+    [Fact]
+    public void TextBoxRefreshStyles_AuthoredTextChanged_ShowsNewAuthoredText()
+    {
+        TextBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Old authored";
+        TextBox textBox = new(visual);
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        textBox.Text.ShouldBe("New authored");
+    }
+
+    [Fact]
+    public void TextBoxRefreshStyles_MaxLengthAssignedAndAuthoredTextChanged_ShowsNewAuthoredText()
+    {
+        TextBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        visual.TextInstance.Text = "Old authored";
+        TextBox textBox = new(visual);
+        textBox.MaxLength = 100;
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        textBox.Text.ShouldBe("New authored");
+    }
+
+    [Fact]
+    public void TextBoxRefreshStyles_TextSetInCodeAndAuthoredChanged_KeepsCodeText()
+    {
+        TextBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        TextBox textBox = new(visual);
+        textBox.Text = "From code";
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        textBox.Text.ShouldBe("From code");
+    }
+
+    [Fact]
+    public void TextBoxRefreshStyles_TextSetNoTranslateAndAuthoredChanged_KeepsCodeText()
+    {
+        TextBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        TextBox textBox = new(visual);
+        textBox.SetTextNoTranslate("From code");
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        textBox.Text.ShouldBe("From code");
+    }
+
+    [Fact]
+    public void TextBoxRefreshStyles_TextTypedByUserAndAuthoredChanged_KeepsTypedText()
+    {
+        TextBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        TextBox textBox = new(visual);
+        textBox.HandleCharEntered('a');
+        textBox.HandleCharEntered('b');
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        textBox.Text.ShouldBe("ab");
+    }
+
+    [Fact]
+    public void PasswordBoxRefreshStyles_PasswordSetAndAuthoredTextChanged_KeepsMaskedPassword()
+    {
+        PasswordBoxVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        PasswordBox passwordBox = new(visual);
+        passwordBox.Password = "secret";
+        ContainerRuntime screen = AttachToScreenAuthoring(visual, "TextInstance.Text", "New authored");
+
+        screen.RefreshStyles();
+
+        passwordBox.Password.ShouldBe("secret");
+        visual.TextInstance.Text.ShouldBe("******");
+    }
+
+    [Fact]
+    public void TextBoxSwap_NewVisualAuthoredText_IsNotOverwritten()
+    {
+        TextBox textBox = new();
+        textBox.Text = "Old";
+        TextBoxVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        textBox.Visual = newVisual;
+
+        textBox.Text.ShouldBe("Authored on new visual");
     }
 
     #endregion

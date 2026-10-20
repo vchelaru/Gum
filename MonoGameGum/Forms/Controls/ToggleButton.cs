@@ -63,7 +63,7 @@ public class ToggleButton : ButtonBase
 #if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
-            _isTextSetInCode = true;
+            _codeText.Record(value, translate: true);
             // go through the component instead of the core text object to force a layout refresh if necessary
             textComponent?.SetProperty("Text", value);
         }
@@ -79,7 +79,7 @@ public class ToggleButton : ButtonBase
     /// </remarks>
     public void SetTextNoTranslate(string? value)
     {
-        _isTextSetInCode = true;
+        _codeText.Record(value, translate: false);
         textComponent?.SetProperty("TextNoTranslate", value);
     }
 
@@ -172,6 +172,9 @@ public class ToggleButton : ButtonBase
 
     protected override void RefreshInternalVisualReferences()
     {
+        // The new visual's text is authoritative; text set on the previous visual does not carry over.
+        _codeText.Clear();
+
         // text component is optional — visuals without a "TextInstance" child are
         // still valid (icon-only toggles, for example).
         textComponent = base.Visual?.GetGraphicalUiElementByName("TextInstance");
@@ -193,33 +196,17 @@ public class ToggleButton : ButtonBase
 
     #region Update To Methods
 
-    // Manual save/restore rather than RegisterRuntimeProperty because
+    // Manual restore rather than RegisterRuntimeProperty because
     // ReactToVisualChanged can fire multiple times (visual reassignment),
-    // which would accumulate duplicate registrations.
-    private string? _savedText;
-    private bool _hasSavedText;
-
-    // Only text assigned through the property is restored after RefreshStyles; text the Visual
-    // authored is re-applied from the Visual's state instead.
-    private bool _isTextSetInCode;
-
-    /// <inheritdoc/>
-    public override void SaveRuntimeProperties()
-    {
-        _savedText = coreTextObject?.RawText;
-        _hasSavedText = _isTextSetInCode && coreTextObject != null;
-        base.SaveRuntimeProperties();
-    }
+    // which would accumulate duplicate registrations. Only text assigned through
+    // the property is restored; text the Visual authored is re-applied from the
+    // Visual's state instead.
+    private CodeAssignedText _codeText;
 
     /// <inheritdoc/>
     public override void ApplyRuntimeProperties()
     {
-        if (_hasSavedText && textComponent != null)
-        {
-            textComponent.SetProperty("Text", _savedText);
-        }
-        _savedText = null;
-        _hasSavedText = false;
+        _codeText.Restore(textComponent);
         base.ApplyRuntimeProperties();
     }
 

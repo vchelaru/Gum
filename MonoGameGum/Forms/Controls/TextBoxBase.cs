@@ -324,7 +324,7 @@ public abstract class TextBoxBase :
         get => placeholderTextObject?.RawText;
         set
         {
-            _isPlaceholderSetInCode = true;
+            _placeholderSetInCode.Record(value, translate: true);
             if (placeholderComponent != null)
             {
                 // go through the component instead of the renderable to apply localization and force a layout refresh
@@ -343,7 +343,7 @@ public abstract class TextBoxBase :
     /// </remarks>
     public void SetPlaceholderNoTranslate(string? value)
     {
-        _isPlaceholderSetInCode = true;
+        _placeholderSetInCode.Record(value, translate: false);
         if (placeholderComponent != null)
         {
             placeholderComponent.SetProperty("TextNoTranslate", value);
@@ -536,6 +536,10 @@ public abstract class TextBoxBase :
 
     protected override void RefreshInternalVisualReferences()
     {
+        // The new visual's text is authoritative; text set on the previous visual does not carry over.
+        _textSetInCode.Clear();
+        _placeholderSetInCode.Clear();
+
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance")
             ?? throw new Exception("Gum object must have an object called \"TextInstance\"");
         caretComponent = base.Visual.GetGraphicalUiElementByName("CaretInstance")
@@ -1285,38 +1289,34 @@ public abstract class TextBoxBase :
 
     #region UpdateTo Methods
 
-    private string? _savedText;
-    private string? _savedPlaceholder;
+    // Only text and a placeholder assigned through the property (code, binding, or user input)
+    // are restored after RefreshStyles; ones the Visual authored are re-applied from the
+    // Visual's state instead.
+    internal CodeAssignedText _textSetInCode;
+    private CodeAssignedText _placeholderSetInCode;
 
-    // Only a placeholder assigned through the property is restored after RefreshStyles; one the
-    // Visual authored is re-applied from the Visual's state instead.
-    private bool _isPlaceholderSetInCode;
+    private bool _hasSavedCaret;
     private int _savedCaretIndex;
     private int _savedSelectionLength;
 
     /// <inheritdoc/>
     public override void SaveRuntimeProperties()
     {
-        _savedText = coreTextObject?.RawText;
-        _savedPlaceholder = _isPlaceholderSetInCode ? placeholderTextObject?.RawText : null;
         _savedCaretIndex = caretIndex;
         _savedSelectionLength = selectionLength;
+        _hasSavedCaret = true;
         base.SaveRuntimeProperties();
     }
 
     /// <inheritdoc/>
     public override void ApplyRuntimeProperties()
     {
-        if (_savedPlaceholder != null && placeholderComponent != null)
-        {
-            placeholderComponent.SetProperty("Text", _savedPlaceholder);
-        }
-        _savedPlaceholder = null;
+        _placeholderSetInCode.Restore(placeholderComponent);
 
-        if (_savedText != null && coreTextObject != null)
+        if (_hasSavedCaret && coreTextObject != null)
         {
-            textComponent?.SetProperty("Text", _savedText);
-            caretIndex = System.Math.Min(_savedCaretIndex, _savedText.Length);
+            _textSetInCode.Restore(textComponent);
+            caretIndex = System.Math.Min(_savedCaretIndex, DisplayedText?.Length ?? 0);
             selectionLength = _savedSelectionLength;
 
             // UpdateToIsFocused calls UpdateState which re-applies categorical
@@ -1325,7 +1325,7 @@ public abstract class TextBoxBase :
             UpdatePlaceholderVisibility();
             UpdateToSelection();
         }
-        _savedText = null;
+        _hasSavedCaret = false;
         base.ApplyRuntimeProperties();
     }
 

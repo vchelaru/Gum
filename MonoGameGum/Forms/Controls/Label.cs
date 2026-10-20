@@ -43,6 +43,7 @@ public class Label :
         }
         set
         {
+            _codeText.Record(value, translate: true);
             if(value != Text)
             {
 
@@ -69,6 +70,7 @@ public class Label :
     /// </remarks>
     public void SetTextNoTranslate(string? value)
     {
+        _codeText.Record(value, translate: false);
         if (value != Text)
         {
             textComponent?.SetProperty("TextNoTranslate", value);
@@ -88,6 +90,9 @@ public class Label :
 
     protected override void RefreshInternalVisualReferences()
     {
+        // The new visual's text is authoritative; text set on the previous visual does not carry over.
+        _codeText.Clear();
+
         if (base.Visual?.Name == "TextInstance")
         {
             textComponent = base.Visual;
@@ -109,29 +114,17 @@ public class Label :
         coreTextObject = textComponent?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
     }
 
-    // Manual save/restore rather than RegisterRuntimeProperty because
+    // Manual restore rather than RegisterRuntimeProperty because
     // ReactToVisualChanged can fire multiple times (visual reassignment),
-    // which would accumulate duplicate registrations.
-    private string? _savedText;
-    private bool _hasSavedText;
-
-    /// <inheritdoc/>
-    public override void SaveRuntimeProperties()
-    {
-        _savedText = coreTextObject?.RawText;
-        _hasSavedText = coreTextObject != null;
-        base.SaveRuntimeProperties();
-    }
+    // which would accumulate duplicate registrations. Only text assigned through
+    // the property is restored; text the Visual authored is re-applied from the
+    // Visual's state instead.
+    private CodeAssignedText _codeText;
 
     /// <inheritdoc/>
     public override void ApplyRuntimeProperties()
     {
-        if (_hasSavedText && textComponent != null)
-        {
-            textComponent.SetProperty("Text", _savedText);
-        }
-        _savedText = null;
-        _hasSavedText = false;
+        _codeText.Restore(textComponent);
         base.ApplyRuntimeProperties();
     }
 
