@@ -82,36 +82,37 @@ public class BlendTests
     // ReplaceAlpha has no single SKBlendMode (alpha becomes the source alpha and the destination
     // color is scaled by it), so the paint carries a custom blender instead of a blend mode.
     [Fact]
-    public void Sprite_GetPaint_ReplaceAlpha_UsesCustomBlender()
+    public void ApplyBlend_ReplaceAlpha_SetsCustomBlender()
+    {
+        using SKPaint paint = new();
+
+        paint.ApplyBlend(Blend.ReplaceAlpha);
+
+        paint.Blender.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ApplyBlend_MinAlpha_SetsDstIn()
+    {
+        using SKPaint paint = new();
+
+        paint.ApplyBlend(Blend.MinAlpha);
+
+        paint.BlendMode.ShouldBe(SKBlendMode.DstIn);
+    }
+
+    // ReplaceAlpha and MinAlpha are applied to a layer by Render (the whole bounds is the source),
+    // so the shape's own paint stays a plain draw.
+    [Fact]
+    public void Sprite_GetPaint_ReplaceAlpha_LeavesPaintUnblended()
     {
         TestableSprite sut = new();
         sut.Blend = Blend.ReplaceAlpha;
 
         using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
 
-        paint.Blender.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public void Sprite_GetPaint_Normal_HasNoCustomBlender()
-    {
-        TestableSprite sut = new();
-        sut.Blend = Blend.Normal;
-
-        using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
-
         paint.Blender.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Sprite_GetPaint_MinAlpha_MapsToDstIn()
-    {
-        TestableSprite sut = new();
-        sut.Blend = Blend.MinAlpha;
-
-        using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
-
-        paint.BlendMode.ShouldBe(SKBlendMode.DstIn);
+        paint.BlendMode.ShouldBe(SKBlendMode.SrcOver);
     }
 
     // The mask use: inside a render-target container, a MinAlpha shape erases what is under it
@@ -200,6 +201,78 @@ public class BlendTests
         using SKImage image = surface.Snapshot();
         using SKBitmap bitmap = SKBitmap.FromImage(image);
         bitmap.GetPixel(110, 50).ShouldBe(SKColors.Red);
+    }
+
+    // The same scene and expected pixels as MonoGameGum.IntegrationTests' AlphaBlendSceneTests, so the
+    // two runtimes stay in step. Alpha-only blends apply to a shape's whole bounds: the circle's
+    // corner (40, 52) is erased as well as the circle itself.
+    [Fact]
+    public void ReplaceAlpha_Scene_MatchesMonoGamePixels()
+    {
+        using SKBitmap bitmap = RenderBlendScene(Blend.ReplaceAlpha);
+
+        AssertPixel(bitmap, 20, 20, 135, 50, 60);
+        AssertPixel(bitmap, 50, 60, 135, 50, 60);
+        AssertPixel(bitmap, 70, 70, 35, 35, 45);
+        AssertPixel(bitmap, 40, 52, 70, 70, 90);
+        AssertPixel(bitmap, 5, 5, 200, 30, 30);
+        AssertPixel(bitmap, 90, 10, 70, 70, 90);
+    }
+
+    [Fact]
+    public void MinAlpha_Scene_MatchesMonoGamePixels()
+    {
+        using SKBitmap bitmap = RenderBlendScene(Blend.MinAlpha);
+
+        AssertPixel(bitmap, 20, 20, 135, 50, 60);
+        AssertPixel(bitmap, 50, 60, 135, 50, 60);
+        AssertPixel(bitmap, 70, 70, 70, 70, 90);
+        AssertPixel(bitmap, 40, 52, 70, 70, 90);
+        AssertPixel(bitmap, 5, 5, 200, 30, 30);
+        AssertPixel(bitmap, 90, 10, 70, 70, 90);
+    }
+
+    private static void AssertPixel(SKBitmap bitmap, int x, int y, int red, int green, int blue)
+    {
+        SKColor actual = bitmap.GetPixel(x, y);
+        ((int)actual.Red).ShouldBeInRange(red - 2, red + 2, $"red at ({x}, {y})");
+        ((int)actual.Green).ShouldBeInRange(green - 2, green + 2, $"green at ({x}, {y})");
+        ((int)actual.Blue).ShouldBeInRange(blue - 2, blue + 2, $"blue at ({x}, {y})");
+    }
+
+    private static SKBitmap RenderBlendScene(Blend blend)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(100, 100));
+        Gum.GumService.Default.Initialize(surface.Canvas, 100, 100);
+        ContainerRuntime root = new() { Width = 100, Height = 100 };
+        root.Children.Add(new RectangleRuntime
+        {
+            Width = 100, Height = 100, IsFilled = true, StrokeWidth = 0, FillColor = new SKColor(70, 70, 90),
+        });
+        ContainerRuntime renderTarget = new() { Width = 100, Height = 100, IsRenderTarget = true };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 55, Height = 100, IsFilled = true, StrokeWidth = 0, FillColor = new SKColor(200, 30, 30),
+        });
+        RectangleRuntime square = new()
+        {
+            X = 8, Y = 8, Width = 35, Height = 35, IsFilled = true, StrokeWidth = 0, FillColor = new SKColor(255, 255, 255, 128),
+        };
+        square.SetProperty(nameof(RenderableShapeBase.Blend), blend);
+        renderTarget.Children.Add(square);
+        CircleRuntime circle = new()
+        {
+            X = 38, Y = 50, Width = 45, Height = 45, IsFilled = true, StrokeWidth = 0, FillColor = new SKColor(255, 255, 255, 128),
+        };
+        circle.SetProperty(nameof(RenderableShapeBase.Blend), blend);
+        renderTarget.Children.Add(circle);
+        root.Children.Add(renderTarget);
+        Gum.GumService.Default.Root.Children.Add(root);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        return SKBitmap.FromImage(image);
     }
 
     private static SKBitmap RenderReplaceAlphaMask(bool fillBelow)

@@ -751,6 +751,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 canvas.RotateDegrees(-rotation);
             }
 
+            SKRect blendBounds = boundingRect;
+
             // If this is stroke-only, then the stroke is centered around the bounds
             // we pass in. Therefore, we need to move the bounds "in" by half of the
             // stroke width
@@ -762,7 +764,25 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 boundingRect.Bottom -= StrokeWidth / 2.0f;
             }
 
-            DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+            if (AppliesToWholeBounds)
+            {
+                // ReplaceAlpha and MinAlpha act on the shape's whole bounds, not just the pixels it
+                // draws (the corners of a circle's bounds are erased), the same as MonoGame's
+                // Apos.Shapes path (#5689). Draw the shape normally into a layer, clipped to the
+                // bounds, and composite that layer with the blend.
+                using SKPaint layerPaint = new SKPaint();
+                layerPaint.ApplyBlend(Blend!.Value);
+                canvas.Save();
+                canvas.ClipRect(blendBounds);
+                canvas.SaveLayer(layerPaint);
+                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+                canvas.Restore();
+                canvas.Restore();
+            }
+            else
+            {
+                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+            }
 
             if (applyRotation)
             {
@@ -781,6 +801,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     /// <see cref="SKBlender"/>; see <see cref="BlendToSkBlendModeExtensions"/>.
     /// </summary>
     public Gum.RenderingLibrary.Blend? Blend { get; set; }
+
+    /// <summary>
+    /// True for the blends that treat the whole bounds as the source (ReplaceAlpha, MinAlpha): pixels
+    /// inside the bounds that the shape leaves transparent still write alpha 0.
+    /// </summary>
+    private bool AppliesToWholeBounds =>
+        Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha || Blend == Gum.RenderingLibrary.Blend.MinAlpha;
 
     public bool ClipsChildren { get; set; }
 
@@ -866,7 +893,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
         }
 
-        if (Blend.HasValue)
+        // The whole-bounds blends are applied by Render, to a layer; see AppliesToWholeBounds.
+        if (Blend.HasValue && !AppliesToWholeBounds)
         {
             paint.ApplyBlend(Blend.Value);
         }
