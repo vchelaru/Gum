@@ -1,7 +1,9 @@
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
 
@@ -73,5 +75,35 @@ public class BaseTestClassTests
         {
             Gum.GumService.Default.Root.Children!.Clear();
         }
+    }
+
+    // Renderer.TextureFilter is a process-wide static; a test that sets Linear (or loads a project
+    // that does) must not change how the next test's sprites sample.
+    [Fact]
+    public void Constructor_ShouldRestorePointTextureFilter_WhenPreviousTestLeftLinear()
+    {
+        Renderer.TextureFilter = TextureFilter.Linear;
+
+        BaseTestClass testBase = new();
+
+        try
+        {
+            Renderer.TextureFilter.ShouldBe(TextureFilter.Point);
+        }
+        finally
+        {
+            testBase.Dispose();
+        }
+    }
+
+    [Fact]
+    public void Dispose_ShouldRestorePointTextureFilter_WhenTestLeftLinear()
+    {
+        BaseTestClass testBase = new();
+        Renderer.TextureFilter = TextureFilter.Linear;
+
+        testBase.Dispose();
+
+        Renderer.TextureFilter.ShouldBe(TextureFilter.Point);
     }
 }

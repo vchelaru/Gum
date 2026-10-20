@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Wireframe;
 using Shouldly;
 using ToolsUtilities;
 using Xunit;
@@ -42,6 +43,31 @@ public class BaseTestClassTests : BaseTestClass
         finally
         {
             FileManager.UserApplicationDataFolderOverride = processOverride;
+        }
+    }
+
+    [Fact]
+    public void Dispose_RestoresCanvasSize_WhenATestChangedIt()
+    {
+        // The canvas is a process-wide static the wireframe layout reads, so a test that sets it
+        // must not leave it for whichever test runs next.
+        float originalWidth = GraphicalUiElement.CanvasWidth;
+        float originalHeight = GraphicalUiElement.CanvasHeight;
+        try
+        {
+            BaseTestClass test = new BaseTestClass();
+            GraphicalUiElement.CanvasWidth = originalWidth + 123;
+            GraphicalUiElement.CanvasHeight = originalHeight + 45;
+
+            test.Dispose();
+
+            GraphicalUiElement.CanvasWidth.ShouldBe(originalWidth);
+            GraphicalUiElement.CanvasHeight.ShouldBe(originalHeight);
+        }
+        finally
+        {
+            GraphicalUiElement.CanvasWidth = originalWidth;
+            GraphicalUiElement.CanvasHeight = originalHeight;
         }
     }
 }

@@ -16,8 +16,43 @@ public class BaseTestClass : IDisposable
 {
     public BaseTestClass()
     {
+        // The shared roots are laid out against the canvas, so restore it before laying them out.
+        ResetCanvasAndRoots();
+
         Gum.GumService.Default.InitializeForTesting();
         CreateMockCursor();
+    }
+
+    /// <summary>
+    /// Restores the canvas and the shared Root, PopupRoot and ModalRoot to their startup state.
+    /// GumService.Update sizes the roots to the canvas, and Root is centered, so a test that grows
+    /// the canvas, calls Update and restores the canvas leaves Root wider than the canvas. The next
+    /// layout of Root then puts it at a negative position, and every element added under it lands
+    /// off-screen (issue #6199).
+    /// </summary>
+    private static void ResetCanvasAndRoots()
+    {
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+
+        Gum.GumService gumService = Gum.GumService.Default;
+        gumService.Root.X = 0;
+        gumService.Root.Y = 0;
+        gumService.Root.Width = 0;
+        gumService.Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        gumService.Root.Height = 0;
+        gumService.Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        gumService.Root.UpdateLayout();
+
+        // Popup and modal roots are left-origin and sized to the canvas by Update.
+        foreach (InteractiveGue? popupOrModalRoot in new InteractiveGue?[] { gumService.PopupRoot, gumService.ModalRoot })
+        {
+            if (popupOrModalRoot != null)
+            {
+                FormsUtilities.SetDimensionsToCanvas(popupOrModalRoot);
+                popupOrModalRoot.UpdateLayout();
+            }
+        }
     }
 
 
@@ -78,5 +113,8 @@ public class BaseTestClass : IDisposable
         // Clear any per-capability factories a test registered into the static
         // RenderableRegistry so they don't leak into the next test.
         RenderableRegistry.Reset();
+
+        // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
+        ResetCanvasAndRoots();
     }
 }

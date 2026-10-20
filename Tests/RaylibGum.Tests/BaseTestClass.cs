@@ -1,4 +1,5 @@
-﻿using Gum.Forms.Controls;
+﻿using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Renderables;
 using Gum.Wireframe;
 using Raylib_cs;
@@ -43,7 +44,37 @@ public class BaseTestClass : IDisposable
 
     public BaseTestClass()
     {
+        // The shared roots are laid out against the canvas, so restore it before laying them out.
+        ResetCanvasAndRoots();
+
         GumService.Default.InitializeForTesting();
+    }
+
+    /// <summary>
+    /// Restores the canvas and the shared Root, PopupRoot and ModalRoot to their bootstrap state.
+    /// GumService.Update sizes the roots to the canvas, and Root is docked to fill (centered), so a
+    /// test that resizes the canvas, calls Update and does not restore it leaves Root sized for that
+    /// canvas. The next layout of Root then puts it at the wrong position and size, and every element
+    /// added under it is laid out against it (issue #6212).
+    /// </summary>
+    private static void ResetCanvasAndRoots()
+    {
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+
+        Gum.GumService gumService = GumService.Default;
+        gumService.Root.Dock(Dock.Fill);
+        gumService.Root.UpdateLayout();
+
+        // Popup and modal roots are left-origin and sized to the canvas by Update.
+        foreach (InteractiveGue? popupOrModalRoot in new InteractiveGue?[] { gumService.PopupRoot, gumService.ModalRoot })
+        {
+            if (popupOrModalRoot != null)
+            {
+                FormsUtilities.SetDimensionsToCanvas(popupOrModalRoot);
+                popupOrModalRoot.UpdateLayout();
+            }
+        }
     }
 
     public virtual void Dispose()
@@ -114,6 +145,9 @@ public class BaseTestClass : IDisposable
 
         Text.Customizations.Clear();
         Text.ContextCustomizations.Clear();
+
+        // Last: the roots' layout depends on the canvas, and clearing their children above can lay them out.
+        ResetCanvasAndRoots();
 
         // The hidden Raylib window opened in TestAssemblyInitialize is intentionally
         // kept alive for the duration of the test run — closing and reopening it across
