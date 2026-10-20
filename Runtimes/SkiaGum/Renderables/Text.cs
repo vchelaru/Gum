@@ -644,8 +644,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// The Gum blend mode applied when compositing this text. When null, the SkiaSharp default
     /// (SrcOver / standard alpha blending) is used. Mirrors <see cref="RenderableShapeBase.Blend"/>
     /// and the MonoGame/Raylib Text's Blend surface. Applied as an <see cref="SKPaint.BlendMode"/>
-    /// in <see cref="Render"/> (see <see cref="GetRenderPaint"/>); values without a clean SkiaSharp
-    /// equivalent fall through to SrcOver (see <see cref="BlendToSkBlendModeExtensions"/>). Like the
+    /// (or, for <c>ReplaceAlpha</c>, a custom blender) in <see cref="Render"/> (see
+    /// <see cref="GetRenderPaint"/>), limited to the text's bounds. See
+    /// <see cref="BlendToSkBlendModeExtensions"/>. Like the
     /// drop-shadow setters, this is a live render-time effect and intentionally does not invalidate
     /// the cached <see cref="TextBlock"/>.
     /// </summary>
@@ -946,9 +947,22 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             var renderPaint = GetRenderPaint();
             if (renderPaint != null)
             {
+                // A blend that writes alpha (ReplaceAlpha, MinAlpha, Replace) would otherwise act on the
+                // whole clip, erasing everything the text does not cover. Clip to the text first.
+                if (Blend.HasValue)
+                {
+                    canvas.Save();
+                    canvas.ClipRect(GetBlendLayerBounds(paintBlock));
+                }
+
                 canvas.SaveLayer(renderPaint);
                 paintBlock.Paint(canvas, new SKPoint(0, 0));
                 canvas.Restore();
+                if (Blend.HasValue)
+                {
+                    canvas.Restore();
+                }
+
                 renderPaint.Dispose();
             }
             else
@@ -1660,6 +1674,22 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>
+    /// The text-local rectangle the blend is limited to: the measured block plus room for the outline
+    /// and drop shadow.
+    /// </summary>
+    private SKRect GetBlendLayerBounds(TextBlock textBlock)
+    {
+        float padding = 2 + OutlineThickness;
+        if (HasDropshadow)
+        {
+            padding += System.Math.Max(System.Math.Abs(DropshadowOffsetX), System.Math.Abs(DropshadowOffsetY))
+                + System.Math.Max(DropshadowBlurX, DropshadowBlurY);
+        }
+
+        return new SKRect(-padding, -padding, textBlock.MeasuredWidth + padding, textBlock.MeasuredHeight + padding);
+    }
+
+    /// <summary>
     /// Builds the <see cref="SKPaint"/> used to composite the text when a render-time effect is
     /// active, carrying the drop-shadow <see cref="SKPaint.ImageFilter"/> (when
     /// <see cref="HasDropshadow"/>) and/or the <see cref="SKPaint.BlendMode"/> (when
@@ -1689,7 +1719,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if (Blend.HasValue)
         {
-            paint.BlendMode = Blend.Value.ToSKBlendMode();
+            paint.ApplyBlend(Blend.Value);
         }
 
         return paint;

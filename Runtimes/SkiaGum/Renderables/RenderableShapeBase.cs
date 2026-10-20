@@ -751,6 +751,8 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 canvas.RotateDegrees(-rotation);
             }
 
+            SKRect blendBounds = boundingRect;
+
             // If this is stroke-only, then the stroke is centered around the bounds
             // we pass in. Therefore, we need to move the bounds "in" by half of the
             // stroke width
@@ -762,7 +764,23 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 boundingRect.Bottom -= StrokeWidth / 2.0f;
             }
 
-            DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+            if (UsesBoundsLayer)
+            {
+                // See BlendsWholeBounds: draw the shape normally into a layer clipped to the bounds,
+                // then composite that layer with the blend.
+                using SKPaint layerPaint = new SKPaint();
+                layerPaint.ApplyBlend(Blend!.Value);
+                canvas.Save();
+                canvas.ClipRect(blendBounds);
+                canvas.SaveLayer(layerPaint);
+                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+                canvas.Restore();
+                canvas.Restore();
+            }
+            else
+            {
+                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+            }
 
             if (applyRotation)
             {
@@ -776,11 +794,24 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     /// <summary>
     /// The Gum blend mode applied when constructing the SKPaint used to draw this renderable.
-    /// When null, the SkiaSharp default (SrcOver / standard alpha blending) is used. Values
-    /// without a clean SkiaSharp equivalent (ReplaceAlpha, MinAlpha) fall through to SrcOver
-    /// rather than approximating; see <see cref="BlendToSkBlendModeExtensions"/>.
+    /// When null, the SkiaSharp default (SrcOver / standard alpha blending) is used.
+    /// <c>ReplaceAlpha</c> has no <see cref="SKBlendMode"/>, so it is applied as a custom
+    /// <see cref="SKBlender"/>; see <see cref="BlendToSkBlendModeExtensions"/>.
     /// </summary>
     public Gum.RenderingLibrary.Blend? Blend { get; set; }
+
+    /// <summary>
+    /// Whether <c>ReplaceAlpha</c> and <c>MinAlpha</c> act on the shape's whole bounds, so pixels
+    /// inside the bounds that the shape leaves transparent still write alpha 0. True for the shapes
+    /// MonoGame's Apos.Shapes path masks the same way (#5689): circle, rounded rectangle and arc.
+    /// Sprites and nine-slices draw their whole bounds already; a line or polygon changes only the
+    /// pixels it draws.
+    /// </summary>
+    protected virtual bool BlendsWholeBounds => false;
+
+    private bool UsesBoundsLayer =>
+        BlendsWholeBounds
+        && (Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha || Blend == Gum.RenderingLibrary.Blend.MinAlpha);
 
     public bool ClipsChildren { get; set; }
 
@@ -866,9 +897,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
                 new[] { StrokeDashLength, StrokeGapLength }, phase: 0);
         }
 
-        if (Blend.HasValue)
+        // The whole-bounds blends are applied by Render, to a layer; see BlendsWholeBounds.
+        if (Blend.HasValue && !UsesBoundsLayer)
         {
-            paint.BlendMode = Blend.Value.ToSKBlendMode();
+            paint.ApplyBlend(Blend.Value);
         }
 
         // If you add new paint properties here, don't forget to also add them to
