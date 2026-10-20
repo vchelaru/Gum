@@ -5,6 +5,13 @@ using System;
 
 namespace MonoGameAndGum.Renderables;
 
+/// <remarks>
+/// Unlike Rectangle and Circle, a Line is not inset. Its anti-aliasing is centered on the geometric
+/// edge, so a line's visible extent is its stroke and it reaches about half a pixel past its
+/// endpoints. Rectangle and Circle are inset because their box is the visible boundary; a 1px line
+/// inset the same way would vanish. A line drawn along a box edge therefore bleeds outside the box.
+/// This is intentional.
+/// </remarks>
 internal class Line : RenderableShapeBase
 {
     public bool IsRounded

@@ -21,6 +21,8 @@ namespace Gum.GueDeriving;
 /// <summary>
 /// Runtime for a line shape that draws from the top-left to the bottom-right of its bounding
 /// rectangle. Rotation, Width, and Height can be used to control the line's angle and length.
+/// The stroke is centered on the line and is not inset like Rectangle and Circle, so a line along a
+/// box edge bleeds about half its stroke width outside the box. This is intentional.
 /// </summary>
 /// <remarks>
 /// Source-shared between SkiaGum and MonoGameGumShapes (and KniGumShapes) via a Compile/Link in
