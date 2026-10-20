@@ -602,6 +602,12 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.EnabledChange -= HandleEnabledChanged;
                     visual.ParentChanged -= HandleParentChanged;
                     ReactToVisualRemoved();
+
+                    // The detached Visual no longer belongs to this control, so it can be assigned again later.
+                    if (ReferenceEquals(visual.FormsControlAsObject, this))
+                    {
+                        visual.FormsControlAsObject = null;
+                    }
                 }
 
 

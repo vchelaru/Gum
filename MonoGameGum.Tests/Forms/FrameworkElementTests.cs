@@ -1,4 +1,5 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Gum.GueDeriving;
@@ -118,6 +119,19 @@ public class FrameworkElementTests : BaseTestClass
         FrameworkElement control = (FrameworkElement)Activator.CreateInstance(controlType)!;
 
         Should.NotThrow(() => control.Visual = null);
+    }
+
+    [Fact]
+    public void Visual_ShouldReleaseOldVisual_WhenSwapped()
+    {
+        Button sut = new();
+        InteractiveGue oldVisual = sut.Visual;
+
+        sut.Visual = new ButtonVisual(tryCreateFormsObject: false);
+
+        oldVisual.FormsControlAsObject.ShouldBeNull();
+        Should.NotThrow(() => sut.Visual = oldVisual);
+        oldVisual.FormsControlAsObject.ShouldBe(sut);
     }
 
     #region HandleTab

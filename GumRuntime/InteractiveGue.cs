@@ -80,6 +80,9 @@ public partial class InteractiveGue : GraphicalUiElement
     static List<Action> nextPushActions => GumContext.Own?.NextPushActions ?? _processWideNextPushActions;
     static List<Action> nextClickActions => GumContext.Own?.NextClickActions ?? _processWideNextClickActions;
 
+    // Test seam: how many next-push actions are queued (pending or waiting for the next frame).
+    internal static int PendingNextPushActionCount => nextPushActionHoldingList.Count + nextPushActions.Count;
+
     /// <summary>
     /// The current game time in seconds, assigned internally when calling GumService.Update. 
     /// This can be used by UI elements to perform

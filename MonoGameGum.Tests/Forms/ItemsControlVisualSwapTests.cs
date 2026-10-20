@@ -4,6 +4,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Shouldly;
 using RenderingLibrary;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Xunit;
 
@@ -298,6 +299,106 @@ public class ItemsControlVisualSwapTests : BaseTestClass
 
     #endregion
 
+    #region Menu push action
+
+    [Fact]
+    public void Menu_ShouldQueueOneNextPushAction_WhenCodeAddedItemSelectedAfterVisualSwapped()
+    {
+        Menu sut = new();
+        MenuItem item = new();
+        sut.Items!.Add(item);
+        sut.Visual = new MenuVisual(tryCreateFormsObject: false);
+        InteractiveGue.ClearNextPushActions();
+
+        item.IsSelected = true;
+
+        InteractiveGue.PendingNextPushActionCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Menu_ShouldQueueOneNextPushAction_WhenAuthoredItemSelectedAfterVisualSwappedBackIn()
+    {
+        MenuVisual visualA = new(tryCreateFormsObject: false);
+        MenuItem authoredItem = new();
+        visualA.InnerPanelInstance.Children.Add(authoredItem.Visual);
+        Menu sut = new(visualA);
+        sut.Visual = new MenuVisual(tryCreateFormsObject: false);
+        sut.Visual = visualA;
+        InteractiveGue.ClearNextPushActions();
+
+        authoredItem.IsSelected = true;
+
+        sut.Items!.Count.ShouldBe(1);
+        InteractiveGue.PendingNextPushActionCount.ShouldBe(1);
+    }
+
+    #endregion
+
+    #region Bound Items
+
+    [Fact]
+    public void ListBox_ShouldRebuildRowsWithoutTouchingBoundCollection_WhenVisualSwapped()
+    {
+        ObservableCollection<string> source = new() { "a", "b" };
+        ListBox sut = new();
+        sut.Items = source;
+        int changeCount = 0;
+        source.CollectionChanged += (_, _) => changeCount++;
+        ListBoxVisual newVisual = new(tryCreateFormsObject: false);
+
+        sut.Visual = newVisual;
+        source.Add("c");
+
+        changeCount.ShouldBe(1);
+        source.ShouldBe(new[] { "a", "b", "c" });
+        sut.Items.ShouldBeSameAs(source);
+        newVisual.InnerPanelInstance.Children.Count.ShouldBe(3);
+        sut.ListBoxItems.Count.ShouldBe(3);
+        sut.ListBoxItems[2].DataObject.ShouldBe("c");
+    }
+
+    [Fact]
+    public void ListBox_ShouldKeepSelectionAndRemoveFromNewPanel_WhenBoundCollectionChangesAfterVisualSwapped()
+    {
+        ObservableCollection<string> source = new() { "a", "b" };
+        ListBox sut = new();
+        sut.Items = source;
+        sut.SelectedIndex = 1;
+        ListBoxVisual newVisual = new(tryCreateFormsObject: false);
+        sut.Visual = newVisual;
+
+        source.RemoveAt(0);
+
+        sut.SelectedObject.ShouldBe("b");
+        newVisual.InnerPanelInstance.Children.Count.ShouldBe(1);
+        sut.ListBoxItems.Count.ShouldBe(1);
+    }
+
+    #endregion
+
+    #region RefreshStyles after swap
+
+    [Fact]
+    public void ListBox_ShouldKeepItemsAndSelection_WhenRefreshStylesAfterVisualSwapped()
+    {
+        ListBox sut = new();
+        sut.Items!.Add("a");
+        sut.Items.Add("b");
+        sut.SelectedIndex = 1;
+        ListBoxVisual newVisual = new(tryCreateFormsObject: false);
+        sut.Visual = newVisual;
+
+        newVisual.RefreshStyles();
+
+        sut.Items.Count.ShouldBe(2);
+        newVisual.InnerPanelInstance.Children.Count.ShouldBe(2);
+        sut.ListBoxItems.Count.ShouldBe(2);
+        sut.SelectedObject.ShouldBe("b");
+        sut.ListBoxItems[1].IsSelected.ShouldBeTrue();
+    }
+
+    #endregion
+
     #region MenuItem swap
 
     private static ContainerRuntime CreateMenuItemVisualWithSubItem(MenuItem subItem)
@@ -322,6 +423,41 @@ public class ItemsControlVisualSwapTests : BaseTestClass
         sut.Items.Count.ShouldBe(2);
         sut.Items[0].ShouldBe("code");
         sut.Items[1].ShouldBe(newAuthored);
+    }
+
+    [Fact]
+    public void MenuItem_ShouldRestoreAuthoredSubItems_WhenPreviousVisualSwappedBackIn()
+    {
+        MenuItem authored = new();
+        ContainerRuntime visualA = CreateMenuItemVisualWithSubItem(authored);
+        MenuItem sut = new(visualA);
+        sut.Items!.Add("code");
+        ContainerRuntime visualB = new();
+
+        sut.Visual = visualB;
+        sut.Visual = visualA;
+
+        sut.Items.Count.ShouldBe(2);
+        sut.Items[0].ShouldBe("code");
+        sut.Items[1].ShouldBe(authored);
+    }
+
+    [Fact]
+    public void MenuItem_ShouldLeaveOldVisualIntact_WhenVisualSwapped()
+    {
+        MenuItem authored = new();
+        ContainerRuntime oldVisual = new();
+        ContainerRuntime header = new();
+        ContainerRuntime subItemContainer = new() { Name = "SubItemContainerInstance" };
+        oldVisual.AddChild(header);
+        oldVisual.AddChild(subItemContainer);
+        subItemContainer.Children.Add(authored.Visual);
+        MenuItem sut = new(oldVisual);
+
+        sut.Visual = new ContainerRuntime();
+
+        oldVisual.Children.IndexOf(subItemContainer).ShouldBe(1);
+        subItemContainer.Children.ShouldContain(authored.Visual);
     }
 
     [Fact]
