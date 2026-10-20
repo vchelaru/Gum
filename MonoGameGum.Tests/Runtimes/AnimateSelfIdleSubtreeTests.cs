@@ -469,6 +469,29 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
 
     #endregion
 
+    #region Screen-style containers
+
+    [Fact]
+    public void AnimateSelf_ShouldTickChildThatStartsAnimating_WhenScreenStyleContainerHasGoneIdle()
+    {
+        // A Screen-style container has no renderable; its children are held only in WhatThisContains
+        // (generated code adds to that list directly), so nothing invalidates it when a child wakes up.
+        GraphicalUiElement screen = new();
+        CountingSprite sprite = CreateIdleSprite();
+        GraphicalUiElement child = new(sprite, whatContainsThis: screen);
+        RunFrames(screen, 3);
+        sprite.Calls = 0;
+
+        StartAnimating(sprite);
+        RunFrames(screen, 3);
+
+        sprite.Calls.ShouldBe(3);
+        TimeInto(sprite).ShouldBeGreaterThan(0);
+        child.Parent.ShouldBeNull();
+    }
+
+    #endregion
+
     #region Wake-up: per-frame callbacks
 
     [Fact]
