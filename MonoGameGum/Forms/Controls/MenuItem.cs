@@ -290,7 +290,7 @@ public class MenuItem : ItemsControl
         if (originalParent != null && _subItemContainerOriginalIndex > -1)
         {
             originalParent.Children.Insert(
-                Math.Min(_subItemContainerOriginalIndex, originalParent.Children.Count), container);
+                global::System.Math.Min(_subItemContainerOriginalIndex, originalParent.Children.Count), container);
         }
     }
 

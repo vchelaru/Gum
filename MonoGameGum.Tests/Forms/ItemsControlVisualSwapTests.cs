@@ -438,7 +438,7 @@ public class ItemsControlVisualSwapTests : BaseTestClass
     [Fact]
     public void ListBox_ShouldLeaveAuthoredRowOutOfPanelAndRestoreItOnSwapAway_WhenItemsIsUserAssigned()
     {
-        ObservableCollection<string> source = new() { "a" };
+        ObservableCollection<object> source = new() { "a" };
         ListBox sut = new();
         sut.Items = source;
         ListBoxVisual visualA = new(tryCreateFormsObject: false);
@@ -454,6 +454,50 @@ public class ItemsControlVisualSwapTests : BaseTestClass
 
         visualA.InnerPanelInstance.Children.ShouldContain(authoredItem.Visual);
         authoredItem.Visual.Parent.ShouldBe(visualA.InnerPanelInstance);
+    }
+
+    [Fact]
+    public void ListBox_ShouldRestoreAuthoredRowsInOriginalOrder_WhenSwappedAwayWithUserAssignedItems()
+    {
+        ObservableCollection<string> source = new() { "a" };
+        ListBox sut = new();
+        sut.Items = source;
+        ListBoxVisual visualA = new(tryCreateFormsObject: false);
+        ListBoxItem first = new();
+        ListBoxItem second = new();
+        ListBoxItem third = new();
+        visualA.InnerPanelInstance.Children.Add(first.Visual);
+        visualA.InnerPanelInstance.Children.Add(second.Visual);
+        visualA.InnerPanelInstance.Children.Add(third.Visual);
+        sut.Visual = visualA;
+
+        sut.Visual = new ListBoxVisual(tryCreateFormsObject: false);
+
+        GraphicalUiElement[] children = visualA.InnerPanelInstance.Children.ToArray();
+        children.Length.ShouldBe(4);
+        children.Take(3).ShouldBe(new[] { first.Visual, second.Visual, third.Visual });
+    }
+
+    [Fact]
+    public void Menu_ShouldRestoreAuthoredItemsInOriginalOrder_WhenSwappedAwayWithUserAssignedItems()
+    {
+        ObservableCollection<string> source = new() { "File" };
+        Menu sut = new();
+        sut.Items = source;
+        MenuVisual visualA = new(tryCreateFormsObject: false);
+        MenuItem first = new();
+        MenuItem second = new();
+        MenuItem third = new();
+        visualA.InnerPanelInstance.Children.Add(first.Visual);
+        visualA.InnerPanelInstance.Children.Add(second.Visual);
+        visualA.InnerPanelInstance.Children.Add(third.Visual);
+        sut.Visual = visualA;
+
+        sut.Visual = new MenuVisual(tryCreateFormsObject: false);
+
+        GraphicalUiElement[] children = visualA.InnerPanelInstance.Children.ToArray();
+        children.Length.ShouldBe(4);
+        children.Take(3).ShouldBe(new[] { first.Visual, second.Visual, third.Visual });
     }
 
     [Fact]

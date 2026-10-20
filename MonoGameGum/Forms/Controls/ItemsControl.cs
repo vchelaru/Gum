@@ -360,9 +360,11 @@ public class ItemsControl : ScrollViewer
 
     private void RestoreDetachedAuthoredRows()
     {
-        foreach ((GraphicalUiElement panel, GraphicalUiElement row, int index) in _detachedAuthoredRows)
+        // Each index was recorded after the earlier rows were removed, so undo the removals last to first.
+        for (int i = _detachedAuthoredRows.Count - 1; i > -1; i--)
         {
-            panel.Children.Insert(Math.Min(index, panel.Children.Count), row);
+            (GraphicalUiElement panel, GraphicalUiElement row, int index) = _detachedAuthoredRows[i];
+            panel.Children.Insert(global::System.Math.Min(index, panel.Children.Count), row);
         }
         _detachedAuthoredRows.Clear();
     }
