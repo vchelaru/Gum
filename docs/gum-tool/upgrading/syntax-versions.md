@@ -36,7 +36,7 @@ When a new syntax version is introduced, the corresponding monthly migration pag
 If you upgrade your Gum NuGet package to a version with a higher syntax version:
 
 1. The Gum tool auto-detects the new version.
-2. Code generation uses the new namespaces.
+2. Code generation uses the new namespaces. It also rewrites legacy `MonoGameGum` usings from your Code tab settings in the generated output, and leaves your saved settings unchanged. See [Code Generation Updates Legacy Using Statements](migrating-to-2026-november.md#code-generation-updates-legacy-using-statements).
 3. Your existing hand-written code may have `using` statements that reference old namespaces. The Gum Roslyn analyzer (bundled with the NuGet package) will show warnings with one-click fixes in your IDE. Use "Fix all in solution" to update everything at once.
 
 If you reference Gum via direct project reference, the same flow applies — the tool reads the version from the source and the analyzer runs at compile time.

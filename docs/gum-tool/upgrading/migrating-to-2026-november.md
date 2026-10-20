@@ -84,9 +84,102 @@ The `AddChild` extension method in the `MonoGameGum` and `RaylibGum` namespaces 
 
 To migrate, call the instance method, or regenerate your code so the generated files no longer import the old namespace.
 
+### XNA Keys Overloads on Keyboard Are Obsolete
+
+In MonoGame, KNI and FNA projects, the key methods that take `Microsoft.Xna.Framework.Input.Keys` are now `[Obsolete]`:
+
+* `KeyDown`, `KeyPushed`, `KeyReleased`, `KeyTyped` and `IsKeyLetter` on `Keyboard`
+* `KeyDown`, `KeyPushed`, `KeyReleased` and `KeyTyped` on `IInputReceiverKeyboardMonoGame`
+* The `KeyDown`, `KeyPushed`, `KeyReleased` and `KeyTyped` extension methods in `XnaKeyboardExtensions`, which add the XNA overloads to `IInputReceiverKeyboard`
+
+Each one still works and reports `CS0618`. They become `[Obsolete(error: true)]` no earlier than March 2027 and are removed no earlier than July 2027. Every method has an overload that takes `Gum.Forms.Input.Keys`, the enum Forms already uses for `KeyCombo` and `KeyEventArgs.Key`.
+
+This affects you only if you pass an XNA `Keys` value to one of these methods. In a file with `using Microsoft.Xna.Framework.Input;`, a bare `Keys.Enter` picks the XNA overload.
+
+To migrate, pass `Gum.Forms.Input.Keys` instead. The enum mirrors the XNA values, so the names stay the same. `Keyboard.KeysTyped` and `KeyboardStateProcessor` still use XNA `Keys` and are not obsolete.
+
+The same change adds four members to `ICursor` with default implementations: `VisualPushed` (the same value as `WindowPushed`), `LastX`, `LastY` and `ClearInputValues()`. A class that implements `ICursor` keeps compiling without them.
+
+❌ Old:
+
+```csharp
+// Update
+if (GumUI.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+{
+    SubmitForm();
+}
+```
+
+✅ New:
+
+```csharp
+// Update
+if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
+{
+    SubmitForm();
+}
+```
+
+### SkiaResourceManager and EmbeddedResourceContentLoader Are Obsolete
+
+In SkiaSharp projects (including .NET MAUI), `SkiaGum.Content.SkiaResourceManager` and `SkiaGum.Content.EmbeddedResourceContentLoader` are now `[Obsolete]`. Use `RenderingLibrary.Content.ContentLoader`, which has the same name as the loader on MonoGame, KNI, FNA and raylib. Gum installs it as the default loader, and `GumService.ContentLoader` returns it.
+
+Both old types keep working and report `CS0618`. Gum keeps them until at least April 2027. A cast such as `LoaderManager.Self.ContentLoader as EmbeddedResourceContentLoader` now returns `null`, because the default loader is a `ContentLoader`.
+
+To migrate:
+
+* Replace `SkiaResourceManager.CustomResourceAssembly` and `SkiaResourceManager.AdjustContentName` with the same properties on `ContentLoader`. They are the same setting, so code that still sets the old ones keeps working.
+* Replace `SkiaResourceManager` loading calls with `LoadContent<T>` on the loader, where `T` is `SKBitmap`, `SKSvg`, `Animation` or `SKTypeface`.
+* Replace `new EmbeddedResourceContentLoader()` with `new ContentLoader()`.
+
+`GetSKBitmapFromUrl`, `CacheSvg` and the other `SkiaResourceManager` cache helpers have no `ContentLoader` equivalent. They keep working until the type is removed.
+
+An `Svg` element's `SourceFile` now goes through `AdjustContentName`, as bitmaps, animations and typefaces already did. If your `SourceFile` values already include the prefix, remove it.
+
+❌ Old:
+
+```csharp
+// Initialize
+SkiaGum.Content.SkiaResourceManager.CustomResourceAssembly = typeof(MauiProgram).Assembly;
+SkiaGum.Content.SkiaResourceManager.AdjustContentName = (contentName) => "MyGame.Assets." + contentName;
+```
+
+✅ New:
+
+```csharp
+// Initialize
+RenderingLibrary.Content.ContentLoader.CustomResourceAssembly = typeof(MauiProgram).Assembly;
+RenderingLibrary.Content.ContentLoader.AdjustContentName = (contentName) => "MyGame.Assets." + contentName;
+```
+
+For more information see the [Content Using Embedded Resources](../../code/files-and-fonts/content-using-embedded-resources.md) page.
+
+### OutputLibrary.MonoGameForms Renamed to GumForms
+
+`Gum.ProjectServices.CodeGeneration.OutputLibrary.MonoGameForms` is now `GumForms`, the name the Gum tool already shows as **Gum Forms**. `MonoGameForms` remains as an obsolete alias with the same value, so it reports `CS0618`. It becomes `[Obsolete(error: true)]` no earlier than May 2027 and is removed no earlier than November 2027.
+
+This affects you only if you wrote a plugin or tool that references `OutputLibrary.MonoGameForms`. Saved settings need no change. `ProjectCodeSettings.codsj` stores the value as `5`, and a file that spells out `MonoGameForms` still loads. `gumcli codegen-init` now prints `GumForms`.
+
+To migrate, rename `OutputLibrary.MonoGameForms` to `OutputLibrary.GumForms`.
+
+### Code Generation Updates Legacy Using Statements
+
+Code generation copies the **Project-wide Using Statements** and an element's **Using Statements** into generated files. A project that saved `using MonoGameGum.GueDeriving;` there used to get the old namespace back in every generated file, even when the rest of the generated code used the unified names.
+
+Code generation now rewrites these lines in the generated output, based on the project's [syntax version](syntax-versions.md):
+
+| Saved line | Generated line | From syntax version |
+|---|---|---|
+| `using MonoGameGum.GueDeriving;` or `using SkiaGum.GueDeriving;` | `using Gum.GueDeriving;` | 1 |
+| `using MonoGameGum;` | `using Gum;` | 3 |
+
+Gum drops a rewritten line if the same list already imports that namespace. Your saved settings are not changed, and a syntax version below the one in the table keeps the line as written.
+
+This affects you only if your using statements name the old namespaces. To migrate, regenerate your code. To remove the old names from your saved settings as well, edit the using statements in the **Code** tab.
+
 ### Obsolete Shims Are Removed No Earlier Than November 2027
 
-The obsolete shims that keep the old `MonoGameGum`, `SkiaGum` and `MonoGameAndGum` names compiling are not permanent. Each one is a `CS0618` warning today, becomes `[Obsolete(error: true)]` no earlier than May 2027, and is removed no earlier than November 2027. The message on each shim states these dates. Gum announces the actual release in the migration page for that month.
+The obsolete shims that keep the old `MonoGameGum`, `SkiaGum` and `MonoGameAndGum` names compiling are not permanent. Unless a row below says otherwise, each one is a `CS0618` warning today, becomes `[Obsolete(error: true)]` no earlier than May 2027, and is removed no earlier than November 2027. The message on each shim states these dates. Gum announces the actual release in the migration page for that month.
 
 | Old name | Replacement | Obsoleted | Error no earlier than | Removed no earlier than |
 |---|---|---|---|---|
@@ -99,6 +192,10 @@ The obsolete shims that keep the old `MonoGameGum`, `SkiaGum` and `MonoGameAndGu
 | `MonoGameGum.GraphicalUiElementExtensionMethods.AddChild` | `GraphicalUiElement.AddChild` | October 20, 2026 | May 2027 | November 2027 |
 | `MonoGameGum.Renderables.RenderableCreator` | `Gum.Renderables.RenderableCreator` | October 20, 2026 | May 2027 | November 2027 |
 | `MonoGameAndGum.Renderables` and `MonoGameAndGum.Content` types | `Gum.Renderables` and `Gum.Content` | October 20, 2026 | May 2027 | November 2027 |
+| `Keyboard`, `IInputReceiverKeyboardMonoGame` and `XnaKeyboardExtensions` methods that take XNA `Keys` | The same methods taking `Gum.Forms.Input.Keys` | October 20, 2026 | March 2027 | July 2027 |
+| `OutputLibrary.MonoGameForms` | `OutputLibrary.GumForms` | October 20, 2026 | May 2027 | November 2027 |
+| `SkiaGum.Content.SkiaResourceManager` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | Not scheduled | April 2027 |
+| `SkiaGum.Content.EmbeddedResourceContentLoader` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | Not scheduled | April 2027 |
 | `MonoGameGum.GumService` and `RaylibGum.GumService` | `Gum.GumService` | June 12, 2026 | Never | Never |
 
 The `GumService` shim stays because `GumService.Default` returns it. Declarations typed with the old name keep compiling with a `CS0618` warning, and you can change them to `Gum.GumService` whenever you like.

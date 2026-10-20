@@ -71,6 +71,10 @@ Each backend's built-in content loader is now `sealed`:
 * `RenderingLibrary.Content.ContentLoader` on raylib
 * `SkiaGum.Content.EmbeddedResourceContentLoader` on SkiaSharp
 
+{% hint style="info" %}
+**As of November 2026:** `EmbeddedResourceContentLoader` is obsolete, and SkiaSharp projects use `RenderingLibrary.Content.ContentLoader`. See [Migrating to 2026 November](migrating-to-2026-november.md#skiaresourcemanager-and-embeddedresourcecontentloader-are-obsolete).
+{% endhint %}
+
 This affects you only if you wrote a class that derives from one of them. Customizing loading by implementing `IContentLoader` yourself is the supported approach and is unchanged, as is setting `LoaderManager.Self.ContentLoader`.
 
 None of these loaders ever had a `virtual` method, so a derived class could not actually change how loading works. Hiding `LoadContent` with the `new` keyword compiled, but Gum calls the loader through the `IContentLoader` interface, so the hidden method never ran. Reimplementing the interface explicitly did run, and is the same thing as wrapping, with an unused base class attached.
