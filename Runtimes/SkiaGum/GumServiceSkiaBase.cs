@@ -103,6 +103,34 @@ public abstract class GumServiceSkiaBase : IGumService
         target?.RefreshStyles();
     }
 
+    // Cursors and keyboards a host created through OwnInput.
+    private readonly List<IDisposable> _ownedInput = new List<IDisposable>();
+
+    /// <summary>
+    /// Marks a cursor or keyboard the host created in <see cref="IGumService.CreateCursor"/> or
+    /// <see cref="IGumService.CreateKeyboard"/> as this service's, so <see cref="Uninitialize"/> and a
+    /// second <c>Initialize</c> dispose it and it stops listening to the host's devices. Returns
+    /// <paramref name="input"/>. A custom one installed with <c>FormsUtilities.SetKeyboard</c> is not
+    /// owned and is never disposed.
+    /// </summary>
+    /// <typeparam name="T">The cursor or keyboard type.</typeparam>
+    /// <param name="input">The cursor or keyboard the host just created.</param>
+    protected T OwnInput<T>(T input) where T : IDisposable
+    {
+        _ownedInput.Add(input);
+        return input;
+    }
+
+    private void DisposeOwnedInput()
+    {
+        foreach (IDisposable input in _ownedInput)
+        {
+            input.Dispose();
+        }
+
+        _ownedInput.Clear();
+    }
+
     /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
     /// like <see cref="GraphicalUiElement.AddToRoot()"/>
@@ -418,6 +446,9 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
     protected void InitializeCore(SKCanvas? canvas, int width, int height, string? gumProjectFile)
     {
+        // Input from a previous Initialize that was not followed by Uninitialize.
+        DisposeOwnedInput();
+
         // SkiaGum relies on ModuleInitializer instead of explicitly registering
         // runtimes.
         SystemManagers.Default = new SystemManagers();
@@ -568,6 +599,8 @@ public abstract class GumServiceSkiaBase : IGumService
 
         FormsUtilities.Uninitialize();
         FormsUtilities.UnregisterFromFileFormRuntimeDefaults();
+
+        DisposeOwnedInput();
 
         // Restores the stream hook a .gumpkg load replaced (issue #5285).
         ReleaseProjectResolution();

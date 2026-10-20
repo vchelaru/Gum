@@ -25,6 +25,7 @@ public class Keyboard : PolledKeyboard, IInputEventListener<TextInputEvent>
     {
         _keyboard = keyboard;
         inputManager.AddListener(this);
+        OnDispose(() => inputManager.RemoveListener(this));
         inputManager.TextInput?.EnabledTextInput();
     }
 

@@ -21,8 +21,11 @@ public class Keyboard : PolledKeyboard
     public Keyboard(IKeyboard keyboard)
     {
         _keyboard = keyboard;
-        _keyboard.KeyChar += (_, character) => AppendTypedText(character);
+        _keyboard.KeyChar += HandleKeyChar;
+        OnDispose(() => keyboard.KeyChar -= HandleKeyChar);
     }
+
+    private void HandleKeyChar(IKeyboard keyboard, char character) => AppendTypedText(character);
 
     /// <summary>
     /// Device-less constructor. Used by <c>GumService.CreateKeyboard</c> for the degenerate case

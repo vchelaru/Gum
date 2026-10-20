@@ -21,7 +21,6 @@ using Stride.Rendering;
 using Stride.Rendering.Compositing;
 using System;
 using System.Diagnostics;
-using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
@@ -80,30 +79,21 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// </summary>
     public bool IsUsingGpuPath => _useGpuPath;
 
-    /// <inheritdoc/>
-    ICursor? IGumService.CreateCursor()
+    private partial Cursor CreateHostCursor()
     {
-        var cursor = new Cursor();
+        Cursor cursor = new Cursor();
         if (_inputManager != null)
         {
-            cursor.AttachStrideInput(_inputManager.Mouse);
-            _inputManager.AddListener(cursor);
+            cursor.AttachStrideInput(_inputManager.Mouse, _inputManager);
         }
         return cursor;
     }
 
-    /// <inheritdoc/>
-    IInputReceiverKeyboard? IGumService.CreateKeyboard()
-    {
-        // A real desktop Stride window always exposes at least one keyboard. For the degenerate
-        // (headless) case, return an inert device-less Keyboard rather than null: FormsUtilities.Update
-        // ticks keyboard.Activity() unconditionally, so a null here would NRE on the first Update.
-        if (_inputManager == null || _inputManager.Keyboards.Count == 0)
-        {
-            return new Keyboard();
-        }
-        return new Keyboard(_inputManager.Keyboards[0], _inputManager);
-    }
+    // A real desktop Stride window always exposes at least one keyboard.
+    private partial Keyboard? CreateHostKeyboard() =>
+        _inputManager != null && _inputManager.Keyboards.Count > 0
+            ? new Keyboard(_inputManager.Keyboards[0], _inputManager)
+            : null;
 
     /// <inheritdoc/>
     void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time)

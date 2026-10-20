@@ -22,7 +22,6 @@ using SkiaSharp;
 using XnaGame = Microsoft.Xna.Framework.Game;
 using XnaGameTime = Microsoft.Xna.Framework.GameTime;
 using XnaGameWindow = Microsoft.Xna.Framework.GameWindow;
-using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
@@ -48,11 +47,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     public XnaGame Game => _game ?? throw new InvalidOperationException(
         "GumService has not been initialized. Call GumService.Initialize(game) first.");
 
-    /// <inheritdoc/>
-    ICursor? IGumService.CreateCursor() => new Cursor();
+    private partial Cursor CreateHostCursor() => new Cursor();
 
-    /// <inheritdoc/>
-    IInputReceiverKeyboard? IGumService.CreateKeyboard() => new Keyboard(_window);
+    private partial Keyboard? CreateHostKeyboard() => new Keyboard(_window);
 
     /// <inheritdoc/>
     void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) =>

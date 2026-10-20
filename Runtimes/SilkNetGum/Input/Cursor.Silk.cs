@@ -21,14 +21,18 @@ public partial class Cursor
     /// </summary>
     internal void AttachSilkInput(IInputContext inputContext)
     {
-        _mouse = inputContext.Mice.Count > 0 ? inputContext.Mice[0] : null;
+        IMouse? mouse = inputContext.Mice.Count > 0 ? inputContext.Mice[0] : null;
+        _mouse = mouse;
 
-        if (_mouse != null)
+        if (mouse != null)
         {
-            // Silk reports a per-event scroll delta in notches; the shared half keeps the running total.
-            _mouse.Scroll += (_, wheel) => AddScrollUnits((int)(wheel.Y * ScrollUnitsPerNotch));
+            mouse.Scroll += HandleScroll;
+            OnDispose(() => mouse.Scroll -= HandleScroll);
         }
     }
+
+    // Silk reports a per-event scroll delta in notches; the shared half keeps the running total.
+    private void HandleScroll(IMouse mouse, ScrollWheel wheel) => AddScrollUnits((int)(wheel.Y * ScrollUnitsPerNotch));
 
     private MouseState GetMouseState()
     {

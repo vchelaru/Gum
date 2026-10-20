@@ -8,10 +8,10 @@ namespace Gum;
 /// <summary>
 /// The base for Skia hosts that read real input (Silk.NET, Stride, Unity). Adds the per-frame Forms
 /// input pump to <see cref="GumServiceSkiaBase"/>, which stays render-only for the WPF, MAUI and
-/// bring-your-own-canvas hosts. A host derives from this, overrides the
-/// <see cref="IGumService.CreateCursor"/>, <see cref="IGumService.CreateKeyboard"/> and
-/// <see cref="IGumService.ApplyGamePadState"/> hooks, and adds the typed Default, Cursor and
-/// Keyboard accessors by importing <c>Runtimes/SkiaInputHost.props</c>.
+/// bring-your-own-canvas hosts. A host derives from this, imports <c>Runtimes/SkiaInputHost.props</c>
+/// (which adds the typed Default, Cursor and Keyboard accessors and owns the cursor and keyboard),
+/// implements its <c>CreateHostCursor</c> and <c>CreateHostKeyboard</c> partial methods, and overrides
+/// <see cref="IGumService.ApplyGamePadState"/>.
 /// </summary>
 public abstract class GumServiceSkiaInteractiveBase : GumServiceSkiaBase
 {

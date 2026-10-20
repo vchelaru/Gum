@@ -1,6 +1,6 @@
-// Silk.NET's GumService, as a subclass of GumServiceSkiaInteractiveBase. Overrides the
-// CreateCursor/CreateKeyboard/ApplyGamePadState capability hooks with real Silk.NET.Input-backed
-// implementations. The per-frame Forms input pump in Update comes from the base, and the typed
+// Silk.NET's GumService, as a subclass of GumServiceSkiaInteractiveBase. Supplies the
+// CreateHostCursor/CreateHostKeyboard partial methods and the ApplyGamePadState hook with real
+// Silk.NET.Input-backed implementations. The per-frame Forms input pump in Update comes from the base, and the typed
 // Default/Cursor/Keyboard accessors from Runtimes/SkiaHost/GumService.SkiaHost.cs. Everything else
 // -- rendering, .gumx loading, non-interactive Forms controls, hot reload, window-fit, the sync
 // context -- comes from GumServiceSkiaBase, the same way SkiaGum.Wpf/SkiaGum.Maui/any
@@ -17,7 +17,6 @@ using RenderingLibrary;
 using SkiaSharp;
 using Silk.NET.Input;
 using System;
-using ICursor = Gum.Wireframe.ICursor;
 
 namespace Gum;
 
@@ -25,10 +24,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 {
     private IInputContext? _inputContext;
 
-    /// <inheritdoc/>
-    ICursor? IGumService.CreateCursor()
+    private partial Cursor CreateHostCursor()
     {
-        var cursor = new Cursor();
+        Cursor cursor = new Cursor();
         if (_inputContext != null)
         {
             cursor.AttachSilkInput(_inputContext);
@@ -36,18 +34,9 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         return cursor;
     }
 
-    /// <inheritdoc/>
-    IInputReceiverKeyboard? IGumService.CreateKeyboard()
-    {
-        // Real desktop Silk contexts always expose at least one keyboard. For the degenerate
-        // (headless) case, return an inert device-less Keyboard rather than null: FormsUtilities.Update
-        // ticks keyboard.Activity() unconditionally, so a null here would NRE on the first Update.
-        if (_inputContext == null || _inputContext.Keyboards.Count == 0)
-        {
-            return new Keyboard();
-        }
-        return new Keyboard(_inputContext.Keyboards[0]);
-    }
+    // Real desktop Silk contexts always expose at least one keyboard.
+    private partial Keyboard? CreateHostKeyboard() =>
+        _inputContext != null && _inputContext.Keyboards.Count > 0 ? new Keyboard(_inputContext.Keyboards[0]) : null;
 
     /// <inheritdoc/>
     void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time)

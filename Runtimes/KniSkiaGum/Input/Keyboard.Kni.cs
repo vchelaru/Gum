@@ -32,9 +32,13 @@ public class Keyboard : PolledKeyboard
     {
         if (window != null)
         {
-            window.TextInput += (_, e) => AppendTypedText(e.Character);
+            window.TextInput += HandleTextInput;
+            OnDispose(() => window.TextInput -= HandleTextInput);
         }
     }
+
+    private void HandleTextInput(object? sender, Microsoft.Xna.Framework.Input.TextInputEventArgs e) =>
+        AppendTypedText(e.Character);
 
     /// <summary>
     /// Reads the keyboard. Replaced in tests; KNI's <c>Keyboard.GetState</c> is a static device read.
