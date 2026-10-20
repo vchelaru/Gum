@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Runs the Windows CI test projects as several streams at once (#6282). The manifest
+# (windows-test-groups.txt) assigns every project to a stream; the streams run concurrently and the
+# projects inside a stream run one after another. Each project is still its own `dotnet test` with
+# its own trx, so Publish Test Results reports them as before, and a failure in any project fails
+# the step after every stream has finished.
+#
+# Why not one process per project: the headless projects use little GL, the Mesa llvmpipe ones are
+# slow and mostly wait on software rendering, so running both kinds side by side fills the runner's
+# cores that a one-after-another run leaves idle. Only "mesa*" streams get GALLIUM_DRIVER, and each
+# stream gets its own temp folder so fixed-name temp files cannot collide across streams.
+#
+# Usage: test-concurrent.sh [manifest] [slnf]
+# Expects every project already built in Release (it passes --no-build).
+set -uo pipefail
+
+manifest="${1:-.github/scripts/windows-test-groups.txt}"
+slnf="${2:-Tests/CiTestProjects.slnf}"
+results="TestResults"
+
+# The manifest must list exactly the projects the build step compiles (the slnf), each once.
+slnf_projects="$(grep -o '"[^"]*\.csproj"' "$slnf" | tr -d '"' | sed -E 's#\\+#/#g; s#/[^/]*$##' | sort)"
+manifest_projects="$(grep -vE '^\s*(#|$)' "$manifest" | awk '{print $2}' | sort)"
+if [ "$slnf_projects" != "$manifest_projects" ]; then
+  echo "::error::$manifest and $slnf list different test projects."
+  diff <(echo "$slnf_projects") <(echo "$manifest_projects") | sed 's/^/  /'
+  echo "  (< only in the slnf, so it is built but never run; > only in the manifest, so it is run but never built)"
+  exit 1
+fi
+
+mkdir -p "$results"
+streams="$(grep -vE '^\s*(#|$)' "$manifest" | awk '{print $1}' | sort -u)"
+pids=(); names=()
+
+run_stream() {
+  local stream="$1" log="$results/stream-$1.log" tmp
+  tmp="$(mktemp -d)"; if command -v cygpath >/dev/null 2>&1; then tmp="$(cygpath -w "$tmp")"; fi
+  export TMPDIR="$tmp" TMP="$tmp" TEMP="$tmp"
+  case "$stream" in mesa*) export GALLIUM_DRIVER=llvmpipe ;; esac
+  local failed=0 line project minutes
+  while read -r line; do
+    set -- $line   # stream project [minutes] [extra...] (word-split on purpose; quotes are kept for eval)
+    [ "$1" = "$stream" ] || continue
+    project="$2"; minutes="${3:-10}"
+    shift 3 2>/dev/null || shift $#
+    local start=$SECONDS rc=0
+    echo "=== $project (stream $stream, limit ${minutes} min) ===" >> "$log"
+    eval timeout "$((minutes * 60))" dotnet test "\"$project\"" --configuration Release --no-build \
+      --logger '"trx"' --results-directory "$results" "$@" >> "$log" 2>&1 < /dev/null || rc=$?
+    echo "=== $project finished in $((SECONDS - start)) s, exit $rc ===" >> "$log"
+    [ "$rc" -eq 0 ] || failed=1
+  done < <(grep -vE '^\s*(#|$)' "$manifest")
+  return $failed
+}
+
+total_start=$SECONDS
+for s in $streams; do
+  run_stream "$s" &
+  pids+=($!); names+=("$s")
+done
+
+failed=0
+for i in "${!pids[@]}"; do
+  rc=0; wait "${pids[$i]}" || rc=$?
+  [ "$rc" -eq 0 ] || failed=1
+  s="${names[$i]}"
+  echo "::group::Stream $s (exit $rc)"
+  cat "$results/stream-$s.log"
+  echo "::endgroup::"
+  [ "$rc" -eq 0 ] || echo "::error::Stream $s has failing test projects; see its log group above."
+done
+
+summary="$(grep -h '^=== .* finished in ' "$results"/stream-*.log | sed -E 's/^=== (.*) finished in ([0-9]+) s, exit ([0-9]+) ===$/\2 s\t\1\texit \3/' | sort -rn)"
+echo "Wall time $((SECONDS - total_start)) s across $(echo "$streams" | wc -l) streams."
+echo "$summary"
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+  { echo "### Windows test streams (wall $((SECONDS - total_start)) s)"; echo '```'; echo "$summary"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+fi
+exit $failed

@@ -529,7 +529,9 @@ jobs:
       # MonoGame integration harnesses, etc. So we maintain an explicit list.
       #
       # When you add a new test project, decide which bucket it belongs to and
-      # update both this list and the comments below.
+      # update both this list and the comments below. The macOS steps below run the list
+      # one after another; Windows runs it from .github/scripts/windows-test-groups.txt (add the
+      # project there too, plus Tests/CiTestProjects.slnf; the script fails fast if they differ).
       #
       # Bucket A suites BLOCK the merge — a red test fails the job (no
       # continue-on-error). Keep them green.
@@ -648,35 +650,35 @@ jobs:
       # Results" step runs with always() so whatever trx were produced are still
       # reported.
       - name: MonoGameGum.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Bundle.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.Bundle.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.ProjectServices.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.ImageDiff.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.ImageDiff.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Presentation.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.Presentation.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.AssemblyNameGuard.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.AssemblyNameGuard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.RepoHygiene.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.RepoHygiene.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Analyzers.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.Analyzers.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum.Tests renders into an in-memory CPU raster SKSurface (no GPU / window /
@@ -684,40 +686,40 @@ jobs:
       # was previously excluded by mistake — the old comment claimed it needed window
       # plumbing, which is not true of these tests. #3233
       - name: SkiaGum.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # Runs the netstandard2.1 builds of GumCommon and SkiaGum (what Unity loads), so their
       # netstandard2.1-only branches execute. Headless like SkiaGum.Tests. #5508
       - name: Gum.NetStandard.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.NetStandard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SilkNetGum.Tests is the Gum.SilkNet runtime (SkiaGum renderer + Silk.NET.Input host).
       # Like SkiaGum.Tests it renders into an in-memory CPU raster SKSurface and mocks input —
       # no GPU / window / GL — so it runs headless and blocks on failure. #3605
       - name: SilkNetGum.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/SilkNetGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # KniSkiaGum.Tests is the KNI desktop runtime (SkiaGum renderer + KNI input host). No KNI platform
       # package or window: it renders into a CPU raster SKSurface and feeds mouse, keyboard and gamepad
       # state through test seams, so it runs headless.
       - name: KniSkiaGum.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/KniSkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # UnityGum.Tests is the Unity runtime (SkiaGum renderer + host-pushed input). No Unity needed:
       # the runtime references no Unity assembly, and the tests draw into a CPU raster SKSurface. #5506
       - name: UnityGum.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/UnityGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
       # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
       # like SkiaGum.Tests above, so it blocks on failure too. #3259
       - name: Gum.ProjectServices.SkiaGum.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         run: dotnet test "Tests/Gum.ProjectServices.SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # --- RaylibGum.Tests via Mesa llvmpipe software GL (Windows, #3250) ---------
@@ -757,67 +759,24 @@ jobs:
       # OSes (no runner.os gate) like before this move — only the raylib-touching tests self-skip on
       # non-Windows (see their own comments).
       - name: Gum.Cli.Tests
-        if: steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os != 'Windows' && steps.plan.outputs.active == 'true' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         env:
           GALLIUM_DRIVER: llvmpipe   # only consulted by the raylib-touching tests, themselves
                                      # Windows-only; harmless no-op elsewhere
         run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
-      - name: "RaylibGum.Tests (Windows, #3250)"
-        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
-        timeout-minutes: 10
-        env:
-          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/RaylibGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
-      # RaylibScreenshotService (#4174) — same real raylib window/OpenGL context as
-      # RaylibGum.Tests above, via the same Mesa llvmpipe DLLs copied in the step above.
-      - name: "Gum.ProjectServices.Raylib.Tests (Windows, #4174)"
-        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
-        timeout-minutes: 10
-        env:
-          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/Gum.ProjectServices.Raylib.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
-      # MonoGameScreenshotService (#4403) — real MonoGame Game + GraphicsDevice, same Mesa
-      # llvmpipe DLLs copied above. Pins the fix for Circle/rounded-rectangle instances
-      # (Apos.Shapes-backed) rendering with renderable construction defaults instead of the
-      # element's actual state because ShapeRenderer.Self was never initialized.
-      - name: "Gum.ProjectServices.MonoGame.Tests (Windows, #4403)"
+      # Windows runs the test projects as concurrent streams (#6282): the headless projects in one, the
+      # Mesa llvmpipe ones in two more, each project still its own `dotnet test` with its own trx. The
+      # project-to-stream list is .github/scripts/windows-test-groups.txt, and the script fails fast
+      # unless it matches Tests/CiTestProjects.slnf exactly. Only the Mesa streams get GALLIUM_DRIVER.
+      # macOS keeps the one-after-another steps above (it has no Mesa and runs the headless list only).
+      - name: Test projects (Windows, concurrent streams)
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
-        timeout-minutes: 10
-        env:
-          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/Gum.ProjectServices.MonoGame.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-
-      # Real MonoGame Game + GraphicsDevice per test, on the same Mesa llvmpipe DLLs copied above
-      # (#4190). Windows-only because Mesa is dropped in as Windows DLLs. The suite also runs locally
-      # on macOS: its own Main runs every test on the process main thread, which Cocoa requires (#5025).
-      #
-      # All tests run unfiltered, including the 7 RenderTargetEffectTests that compile a .fx with
-      # ShadowDusk for PlatformTarget.OpenGL. That target used to fail here with "DXIL container
-      # mismatch for 'PSVRuntimeInfoSize'" — a stray, unpaired dxil.dll ShadowDusk's native loader
-      # wrote to the app base directory at runtime, which Windows' DLL search order picked up ahead
-      # of the correctly RID-scoped, version-paired copy under runtimes\win-x64\native. Fixed
-      # upstream in ShadowDusk.Compiler 0.17.0 (#4195).
-      - name: "MonoGameGum.IntegrationTests (Windows, #4190)"
-        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
-        timeout-minutes: 15
-        env:
-          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        # console;verbosity=normal streams every test's duration as it finishes, so a timeout
-        # still shows where the time went (#6078).
-        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --logger "console;verbosity=normal" --results-directory "TestResults"
-
-      # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
-      # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
-      # above, though verification showed every test here mocks out GraphicsDevice entirely.
-      - name: "MonoGameGum.Shapes.Tests (Windows, #4198)"
-        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
-        timeout-minutes: 10
-        env:
-          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/MonoGameGum.Shapes.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        timeout-minutes: 25
+        shell: bash
+        run: bash .github/scripts/test-concurrent.sh
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
       # page alone (#6092).
