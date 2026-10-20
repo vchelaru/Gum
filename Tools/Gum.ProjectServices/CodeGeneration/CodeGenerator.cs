@@ -5980,12 +5980,17 @@ public class CodeGenerator
 
         if (shouldInclude)
         {
-            // A variable hidden from instances (e.g. a category state materialized from a behavior
-            // tool-only reference like ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled") is
-            // owned by the Forms control's own setter at runtime; baking it into instance-assignment
-            // code is redundant and a latent double-write (#3029). IsVariableHiddenRecursively walks
-            // the BaseType chain, so instances of a type derived from the hiding element are handled too.
-            shouldInclude = !ObjectFinder.Self.IsVariableHiddenRecursively(instanceBaseElement, item.GetRootName());
+            // A variable hidden from instances AND derived from a Forms property (e.g. a category
+            // state materialized from a behavior tool-only reference like ButtonCategoryState =
+            // IsEnabled ? "Enabled" : "Disabled") is owned by the Forms control's own setter at
+            // runtime; baking it into instance-assignment code is redundant and a latent
+            // double-write (#3029). A hidden variable nothing derives is the author's own value
+            // (the instance authored it before the template hid it): the tool still shows it and
+            // the runtime still loads it, so it is emitted. Both checks walk the BaseType chain, so
+            // instances of a type derived from the hiding element are handled too.
+            string rootName = item.GetRootName();
+            shouldInclude = !(ObjectFinder.Self.IsVariableHiddenRecursively(instanceBaseElement, rootName)
+                && ObjectFinder.Self.IsVariableDrivenByToolOnlyReference(instanceBaseElement, rootName));
         }
 
         return shouldInclude;

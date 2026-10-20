@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
@@ -61,6 +62,15 @@ public class CodeGeneratorHiddenFromInstancesTests : BaseTestClass
             Type = type,
         });
 
+    /// <summary>Gives <paramref name="component"/> a behavior whose tool-only reference drives ButtonCategoryState.</summary>
+    private static void AddCategoryStateBehavior(GumProjectSave project, ComponentSave component)
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        behavior.ToolOnlyVariableReferences.Add("ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+        project.Behaviors.Add(behavior);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+    }
+
     [Fact]
     public void GetCodeForInstance_VariableHiddenFromInstances_IsNotEmitted()
     {
@@ -68,6 +78,7 @@ public class CodeGeneratorHiddenFromInstancesTests : BaseTestClass
 
         ComponentSave button = CreateComponent("Button", "Container");
         button.VariablesHiddenFromInstances.Add("ButtonCategoryState");
+        AddCategoryStateBehavior(project, button);
         AddVariable(button, "ButtonCategoryState", "Enabled", "string");
         AddVariable(button, "Width", 50f, "float");
         project.Components.Add(button);
@@ -112,6 +123,7 @@ public class CodeGeneratorHiddenFromInstancesTests : BaseTestClass
 
         ComponentSave button = CreateComponent("Button", "Container");
         button.VariablesHiddenFromInstances.Add("ButtonCategoryState");
+        AddCategoryStateBehavior(project, button);
         AddVariable(button, "ButtonCategoryState", "Enabled", "string");
         AddVariable(button, "Width", 50f, "float");
         project.Components.Add(button);
@@ -141,6 +153,46 @@ public class CodeGeneratorHiddenFromInstancesTests : BaseTestClass
 
             code.ShouldContain("Width = 100");
             code.ShouldNotContain("ButtonCategoryState");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void GetCodeForInstance_AuthoredVariableHiddenWithoutAReference_IsStillEmitted()
+    {
+        // A variable the template hides but no behavior reference drives is the author's own value
+        // (an instance authored it before the template hid it). The tool still shows it and the
+        // runtime still loads it, so the generated code must set it too.
+        GumProjectSave project = Project;
+
+        ComponentSave itemsControl = CreateComponent("ItemsControl", "Container");
+        itemsControl.VariablesHiddenFromInstances.Add("ClipsChildren");
+        AddVariable(itemsControl, "ClipsChildren", false, "bool");
+        AddVariable(itemsControl, "Width", 50f, "float");
+        project.Components.Add(itemsControl);
+
+        ComponentSave main = CreateComponent("MainComponent", "Container");
+        InstanceSave instance = new InstanceSave
+        {
+            Name = "ItemsControlInstance",
+            BaseType = "ItemsControl",
+            ParentContainer = main,
+        };
+        main.Instances.Add(instance);
+        AddVariable(main, "ItemsControlInstance.ClipsChildren", true, "bool");
+        AddVariable(main, "ItemsControlInstance.Width", 100f, "float");
+        project.Components.Add(main);
+
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            string code = CreateCodeGenerator().GetCodeForInstance(instance, main, CreateMonoGame());
+
+            code.ShouldContain("Width = 100");
+            code.ShouldContain("ClipsChildren = true");
         }
         finally
         {
