@@ -1,0 +1,41 @@
+name: No Diagnostics Nightly
+
+# MonoGameGum.Tests under Release_No_Diagnostics, the build without FULL_DIAGNOSTICS (the runtime's
+# argument and state checks compiled out). Every other workflow builds Release, which defines it, so
+# a test or code that only works with the checks on would go unnoticed. It rebuilds GumCommon,
+# MonoGameGum and the test project, which costs minutes, so it runs nightly instead of on every PR
+# (#6202). Run it by hand before a release. A test that only holds with the checks on belongs under
+# #if FULL_DIAGNOSTICS.
+#
+# Not a required check. A failure only fails the run; nothing files an issue.
+on:
+  schedule:
+    - cron: '53 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  Test-No-Diagnostics:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Restore MonoGameGum.Tests
+        run: dotnet restore "MonoGameGum.Tests/MonoGameGum.Tests.csproj"
+
+      - name: Build MonoGameGum.Tests (Release_No_Diagnostics)
+        run: dotnet build "MonoGameGum.Tests/MonoGameGum.Tests.csproj" --configuration Release_No_Diagnostics --no-restore -p:WarningLevel=0
+
+      - name: MonoGameGum.Tests (Release_No_Diagnostics)
+        run: dotnet test "MonoGameGum.Tests/MonoGameGum.Tests.csproj" --configuration Release_No_Diagnostics --no-build --blame --blame-hang-timeout 8m --logger "trx" --results-directory "TestResults"
+
+      - name: Publish Test Results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Tests MonoGameGum no diagnostics
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true

@@ -38,6 +38,7 @@ public class MenuItemTests : BaseTestClass
         fileItem.IsPopupVisible.ShouldBeFalse();
     }
 
+#if FULL_DIAGNOSTICS
     [Fact]
     public void IsSelected_SetFalse_ShouldThrow_WhenContainerHasNoManagers()
     {
@@ -58,6 +59,7 @@ public class MenuItemTests : BaseTestClass
 
         Should.Throw<InvalidOperationException>(() => fileItem.IsSelected = false);
     }
+#endif
 
     #region Visual without TextInstance (#6195)
 
