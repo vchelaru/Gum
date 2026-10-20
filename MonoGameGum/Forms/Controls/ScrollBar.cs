@@ -67,11 +67,24 @@ public class ScrollBar : RangeBase
         : track.AbsoluteWidth - thumb.ActualWidth;
 
 
+    /// <inheritdoc/>
+    public override bool IsEnabled
+    {
+        get => base.IsEnabled;
+        set
+        {
+            base.IsEnabled = value;
+            ApplyIsEnabledToButtons();
+        }
+    }
+
     public override Orientation Orientation 
     { 
         get => base.Orientation; 
         set
         {
+            hasAssignedOrientation = true;
+
             if(value != Orientation)
             {
                 base.Orientation = value;
@@ -111,7 +124,14 @@ public class ScrollBar : RangeBase
             // default it!
             Orientation = Orientation.Vertical;
         }
+        else
+        {
+            // The Orientation is kept across a Visual change, but the new Visual
+            // has not had the matching state applied yet.
+            ApplyOrientationStateToVisual();
+        }
         RefreshInternalVisualReferences();
+        ApplyIsEnabledToButtons();
 
         base.ReactToVisualChanged();
 
@@ -492,7 +512,8 @@ public class ScrollBar : RangeBase
                     thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
                     thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
-                    thumb.Height = System.Math.Max(MinimumThumbSize, (float)(trackSize * thumbRatio));
+                    // The track length wins over MinimumThumbSize so the thumb always fits in the track.
+                    thumb.Height = System.Math.Min(trackSize, System.Math.Max(MinimumThumbSize, (float)(trackSize * thumbRatio)));
                 }
                 else
                 {
@@ -500,7 +521,7 @@ public class ScrollBar : RangeBase
                     thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
                     thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
-                    thumb.Width = System.Math.Max(MinimumThumbSize, (float)(trackSize * thumbRatio));
+                    thumb.Width = System.Math.Min(trackSize, System.Math.Max(MinimumThumbSize, (float)(trackSize * thumbRatio)));
                 }
             }
         }
@@ -508,7 +529,28 @@ public class ScrollBar : RangeBase
 
 #endregion
 
+    private void ApplyIsEnabledToButtons()
+    {
+        if (upButton != null)
+        {
+            upButton.IsEnabled = IsEnabled;
+        }
+
+        if (downButton != null)
+        {
+            downButton.IsEnabled = IsEnabled;
+        }
+    }
+
     private void UpdateOrientationState()
+    {
+        ApplyOrientationStateToVisual();
+
+        UpdateThumbSize();
+        UpdateThumbPositionAccordingToValue();
+    }
+
+    private void ApplyOrientationStateToVisual()
     {
         var categoryName = "OrientationCategory";
 
@@ -523,9 +565,5 @@ public class ScrollBar : RangeBase
         }
 
         Visual.SetProperty(categoryName + "State", state);
-
-
-        UpdateThumbSize();
-        UpdateThumbPositionAccordingToValue();
     }
 }

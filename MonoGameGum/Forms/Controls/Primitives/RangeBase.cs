@@ -273,6 +273,10 @@ public abstract class RangeBase :
             {
                 thumb.IsDragHandle = true;
                 thumb.Push += HandleThumbPush;
+
+                // A visual assigned (or reassigned) while this control is disabled
+                // must start out disabled too.
+                thumb.IsEnabled = IsEnabled;
             }
         }
 #if FRB
