@@ -201,7 +201,7 @@ public class RoundedRectangle : RenderableShapeBase,
     public override void Render(ISystemManagers managers)
     {
         // Issue #2950 follow-up — see Circle.Render for the rationale on this gate.
-        if (!HasVisibleOutput)
+        if (!HasVisibleOutput || IsHiddenPairedStroke)
         {
             return;
         }
@@ -217,7 +217,7 @@ public class RoundedRectangle : RenderableShapeBase,
 
         var size = new Microsoft.Xna.Framework.Vector2(Width, Height);
 
-        BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
+        using AlphaBoundsMaskScope mask = BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         // Resolve camera zoom once: it scales the pixel-center AA inset (RenderInternal) and the
         // dropshadow halo/geometry so both hold a constant on-screen size as the tool zooms.
@@ -255,8 +255,11 @@ public class RoundedRectangle : RenderableShapeBase,
                 forcedColor: shadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom);
-        EndAlphaBoundsMask();
+        if (!mask.BodyDrawnByPairedStroke)
+        {
+            RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom,
+                mergedFill: mask.MergedFill);
+        }
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,
@@ -267,7 +270,8 @@ public class RoundedRectangle : RenderableShapeBase,
         float strokeWidth,
         float rotationRadians,
         float cameraZoom,
-        Color? forcedColor = null)
+        Color? forcedColor = null,
+        RenderableShapeBase? mergedFill = null)
     {
         // Issue #3972 — Apos.Shapes 0.7.5 added a native DashStyle parameter to DrawRectangle,
         // which dashes the full rounded perimeter (straight sides + corners) in-shader. Replaces
@@ -344,30 +348,20 @@ public class RoundedRectangle : RenderableShapeBase,
         }
         else
         {
-            if(ShouldPaintGradient(forcedColor))
+            StrokePaint paint = GetStrokePaint(absoluteLeft, absoluteTop, rotationRadians, forcedColor, mergedFill);
+            if (paint.UseGradient)
             {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
-
-                var transparentGradient = gradient;
-                transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
-                transparentGradient.BC = new Color((int)gradient.BC.R, gradient.BC.G, gradient.BC.B, 0);
-
                 if (hasCustomCorners)
-                    sb.DrawRectangle(position, size, transparentGradient, gradient, strokeWidth, corners, rotationRadians, antiAliasSize, dash);
+                    sb.DrawRectangle(position, size, paint.InteriorGradient, paint.BorderGradient, strokeWidth, corners, rotationRadians, antiAliasSize, dash);
                 else
-                    sb.DrawRectangle(position, size, transparentGradient, gradient, strokeWidth, CornerRadius, rotationRadians, antiAliasSize, dash);
+                    sb.DrawRectangle(position, size, paint.InteriorGradient, paint.BorderGradient, strokeWidth, CornerRadius, rotationRadians, antiAliasSize, dash);
             }
             else
             {
-                var color= forcedColor ?? this.Color;
-                var transparentColor = color;
-                transparentColor.A = 0;
-
                 if (hasCustomCorners)
-                    sb.DrawRectangle(position, size, transparentColor, color, strokeWidth, corners, rotationRadians, antiAliasSize, dash);
+                    sb.DrawRectangle(position, size, paint.InteriorColor, paint.BorderColor, strokeWidth, corners, rotationRadians, antiAliasSize, dash);
                 else
-                    sb.DrawRectangle(position, size, transparentColor, color, strokeWidth, CornerRadius, rotationRadians, antiAliasSize, dash);
-
+                    sb.DrawRectangle(position, size, paint.InteriorColor, paint.BorderColor, strokeWidth, CornerRadius, rotationRadians, antiAliasSize, dash);
             }
         }
     }

@@ -121,6 +121,8 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     {
         StrokeRenderable = strokeRenderable;
         strokeRenderable.IsFilled = false;
+        strokeRenderable.IsPairedStroke = true;
+        strokeRenderable.Blend = ContainedRenderable.Blend;
         // Setting Parent walks the RenderableShapeBase setter which appends to fill's Children
         // collection, so the Skia Renderer's hierarchy walk reaches it after the fill draws.
         strokeRenderable.Parent = ContainedRenderable;
@@ -601,6 +603,17 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             ContainedRenderable.IsAntialiased = value;
             if (StrokeRenderable != null) StrokeRenderable.IsAntialiased = value;
         }
+    }
+
+    /// <summary>
+    /// Blend mode of the shape (non-nullable; the renderable keeps <c>null</c> for "no blend set"). Mirrors the
+    /// <c>Blend</c> property on the MonoGame <c>CircleRuntime</c> and <c>RectangleRuntime</c>. When two-slot
+    /// composition is engaged the value goes to the stroke slot too, so the ring blends like the fill (#6246).
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => ContainedRenderable.Blend ?? Gum.RenderingLibrary.Blend.Normal;
+        set => ApplyToBothSlots(r => r.Blend = value);
     }
 
     public float StrokeDashLength

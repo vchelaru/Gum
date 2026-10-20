@@ -97,7 +97,7 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         RenderableRegistry.RegisterFactory<Gum.GueDeriving.IStrokedCircleRenderable>(gue =>
         {
             if (!ShapeRenderer.Self.IsInitialized) return null!; // #3112 gate (see above)
-            var shape = new Circle { IsFilled = false };
+            var shape = new Circle { IsFilled = false, IsPairedStroke = true };
             WireOnPreRender(shape, gue);
             return shape;
         });
@@ -111,7 +111,7 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         RenderableRegistry.RegisterFactory<Gum.GueDeriving.IStrokedRectangleRenderable>(gue =>
         {
             if (!ShapeRenderer.Self.IsInitialized) return null!; // #3112 gate (see above)
-            var shape = new RoundedRectangle { IsFilled = false };
+            var shape = new RoundedRectangle { IsFilled = false, IsPairedStroke = true };
             WireOnPreRender(shape, gue);
             return shape;
         });

@@ -49,6 +49,7 @@ public class ShapeRenderer
     Microsoft.Xna.Framework.Vector2 _maskSize;
     float _maskRotationRadians;
     bool _isMaskActive;
+    object? _maskOwner;
 
     // Issue #4509 — the view the batch was opened with, saved while a single renderable draws
     // through a transformed one. Apos.Shapes has no per-draw transform, so a non-uniformly scaled
@@ -93,6 +94,7 @@ public class ShapeRenderer
         _isViewPushed = false;
         _currentDepthStencilState = null;
         _isMaskActive = false;
+        _maskOwner = null;
         _statistics = statistics;
         _statistics?.RecordShapeBatchBegin();
         _sb.Begin(view: view, blendState: _currentXnaBlendState, rasterizerState: rasterizerState);
@@ -104,20 +106,26 @@ public class ShapeRenderer
     /// adjusted for Apos.Shapes' rotation around the center). For an alpha-only blend while baking,
     /// clips the shape's draws to those bounds and marks what they draw, so
     /// <see cref="EndAlphaBoundsMask"/> can apply the blend to the rest of the bounds. Pair with
-    /// <see cref="EndAlphaBoundsMask"/>. Internal use: only Gum's own shape renderables call this;
-    /// game code should not.
+    /// <see cref="EndAlphaBoundsMask"/>. The mask stays open across several shapes until
+    /// <see cref="EndAlphaBoundsMask"/> is called, so a fill slot and its stroke slot (#6246) draw into
+    /// one mask. Internal use: only Gum's own shape renderables call this; game code should not.
     /// </summary>
+    /// <param name="owner">The shape that opened the mask; see <see cref="IsAlphaBoundsMaskOpenFor"/>.</param>
     /// <param name="topLeft">Top-left of the bounds before rotation around its center.</param>
     /// <param name="size">Size of the bounds.</param>
     /// <param name="rotationRadians">Rotation of the bounds around its center.</param>
-    public void BeginAlphaBoundsMask(Microsoft.Xna.Framework.Vector2 topLeft, Microsoft.Xna.Framework.Vector2 size, float rotationRadians)
+    public void BeginAlphaBoundsMask(object owner, Microsoft.Xna.Framework.Vector2 topLeft, Microsoft.Xna.Framework.Vector2 size, float rotationRadians)
     {
         if (!_isBatchBegun || !_isBakingRenderTarget)
         {
             return;
         }
 
+        // A mask a shape left open (its stroke slot never drew) must not swallow this shape's draws.
+        EndAlphaBoundsMask();
+
         _isMaskActive = true;
+        _maskOwner = owner;
         _maskTopLeft = topLeft;
         _maskSize = size;
         _maskRotationRadians = rotationRadians;
@@ -132,8 +140,14 @@ public class ShapeRenderer
     }
 
     /// <summary>
-    /// Issue #5689 — the second half of <see cref="BeginAlphaBoundsMask"/>, called after the shape's
-    /// last draw. Draws an alpha-0 rectangle over the shape's bounds with the shape's blend, only
+    /// True while the mask <paramref name="owner"/> opened with <see cref="BeginAlphaBoundsMask"/> is
+    /// still open, so a following shape can draw into it instead of opening its own (#6246).
+    /// </summary>
+    public bool IsAlphaBoundsMaskOpenFor(object owner) => _isMaskActive && ReferenceEquals(_maskOwner, owner);
+
+    /// <summary>
+    /// Issue #5689 — the second half of <see cref="BeginAlphaBoundsMask"/>, called after the last draw
+    /// into the mask. Draws an alpha-0 rectangle over the shape's bounds with the shape's blend, only
     /// where the shape did not draw: MinAlpha erases there (min(dst, 0)) and ReplaceAlpha sets alpha 0.
     /// Internal use: only Gum's own shape renderables call this; game code should not.
     /// </summary>
@@ -144,6 +158,7 @@ public class ShapeRenderer
             return;
         }
         _isMaskActive = false;
+        _maskOwner = null;
 
         ReopenWithDepthStencil(_coverOutsideBodyState);
         // Alpha 1/255, not 0: Apos.Shapes.KNI drops draws whose colors are fully transparent, so a
@@ -216,6 +231,8 @@ public class ShapeRenderer
         {
             return;
         }
+        // A mask a shape left open must not carry its stencil test into a draw with another blend.
+        EndAlphaBoundsMask();
         _sb.End();
         _currentBlend = shape.Blend;
         _currentXnaBlendState = shape.GetEffectiveXnaBlendState(_isBakingRenderTarget);
@@ -269,6 +286,8 @@ public class ShapeRenderer
     public void EndBatch()
     {
         _isBatchBegun = false;
+        _isMaskActive = false;
+        _maskOwner = null;
         _isViewPushed = false;
         _sb.End();
     }

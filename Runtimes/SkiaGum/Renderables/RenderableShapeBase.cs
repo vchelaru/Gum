@@ -723,11 +723,13 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         // treat 0 as invisible. Skipping the draw here is what SkiaShapeRuntime.IsFilled's own doc
         // comment already claims ("Stroke visibility is gated separately by StrokeWidth (0 hides
         // stroke)"), so this makes the code match the documented contract.
-        var canRender =
-            Visible &&
-                ((Width > 0 && Height > 0) || CanRenderAt0Dimension) &&
-                (IsFilled || StrokeWidth > 0);
-        if (canRender)
+        // The stroke slot of a fill slot that draws it into its own layer (#6246) has nothing left to draw.
+        if (IsPairedStroke && Parent is RenderableShapeBase fill && fill.PairedStrokeInLayer == this)
+        {
+            return;
+        }
+
+        if (CanRender)
         {
             var absoluteX = this.GetAbsoluteX();
             var absoluteY = this.GetAbsoluteY();
@@ -752,28 +754,21 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
             }
 
             SKRect blendBounds = boundingRect;
-
-            // If this is stroke-only, then the stroke is centered around the bounds
-            // we pass in. Therefore, we need to move the bounds "in" by half of the
-            // stroke width
-            if (IsFilled == false && IsOffsetAppliedForStroke)
-            {
-                boundingRect.Left += StrokeWidth / 2.0f;
-                boundingRect.Top += StrokeWidth / 2.0f;
-                boundingRect.Right -= StrokeWidth / 2.0f;
-                boundingRect.Bottom -= StrokeWidth / 2.0f;
-            }
+            boundingRect = GetStrokeAdjustedBounds(boundingRect);
 
             if (UsesBoundsLayer)
             {
                 // See BlendsWholeBounds: draw the shape normally into a layer clipped to the bounds,
-                // then composite that layer with the blend.
+                // then composite that layer with the blend. A fill slot draws its stroke slot into the
+                // same layer, so the pair blends as one shape (#6246).
                 using SKPaint layerPaint = new SKPaint();
                 layerPaint.ApplyBlend(Blend!.Value);
                 canvas.Save();
                 canvas.ClipRect(blendBounds);
                 canvas.SaveLayer(layerPaint);
                 DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+                RenderableShapeBase? pairedStroke = PairedStrokeInLayer;
+                pairedStroke?.DrawBound(pairedStroke.GetStrokeAdjustedBounds(blendBounds), canvas, pairedStroke.GetAbsoluteRotation());
                 canvas.Restore();
                 canvas.Restore();
             }
@@ -789,6 +784,40 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         }
 #endif
     }
+
+    private bool CanRender =>
+        Visible &&
+            ((Width > 0 && Height > 0) || CanRenderAt0Dimension) &&
+            (IsFilled || StrokeWidth > 0);
+
+    // If this is stroke-only, then the stroke is centered around the bounds we pass in, so the bounds
+    // move "in" by half of the stroke width.
+    private SKRect GetStrokeAdjustedBounds(SKRect bounds)
+    {
+        if (IsFilled == false && IsOffsetAppliedForStroke)
+        {
+            bounds.Left += StrokeWidth / 2.0f;
+            bounds.Top += StrokeWidth / 2.0f;
+            bounds.Right -= StrokeWidth / 2.0f;
+            bounds.Bottom -= StrokeWidth / 2.0f;
+        }
+        return bounds;
+    }
+
+    /// <summary>
+    /// True for the stroke slot of a Rectangle or Circle runtime, the child of that runtime's fill slot (set by
+    /// <c>SkiaShapeRuntime.SetStrokeRenderable</c>). The two slots are one shape, so a whole-bounds blend
+    /// composites them as one layer (#6246).
+    /// </summary>
+    internal bool IsPairedStroke { get; set; }
+
+    // The stroke slot this fill slot draws into its own blend layer: Children[0] is the stroke slot the runtime
+    // adds at construction. Null when the blend does not use a layer or the stroke slot would not draw.
+    private RenderableShapeBase? PairedStrokeInLayer =>
+        UsesBoundsLayer && !IsPairedStroke
+        && mChildren.Count > 0 && mChildren[0] is RenderableShapeBase { IsPairedStroke: true, CanRender: true } stroke
+            ? stroke
+            : null;
 
     public BlendState BlendState => BlendState.AlphaBlend;
 

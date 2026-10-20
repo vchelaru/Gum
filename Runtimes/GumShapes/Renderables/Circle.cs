@@ -113,7 +113,7 @@ public class Circle : RenderableShapeBase,
         // a hairline AA ring in the stroke color (Apos paints a 1 px AA fringe regardless of
         // strokeWidth). Skip the entire render — the shadow alpha would already be 0 via the
         // ComputeStrokeShadowDrawParameters fade, so no visual is lost.
-        if (!HasVisibleOutput)
+        if (!HasVisibleOutput || IsHiddenPairedStroke)
         {
             return;
         }
@@ -137,7 +137,7 @@ public class Circle : RenderableShapeBase,
         var center = GetRotatedCenter(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         var radius = System.Math.Min(Width, Height) / 2.0f;
-        BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
+        using AlphaBoundsMaskScope mask = BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
         // Resolve camera zoom once: it scales the pixel-center AA inset (RenderInternal) and the
         // dropshadow halo/geometry so both hold a constant on-screen size as the tool zooms.
@@ -200,8 +200,11 @@ public class Circle : RenderableShapeBase,
                 shadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom);
-        EndAlphaBoundsMask();
+        if (!mask.BodyDrawnByPairedStroke)
+        {
+            RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom,
+                mergedFill: mask.MergedFill);
+        }
     }
 
     private void RenderInternal(ShapeBatch sb,
@@ -213,7 +216,8 @@ public class Circle : RenderableShapeBase,
         float strokeWidth,
         float rotationRadians,
         float cameraZoom,
-        Color? forcedColor = null)
+        Color? forcedColor = null,
+        RenderableShapeBase? mergedFill = null)
     {
         // Issue #3972 — Apos.Shapes 0.7.5 added a native DashStyle parameter to DrawCircle, so
         // dashing now flows through the same draw call as a solid stroke instead of a hand-rolled
@@ -277,36 +281,14 @@ public class Circle : RenderableShapeBase,
         }
         else
         {
-            if(ShouldPaintGradient(forcedColor))
+            StrokePaint paint = GetStrokePaint(absoluteLeft, absoluteTop, rotationRadians, forcedColor, mergedFill);
+            if (paint.UseGradient)
             {
-                var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
-
-                var transparentGradient = gradient;
-                transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
-                transparentGradient.BC = new Color((int)gradient.BC.R, gradient.BC.G, gradient.BC.B, 0);
-
-                sb.DrawCircle(center,
-                    radius,
-                    transparentGradient,
-                    gradient,
-                    strokeWidth,
-                    aaSize: antiAliasSize,
-                    dash: dash);
+                sb.DrawCircle(center, radius, paint.InteriorGradient, paint.BorderGradient, strokeWidth, aaSize: antiAliasSize, dash: dash);
             }
             else
             {
-                var color = forcedColor ?? this.Color;
-
-                var transparentColor = color;
-                transparentColor.A = 0;
-
-                sb.DrawCircle(center,
-                    radius,
-                    transparentColor,
-                    color,
-                    strokeWidth,
-                    aaSize: antiAliasSize,
-                    dash: dash);
+                sb.DrawCircle(center, radius, paint.InteriorColor, paint.BorderColor, strokeWidth, aaSize: antiAliasSize, dash: dash);
             }
         }
     }
