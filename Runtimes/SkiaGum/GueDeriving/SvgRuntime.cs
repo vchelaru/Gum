@@ -8,8 +8,8 @@ using Svg.Skia;
 using ContainedRenderable = SkiaGum.VectorSprite;
 using SvgDocument = Svg.Skia.SKSvg;
 #else
-using MonoGameAndGum.Content;
-using ContainedRenderable = MonoGameAndGum.Renderables.Svg;
+using Gum.Content;
+using ContainedRenderable = Gum.Renderables.Svg;
 using SvgDocument = Apos.Shapes.ShapeSvg;
 #endif
 

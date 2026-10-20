@@ -276,4 +276,153 @@ namespace Gum.GueDeriving
 
         await CodeFixVerifier.VerifyCodeFixAsync(testCode, fixedCode);
     }
+
+    [Theory]
+    [InlineData("MonoGameGum", "Gum", "GumService")]
+    [InlineData("MonoGameGum", "Gum", "GraphicalUiElementExtensionMethods")]
+    [InlineData("MonoGameGum", "Gum", "ElementSaveExtensionMethods")]
+    [InlineData("MonoGameGum.Renderables", "Gum.Renderables", "RenderableCreator")]
+    [InlineData("MonoGameGum.Renderables", "Gum.Renderables", "DefaultFilledRectangleRenderable")]
+    [InlineData("MonoGameGum.ExtensionMethods", "Gum.ExtensionMethods", "IReadOnlyListExtensionMethods")]
+    [InlineData("MonoGameAndGum.Renderables", "Gum.Renderables", "ShapeRenderer")]
+    [InlineData("MonoGameAndGum.Renderables", "Gum.Renderables", "RenderableShapeBase")]
+    [InlineData("MonoGameAndGum.Renderables", "Gum.Renderables", "Circle")]
+    [InlineData("MonoGameAndGum.Renderables", "Gum.Renderables", "RoundedRectangle")]
+    [InlineData("MonoGameAndGum.Content", "Gum.Content", "ShapeSvgLoader")]
+    public void MappingTable_MapsRemainingLegacyNamespaces(string oldNamespace, string newNamespace, string typeName)
+    {
+        Assert.True(NamespaceMigrationMapping.ByOldNamespace.TryGetValue(oldNamespace, out var migrations));
+        Assert.Contains(migrations, m => m.TypeName == typeName && m.NewNamespace == newNamespace);
+    }
+
+    [Fact]
+    public async Task UsingMonoGameAndGumRenderables_RaisesGum001()
+    {
+        string testCode = @"
+{|GUM001:using MonoGameAndGum.Renderables;|}
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameAndGum.Renderables
+{
+    public class ShapeRenderer { }
+}
+";
+
+        await CodeFixVerifier.VerifyAnalyzerAsync(testCode);
+    }
+
+    [Fact]
+    public async Task CodeFix_RewritesMonoGameAndGumRenderablesUsing()
+    {
+        string testCode = @"
+{|GUM001:using MonoGameAndGum.Renderables;|}
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameAndGum.Renderables
+{
+    public class ShapeRenderer { }
+}
+
+namespace Gum.Renderables
+{
+    public class ShapeRenderer { }
+}
+";
+
+        string fixedCode = @"
+using Gum.Renderables;
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameAndGum.Renderables
+{
+    public class ShapeRenderer { }
+}
+
+namespace Gum.Renderables
+{
+    public class ShapeRenderer { }
+}
+";
+
+        await CodeFixVerifier.VerifyCodeFixAsync(testCode, fixedCode);
+    }
+
+    [Fact]
+    public async Task UsingMonoGameGum_RaisesGum001()
+    {
+        // The GumService shim in this namespace is permanent, but the namespace itself is still
+        // the legacy home: `using Gum;` resolves GumService to the real type, and
+        // GumService.Default still returns the same singleton.
+        string testCode = @"
+{|GUM001:using MonoGameGum;|}
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum
+{
+    public class GumService { }
+}
+";
+
+        await CodeFixVerifier.VerifyAnalyzerAsync(testCode);
+    }
+
+    [Fact]
+    public async Task CodeFix_RewritesMonoGameGumUsing()
+    {
+        string testCode = @"
+{|GUM001:using MonoGameGum;|}
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum
+{
+    public class GumService { }
+}
+
+namespace Gum
+{
+    public class GumService { }
+}
+";
+
+        string fixedCode = @"
+using Gum;
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum
+{
+    public class GumService { }
+}
+
+namespace Gum
+{
+    public class GumService { }
+}
+";
+
+        await CodeFixVerifier.VerifyCodeFixAsync(testCode, fixedCode);
+    }
 }

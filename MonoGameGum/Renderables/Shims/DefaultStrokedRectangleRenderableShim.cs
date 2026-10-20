@@ -8,7 +8,8 @@ namespace MonoGameGum.Renderables;
 /// This derived class exists so existing user code with <c>using MonoGameGum.Renderables;</c>
 /// continues to compile during the deprecation window.
 /// </summary>
-[Obsolete("Use Gum.Renderables.DefaultStrokedRectangleRenderable instead. The MonoGameGum.Renderables namespace will be removed in a future release.")]
+// Obsoleted 2026-06-13. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+[Obsolete("Use Gum.Renderables.DefaultStrokedRectangleRenderable instead. The MonoGameGum.Renderables namespace becomes an error no earlier than May 2027 and is removed no earlier than November 2027.")]
 public class DefaultStrokedRectangleRenderable : Gum.Renderables.DefaultStrokedRectangleRenderable
 {
 }

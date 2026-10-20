@@ -1,5 +1,5 @@
 using Gum.DataTypes;
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 using Shouldly;
 
 namespace MonoGameGum.Shapes.Tests;

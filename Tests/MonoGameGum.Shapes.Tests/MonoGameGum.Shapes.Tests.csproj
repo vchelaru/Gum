@@ -28,4 +28,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\ShimRetention.cs" Link="Shared\ShimRetention.cs" />
+  </ItemGroup>
+
 </Project>

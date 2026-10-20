@@ -29,7 +29,7 @@ using MonoGameGum.GueDeriving;
 using Gum.Managers;
 using GumRuntime;
 
-using MonoGameGum.Renderables;
+using Gum.Renderables;
 using Gum.Wireframe;
 using Gum.Localization;
 #endif

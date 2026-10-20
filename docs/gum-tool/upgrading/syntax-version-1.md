@@ -41,7 +41,7 @@ If auto-detection fails, you can pin a version manually by setting the `SyntaxVe
 
 ## Deprecation Timeline
 
-The compatibility shims will remain in place **until at least the December 2026 release** (this change shipped in May 2026). After that window, the shim namespaces will be marked `[Obsolete(error: true)]` in a subsequent release, breaking compilation for any code still using them. The exact removal date will be announced in the corresponding monthly migration page.
+The compatibility shims become `[Obsolete(error: true)]` **no earlier than May 2027** and are removed **no earlier than November 2027** (this change shipped in May 2026). After the first date, the shim namespaces break compilation for any code still using them. The exact dates will be announced in the corresponding monthly migration page. See [Obsolete Shims Are Removed No Earlier Than November 2027](migrating-to-2026-november.md#obsolete-shims-are-removed-no-earlier-than-november-2027) for every shim and its dates.
 
 ## Before / After
 

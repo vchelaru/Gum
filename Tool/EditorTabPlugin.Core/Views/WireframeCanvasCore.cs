@@ -11,7 +11,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Content;

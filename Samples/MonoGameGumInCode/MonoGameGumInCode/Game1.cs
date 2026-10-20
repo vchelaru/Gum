@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Gum;
 using KernSmith.Gum;
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 using MonoGameGumInCode.Screens;
 using GumSamples.Screens;
 using RenderingLibrary;

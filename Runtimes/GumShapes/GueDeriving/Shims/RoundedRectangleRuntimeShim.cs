@@ -15,7 +15,8 @@ namespace MonoGameGum.GueDeriving;
 /// KniGumShapes). Placing the shim here scopes it to those projects only, matching the type's
 /// actual compilation surface.
 /// </remarks>
-[Obsolete("Use Gum.GueDeriving.RoundedRectangleRuntime instead. The MonoGameGum.GueDeriving namespace will be removed in a future release.")]
+// Obsoleted 2026-05-07. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+[Obsolete("Use Gum.GueDeriving.RoundedRectangleRuntime instead. The MonoGameGum.GueDeriving namespace becomes an error no earlier than May 2027 and is removed no earlier than November 2027.")]
 public class RoundedRectangleRuntime : Gum.GueDeriving.RoundedRectangleRuntime
 {
     /// <inheritdoc/>

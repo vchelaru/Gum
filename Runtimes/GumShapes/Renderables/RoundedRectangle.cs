@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameAndGum.Renderables;
+namespace Gum.Renderables;
 
 public class RoundedRectangle : RenderableShapeBase,
     Gum.GueDeriving.IFilledRectangleRenderable,
@@ -221,7 +221,7 @@ public class RoundedRectangle : RenderableShapeBase,
 
         // Resolve camera zoom once: it scales the pixel-center AA inset (RenderInternal) and the
         // dropshadow halo/geometry so both hold a constant on-screen size as the tool zooms.
-        var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+        var cameraZoom = (managers as global::RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
 
         if(HasDropshadow)
         {

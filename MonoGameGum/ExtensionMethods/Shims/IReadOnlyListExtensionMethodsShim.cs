@@ -10,7 +10,8 @@ namespace MonoGameGum.ExtensionMethods;
 /// continues to compile during the deprecation window. A static extension class cannot be
 /// subclassed, so each member forwards to the real implementation instead.
 /// </summary>
-[Obsolete("Use Gum.ExtensionMethods.IReadOnlyListExtensionMethods instead. The MonoGameGum.ExtensionMethods namespace will be removed in a future release.")]
+// Obsoleted 2026-06-13. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+[Obsolete("Use Gum.ExtensionMethods.IReadOnlyListExtensionMethods instead. The MonoGameGum.ExtensionMethods namespace becomes an error no earlier than May 2027 and is removed no earlier than November 2027.")]
 public static class IReadOnlyListExtensionMethods
 {
     /// <summary>

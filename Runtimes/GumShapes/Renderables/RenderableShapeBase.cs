@@ -17,14 +17,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Color = Microsoft.Xna.Framework.Color;
 
-namespace MonoGameAndGum.Renderables;
+namespace Gum.Renderables;
 
 // Issue #2768 two-slot model: the role contracts (IFilledCircleRenderable,
 // IStrokedCircleRenderable, IFilledRectangleRenderable, IStrokedRectangleRenderable) are
 // implemented on the concrete shape classes (Circle, RoundedRectangle) directly, not the
 // shared base. The base no longer participates in any renderable-registry contract — only
 // the concrete shape classes do.
-public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBlendedRenderable, RenderingLibrary.Graphics.IStencilRenderable
+public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBlendedRenderable, global::RenderingLibrary.Graphics.IStencilRenderable
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;
 
@@ -125,7 +125,7 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
                 || Blend == Gum.RenderingLibrary.Blend.ReplaceAlpha
                 || Blend == Gum.RenderingLibrary.Blend.MinAlpha))
         {
-            gumBlendState = RenderingLibrary.Graphics.Renderer.AdjustBlendStateForRenderTargetBake(
+            gumBlendState = global::RenderingLibrary.Graphics.Renderer.AdjustBlendStateForRenderTargetBake(
                 gumBlendState, isBakingRenderTarget: true);
         }
 

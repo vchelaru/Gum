@@ -25,7 +25,7 @@ using SkiaSharp;
 using RenderableShapeBase = SkiaGum.Renderables.RenderableShapeBase;
 namespace SkiaGum;
 #else
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 using Gum.GueDeriving;
 namespace MonoGameGumShapes;
 

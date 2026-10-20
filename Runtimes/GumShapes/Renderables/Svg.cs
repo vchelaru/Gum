@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
-namespace MonoGameAndGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// Draws an SVG document through Apos.Shapes' <see cref="ShapeBatch.DrawSvg(ShapeSvg, Vector2, float, float, Vector2, float)"/>.

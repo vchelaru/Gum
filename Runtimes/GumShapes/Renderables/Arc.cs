@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameAndGum.Renderables;
+namespace Gum.Renderables;
 
 /// <summary>
 /// A stroked arc that fills its box on every runtime. In a square box it is a circle. In a box that is not
@@ -151,7 +151,7 @@ internal class Arc : RenderableShapeBase
         var radius = shortSide / 2 - StrokeWidth / 2;
         BeginAlphaBoundsMask(absoluteLeft, absoluteTop, Width, Height, rotationRadians);
 
-        var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+        var cameraZoom = (managers as global::RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
 
         if(HasDropshadow)
         {

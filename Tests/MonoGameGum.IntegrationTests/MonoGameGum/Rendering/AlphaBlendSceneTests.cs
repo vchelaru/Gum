@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using Gum.GueDeriving;
-using MonoGameAndGum.Renderables;
+using Gum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
