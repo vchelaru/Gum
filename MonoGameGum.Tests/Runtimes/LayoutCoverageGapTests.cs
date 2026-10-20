@@ -72,6 +72,7 @@ public class LayoutCoverageGapTests : BaseTestClass
 
     // GumCommon is built with FULL_DIAGNOSTICS in every configuration except Release_No_Diagnostics,
     // where these setters accept the values instead of throwing.
+#if FULL_DIAGNOSTICS
     [Theory]
     [InlineData(nameof(GraphicalUiElement.X), float.NaN)]
     [InlineData(nameof(GraphicalUiElement.X), float.PositiveInfinity)]
@@ -91,6 +92,7 @@ public class LayoutCoverageGapTests : BaseTestClass
 
         Should.Throw<ArgumentException>(() => element.SetProperty(propertyName, value));
     }
+#endif
 
     #endregion
 
@@ -691,6 +693,7 @@ public class LayoutCoverageGapTests : BaseTestClass
 
     #endregion
 
+#if FULL_DIAGNOSTICS
     #region Invalid canvas size (diagnostics build)
 
     // The canvas size is a static property that accepts any value, so non-finite values reach layout.
@@ -765,4 +768,5 @@ public class LayoutCoverageGapTests : BaseTestClass
     }
 
     #endregion
+#endif
 }

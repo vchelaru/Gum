@@ -2215,6 +2215,7 @@ public class GraphicalUiElementTests : BaseTestClass
         parent.Children.ShouldContain(child);
     }
 
+#if FULL_DIAGNOSTICS
     [Fact]
     public void AddChild_ShouldThrowException_OnAddingSelf()
     {
@@ -2232,6 +2233,7 @@ public class GraphicalUiElementTests : BaseTestClass
 
         didThrow.ShouldBeTrue();
     }
+#endif
 
     [Fact]
     public void AssignParent_ShouldAddToParentsChildren()
