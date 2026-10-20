@@ -466,5 +466,7 @@
     <string>ChildrenLayout</string>
     <string>ExposeChildrenEvents</string>
     <string>ScrollViewerCategoryState</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
   </VariablesHiddenFromInstances>
 </ComponentSave>

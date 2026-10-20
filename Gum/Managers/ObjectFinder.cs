@@ -71,6 +71,15 @@ public interface IObjectFinder
     /// on <paramref name="elementSave"/> or any of its base types.
     /// </summary>
     bool IsVariableHiddenRecursively(ElementSave elementSave, string variableName);
+
+    /// <summary>
+    /// True when <paramref name="variableName"/> is the left-hand side of a
+    /// <see cref="BehaviorSave.ToolOnlyVariableReferences"/> entry on any behavior of
+    /// <paramref name="elementSave"/> or of any element in its <c>BaseType</c> chain. Such a
+    /// variable is derived from a Forms property (and materialized for design-time preview), not
+    /// authored by the user.
+    /// </summary>
+    bool IsVariableDrivenByToolOnlyReference(ElementSave elementSave, string variableName);
 }
 
 public class ObjectFinder : IObjectFinder
@@ -784,6 +793,36 @@ public class ObjectFinder : IObjectFinder
         FillListWithBaseElements(elementSave, toReturn);
 
         return toReturn;
+    }
+
+    /// <inheritdoc/>
+    public bool IsVariableDrivenByToolOnlyReference(ElementSave elementSave, string variableName)
+    {
+        ElementSave? current = elementSave;
+        while (current != null)
+        {
+            foreach (ElementBehaviorReference behaviorReference in current.Behaviors)
+            {
+                BehaviorSave? behavior = GetBehavior(behaviorReference);
+                if (behavior == null)
+                {
+                    continue;
+                }
+
+                foreach (string referenceLine in behavior.ToolOnlyVariableReferences)
+                {
+                    int equalsIndex = referenceLine.IndexOf('=');
+                    if (equalsIndex >= 0 && referenceLine.Substring(0, equalsIndex).Trim() == variableName)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            current = !string.IsNullOrEmpty(current.BaseType) ? GetElementSave(current.BaseType) : null;
+        }
+
+        return false;
     }
 
     /// <inheritdoc/>

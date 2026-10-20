@@ -123,6 +123,75 @@ public class FormsTemplateInstanceVariablesScenarioTests
         grid.ShownMemberNames().ShouldNotContain("ScrollViewerInstance.ScrollViewerCategoryState");
     }
 
+    [AvaloniaTheory]
+    [InlineData("Controls/ItemsControl")]
+    [InlineData("Controls/ListBox")]
+    [InlineData("Controls/ScrollViewer")]
+    [InlineData("Controls/Window")]
+    [InlineData("Controls/DialogBox")]
+    [InlineData("Controls/SettingsView")]
+    public void ControlWithInternals_DoesNotShowContainerStructureVariables(string type)
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        InstanceSave instance = AddStandardInstance(grid, "ControlInstance", type);
+
+        grid.Select(instance);
+
+        string[] shown = grid.ShownMemberNames().ToArray();
+        foreach (string variable in new[] { "ContainedType", "ChildrenLayout", "ClipsChildren", "IsRenderTarget", "ExposeChildrenEvents" })
+        {
+            shown.ShouldNotContain("ControlInstance." + variable);
+        }
+    }
+
+    [AvaloniaFact]
+    public void PanelInstance_ShowsAllContainerStructureVariables()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        InstanceSave instance = AddStandardInstance(grid, "PanelInstance", "Controls/Panel");
+
+        grid.Select(instance);
+
+        string[] shown = grid.ShownMemberNames().ToArray();
+        foreach (string variable in new[] { "ContainedType", "ChildrenLayout", "ClipsChildren", "IsRenderTarget", "ExposeChildrenEvents" })
+        {
+            shown.ShouldContain("PanelInstance." + variable);
+        }
+    }
+
+    [AvaloniaFact]
+    public void StackPanelInstance_ShowsStructureVariables_ExceptTheOrientationDrivenChildrenLayout()
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        InstanceSave instance = AddStandardInstance(grid, "StackPanelInstance", "Controls/StackPanel");
+
+        grid.Select(instance);
+
+        string[] shown = grid.ShownMemberNames().ToArray();
+        shown.ShouldContain("StackPanelInstance.Orientation");
+        shown.ShouldNotContain("StackPanelInstance.ChildrenLayout");
+        shown.ShouldContain("StackPanelInstance.ClipsChildren");
+        shown.ShouldContain("StackPanelInstance.IsRenderTarget");
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Controls/ItemsControl")]
+    [InlineData("Controls/ScrollViewer")]
+    [InlineData("Controls/Window")]
+    public void ControlWithInternals_AlreadyAuthoringClipsChildren_KeepsShowingIt(string type)
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        InstanceSave instance = AddStandardInstance(grid, "ControlInstance", type);
+        ElementSave owner = grid.SelectedState.SelectedElement!;
+        owner.DefaultState!.SetValue("ControlInstance.ClipsChildren", true, "bool");
+
+        grid.Select(owner);
+        grid.Select(instance);
+
+        grid.ShownMemberNames().ShouldContain("ControlInstance.ClipsChildren");
+        grid.ShownMemberNames().ShouldNotContain("ControlInstance.IsRenderTarget");
+    }
+
     /// <summary>
     /// The enum fix-up the tool wires at startup, which promotes a saved int back to the enum on
     /// load. The test app does not run the startup sequence.

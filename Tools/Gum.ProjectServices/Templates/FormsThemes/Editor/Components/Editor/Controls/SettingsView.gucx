@@ -72,5 +72,9 @@
   </Behaviors>
   <VariablesHiddenFromInstances>
     <string>ExposeChildrenEvents</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
   </VariablesHiddenFromInstances>
 </ComponentSave>

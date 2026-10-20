@@ -1069,7 +1069,7 @@ public class ElementSaveDisplayer
                 // ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled") is not user-authored,
                 // so the "explicitly set" escape hatch must not un-hide it - otherwise it surfaces
                 // as an editable combo that fights the FormsProperty driving it (issue #3028).
-                if (!isExplicitlySet || IsDrivenByBehaviorToolOnlyReference(elementSave, hiddenCheckName))
+                if (!isExplicitlySet || ObjectFinder.Self.IsVariableDrivenByToolOnlyReference(elementSave, hiddenCheckName))
                 {
                     shouldInclude = false;
                 }
@@ -1160,54 +1160,6 @@ public class ElementSaveDisplayer
         }
         return null;
     }
-
-    /// <summary>
-    /// True when <paramref name="variableName"/> is the left-hand side of a
-    /// <see cref="BehaviorSave.ToolOnlyVariableReferences"/> entry on any behavior of
-    /// <paramref name="elementSave"/> or of any element in its <c>BaseType</c> chain. Such a
-    /// variable is driven by a behavior reference (materialized for design-time preview) rather
-    /// than authored by the user, so the grid keeps it hidden on instances even though it carries
-    /// a value in the state. Walks inheritance like <c>ObjectFinder.IsVariableHiddenRecursively</c>
-    /// so instances of types derived from a Forms control (behavior on the base) are handled too.
-    /// Mirrors the reference-detection the state-level <c>VariableReferences</c> path already does
-    /// via <c>variablesSetThroughReference</c>.
-    /// </summary>
-    private static bool IsDrivenByBehaviorToolOnlyReference(ElementSave elementSave, string variableName)
-    {
-        var current = elementSave;
-        while (current != null)
-        {
-            foreach (var behaviorReference in current.Behaviors)
-            {
-                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
-                if (behavior == null)
-                {
-                    continue;
-                }
-
-                foreach (var referenceLine in behavior.ToolOnlyVariableReferences)
-                {
-                    int equalsIndex = referenceLine.IndexOf('=');
-                    if (equalsIndex < 0)
-                    {
-                        continue;
-                    }
-
-                    if (referenceLine.Substring(0, equalsIndex).Trim() == variableName)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            current = !string.IsNullOrEmpty(current.BaseType)
-                ? ObjectFinder.Self.GetElementSave(current.BaseType)
-                : null;
-        }
-
-        return false;
-    }
-
 
     private void AddDefaultChildContainerProperty(List<PropertyData> propertyList, bool isDefault)
     {
