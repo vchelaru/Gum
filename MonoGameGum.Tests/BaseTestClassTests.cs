@@ -106,4 +106,34 @@ public class BaseTestClassTests
 
         Renderer.TextureFilter.ShouldBe(TextureFilter.Point);
     }
+
+    // Text.IsMidWordLineBreakEnabled is a process-wide static; a test that turns it off changes how
+    // every later Text wraps, so the layout sweep's text heights differ (#6245).
+    [Fact]
+    public void Constructor_ShouldRestoreMidWordLineBreak_WhenPreviousTestLeftItDisabled()
+    {
+        Text.IsMidWordLineBreakEnabled = false;
+
+        BaseTestClass testBase = new();
+
+        try
+        {
+            Text.IsMidWordLineBreakEnabled.ShouldBeTrue();
+        }
+        finally
+        {
+            testBase.Dispose();
+        }
+    }
+
+    [Fact]
+    public void Dispose_ShouldRestoreMidWordLineBreak_WhenTestLeftItDisabled()
+    {
+        BaseTestClass testBase = new();
+        Text.IsMidWordLineBreakEnabled = false;
+
+        testBase.Dispose();
+
+        Text.IsMidWordLineBreakEnabled.ShouldBeTrue();
+    }
 }

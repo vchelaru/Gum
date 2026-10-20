@@ -34,6 +34,9 @@ public class BaseTestClass : IDisposable
         // Renderer.TextureFilter is process-wide; a test (or a project it loads) that sets Linear
         // would change how every later test's sprites sample.
         Renderer.TextureFilter = TextureFilter.Point;
+        // Text.IsMidWordLineBreakEnabled is process-wide too; a test that turns it off changes how
+        // every later Text wraps (#6245).
+        Text.IsMidWordLineBreakEnabled = true;
         // The shared roots are laid out against the canvas, so restore it before laying them out.
         ResetCanvasAndRoots();
 
@@ -96,6 +99,7 @@ public class BaseTestClass : IDisposable
         GraphicalUiElement.CanvasHeight = 600;
         GraphicalUiElement.GlobalFontScale = 1;
         Renderer.TextureFilter = TextureFilter.Point;
+        Text.IsMidWordLineBreakEnabled = true;
 
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.GamePadsForUiControl.Clear();
