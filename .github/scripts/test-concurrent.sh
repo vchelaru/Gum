@@ -14,7 +14,9 @@
 # Expects every project already built in Release (it passes --no-build).
 set -uo pipefail
 
-manifest="${1:-.github/scripts/windows-test-groups.txt}"
+manifest_file="${1:-.github/scripts/windows-test-groups.txt}"
+# A Windows checkout turns the manifest's LF into CRLF (core.autocrlf), so read a copy without the CRs.
+manifest="$(mktemp)"; tr -d '' < "$manifest_file" > "$manifest"
 slnf="${2:-Tests/CiTestProjects.slnf}"
 results="TestResults"
 
@@ -22,7 +24,7 @@ results="TestResults"
 slnf_projects="$(grep -o '"[^"]*\.csproj"' "$slnf" | tr -d '"' | sed -E 's#\\+#/#g; s#/[^/]*$##' | sort)"
 manifest_projects="$(grep -vE '^\s*(#|$)' "$manifest" | awk '{print $2}' | sort)"
 if [ "$slnf_projects" != "$manifest_projects" ]; then
-  echo "::error::$manifest and $slnf list different test projects."
+  echo "::error::$manifest_file and $slnf list different test projects."
   diff <(echo "$slnf_projects") <(echo "$manifest_projects") | sed 's/^/  /'
   echo "  (< only in the slnf, so it is built but never run; > only in the manifest, so it is run but never built)"
   exit 1
