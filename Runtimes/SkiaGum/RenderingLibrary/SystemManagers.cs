@@ -49,12 +49,12 @@ namespace RenderingLibrary
         SkiaSharp.SKCanvas? _canvas;
 
         /// <summary>
-        /// The canvas renderables draw to. Assigned by the host (e.g. GumService.Initialize) before drawing.
+        /// The canvas renderables draw to. Assigned by the host (e.g. GumService.Initialize or Draw(SKCanvas)) before drawing.
         /// </summary>
         public SkiaSharp.SKCanvas Canvas
         {
             get => _canvas ?? throw new InvalidOperationException(
-                "SystemManagers.Canvas has not been assigned. Initialize GumService (or assign Canvas) before drawing.");
+                "SystemManagers.Canvas has not been assigned. Initialize GumService with a canvas, or draw with GumService.Draw(SKCanvas), before drawing.");
             set => _canvas = value;
         }
 

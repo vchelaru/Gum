@@ -265,7 +265,6 @@ public abstract class GumServiceSkiaBase : IGumService
     #region Hot reload
 
     private IGumHotReloadManager? _hotReloadManager;
-    private readonly List<GraphicalUiElement> _hotReloadRoots = new();
 
     /// <summary>
     /// Starts watching the Gum project source files at the given path.
@@ -404,12 +403,28 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
     /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
-    public void Initialize(SKCanvas canvas, int width, int height, string? gumProjectFile = null)
+    public void Initialize(SKCanvas canvas, int width, int height, string? gumProjectFile = null) =>
+        InitializeCore(canvas, width, height, gumProjectFile);
+
+    /// <summary>
+    /// The shared Initialize body. A host that knows its size before it has a canvas (for example one
+    /// that reads the size from its game window) passes a null <paramref name="canvas"/>; the canvas
+    /// then arrives with the first <see cref="Draw(SKCanvas)"/>. Nothing before the first draw reads
+    /// the canvas, so a screen can be built and updated until then.
+    /// </summary>
+    /// <param name="canvas">The canvas to draw into, or null to supply it on the first draw.</param>
+    /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
+    /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
+    /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
+    protected void InitializeCore(SKCanvas? canvas, int width, int height, string? gumProjectFile)
     {
         // SkiaGum relies on ModuleInitializer instead of explicitly registering
         // runtimes.
         SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Canvas = canvas;
+        if (canvas != null)
+        {
+            SystemManagers.Default.Canvas = canvas;
+        }
         SystemManagers.Default.Initialize();
         SystemManagers.Default.Renderer.ClearsCanvas = false;
 
@@ -530,7 +545,7 @@ public abstract class GumServiceSkiaBase : IGumService
     /// project added. Skia wires the rest once per process (SystemManagers' global setup and
     /// generated code's module initializers), so a later <c>Initialize</c> would not restore them.
     /// </remarks>
-    public void Uninitialize()
+    public virtual void Uninitialize()
     {
         _hotReloadManager?.Stop();
         _hotReloadManager = null;
@@ -615,7 +630,7 @@ public abstract class GumServiceSkiaBase : IGumService
     private bool _hasReceivedUpdate;
 
     /// <summary>
-    /// Per-frame tick. Call once per frame, before <see cref="Draw"/>, with the total
+    /// Per-frame tick. Call once per frame, before <see cref="Draw()"/>, with the total
     /// number of seconds elapsed since the application started. Drives AnimateSelf on
     /// the root and (via recursion) every descendant — without it, AnimationChain
     /// playback won't advance. Hosts that need this to find their screens must attach
@@ -625,21 +640,51 @@ public abstract class GumServiceSkiaBase : IGumService
     /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
     public virtual void Update(double totalSeconds)
     {
+        _updateRoots.Clear();
+        if (Root != null)
+        {
+            _updateRoots.Add(Root);
+        }
+        UpdateFrame(totalSeconds, _updateRoots);
+    }
+
+    private readonly List<GraphicalUiElement> _updateRoots = new();
+    private readonly List<GraphicalUiElement> _animateSnapshot = new();
+
+    /// <summary>
+    /// The per-frame work behind <see cref="Update(double)"/> for an explicit set of roots: window fit,
+    /// the sync context, deferred actions, hot reload, and animation of each root. It does not pump
+    /// Forms input; <see cref="GumServiceSkiaInteractiveBase"/> adds that.
+    /// </summary>
+    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+    /// <param name="roots">The roots hot reload patches and animation advances.</param>
+    protected void UpdateFrame(double totalSeconds, IEnumerable<GraphicalUiElement> roots)
+    {
         _windowFit?.PollAndApplyFit();
 
         _syncContext?.Update();
         DeferredQueue?.ProcessPending();
         if (_hotReloadManager != null)
         {
-            _hotReloadRoots.Clear();
-            _hotReloadRoots.Add(Root);
-            _hotReloadManager.Update(_hotReloadRoots);
+            _hotReloadManager.Update(roots);
         }
 
         double delta = _hasReceivedUpdate ? totalSeconds - _previousTotalSeconds : 0;
         _previousTotalSeconds = totalSeconds;
         _hasReceivedUpdate = true;
 
-        Root?.AnimateSelf(delta);
+        // Animation handlers may add or remove roots, so advance a copy.
+        _animateSnapshot.AddRange(roots);
+        try
+        {
+            for (int i = 0; i < _animateSnapshot.Count; i++)
+            {
+                _animateSnapshot[i].AnimateSelf(delta);
+            }
+        }
+        finally
+        {
+            _animateSnapshot.Clear();
+        }
     }
 }

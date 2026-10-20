@@ -409,6 +409,31 @@ public class GumServiceTests
         PixelAt(initializeSurface, 50, 50).Alpha.ShouldBe((byte)0);
     }
 
+    [Fact]
+    public void Update_AdvancesRootChildrenByTheTimeSinceThePreviousUpdate()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+        FrameCounter counter = new FrameCounter();
+        counter.AddToRoot();
+
+        GumService.Default.Update(10);
+        GumService.Default.Update(10.5);
+
+        counter.Seconds.ShouldBe(0.5);
+    }
+
+    private class FrameCounter : FrameworkElement, IUpdateEveryFrame
+    {
+        public FrameCounter() : base(new ContainerRuntime())
+        {
+        }
+
+        public double Seconds { get; private set; }
+
+        void IUpdateEveryFrame.Activity(double secondDifference) => Seconds += secondDifference;
+    }
+
     private static SKColor PixelAt(SKSurface surface, int x, int y)
     {
         using SKImage image = surface.Snapshot();

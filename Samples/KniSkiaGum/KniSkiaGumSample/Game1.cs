@@ -9,13 +9,14 @@ namespace KniSkiaGumSample;
 /// <summary>
 /// A KNI desktop game whose UI is Gum drawn by Skia. SkiaGameRendering gives a <see cref="SkiaRenderTarget2D"/>:
 /// a KNI texture with an SKCanvas. Gum draws into that canvas, then the target is composited onto the
-/// back buffer. Mouse, keyboard and gamepad reach Gum through KNI, with no Apos.Shapes involved.
+/// back buffer. Gum initializes from the game, like MonoGameGum, so the first screen is built in
+/// <see cref="Initialize"/>; the canvas arrives with the first <c>Draw</c>. Mouse, keyboard and gamepad
+/// reach Gum through KNI, with no Apos.Shapes involved.
 /// </summary>
 public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private SkiaRenderTarget2D? _canvas;
-    private bool _gumInitialized;
     private int _clicks;
 
     public Game1()
@@ -29,12 +30,19 @@ public class Game1 : Game
         Window.AllowUserResizing = true;
     }
 
+    protected override void Initialize()
+    {
+        // The graphics device exists once the base Initialize has run.
+        base.Initialize();
+
+        GumService.Default.Initialize(this);
+        GumService.Default.UseKeyboardDefaults();
+        BuildUi();
+    }
+
     protected override void Update(GameTime gameTime)
     {
-        if (_gumInitialized)
-        {
-            GumService.Default.Update(gameTime.TotalGameTime.TotalSeconds);
-        }
+        GumService.Default.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -75,14 +83,7 @@ public class Game1 : Game
         SKCanvas canvas = _canvas.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        if (!_gumInitialized)
-        {
-            GumService.Default.Initialize(this, canvas, width, height);
-            GumService.Default.UseKeyboardDefaults();
-            BuildUi();
-            _gumInitialized = true;
-        }
-        else if (resized)
+        if (resized)
         {
             GumService.Default.HandleResize(width, height);
         }
