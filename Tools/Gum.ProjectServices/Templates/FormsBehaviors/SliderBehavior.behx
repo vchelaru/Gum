@@ -16,11 +16,11 @@
     <Value xsi:type="xsd:double">0</Value>
   </FormsProperty>
   <FormsProperty Type="double" Name="SmallChange">
-    <Value xsi:type="xsd:double">1</Value>
+    <Value xsi:type="xsd:double">5</Value>
     <Description>Step size for arrow keys / mouse wheel.</Description>
   </FormsProperty>
   <FormsProperty Type="double" Name="LargeChange">
-    <Value xsi:type="xsd:double">10</Value>
+    <Value xsi:type="xsd:double">25</Value>
     <Description>Step size for clicks on the track.</Description>
   </FormsProperty>
   <FormsProperty Type="double" Name="TicksFrequency">

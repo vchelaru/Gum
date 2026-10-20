@@ -163,5 +163,6 @@
     <string>ClipsChildren</string>
     <string>IsRenderTarget</string>
     <string>ExposeChildrenEvents</string>
+    <string>OrientationCategoryState</string>
   </VariablesHiddenFromInstances>
 </ComponentSave>

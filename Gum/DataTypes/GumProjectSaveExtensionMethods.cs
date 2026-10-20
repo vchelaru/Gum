@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.DataTypes.Variables;
 
@@ -41,6 +42,14 @@ namespace Gum.DataTypes
                 wasModified = true;
                 modifications?.Add(nameof(MigrateCircleRadiusToWidthHeight));
             }
+
+#if !FRB
+            if (gumProjectSave.MigrateScrollBarOrientationStateToProperty())
+            {
+                wasModified = true;
+                modifications?.Add(nameof(MigrateScrollBarOrientationStateToProperty));
+            }
+#endif
 
             // Do StandardElements first
             // because the values here are
@@ -380,6 +389,92 @@ namespace Gum.DataTypes
             }
             return didChange;
         }
+
+#if !FRB
+        /// <summary>
+        /// Issue #6252 — a ScrollBar's orientation used to be authored only through its visual state
+        /// (OrientationCategoryState = Horizontal), which the Forms control never read, so the bar
+        /// looked horizontal while its Orientation stayed Vertical. ScrollBarBehavior now declares an
+        /// Orientation property that drives that state. Gives every ScrollBar (and ScrollBar-derived
+        /// element) whose default state authors the Horizontal state the matching Orientation value,
+        /// so the bar keeps its orientation and the control now follows it.
+        /// </summary>
+        /// <remarks>
+        /// Does nothing for a project whose ScrollBarBehavior predates the Orientation property: it
+        /// has nothing to read the value. The default state only, because that is the state Forms
+        /// properties are read from.
+        /// </remarks>
+        public static bool MigrateScrollBarOrientationStateToProperty(this GumProjectSave gumProjectSave)
+        {
+            const string stateVariableName = "OrientationCategoryState";
+            const string propertyName = "Orientation";
+
+            BehaviorSave? behavior = gumProjectSave.Behaviors.FirstOrDefault(
+                item => item.Name == StandardFormsBehaviorNames.ScrollBarBehaviorName);
+            if (behavior == null || behavior.FormsProperties.All(item => item.Name != propertyName))
+            {
+                return false;
+            }
+
+            bool didChange = false;
+            foreach (ElementSave element in gumProjectSave.AllElements)
+            {
+                StateSave? defaultState = element.DefaultState;
+                if (defaultState == null)
+                {
+                    continue;
+                }
+
+                List<VariableSave> horizontalStates = defaultState.Variables
+                    .Where(item => item.Name != null
+                        && GetLastNameSegment(item.Name) == stateVariableName
+                        && item.Value is string value && value == "Horizontal")
+                    .ToList();
+
+                foreach (VariableSave horizontalState in horizontalStates)
+                {
+                    string prefix = horizontalState.Name.Substring(0, horizontalState.Name.Length - stateVariableName.Length);
+                    string? scrollBarTypeName = prefix.Length == 0
+                        ? (element is ComponentSave ? element.Name : null)
+                        : element.Instances.FirstOrDefault(item => item.Name == prefix.TrimEnd('.'))?.BaseType;
+
+                    bool alreadyAuthored = defaultState.Variables.Any(item => item.Name == prefix + propertyName);
+                    if (alreadyAuthored || !HasBehaviorInBaseChain(gumProjectSave, scrollBarTypeName, StandardFormsBehaviorNames.ScrollBarBehaviorName))
+                    {
+                        continue;
+                    }
+
+                    defaultState.Variables.Add(new VariableSave
+                    {
+                        Name = prefix + propertyName,
+                        Type = propertyName,
+                        Value = Gum.Forms.Controls.Orientation.Horizontal,
+                        SetsValue = true,
+                    });
+                    didChange = true;
+                }
+            }
+            return didChange;
+        }
+
+        private static bool HasBehaviorInBaseChain(GumProjectSave gumProjectSave, string? componentName, string behaviorName)
+        {
+            HashSet<string> visited = new HashSet<string>();
+            ComponentSave? current = FindComponent(gumProjectSave, componentName);
+            while (current != null && visited.Add(current.Name))
+            {
+                if (current.Behaviors.Any(item => item.BehaviorName == behaviorName))
+                {
+                    return true;
+                }
+                current = FindComponent(gumProjectSave, current.BaseType);
+            }
+            return false;
+        }
+
+        private static ComponentSave? FindComponent(GumProjectSave gumProjectSave, string? name) =>
+            string.IsNullOrEmpty(name) ? null : gumProjectSave.Components.FirstOrDefault(item => item.Name == name);
+#endif
 
         /// <summary>
         /// Issue #3009 — Circle and Rectangle no longer store a standalone gradient start color
