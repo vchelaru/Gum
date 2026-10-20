@@ -29,6 +29,9 @@
 		<PackageReference Include="MonoGame.Framework.DesktopGL" VersionOverride="3.8.4.1" />
 		<ProjectReference Include="..\..\GumCore\GumCoreXnaPc\GumCore.DesktopGlNet6\GumCore.DesktopGlNet6.csproj" />
 		<Compile Include="..\MonoGameGum.IntegrationTests\MainThreadTestHost.cs" Link="MainThreadTestHost.cs" />
+		<!-- MainThreadTestHost.cs uses the xunit v3 test-order seam (#6106). -->
+		<Compile Include="..\TestOrdering\TestShuffle.cs" Link="TestOrdering\TestShuffle.cs" />
+		<Compile Include="..\TestOrdering\Xunit3\ShuffledTestCaseOrderer.cs" Link="TestOrdering\ShuffledTestCaseOrderer.cs" />
 		<None Update="Content\Shader.xnb" CopyToOutputDirectory="PreserveNewest" />
 		<Using Include="Xunit" />
 	</ItemGroup>
