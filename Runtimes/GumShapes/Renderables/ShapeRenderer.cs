@@ -14,12 +14,7 @@ namespace MonoGameAndGum.Renderables;
 public class ShapeRenderer
 {
     static ShapeRenderer _self = default!;
-    // Issue #6153 — created on first use (see the ShapeBatch property), not in Initialize: building
-    // it loads Apos.Shapes' shader and the GPU driver compiles it, which takes seconds on slow
-    // Android GPUs. Like the rest of this class it is not thread-safe; GPU resources must be
-    // created on the render thread anyway, which is where the first shape draw runs.
     ShapeBatch _sb = default!;
-    GraphicsDevice _graphicsDevice = default!;
 
     // Issue #2937 — mid-batch blend state, mirroring SpriteBatchStack. BatchKey identifies the
     // tech ("Apos.Shapes"), NOT the blend, so a whole run of shapes shares one batch. When a
@@ -55,24 +50,11 @@ public class ShapeRenderer
     // batch was opened without a Renderer in scope (e.g. unit tests), making the records no-ops.
     RenderStateChangeStatistics? _statistics;
 
-    // Issue #6153 — test seam: swapped by headless tests so lazy creation can be observed without a GPU.
-    internal Func<GraphicsDevice, ShapeBatch> ShapeBatchFactory { get; set; } =
-        graphicsDevice => new ShapeBatch(graphicsDevice, (Effect?)null);
-
-    /// <summary>
-    /// The shared Apos.Shapes batch. Created on first access after <see cref="Initialize()"/>
-    /// rather than during it, so an app that never draws a Gum shape never pays for compiling
-    /// the shader. Null before initialization.
-    /// </summary>
     public ShapeBatch ShapeBatch
     {
         get
         {
-            if (_sb == null && IsInitialized && _graphicsDevice != null)
-            {
-                _sb = ShapeBatchFactory(_graphicsDevice);
-            }
-            return _sb!;
+            return _sb;
         }
     }
 
@@ -101,7 +83,7 @@ public class ShapeRenderer
         _currentDepthStencilState = null;
         _statistics = statistics;
         _statistics?.RecordShapeBatchBegin();
-        ShapeBatch.Begin(view: view, blendState: _currentXnaBlendState, rasterizerState: rasterizerState);
+        _sb.Begin(view: view, blendState: _currentXnaBlendState, rasterizerState: rasterizerState);
     }
 
     /// <summary>
@@ -244,7 +226,7 @@ public class ShapeRenderer
     {
         _isBatchBegun = false;
         _isViewPushed = false;
-        _sb?.End();
+        _sb.End();
     }
 
     public bool IsInitialized { get; private set; }
@@ -293,7 +275,8 @@ public class ShapeRenderer
             throw new InvalidOperationException("ShapeRenderer is already initialized");
         }
         IsInitialized = true;
-        _graphicsDevice = graphicsDevice;
+        // Eager on purpose, so the shader compile happens at startup and not mid-game.
+        _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
 
         // Belt-and-suspenders for consumers using GumBatch directly (without GumService).
         // GumService.Initialize already triggers this via reflection scan; calling it here
@@ -318,7 +301,6 @@ public class ShapeRenderer
 
         _sb?.Dispose();
         _sb = default!;
-        _graphicsDevice = default!;
 
         IsInitialized = false;
         _isBatchBegun = false;
