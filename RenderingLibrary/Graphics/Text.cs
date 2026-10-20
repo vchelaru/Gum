@@ -1167,12 +1167,17 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         maskTopLeft, maskSize, maskRotation, this);
                 }
 
-                RenderCharacterByCharacter(spriteRenderer);
-
-                if (masksBounds)
+                try
                 {
-                    spriteRenderer.EndAlphaBoundsMask(pixelTexture, systemManagers.Renderer.SinglePixelSourceRectangle,
-                        maskTopLeft, maskSize, maskRotation, this);
+                    RenderCharacterByCharacter(spriteRenderer);
+                }
+                finally
+                {
+                    if (masksBounds)
+                    {
+                        spriteRenderer.EndAlphaBoundsMask(pixelTexture, systemManagers.Renderer.SinglePixelSourceRectangle,
+                            maskTopLeft, maskSize, maskRotation, this);
+                    }
                 }
             }
             else // RenderTarget
