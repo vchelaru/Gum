@@ -2,6 +2,7 @@
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Math;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -515,8 +516,8 @@ namespace RenderingLibrary.Graphics
         }
 
         // Composites a render-target container's baked texture at the container's rectangle, honoring
-        // group alpha and additive blend. No valid baked texture (degenerate size, or off-screen) =>
-        // draws nothing, so the subtree simply does not appear.
+        // group alpha and the container's Blend. No valid baked texture (degenerate size, or
+        // off-screen) => draws nothing, so the subtree simply does not appear.
         private void CompositeRenderTarget(IRenderableIpso container, SystemManagers managers)
         {
             IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
@@ -532,21 +533,16 @@ namespace RenderingLibrary.Graphics
                 return;
             }
 
-            // Skia surfaces are premultiplied, so a plain SrcOver composite needs no straight-vs-
-            // premultiplied correction (unlike the XNA/raylib bake blend handling) -- the default
-            // SKPaint.BlendMode (SrcOver) already composites the premultiplied baked color correctly.
-            // An additive container (ContainerRuntime.Blend == Additive, #3989) switches to
-            // SKBlendMode.Plus, which adds the (already-premultiplied) baked color straight onto the
-            // destination instead of alpha-blending over it -- no separate premultiplied-additive pass
-            // is needed the way raylib's non-premultiplied textures require. Group alpha tints the
+            // Skia surfaces are premultiplied, so the baked color composites with the same blend a
+            // shape with that Blend uses (ApplyBlend; Normal is the default SrcOver, which needs no
+            // straight-vs-premultiplied correction unlike the XNA/raylib bake blend handling). An
+            // unconfigured or unrecognized BlendState composites as Normal. Group alpha tints the
             // whole texture via the paint's alpha channel either way.
             byte alpha = (byte)System.Math.Clamp(container.Alpha, 0, 255);
             using SKPaint paint = new SKPaint();
             paint.Color = new SKColor(255, 255, 255, alpha);
-            if (IsAdditiveComposite(owner))
-            {
-                paint.BlendMode = SKBlendMode.Plus;
-            }
+            paint.ApplyBlend(Gum.RenderingLibrary.BlendExtensions.ToBlend(owner.BlendState)
+                ?? Gum.RenderingLibrary.Blend.Normal);
 
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
@@ -593,13 +589,6 @@ namespace RenderingLibrary.Graphics
             using SKShader combinedShader = effect.ToShader(uniforms, children);
             paint.Shader = combinedShader;
             managers.Canvas.DrawRect(destination, paint);
-        }
-
-        // Whether the render-target container's blend is Additive (ContainerRuntime.Blend, #3989).
-        private static bool IsAdditiveComposite(IRenderableIpso cacheOwner)
-        {
-            return Gum.RenderingLibrary.BlendExtensions.ToBlend(cacheOwner.BlendState)
-                == Gum.RenderingLibrary.Blend.Additive;
         }
 
         // For a nested render-target container the walk hands the GraphicalUiElement wrapper; for a
