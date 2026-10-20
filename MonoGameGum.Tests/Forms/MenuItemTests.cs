@@ -2,6 +2,7 @@
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using Shouldly;
@@ -57,6 +58,50 @@ public class MenuItemTests : BaseTestClass
 
         Should.Throw<InvalidOperationException>(() => fileItem.IsSelected = false);
     }
+
+    #region Visual without TextInstance (#6195)
+
+    [Fact]
+    public void SetHeaderNoTranslate_ShouldNotThrow_WhenVisualHasNoTextInstance()
+    {
+        MenuItem sut = new(new InteractiveGue());
+
+        Should.NotThrow(() => sut.SetHeaderNoTranslate("File"));
+    }
+
+    [Fact]
+    public void UpdateToObject_ShouldNotThrow_WhenVisualHasNoTextInstance()
+    {
+        MenuItem sut = new(new InteractiveGue());
+
+        Should.NotThrow(() => sut.UpdateToObject("File"));
+    }
+
+#if FULL_DIAGNOSTICS
+    [Fact]
+    public void Header_ShouldThrowDescriptiveError_WhenVisualHasNoTextInstance()
+    {
+        MenuItem sut = new(new InteractiveGue());
+
+        Exception getterException = Should.Throw<Exception>(() => sut.Header);
+        getterException.Message.ShouldContain("TextInstance");
+
+        Exception setterException = Should.Throw<Exception>(() => sut.Header = "File");
+        setterException.Message.ShouldContain("TextInstance");
+    }
+#else
+    [Fact]
+    public void Header_ShouldBeIgnored_WhenVisualHasNoTextInstance()
+    {
+        MenuItem sut = new(new InteractiveGue());
+
+        Should.NotThrow(() => sut.Header = "File");
+        sut.Header.ShouldBeNull();
+        Should.NotThrow(() => sut.ToString());
+    }
+#endif
+
+    #endregion
 
     [Fact]
     public void Visual_HasEvents_ShouldBeTrue()
