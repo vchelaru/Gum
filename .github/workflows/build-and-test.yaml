@@ -910,6 +910,8 @@ jobs:
         env:
           # Fast scope runs only the headless stream; the Mesa streams need the Mesa install above.
           STREAMS: ${{ needs.Changes.outputs.scope == 'fast' && 'headless' || '' }}
+          # ...split three ways, because the Mesa streams are not there to share the four cores.
+          SPLIT: ${{ needs.Changes.outputs.scope == 'fast' && 'headless=3' || '' }}
         run: bash .github/scripts/test-concurrent.sh
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
