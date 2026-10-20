@@ -776,9 +776,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
     /// <summary>
     /// The Gum blend mode applied when constructing the SKPaint used to draw this renderable.
-    /// When null, the SkiaSharp default (SrcOver / standard alpha blending) is used. Values
-    /// without a clean SkiaSharp equivalent (ReplaceAlpha, MinAlpha) fall through to SrcOver
-    /// rather than approximating; see <see cref="BlendToSkBlendModeExtensions"/>.
+    /// When null, the SkiaSharp default (SrcOver / standard alpha blending) is used.
+    /// <c>ReplaceAlpha</c> has no <see cref="SKBlendMode"/>, so it is applied as a custom
+    /// <see cref="SKBlender"/>; see <see cref="BlendToSkBlendModeExtensions"/>.
     /// </summary>
     public Gum.RenderingLibrary.Blend? Blend { get; set; }
 
@@ -868,7 +868,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
 
         if (Blend.HasValue)
         {
-            paint.BlendMode = Blend.Value.ToSKBlendMode();
+            paint.ApplyBlend(Blend.Value);
         }
 
         // If you add new paint properties here, don't forget to also add them to

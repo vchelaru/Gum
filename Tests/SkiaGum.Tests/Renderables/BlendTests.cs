@@ -79,19 +79,28 @@ public class BlendTests
         paint.BlendMode.ShouldBe(SKBlendMode.DstOut);
     }
 
-    // ReplaceAlpha has no clean SkiaSharp equivalent — SKBlendMode has no separate per-channel
-    // blend-factor/equation override the way raylib's rlgl does (see
-    // Runtimes/RaylibGum/Renderables/BlendModeExtensions.cs, issue #3470), so it falls through to the
-    // default SrcOver rather than picking a Skia mode that would silently change visuals.
+    // ReplaceAlpha has no single SKBlendMode (alpha becomes the source alpha and the destination
+    // color is scaled by it), so the paint carries a custom blender instead of a blend mode.
     [Fact]
-    public void Sprite_GetPaint_ReplaceAlpha_FallsThroughToSrcOver()
+    public void Sprite_GetPaint_ReplaceAlpha_UsesCustomBlender()
     {
         TestableSprite sut = new();
         sut.Blend = Blend.ReplaceAlpha;
 
         using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
 
-        paint.BlendMode.ShouldBe(SKBlendMode.SrcOver);
+        paint.Blender.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Sprite_GetPaint_Normal_HasNoCustomBlender()
+    {
+        TestableSprite sut = new();
+        sut.Blend = Blend.Normal;
+
+        using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 100, 100), absoluteRotation: 0);
+
+        paint.Blender.ShouldBeNull();
     }
 
     [Fact]
@@ -137,6 +146,87 @@ public class BlendTests
         using SKBitmap bitmap = SKBitmap.FromImage(image);
         bitmap.GetPixel(10, 10).Alpha.ShouldBe((byte)0);
         bitmap.GetPixel(30, 10).ShouldBe(SKColors.Red);
+    }
+
+    // ReplaceAlpha inside a render-target container writes the source alpha over what is below and
+    // scales the destination color by it (MonoGame: BlendState.ReplaceAlphaOnPremultipliedTarget).
+    // A 50% white mask over opaque red leaves red at 50% alpha, not a pink opaque pixel.
+    [Fact]
+    public void ReplaceAlphaShape_InRenderTargetContainer_OverOpaque_KeepsColorAtSourceAlpha()
+    {
+        using SKBitmap bitmap = RenderReplaceAlphaMask(fillBelow: true);
+
+        SKColor masked = bitmap.GetPixel(10, 10);
+        ((int)masked.Red).ShouldBeInRange(255 - 2, 255 + 2);
+        ((int)masked.Green).ShouldBeInRange(0 - 2, 0 + 2);
+        ((int)masked.Blue).ShouldBeInRange(0 - 2, 0 + 2);
+        ((int)masked.Alpha).ShouldBeInRange(128 - 2, 128 + 2);
+        bitmap.GetPixel(30, 10).ShouldBe(SKColors.Red);
+    }
+
+    // Over empty pixels the alpha is still replaced (the destination color is zero, so the pixel is
+    // black at the source alpha). DstIn would leave these pixels transparent.
+    [Fact]
+    public void ReplaceAlphaShape_InRenderTargetContainer_OverTransparent_WritesSourceAlpha()
+    {
+        using SKBitmap bitmap = RenderReplaceAlphaMask(fillBelow: false);
+
+        SKColor masked = bitmap.GetPixel(10, 10);
+        ((int)masked.Red).ShouldBeInRange(0 - 2, 0 + 2);
+        ((int)masked.Green).ShouldBeInRange(0 - 2, 0 + 2);
+        ((int)masked.Blue).ShouldBeInRange(0 - 2, 0 + 2);
+        ((int)masked.Alpha).ShouldBeInRange(128 - 2, 128 + 2);
+        bitmap.GetPixel(30, 10).Alpha.ShouldBe((byte)0);
+    }
+
+    // Text composites through a layer; it must not reach past the text, or ReplaceAlpha would erase
+    // everything else in the clip.
+    [Fact]
+    public void ReplaceAlphaText_InRenderTargetContainer_LeavesPixelsOutsideTheTextAlone()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(120, 60));
+        Gum.GumService.Default.Initialize(surface.Canvas, 120, 60);
+        ContainerRuntime renderTarget = new() { Width = 120, Height = 60, IsRenderTarget = true };
+        renderTarget.Children.Add(new RectangleRuntime
+        {
+            Width = 120, Height = 60, IsFilled = true, FillColor = SKColors.Red,
+        });
+        TextRuntime text = new() { X = 0, Y = 0, Text = "Hi", Blend = Blend.ReplaceAlpha };
+        renderTarget.Children.Add(text);
+        Gum.GumService.Default.Root.Children.Add(renderTarget);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        bitmap.GetPixel(110, 50).ShouldBe(SKColors.Red);
+    }
+
+    private static SKBitmap RenderReplaceAlphaMask(bool fillBelow)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(40, 20));
+        Gum.GumService.Default.Initialize(surface.Canvas, 40, 20);
+        ContainerRuntime renderTarget = new() { Width = 40, Height = 20, IsRenderTarget = true };
+        if (fillBelow)
+        {
+            renderTarget.Children.Add(new RectangleRuntime
+            {
+                Width = 40, Height = 20, IsFilled = true, FillColor = SKColors.Red,
+            });
+        }
+
+        RectangleRuntime mask = new()
+        {
+            X = 0, Width = 20, Height = 20, IsFilled = true, FillColor = new SKColor(255, 255, 255, 128),
+        };
+        mask.SetProperty(nameof(RenderableShapeBase.Blend), Blend.ReplaceAlpha);
+        renderTarget.Children.Add(mask);
+        Gum.GumService.Default.Root.Children.Add(renderTarget);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        return SKBitmap.FromImage(image);
     }
 
     // Blend lives on RenderableShapeBase so every shape derivative gets it, not just Sprite/NineSlice.
