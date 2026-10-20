@@ -16,7 +16,7 @@ internal sealed class OrdererFake : IRenderableIpso
         Children = new ObservableCollection<IRenderableIpso>();
     }
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
     public bool Visible { get; set; }
     public bool ClipsChildren { get; set; }
     public bool IsRenderTarget { get; set; }
