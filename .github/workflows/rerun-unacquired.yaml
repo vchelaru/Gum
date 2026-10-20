@@ -1,0 +1,30 @@
+name: Re-run unacquired jobs
+
+# A hosted-runner outage can leave a job queued for about 15 minutes until GitHub cancels it with an
+# empty runner name ("The job was not acquired by Runner of type hosted"). That leaves a required check
+# red for no reason in the code (#6282). This workflow re-runs the failed jobs of such a run once. It
+# is not a general retry: a job that ran and failed, a run cancelled by hand or by a newer push, and any
+# attempt after the first are left alone (see the script). workflow_run only fires from the default branch.
+on:
+  workflow_run:
+    workflows: ["Test Runtimes"]
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  Rerun:
+    if: github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.run_attempt == 1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - name: Re-run jobs that never got a runner
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: bash .github/scripts/rerun-unacquired.sh "${{ github.event.workflow_run.id }}" "${{ github.event.workflow_run.run_attempt }}"
