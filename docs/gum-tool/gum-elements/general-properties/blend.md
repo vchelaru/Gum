@@ -6,9 +6,11 @@ The `Blend` variable controls how the selected instance combines its colors with
 
 `Blend` is available on the following types:
 
+* [Circle](../circle.md)
 * [ColoredRectangle](../coloredrectangle.md)
 * [Container](../container/) (if [Is Render Target](../container/is-render-target.md) is set to true)
 * [NineSlice](../nineslice/)
+* [Rectangle](../rectangle.md)
 * [Sprite](../sprite/)
 
 `Blend` is also available on all Skia elements:
@@ -129,7 +131,7 @@ Keep in mind that `Replace Alpha` can apply different alpha values if the instan
 
 <figure><img src="../../../.gitbook/assets/09_08 11 21.gif" alt=""><figcaption><p>Alpha being replaced to opaque in the center and transparent on the edges of the circle</p></figcaption></figure>
 
-A Circle or Rectangle using `Replace Alpha` applies to its whole bounding rectangle, not only the pixels the shape paints. The area inside the rectangle but outside the shape (such as the corners around a circle) has an alpha of `0`, so `Replace Alpha` makes it transparent.
+`Replace Alpha` applies to the whole bounds of the instance, not only the pixels it paints. See [Whole-Bounds Masking](blend.md#whole-bounds-masking).
 
 ## Min Alpha
 
@@ -137,11 +139,7 @@ A Circle or Rectangle using `Replace Alpha` applies to its whole bounding rectan
 
 <figure><img src="../../../.gitbook/assets/09_08 16 44.gif" alt=""><figcaption><p>Min alpha creates a mask</p></figcaption></figure>
 
-A Circle or Rectangle using `Min Alpha` applies to its whole bounding rectangle, not only the pixels the shape paints. Pixels inside the shape keep their opacity, and pixels inside the rectangle but outside the shape (such as the corners around a circle) become transparent. This lets a Circle or a Rectangle with rounded corners mask a circular or rounded area without a custom texture.
-
-{% hint style="info" %}
-Applying `Min Alpha` and `Replace Alpha` to the whole bounding rectangle of a Circle or Rectangle is available in November 2026, or now if building Gum from source.
-{% endhint %}
+`Min Alpha` applies to the whole bounds of the instance, not only the pixels it paints. Pixels inside the shape keep their opacity, and pixels inside the bounds but outside the shape (such as the corners around a circle) become transparent. This lets a Circle or a Rectangle with rounded corners mask a circular or rounded area without a custom texture. See [Whole-Bounds Masking](blend.md#whole-bounds-masking).
 
 If the instance alpha is reduced, then the resulting transparency is reduced as well. The following shows setting `Alpha` to 128 (about 50%).
 
@@ -150,3 +148,28 @@ If the instance alpha is reduced, then the resulting transparency is reduced as 
 Keep in mind that multiple objects can be combined to create larger masks. For example, additional ColoredRectangles can be added to the circle above to create a larger mask. Each rectangle also has its `Blend` set to `Min Alpha`.
 
 <figure><img src="../../../.gitbook/assets/09_08 22 06.gif" alt=""><figcaption><p>Extending masks with additional shapes</p></figcaption></figure>
+
+## Whole-Bounds Masking
+
+`Replace Alpha` and `Min Alpha` use the whole bounding rectangle of an instance as the mask. Pixels inside the bounds that the instance does not cover end up with an alpha of `0`. Pixels outside the bounds do not change.
+
+This applies to Circle, Rectangle, RoundedRectangle, Arc, Sprite, NineSlice, and text.
+
+{% hint style="info" %}
+Whole-bounds masking for shapes and text, and `Replace Alpha` on Skia elements, are available in November 2026, or now if building Gum from source. Before then, `Replace Alpha` on a Skia element drew like `Normal` `Blend`.
+{% endhint %}
+
+### Shapes With a Stroke
+
+A shape with both a fill and a stroke masks as one shape. The fill and the stroke keep their opacity, and the rest of the bounds becomes transparent. A default Circle or Rectangle, which has a stroke and no fill, works as a mask without setting `Is Filled`.
+
+### Text
+
+Text uses the measured text block plus a 2 pixel margin as its bounds, and adds the drop shadow offset when it has a drop shadow. Skia also adds the outline thickness and the shadow blur. Glyph pixels keep their alpha, and the rest of the bounds becomes transparent.
+
+On MonoGame, KNI, and FNA, text masks its bounds only inside a render target container, and only when text is drawn character by character (the default). The Gum tool has no `Blend` variable for text, so set `Blend` on the text in code.
+
+### Limits
+
+* An edge of the bounds that falls between pixels (a fractional position or a rotation) is not exact, because a pixel partly covered by the edge cannot be both kept and cleared.
+* On runtimes with premultiplied alpha such as FlatRedBall 1, text with `Replace` `Blend` inside a render target container also masks its bounds.
