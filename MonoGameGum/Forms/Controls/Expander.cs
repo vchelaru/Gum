@@ -61,7 +61,11 @@ public class Expander : FrameworkElement
     public string? Header
     {
         get => coreTextObject?.RawText;
-        set => textComponent?.SetProperty("Text", value);
+        set
+        {
+            _isTextSetInCode = true;
+            textComponent?.SetProperty("Text", value);
+        }
     }
 
     #endregion
@@ -138,11 +142,15 @@ public class Expander : FrameworkElement
     private string? _savedText;
     private bool _hasSavedText;
 
+    // Only text assigned through the property is restored after RefreshStyles; text the Visual
+    // authored is re-applied from the Visual's state instead.
+    private bool _isTextSetInCode;
+
     /// <inheritdoc/>
     public override void SaveRuntimeProperties()
     {
         _savedText = coreTextObject?.RawText;
-        _hasSavedText = coreTextObject != null;
+        _hasSavedText = _isTextSetInCode && coreTextObject != null;
         base.SaveRuntimeProperties();
     }
 

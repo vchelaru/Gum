@@ -128,7 +128,11 @@ public class ScrollBar : RangeBase
             ApplyOrientationStateToVisual();
         }
         RefreshInternalVisualReferences();
-        ApplyIsEnabledToButtons();
+        // Only disable here: an enabled ScrollBar must not re-enable buttons the Visual authored as disabled.
+        if (!IsEnabled)
+        {
+            ApplyIsEnabledToButtons();
+        }
 
         base.ReactToVisualChanged();
 
