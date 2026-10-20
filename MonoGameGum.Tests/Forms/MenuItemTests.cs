@@ -212,4 +212,71 @@ public class MenuItemTests : BaseTestClass
 
         Should.NotThrow(() => menuItem.DoItemsHaveFocus = true);
     }
+
+    #region Visual-authored state flows to the control
+
+    [Fact]
+    public void Header_ShouldBeAuthoredText_WhenVisualAssignedToFreshMenuItem()
+    {
+        MenuItemVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.TextInstance.Text = "File";
+
+        MenuItem sut = new(authoredVisual);
+
+        sut.Header.ShouldBe("File");
+    }
+
+    [Fact]
+    public void Header_ShouldBeNewVisualText_WhenVisualReassigned()
+    {
+        MenuItem sut = new();
+        sut.Header = "Old";
+        MenuItemVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.TextInstance.Text = "File";
+
+        sut.Visual = authoredVisual;
+
+        sut.Header.ShouldBe("File");
+    }
+
+    [Fact]
+    public void Items_ShouldContainAuthoredSubItems_WhenVisualAssignedToFreshMenuItem()
+    {
+        ContainerRuntime authoredVisual = new();
+        ContainerRuntime subItemContainer = new() { Name = "SubItemContainerInstance" };
+        authoredVisual.AddChild(subItemContainer);
+        MenuItem authoredSubItem = new();
+        subItemContainer.Children.Add(authoredSubItem.Visual);
+
+        MenuItem sut = new(authoredVisual);
+
+        sut.Items!.Count.ShouldBe(1);
+        sut.Items[0].ShouldBe(authoredSubItem);
+    }
+
+    [Fact]
+    public void SubmenuIndicator_ShouldBeHidden_WhenVisualWithVisibleIndicatorAssignedToTopLevelMenuItem()
+    {
+        MenuItemVisual authoredVisual = new(tryCreateFormsObject: false);
+        authoredVisual.SubmenuIndicatorInstance.Visible = true;
+
+        MenuItem sut = new(authoredVisual);
+
+        authoredVisual.SubmenuIndicatorInstance.Visible.ShouldBeFalse();
+    }
+
+    #endregion
+
+    [Fact]
+    public void UpdateToObject_ShouldNotWriteToOldVisual_WhenVisualSetToNull()
+    {
+        MenuItemVisual oldVisual = new(tryCreateFormsObject: false);
+        oldVisual.TextInstance.Text = "File";
+        MenuItem sut = new(oldVisual);
+
+        sut.Visual = null!;
+        sut.UpdateToObject("Edit");
+
+        oldVisual.TextInstance.Text.ShouldBe("File");
+    }
 }

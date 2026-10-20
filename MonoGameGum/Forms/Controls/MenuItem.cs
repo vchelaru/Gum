@@ -219,6 +219,10 @@ public class MenuItem : ItemsControl
             _subscribedSubItemContainer.Children.CollectionChanged -= HandleSubItemContainerChanged;
             _subscribedSubItemContainer = null;
         }
+
+        text = null;
+        coreText = null;
+        SubmenuIndicatorInstance = null;
     }
 
     private void UpdateMenuItems()
@@ -228,7 +232,8 @@ public class MenuItem : ItemsControl
 
         if (containerInstance != null)
         {
-            foreach (var child in containerInstance.Children)
+            // Snapshot: detaching a child from the container modifies Children while it is enumerated.
+            foreach (var child in containerInstance.Children.ToList())
             {
                 if (child is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is MenuItem menuItem)
                 {

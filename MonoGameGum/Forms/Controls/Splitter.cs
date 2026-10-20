@@ -103,6 +103,10 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         Visual.RollOn -= HandleRollOn;
         Visual.Push -= HandleVisualPush;
         Visual.Dragging -= HandleVisualDragging;
+
+        // The grab offsets were measured against the removed visual.
+        leftGrabbedInOffset = null;
+        topGrabbedInOffset = null;
     }
 
     float? leftGrabbedInOffset;
