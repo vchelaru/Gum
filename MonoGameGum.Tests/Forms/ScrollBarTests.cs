@@ -111,6 +111,29 @@ public class ScrollBarTests : BaseTestClass
     }
 
     [Fact]
+    public void Constructor_ShouldResolveButtons_FromAuthoredVisual()
+    {
+        ScrollBarVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+
+        ScrollBar sut = new(visual);
+
+        sut.UpButton!.Visual.ShouldBe(visual.UpButtonInstance);
+        sut.DownButton!.Visual.ShouldBe(visual.DownButtonInstance);
+    }
+
+    [Fact]
+    public void Visual_ShouldResolveButtonsFromNewVisual_WhenReassigned()
+    {
+        ScrollBar sut = new();
+        ScrollBarVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+
+        sut.Visual = newVisual;
+
+        sut.UpButton!.Visual.ShouldBe(newVisual.UpButtonInstance);
+        sut.DownButton!.Visual.ShouldBe(newVisual.DownButtonInstance);
+    }
+
+    [Fact]
     public void Orientation_ShouldStayHorizontal_WhenVisualIsReassigned()
     {
         ScrollBar scrollBar = new();
