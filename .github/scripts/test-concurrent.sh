@@ -16,7 +16,7 @@ set -uo pipefail
 
 manifest_file="${1:-.github/scripts/windows-test-groups.txt}"
 # A Windows checkout turns the manifest's LF into CRLF (core.autocrlf), so read a copy without the CRs.
-manifest="$(mktemp)"; tr -d 'manifest="$(mktemp)"; tr -d '' < "$manifest_file" > "$manifest"15' < "$manifest_file" > "$manifest"
+manifest="$(mktemp)"; tr -d '\015' < "$manifest_file" > "$manifest"
 slnf="${2:-Tests/CiTestProjects.slnf}"
 results="TestResults"
 
