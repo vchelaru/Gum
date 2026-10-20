@@ -80,9 +80,11 @@ When a `Button`, `CheckBox`, or other `FrameworkElement` is added to `Items`, it
 
 `HandleInnerPanelCollectionChanged` fires and can populate `ListBoxItemsInternal` if the child's `FormsControlAsObject` is a `ListBoxItem`. But **`Items` is never updated** — it stays at 0 (or whatever it was). This is the case when a ListBox's visual is constructed by the Gum tool with pre-filled children.
 
-### 3. Gum tool pre-filled ListBox (ReactToVisualChanged recovery)
+### 3. Gum tool pre-filled ListBox and Menu (AdoptVisualAuthoredItems)
 
-If a ListBox Visual arrives with children already in InnerPanel and `Items.Count == 0`, `ReactToVisualChanged` in ListBox iterates `InnerPanel.Children`, adds `ListBoxItem` instances to both `Items` and `ListBoxItemsInternal`, and calls `AssignListBoxEvents`. This recovery only runs once at construction; it does not stay in sync afterward.
+When a Visual with an InnerPanel is assigned, `ItemsControl.ReactToVisualChanged` calls `AdoptVisualAuthoredItems`. ListBox and Menu override it to put the `ListBoxItem`/`MenuItem` children authored in the panel at the front of `Items` and the row list, and to hook their events. Adopted items are tracked through `AdoptVisualAuthoredItem`; `MenuItem` adopts its `SubItemContainerInstance` children the same way. Adoption runs only on assignment, so later direct panel adds follow the normal panel path.
+
+On a Visual swap, the old Visual's adopted items are dropped from `Items` and items added in code are re-added after the new Visual's own children. Rows for data objects are recreated, and a ListBox keeps its selection by data object.
 
 A direct `InnerPanel.Children.Move` (hot reload does this) reaches `HandleInnerPanelChildMovedExternally`. ListBox syncs `Items`/`ListBoxItems` only for self-backed rows (`DataObject == row`); a data-backed row's move leaves both collections untouched. Code that moves the panel and syncs itself sets `IsMovingInnerPanelChildInternally` around the move so the sync doesn't run twice.
 

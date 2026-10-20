@@ -97,6 +97,7 @@ public class ItemsControl : ScrollViewer
                         notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
                     }
                     items = value;
+                    _visualAuthoredItems.Clear();
                     ForceUpdateToItems();
                 }
                 finally
@@ -260,9 +261,142 @@ public class ItemsControl : ScrollViewer
     {
         base.ReactToVisualChanged();
 
+        // The row bookkeeping describes the previous Visual's panel (if any).
+        HandleCollectionReset();
+
         if (InnerPanel != null)
         {
             InnerPanel.Children.CollectionChanged += HandleInnerPanelCollectionChanged;
+
+            // Items added in code are control data, not template, so they follow the control to the
+            // new Visual's panel. Items the previous Visual authored were dropped when it was removed.
+            List<object>? codeAddedItems = items?.Count > 0 ? items.Cast<object>().ToList() : null;
+
+            AdoptVisualAuthoredItems();
+
+            if (codeAddedItems != null)
+            {
+                AddItemsToInnerPanel(codeAddedItems);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called when a Visual with an InnerPanel is assigned, so derived controls can bring content the
+    /// Visual authored into <see cref="Items"/>. Adopted items must be recorded with
+    /// <see cref="AdoptVisualAuthoredItem"/> so they are dropped again if the Visual is replaced.
+    /// </summary>
+    protected virtual void AdoptVisualAuthoredItems() { }
+
+    // Items that came from the Visual's authored content rather than from code. Compared by reference.
+    private readonly List<object> _visualAuthoredItems = new List<object>();
+    private bool _isSyncingVisualAuthoredItems;
+
+    /// <summary>
+    /// Inserts an item the Visual authored into <see cref="Items"/> without creating a visual for it
+    /// (it already has one in the Visual), and remembers it so it is dropped with the Visual.
+    /// </summary>
+    /// <param name="item">The item authored on the Visual.</param>
+    /// <param name="itemsIndex">The index in Items to insert at, or -1 to append.</param>
+    protected void AdoptVisualAuthoredItem(object item, int itemsIndex = -1)
+    {
+        if (items == null)
+        {
+            return;
+        }
+
+        _visualAuthoredItems.Add(item);
+        _isSyncingVisualAuthoredItems = true;
+        try
+        {
+            if (itemsIndex < 0 || itemsIndex > items.Count)
+            {
+                items.Add(item);
+            }
+            else
+            {
+                items.Insert(itemsIndex, item);
+            }
+        }
+        finally
+        {
+            _isSyncingVisualAuthoredItems = false;
+        }
+    }
+
+    /// <summary>
+    /// Whether the item came from content authored on the current Visual.
+    /// </summary>
+    protected bool IsVisualAuthoredItem(object item)
+    {
+        for (int i = 0; i < _visualAuthoredItems.Count; i++)
+        {
+            if (ReferenceEquals(_visualAuthoredItems[i], item))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void DropVisualAuthoredItems()
+    {
+        if (_visualAuthoredItems.Count == 0)
+        {
+            return;
+        }
+
+        List<object> authored = _visualAuthoredItems.ToList();
+        _visualAuthoredItems.Clear();
+
+        if (items == null)
+        {
+            return;
+        }
+
+        // The panel is no longer observed, so only the Items entries are removed; the old Visual
+        // keeps its own content.
+        _isSyncingVisualAuthoredItems = true;
+        try
+        {
+            foreach (object item in authored)
+            {
+                for (int i = items.Count - 1; i > -1; i--)
+                {
+                    if (ReferenceEquals(items[i], item))
+                    {
+                        items.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            _isSyncingVisualAuthoredItems = false;
+        }
+    }
+
+    private void AddItemsToInnerPanel(List<object> itemsToAdd)
+    {
+        bool wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+
+        try
+        {
+            // Appended after anything the Visual authored.
+            HandleItemsCollectionChanged(this,
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                    itemsToAdd, startingIndex: InnerPanel.Children.Count));
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+        }
+
+        if (!wasSuppressed)
+        {
+            Visual.ResumeLayout(recursive: true);
         }
     }
 
@@ -364,6 +498,8 @@ public class ItemsControl : ScrollViewer
         {
             InnerPanel.Children.CollectionChanged -= HandleInnerPanelCollectionChanged;
         }
+
+        DropVisualAuthoredItems();
     }
 
     private void HandleInnerPanelCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -873,10 +1009,19 @@ public class ItemsControl : ScrollViewer
                         ? GetPanelIndexForItemIndex(e.OldStartingIndex)
                         : e.OldStartingIndex;
 
-                    if (InnerPanel != null && index >= 0 && index < InnerPanel.Children.Count)
+                    if (!_isSyncingVisualAuthoredItems && InnerPanel != null && index >= 0 && index < InnerPanel.Children.Count)
                     {
                         var listItem = InnerPanel.Children[index];
                         listItem.Parent = null;
+                    }
+
+                    if (e.OldItems != null)
+                    {
+                        for (int i = 0; i < e.OldItems.Count; i++)
+                        {
+                            object? removed = e.OldItems[i];
+                            _visualAuthoredItems.RemoveAll(authored => ReferenceEquals(authored, removed));
+                        }
                     }
 
                     //HandleCollectionItemRemoved(index);

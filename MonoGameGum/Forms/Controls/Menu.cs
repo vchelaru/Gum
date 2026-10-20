@@ -109,6 +109,7 @@ public class Menu : ItemsControl
             menuItem.BindingContext = o;
         }
 
+        menuItem.Selected -= HandleItemSelected;
         menuItem.Selected += HandleItemSelected;
 
         return menuItem;
@@ -193,13 +194,42 @@ public class Menu : ItemsControl
 
     #region Collection Changed
 
+    /// <summary>
+    /// Brings MenuItems authored on the Visual into Items and MenuItems, ahead of any item added in code.
+    /// </summary>
+    protected override void AdoptVisualAuthoredItems()
+    {
+        if (InnerPanel == null || Items == null)
+        {
+            return;
+        }
+
+        int adoptedCount = 0;
+        foreach (GraphicalUiElement child in InnerPanel.Children.ToList())
+        {
+            if (child is InteractiveGue interactiveGue &&
+                interactiveGue.FormsControlAsObject is MenuItem menuItem &&
+                !Items.Contains(menuItem))
+            {
+                // The item already has its visual in the panel, so Items must not create another.
+                AdoptVisualAuthoredItem(menuItem, adoptedCount);
+
+                MenuItemsInternal.Insert(adoptedCount, menuItem);
+                menuItem.Selected -= HandleItemSelected;
+                menuItem.Selected += HandleItemSelected;
+                adoptedCount++;
+            }
+        }
+    }
+
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)
     {
         if (newItem is MenuItem menuItem)
         {
             MenuItemsInternal.Insert(newItemIndex, menuItem);
 
-            // todo - look at AssignListBoxEvents to see how this could be improved so events don't get added 2x
+            // A re-added item (such as after a Visual swap) is still subscribed from before.
+            menuItem.Selected -= HandleItemSelected;
             menuItem.Selected += HandleItemSelected;
         }
     }
