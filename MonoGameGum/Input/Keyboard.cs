@@ -50,23 +50,23 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     /// <summary>
     /// Returns whether either Shift key is currently held down.
     /// </summary>
-    public bool IsShiftDown => KeyDown(Keys.LeftShift) || KeyDown(Keys.RightShift);
+    public bool IsShiftDown => KeyDownCore(Keys.LeftShift) || KeyDownCore(Keys.RightShift);
 
     /// <summary>
     /// Returns whether either Control key is currently held down.
     /// </summary>
-    public bool IsCtrlDown => KeyDown(Keys.LeftControl) || KeyDown(Keys.RightControl);
+    public bool IsCtrlDown => KeyDownCore(Keys.LeftControl) || KeyDownCore(Keys.RightControl);
 
     /// <summary>
     /// Returns whether either Command key is held on macOS, where MonoGame reports it as a Windows key. Always
     /// false elsewhere, so the Windows key never triggers text shortcuts (Windows+V is the clipboard history).
     /// </summary>
-    public bool IsCommandDown => OperatingSystem.IsMacOS() && (KeyDown(Keys.LeftWindows) || KeyDown(Keys.RightWindows));
+    public bool IsCommandDown => OperatingSystem.IsMacOS() && (KeyDownCore(Keys.LeftWindows) || KeyDownCore(Keys.RightWindows));
 
     /// <summary>
     /// Returns whether either Alt key is currently held down.
     /// </summary>
-    public bool IsAltDown => KeyDown(Keys.LeftAlt) || KeyDown(Keys.RightAlt);
+    public bool IsAltDown => KeyDownCore(Keys.LeftAlt) || KeyDownCore(Keys.RightAlt);
 
     bool[] mKeysIgnoredForThisFrame;
 
@@ -85,7 +85,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             for (int i = 0; i < NumberOfKeys; i++)
             {
                 var key = (Keys)i;
-                if (KeyTyped(key))
+                if (KeyTypedCore(key))
                 {
                     keysTypedInternal.Add(key);
                 }
@@ -110,25 +110,25 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     /// <see cref="Gum.Forms.Input.Keys"/> value. Casts directly to XNA <see cref="Keys"/>
     /// because both enums share the same numeric values.
     /// </summary>
-    public bool KeyDown(Gum.Forms.Input.Keys key) => KeyDown((Keys)(int)key);
+    public bool KeyDown(Gum.Forms.Input.Keys key) => KeyDownCore((Keys)(int)key);
 
     /// <summary>
     /// Returns whether the specified key was pressed this frame, accepting a shared
     /// <see cref="Gum.Forms.Input.Keys"/> value.
     /// </summary>
-    public bool KeyPushed(Gum.Forms.Input.Keys key) => KeyPushed((Keys)(int)key);
+    public bool KeyPushed(Gum.Forms.Input.Keys key) => KeyPushedCore((Keys)(int)key);
 
     /// <summary>
     /// Returns whether the specified key was released this frame, accepting a shared
     /// <see cref="Gum.Forms.Input.Keys"/> value.
     /// </summary>
-    public bool KeyReleased(Gum.Forms.Input.Keys key) => KeyReleased((Keys)(int)key);
+    public bool KeyReleased(Gum.Forms.Input.Keys key) => KeyReleasedCore((Keys)(int)key);
 
     /// <summary>
     /// Returns whether the specified key was "typed" this frame (pushed or OS-repeat),
     /// accepting a shared <see cref="Gum.Forms.Input.Keys"/> value.
     /// </summary>
-    public bool KeyTyped(Gum.Forms.Input.Keys key) => KeyTyped((Keys)(int)key);
+    public bool KeyTyped(Gum.Forms.Input.Keys key) => KeyTypedCore((Keys)(int)key);
 
     public const int NumberOfKeys = 255;
 
@@ -322,7 +322,14 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 #endif
     }
 
-    public bool KeyDown(Keys key)
+    /// <summary>
+    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// </summary>
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
+    public bool KeyDown(Keys key) => KeyDownCore(key);
+
+    private bool KeyDownCore(Keys key)
     {
         if (mKeysIgnoredForThisFrame[(int)key])
         {
@@ -343,7 +350,14 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             KeyboardStateProcessor.IsKeyDown(key);
     }
 
-    public bool KeyTyped(Keys key)
+    /// <summary>
+    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// </summary>
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
+    public bool KeyTyped(Keys key) => KeyTypedCore(key);
+
+    private bool KeyTypedCore(Keys key)
     {
         if (mKeysIgnoredForThisFrame[(int)key])
         {
@@ -362,7 +376,14 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             mKeysTyped[(int)key];
     }
 
-    public bool KeyPushed(Keys key)
+    /// <summary>
+    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// </summary>
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
+    public bool KeyPushed(Keys key) => KeyPushedCore(key);
+
+    private bool KeyPushedCore(Keys key)
     {
         if (mKeysIgnoredForThisFrame[(int)key] /*|| InputManager.mIgnorePushesThisFrame*/)
         {
@@ -380,7 +401,14 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         return /* !InputManager.CurrentFrameInputSuspended && */ KeyboardStateProcessor.KeyPushed(key);
     }
 
-    public bool KeyReleased(Keys key)
+    /// <summary>
+    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// </summary>
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
+    public bool KeyReleased(Keys key) => KeyReleasedCore(key);
+
+    private bool KeyReleasedCore(Keys key)
     {
         if (mKeysIgnoredForThisFrame[(int)key] /*|| InputManager.mIgnorePushesThisFrame*/)
         {
@@ -457,7 +485,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             mKeysIgnoredForThisFrame[i] = false;
             mKeysTyped[i] = false;
 
-            if (KeyPushed((Keys)(i)))
+            if (KeyPushedCore((Keys)(i)))
             {
                 mKeysTyped[i] = true;
                 mLastTimeKeyTyped[i] = currentTime;
@@ -478,7 +506,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
         for (int i = 0; i < NumberOfKeys; i++)
         {
-            if (KeyDown((Keys)(i)))
+            if (KeyDownCore((Keys)(i)))
             {
                 if ((mLastTypedFromPush[i] && currentTime - mLastTimeKeyTyped[i] > RepeatDelay.TotalSeconds) ||      // Fresh key press, with long enough initial press delay
                     (mLastTypedFromPush[i] == false && currentTime - mLastTimeKeyTyped[i] > RepeatRate.TotalSeconds) // held key, with long enough repeat rate between
@@ -510,17 +538,17 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
     private string KeyToStringAtCurrentState(int key)
     {
-        bool isShiftDown = KeyDown(Keys.LeftShift) || KeyDown(Keys.RightShift);
+        bool isShiftDown = KeyDownCore(Keys.LeftShift) || KeyDownCore(Keys.RightShift);
 
         #region If Shift is down, return a different key
-        if (isShiftDown && IsKeyLetter((Keys)key))
+        if (isShiftDown && IsKeyLetterCore((Keys)key))
         {
             return ((char)(mKeyToChar[key] - 32)).ToString();
         }
 
         else
         {
-            if (KeyDown(Keys.LeftShift) || KeyDown(Keys.RightShift))
+            if (KeyDownCore(Keys.LeftShift) || KeyDownCore(Keys.RightShift))
             {
                 switch ((Keys)key)
                 {
@@ -564,10 +592,23 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
     }
 
-    public bool IsKeyLetter(Keys key)
+    /// <summary>
+    /// XNA <see cref="Keys"/> overload. Use the <see cref="Gum.Forms.Input.Keys"/> overload instead.
+    /// </summary>
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
+    public bool IsKeyLetter(Keys key) => IsKeyLetterCore(key);
+
+    private static bool IsKeyLetterCore(Keys key)
     {
         return key >= Keys.A && key <= Keys.Z;
     }
+
+    /// <summary>
+    /// Returns whether the specified key is a letter (A through Z), accepting a shared
+    /// <see cref="Gum.Forms.Input.Keys"/> value.
+    /// </summary>
+    public bool IsKeyLetter(Gum.Forms.Input.Keys key) => IsKeyLetterCore((Keys)(int)key);
 
     [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mKeyToChar))]
     private void FillKeyCodes()
@@ -661,9 +702,17 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
 {
     new IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
     bool KeyDown(Keys key);
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
     bool KeyPushed(Keys key);
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
     bool KeyReleased(Keys key);
+    // Obsoleted on 2026-10-20 (#5028). Earliest error: March 2027. Earliest removal: July 2027.
+    [Obsolete(XnaKeysObsolescence.Message)]
     bool KeyTyped(Keys key);
 }
 
