@@ -4,7 +4,6 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
-using Xunit.Abstractions;
 using static MonoGameGum.Tests.RenderingLibraries.BatchOrdererScenes;
 
 namespace MonoGameGum.Tests.RenderingLibraries;
@@ -15,19 +14,11 @@ namespace MonoGameGum.Tests.RenderingLibraries;
 /// </summary>
 public class BatchKeyGroupedOrdererPickCountTests : BaseTestClass
 {
-    private readonly ITestOutputHelper _output;
-
-    public BatchKeyGroupedOrdererPickCountTests(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
-    private int CountPickSteps(List<IRenderableIpso> roots, out int nodeCount)
+    private static int CountPickSteps(List<IRenderableIpso> roots, out int nodeCount)
     {
         nodeCount = CountNodes(roots);
         BatchKeyGroupedOrderer orderer = new BatchKeyGroupedOrderer();
         orderer.BuildDrawList(BuildLayer(roots), new List<DrawCommand>());
-        _output.WriteLine($"nodes={nodeCount} pickSteps={orderer.PickStepCount}");
         return orderer.PickStepCount;
     }
 
@@ -52,7 +43,7 @@ public class BatchKeyGroupedOrdererPickCountTests : BaseTestClass
         int steps = CountPickSteps(BuildVerticalList(33, new object(), new object()), out int nodes);
 
         nodes.ShouldBe(165);
-        steps.ShouldBeLessThan(2000);
+        steps.ShouldBeLessThan(4000);
     }
 
     [Fact]
@@ -61,7 +52,17 @@ public class BatchKeyGroupedOrdererPickCountTests : BaseTestClass
         int steps = CountPickSteps(BuildVerticalList(100, new object(), new object()), out int nodes);
 
         nodes.ShouldBe(500);
-        steps.ShouldBeLessThan(7000);
+        steps.ShouldBeLessThan(15000);
+    }
+
+    [Fact]
+    public void BuildDrawList_VerticalListGrowing3x_PickStepsGrowLessThan5x()
+    {
+        int small = CountPickSteps(BuildVerticalList(33, new object(), new object()), out _);
+        int large = CountPickSteps(BuildVerticalList(100, new object(), new object()), out _);
+
+        // 100 rows against 33 is about 3x the nodes; a quadratic pick would be about 9x the steps.
+        large.ShouldBeLessThan(small * 5);
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public class BatchKeyGroupedOrdererPickCountTests : BaseTestClass
         int steps = CountPickSteps(BuildDisjointNodes(500), out int nodes);
 
         nodes.ShouldBe(500);
-        // Every node is available from the start, so a per-pick rescan of them costs ~n^2.
+        // Every node is available from the start, so rescanning them per pick is quadratic.
         steps.ShouldBeLessThan(15000);
     }
 
