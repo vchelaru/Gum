@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using Gum.GueDeriving;
@@ -872,6 +873,83 @@ public class ScrollViewerTests : BaseTestClass
         sut.HorizontalSizeMode = SizeMode.Auto;
 
         appliedState.ShouldBe("Auto");
+    }
+
+    [Theory]
+    [InlineData("HorizontalSizeMode")]
+    [InlineData("VerticalSizeMode")]
+    public void SizeMode_ShouldApplyFixedState_WhenChangedFromAutoToFixed(string categoryName)
+    {
+        ScrollViewer sut = new();
+        string? appliedState = null;
+        AddSizeModeCategory(sut, categoryName, applied => appliedState = applied);
+        SetSizeMode(sut, categoryName, SizeMode.Auto);
+
+        SetSizeMode(sut, categoryName, SizeMode.Fixed);
+
+        appliedState.ShouldBe("Fixed");
+    }
+
+    [Theory]
+    [InlineData("HorizontalSizeMode")]
+    [InlineData("VerticalSizeMode")]
+    public void SizeMode_ShouldApplyAutoState_WhenChangedFromFixedToAuto(string categoryName)
+    {
+        ScrollViewer sut = new();
+        string? appliedState = null;
+        AddSizeModeCategory(sut, categoryName, applied => appliedState = applied);
+
+        SetSizeMode(sut, categoryName, SizeMode.Auto);
+
+        appliedState.ShouldBe("Auto");
+    }
+
+    [Theory]
+    [InlineData("HorizontalSizeMode")]
+    [InlineData("VerticalSizeMode")]
+    public void Visual_ShouldKeepAuthoredAutoSizeModeState_WhenAssignedToFreshScrollViewerAndLaidOut(string categoryName)
+    {
+        // A Visual authored (as the tool would) with the Auto size-mode state; the fresh control's
+        // SizeMode property is left at its default and must not clobber what the Visual authored.
+        ScrollViewerVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        string? lastAppliedState = null;
+        StateSaveCategory category = new() { Name = categoryName };
+        foreach (string stateName in new[] { "Fixed", "Auto" })
+        {
+            string captured = stateName;
+            category.States.Add(new StateSave { Name = captured, Apply = () => lastAppliedState = captured });
+        }
+        visual.AddCategory(category);
+        visual.SetProperty(categoryName + "State", "Auto");
+        lastAppliedState.ShouldBe("Auto");
+
+        ScrollViewer sut = new(visual);
+        sut.UpdateVerticalScrollBarValues();
+
+        lastAppliedState.ShouldBe("Auto");
+    }
+
+    private static void AddSizeModeCategory(ScrollViewer sut, string categoryName, Action<string> onApplied)
+    {
+        StateSaveCategory category = new() { Name = categoryName };
+        foreach (string stateName in new[] { "Fixed", "Auto" })
+        {
+            string captured = stateName;
+            category.States.Add(new StateSave { Name = captured, Apply = () => onApplied(captured) });
+        }
+        sut.Visual.AddCategory(category);
+    }
+
+    private static void SetSizeMode(ScrollViewer sut, string categoryName, SizeMode mode)
+    {
+        if (categoryName == "HorizontalSizeMode")
+        {
+            sut.HorizontalSizeMode = mode;
+        }
+        else
+        {
+            sut.VerticalSizeMode = mode;
+        }
     }
 
     [Fact]

@@ -355,7 +355,7 @@ public class ScrollViewer :
             if (_verticalSizeMode != value)
             {
                 _verticalSizeMode = value;
-                UpdateToSizeMode();
+                ApplyVerticalSizeModeState();
             }
         }
     }
@@ -378,7 +378,7 @@ public class ScrollViewer :
             if(_horizontalSizeMode != value)
             {
                 _horizontalSizeMode = value;
-                UpdateToSizeMode();
+                ApplyHorizontalSizeModeState();
             }
         }
     }
@@ -1252,21 +1252,31 @@ public class ScrollViewer :
 
     #region UpdateTo methods
 
+    // Called on every layout update to keep Auto applied. Fixed is deliberately not
+    // re-applied here so a size-mode state authored on the Visual is not overwritten by the
+    // control's default; Fixed is applied only when the property changes.
     private void UpdateToSizeMode()
     {
         if(VerticalSizeMode == SizeMode.Auto)
         {
-            string state = VerticalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
-            const string category = "VerticalSizeModeState";
-            Visual.SetProperty(category, state);
+            ApplyVerticalSizeModeState();
         }
         if(HorizontalSizeMode == SizeMode.Auto)
         {
-            string state = HorizontalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
-            const string category = "HorizontalSizeModeState";
-            Visual.SetProperty(category, state);
+            ApplyHorizontalSizeModeState();
         }
+    }
 
+    private void ApplyVerticalSizeModeState()
+    {
+        string state = VerticalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
+        Visual.SetProperty("VerticalSizeModeState", state);
+    }
+
+    private void ApplyHorizontalSizeModeState()
+    {
+        string state = HorizontalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
+        Visual.SetProperty("HorizontalSizeModeState", state);
     }
 
     // Currently this is public because Gum objects don't have events
