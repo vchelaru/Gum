@@ -172,6 +172,20 @@ public class GameInitializationTests : BaseTestClass
         IGumService.Default!.GameTime.ShouldBe(12.5f);
     }
 
+    // A game that zooms shrinks the canvas after Initialize (CanvasWidth = ClientWidth / zoom); the KNI
+    // Update(GameTime) path has to resize Root to it, as MonoGame does, or children lay out off screen.
+    [Fact]
+    public void Update_WithGameTime_SizesRootToTheCurrentCanvas()
+    {
+        GraphicalUiElement.CanvasWidth = 120;
+        GraphicalUiElement.CanvasHeight = 60;
+
+        GumService.Default.Update(new XnaGameTime(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(0.016)));
+
+        GumService.Default.Root.GetAbsoluteWidth().ShouldBe(120);
+        GumService.Default.Root.GetAbsoluteHeight().ShouldBe(60);
+    }
+
     [Fact]
     public void Update_WithGameTime_PumpsFormsInputWithTotalSeconds()
     {

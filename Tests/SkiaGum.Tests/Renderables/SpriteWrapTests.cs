@@ -7,6 +7,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using System;
 
 namespace SkiaGum.Tests.Renderables;
 
@@ -14,8 +15,13 @@ namespace SkiaGum.Tests.Renderables;
 /// A sprite with Wrap set and a custom source rectangle larger than its texture repeats the texture,
 /// as it does on MonoGame. Scrolling UI such as the Hollow Knight mana wave depends on it.
 /// </summary>
-public class SpriteWrapTests
+public class SpriteWrapTests : IDisposable
 {
+    // TextureFilter is static; leaving it changed breaks TextureFilterTests, which expects the default.
+    private readonly SKFilterMode _savedFilter = global::RenderingLibrary.Graphics.Renderer.TextureFilter;
+
+    public void Dispose() => global::RenderingLibrary.Graphics.Renderer.TextureFilter = _savedFilter;
+
     private static SKBitmap CreateRedBlueTexture()
     {
         SKBitmap texture = new(2, 1);
