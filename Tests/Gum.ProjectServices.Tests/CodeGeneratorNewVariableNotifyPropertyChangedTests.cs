@@ -71,9 +71,9 @@ public class CodeGeneratorNewVariableNotifyPropertyChangedTests : BaseTestClass
     }
 
     [Fact]
-    public void GetGeneratedCodeForElement_MonoGameForms_CustomVariable_SetterRaisesOnPropertyChanged()
+    public void GetGeneratedCodeForElement_GumForms_CustomVariable_SetterRaisesOnPropertyChanged()
     {
-        // Under MonoGameForms, the generated class derives from Gum.Forms.Controls.FrameworkElement
+        // Under GumForms, the generated class derives from Gum.Forms.Controls.FrameworkElement
         // (see CodeGenerator.GetInheritance), not GraphicalUiElement - it has OnPropertyChanged, not
         // NotifyPropertyChanged (issue #4921 CI: Build-Generated-Code, CS0103).
         GumProjectSave project = Project;
@@ -96,7 +96,7 @@ public class CodeGeneratorNewVariableNotifyPropertyChangedTests : BaseTestClass
             string code = CreateCodeGenerator().GetGeneratedCodeForElement(
                 slider,
                 elementSettings: null!,
-                new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, RootNamespace = "MyGame" });
+                new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms, RootNamespace = "MyGame" });
 
             code.ShouldContain("OnPropertyChanged();");
             code.ShouldNotContain("NotifyPropertyChanged();");

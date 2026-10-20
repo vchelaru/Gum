@@ -88,7 +88,7 @@ public class CodeGenerationServiceTests : BaseTestClass
     private static CodeOutputProjectSettings CreateFormsSettings() => new()
     {
         CodeProjectRoot = Path.Combine(Path.GetTempPath(), "GumCodeGenerationServiceTests_NeverWritten") + Path.DirectorySeparatorChar,
-        OutputLibrary = OutputLibrary.MonoGameForms
+        OutputLibrary = OutputLibrary.GumForms
     };
 
     [Fact]

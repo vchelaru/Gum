@@ -13,9 +13,38 @@ public enum OutputLibrary
     Skia = 2,
     Maui = 3,
     MonoGame = 4,
+    GumForms = 5,
+
+    // Obsoleted 2026-10-20. Warning now; error:true no earlier than May 2027; remove no earlier than November 2027.
+    [Obsolete("Use OutputLibrary.GumForms. Same value (5); the old name is only an alias. Error no earlier than May 2027; removed no earlier than November 2027.")]
     MonoGameForms = 5,
     Raylib = 6,
     Silk = 7
+}
+
+/// <summary>
+/// Name lookup for <see cref="OutputLibrary"/>. <see cref="OutputLibrary.MonoGameForms"/> shares a value
+/// with <see cref="OutputLibrary.GumForms"/>, and <c>Enum.ToString()</c> may return either of two
+/// members that share a value, so anything user-visible goes through here.
+/// </summary>
+public static class OutputLibraryExtensions
+{
+    /// <summary>
+    /// The name of the current (non-obsolete) member for this value, e.g. <c>GumForms</c> for 5.
+    /// </summary>
+    public static string GetName(this OutputLibrary outputLibrary)
+    {
+        foreach (System.Reflection.FieldInfo field in typeof(OutputLibrary).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+        {
+            if ((OutputLibrary)field.GetRawConstantValue()! == outputLibrary &&
+                !Attribute.IsDefined(field, typeof(ObsoleteAttribute)))
+            {
+                return field.Name;
+            }
+        }
+
+        return outputLibrary.ToString();
+    }
 }
 
 public enum ObjectInstantiationType
@@ -106,12 +135,12 @@ using System.Linq;
     /// <summary>
     /// Optional base class override for generated screens. When empty,
     /// the code generator picks the appropriate default for the current
-    /// OutputLibrary (e.g. FrameworkElement for MonoGameForms,
+    /// OutputLibrary (e.g. FrameworkElement for GumForms,
     /// GraphicalUiElement for MonoGame).
     /// </summary>
     public string DefaultScreenBase { get; set; } = "";
 
-    public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.MonoGameForms;
+    public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.GumForms;
 
     public bool AdjustPixelValuesForDensity { get; set; } = false;
 

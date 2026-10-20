@@ -207,7 +207,7 @@ public class CodeFileMigrationPlannerTests : BaseTestClass
     {
         CodeProjectRoot = "./",
         RootNamespace = "MyGame",
-        OutputLibrary = OutputLibrary.MonoGameForms
+        OutputLibrary = OutputLibrary.GumForms
     };
 
     private static GumProjectSave CreateProject(ComponentSave component)

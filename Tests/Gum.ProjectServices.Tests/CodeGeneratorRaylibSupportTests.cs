@@ -30,10 +30,10 @@ public class CodeGeneratorRaylibSupportTests
     }
 
     [Fact]
-    public void UsesUnifiedGumRuntime_MonoGameForms_ReturnsFalse()
+    public void UsesUnifiedGumRuntime_GumForms_ReturnsFalse()
     {
-        // MonoGameForms is handled by its own dedicated checks, not this predicate.
-        CodeGenerator.UsesUnifiedGumRuntime(OutputLibrary.MonoGameForms).ShouldBeFalse();
+        // GumForms is handled by its own dedicated checks, not this predicate.
+        CodeGenerator.UsesUnifiedGumRuntime(OutputLibrary.GumForms).ShouldBeFalse();
     }
 
     [Fact]

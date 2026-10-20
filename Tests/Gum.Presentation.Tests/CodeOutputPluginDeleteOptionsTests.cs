@@ -75,7 +75,7 @@ public class CodeOutputPluginDeleteOptionsTests : BaseTestClass
         {
             CodeProjectRoot = Path.Combine(_projectDirectory, "Code") + Path.DirectorySeparatorChar,
             RootNamespace = "MyGame",
-            OutputLibrary = OutputLibrary.MonoGameForms,
+            OutputLibrary = OutputLibrary.GumForms,
         };
         File.WriteAllText(Path.Combine(_projectDirectory, "ProjectCodeSettings.codsj"), JsonConvert.SerializeObject(projectSettings));
         _plugin.CallProjectLoad(new GumProjectSave());

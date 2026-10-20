@@ -116,9 +116,9 @@ public class RenameServiceTests : BaseTestClass
             CodeProjectRoot = _codeProjectRoot + Path.DirectorySeparatorChar,
             RootNamespace = rootNamespace,
             AppendFolderToNamespace = appendFolderToNamespace,
-            // MonoGameForms names a component's class after the element, with no "Runtime" suffix,
+            // GumForms names a component's class after the element, with no "Runtime" suffix,
             // so the file names below read the same as the element names.
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
     }
 

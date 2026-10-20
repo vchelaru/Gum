@@ -110,7 +110,7 @@ public class CustomCodeStubDetectorTests : BaseTestClass
         CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
         {
             RootNamespace = "MyGame",
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
 
         string contents = customCodeGenerator.GetCustomCodeForElement(

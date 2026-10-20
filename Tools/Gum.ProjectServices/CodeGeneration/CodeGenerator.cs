@@ -120,7 +120,7 @@ public class CodeGenerationContext
     public bool PrefixCastsVisualToTextRuntime =>
         Instance == null
             ? BaseStandardRuntimeTypeName != null && string.IsNullOrEmpty(ThisPrefix)
-                && CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms
+                && CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms
             : InstanceStandardRuntimeTypeName != null;
 
     internal string TextRuntimeTypeName =>
@@ -179,7 +179,7 @@ public class CodeGenerationContext
             {
                 if (string.IsNullOrEmpty(ThisPrefix))
                 {
-                    if (CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    if (CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
                         return BaseStandardRuntimeTypeName is string runtimeTypeName
                             ? $"(({runtimeTypeName})this.Visual)"
@@ -232,7 +232,7 @@ public class CodeGenerationContext
 
     private void RefreshIsInstanceFormsObject()
     {
-        if (_instance == null || CodeOutputProjectSettings?.OutputLibrary != OutputLibrary.MonoGameForms)
+        if (_instance == null || CodeOutputProjectSettings?.OutputLibrary != OutputLibrary.GumForms)
         {
             _isInstanceFormsObject = false;
         }
@@ -242,7 +242,7 @@ public class CodeGenerationContext
             var instanceElement = ObjectFinder.Self.GetElementSave(_instance);
             if (instanceElement != null)
             {
-                if (this.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                if (this.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                 {
                     // everything is a form if it's not a standard:
                     var isStandard = instanceElement is StandardElementSave;
@@ -417,7 +417,7 @@ public class CodeGenerator
             projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
             throw new NotSupportedException(
-                $"{projectSettings.OutputLibrary} code generation currently only supports ObjectInstantiationType.FindByName. " +
+                $"{projectSettings.OutputLibrary.GetName()} code generation currently only supports ObjectInstantiationType.FindByName. " +
                 "Set ObjectInstantiationType to FindByName in ProjectCodeSettings.codsj (FullyInCode support is not implemented yet).");
         }
     }
@@ -552,7 +552,7 @@ public class CodeGenerator
         neededUsings.Add("System.Linq");
 
         if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary) ||
-            projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            projectSettings.OutputLibrary == OutputLibrary.GumForms)
         {
             neededUsings.Add(GetGumServiceNamespace(resolvedSyntaxVersion));
             neededUsings.Add(GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false));
@@ -609,7 +609,7 @@ public class CodeGenerator
         // https://github.com/vchelaru/Gum/issues/242
         if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
         {
-            var originalString = projectSettings.CommonUsingStatements;
+            var originalString = TranslateLegacyUsingStatements(projectSettings!.CommonUsingStatements, resolvedSyntaxVersion);
 
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
@@ -620,7 +620,7 @@ public class CodeGenerator
 
         if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
         {
-            string originalString = elementSettings!.UsingStatements;
+            string originalString = TranslateLegacyUsingStatements(elementSettings!.UsingStatements, resolvedSyntaxVersion);
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
             var splitUsings = result.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
@@ -649,6 +649,88 @@ public class CodeGenerator
         // Invariant so every machine generates the same order; not ordinal, to keep the order
         // existing generated files were written in.
         return neededUsings.OrderBy(item => item, StringComparer.InvariantCulture).ToList();
+    }
+
+    /// <summary>
+    /// Translates legacy runtime namespaces in user-supplied using statements (the .codsj
+    /// <c>CommonUsingStatements</c> and an element's <c>UsingStatements</c>) to the neutral
+    /// <c>Gum.*</c> names, at the same syntax versions where <see cref="GetGueDerivingNamespace"/> and
+    /// <see cref="GetGumServiceNamespace"/> switch to them. Below those versions the statements are
+    /// returned unchanged, so projects on an older runtime keep compiling. Only the generated output
+    /// changes; the saved settings are never rewritten. A translated line is dropped when its
+    /// target namespace is already imported by another line.
+    /// </summary>
+    internal static string TranslateLegacyUsingStatements(string usingStatements, int resolvedSyntaxVersion)
+    {
+        if (resolvedSyntaxVersion < 1 || string.IsNullOrEmpty(usingStatements))
+        {
+            return usingStatements;
+        }
+
+        string[] lines = usingStatements.Split('\n');
+        string?[] translated = new string?[lines.Length];
+        HashSet<string> imported = new HashSet<string>();
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string namespaceName = GetUsingNamespace(lines[i]);
+            translated[i] = GetNeutralUsingNamespace(namespaceName, resolvedSyntaxVersion);
+
+            if (translated[i] == null && namespaceName.Length > 0)
+            {
+                imported.Add(namespaceName);
+            }
+        }
+
+        List<string> result = new List<string>();
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string? neutral = translated[i];
+            if (neutral == null)
+            {
+                result.Add(lines[i]);
+            }
+            else if (imported.Add(neutral))
+            {
+                string indent = lines[i].Substring(0, lines[i].Length - lines[i].TrimStart().Length);
+                string lineEnding = lines[i].EndsWith('\r') ? "\r" : string.Empty;
+                result.Add($"{indent}using {neutral};{lineEnding}");
+            }
+        }
+
+        return string.Join("\n", result);
+    }
+
+    private static string GetUsingNamespace(string line)
+    {
+        string trimmed = line.Trim();
+        if (trimmed.StartsWith("using "))
+        {
+            trimmed = trimmed.Substring("using ".Length);
+        }
+
+        if (trimmed.EndsWith(';'))
+        {
+            trimmed = trimmed.Substring(0, trimmed.Length - 1);
+        }
+
+        return trimmed.Trim();
+    }
+
+    private static string? GetNeutralUsingNamespace(string namespaceName, int resolvedSyntaxVersion)
+    {
+        if (resolvedSyntaxVersion >= 1 &&
+            (namespaceName == "MonoGameGum.GueDeriving" || namespaceName == "SkiaGum.GueDeriving"))
+        {
+            return GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false);
+        }
+
+        if (resolvedSyntaxVersion >= 3 && namespaceName == "MonoGameGum")
+        {
+            return GetGumServiceNamespace(resolvedSyntaxVersion);
+        }
+
+        return null;
     }
 
     #endregion
@@ -755,7 +837,7 @@ public class CodeGenerator
             }
         }
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
         {
             // see if it's a forms object:
             if (elementType == typeof(ScreenSave) || elementType == typeof(ComponentSave))
@@ -824,7 +906,7 @@ public class CodeGenerator
         string? inheritance = null;
         if (element is ScreenSave)
         {
-            string fallback = projectSettings.OutputLibrary == OutputLibrary.MonoGameForms
+            string fallback = projectSettings.OutputLibrary == OutputLibrary.GumForms
                 ? "global::Gum.Forms.Controls.FrameworkElement"
                 : "Gum.Wireframe.GraphicalUiElement";
 
@@ -856,7 +938,7 @@ public class CodeGenerator
             // be a Forms control:
             ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
         {
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            if (projectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 GetGumFormsTypeFromBehaviors(element, out string? gumFormsType, out _);
 
@@ -937,7 +1019,7 @@ public class CodeGenerator
     /// </summary>
     public static string? GetUnsupportedFormsBaseTypeError(ElementSave element, CodeOutputProjectSettings projectSettings)
     {
-        if (projectSettings.OutputLibrary != OutputLibrary.MonoGameForms ||
+        if (projectSettings.OutputLibrary != OutputLibrary.GumForms ||
             element is ScreenSave ||
             element.BaseType == "Container" ||
             ObjectFinder.Self.GetStandardElement(element.BaseType) == null)
@@ -972,10 +1054,10 @@ public class CodeGenerator
 
         var stringBuilder = context.StringBuilder;
 
-        // MonoGameForms generates a Gum.Forms.Controls.FrameworkElement-derived class (see
+        // GumForms generates a Gum.Forms.Controls.FrameworkElement-derived class (see
         // GetInheritance), which raises property-changed notifications through OnPropertyChanged
         // rather than GraphicalUiElement's NotifyPropertyChanged.
-        var notifyMethodName = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms
+        var notifyMethodName = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms
             ? "OnPropertyChanged"
             : "NotifyPropertyChanged";
 
@@ -1074,7 +1156,7 @@ public class CodeGenerator
 
         if (isState)
         {
-            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && stateContainer is StandardElementSave)
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms && stateContainer is StandardElementSave)
             {
                 shouldGenerate = false;
             }
@@ -1196,7 +1278,7 @@ public class CodeGenerator
                     ElementSave? sourceInstanceElement = null;
                     string? textRuntimeCast = null;
 
-                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
                         // only if the object is not a standard element
                         sourceInstanceElement = ObjectFinder.Self.GetElementSave(foundInstance);
@@ -1419,12 +1501,12 @@ public class CodeGenerator
 
     /// <summary>
     /// Returns the placeholder type (see FormsControlPlaceholders.cs) standing in for the Forms
-    /// control the element derives from, or null when the output library is not MonoGameForms
+    /// control the element derives from, or null when the output library is not GumForms
     /// or no placeholder exists for the control.
     /// </summary>
     private Type? GetFormsPlaceholderType(ElementSave element, CodeOutputProjectSettings settings)
     {
-        if(settings.OutputLibrary != OutputLibrary.MonoGameForms)
+        if(settings.OutputLibrary != OutputLibrary.GumForms)
         {
             return null;
         }
@@ -1540,7 +1622,7 @@ public class CodeGenerator
         bool isFullyInstantiatingInCode =
             context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode;
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
         {
             if (isFullyInstantiatingInCode)
             {
@@ -1582,7 +1664,7 @@ public class CodeGenerator
         context.TabCount++;
         context.Instance = null;
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms &&
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms &&
             // if it is fully instantiated in code, then it already has its 
             // visual assigned by this point. Instead, we should call RefreshInternalVisualReferences
             isFullyInstantiatingInCode == false)
@@ -1598,7 +1680,7 @@ public class CodeGenerator
             }
             else
             {
-                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                 {
                     // July 17, 2025
                     // I don't think this
@@ -1652,7 +1734,7 @@ public class CodeGenerator
             context.Instance = null;
         }
 
-        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
         {
             //RefreshInternalVisualReferences
             context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
@@ -1693,7 +1775,7 @@ public class CodeGenerator
 
     private void AddFindByNameAssignment(CodeGenerationContext context)
     {
-        var isGeneratingFormsControls = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms;
+        var isGeneratingFormsControls = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms;
 
         var instance = context.Instance;
 
@@ -1888,7 +1970,7 @@ public class CodeGenerator
 
         var outputLibrary = context.CodeOutputProjectSettings.OutputLibrary;
 
-        if (outputLibrary == OutputLibrary.MonoGameForms)
+        if (outputLibrary == OutputLibrary.GumForms)
         {
             var builder = context.StringBuilder;
 
@@ -3295,7 +3377,7 @@ public class CodeGenerator
                 // add it to "this"
                 if (container is ScreenSave)
                 {
-                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
                         context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
                     }
@@ -3316,7 +3398,7 @@ public class CodeGenerator
                 }
                 else
                 {
-                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
                     {
                         context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
                     }
@@ -3403,7 +3485,7 @@ public class CodeGenerator
 
         if (visualApi == VisualApi.Gum)
         {
-            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(InteractiveGue visual) : base(visual)");
                 stringBuilder.AppendLine(context.Tabs + "{");
@@ -3435,7 +3517,7 @@ public class CodeGenerator
                 // approach so let's do that:
                 stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true, bool tryCreateFormsObject = true)");
             }
-            else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
@@ -3472,7 +3554,7 @@ public class CodeGenerator
             {
                 bool isContainerNeedingOwnRenderable = element.BaseType == "Container" &&
                     // In MonoGame the Container is a ContainerRuntime which handles this already
-                    (projectSettings.OutputLibrary != OutputLibrary.MonoGame && projectSettings.OutputLibrary != OutputLibrary.MonoGameForms);
+                    (projectSettings.OutputLibrary != OutputLibrary.MonoGame && projectSettings.OutputLibrary != OutputLibrary.GumForms);
 
                 // A Screen with no BaseType and no custom DefaultScreenBase falls back to bare
                 // Gum.Wireframe.GraphicalUiElement for the unified runtime (see GetInheritance),
@@ -3508,7 +3590,7 @@ public class CodeGenerator
                     //context.StringBuilder.AppendLine(context.Tabs +
                     //"AfterFullCreation();");
                 }
-                else if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                else if (projectSettings.OutputLibrary == OutputLibrary.GumForms)
                 {
                     // This is handled in the register function 
                 }
@@ -4333,7 +4415,7 @@ public class CodeGenerator
 
             var categories = "Categories";
             var thisOptionalVisual = "this";
-            if (codeProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            if (codeProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 categories = "Visual.Categories";
                 thisOptionalVisual = "this.Visual";
@@ -4356,7 +4438,7 @@ public class CodeGenerator
             tabCount++;
 
             string tagCategories = "((global::Gum.DataTypes.ElementSave)this.Tag).Categories";
-            if (codeProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            if (codeProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 tagCategories = "((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories";
             }
@@ -4794,7 +4876,7 @@ public class CodeGenerator
 
         ElementSave? instanceElement = null;
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && context.Instance != null)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms && context.Instance != null)
         {
             // if the variable is an exposed variable on the instance, then we don't want to do a .Visual., because the
             // exposed variable lives on the main generated object.
@@ -4809,13 +4891,13 @@ public class CodeGenerator
                 forceSetDirectlyOnInstance = true;
             }
         }
-        if (!forceSetDirectlyOnInstance && variable.IsState(container) && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if (!forceSetDirectlyOnInstance && variable.IsState(container) && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
         {
             // If it's a state set on an instance, set it directly on the instance and not on 
             forceSetDirectlyOnInstance = true;
         }
 
-        if (!forceSetDirectlyOnInstance && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if (!forceSetDirectlyOnInstance && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
         {
             // this could be a variable like assigning "Text" on a label. Since this label inherits directly from the standard Text type, then the
             // value Text exists right on it. This is a little dangerous because it means users could assign variables that don't exist on Label. To
@@ -5457,7 +5539,7 @@ public class CodeGenerator
             // October 5, 2025
             // Generate the screen
             // size:
-            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 // children attached to the screen should behave as if they are attached to the entire root, so make the screen fully
                 context.StringBuilder.AppendLine(context.Tabs + "this.Visual.Width = 0f;");
@@ -5645,7 +5727,7 @@ public class CodeGenerator
                 ? "this"
                 : _codeGenerationNameVerifier.ToCSharpName(ownerName);
 
-            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 var child = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
 
@@ -5703,10 +5785,10 @@ public class CodeGenerator
 
             var referenceInCode = "this." + _codeGenerationNameVerifier.ToCSharpName(referencedInstanceName);
 
-            // RenderTargetTextureSource is an IRenderableIpso. For MonoGameForms a non-standard
+            // RenderTargetTextureSource is an IRenderableIpso. For GumForms a non-standard
             // instance's field is the Forms wrapper, so reach its underlying visual.
             var referencedElement = ObjectFinder.Self.GetElementSave(referencedInstance);
-            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms &&
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms &&
                 referencedElement is not StandardElementSave)
             {
                 referenceInCode += ".Visual";
@@ -5805,7 +5887,7 @@ public class CodeGenerator
         else if (variable.GetRootName() == "SourceFile")
         {
             if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary) ||
-                context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.GumForms)
             {
                 return "SourceFileName";
             }

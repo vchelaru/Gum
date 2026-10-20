@@ -156,7 +156,7 @@ public class CustomCodeHeaderUpdaterTests : BaseTestClass
         CodeProjectRoot = "./",
         RootNamespace = "MyGame",
         AppendFolderToNamespace = true,
-        OutputLibrary = OutputLibrary.MonoGameForms
+        OutputLibrary = OutputLibrary.GumForms
     };
 
     private FilePath WriteFile(string relativePath, string contents)

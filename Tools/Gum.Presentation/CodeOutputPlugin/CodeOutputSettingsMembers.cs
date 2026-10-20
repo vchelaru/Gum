@@ -25,7 +25,7 @@ public class CodeOutputSettingsMembers
     // Also read by CodeFileLocationChange, so the migration prompt names a library as this row does.
     internal static readonly Dictionary<OutputLibrary, string> LibraryNames = new Dictionary<OutputLibrary, string>
     {
-        { OutputLibrary.MonoGameForms, "Gum Forms (recommended)" },
+        { OutputLibrary.GumForms, "Gum Forms (recommended)" },
         { OutputLibrary.Skia, "SkiaSharp (deprecated)" },
         { OutputLibrary.MonoGame, "MonoGame (deprecated)" },
         { OutputLibrary.Raylib, "Raylib (deprecated)" },
@@ -314,7 +314,7 @@ public class CodeOutputSettingsMembers
 
         member.CustomOptions = new List<object>
         {
-            LibraryNames[OutputLibrary.MonoGameForms],
+            LibraryNames[OutputLibrary.GumForms],
             LibraryNames[OutputLibrary.Skia],
             LibraryNames[OutputLibrary.MonoGame],
             LibraryNames[OutputLibrary.Raylib],
@@ -523,7 +523,7 @@ public class CodeOutputSettingsMembers
         {
             string detailText = string.Empty;
 
-            if (ProjectSettings?.OutputLibrary == OutputLibrary.MonoGameForms)
+            if (ProjectSettings?.OutputLibrary == OutputLibrary.GumForms)
             {
                 if (ProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {

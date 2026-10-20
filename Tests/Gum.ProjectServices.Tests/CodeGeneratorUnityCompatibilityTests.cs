@@ -89,7 +89,7 @@ public class CodeGeneratorUnityCompatibilityTests : BaseTestClass
 
     [Theory]
     [InlineData(OutputLibrary.MonoGame)]
-    [InlineData(OutputLibrary.MonoGameForms)]
+    [InlineData(OutputLibrary.GumForms)]
     public void GetGeneratedCodeForElement_RegistersWithUnityHookOrModuleInitializer(OutputLibrary outputLibrary)
     {
         string code = GenerateHost(languageVersion: null, outputLibrary);
@@ -144,7 +144,7 @@ public class CodeGeneratorUnityCompatibilityTests : BaseTestClass
 
     [Theory]
     [InlineData(OutputLibrary.MonoGame)]
-    [InlineData(OutputLibrary.MonoGameForms)]
+    [InlineData(OutputLibrary.GumForms)]
     public void GeneratedCode_AtCSharp9_UsesNoNewerLanguageFeatures(OutputLibrary outputLibrary)
     {
         string elementCode = GenerateHost(languageVersion: 9, outputLibrary);

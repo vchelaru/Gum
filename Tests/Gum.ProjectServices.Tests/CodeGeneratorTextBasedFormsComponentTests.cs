@@ -71,7 +71,7 @@ public class CodeGeneratorTextBasedFormsComponentTests : BaseTestClass
             new CodeOutputElementSettings(),
             new CodeOutputProjectSettings
             {
-                OutputLibrary = OutputLibrary.MonoGameForms,
+                OutputLibrary = OutputLibrary.GumForms,
                 ObjectInstantiationType = ObjectInstantiationType.FullyInCode,
                 RootNamespace = "MyGame",
             });
@@ -138,7 +138,7 @@ public class CodeGeneratorTextBasedFormsComponentTests : BaseTestClass
             new CodeOutputElementSettings(),
             new CodeOutputProjectSettings
             {
-                OutputLibrary = OutputLibrary.MonoGameForms,
+                OutputLibrary = OutputLibrary.GumForms,
                 ObjectInstantiationType = ObjectInstantiationType.FullyInCode,
                 RootNamespace = "MyGame",
             });

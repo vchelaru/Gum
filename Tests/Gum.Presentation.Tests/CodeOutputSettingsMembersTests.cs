@@ -46,7 +46,7 @@ public class CodeOutputSettingsMembersTests
     [Fact]
     public void BuildCategories_ListsTheProjectRowsThenTheElementRows()
     {
-        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms };
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms };
         _sut.ElementSettings = new CodeOutputElementSettings();
 
         List<MemberCategory> categories = _sut.BuildCategories();
@@ -66,7 +66,7 @@ public class CodeOutputSettingsMembersTests
     [Fact]
     public void BuildProjectCategory_ListsOnlyTheProjectRows()
     {
-        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms };
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms };
 
         MemberCategory category = _sut.BuildProjectCategory();
 
@@ -233,7 +233,7 @@ public class CodeOutputSettingsMembersTests
     [Fact]
     public void OutputLibrary_WritesTheLibrary_AndAsksForARebuild()
     {
-        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms };
+        _sut.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms };
         int rebuilds = 0;
         _sut.RebuildRequested += (_, _) => rebuilds++;
         InstanceMember library = Member("Output Library");

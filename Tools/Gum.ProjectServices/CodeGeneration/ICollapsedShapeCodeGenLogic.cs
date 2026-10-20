@@ -15,7 +15,7 @@ public interface ICollapsedShapeCodeGenLogic
     /// <summary>
     /// Returns whether generated code for the given standard element should target the collapsed
     /// runtime type. True only when the element is a legacy shape, the resolved syntax version is
-    /// at or above the collapse version, the output library is MonoGame or MonoGameForms, and
+    /// at or above the collapse version, the output library is MonoGame or GumForms, and
     /// instantiation is fully-in-code.
     /// </summary>
     bool ShouldCollapse(string? standardElementName, int resolvedSyntaxVersion, CodeOutputProjectSettings? projectSettings);

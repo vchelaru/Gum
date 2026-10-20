@@ -40,7 +40,7 @@ public class CodeGeneratorRegisterRuntimeTypeTests : BaseTestClass
     {
         return new CodeOutputProjectSettings
         {
-            OutputLibrary = OutputLibrary.MonoGameForms,
+            OutputLibrary = OutputLibrary.GumForms,
             RootNamespace = "MyGame",
         };
     }

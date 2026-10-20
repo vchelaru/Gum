@@ -115,7 +115,7 @@ public class CodeGeneratorRenderTargetTextureSourceTests : BaseTestClass
 
     [Theory]
     [InlineData(OutputLibrary.MonoGame)]
-    [InlineData(OutputLibrary.MonoGameForms)]
+    [InlineData(OutputLibrary.GumForms)]
     public void GetGeneratedCodeForElement_ExposedRenderTargetTextureSource_TypesPropertyAsIRenderableIpso(OutputLibrary library)
     {
         GumProjectSave project = Project;

@@ -15,7 +15,7 @@ public class CodeGeneratorGetInheritanceTests
         string json = JsonConvert.SerializeObject(new
         {
             DefaultScreenBase = "Gum.Wireframe.BindableGue",
-            OutputLibrary = (int)OutputLibrary.MonoGameForms
+            OutputLibrary = (int)OutputLibrary.GumForms
         });
         CodeOutputProjectSettings settings = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(json)!;
 
@@ -28,7 +28,7 @@ public class CodeGeneratorGetInheritanceTests
         settings.Version.ShouldBe(1);
         settings.DefaultScreenBase.ShouldBe("");
 
-        // Codegen should use the MonoGameForms fallback
+        // Codegen should use the GumForms fallback
         ScreenSave screen = new ScreenSave();
         string? result = CodeGenerator.GetInheritance(screen, settings);
         result.ShouldBe("global::Gum.Forms.Controls.FrameworkElement");
@@ -41,7 +41,7 @@ public class CodeGeneratorGetInheritanceTests
         {
             Version = 1,
             DefaultScreenBase = "MyProject.Screens.MyBaseScreen",
-            OutputLibrary = (int)OutputLibrary.MonoGameForms
+            OutputLibrary = (int)OutputLibrary.GumForms
         });
         CodeOutputProjectSettings settings = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(json)!;
 
@@ -96,11 +96,11 @@ public class CodeGeneratorGetInheritanceTests
     }
 
     [Fact]
-    public void GetInheritance_MonoGameForms_Screen_NoBaseType_NoDefaultScreenBase_ReturnsFrameworkElement()
+    public void GetInheritance_GumForms_Screen_NoBaseType_NoDefaultScreenBase_ReturnsFrameworkElement()
     {
         ScreenSave screen = new ScreenSave();
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings();
-        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        settings.OutputLibrary = OutputLibrary.GumForms;
         settings.DefaultScreenBase = "";
 
         string? result = CodeGenerator.GetInheritance(screen, settings);
@@ -109,11 +109,11 @@ public class CodeGeneratorGetInheritanceTests
     }
 
     [Fact]
-    public void GetInheritance_MonoGameForms_Screen_NoBaseType_UsesDefaultScreenBase()
+    public void GetInheritance_GumForms_Screen_NoBaseType_UsesDefaultScreenBase()
     {
         ScreenSave screen = new ScreenSave();
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings();
-        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        settings.OutputLibrary = OutputLibrary.GumForms;
         settings.DefaultScreenBase = "MyProject.Screens.MyBaseScreen";
 
         string? result = CodeGenerator.GetInheritance(screen, settings);
@@ -122,12 +122,12 @@ public class CodeGeneratorGetInheritanceTests
     }
 
     [Fact]
-    public void GetInheritance_MonoGameForms_Screen_WithBaseType_IgnoresDefaultScreenBase()
+    public void GetInheritance_GumForms_Screen_WithBaseType_IgnoresDefaultScreenBase()
     {
         ScreenSave screen = new ScreenSave();
         screen.BaseType = "SomeOtherScreen";
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings();
-        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        settings.OutputLibrary = OutputLibrary.GumForms;
         settings.DefaultScreenBase = "MyProject.Screens.MyBaseScreen";
 
         string? result = CodeGenerator.GetInheritance(screen, settings);
@@ -138,7 +138,7 @@ public class CodeGeneratorGetInheritanceTests
     [Fact]
     public void GetInheritance_Raylib_Screen_NoBaseType_NoDefaultScreenBase_ReturnsGraphicalUiElement()
     {
-        // Raylib is not MonoGameForms, so it takes the same non-Forms fallback as plain MonoGame.
+        // Raylib is not GumForms, so it takes the same non-Forms fallback as plain MonoGame.
         ScreenSave screen = new ScreenSave();
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings();
         settings.OutputLibrary = OutputLibrary.Raylib;
@@ -165,7 +165,7 @@ public class CodeGeneratorGetInheritanceTests
     }
 
     [Fact]
-    public void GetInheritance_MonoGameForms_ComponentInheritingFromNonContainerStandard_ReturnsDescriptiveError()
+    public void GetInheritance_GumForms_ComponentInheritingFromNonContainerStandard_ReturnsDescriptiveError()
     {
         StandardElementSave text = new StandardElementSave { Name = "Text" };
         GumProjectSave project = new GumProjectSave();
@@ -180,7 +180,7 @@ public class CodeGeneratorGetInheritanceTests
 
             CodeOutputProjectSettings settings = new CodeOutputProjectSettings
             {
-                OutputLibrary = OutputLibrary.MonoGameForms
+                OutputLibrary = OutputLibrary.GumForms
             };
 
             string? result = CodeGenerator.GetInheritance(component, settings);
@@ -194,7 +194,7 @@ public class CodeGeneratorGetInheritanceTests
     }
 
     [Fact]
-    public void GetInheritance_MonoGameForms_ComponentWithColorPickerBehavior_ReturnsColorPicker()
+    public void GetInheritance_GumForms_ComponentWithColorPickerBehavior_ReturnsColorPicker()
     {
         ComponentSave component = new ComponentSave();
         component.Name = "Components/MyColorPicker";
@@ -204,7 +204,7 @@ public class CodeGeneratorGetInheritanceTests
 
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings
         {
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
 
         string? result = CodeGenerator.GetInheritance(component, settings);
@@ -213,7 +213,7 @@ public class CodeGeneratorGetInheritanceTests
     }
 
     [Fact]
-    public void GetInheritance_MonoGameForms_ComponentWithExpanderBehavior_ReturnsExpander()
+    public void GetInheritance_GumForms_ComponentWithExpanderBehavior_ReturnsExpander()
     {
         ComponentSave component = new ComponentSave();
         component.Name = "Components/MyExpander";
@@ -223,7 +223,7 @@ public class CodeGeneratorGetInheritanceTests
 
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings
         {
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
 
         string? result = CodeGenerator.GetInheritance(component, settings);

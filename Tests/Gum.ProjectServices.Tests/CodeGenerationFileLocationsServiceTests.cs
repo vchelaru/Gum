@@ -22,7 +22,7 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
     public void GetGeneratedFileName_ShouldUseCodeProjectRoot_WhenGeneratedCodeFolderIsEmpty()
     {
         ComponentSave component = CreateComponent("Buttons/IconButton");
-        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/", OutputLibrary = OutputLibrary.MonoGameForms };
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings { CodeProjectRoot = "Code/", OutputLibrary = OutputLibrary.GumForms };
 
         FilePath? generated = CreateService().GetGeneratedFileName(
             component, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
@@ -41,7 +41,7 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
         {
             CodeProjectRoot = "Code/",
             GeneratedCodeFolder = generatedCodeFolder,
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
         CodeGenerationFileLocationsService service = CreateService();
 
@@ -94,7 +94,7 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
         {
             CodeProjectRoot = "Code/",
             GeneratedCodeFolderPrefix = prefix,
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
         CodeGenerationFileLocationsService service = CreateService();
 
@@ -117,7 +117,7 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
         {
             CodeProjectRoot = "Code/",
             GeneratedCodeFolderPrefix = prefix,
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
 
         FilePath? generated = CreateService().GetGeneratedFileName(screen, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
@@ -139,7 +139,7 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
         {
             CodeProjectRoot = "Code/",
             GeneratedCodeFolderPrefix = prefix,
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
 
         FilePath? generated = CreateService().GetGeneratedFileName(component, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
@@ -157,7 +157,7 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
             CodeProjectRoot = "Code/",
             GeneratedCodeFolder = "Gum/Generated",
             GeneratedCodeFolderPrefix = "My",
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
 
         FilePath? generated = CreateService().GetGeneratedFileName(component, new CodeOutputElementSettings(), projectSettings, VisualApi.Gum);
@@ -173,7 +173,7 @@ public class CodeGenerationFileLocationsServiceTests : BaseTestClass
         {
             CodeProjectRoot = "Code/",
             GeneratedCodeFolderPrefix = "Gum",
-            OutputLibrary = OutputLibrary.MonoGameForms
+            OutputLibrary = OutputLibrary.GumForms
         };
         CodeOutputElementSettings elementSettings = new CodeOutputElementSettings { GeneratedFileName = "Custom/Place.Generated.cs" };
 

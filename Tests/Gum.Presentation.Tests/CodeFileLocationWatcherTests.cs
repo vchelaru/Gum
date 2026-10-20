@@ -26,7 +26,7 @@ public class CodeFileLocationWatcherTests
 
         settings.RootNamespace = "Renamed";
         watcher.CheckAfterEdit(settings);
-        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        settings.OutputLibrary = OutputLibrary.GumForms;
         watcher.CheckAfterEdit(settings);
         watcher.CheckAfterEdit(settings);
 
@@ -45,7 +45,7 @@ public class CodeFileLocationWatcherTests
         messenger.Register<CodeFileLocationsChangedMessage>(this, (_, message) => locations.Add(message));
         messenger.Register<CustomCodeHeadersChangedMessage>(this, (_, message) => headers.Add(message));
         CodeFileLocationWatcher watcher = new CodeFileLocationWatcher(messenger, new CodeFileLocationChange(), new CustomCodeHeaderChange());
-        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms, RootNamespace = "Game" };
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms, RootNamespace = "Game" };
         watcher.Reset(settings);
 
         settings.GeneratedCodeFolderPrefix = "GumCodeGen/";
@@ -67,7 +67,7 @@ public class CodeFileLocationWatcherTests
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGame, RootNamespace = "Game" };
         watcher.Reset(settings);
 
-        settings.OutputLibrary = OutputLibrary.MonoGameForms;
+        settings.OutputLibrary = OutputLibrary.GumForms;
         watcher.CheckAfterEdit(settings);
         settings.RootNamespace = "Renamed";
         settings.AppendFolderToNamespace = true;

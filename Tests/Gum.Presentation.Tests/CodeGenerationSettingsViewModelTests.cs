@@ -31,7 +31,7 @@ public class CodeGenerationSettingsViewModelTests
             projectState.Object,
             new SyntaxVersionDetectionService(Mock.Of<ICodeGenLogger>()),
             viewModel);
-        _members.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.MonoGameForms };
+        _members.ProjectSettings = new CodeOutputProjectSettings { OutputLibrary = OutputLibrary.GumForms };
         _sut = new CodeGenerationSettingsViewModel(_members);
     }
 

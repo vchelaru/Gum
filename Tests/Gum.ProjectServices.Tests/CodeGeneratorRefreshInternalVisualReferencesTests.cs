@@ -10,7 +10,7 @@ namespace Gum.ProjectServices.Tests;
 
 /// <summary>
 /// Tests for #3501: <c>base.RefreshInternalVisualReferences();</c> must only be emitted for
-/// <see cref="OutputLibrary.MonoGameForms"/>, since that method only exists on the Forms
+/// <see cref="OutputLibrary.GumForms"/>, since that method only exists on the Forms
 /// <c>FrameworkElement</c> hierarchy (<c>MonoGameGum/Forms/Controls/FrameworkElement.cs</c>). The
 /// generator previously gated the call on <c>OutputLibrary != OutputLibrary.Skia</c>, which wrongly
 /// emitted the call for plain <see cref="OutputLibrary.MonoGame"/> (and Raylib/WPF/Maui/XamarinForms)
@@ -79,7 +79,7 @@ public class CodeGeneratorRefreshInternalVisualReferencesTests : BaseTestClass
     }
 
     [Fact]
-    public void GetGeneratedCodeForElement_MonoGameForms_EmitsRefreshInternalVisualReferences()
+    public void GetGeneratedCodeForElement_GumForms_EmitsRefreshInternalVisualReferences()
     {
         GumProjectSave project = Project;
 
@@ -92,7 +92,7 @@ public class CodeGeneratorRefreshInternalVisualReferencesTests : BaseTestClass
             string code = CreateCodeGenerator().GetGeneratedCodeForElement(
                 component,
                 new CodeOutputElementSettings(),
-                CreateProjectSettings(OutputLibrary.MonoGameForms));
+                CreateProjectSettings(OutputLibrary.GumForms));
 
             code.ShouldContain("base.RefreshInternalVisualReferences();");
         }

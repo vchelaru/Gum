@@ -79,7 +79,7 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
     #region CollectUsingNamespaces
 
     [Fact]
-    public void CollectUsingNamespaces_MonoGameFormsVersion2_EmitsMonoGameGumUsing()
+    public void CollectUsingNamespaces_GumFormsVersion2_EmitsMonoGameGumUsing()
     {
         ComponentSave component = new ComponentSave { Name = "Widgets/Host" };
         Project.Components.Add(component);
@@ -88,7 +88,7 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
         CodeGenerator generator = CreateCodeGenerator();
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings
         {
-            OutputLibrary = OutputLibrary.MonoGameForms,
+            OutputLibrary = OutputLibrary.GumForms,
             RootNamespace = "MyGame",
         };
 
@@ -103,7 +103,7 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
     }
 
     [Fact]
-    public void CollectUsingNamespaces_MonoGameFormsVersion3_EmitsGumUsing()
+    public void CollectUsingNamespaces_GumFormsVersion3_EmitsGumUsing()
     {
         ComponentSave component = new ComponentSave { Name = "Widgets/Host" };
         Project.Components.Add(component);
@@ -112,7 +112,7 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
         CodeGenerator generator = CreateCodeGenerator();
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings
         {
-            OutputLibrary = OutputLibrary.MonoGameForms,
+            OutputLibrary = OutputLibrary.GumForms,
             RootNamespace = "MyGame",
         };
 
@@ -184,7 +184,7 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
     private string GetParentAssignmentCode(int syntaxVersion)
     {
         // A GraphicalUiElement-typed owner (standard Container instance) parenting a
-        // Forms-typed child (component instance) in MonoGameForms output.
+        // Forms-typed child (component instance) in GumForms output.
         ComponentSave button = new ComponentSave { Name = "Controls/MyButton" };
         StateSave buttonDefault = new StateSave { Name = "Default", ParentContainer = button };
         button.States.Add(buttonDefault);
@@ -223,7 +223,7 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
 
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings
         {
-            OutputLibrary = OutputLibrary.MonoGameForms,
+            OutputLibrary = OutputLibrary.GumForms,
             RootNamespace = "MyGame",
             SyntaxVersion = syntaxVersion.ToString(),
         };

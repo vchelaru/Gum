@@ -99,7 +99,7 @@ public static class CodegenInitCommand
             Console.WriteLine($"  CsprojPath      : {result.Settings.CsprojPath}");
         }
         Console.WriteLine($"  RootNamespace   : {result.Settings.RootNamespace}");
-        Console.WriteLine($"  OutputLibrary   : {result.Settings.OutputLibrary}");
+        Console.WriteLine($"  OutputLibrary   : {result.Settings.OutputLibrary.GetName()}");
         Console.WriteLine($"  Settings saved to: {settingsFilePath}");
 
         return 0;

@@ -76,7 +76,7 @@ public class CodegenInitCommandTests : IDisposable
         result.ExitCode.ShouldBe(0);
         result.StandardOutput.ShouldContain("CodeProjectRoot");
         result.StandardOutput.ShouldContain("RootNamespace");
-        result.StandardOutput.ShouldContain("OutputLibrary");
+        result.StandardOutput.ShouldContain("OutputLibrary   : GumForms");
     }
 
     [Fact]
