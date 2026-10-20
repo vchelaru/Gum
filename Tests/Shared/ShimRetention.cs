@@ -32,12 +32,19 @@ internal static class ShimRetention
     private const string PermanentShimName = "GumService";
 
     /// <summary>
+    /// Fewer shims than this in an assembly means the namespace filter or the shims themselves went
+    /// missing, so the check would pass vacuously.
+    /// </summary>
+    public const int MinimumShimsPerAssembly = 10;
+
+    /// <summary>
     /// Returns one line per shim in <paramref name="assembly"/> that is not obsolete or whose
     /// message lacks the retention dates. Empty when every shim complies.
     /// </summary>
     public static List<string> FindViolations(Assembly assembly)
     {
         List<string> violations = new List<string>();
+        int shimCount = 0;
 
         foreach (Type type in assembly.GetExportedTypes())
         {
@@ -45,6 +52,8 @@ internal static class ShimRetention
             {
                 continue;
             }
+
+            shimCount++;
 
             ObsoleteAttribute? typeObsolete = type.GetCustomAttribute<ObsoleteAttribute>(inherit: false);
 
@@ -83,6 +92,11 @@ internal static class ShimRetention
             }
 
             violations.Add($"{type.FullName}: public type in a legacy namespace is not [Obsolete]");
+        }
+
+        if (shimCount < MinimumShimsPerAssembly)
+        {
+            violations.Add($"{assembly.GetName().Name}: found only {shimCount} shims, expected at least {MinimumShimsPerAssembly}");
         }
 
         return violations;
