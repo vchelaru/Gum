@@ -32,6 +32,16 @@ fi
 
 mkdir -p "$results"
 streams="$(grep -vE '^\s*(#|$)' "$manifest" | awk '{print $1}' | sort -u)"
+# STREAMS (space separated) limits the run to those streams; the manifest check above still covers all.
+if [ -n "${STREAMS:-}" ]; then
+  wanted=""
+  for want in $STREAMS; do
+    echo "$streams" | grep -qFx "$want" || { echo "::error::Unknown stream $want"; exit 1; }
+    wanted="$wanted $want"
+  done
+  streams="$wanted"
+fi
+echo "Streams:" $streams
 pids=(); names=()
 
 run_stream() {
@@ -73,7 +83,7 @@ for i in "${!pids[@]}"; do
 done
 
 summary="$(grep -h '^=== .* finished in ' "$results"/stream-*.log | sed -E 's/^=== (.*) finished in ([0-9]+) s, exit ([0-9]+) ===$/\2 s\t\1\texit \3/' | sort -rn)"
-echo "Wall time $((SECONDS - total_start)) s across $(echo "$streams" | wc -l) streams."
+echo "Wall time $((SECONDS - total_start)) s across $(echo $streams | wc -w) streams."
 echo "$summary"
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
   { echo "### Windows test streams (wall $((SECONDS - total_start)) s)"; echo '```'; echo "$summary"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

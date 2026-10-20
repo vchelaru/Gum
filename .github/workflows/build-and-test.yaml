@@ -43,7 +43,7 @@ jobs:
   # in the top-of-file comment. Outputs 'true' for every event other than pull_request.
   #
   # It also outputs `scope`: 'fast' when the PR carries the `fast-ci` label, else 'full' (and always
-  # 'full' for any event other than pull_request). Nothing reads it yet (#6282). The label is read
+  # 'full' for any event other than pull_request) (#6282). The label is read
   # live from the API, so re-running a job after adding or removing the label sees the new value
   # rather than the stale event payload. Adding or removing the label reruns the PR's run through
   # .github/workflows/fast-ci-label.yaml, so no extra pull_request run exists to mask the required contexts.
@@ -52,6 +52,9 @@ jobs:
     outputs:
       non-docs: ${{ github.event_name != 'pull_request' || steps.filter.outputs.non-docs == 'true' }}
       scope: ${{ steps.scope.outputs.scope }}
+      avalonia: ${{ steps.jobpaths.outputs.avalonia }}
+      aot: ${{ steps.jobpaths.outputs.aot }}
+      gencode: ${{ steps.jobpaths.outputs.gencode }}
     steps:
       - name: Scope (fast-ci label)
         id: scope
@@ -87,6 +90,93 @@ jobs:
               - '!**/*.md'
               - '!.gitbook/**'
 
+      # Which of the optional jobs a PR touches, used only when scope is 'fast' (full scope runs them
+      # all). Positive path lists, so a new top-level directory is NOT covered until it is added here;
+      # the full run at the end of a fast session (and every push to main in full mode) is the net.
+      # - avalonia: the tool, its shared logic and the core libraries it compiles. Not MonoGameGum or
+      #   the host runtimes, which the head also references: a break there that only the head's own
+      #   build would catch waits for the full run (accepted fast-mode trade-off).
+      # - aot: exactly the NativeAotSmoke.Harness reference closure (MonoGameGum and the core libs).
+      # - gencode: the generator and CLI, the harness projects, the runtimes they compile against and
+      #   the themes. Broad on purpose; it is off the critical path (about 4 minutes).
+      # Every filter also fires on root build files and anything under .github.
+      - name: Detect which optional jobs a PR touches
+        if: github.event_name == 'pull_request'
+        id: jobpaths
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            avalonia:
+              - 'Tool/**'
+              - 'Tools/**'
+              - 'Gum/**'
+              - 'Themes/**'
+              - 'DataUi.Core/**'
+              - 'AvaloniaDataUi/**'
+              - 'Tests/Gum.Avalonia.Tests/**'
+              - 'Tests/PluginHostFixture/**'
+              - 'GumCommon/**'
+              - 'GumDataTypes/**'
+              - 'GumRuntime/**'
+              - 'RenderingLibrary/**'
+              - 'InputLibrary/**'
+              - 'ToolsUtilities/**'
+              - 'XnaAndWinforms/**'
+              - 'FlatRedBall.SpecializedXnaControls/**'
+              - 'Runtimes/SkiaGum/**'
+              - 'Runtimes/GumShapes/**'
+              - 'Runtimes/GumExpressions/**'
+              - 'Gum.slnx'
+              - 'GumCoreShared.projitems'
+              - '*.props'
+              - '*.targets'
+              - 'global.json'
+              - 'NuGet.config'
+              - '.github/**'
+            aot:
+              - 'MonoGameGum/**'
+              - 'GumCommon/**'
+              - 'GumDataTypes/**'
+              - 'GumRuntime/**'
+              - 'RenderingLibrary/**'
+              - 'ToolsUtilities/**'
+              - 'Gum/DataTypes/**'
+              - 'Gum/Graphics/**'
+              - 'Gum/Logic/**'
+              - 'Gum/Managers/**'
+              - 'Gum/Mvvm/**'
+              - 'Gum/Reflection/**'
+              - 'Gum/RenderingLibrary/**'
+              - 'Gum/Wireframe/**'
+              - 'Tools/Gum.ProjectServices/**'
+              - 'Tools/Gum.Analyzers/**'
+              - 'Tests/NativeAotSmoke.Harness/**'
+              - 'GumCoreShared.projitems'
+              - '*.props'
+              - '*.targets'
+              - 'global.json'
+              - 'NuGet.config'
+              - '.github/**'
+            gencode:
+              - 'Tools/**'
+              - 'Tests/CodeGen_*/**'
+              - 'Tests/GenerateAllCodeGenProjects.bat'
+              - 'Gum/CodeOutputPlugin/**'
+              - 'MonoGameGum/**'
+              - 'Runtimes/**'
+              - 'GumCommon/**'
+              - 'GumDataTypes/**'
+              - 'GumRuntime/**'
+              - 'RenderingLibrary/**'
+              - 'ToolsUtilities/**'
+              - 'Themes/**'
+              - 'GumCoreShared.projitems'
+              - '*.props'
+              - '*.targets'
+              - 'global.json'
+              - 'NuGet.config'
+              - '.github/**'
+
   # The Avalonia head (Direction/avalonia-migration/phase-30) must build and its headless tests must
   # pass on all three desktop OSes from the first PR that adds it. Plain net10.0, no submodules, no
   # workloads; the matrix is what proves the purity guard (a WPF/WinForms leak fails on macOS/Linux).
@@ -99,7 +189,7 @@ jobs:
   # still runs on Windows and macOS in Build-and-Test on every PR.
   Build-Avalonia-Head:
     needs: Changes
-    if: github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true'
+    if: github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true' && (needs.Changes.outputs.scope != 'fast' || needs.Changes.outputs.avalonia == 'true')
     strategy:
       fail-fast: false
       matrix:
@@ -195,7 +285,7 @@ jobs:
   # stays on just net8.0 with no flags needed.
   Native-AOT-Smoke:
     needs: Changes
-    if: github.event_name != 'push' && github.event_name != 'schedule' && needs.Changes.outputs.non-docs == 'true'
+    if: github.event_name != 'push' && github.event_name != 'schedule' && needs.Changes.outputs.non-docs == 'true' && (needs.Changes.outputs.scope != 'fast' || needs.Changes.outputs.aot == 'true')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -247,7 +337,7 @@ jobs:
   # The job does nothing on a push to main (it used to seed a workload cache).
   Build-Generated-Code:
     needs: Changes
-    if: github.event_name != 'schedule' && github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true'
+    if: github.event_name != 'schedule' && github.event_name != 'push' && needs.Changes.outputs.non-docs == 'true' && (needs.Changes.outputs.scope != 'fast' || needs.Changes.outputs.gencode == 'true')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -332,13 +422,21 @@ jobs:
         if: steps.cache-nuget.outputs.cache-hit != 'true'
         run: dotnet restore "Tests/CiTestProjects.slnf" --verbosity quiet
 
+  # The required contexts are `Build-and-Test (windows-latest)` and `Build-and-Test (macos-15)`, so the
+  # name is pinned here and the legs always run; a leg with nothing to do (docs-only PR, the Windows
+  # leg on a push to main, the macOS leg in fast scope) runs on ubuntu-latest and goes green in seconds
+  # instead of waiting for a Windows or macOS runner (#6282). A leg is only sent to ubuntu on an explicit
+  # `false`/`fast` from Changes, so a failed Changes job can never turn real work into a no-op. The
+  # steps below are gated on `steps.plan.outputs.active`, never on runner.os alone.
   Build-and-Test:
-    if: github.event_name != 'schedule'
+    needs: Changes
+    if: ${{ !cancelled() && github.event_name != 'schedule' }}
+    name: Build-and-Test (${{ matrix.os }})
     strategy:
       matrix:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos
         os: [windows-latest, macos-15]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ ((github.event_name == 'pull_request' && needs.Changes.outputs.non-docs == 'false') || (github.event_name == 'push' && matrix.os == 'windows-latest') || (github.event_name == 'pull_request' && needs.Changes.outputs.scope == 'fast' && matrix.os == 'macos-15')) && 'ubuntu-latest' || matrix.os }}
     steps:
       # actions/checkout's `submodules: recursive` does shallow (--depth=1)
       # submodule fetches, which fail outright whenever a nested submodule pins a
@@ -377,17 +475,21 @@ jobs:
 
       # Whether this leg has anything to do. Every later step keys off this instead of repeating the
       # event logic. A docs-only PR does nothing; a push to main only seeds the macOS workload cache
-      # (Windows installs no workloads, so its leg is a no-op on push).
+      # (Windows installs no workloads, so its leg is a no-op on push); in fast scope the macOS leg is a
+      # no-op and the Windows leg runs only the headless test stream.
       - name: Plan
         id: plan
         shell: bash
         env:
           EVENT: ${{ github.event_name }}
           NON_DOCS: ${{ steps.docs-only.outputs.non-docs }}
+          SCOPE: ${{ needs.Changes.outputs.scope }}
+          MATRIX_OS: ${{ matrix.os }}
         run: |
           active=true
           if [ "$EVENT" = "pull_request" ] && [ "$NON_DOCS" != "true" ]; then active=false; fi
-          if [ "$EVENT" = "push" ] && [ "$RUNNER_OS" != "macOS" ]; then active=false; fi
+          if [ "$EVENT" = "push" ] && [ "$MATRIX_OS" != "macos-15" ]; then active=false; fi
+          if [ "$EVENT" = "pull_request" ] && [ "$SCOPE" = "fast" ] && [ "$MATRIX_OS" = "macos-15" ]; then active=false; fi
           echo "active=$active" >> "$GITHUB_OUTPUT"
 
       # Cache the submodule object stores (.git/modules) + working trees, keyed on
@@ -769,7 +871,7 @@ jobs:
       # trx now lands in the shared TestResults dir so the "Publish Test Results"
       # reporter gates on it like every other suite.
       - name: "Install Mesa llvmpipe (Windows, #3250)"
-        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true' && needs.Changes.outputs.scope != 'fast'
         uses: ./.github/actions/install-mesa-llvmpipe
         with:
           dest-dirs: |
@@ -799,11 +901,15 @@ jobs:
       # Mesa llvmpipe ones in two more, each project still its own `dotnet test` with its own trx. The
       # project-to-stream list is .github/scripts/windows-test-groups.txt, and the script fails fast
       # unless it matches Tests/CiTestProjects.slnf exactly. Only the Mesa streams get GALLIUM_DRIVER.
-      # macOS keeps the one-after-another steps above (it has no Mesa and runs the headless list only).
+      # Fast scope (the `fast-ci` label) keeps compiling every test project but runs only the headless
+      # stream, skipping Mesa. macOS keeps the one-after-another steps above (it has no Mesa and runs the headless list only).
       - name: Test projects (Windows, concurrent streams)
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true'
         timeout-minutes: 25
         shell: bash
+        env:
+          # Fast scope runs only the headless stream; the Mesa streams need the Mesa install above.
+          STREAMS: ${{ needs.Changes.outputs.scope == 'fast' && 'headless' || '' }}
         run: bash .github/scripts/test-concurrent.sh
 
       # Slowest classes and tests in the job summary, so a slow suite can be explained from the run
