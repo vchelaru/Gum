@@ -83,10 +83,12 @@ public class ArcMatchesCircleTests : BaseTestClass
         container.Height = CanvasSize;
         container.IsRenderTarget = true;
 
-        ColoredRectangleRuntime backdrop = new();
+        RectangleRuntime backdrop = new();
         backdrop.Width = CanvasSize;
         backdrop.Height = CanvasSize;
-        backdrop.Color = Backdrop;
+        backdrop.IsFilled = true;
+        backdrop.StrokeWidth = 0;
+        backdrop.FillColor = Backdrop;
         container.Children.Add(backdrop);
 
         GraphicalUiElement shape;
@@ -113,11 +115,11 @@ public class ArcMatchesCircleTests : BaseTestClass
         shape.Height = BoxSize;
         container.Children.Add(shape);
 
-        GumService.Default.Root.Children.Add(container);
-        GumService.Default.Root.UpdateLayout();
+        Gum.GumService.Default.Root.Children.Add(container);
+        Gum.GumService.Default.Root.UpdateLayout();
 
         BeginDrawing();
-        GumService.Default.Draw();
+        Gum.GumService.Default.Draw();
         EndDrawing();
 
         RenderTexture2D rt = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
@@ -131,7 +133,7 @@ public class ArcMatchesCircleTests : BaseTestClass
             }
         }
         UnloadImage(image);
-        GumService.Default.Root.Children.Clear();
+        Gum.GumService.Default.Root.Children.Clear();
         return result;
     }
 }

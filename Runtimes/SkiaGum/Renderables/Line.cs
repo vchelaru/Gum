@@ -8,7 +8,7 @@ namespace SkiaGum.Renderables;
 /// </summary>
 /// <remarks>
 /// A line is not inset like Rectangle and Circle. The stroke is centered on the geometric line
-/// (<see cref="IsOffsetAppliedForStroke"/> is false), so a 1px line along a box edge covers half a
+/// (<c>IsOffsetAppliedForStroke</c> is false), so a 1px line along a box edge covers half a
 /// pixel on each side and bleeds outside the box, and round caps extend half the stroke width past
 /// the endpoints. Rectangle and Circle are inset because their box is the visible boundary; a 1px
 /// line inset the same way would vanish. This is intentional and matches the MonoGame line.
