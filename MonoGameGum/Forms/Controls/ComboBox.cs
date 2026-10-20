@@ -350,6 +350,8 @@ public class ComboBox :
     {
         base.ReactToVisualRemoved();
 
+        // FRB1 only: these lambdas cannot be unsubscribed when the Visual is replaced, so the old
+        // Visual keeps driving this control after a swap (see #6208). Not fixed until a FRB1 project needs it.
 #if !FRB
         Visual.Click -= this.HandleClick;
         Visual.Push -= this.HandlePush;
