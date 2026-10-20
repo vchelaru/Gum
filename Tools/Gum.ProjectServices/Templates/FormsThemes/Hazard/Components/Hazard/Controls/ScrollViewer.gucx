@@ -190,6 +190,9 @@
     <Variable Type="PositionUnitType" Name="FocusedIndicator.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
+    <Variable Type="Orientation" Name="HorizontalScrollBarInstance.Orientation" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="OrientationCategory" Name="HorizontalScrollBarInstance.OrientationCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Horizontal</Value>
     </Variable>
@@ -449,5 +452,6 @@
     <string>ContainedType</string>
     <string>ChildrenLayout</string>
     <string>ExposeChildrenEvents</string>
+    <string>ScrollViewerCategoryState</string>
   </VariablesHiddenFromInstances>
 </ComponentSave>
