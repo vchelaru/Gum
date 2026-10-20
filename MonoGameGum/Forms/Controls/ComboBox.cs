@@ -357,6 +357,13 @@ public class ComboBox :
         Visual.RollOn -= this.HandleRollOn;
         Visual.RollOff -= this.HandleRollOff;
 #endif
+
+        if (_subscribedListBox != null)
+        {
+            _subscribedListBox.SelectionChanged -= HandleSelectionChanged;
+            _subscribedListBox.ItemPushed -= HandleListBoxItemPushed;
+            _subscribedListBox = null;
+        }
     }
 
     protected override void RefreshInternalVisualReferences()
