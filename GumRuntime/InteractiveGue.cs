@@ -1255,6 +1255,31 @@ public interface ICursor
 
     InteractiveGue? VisualOver { get; set; }
 
+    /// <summary>
+    /// Returns the visual that was last pushed. Defaults to <see cref="WindowPushed"/>, the older name
+    /// for the same value.
+    /// </summary>
+    InteractiveGue? VisualPushed
+    {
+        get => WindowPushed;
+        set => WindowPushed = value;
+    }
+
+    /// <summary>
+    /// The X position the cursor had on the previous frame. Defaults to <see cref="X"/> minus <see cref="XChange"/>.
+    /// </summary>
+    int LastX => X - XChange;
+
+    /// <summary>
+    /// The Y position the cursor had on the previous frame. Defaults to <see cref="Y"/> minus <see cref="YChange"/>.
+    /// </summary>
+    int LastY => Y - YChange;
+
+    /// <summary>
+    /// Clears the cursor's per-frame input state. Does nothing by default.
+    /// </summary>
+    void ClearInputValues() { }
+
     public void Activity(double currentGameTimeTotalSeconds);
 }
 

@@ -76,12 +76,6 @@ public class ButtonTests : BaseTestClass
         };
 
         var keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        keyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
-            .Returns(true);
-        keyboard
-            .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Enter))
-            .Returns(true);
         // KeyCombo.IsComboPushed now routes through the shared Gum.Forms.Input.Keys overload.
         keyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter))
@@ -114,11 +108,11 @@ public class ButtonTests : BaseTestClass
         };
 
         var keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        keyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+        keyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter))
             .Returns(false);
-        keyboard
-            .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Enter))
+        keyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyDown(Gum.Forms.Input.Keys.Enter))
             .Returns(true);
         FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
 
@@ -137,9 +131,6 @@ public class ButtonTests : BaseTestClass
         FrameworkElement.KeyboardsForUiControl.Clear();
 
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
-            .Returns(true);
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter))
             .Returns(true);
@@ -161,9 +152,6 @@ public class ButtonTests : BaseTestClass
         FrameworkElement.KeyboardsForUiControl.Clear();
 
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
-            .Returns(true);
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter))
             .Returns(true);
@@ -214,12 +202,12 @@ public class ButtonTests : BaseTestClass
         button.Click += (sender, args) => wasClicked = true;
 
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Space))
             .Returns(true);
 
-        mockKeyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Right))
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Right))
             .Returns(true);
 
         FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
@@ -237,9 +225,6 @@ public class ButtonTests : BaseTestClass
         button.Click += (sender, args) => wasClicked = true;
 
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
-            .Returns(true);
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Space))
             .Returns(true);
@@ -278,13 +263,7 @@ public class ButtonTests : BaseTestClass
 
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
 
-        mockKeyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
-            .Returns(true);
 
-        mockKeyboard
-            .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Space))
-            .Returns(true);
         // KeyCombo.IsComboPushed / IsComboDown now route through the Gum.Forms.Input.Keys overload.
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Space))
@@ -300,9 +279,6 @@ public class ButtonTests : BaseTestClass
         lastStateSet.ShouldBe(FrameworkElement.PushedStateName, "Because the space key was pushed and is down");
 
 
-        mockKeyboard
-            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
-            .Returns(false);
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Space))
             .Returns(false);
@@ -311,13 +287,7 @@ public class ButtonTests : BaseTestClass
 
         lastStateSet.ShouldBe(FrameworkElement.PushedStateName, "Becuse the button is still focused and the click button is pushed");
 
-        mockKeyboard
-            .Setup(k => k.KeyReleased(Microsoft.Xna.Framework.Input.Keys.Space))
-            .Returns(true);
 
-        mockKeyboard
-            .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Space))
-            .Returns(false);
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(k => k.KeyReleased(Gum.Forms.Input.Keys.Space))
             .Returns(true);

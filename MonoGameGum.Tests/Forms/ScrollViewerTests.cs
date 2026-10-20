@@ -110,9 +110,6 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.IsFocused = true;
 
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard
-            .Setup(m => m.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
-            .Returns(true);
         // KeyCombo.IsComboPushed routes through the Gum.Forms.Input.Keys overload.
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(m => m.KeyPushed(Gum.Forms.Input.Keys.Enter))
@@ -194,9 +191,6 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.IsFocused = true;
 
         var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
-        mockKeyboard
-            .Setup(m=>m.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Tab))
-            .Returns(true);
         // KeyCombo.IsComboPushed (used for Tab navigation) routes through Gum.Forms.Input.Keys.
         mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
             .Setup(m => m.KeyPushed(Gum.Forms.Input.Keys.Tab))
@@ -362,9 +356,6 @@ public class ScrollViewerTests : BaseTestClass
 
 
         Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = new();
-        mockKeyboard
-            .Setup(m => m.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Tab))
-            .Returns(true);
         mockKeyboard
             .Setup(m => m.KeysTyped)
             .Returns(new List<Keys>() { Keys.Tab });
