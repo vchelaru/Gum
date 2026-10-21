@@ -226,11 +226,15 @@ Called when layout is resumed after suspension. Walks the tree:
 child's `currentDirtyState`. When recursion (step 3) reaches that child, its
 dirty state is already null — it skips the `UpdateLayout` call.
 
+### Visibility-deferred work is resolved on show
+
+Layout skipped because an element or an ancestor was hidden is always resolved when it is shown, in any suspend mode and resume order; a layout clears a dirty record only when it covers its depth and axes, and `resumeDescendantsOnResume` makes a non-recursive resume walk hidden descendants (skipping children the user suspended).
+
 ### EffectiveDirtyStateParentUpdateType
 
-Combines `currentDirtyState.ParentUpdateType` with runtime checks:
-`GetIfParentHasRatioChildren()` and `GetIfParentStacks()`. These are checked
-at resume time, not when dirtied, so they reflect current state.
+Adds all four `IfParent*` flags to `currentDirtyState.ParentUpdateType`. Each is checked against the real
+parent when the update runs, and the climb passes the same flags up, so ancestors that stack or size from
+children hear about a change skipped on a hidden element.
 
 ## Upward Propagation
 
