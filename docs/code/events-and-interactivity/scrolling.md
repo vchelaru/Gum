@@ -23,7 +23,7 @@ All controls support the following built-in actions for scrolling:
 Scrolling speed is controlled by the following two variables:
 
 * `SmallChange` - The amount to scroll when a scroll bar button is clicked, or when a _tick_ is scrolled on the mouse wheel
-* `LargeChange`  - The amount to scroll when the user clicks on the scroll bar track
+* `LargeChange`  - The amount to scroll when the user clicks on the scroll bar track. Until you assign it, it follows the viewport size.
 
 The following code creates two `ListBoxes` to compare the scrolling speed of each.
 

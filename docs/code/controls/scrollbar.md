@@ -13,8 +13,8 @@ If you want a scrollable container that manages content layout for you, use [Scr
 * **`Value`** — The current numeric value. Always clamped between `Minimum` and `Maximum`. Set this in code to scroll the bar programmatically.
 * **`Minimum`** — The lower bound of the range (inclusive). Defaults to `0`.
 * **`Maximum`** — The upper bound of the range (inclusive). Defaults to `100`.
-* **`SmallChange`** — The amount `Value` changes when the user clicks the up or down arrow buttons, or scrolls the mouse wheel over the scrollbar.
-* **`LargeChange`** — The amount `Value` changes when the user clicks on the track (the area between the thumb and the arrow buttons).
+* **`SmallChange`** — The amount `Value` changes when the user clicks the up or down arrow buttons, or scrolls the mouse wheel over the scrollbar. A value set in code, authored on the Visual, or applied from a behavior stays set when the Visual is swapped. See [Properties Set by Forms Controls](../styling/properties-set-by-forms-controls.md#scroll-step-sizes-survive-a-visual-swap).
+* **`LargeChange`** — The amount `Value` changes when the user clicks on the track (the area between the thumb and the arrow buttons). Until you assign it, the ScrollBar derives it from `ViewportSize`, so a track click moves by one viewport. Once you assign a value, that value is used and stays set when the Visual is swapped.
 
 ## Events
 

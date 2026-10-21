@@ -510,6 +510,14 @@ The tool writes a behavior's declared defaults onto controls that do not set the
 
 This affects you only if you rely on the step size of a `Slider`, `ScrollBar`, or `ScrollViewer` that you add in the tool. To migrate, set `SmallChange` or `LargeChange` in the **Behavior** category to the value you want.
 
+### Step Sizes Survive a Visual Swap
+
+Before this version, assigning a new Visual to a `ScrollBar`, `ScrollViewer`, or `Slider` replaced `SmallChange` and `LargeChange` with the new Visual's values. Now a value set in code, authored on the Visual, or applied from a behavior is kept, and `LargeChange` on a `ScrollBar` and `ScrollViewer` has no default, so it follows the viewport size until you assign it. See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md#scroll-step-sizes-survive-a-visual-swap) for details.
+
+A project created before this version still declares a `LargeChange` of 10 on its scroll controls. That value now stays at 10 after a Visual swap instead of following the viewport size.
+
+This affects you only if you assign a new Visual to one of these controls and relied on the step sizes changing, or your project declares a `LargeChange`. To migrate, set the step sizes you want after assigning the Visual.
+
 ### ScrollBar Orientation Is a Behavior Property
 
 A ScrollBar instance now has an `Orientation` setting in the **Behavior** category, and the `OrientationCategoryState` variable is hidden. Before this version, setting the orientation state in the tool changed how the bar looked, but the control in your game never read it, so the bar stayed vertical.
