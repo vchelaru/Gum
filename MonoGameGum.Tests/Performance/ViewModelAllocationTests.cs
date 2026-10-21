@@ -168,6 +168,41 @@ public class ViewModelAllocationTests : BaseTestClass
     }
 
     [Fact]
+    public void Set_SameObservableCollection_AllocatesNothing()
+    {
+        ObservableCollection<int> items = new ObservableCollection<int>();
+        // A second listener, like an ItemsControl bound to the collection: removing and re-adding
+        // one handler from a multi-handler event allocates a new delegate list each time.
+        items.CollectionChanged += (_, _) => { };
+        AllocationViewModel vm = new AllocationViewModel { Items = items };
+
+        AllocationResult result = Measure(() => vm.Items = items);
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Set_NewObservableCollection_StaysWithinSubscribeAndUnsubscribeCost()
+    {
+        AllocationViewModel vm = new AllocationViewModel();
+        ObservableCollection<int> a = new ObservableCollection<int>();
+        ObservableCollection<int> b = new ObservableCollection<int>();
+        a.CollectionChanged += (_, _) => { };
+        b.CollectionChanged += (_, _) => { };
+        bool useA = false;
+
+        AllocationResult result = Measure(() =>
+        {
+            useA = !useA;
+            vm.Items = useA ? a : b;
+        });
+
+        // Main measured 112 B here (the benchmark's ObservableCollection row); the bound leaves
+        // room for runtime differences but fails if a Set starts building a subscription per call again.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(128);
+    }
+
+    [Fact]
     public void Get_AllocatesNothing()
     {
         AllocationViewModel vm = new AllocationViewModel { FloatProperty = 3, StringProperty = "abc" };

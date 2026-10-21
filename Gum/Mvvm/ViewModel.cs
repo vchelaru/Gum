@@ -69,11 +69,26 @@ namespace Gum.Mvvm
             return didSet;
         }
 
-        // One handler per property, created the first time the property holds a collection and
-        // reused afterwards, so the exact delegate that was added is the one removed. A fresh
+        // One subscription per property, created the first time the property holds a collection and
+        // reused afterwards, so the exact handler that was added is the one removed. A fresh
         // closure per Set never equals the one added earlier, so -= would silently do nothing.
+        // Subscribed remembers the instance the handler is currently attached to, so setting the
+        // same collection again does no event add or remove at all.
         // Null until a collection is set, so view models without collection properties pay nothing.
-        private Dictionary<string, NotifyCollectionChangedEventHandler>? collectionHandlers;
+        private sealed class CollectionSubscription
+        {
+            public CollectionSubscription(NotifyCollectionChangedEventHandler handler)
+            {
+                Handler = handler;
+            }
+
+            public NotifyCollectionChangedEventHandler Handler { get; }
+
+            /// <summary>The collection <see cref="Handler"/> is attached to, or null when none.</summary>
+            public INotifyCollectionChanged? Subscribed { get; set; }
+        }
+
+        private Dictionary<string, CollectionSubscription>? collectionSubscriptions;
 
         private void SubscribeToCollection(INotifyCollectionChanged collection, string propertyName)
         {
@@ -84,24 +99,30 @@ namespace Gum.Mvvm
                 return;
             }
 
-            collectionHandlers ??= new Dictionary<string, NotifyCollectionChangedEventHandler>();
-            if (collectionHandlers.TryGetValue(propertyName, out NotifyCollectionChangedEventHandler? handler) == false)
+            collectionSubscriptions ??= new Dictionary<string, CollectionSubscription>();
+            if (collectionSubscriptions.TryGetValue(propertyName, out CollectionSubscription? subscription) == false)
             {
-                handler = CreateCollectionHandler(propertyName);
-                collectionHandlers[propertyName] = handler;
+                subscription = new CollectionSubscription(CreateCollectionHandler(propertyName));
+                collectionSubscriptions[propertyName] = subscription;
             }
 
-            // Remove first so setting the same collection again does not subscribe twice.
-            collection.CollectionChanged -= handler;
-            collection.CollectionChanged += handler;
+            // Already attached to this instance (it is only ever attached to the stored value).
+            if (ReferenceEquals(subscription.Subscribed, collection))
+            {
+                return;
+            }
+
+            collection.CollectionChanged += subscription.Handler;
+            subscription.Subscribed = collection;
         }
 
         private void UnsubscribeFromCollection(object? oldValue, string propertyName)
         {
             if (oldValue is INotifyCollectionChanged oldCollection &&
-                collectionHandlers!.TryGetValue(propertyName, out NotifyCollectionChangedEventHandler? handler))
+                collectionSubscriptions!.TryGetValue(propertyName, out CollectionSubscription? subscription))
             {
-                oldCollection.CollectionChanged -= handler;
+                oldCollection.CollectionChanged -= subscription.Handler;
+                subscription.Subscribed = null;
             }
         }
 
@@ -122,7 +143,7 @@ namespace Gum.Mvvm
                 if (EqualityComparer<T>.Default.Equals(storage, propertyValue) == false)
                 {
                     didSet = true;
-                    if (collectionHandlers != null)
+                    if (collectionSubscriptions != null)
                     {
                         UnsubscribeFromCollection(storedValue, propertyName);
                     }
@@ -220,9 +241,9 @@ namespace Gum.Mvvm
             var asObject = this.MemberwiseClone();
             var asViewModel = (ViewModel)asObject;
             asViewModel.propertyDictionary = new Dictionary<string, object?>(this.propertyDictionary);
-            // MemberwiseClone copied the reference; the handlers belong to this instance, and a
+            // MemberwiseClone copied the reference; the subscriptions belong to this instance, and a
             // clone replacing a collection must not unsubscribe the original.
-            asViewModel.collectionHandlers = null;
+            asViewModel.collectionSubscriptions = null;
             var asT = (T)asObject;
 
             return asT;
