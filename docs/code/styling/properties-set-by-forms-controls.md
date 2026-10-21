@@ -38,7 +38,7 @@ Computed writes are what a custom Visual needs to plan around. The tables below 
 Controls find the parts of a Visual by name, such as `TextInstance` or `ThumbInstance`. Most controls skip a missing child without an error, and the tables mark the exceptions (children the control requires).
 
 {% hint style="info" %}
-`RefreshStyles` re-applies the Visual's states and then restores some control values. `Button`, `Label`, `TextBox`, and `ComboBox` restore their text, `ScrollBar` and `Slider` restore the thumb position, and `ScrollViewer` restores its scroll offset. `ToggleButton` and `Expander` do not restore their text.
+`RefreshStyles` re-applies the Visual's states and then restores some control values. `ComboBox` restores its text, `ScrollBar` and `Slider` restore the thumb position, and `ScrollViewer` restores its scroll offset. `Button`, `Label`, `ToggleButton`, `Expander`, `MenuItem`, `TextBox`, and `PasswordBox` restore their text only when code supplied it, as described in [Text After RefreshStyles](runtime-variable-references.md#text-after-refreshstyles).
 {% endhint %}
 
 ## Properties Every Control Forwards

@@ -455,3 +455,63 @@ svg.Document = shapeSvg;
 // Initialize
 svg.Texture = shapeSvg;
 ```
+
+### RefreshStyles Restores Only Text Set in Code
+
+`RefreshStyles` now restores a control's text only when code supplied it. Text counts as supplied by code when you set it through the property, call `SetTextNoTranslate` (or the `SetHeaderNoTranslate` and `SetPlaceholderNoTranslate` equivalents), bind it, or when the user types it into a `TextBox`. This applies to:
+
+* `Text` on `Button`, `Label`, `ToggleButton` (and so `CheckBox` and `RadioButton`), `TextBox`, and `PasswordBox`
+* `Header` on `Expander` and `MenuItem`
+* `Placeholder` on `TextBox` and `PasswordBox`
+
+Before this version, `Button`, `Label`, `TextBox`, and `PasswordBox` restored the text they had before the refresh whether or not code set it. A text authored on the Visual and then changed, for example through a variable reference, was overwritten with the old text. Text authored on the Visual is now re-applied from the Visual, so the changed text shows.
+
+Text set in code also no longer carries over when you assign a new Visual to a control. The control shows the text the new Visual authors.
+
+These cases are unchanged:
+
+* Text set in code, through `SetTextNoTranslate`, or typed by the user still survives `RefreshStyles`.
+* `ComboBox` still restores its displayed text.
+
+This affects you only if a Visual authors text that you expected `RefreshStyles` to overwrite, or if you assign a new Visual to a control after setting its text in code.
+
+To migrate, set the text through the control's property if you want it to survive `RefreshStyles`. Set the text again after assigning a new Visual.
+
+For more information see the [Runtime Variable References](../../code/styling/runtime-variable-references.md#text-after-refreshstyles) page.
+
+### Slider, ScrollBar, and ScrollViewer Step Defaults Changed in the Gum Tool
+
+The behaviors that the Gum tool adds for new Forms controls now declare these step sizes:
+
+| Control | Property | Before | Now |
+|---|---|---|---|
+| `Slider` | `SmallChange` | 1 | 5 |
+| `Slider` | `LargeChange` | 10 | 25 |
+| `ScrollBar` | `SmallChange` | 1 | 10 |
+| `ScrollViewer` | `SmallChange` | 1 | 10 |
+
+The tool writes a behavior's declared defaults onto controls that do not set their own value. A `Slider` placed in the tool therefore stepped by 1 and 10 while a `Slider` created in code steps by 5 and 25. The tool now matches code.
+
+This affects you only if you rely on the step size of a `Slider`, `ScrollBar`, or `ScrollViewer` that you add in the tool. To migrate, set `SmallChange` or `LargeChange` in the **Behavior** category to the value you want.
+
+### ScrollBar Orientation Is a Behavior Property
+
+A ScrollBar instance now has an `Orientation` setting in the **Behavior** category, and the `OrientationCategoryState` variable is hidden. Before this version, setting the orientation state in the tool changed how the bar looked, but the control in your game never read it, so the bar stayed vertical.
+
+When the tool or your game loads a project, Gum migrates a ScrollBar whose default state sets `OrientationCategoryState` to `Horizontal` by also setting its `Orientation` to `Horizontal`. The bar keeps its look and the control now follows it. The project does not need to be saved again. A project whose `ScrollBarBehavior` does not have the `Orientation` property yet is not migrated, since there is nothing to read the value.
+
+This affects you only if you set the orientation of a ScrollBar in the tool. To migrate, open the project in the tool and check that the bars you made horizontal show `Orientation` set to `Horizontal`.
+
+For more information see the [Behaviors](../gum-elements/behaviors/README.md#scrollbar-orientation) page.
+
+### Code Generation Emits Variables Hidden From Instances
+
+Code generation now emits a variable that a control hides from its instances, unless a behavior reference drives that variable. For example, a `Window` instance that sets `ClipsChildren` now gets that line in generated code.
+
+Before this version, code generation skipped every hidden variable. The Gum tool still showed such a value and your game still loaded it, but generated code left it out.
+
+Variables driven by a behavior reference, such as a category state that follows `IsEnabled`, are still skipped, because the control sets them itself.
+
+This affects you only if an instance sets a variable that its control now hides. A project from before the control hid the variable can hold one without you knowing. Such a variable appears in generated code the next time you generate.
+
+To migrate, regenerate your code and look at the changes. To drop a stale value, remove it from the instance in the tool.
