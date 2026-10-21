@@ -12,6 +12,8 @@ on:
 permissions:
   actions: write
   contents: read
+  issues: read
+  pull-requests: read
 
 jobs:
   Rerun:
@@ -24,16 +26,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           SHA: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
           id="$(gh run list --workflow build-and-test.yaml --event pull_request --commit "$SHA" --limit 1 --json databaseId --jq '.[0].databaseId')"
           if [ -z "$id" ]; then echo "No run on $SHA yet; its Changes job will read the label itself."; exit 0; fi
           status="$(gh run view "$id" --json status --jq .status)"
           if [ "$status" != completed ]; then
-            # A run opened together with the label (gh pr create --label) has not reached its Scope step
-            # yet, and that step reads the label live, so there is nothing to redo.
-            reached="$(gh run view "$id" --json jobs --jq '[.jobs[] | select(.name == "Changes") | .steps[] | select((.name | startswith("Scope")) and .status != "pending" and .status != "queued")] | length')"
-            if [ "$reached" = 0 ]; then
-              echo "Run $id has not read the scope yet; its Changes job will read the label itself."
+            # A run opened together with the label (gh pr create --label) reads the label live in its Scope
+            # step. If that step starts after the label was added (or has not started), it already sees the
+            # label and there is nothing to redo.
+            label_at="$(gh api "repos/$GH_REPO/issues/$PR/events" --jq '[.[] | select(.event == "labeled" and .label.name == "fast-ci")] | last | .created_at')"
+            started="$(gh run view "$id" --json jobs --jq '[.jobs[] | select(.name == "Changes") | .steps[] | select(.name | startswith("Scope")) | .startedAt] | first // empty')"
+            if [ -z "$started" ] || [[ "$started" == 0001* ]] || [[ "$started" > "$label_at" ]]; then
+              echo "Run $id reads the scope after the label was added ($started vs $label_at); nothing to redo."
               exit 0
             fi
             echo "Cancelling in-flight run $id so the new scope applies."
