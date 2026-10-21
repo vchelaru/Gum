@@ -65,6 +65,7 @@ Model it on `Runtimes/KniSkiaGum` or `Runtimes/SilkNetGum`: reference `GumCommon
 - ⚠ **A new host is registered by hand in four places:** `AllLibraries.sln`, `Tests/CiTestProjects.slnf` (a missing entry fails the Windows `--no-build` test step), a step in `.github/workflows/build-and-test.yaml`, and a test project that derives from `Tests/SkiaHost.TestsCommon` (`SkiaHostTestBase`, `SkiaHostTestFramework`).
 - ⚠ **netstandard2.1 builds (Unity) compile out `OperatingSystem.Is*`.** The host sets `Cursor.IsMobile` and `TextBoxBase.ShowNativeKeyboardOnFocus` itself, and supplies files through `FileManager.CustomGetStreamFromFile` when it can't read from disk.
 - `Runtimes/UnityGum` is the push-model example: the host pushes input in each frame rather than the runtime polling a device.
+- ⚠ **Unity is a supported host (experimental, Unity 6+, Windows and macOS; docs: `docs/code/getting-started/setup/adding-initializing-gum/unity.md`).** It loads the netstandard2.1 `GumCommon` and `SkiaGum` builds, and compiles the game's scripts with its own compiler on an older C# language version than this repo's `LangVersion` 12 (not verified which). Public API that users call must not need newer C# syntax; C# 14 extension properties, for example, would not be usable from Unity.
 - ⚠ **Unity IL2CPP needs a `link.xml` preserving `netstandard`.**
 
 ## Back-compat shims (`MonoGameGum.*`, `SkiaGum.GueDeriving`, `MonoGameAndGum.*`)
