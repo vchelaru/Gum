@@ -1305,7 +1305,7 @@ public class LayoutVisibilityOrderTests : BaseTestClass
         stack.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         SetAbsolute(stack, 100, 100);
         container.AddChild(stack);
-        container.ParentGue = screen;
+        container.ElementGueContainingThis = screen;
         container.Visible = false;
         stack.Visible = false;
 

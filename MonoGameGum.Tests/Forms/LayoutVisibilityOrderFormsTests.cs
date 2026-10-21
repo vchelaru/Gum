@@ -193,7 +193,7 @@ public class LayoutVisibilityOrderFormsTests : BaseTestClass
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    listBox.Items.Add("Item " + i);
+                    listBox.Items!.Add("Item " + i);
                 }
             },
             listBox => listBox.ListBoxItems.Select(item => (GraphicalUiElement)item.Visual));
@@ -208,7 +208,7 @@ public class LayoutVisibilityOrderFormsTests : BaseTestClass
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    itemsControl.Items.Add("Item " + i);
+                    itemsControl.Items!.Add("Item " + i);
                 }
             },
             itemsControl => itemsControl.InnerPanel.Children.Select(child => (GraphicalUiElement)child));
