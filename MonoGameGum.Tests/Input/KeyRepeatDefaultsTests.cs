@@ -197,6 +197,56 @@ public class KeyRepeatDefaultsTests : IDisposable
     }
 
     [Fact]
+    public void FromMacTicks_BothValues_ShouldBeFifteenMillisecondTicks()
+    {
+        KeyRepeatSettings? settings = OsKeyRepeatSettingsProvider.FromMacTicks(initialKeyRepeatTicks: 25, keyRepeatTicks: 4);
+
+        settings.ShouldNotBeNull();
+        settings.Value.Delay.TotalMilliseconds.ShouldBe(375);
+        settings.Value.Rate.TotalMilliseconds.ShouldBe(60);
+    }
+
+    [Fact]
+    public void FromMacTicks_NeitherValueSet_ShouldBeNullSoDefaultsApply()
+    {
+        OsKeyRepeatSettingsProvider.FromMacTicks(null, null).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromMacTicks_OnlyDelaySet_ShouldKeepDefaultRate()
+    {
+        KeyRepeatSettings? settings = OsKeyRepeatSettingsProvider.FromMacTicks(initialKeyRepeatTicks: 30, keyRepeatTicks: null);
+
+        settings.ShouldNotBeNull();
+        settings.Value.Delay.TotalMilliseconds.ShouldBe(450);
+        settings.Value.Rate.ShouldBe(KeyRepeatTimer.DefaultRate);
+    }
+
+    [Fact]
+    public void FromMacTicks_OnlyRateSet_ShouldKeepDefaultDelay()
+    {
+        KeyRepeatSettings? settings = OsKeyRepeatSettingsProvider.FromMacTicks(initialKeyRepeatTicks: null, keyRepeatTicks: 2);
+
+        settings.ShouldNotBeNull();
+        settings.Value.Delay.ShouldBe(KeyRepeatTimer.DefaultDelay);
+        settings.Value.Rate.TotalMilliseconds.ShouldBe(30);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void FromMacTicks_NonPositiveValue_ShouldBeTreatedAsUnset(int ticks)
+    {
+        KeyRepeatSettings? settings = OsKeyRepeatSettingsProvider.FromMacTicks(initialKeyRepeatTicks: ticks, keyRepeatTicks: 6);
+
+        settings.ShouldNotBeNull();
+        settings.Value.Delay.ShouldBe(KeyRepeatTimer.DefaultDelay);
+        settings.Value.Rate.TotalMilliseconds.ShouldBe(90);
+
+        OsKeyRepeatSettingsProvider.FromMacTicks(ticks, ticks).ShouldBeNull();
+    }
+
+    [Fact]
     public void OsProvider_GetSettings_ShouldNotThrowAndBeWithinWindowsRangeWhenAvailable()
     {
         KeyRepeatSettings? settings = new OsKeyRepeatSettingsProvider().GetSettings();
@@ -206,10 +256,17 @@ public class KeyRepeatDefaultsTests : IDisposable
             settings.ShouldNotBeNull();
         }
 
-        if (settings != null)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && settings != null)
         {
             settings.Value.Delay.TotalMilliseconds.ShouldBeInRange(250, 1000);
             settings.Value.Rate.TotalMilliseconds.ShouldBeInRange(33, 401);
+        }
+
+        if (settings != null)
+        {
+            // Any OS: a usable value, never zero or negative (a zero rate would repeat every frame).
+            settings.Value.Delay.ShouldBeGreaterThan(TimeSpan.Zero);
+            settings.Value.Rate.ShouldBeGreaterThan(TimeSpan.Zero);
         }
     }
 }

@@ -25,7 +25,7 @@ To have a `ListBox` start with an item already focused, so the arrow keys work w
 
 ## Key Repeat
 
-When a key is held, `KeyTyped` is true when the key is first pressed, again after `RepeatDelay`, then every `RepeatRate`. Arrow keys in a `ListBox` and Backspace in a `TextBox` repeat this way. Both are `TimeSpan` properties on `IInputReceiverKeyboard`, so they are available on any host. They default to 500 ms and 70 ms. On Windows, `Initialize` reads the repeat delay and repeat speed from the system keyboard settings once and uses those instead. On other platforms the defaults apply. Changes to the system setting while the game runs are not picked up, and a value you set after `Initialize` always wins.
+When a key is held, `KeyTyped` is true when the key is first pressed, again after `RepeatDelay`, then every `RepeatRate`. Arrow keys in a `ListBox` and Backspace in a `TextBox` repeat this way. Both are `TimeSpan` properties on `IInputReceiverKeyboard`, so they are available on any host. They default to 500 ms and 70 ms. On Windows and macOS, `Initialize` reads the repeat delay and repeat speed from the system keyboard settings once and uses those instead. On macOS the settings are only present after the user has changed them in System Settings; otherwise the defaults apply. On Linux and other platforms the defaults apply. Changes to the system setting while the game runs are not picked up, and a value you set after `Initialize` always wins.
 
 ```csharp
 using System;
