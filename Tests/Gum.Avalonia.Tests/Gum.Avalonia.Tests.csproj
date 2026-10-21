@@ -46,13 +46,16 @@
     layout is defined). Only the referenced plugins are copied, all rebuilt by this build, so a
     stale DLL left in the head's folder never reaches a test; both folders are emptied first.
   -->
-  <ItemGroup>
-    <!-- What the staging copies from, listed at evaluation so the target can skip when none of it changed
-         (it deleted and recopied both folders on every build, about 5 seconds with nothing to do). -->
-    <_HeadStagingInput Include="$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/Plugins/**/*" />
-    <_HeadStagingInput Include="$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/Content/FormsThemes/**/*" />
-  </ItemGroup>
-  <Target Name="StageHeadPlugins" AfterTargets="Build"
+  <!-- What the staging copies from, listed when the build reaches it: the head's output does not exist yet
+       when the project loads on a clean checkout, and a target whose Inputs are empty is skipped. -->
+  <Target Name="_ListHeadStagingInputs">
+    <ItemGroup>
+      <_HeadStagingInput Include="$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/Plugins/**/*" />
+      <_HeadStagingInput Include="$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/Content/FormsThemes/**/*" />
+    </ItemGroup>
+  </Target>
+  <!-- Incremental: it deleted and recopied both folders on every build, about 5 seconds with nothing to do. -->
+  <Target Name="StageHeadPlugins" AfterTargets="Build" DependsOnTargets="_ListHeadStagingInputs"
           Inputs="@(_HeadStagingInput)"
           Outputs="$(OutDir)Plugins/.staged">
     <PropertyGroup>
