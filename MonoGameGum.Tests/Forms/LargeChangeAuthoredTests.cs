@@ -260,6 +260,68 @@ public class LargeChangeAuthoredTests : BaseTestClass
 
     #endregion
 
+    #region Swapping to a Visual without scroll bars
+
+    [Fact]
+    public void ScrollViewer_WithBars_ReadsLargeAndSmallChangeFromBar()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.LargeChange = 25;
+        scrollViewer.SmallChange = 7;
+
+        scrollViewer.LargeChange.ShouldBe(GetVerticalBar(scrollViewer).LargeChange);
+        scrollViewer.SmallChange.ShouldBe(GetVerticalBar(scrollViewer).SmallChange);
+        scrollViewer.LargeChange.ShouldBe(25);
+        scrollViewer.SmallChange.ShouldBe(7);
+    }
+
+    [Fact]
+    public void ScrollViewerVisualSwap_ToVisualWithoutBars_LargeChangeDoesNotReadRemovedBar()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.LargeChange = 25;
+
+        scrollViewer.Visual = new Gum.GueDeriving.ContainerRuntime();
+
+        scrollViewer.LargeChange.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ScrollViewerVisualSwap_ToVisualWithoutBars_SmallChangeDoesNotReadRemovedBar()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.SmallChange = 7;
+
+        scrollViewer.Visual = new Gum.GueDeriving.ContainerRuntime();
+
+        scrollViewer.SmallChange.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ScrollViewerVisualSwap_ToVisualWithoutBars_ClearsBarReferences()
+    {
+        ScrollViewer scrollViewer = new();
+
+        scrollViewer.Visual = new Gum.GueDeriving.ContainerRuntime();
+
+        scrollViewer.VerticalScrollBar.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ScrollViewerVisualSwap_ToVisualWithoutBarsAndBack_ReadsNewBar()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.LargeChange = 25;
+        scrollViewer.Visual = new Gum.GueDeriving.ContainerRuntime();
+
+        scrollViewer.Visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+
+        scrollViewer.LargeChange.ShouldBe(25);
+        scrollViewer.VerticalScrollBar.ShouldBe(GetVerticalBar(scrollViewer));
+    }
+
+    #endregion
+
     #region Inner bar values set before the ScrollViewer wraps it
 
     [Fact]

@@ -751,7 +751,7 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
         // layout changed nothing, which has to give exactly what laying it out in full gives: the same
         // geometry, edits, partial layouts and events, in trees that settle and in ones that do not.
         const int firstSeed = SeedCount;
-        const int lastSeed = SeedCount + 500;
+        int lastSeed = SeedCount + SweepScale.Cases(500);
         List<string> differences = new();
         for (int seed = firstSeed; seed < lastSeed; seed++)
         {
@@ -1256,7 +1256,7 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
         // Ill-formed trees are held to the invariants that do not depend on the input making sense: no
         // exception, a second layout changes nothing, building with layout live or suspended, or making
         // the edits suspended, gives the same result as a fresh build, and so does editing the tree live.
-        const int lastSeed = 1300;
+        int lastSeed = SweepScale.Cases(1300);
         List<string> failures = new();
         for (int seed = 0; seed < lastSeed; seed++)
         {

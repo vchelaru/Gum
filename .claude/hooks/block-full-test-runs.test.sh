@@ -42,6 +42,22 @@ check $allowed "multi-line quoted string" 'git commit -m \"line one\ndotnet test
 check $allowed "heredoc body" 'cat > f.md <<'"'"'EOF'"'"'\nUse dotnet test with a filter.\ndotnet test\nEOF'
 check $blocked "command after heredoc" 'cat > f.md <<EOF\nnotes\nEOF\ndotnet test'
 check $allowed "dotnet test-like word" 'dotnet testx'
+check $blocked "namespace filter, two namespaces" 'dotnet test Tests/Foo/Foo.csproj --filter \"MonoGameGum.Tests.Runtimes|MonoGameGum.Tests.Forms\"'
+check $blocked "namespace filter with property prefix" 'dotnet test Tests/Foo/Foo.csproj --filter \"FullyQualifiedName~MonoGameGum.Tests.Forms\"'
+check $blocked "namespace filter, unquoted --filter=" 'dotnet test Tests/Foo/Foo.csproj --filter=Gum.Tests.Forms'
+check $blocked "namespace filter, single-quoted" "dotnet test Tests/Foo/Foo.csproj --filter 'Gum.Tests.Forms'"
+check $blocked "one class and one namespace" 'dotnet test Tests/Foo/Foo.csproj --filter \"ButtonTests|Gum.Tests.Forms\"'
+check $allowed "namespace filter with GUM_ALLOW_FULL_TESTS=1" 'GUM_ALLOW_FULL_TESTS=1 dotnet test Tests/Foo/Foo.csproj --filter \"Gum.Tests.Forms\"'
+check $allowed "qualified class" 'dotnet test Tests/Foo/Foo.csproj --filter \"FullyQualifiedName~Gum.Forms.ButtonTests\"'
+check $allowed "qualified class with trailing dot" 'dotnet test Tests/Foo/Foo.csproj --filter \"FullyQualifiedName~Gum.Forms.ButtonTests.\"'
+check $allowed "qualified method" 'dotnet test Tests/Foo/Foo.csproj --filter \"FullyQualifiedName~Gum.Forms.ButtonTests.Click_Raises\"'
+check $allowed "bare classes" 'dotnet test Tests/Foo/Foo.csproj --filter \"ButtonTests|ListBoxTests\"'
+check $allowed "method name filter" 'dotnet test Tests/Foo/Foo.csproj --filter \"Name~Click_Raises\"'
+check $blocked "bare word" 'dotnet test Tests/Foo/Foo.csproj --filter \"Runtimes\"'
+check $blocked "bare word with property prefix" 'dotnet test Tests/Foo/Foo.csproj --filter \"FullyQualifiedName~Layout\"'
+check $blocked "class and a bare word" 'dotnet test Tests/Foo/Foo.csproj --filter \"ButtonTests|Forms\"'
+check $allowed "trait filter" 'dotnet test Tests/Foo/Foo.csproj --filter \"Category=Slow\"'
+check $allowed "class in parentheses" 'dotnet test Tests/Foo/Foo.csproj --filter \"(FullyQualifiedName~Ns.ButtonTests.|FullyQualifiedName~Ns.ButtonTests+)\"'
 
 if [ "$failures" -ne 0 ]; then
   echo "$failures failure(s)"

@@ -744,7 +744,7 @@ public class LayoutVisibilityOrderTests : BaseTestClass
     public void RandomHideShowAndEditSequences_ShouldEndWithTheLayoutOfTheSameEditsOnAVisibleTree(Sizing sizing)
     {
         List<string> failures = new();
-        const int cases = 1500;
+        int cases = SweepScale.Cases(1500);
         for (int seed = 0; seed < cases; seed++)
         {
             Random random = new(seed);
