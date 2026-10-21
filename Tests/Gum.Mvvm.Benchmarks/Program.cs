@@ -7,6 +7,11 @@ using Gum.Mvvm.Benchmarks;
 
 // Usage: dotnet run -c Release --project Tests/Gum.Mvvm.Benchmarks -- [--quick] [--runs <n>] [--type <name>] [--out <file>]
 bool quick = args.Contains("--quick");
+if (args.Contains("--count"))
+{
+    Console.WriteLine(Counting.Run());
+    return 0;
+}
 string? typeFilter = ValueOf("--type");
 // --types a,b,c: exact type names (case-insensitive); a quick way to run a subset for alternating comparisons.
 string[]? typeList = ValueOf("--types")?.Split(',');
