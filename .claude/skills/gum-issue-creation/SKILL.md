@@ -13,6 +13,8 @@ Check the skills list for one matching the feature area and load it **before** g
 ## Don't file
 SokolGum and Maui are not maintained. Don't file or work on issues that exist only for them, and a feature that ships on the MonoGame family, raylib, and Skia but not SokolGum is not a tracked gap.
 
+FlatRedBall 1 (FRB1) is frozen. It changes only when a game that uses it needs a change, so don't file issues about behavior that is wrong only in the FRB1 build, and don't fix or pin it unprompted. Shared source still has to compile for FRB1 (the FRB canary), and `#if FRB` code is left alone.
+
 ## Issues you file yourself
 A value you printed while diagnosing something else is an observation, not a report — name what a user would see, or don't file. Say in the body that it came from instrumentation.
 
