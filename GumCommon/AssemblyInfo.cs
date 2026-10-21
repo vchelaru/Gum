@@ -26,3 +26,10 @@ using System.Runtime.CompilerServices;
 // SkiaGum's GumServiceSkiaBase shares GumService internals with the MonoGame/raylib GumService
 // (LanguageChangeSubscription, GumLoadResult.ThrowIfFailed).
 [assembly: InternalsVisibleTo("SkiaGum")]
+
+// The Skia input hosts source-link MonoGameGum/Input/CursorExtensions.cs, whose GetEventFailureReason
+// reads the cursor walk's cached subtree state (GraphicalUiElement._subtreeEventsState).
+[assembly: InternalsVisibleTo("KniSkiaGum")]
+[assembly: InternalsVisibleTo("SilkNetGum")]
+[assembly: InternalsVisibleTo("StrideGum")]
+[assembly: InternalsVisibleTo("UnityGum")]
