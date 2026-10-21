@@ -42,25 +42,30 @@ END {
     } else cmd = cmd c
   }
 
-  # Drop quoted strings and heredoc bodies, keep everything else.
+  # Drop quoted strings and heredoc bodies, keep everything else. Each quoted string leaves a
+  # \001N\002 token behind and its text is kept in qv[N], so a quoted --filter value can still be read.
   out = ""
   state = "normal"
   delim = ""
+  nq = 0
+  qbuf = ""
   n = length(cmd)
   for (p = 1; p <= n; p++) {
     c = substr(cmd, p, 1)
     if (state == "squote") {
-      if (c == sq) { state = "normal"; out = out "Q" }
+      if (c == sq) { state = "normal"; qv[++nq] = qbuf; out = out "\001" nq "\002" }
+      else qbuf = qbuf c
       continue
     }
     if (state == "dquote") {
-      if (c == "\\") p++
-      else if (c == "\"") { state = "normal"; out = out "Q" }
+      if (c == "\\") { p++; qbuf = qbuf substr(cmd, p, 1) }
+      else if (c == "\"") { state = "normal"; qv[++nq] = qbuf; out = out "\001" nq "\002" }
+      else qbuf = qbuf c
       continue
     }
     if (c == "\\") { p++; out = out "_"; continue }
-    if (c == sq) { state = "squote"; continue }
-    if (c == "\"") { state = "dquote"; continue }
+    if (c == sq) { state = "squote"; qbuf = ""; continue }
+    if (c == "\"") { state = "dquote"; qbuf = ""; continue }
     if (substr(cmd, p, 2) == "<<" && substr(cmd, p + 2, 1) != "<") {
       # Heredoc operator: read the delimiter word, minus any quoting.
       q = p + 2
@@ -107,14 +112,36 @@ END {
       seg = substr(seg, RLENGTH + 1)
     }
     if (seg !~ /^dotnet[ \t]+test([ \t)]|$)/) continue
-    if (allowed || seg ~ /[ \t]--filter([ \t=]|$)/) continue
-    exit 2
+    if (allowed) continue
+    if (!match(seg, /[ \t]--filter([ \t=]+|$)/)) exit 2
+    # A namespace-style filter runs thousands of tests that CI already runs. A term with a dot must
+    # contain a class segment (name ending in Test or Tests); Ns.Class, Ns.Class.Method and bare
+    # class or method names pass.
+    rest = substr(seg, RSTART + RLENGTH)
+    if (substr(rest, 1, 1) == "\001") {
+      value = qv[substr(rest, 2, index(rest, "\002") - 2) + 0]
+    } else {
+      match(rest, /^[^ \t]*/)
+      value = substr(rest, 1, RLENGTH)
+    }
+    termCount = split(value, terms, /[|&()]/)
+    for (t = 1; t <= termCount; t++) {
+      term = terms[t]
+      gsub(/^[ \t]+|[ \t]+$/, "", term)
+      sub(/^[A-Za-z]+(~|=|!=|!~)/, "", term)
+      if (index(term, ".") > 0 && term !~ /(^|\.)[A-Za-z0-9_]+Tests?(\.|\+|$)/) exit 3
+    }
   }
   exit 0
 }'
 
-if [ $? -eq 2 ]; then
-  echo "Blocked: 'dotnet test' without --filter runs a whole test project (10-20 min). Use 'pwsh Tools/verify.ps1' or 'dotnet test <csproj> --filter <Class>'. CI runs the full suites. If the user asked for a full run, prefix the command with GUM_ALLOW_FULL_TESTS=1." >&2
+status=$?
+if [ $status -eq 2 ]; then
+  echo "Blocked: 'dotnet test' without --filter runs a whole test project (10-20 min). Use 'pwsh Tools/fast-test.ps1 <Class>' or 'pwsh Tools/verify.ps1'. CI runs the full suites. If the user asked for a full run, prefix the command with GUM_ALLOW_FULL_TESTS=1." >&2
+  exit 2
+fi
+if [ $status -eq 3 ]; then
+  echo "Blocked: this --filter names a namespace, not a test class, so it runs thousands of tests that CI already runs. Name classes: 'pwsh Tools/fast-test.ps1 <ClassA>,<ClassB>'. If the user asked for a broad run, prefix the command with GUM_ALLOW_FULL_TESTS=1." >&2
   exit 2
 fi
 exit 0
