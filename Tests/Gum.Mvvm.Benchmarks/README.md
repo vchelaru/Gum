@@ -106,3 +106,11 @@ Noise: this run was on a busy laptop; the middle half of the runs typically span
 - A new-value set of a value type allocates the box (24 B, 48 B for the 32 B struct); reference types do not, except collections.
 - A struct without `IEquatable<T>` allocates about 200 B even for a same-value set (`ValueType.Equals` boxing), and costs 500 ns or more.
 - `ObservableCollection` sets allocate 100 to 220 B and cost 300 ns or more (the collection-changed unsubscribe and subscribe).
+
+## Field style (#6397)
+
+`Set<T>(ref T field, T value, name)`, `Set(ref field, value, key)` (cached event args) and `SetWithoutNotifying(ref field, ...)`
+on `ViewModel`, plus `ViewModelField<T>` (a per-instance property object, `_score.Value`). Rows prefixed `rvm.` are
+`Set(ref _v, value)`, `kfv.` is the key overload, `ovm.` is the property object. `--csv <file>` writes `type;case;ns;bytes` lines;
+the PR numbers are the median of 4 separate `--runs 5` runs (each run already interleaves every case).
+The machine only had the .NET 10 runtime: run with `DOTNET_ROLL_FORWARD=Major`.

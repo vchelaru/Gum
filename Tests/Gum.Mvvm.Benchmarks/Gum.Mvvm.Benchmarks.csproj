@@ -14,6 +14,8 @@
     <TieredCompilation>false</TieredCompilation>
     <!-- The keyed-style cases need ViewModelProperty<T>; pass -p:NoKeyed=true to build against a ViewModel without it. -->
     <DefineConstants Condition="'$(NoKeyed)' != 'true'">$(DefineConstants);KEYED</DefineConstants>
+    <!-- The field-style cases (#6397) need ViewModelField<T> and Set(ref field, value). -->
+    <DefineConstants>$(DefineConstants);REFFIELD</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

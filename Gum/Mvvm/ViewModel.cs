@@ -58,6 +58,34 @@ namespace Gum.Mvvm
     }
 
     /// <summary>
+    /// Per-instance property object (spike #6397): holds the value and the owner, and raises the owner's
+    /// PropertyChanged. Usage: <c>readonly ViewModelField&lt;float&gt; _score; ... _score = new(this, nameof(Score));
+    /// public float Score { get => _score.Value; set => _score.Value = value; }</c>.
+    /// Clone is not supported for these (MemberwiseClone would share the object with the original).
+    /// </summary>
+    public sealed class ViewModelField<T>
+    {
+        private readonly ViewModel owner;
+        private readonly ViewModelProperty<T> key;
+        private T storedValue;
+
+        public ViewModelField(ViewModel owner, string name, T initialValue = default!)
+        {
+            this.owner = owner;
+            key = new ViewModelProperty<T>(name);
+            storedValue = initialValue;
+        }
+
+        public T Value
+        {
+            get => storedValue;
+            set => owner.SetFieldCore(ref storedValue, value, key.Name, key, notify: true);
+        }
+
+        public bool SetWithoutNotifying(T value) => owner.SetFieldCore(ref storedValue, value, key.Name, key, notify: false);
+    }
+
+    /// <summary>
     /// Base class for view models, providing property storage, change notification, and
     /// <see cref="DependsOnAttribute"/> relationships.
     /// </summary>
@@ -183,6 +211,71 @@ namespace Gum.Mvvm
             }
 
             SubscribeToCollectionCore(collection, property.Name);
+        }
+
+        // Field style (spike #6397): the value lives in a field of the derived view model, passed by ref,
+        // so a read is a plain field read and the base class stores nothing. Only events, [DependsOn]
+        // dependents and collection subscriptions are handled here. The optional key supplies cached
+        // event args so a notifying set hashes no name for the PropertyChanged args.
+
+        /// <summary>
+        /// Assigns <paramref name="value"/> to a backing field and raises PropertyChanged when it changed.
+        /// Usage: <c>float _score; public float Score { get => _score; set => Set(ref _score, value); }</c>.
+        /// </summary>
+        /// <returns>True when the value changed.</returns>
+        protected bool Set<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
+        {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
+            return SetFieldCore(ref field, value, propertyName!, null, notify: true);
+        }
+
+        /// <summary>Field style with a key whose cached <see cref="PropertyChangedEventArgs"/> is reused.</summary>
+        protected bool Set<T>(ref T field, T value, ViewModelProperty<T> property)
+        {
+            return SetFieldCore(ref field, value, property.Name, property, notify: true);
+        }
+
+        /// <summary>Field style assignment that raises no events (collection subscriptions still follow the value).</summary>
+        protected bool SetWithoutNotifying<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
+        {
+            System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
+            return SetFieldCore(ref field, value, propertyName!, null, notify: false);
+        }
+
+        internal bool SetFieldCore<T>(ref T field, T value, string propertyName, ViewModelProperty? key, bool notify)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+            {
+                // Like the by-name style, a collection that is already stored still gets its subscription.
+                if (CollectionCapable<T>.Value && field is INotifyCollectionChanged stored)
+                {
+                    SubscribeToCollectionCore(stored, propertyName);
+                }
+
+                return false;
+            }
+
+            // The old value is still in the field here, so its subscription can be removed before assignment.
+            if (collectionSubscriptions != null && !typeof(T).IsValueType)
+            {
+                UnsubscribeFromCollection(field, propertyName);
+            }
+
+            field = value;
+
+            if (CollectionCapable<T>.Value && value is INotifyCollectionChanged collection)
+            {
+                SubscribeToCollectionCore(collection, propertyName);
+            }
+
+            if (notify)
+            {
+                notifyKey = key;
+                NotifyPropertyChanged(propertyName);
+                notifyKey = null;
+            }
+
+            return true;
         }
 
         protected T Get<T>([CallerMemberName]string? propertyName = null)

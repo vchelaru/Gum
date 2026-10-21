@@ -89,6 +89,25 @@ public static class Counting
         Report("keyed set new string + subscriber", () => new KeyedBenchViewModel(), (v, n) => { KeyedBenchViewModel m = (KeyedBenchViewModel)v; for (int i = 0; i < n; i++) m.TextValue = (i & 1) == 0 ? Values.TextB : Values.TextA; }, true, true);
         Report("keyed set new string + [DependsOn]", () => new KeyedBenchViewModelWithDependents(), (v, n) => { KeyedBenchViewModel m = (KeyedBenchViewModel)v; for (int i = 0; i < n; i++) m.TextValue = (i & 1) == 0 ? Values.TextB : Values.TextA; }, false, true);
 #endif
+#if REFFIELD
+        void Styles<T>(string type, T a, T b)
+        {
+            Report($"ref get {type}", () => new RefVm<T>(a), (v, n) => { var m = (RefVm<T>)v; for (int i = 0; i < n; i++) _ = m.Value; }, false, true);
+            Report($"ref set same {type}", () => new RefVm<T>(a), (v, n) => { var m = (RefVm<T>)v; for (int i = 0; i < n; i++) m.Value = a; }, false, true);
+            Report($"ref set new {type}", () => new RefVm<T>(a), (v, n) => { var m = (RefVm<T>)v; for (int i = 0; i < n; i++) m.Value = (i & 1) == 0 ? b : a; }, false, true);
+            // Name-only Set(ref): the static event-args cache hashes the name once per delivered notification.
+            Report($"ref set new {type} + subscriber", () => new RefVm<T>(a), (v, n) => { var m = (RefVm<T>)v; for (int i = 0; i < n; i++) m.Value = (i & 1) == 0 ? b : a; }, true);
+            Report($"ref set new {type} + [DependsOn]", () => new RefVmWithDependent<T>(a), (v, n) => { var m = (RefVm<T>)v; for (int i = 0; i < n; i++) m.Value = (i & 1) == 0 ? b : a; }, false, true);
+            Report($"ref+key set new {type} + subscriber", () => new RefKeyVm<T>(a), (v, n) => { var m = (RefKeyVm<T>)v; for (int i = 0; i < n; i++) m.Value = (i & 1) == 0 ? b : a; }, true, true);
+            Report($"ref+key set new {type} + [DependsOn]", () => new RefKeyVmWithDependent<T>(a), (v, n) => { var m = (RefKeyVm<T>)v; for (int i = 0; i < n; i++) m.Value = (i & 1) == 0 ? b : a; }, false, true);
+            Report($"obj get {type}", () => new ObjVm<T>(a), (v, n) => { var m = (ObjVm<T>)v; for (int i = 0; i < n; i++) _ = m.Value; }, false, true);
+            Report($"obj set new {type} + subscriber", () => new ObjVm<T>(a), (v, n) => { var m = (ObjVm<T>)v; for (int i = 0; i < n; i++) m.Value = (i & 1) == 0 ? b : a; }, true, true);
+            Report($"obj set new {type} + [DependsOn]", () => new ObjVmWithDependent<T>(a), (v, n) => { var m = (ObjVm<T>)v; for (int i = 0; i < n; i++) m.Value = (i & 1) == 0 ? b : a; }, false, true);
+        }
+
+        Styles("int", 1, 2);
+        Styles("string", Values.TextA, Values.TextB);
+#endif
         return sb.ToString();
     }
 }

@@ -102,6 +102,40 @@ void RunType<T, TVm, TPlain>(
     Record(type, "kvm.setNewDep", n => Loops.SetNew(keyedDepAccessor, a, b, n));
     Record(type, "kvm.setQuiet", n => Loops.SetQuiet(keyedAccessor, a, b, n));
 #endif
+#if REFFIELD
+    // Field style (#6397): Set(ref _v, value); the same with a key (cached event args); and a property object.
+    RefVm<T> refPlain = new(a);
+    RefVm<T> refSubscribed = new(a);
+    refSubscribed.PropertyChanged += subscriber.OnPropertyChanged;
+    RefAccessor<T> refAccessor = new(refPlain);
+    RefAccessor<T> refSubAccessor = new(refSubscribed);
+    RefAccessor<T> refDepAccessor = new(new RefVmWithDependent<T>(a));
+    Record(type, "rvm.get", n => Loops.Get<T, RefAccessor<T>>(refAccessor, n));
+    Record(type, "rvm.setSame", n => Loops.SetSame(refAccessor, a, n));
+    Record(type, "rvm.setNew", n => Loops.SetNew(refAccessor, a, b, n));
+    Record(type, "rvm.setNewSub", n => Loops.SetNew(refSubAccessor, a, b, n));
+    Record(type, "rvm.setNewDep", n => Loops.SetNew(refDepAccessor, a, b, n));
+    Record(type, "rvm.setQuiet", n => Loops.SetQuiet(refAccessor, a, b, n));
+
+    RefKeyVm<T> refKeySubscribed = new(a);
+    refKeySubscribed.PropertyChanged += subscriber.OnPropertyChanged;
+    RefKeyAccessor<T> refKeySubAccessor = new(refKeySubscribed);
+    RefKeyAccessor<T> refKeyDepAccessor = new(new RefKeyVmWithDependent<T>(a));
+    Record(type, "kfv.setNewSub", n => Loops.SetNew(refKeySubAccessor, a, b, n));
+    Record(type, "kfv.setNewDep", n => Loops.SetNew(refKeyDepAccessor, a, b, n));
+
+    ObjVm<T> objSubscribed = new(a);
+    objSubscribed.PropertyChanged += subscriber.OnPropertyChanged;
+    ObjAccessor<T> objAccessor = new(new ObjVm<T>(a));
+    ObjAccessor<T> objSubAccessor = new(objSubscribed);
+    ObjAccessor<T> objDepAccessor = new(new ObjVmWithDependent<T>(a));
+    Record(type, "ovm.get", n => Loops.Get<T, ObjAccessor<T>>(objAccessor, n));
+    Record(type, "ovm.setSame", n => Loops.SetSame(objAccessor, a, n));
+    Record(type, "ovm.setNew", n => Loops.SetNew(objAccessor, a, b, n));
+    Record(type, "ovm.setNewSub", n => Loops.SetNew(objSubAccessor, a, b, n));
+    Record(type, "ovm.setNewDep", n => Loops.SetNew(objDepAccessor, a, b, n));
+    Record(type, "ovm.setQuiet", n => Loops.SetQuiet(objAccessor, a, b, n));
+#endif
 }
 
 bool TypeSelected(string type) =>
@@ -152,6 +186,12 @@ Console.WriteLine(report);
 if (outputPath != null)
 {
     File.WriteAllText(outputPath, report);
+}
+if (ValueOf("--csv") is string csvPath)
+{
+    // type;case;ns;bytes per line, for taking the median over several runs.
+    File.WriteAllLines(csvPath, results.Select(r => string.Join(';', r.Key.Type, r.Key.Case,
+        r.Value.Ns.ToString("0.###", CultureInfo.InvariantCulture), r.Value.Bytes.ToString("0.###", CultureInfo.InvariantCulture))));
 }
 
 return 0;
@@ -231,6 +271,25 @@ string BuildReport(Dictionary<(string Type, string Case), Result> results)
     sb.AppendLine(plainAllocations.Count == 0
         ? "Plain cases allocated 0 B/op."
         : $"Plain cases that allocated: {string.Join(", ", plainAllocations)}.");
+
+#if REFFIELD
+    sb.AppendLine();
+    sb.AppendLine("Field style (#6397), ns/op (B/op). Ref = Set(ref _v, value); Ref+key = Set(ref _v, value, key); Obj = property object _v.Value.");
+    sb.AppendLine();
+    sb.AppendLine("| Type | Style | get | set same | set new | set new + 1 subscriber | set new + [DependsOn] | SetWithoutNotifying |");
+    sb.AppendLine("|---|---|---|---|---|---|---|---|");
+    foreach (string type in types)
+    {
+        foreach ((string label, string prefix) in new[] { ("Ref", "rvm"), ("Obj", "ovm") })
+        {
+            string Cell(string name) => $"{Ns(results[(type, prefix + "." + name)])} ({Bytes(results[(type, prefix + "." + name)])})";
+            sb.AppendLine($"| {type} | {label} | {Cell("get")} | {Cell("setSame")} | {Cell("setNew")} | {Cell("setNewSub")} | {Cell("setNewDep")} | {Cell("setQuiet")} |");
+        }
+
+        string KeyCell(string name) => $"{Ns(results[(type, "kfv." + name)])} ({Bytes(results[(type, "kfv." + name)])})";
+        sb.AppendLine($"| {type} | Ref+key | same as Ref | same as Ref | same as Ref | {KeyCell("setNewSub")} | {KeyCell("setNewDep")} | same as Ref |");
+    }
+#endif
 
 #if KEYED
     sb.AppendLine();
