@@ -298,7 +298,26 @@ public class LayoutShallowUpdateWrapTests : BaseTestClass
     }
 
     [Fact]
-    public void ShallowUpdateLayout_OnWrappingStack_ShouldNotLayOutTheRatioChildsDescendants()
+    public void ShallowUpdateLayout_OnWrappingStackOfFixedChildren_ShouldLayOutEachChildOnce()
+    {
+        ContainerRuntime stack = Stack(vertical: true, width: 37, height: 29);
+        stack.MaxWidth = 42;
+        stack.MaxHeight = 84;
+        stack.AddChild(Fixed(39, 53));
+        stack.AddChild(Fixed(20, 20));
+        stack.AddChild(Fixed(20, 20));
+        stack.UpdateLayout();
+
+        int before = GraphicalUiElement.UpdateLayoutCallCount;
+        stack.UpdateLayout(true, 0);
+        int calls = GraphicalUiElement.UpdateLayoutCallCount - before;
+
+        // The stack, and each of its children once.
+        calls.ShouldBe(4);
+    }
+
+    [Fact]
+    public void ShallowUpdateLayout_OnWrappingStackWithRatioChild_ShouldLayOutOnlyTheRatioChildAgainAndNotItsDescendants()
     {
         ContainerRuntime stack = Stack(vertical: true, width: 37, height: 29);
         stack.MaxWidth = 42;
@@ -311,16 +330,14 @@ public class LayoutShallowUpdateWrapTests : BaseTestClass
         ratio.HeightUnits = DimensionUnitType.Ratio;
         ratio.Height = 1;
         stack.AddChild(ratio);
-
-        ContainerRuntime grandchild = Fixed(5, 5);
-        ratio.AddChild(grandchild);
+        ratio.AddChild(Fixed(5, 5));
         stack.UpdateLayout();
 
         int before = GraphicalUiElement.UpdateLayoutCallCount;
         stack.UpdateLayout(true, 0);
         int calls = GraphicalUiElement.UpdateLayoutCallCount - before;
 
-        // The stack, and each of its children once.
-        calls.ShouldBe(3);
+        // The stack, the fixed child, and the Ratio child twice (its x in the wrap pass, then in full). Not the grandchild.
+        calls.ShouldBe(4);
     }
 }
