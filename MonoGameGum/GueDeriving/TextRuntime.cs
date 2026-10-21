@@ -400,14 +400,14 @@ public class TextRuntime : InteractiveGue
     public float FontSize
     {
         get { return fontSize; }
-        set { fontSize = value; UpdateToFontValues(); }
+        set { fontSize = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(FontSize)); }
     }
 
     bool isItalic;
     public bool IsItalic
     {
         get => isItalic;
-        set { isItalic = value; UpdateToFontValues(); }
+        set { isItalic = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(IsItalic)); }
     }
 
 #if SKIA
@@ -436,14 +436,14 @@ public class TextRuntime : InteractiveGue
     public bool IsBold
     {
         get => _boldWeight > 1;
-        set { BoldWeight = value ? 1.5f : 1f; }
+        set { BoldWeight = value ? 1.5f : 1f; ReportTypedPropertyChanged(nameof(IsBold)); }
     }
 #else
     bool isBold;
     public bool IsBold
     {
         get => isBold;
-        set { isBold = value; UpdateToFontValues(); }
+        set { isBold = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(IsBold)); }
     }
 #endif
 
@@ -460,7 +460,7 @@ public class TextRuntime : InteractiveGue
     public int OutlineThickness
     {
         get { return outlineThickness; }
-        set { outlineThickness = value; UpdateToFontValues(); }
+        set { outlineThickness = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(OutlineThickness)); }
     }
 
 #if SKIA

@@ -210,10 +210,10 @@ public class VariableReferenceBehaviorPinTests : BaseTestClass
         }
     }
 
-    // The typed setters that report themselves. FontSize, IsBold, IsItalic and OutlineThickness do not yet.
+    // The typed setters that report themselves.
     public static IEnumerable<object[]> TypedReportingProperties()
     {
-        foreach (string property in new[] { "Text", "X", "Y", "Width", "Height", "Rotation", "Visible", "Red", "Alpha", "FontScale" })
+        foreach (string property in new[] { "Text", "X", "Y", "Width", "Height", "Rotation", "Visible", "Red", "Alpha", "FontSize", "IsBold", "IsItalic", "OutlineThickness", "FontScale" })
         {
             foreach (bool useExpressions in new[] { false, true })
             {
