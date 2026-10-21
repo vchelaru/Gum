@@ -39,12 +39,37 @@ namespace Gum.Mvvm
 
         public int GetPropertyChangeCount() => PropertyChanged?.GetInvocationList().Length ?? 0;
 
+        // Value-typed properties live in a mutable typed cell, so a changed value overwrites the cell
+        // instead of allocating a new box. Cells are private to one instance (Clone copies them).
+        private abstract class ValueCell
+        {
+            public abstract object? Boxed { get; }
+            public abstract ValueCell Copy();
+        }
+
+        private sealed class ValueCell<T> : ValueCell
+        {
+            public T Value = default!;
+            public override object? Boxed => Value;
+            public override ValueCell Copy() => new ValueCell<T> { Value = Value };
+        }
+
         protected T Get<T>([CallerMemberName]string? propertyName = null)
         {
             T toReturn = default(T)!;
 
             if (propertyName != null && propertyDictionary.TryGetValue(propertyName, out object? storedValue))
             {
+                if (typeof(T).IsValueType && storedValue is ValueCell<T> cell)
+                {
+                    return cell.Value;
+                }
+
+                if (storedValue is ValueCell other)
+                {
+                    storedValue = other.Boxed;
+                }
+
                 toReturn = (T)storedValue!;
             }
 
@@ -116,6 +141,11 @@ namespace Gum.Mvvm
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             var didSet = false;
 
+            if (typeof(T).IsValueType)
+            {
+                return SetValueTyped(propertyValue, propertyName!);
+            }
+
             if (propertyDictionary.TryGetValue(propertyName, out object? storedValue))
             {
                 var storage = (T?)storedValue;
@@ -145,6 +175,41 @@ namespace Gum.Mvvm
             return didSet;
         }
 
+
+        private bool SetValueTyped<T>(T propertyValue, string propertyName)
+        {
+            if (propertyDictionary.TryGetValue(propertyName, out object? storedValue))
+            {
+                if (storedValue is ValueCell<T> cell)
+                {
+                    if (EqualityComparer<T>.Default.Equals(cell.Value, propertyValue))
+                    {
+                        return false;
+                    }
+
+                    cell.Value = propertyValue;
+                    return true;
+                }
+
+                // Stored by Set<object> or under another cell type: same comparison and cast as before.
+                var storage = (T?)(storedValue is ValueCell other ? other.Boxed : storedValue);
+                if (EqualityComparer<T>.Default.Equals(storage, propertyValue))
+                {
+                    return false;
+                }
+
+                if (collectionHandlers != null)
+                {
+                    UnsubscribeFromCollection(storedValue, propertyName);
+                }
+
+                propertyDictionary[propertyName] = new ValueCell<T> { Value = propertyValue };
+                return true;
+            }
+
+            propertyDictionary[propertyName] = new ValueCell<T> { Value = propertyValue };
+            return EqualityComparer<T>.Default.Equals(default(T), propertyValue) == false;
+        }
 
         public ViewModel()
         {
@@ -220,6 +285,13 @@ namespace Gum.Mvvm
             var asObject = this.MemberwiseClone();
             var asViewModel = (ViewModel)asObject;
             asViewModel.propertyDictionary = new Dictionary<string, object?>(this.propertyDictionary);
+            foreach (var pair in this.propertyDictionary)
+            {
+                if (pair.Value is ValueCell cell)
+                {
+                    asViewModel.propertyDictionary[pair.Key] = cell.Copy();
+                }
+            }
             // MemberwiseClone copied the reference; the handlers belong to this instance, and a
             // clone replacing a collection must not unsubscribe the original.
             asViewModel.collectionHandlers = null;
