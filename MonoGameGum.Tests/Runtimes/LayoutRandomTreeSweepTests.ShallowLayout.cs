@@ -56,4 +56,56 @@ public partial class LayoutRandomTreeSweepTests
         _output.WriteLine($"{failures.Count} of {Seeds}: {string.Join("; ", failures)}");
         failures.Count.ShouldBe(0, string.Join("; ", failures.Take(5)));
     }
+
+    /// <summary>
+    /// A shallow layout of any hidden element leaves every visible element where it was, and showing that element
+    /// afterwards gives the tree showing it without the shallow layout gives (#6366). Hidden elements' own stored
+    /// rectangles are not compared: the shallow layout refreshes them on purpose.
+    /// </summary>
+    [Fact]
+    public void Sweep_ShallowLayoutOfAHiddenElement_ShouldNotMoveTheVisibleTreeOrChangeWhatShowingItGives()
+    {
+        List<string> failures = new();
+        int hiddenTargets = 0;
+        for (int seed = 0; seed < Seeds; seed++)
+        {
+            Node probe = GenerateTree(seed, wellFormed: true);
+            int hiddenCount = Walk(probe).Skip(1).Count(n => !n.Visible);
+            for (int hiddenNumber = 0; hiddenNumber < hiddenCount; hiddenNumber++)
+            {
+                hiddenTargets++;
+
+                Node shallow = GenerateTree(seed, wellFormed: true);
+                BuildSuspended(shallow);
+                Node target = Walk(shallow).Skip(1).Where(n => !n.Visible).ElementAt(hiddenNumber);
+                string before = Snapshot(shallow, includeHidden: false);
+                target.Runtime.UpdateLayout(true, 0);
+                string after = Snapshot(shallow, includeHidden: false);
+                if (after != before)
+                {
+                    failures.Add($"seed {seed} hidden {hiddenNumber}: {FirstDifference(before, after).Split('\n')[0]}");
+                    continue;
+                }
+
+                target.Visible = true;
+                target.Runtime.Visible = true;
+                string shownAfterShallow = Snapshot(shallow, includeHidden: false);
+
+                Node plain = GenerateTree(seed, wellFormed: true);
+                BuildSuspended(plain);
+                Node plainTarget = Walk(plain).Skip(1).Where(n => !n.Visible).ElementAt(hiddenNumber);
+                plainTarget.Visible = true;
+                plainTarget.Runtime.Visible = true;
+                string shownPlain = Snapshot(plain, includeHidden: false);
+                if (shownAfterShallow != shownPlain)
+                {
+                    failures.Add($"seed {seed} hidden {hiddenNumber} shown: {FirstDifference(shownPlain, shownAfterShallow).Split('\n')[0]}");
+                }
+            }
+        }
+
+        _output.WriteLine($"{failures.Count} of {hiddenTargets} hidden targets: {string.Join("; ", failures)}");
+        hiddenTargets.ShouldBeGreaterThan(0);
+        failures.Count.ShouldBe(0, string.Join("; ", failures.Take(5)));
+    }
 }
