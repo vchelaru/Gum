@@ -45,7 +45,38 @@ public class ViewModelAllocationTests : BaseTestClass
             get => Get<ObservableCollection<int>?>();
             set => Set(value);
         }
+
+        public int IntProperty
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+
+        public bool BoolProperty
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
+        public AllocationEnum EnumProperty
+        {
+            get => Get<AllocationEnum>();
+            set => Set(value);
+        }
+
+        public BigStruct BigProperty
+        {
+            get => Get<BigStruct>();
+            set => Set(value);
+        }
+
+        public void SetFloatWithoutNotifying(float value) =>
+            SetWithoutNotifying(value, nameof(FloatProperty));
     }
+
+    private enum AllocationEnum { A, B }
+
+    private readonly record struct BigStruct(long A, long B, long C, long D) : System.IEquatable<BigStruct>;
 
     private static AllocationResult Measure(System.Action action)
     {
@@ -215,6 +246,116 @@ public class ViewModelAllocationTests : BaseTestClass
         });
 
         sink.ShouldBeGreaterThan(0);
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Set_NewFloatValue_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { FloatProperty = 1 };
+        float value = 1;
+
+        AllocationResult result = Measure(() =>
+        {
+            value = value == 1 ? 2 : 1;
+            vm.FloatProperty = value;
+        });
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Set_NewIntValue_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { IntProperty = 1 };
+        int value = 1;
+
+        AllocationResult result = Measure(() =>
+        {
+            value = value == 1 ? 2 : 1;
+            vm.IntProperty = value;
+        });
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Set_NewBoolValue_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { BoolProperty = true };
+        bool value = true;
+
+        AllocationResult result = Measure(() =>
+        {
+            value = !value;
+            vm.BoolProperty = value;
+        });
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Set_NewEnumValue_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { EnumProperty = AllocationEnum.B };
+        bool useB = true;
+
+        AllocationResult result = Measure(() =>
+        {
+            useB = !useB;
+            vm.EnumProperty = useB ? AllocationEnum.B : AllocationEnum.A;
+        });
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Set_NewLargeStructValue_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { BigProperty = new BigStruct(1, 2, 3, 4) };
+        BigStruct a = new BigStruct(1, 2, 3, 4);
+        BigStruct b = new BigStruct(5, 6, 7, 8);
+        bool useA = false;
+
+        AllocationResult result = Measure(() =>
+        {
+            useA = !useA;
+            vm.BigProperty = useA ? a : b;
+        });
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Set_NewFloatValue_WithSubscriberAndDependent_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { FloatProperty = 1 };
+        int raisedCount = 0;
+        vm.PropertyChanged += (_, _) => raisedCount++;
+        float value = 1;
+
+        AllocationResult result = Measure(() =>
+        {
+            value = value == 1 ? 2 : 1;
+            vm.FloatProperty = value;
+        });
+
+        raisedCount.ShouldBeGreaterThan(0);
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SetWithoutNotifying_NewFloatValue_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { FloatProperty = 1 };
+        float value = 1;
+
+        AllocationResult result = Measure(() =>
+        {
+            value = value == 1 ? 2 : 1;
+            vm.SetFloatWithoutNotifying(value);
+        });
+
         result.TotalBytes.ShouldBe(0);
     }
 }
