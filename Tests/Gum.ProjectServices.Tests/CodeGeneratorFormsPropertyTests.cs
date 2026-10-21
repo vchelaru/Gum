@@ -624,6 +624,52 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
         code.ShouldContain($"this.ControlInstance.LargeChange = {expected};", Case.Sensitive);
     }
 
+    [Theory]
+    [InlineData("PanelBehavior", "ToolTip", "string", "custom tip", "this.ToolTip = @\"custom tip\";")]
+    [InlineData("ScrollViewerBehavior", "LargeChange", "double", 25d, "this.LargeChange = 25;")]
+    [InlineData("StackPanelBehavior", "Spacing", "float", 4.5f, "this.Spacing = 4.5f;")]
+    public void GetGeneratedCodeForElement_CustomVariableNamedLikeAFormsProperty_IsAssignedOnce(
+        string behaviorName, string name, string type, object value, string expectedLine)
+    {
+        // A custom variable is assigned by its own pass; the Forms property pass must leave it alone.
+        AddBehavior(behaviorName, Declare(name, type));
+        ComponentSave component = AddComponent("ControlStandard", "Container", behaviorName);
+        component.DefaultState!.Variables.Add(new VariableSave
+        {
+            Name = name,
+            Type = type,
+            Value = value,
+            SetsValue = true,
+            IsCustomVariable = true,
+        });
+
+        string code = GenerateElement(component);
+
+        code.ShouldContain(expectedLine, Case.Sensitive);
+        System.Text.RegularExpressions.Regex.Matches(code, "this\\." + name + " = ").Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void GetCodeForInstance_CustomVariableNamedLikeAFormsProperty_IsAssignedOnce()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScreen("PanelBehavior", Declare("ToolTip", "string"));
+        ComponentSave component = Project.Components.First(item => item.Name == "ControlStandard");
+        component.DefaultState!.Variables.Add(new VariableSave
+        {
+            Name = "ToolTip",
+            Type = "string",
+            Value = "custom tip",
+            SetsValue = true,
+            IsCustomVariable = true,
+        });
+        Author(screen, "ControlInstance.ToolTip", "string", "instance tip");
+
+        string code = GenerateInstance(instance, screen);
+
+        System.Text.RegularExpressions.Regex.Matches(code, "ToolTip = ").Count.ShouldBe(1);
+        code.ShouldContain("ToolTip = @\"instance tip\";", Case.Sensitive);
+    }
+
     [Fact]
     public void GetGeneratedCodeForElement_MeadowScrollViewerAndScrollBarInstances_AssignAuthoredFormsProperties()
     {
