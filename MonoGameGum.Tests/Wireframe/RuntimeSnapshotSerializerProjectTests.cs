@@ -143,11 +143,16 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
             startInfo.ArgumentList.Add("run");
             startInfo.ArgumentList.Add("--project");
             startInfo.ArgumentList.Add(cliProject);
-            // dotnet run builds gumcli (incrementally) in the test's configuration. It is not a
-            // ProjectReference of the test project: that made every build of MonoGameGum.Tests
-            // rebuild the whole CLI graph for the sake of these two tests.
+            // On GitHub Actions the test project's build-only ProjectReference already built gumcli in
+            // this configuration, so reuse it (building it here, next to the other test streams, exceeds
+            // the time limit). Elsewhere the reference is skipped to keep local builds fast, so dotnet
+            // run builds gumcli (incrementally) itself.
             startInfo.ArgumentList.Add("--configuration");
             startInfo.ArgumentList.Add(configuration);
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                startInfo.ArgumentList.Add("--no-build");
+            }
             startInfo.ArgumentList.Add("--");
             startInfo.ArgumentList.Add("check");
             startInfo.ArgumentList.Add(gumxPath);
