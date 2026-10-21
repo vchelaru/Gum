@@ -139,7 +139,7 @@ Keep in mind that `Replace Alpha` can apply different alpha values if the instan
 
 <figure><img src="../../../.gitbook/assets/09_08 16 44.gif" alt=""><figcaption><p>Min alpha creates a mask</p></figcaption></figure>
 
-`Min Alpha` applies to the whole bounds of the instance, not only the pixels it paints. Pixels inside the shape keep their opacity, and pixels inside the bounds but outside the shape (such as the corners around a circle) become transparent. This lets a Circle or a Rectangle with rounded corners mask a circular or rounded area without a custom texture. See [Whole-Bounds Masking](blend.md#whole-bounds-masking).
+`Min Alpha` applies to the whole bounds of the instance, not only the pixels it paints. Pixels inside the shape keep their opacity, and pixels inside the bounds but outside the shape (such as the corners around a Circle) become transparent. This lets a Circle or a Rectangle with rounded corners mask a circular or rounded area without a custom texture. See [Whole-Bounds Masking](blend.md#whole-bounds-masking).
 
 If the instance alpha is reduced, then the resulting transparency is reduced as well. The following shows setting `Alpha` to 128 (about 50%).
 
@@ -153,11 +153,11 @@ Keep in mind that multiple objects can be combined to create larger masks. For e
 
 `Replace Alpha` and `Min Alpha` use the whole bounding rectangle of an instance as the mask. Pixels inside the bounds that the instance does not cover end up with an alpha of `0`. Pixels outside the bounds do not change.
 
-This applies to Circle, Rectangle, RoundedRectangle, Arc, Sprite, NineSlice, and text.
+This applies to Circle, Rectangle, RoundedRectangle, Arc, Sprite, NineSlice, and Text.
 
-The following shows a blue Rectangle in a container with `Is Render Target` set to true. A filled Circle drawn after it uses `Min Alpha`. The Circle keeps the Rectangle's pixels inside the circle and clears the corners of the Circle's bounds, while the Rectangle outside those bounds is unchanged.
+The following shows a blue Rectangle in a Container with `Is Render Target` set to true. A filled Circle drawn after it uses `Min Alpha`. The Circle keeps the Rectangle's pixels inside the Circle and clears the corners of the Circle's bounds, while the Rectangle outside those bounds is unchanged.
 
-<figure><img src="../../../.gitbook/assets/21_05 10 35.png" alt=""><figcaption><p>Min Alpha on a Circle clears the corners of its bounds</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/21_05 23 40.png" alt=""><figcaption><p>Min Alpha on a Circle clears the corners of its bounds</p></figcaption></figure>
 
 {% hint style="info" %}
 Whole-bounds masking for shapes and text, and `Replace Alpha` on Skia elements, are available in November 2026, or now if building Gum from source. Before then, `Replace Alpha` on a Skia element drew like `Normal` `Blend`.
@@ -171,7 +171,7 @@ A shape with both a fill and a stroke masks as one shape. The fill and the strok
 
 Text uses the measured text block plus a 2 pixel margin as its bounds, and adds the drop shadow offset when it has a drop shadow. Skia also adds the outline thickness and the shadow blur. Glyph pixels keep their alpha, and the rest of the bounds becomes transparent.
 
-The Gum tool has no `Blend` variable for text, so set `Blend` on the text in code. Like the other alpha-only blends, text masks the content below it when its container has `Is Render Target` set to true.
+The Gum tool has no `Blend` variable for text, so set `Blend` on the Text in code. Like the other alpha-only blends, Text masks the content below it when its Container has `Is Render Target` set to true.
 
 ### Edges Between Pixels
 

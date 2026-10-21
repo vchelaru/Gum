@@ -2,7 +2,7 @@
 
 ### Introduction
 
-Circles can be drawn as an outline, filled in, or both, and supports additional effects such as gradients, drop shadows, and dashed strokes. Circles are sized using their `Width` and `Height` values. If `Width` and `Height` differ, the circle uses the smaller one and sits in the center of the bounds.
+Circles can be drawn as an outline, filled in, or both, and supports additional effects such as gradients, drop shadows, and dashed strokes. Circles are sized using their `Width` and `Height` values. If `Width` and `Height` differ, the Circle uses the smaller one and sits in the center of the bounds.
 
 <figure><img src="../../.gitbook/assets/30_04 52 41.png" alt=""><figcaption><p>Circle in Gum using the default white color</p></figcaption></figure>
 
