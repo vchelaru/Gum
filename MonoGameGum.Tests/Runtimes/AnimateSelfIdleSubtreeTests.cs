@@ -439,7 +439,7 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
         spriteRuntime.Animate = true;
         RunFrames(root, 2);
 
-        ((Sprite)spriteRuntime.RenderableComponent).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
+        ((Sprite)spriteRuntime.RenderableComponent!).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
     }
 
     [Fact]
@@ -454,7 +454,7 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
         spriteRuntime.SetProperty("Animate", true);
         RunFrames(root, 2);
 
-        ((Sprite)spriteRuntime.RenderableComponent).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
+        ((Sprite)spriteRuntime.RenderableComponent!).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
     }
 
     [Fact]
@@ -462,14 +462,14 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
     {
         ContainerRuntime root = new();
         NineSliceRuntime nineSlice = new();
-        ((NineSlice)nineSlice.RenderableComponent).AnimationLogic.AnimationChains = CreateChains(loops: true, 10f);
+        ((NineSlice)nineSlice.RenderableComponent!).AnimationLogic.AnimationChains = CreateChains(loops: true, 10f);
         root.AddChild(nineSlice);
         RunFrames(root, 3);
 
         nineSlice.Animate = true;
         RunFrames(root, 2);
 
-        ((NineSlice)nineSlice.RenderableComponent).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
+        ((NineSlice)nineSlice.RenderableComponent!).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
     }
 
     [Fact]
@@ -483,7 +483,7 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
         GraphicalUiElement clone = source.Clone();
         root.Children[1].AddChild(clone);
         RunFrames(root, 3);
-        CountingSprite clonedSprite = (CountingSprite)clone.RenderableComponent;
+        CountingSprite clonedSprite = (CountingSprite)clone.RenderableComponent!;
 
         clonedSprite.Animate = true;
         RunFrames(root, 2);
