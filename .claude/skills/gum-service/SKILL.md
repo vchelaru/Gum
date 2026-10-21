@@ -30,6 +30,12 @@ GumService.Default.Uninitialize()
 
 **Only the `gumProjectFile` overload loads a project.** `Initialize(game, gumProjectFile)` loads the `.gumx` and runs the project-load path — which applies project-level settings (standard-element defaults, localization, and the project's `TextureFilter` → `Renderer.TextureFilter`, issue #3199). The `Initialize(game, DefaultVisualsVersion)` / parameterless overloads are **code-only** and never touch that path. So when manually verifying anything that depends on a loaded project, you must pass the `.gumx` path or the behavior under test never runs. The cheapest from-file smoke test is `Initialize(game, "GumProject/GumProject.gumx")` plus a `SpriteRuntime` (`SourceFileName` set, scaled up) added to `Root`.
 
+## GumService vs IGumService
+
+Both stay supported long term. `GumService` is strongly typed and the more convenient choice for most games. `IGumService` (`RenderingLibrary/IGumService.cs`) is for code that should be truly cross-platform, for users who expect to migrate or support several runtimes, and it exposes interfaces. Neither replaces the other; each should be as fully featured as it can be, so a platform-neutral capability a game gets from `GumService` should also be reachable through `IGumService`.
+
+**Cursor and keyboard accessors.** `GumService.Cursor` / `Keyboard` return the concrete `Cursor` / `Keyboard` and stay that way, so they are null while a custom `ICursor` / `IInputReceiverKeyboard` is installed with `FormsUtilities.SetCursor` / `SetKeyboard`. `IGumService.Cursor` / `Keyboard` and `FormsUtilities.Cursor` / `Keyboard` return whatever is installed. `FormsUtilities.SetCursor` / `SetKeyboard` only assign `FrameworkElement.MainCursor` / `MainKeyboard` (no event is raised), and the MonoGame service reads them per service (process statics for the first service, `GumContext` for later ones). A new `IGumService` implementation reads `FormsUtilities.Cursor` / `Keyboard`; never forward to the typed property.
+
 ## Singleton Pattern
 
 `Default` is lazily initialized via `??=`. `Uninitialize()` sets `_default = null`, so after teardown `GumService.Default` creates a **fresh instance** — any stored reference to the old instance is now orphaned.

@@ -13,6 +13,15 @@ namespace RenderingLibrary
     /// each runtime implements this interface.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// <c>GumService</c> and <c>IGumService</c> are both supported. <c>GumService</c> is strongly typed
+    /// (for example its <c>Cursor</c> and <c>Keyboard</c> are the concrete types) and is the more convenient
+    /// choice for most games. <c>IGumService</c> is for code that should be truly cross-platform, such as
+    /// code that expects to migrate or to support several runtimes, and it exposes interfaces
+    /// (<see cref="ICursor"/>, <see cref="IInputReceiverKeyboard"/>). Neither replaces the other, and each is
+    /// meant to be as fully featured as it can be.
+    /// </para>
+    /// <para>
     /// The no-arg <see cref="Initialize()"/> works on runtimes that do not require
     /// a host object (e.g. Raylib). On runtimes that do — currently MonoGame,
     /// KNI, and FNA, which all need a <c>Game</c> instance — the call throws
@@ -20,6 +29,7 @@ namespace RenderingLibrary
     /// runtimes should call the concrete <c>GumService.Initialize(Game ...)</c>
     /// overload first, then consume <see cref="Default"/> through this
     /// interface from platform-agnostic code.
+    /// </para>
     /// </remarks>
     public interface IGumService
     {
@@ -52,15 +62,25 @@ namespace RenderingLibrary
         IRenderer Renderer { get; }
 
         /// <summary>
-        /// Gets the default cursor for the active runtime — either mouse or touch
-        /// depending on the platform's input capabilities.
+        /// Gets the cursor Forms reads each frame: the runtime's default cursor (mouse or touch, depending on
+        /// the platform's input capabilities), or the one installed with <c>FormsUtilities.SetCursor</c>.
+        /// Null before <c>Initialize</c> and on runtimes without an input pump.
         /// </summary>
+        /// <remarks>
+        /// Unlike the strongly typed <c>GumService.Cursor</c>, which is null while a custom cursor is installed,
+        /// this returns whichever <see cref="ICursor"/> is installed.
+        /// </remarks>
         ICursor Cursor { get; }
 
         /// <summary>
-        /// Gets the keyboard Forms reads each frame, or null before <c>Initialize</c>. Runtimes without an
-        /// input pump return null.
+        /// Gets the keyboard Forms reads each frame: the runtime's default keyboard, or the one installed with
+        /// <c>FormsUtilities.SetKeyboard</c>. Null before <c>Initialize</c> and on runtimes without an input pump.
         /// </summary>
+        /// <remarks>
+        /// Unlike the strongly typed <c>GumService.Keyboard</c>, which is null while a custom keyboard is
+        /// installed, this returns whichever <see cref="IInputReceiverKeyboard"/> is installed. The default
+        /// implementation returns null, so an existing implementation of this interface keeps compiling.
+        /// </remarks>
         IInputReceiverKeyboard? Keyboard => null;
 
         /// <summary>

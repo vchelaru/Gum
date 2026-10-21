@@ -42,6 +42,16 @@ using SkiaGum;
 // GumService.XnaLike.cs / GumService.Raylib.cs partials (issue #3608).
 namespace Gum;
 
+/// <summary>
+/// The runtime-facing API for initializing, updating and drawing Gum.
+/// </summary>
+/// <remarks>
+/// <c>GumService</c> and <see cref="IGumService"/> are both supported. <c>GumService</c> is strongly typed
+/// (for example <see cref="Cursor"/> and <see cref="Keyboard"/> are the concrete types) and is the more
+/// convenient choice for most games. <see cref="IGumService"/> is for code that should be truly
+/// cross-platform, such as code that expects to migrate or to support several runtimes, and it exposes
+/// interfaces. Neither replaces the other, and each is meant to be as fully featured as it can be.
+/// </remarks>
 public partial class GumService : IGumService
 {
     IRenderer IGumService.Renderer => this.SystemManagers.Renderer;

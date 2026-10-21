@@ -38,7 +38,7 @@ In this example `ReplayKeyboard` is your own class that implements `IInputReceiv
 
 `SetKeyboard` also replaces the old keyboard in `FrameworkElement.KeyboardsForUiControl` and updates `FrameworkElement.MainKeyboard`, so you do not need to change either one yourself. You can call it before or after `UseKeyboardDefaults`.
 
-While a custom keyboard is installed, `GumUI.Keyboard` returns `null` because it only returns Gum's built-in keyboard. Use `FormsUtilities.Keyboard` to get whichever keyboard is active.
+While a custom keyboard is installed, `GumUI.Keyboard` returns `null` because it only returns Gum's built-in keyboard. Use `FormsUtilities.Keyboard` or `IGumService.Default.Keyboard` to get whichever keyboard is active.
 
 {% hint style="info" %}
 Available in October 2026, or now if building Gum from source.
