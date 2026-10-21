@@ -215,6 +215,22 @@ public static class CursorExtensions
 
         }
 
+#if !FRB
+        // The cursor walk skips a subtree whose cached result says nothing in it has events. Every change
+        // that could add events clears that result, so a "none" left on the target or an ancestor while the
+        // target has events is a missed invalidation, and the walk would never reach the target.
+        // (FRB has its own cursor walk, which does not use these results.)
+        for (GraphicalUiElement? cached = interactiveGue; cached != null; cached = cached.Parent as GraphicalUiElement)
+        {
+            if (cached._subtreeEventsState == 1)
+            {
+                return $"The cursor walk is skipping {NameOrType(cached)} because it cached that nothing under it has events, " +
+                    $"but {NameOrType(interactiveGue)} has HasEvents set. A change did not clear that cached result; this is a Gum bug.\n" +
+                    GetStack(interactiveGue);
+            }
+        }
+#endif
+
         // Normalize the cursor's "over" visual to a GraphicalUiElement. On MonoGameGum this is an
         // InteractiveGue (upcast); under FRB the cursor exposes it as an IWindow, which is a
         // GraphicalUiElement at runtime (GraphicalUiElement implements IWindow in the FRB build).
