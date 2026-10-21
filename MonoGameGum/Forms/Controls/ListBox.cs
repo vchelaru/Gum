@@ -2007,7 +2007,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
             // Keys.X references are fully qualified to Gum.Forms.Input.Keys so this block compiles
             // on every platform regardless of what the file-level `using Keys = ...` alias resolves
-            // to. KeyTyped (pushed + OS repeat) replaces the old "KeyPushed OR KeysTyped.Contains"
+            // to. KeyTyped (pushed + repeat while held) replaces the old "KeyPushed OR KeysTyped.Contains"
             // two-step — same effective behavior, single call, works on the shared base interface.
             if (keyboard.KeyTyped(Gum.Forms.Input.Keys.Up) == true)
             {
