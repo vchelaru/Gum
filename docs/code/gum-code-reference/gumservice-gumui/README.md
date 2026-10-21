@@ -10,6 +10,12 @@ Many documentation pages create a property named GumUI as shown in the following
 GumService GumUI => GumService.Default;
 ```
 
+## GumService and IGumService
+
+`GumService` is the concrete service for your platform, and it is the most convenient choice for most games.
+
+`IGumService` is the interface for code that should work on several runtimes, and for projects that expect to migrate between them. Both are supported.
+
 ## Initialize
 
 `Initialize` is called in all Gum projects. This method performs the following:
