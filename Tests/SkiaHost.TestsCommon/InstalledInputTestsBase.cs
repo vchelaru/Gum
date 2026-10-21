@@ -125,6 +125,47 @@ public abstract class InstalledInputTestsBase : IDisposable
     }
 
     [Fact]
+    public void InterfaceAccessors_AfterBootstrap_ReturnTheHostsCursorAndKeyboard()
+    {
+        IGumService service = IGumService.Default!;
+
+        service.Cursor.ShouldBeSameAs(ConcreteCursor);
+        service.Keyboard.ShouldBeSameAs(ConcreteKeyboard);
+    }
+
+    [Fact]
+    public void InterfaceAccessors_WithCustomInstalled_ReturnTheCustomObjects()
+    {
+        IGumService service = IGumService.Default!;
+        ICursor customCursor = new Mock<ICursor>().Object;
+        IInputReceiverKeyboard customKeyboard = new Mock<IInputReceiverKeyboard>().Object;
+
+        FormsUtilities.SetCursor(customCursor);
+        FormsUtilities.SetKeyboard(customKeyboard);
+
+        service.Cursor.ShouldBeSameAs(customCursor);
+        service.Keyboard.ShouldBeSameAs(customKeyboard);
+        ConcreteCursor.ShouldBeNull("the typed accessors keep returning null under a custom implementation");
+        ConcreteKeyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InterfaceAccessors_ReinstallingTheHostsInput_ReturnsIt()
+    {
+        IGumService service = IGumService.Default!;
+        object cursor = ConcreteCursor!;
+        object keyboard = ConcreteKeyboard!;
+        FormsUtilities.SetCursor(new Mock<ICursor>().Object);
+        FormsUtilities.SetKeyboard(new Mock<IInputReceiverKeyboard>().Object);
+
+        FormsUtilities.SetCursor((ICursor)cursor);
+        FormsUtilities.SetKeyboard((IInputReceiverKeyboard)keyboard);
+
+        service.Cursor.ShouldBeSameAs(cursor);
+        service.Keyboard.ShouldBeSameAs(keyboard);
+    }
+
+    [Fact]
     public void SetCursorAndSetKeyboard_DoNotChangeTheDefaultService()
     {
         IGumService? defaultBefore = IGumService.Default;

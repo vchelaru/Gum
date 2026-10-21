@@ -45,7 +45,6 @@ namespace Gum;
 public partial class GumService : IGumService
 {
     IRenderer IGumService.Renderer => this.SystemManagers.Renderer;
-    ICursor IGumService.Cursor => this.Cursor;
 
     #region Default
     // The lazily-initialized singleton backing field. The Default property returns the
@@ -66,30 +65,44 @@ public partial class GumService : IGumService
     // beside a live one has none.
     private bool UsesProcessStatics => _context?.AdoptsProcessStatics ?? !GumContext.HasLiveContextOtherThan(null);
 
+    // The cursor and keyboard Forms reads for this service, whatever their type. Every cursor/keyboard
+    // accessor below is a view of these two.
+    private ICursor? InstalledCursor => UsesProcessStatics ? FrameworkElement._mainCursor : _context?.MainCursor;
+
+    private IInputReceiverKeyboard? InstalledKeyboard => UsesProcessStatics ? FrameworkElement._mainKeyboard : _context?.MainKeyboard;
+
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
     /// </summary>
     /// <remarks>
-    /// Null while a custom cursor is installed with <see cref="FormsUtilities.SetCursor"/>, because this
-    /// property returns the concrete <see cref="Cursor"/> type. <see cref="FormsUtilities.Cursor"/> returns
-    /// whichever cursor is active. This property switches to <see cref="ICursor"/> in a later breaking release (#5028).
+    /// This is the strongly typed accessor, so it returns the concrete <see cref="Cursor"/> type and stays
+    /// that way. It is null while a custom <see cref="ICursor"/> is installed with
+    /// <see cref="FormsUtilities.SetCursor"/>. Code that must work with any cursor reads
+    /// <see cref="IGumService.Cursor"/> or <see cref="FormsUtilities.Cursor"/>, which return whichever
+    /// cursor is installed.
     /// </remarks>
-    // 'as' (not a hard cast) preserves the prior null-on-mismatch behavior: tests may install a mock
-    // ICursor/IInputReceiverKeyboard via FormsUtilities.SetCursor, and this forwarder returned null for
-    // a non-Cursor before FormsUtilities.Cursor changed from 'Cursor?' to 'ICursor'. The '!' only
-    // suppresses the nullable-return warning (runtime no-op) and does not reintroduce a throw.
-    public Cursor Cursor => ((UsesProcessStatics ? FrameworkElement._mainCursor : _context?.MainCursor) as Cursor)!;
+    // 'as' (not a hard cast) returns null for a non-Cursor instead of throwing: tests and automation
+    // install their own ICursor through FormsUtilities.SetCursor. The '!' only suppresses the
+    // nullable-return warning (runtime no-op).
+    public Cursor Cursor => (InstalledCursor as Cursor)!;
 
     /// <summary>
     /// Gets the default keyboard.
     /// </summary>
     /// <remarks>
-    /// Null while a custom keyboard is installed with <see cref="FormsUtilities.SetKeyboard"/>, because this
-    /// property returns the concrete <see cref="Keyboard"/> type. <see cref="FormsUtilities.Keyboard"/> returns
-    /// whichever keyboard is active. This property switches to <see cref="IInputReceiverKeyboard"/> in a later
-    /// breaking release (#5028).
+    /// This is the strongly typed accessor, so it returns the concrete <see cref="Keyboard"/> type and stays
+    /// that way. It is null while a custom <see cref="IInputReceiverKeyboard"/> is installed with
+    /// <see cref="FormsUtilities.SetKeyboard"/>. Code that must work with any keyboard reads
+    /// <see cref="IGumService.Keyboard"/> or <see cref="FormsUtilities.Keyboard"/>, which return whichever
+    /// keyboard is installed.
     /// </remarks>
-    public Keyboard Keyboard => ((UsesProcessStatics ? FrameworkElement._mainKeyboard : _context?.MainKeyboard) as Keyboard)!;
+    public Keyboard Keyboard => (InstalledKeyboard as Keyboard)!;
+
+    /// <inheritdoc/>
+    ICursor IGumService.Cursor => InstalledCursor!;
+
+    /// <inheritdoc/>
+    IInputReceiverKeyboard? IGumService.Keyboard => InstalledKeyboard;
 
     /// <summary>
     /// Gets the service used to provide localized strings and resources for the application.

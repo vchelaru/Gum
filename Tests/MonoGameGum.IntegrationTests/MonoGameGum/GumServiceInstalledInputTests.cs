@@ -110,17 +110,6 @@ public class GumServiceInstalledInputTests : BaseTestClass
     }
 
     [Fact]
-    public void SetCursor_WithCustomCursor_InterfaceAccessorIsNullToday()
-    {
-        // Pins today's behavior: IGumService.Cursor forwards to the concrete property (#6322 flips it).
-        using CollisionGame game = CreateOneService();
-
-        FormsUtilities.SetCursor(new Mock<ICursor>().Object);
-
-        ((IGumService)game.ServiceA).Cursor.ShouldBeNull();
-    }
-
-    [Fact]
     public void SetCursor_ReplacingCustomWithTheOriginalBuiltIn_RestoresEveryAccessor()
     {
         using CollisionGame game = CreateOneService();
@@ -173,6 +162,120 @@ public class GumServiceInstalledInputTests : BaseTestClass
 
         cursor.Verify(c => c.Activity(It.IsAny<double>()), Times.Once());
         keyboard.Verify(k => k.Activity(It.IsAny<double>()), Times.Once());
+    }
+
+    #endregion
+
+    #region IGumService returns whichever cursor and keyboard is installed (#6322)
+
+    [Fact]
+    public void InterfaceAccessors_AfterInitialize_ReturnTheBuiltInInput()
+    {
+        using CollisionGame game = CreateOneService();
+
+        ((IGumService)game.ServiceA).Cursor.ShouldBeSameAs(game.ServiceA.Cursor);
+        ((IGumService)game.ServiceA).Keyboard.ShouldBeSameAs(game.ServiceA.Keyboard);
+        ((IGumService)game.ServiceA).Keyboard.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void InterfaceAccessors_WithCustomInstalled_ReturnTheCustomObjects()
+    {
+        using CollisionGame game = CreateOneService();
+        ICursor customCursor = new Mock<ICursor>().Object;
+        IInputReceiverKeyboard customKeyboard = new Mock<IInputReceiverKeyboard>().Object;
+
+        FormsUtilities.SetCursor(customCursor);
+        FormsUtilities.SetKeyboard(customKeyboard);
+
+        ((IGumService)game.ServiceA).Cursor.ShouldBeSameAs(customCursor);
+        ((IGumService)game.ServiceA).Keyboard.ShouldBeSameAs(customKeyboard);
+        game.ServiceA.Cursor.ShouldBeNull("the concrete accessors keep returning null under a custom implementation");
+        game.ServiceA.Keyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InterfaceAccessors_WithCustomInstalledThenReinstalledBuiltIn_FollowEachInstall()
+    {
+        using CollisionGame game = CreateOneService();
+        Cursor builtInCursor = game.ServiceA.Cursor;
+        Keyboard builtInKeyboard = game.ServiceA.Keyboard;
+        ICursor customCursor = new Mock<ICursor>().Object;
+        IInputReceiverKeyboard customKeyboard = new Mock<IInputReceiverKeyboard>().Object;
+
+        FormsUtilities.SetCursor(customCursor);
+        FormsUtilities.SetKeyboard(customKeyboard);
+        FormsUtilities.SetCursor(builtInCursor);
+        FormsUtilities.SetKeyboard(builtInKeyboard);
+
+        ((IGumService)game.ServiceA).Cursor.ShouldBeSameAs(builtInCursor);
+        ((IGumService)game.ServiceA).Keyboard.ShouldBeSameAs(builtInKeyboard);
+    }
+
+    [Fact]
+    public void InterfaceAccessors_TwoServices_EachReturnsItsOwnInstalledObjects_WhicheverIsTheDefault()
+    {
+        using CollisionGame game = CreateTwoServices();
+        ICursor customA = new Mock<ICursor>().Object;
+        IInputReceiverKeyboard customKeyboardB = new Mock<IInputReceiverKeyboard>().Object;
+        IGumService.Default = game.ServiceA;
+        FormsUtilities.SetCursor(customA);
+        Keyboard keyboardA = game.ServiceA.Keyboard;
+        IGumService.Default = game.ServiceB;
+        FormsUtilities.SetKeyboard(customKeyboardB);
+        Cursor cursorB = game.ServiceB.Cursor;
+
+        foreach (IGumService defaultService in new IGumService[] { game.ServiceA, game.ServiceB })
+        {
+            IGumService.Default = defaultService;
+
+            ((IGumService)game.ServiceA).Cursor.ShouldBeSameAs(customA);
+            ((IGumService)game.ServiceA).Keyboard.ShouldBeSameAs(keyboardA);
+            ((IGumService)game.ServiceB).Cursor.ShouldBeSameAs(cursorB);
+            ((IGumService)game.ServiceB).Keyboard.ShouldBeSameAs(customKeyboardB);
+            IGumService.Default.ShouldBeSameAs(defaultService, "reading must not switch the current service");
+        }
+    }
+
+    [Fact]
+    public void InterfaceAccessors_OnAnUninitializedThirdService_AreNullEvenWhenOthersHaveCustomInput()
+    {
+        using CollisionGame game = CreateTwoServices();
+        Gum.GumService third = new Gum.GumService();
+        IGumService.Default = game.ServiceA;
+        FormsUtilities.SetCursor(new Mock<ICursor>().Object);
+        FormsUtilities.SetKeyboard(new Mock<IInputReceiverKeyboard>().Object);
+
+        ((IGumService)third).Cursor.ShouldBeNull();
+        ((IGumService)third).Keyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InterfaceAccessors_AfterUninitialize_AreNull()
+    {
+        using CollisionGame game = CreateOneService();
+        FormsUtilities.SetCursor(new Mock<ICursor>().Object);
+        FormsUtilities.SetKeyboard(new Mock<IInputReceiverKeyboard>().Object);
+
+        game.ServiceA.Uninitialize();
+
+        ((IGumService)game.ServiceA).Cursor.ShouldBeNull();
+        ((IGumService)game.ServiceA).Keyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InterfaceAccessors_UninitializingTheFirstService_LeaveTheSecondServicesCustomInput()
+    {
+        using CollisionGame game = CreateTwoServices();
+        ICursor customB = new Mock<ICursor>().Object;
+        IGumService.Default = game.ServiceB;
+        FormsUtilities.SetCursor(customB);
+
+        game.ServiceA.Uninitialize();
+
+        IGumService.Default = game.ServiceB;
+        ((IGumService)game.ServiceB).Cursor.ShouldBeSameAs(customB);
+        ((IGumService)game.ServiceA).Cursor.ShouldBeNull();
     }
 
     #endregion

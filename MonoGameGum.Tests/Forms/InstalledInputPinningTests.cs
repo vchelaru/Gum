@@ -75,15 +75,6 @@ public class InstalledInputPinningTests : BaseTestClass
     }
 
     [Fact]
-    public void Cursor_WhenCustomCursorIsInstalled_InterfaceAccessorIsNullToday()
-    {
-        // Pins today's behavior: IGumService.Cursor forwards to the concrete property (#6322 flips it).
-        FormsUtilities.SetCursor(new Mock<ICursor>().Object);
-
-        ((IGumService)Service).Cursor.ShouldBeNull();
-    }
-
-    [Fact]
     public void Cursor_WhenReplacedRepeatedly_AccessorsFollowTheLatestInstall()
     {
         Cursor builtInA = new Cursor(null);
@@ -193,6 +184,121 @@ public class InstalledInputPinningTests : BaseTestClass
 
         FormsUtilities.Keyboard.ShouldBeSameAs(installed);
         Service.Keyboard.ShouldBeSameAs(installed);
+    }
+
+    #endregion
+
+    #region IGumService returns whichever cursor and keyboard is installed (#6322)
+
+    [Fact]
+    public void InterfaceCursor_WhenCustomCursorIsInstalled_ReturnsIt()
+    {
+        ICursor custom = new Mock<ICursor>().Object;
+
+        FormsUtilities.SetCursor(custom);
+
+        ((IGumService)Service).Cursor.ShouldBeSameAs(custom);
+        Service.Cursor.ShouldBeNull("the concrete accessor keeps returning null under a custom cursor");
+    }
+
+    [Fact]
+    public void InterfaceCursor_WhenReplacedRepeatedly_FollowsTheLatestInstall()
+    {
+        ICursor customA = new Mock<ICursor>().Object;
+        ICursor customB = new Mock<ICursor>().Object;
+        Cursor builtIn = new Cursor(null);
+        IGumService service = Service;
+
+        FormsUtilities.SetCursor(customA);
+        service.Cursor.ShouldBeSameAs(customA);
+        FormsUtilities.SetCursor(customB);
+        service.Cursor.ShouldBeSameAs(customB);
+        FormsUtilities.SetCursor(builtIn);
+        service.Cursor.ShouldBeSameAs(builtIn);
+    }
+
+    [Fact]
+    public void InterfaceKeyboard_WhenBuiltInKeyboardIsInstalled_ReturnsIt()
+    {
+        Keyboard installed = new Keyboard();
+
+        FormsUtilities.SetKeyboard(installed);
+
+        ((IGumService)Service).Keyboard.ShouldBeSameAs(installed);
+    }
+
+    [Fact]
+    public void InterfaceKeyboard_WhenCustomKeyboardIsInstalled_ReturnsIt()
+    {
+        IInputReceiverKeyboard custom = new Mock<IInputReceiverKeyboard>().Object;
+
+        FormsUtilities.SetKeyboard(custom);
+
+        ((IGumService)Service).Keyboard.ShouldBeSameAs(custom);
+        Service.Keyboard.ShouldBeNull("the concrete accessor keeps returning null under a custom keyboard");
+    }
+
+    [Fact]
+    public void InterfaceKeyboard_WhenNothingIsInstalled_IsNull()
+    {
+        FrameworkElement.MainKeyboard = null!;
+
+        ((IGumService)Service).Keyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InterfaceKeyboard_WhenReplacedRepeatedly_FollowsTheLatestInstall()
+    {
+        IInputReceiverKeyboard customA = new Mock<IInputReceiverKeyboard>().Object;
+        IInputReceiverKeyboard customB = new Mock<IInputReceiverKeyboard>().Object;
+        Keyboard builtIn = new Keyboard();
+        IGumService service = Service;
+
+        FormsUtilities.SetKeyboard(customA);
+        service.Keyboard.ShouldBeSameAs(customA);
+        FormsUtilities.SetKeyboard(customB);
+        service.Keyboard.ShouldBeSameAs(customB);
+        FormsUtilities.SetKeyboard(builtIn);
+        service.Keyboard.ShouldBeSameAs(builtIn);
+    }
+
+    [Fact]
+    public void InterfaceAccessors_DoNotCallMembersOnTheInstalledObjects()
+    {
+        Mock<ICursor> cursor = new Mock<ICursor>(MockBehavior.Strict);
+        Mock<IInputReceiverKeyboard> keyboard = new Mock<IInputReceiverKeyboard>(MockBehavior.Strict);
+        FormsUtilities.SetCursor(cursor.Object);
+        FormsUtilities.SetKeyboard(keyboard.Object);
+
+        _ = ((IGumService)Service).Cursor;
+        _ = ((IGumService)Service).Keyboard;
+
+        cursor.VerifyNoOtherCalls();
+        keyboard.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void InterfaceAccessors_TwoServicesWithoutContexts_ReadTheSameInstalledObjects()
+    {
+        IGumService? original = IGumService.Default;
+        Gum.GumService other = new Gum.GumService();
+        ICursor customCursor = new Mock<ICursor>().Object;
+        IInputReceiverKeyboard customKeyboard = new Mock<IInputReceiverKeyboard>().Object;
+        FormsUtilities.SetCursor(customCursor);
+        FormsUtilities.SetKeyboard(customKeyboard);
+        try
+        {
+            other.InitializeForTesting();
+
+            ((IGumService)other).Cursor.ShouldBeSameAs(customCursor);
+            ((IGumService)other).Keyboard.ShouldBeSameAs(customKeyboard);
+            ((IGumService)Service).Cursor.ShouldBeSameAs(customCursor);
+            ((IGumService)Service).Keyboard.ShouldBeSameAs(customKeyboard);
+        }
+        finally
+        {
+            IGumService.Default = original;
+        }
     }
 
     #endregion

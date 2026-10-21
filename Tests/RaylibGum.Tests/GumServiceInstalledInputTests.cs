@@ -57,15 +57,6 @@ public class GumServiceInstalledInputTests : BaseTestClass
     }
 
     [Fact]
-    public void Cursor_WhenCustomCursorIsInstalled_InterfaceAccessorIsNullToday()
-    {
-        // Pins today's behavior: IGumService.Cursor forwards to the concrete property (#6322 flips it).
-        FormsUtilities.SetCursor(new Mock<ICursor>().Object);
-
-        ((IGumService)Service).Cursor.ShouldBeNull();
-    }
-
-    [Fact]
     public void Cursor_WhenReinstallingTheBuiltInCursor_RestoresEveryAccessor()
     {
         Cursor builtIn = Cursor.CreateForCurrentPlatform();
@@ -111,6 +102,31 @@ public class GumServiceInstalledInputTests : BaseTestClass
 
         cursor.Verify(c => c.Activity(5), Times.Once());
         keyboard.Verify(k => k.Activity(5), Times.Once());
+    }
+
+    [Fact]
+    public void InterfaceAccessors_WithCustomInstalled_ReturnTheCustomObjects()
+    {
+        ICursor customCursor = new Mock<ICursor>().Object;
+        IInputReceiverKeyboard customKeyboard = new Mock<IInputReceiverKeyboard>().Object;
+
+        FormsUtilities.SetCursor(customCursor);
+        FormsUtilities.SetKeyboard(customKeyboard);
+
+        ((IGumService)Service).Cursor.ShouldBeSameAs(customCursor);
+        ((IGumService)Service).Keyboard.ShouldBeSameAs(customKeyboard);
+        Service.Cursor.ShouldBeNull("the concrete accessors keep returning null under a custom implementation");
+        Service.Keyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InterfaceKeyboard_WhenBuiltInKeyboardIsInstalled_ReturnsIt()
+    {
+        Keyboard installed = Keyboard.CreateForCurrentPlatform();
+
+        FormsUtilities.SetKeyboard(installed);
+
+        ((IGumService)Service).Keyboard.ShouldBeSameAs(installed);
     }
 
     [Fact]

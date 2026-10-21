@@ -58,6 +58,12 @@ namespace RenderingLibrary
         ICursor Cursor { get; }
 
         /// <summary>
+        /// Gets the keyboard Forms reads each frame, or null before <c>Initialize</c>. Runtimes without an
+        /// input pump return null.
+        /// </summary>
+        IInputReceiverKeyboard? Keyboard => null;
+
+        /// <summary>
         /// Gets or sets the width of the canvas, which acts as the root-most
         /// coordinate space.
         /// </summary>
