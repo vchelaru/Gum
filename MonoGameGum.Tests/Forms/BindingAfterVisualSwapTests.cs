@@ -4,6 +4,7 @@ using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Shouldly;
+using System;
 using System.Collections.ObjectModel;
 using Xunit;
 
@@ -356,6 +357,274 @@ public class BindingAfterVisualSwapTests : BaseTestClass
 
         sut.LargeChange.ShouldBeGreaterThan(0);
         sut.VerticalScrollBar.ShouldNotBeNull();
+    }
+
+    #endregion
+
+    #region Bound properties are refreshed from the view model
+
+    [Fact]
+    public void Button_TextBinding_ShowsViewModelValueNotNewVisualAuthoredTextAfterSwap()
+    {
+        TestViewModel vm = new() { Text = "from view model" };
+        Button sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Button.Text), nameof(TestViewModel.Text));
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("from view model");
+        newVisual.TextInstance.Text.ShouldBe("from view model");
+    }
+
+    [Fact]
+    public void Button_TextBindingWithTwoWayMode_ShowsViewModelValueAfterSwap()
+    {
+        TestViewModel vm = new() { Text = "from view model" };
+        Button sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Button.Text), new Binding(nameof(TestViewModel.Text)) { Mode = BindingMode.TwoWay });
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("from view model");
+        vm.Text.ShouldBe("from view model");
+    }
+
+    [Fact]
+    public void TextBox_TwoWayTextBinding_ShowsViewModelValueAndDoesNotWriteAuthoredTextBackAfterSwap()
+    {
+        TestViewModel vm = new() { Text = "from view model" };
+        TextBox sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(TextBox.Text), new Binding(nameof(TestViewModel.Text)) { Mode = BindingMode.TwoWay });
+        int textChangeCount = 0;
+        vm.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(TestViewModel.Text))
+            {
+                textChangeCount++;
+            }
+        };
+        TextBoxVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("from view model");
+        vm.Text.ShouldBe("from view model");
+        textChangeCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void TextBox_TwoWayTextBinding_StillWritesUserEditsBackAfterRefresh()
+    {
+        TestViewModel vm = new() { Text = "from view model" };
+        TextBox sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(TextBox.Text), new Binding(nameof(TestViewModel.Text)) { Mode = BindingMode.TwoWay });
+        sut.Visual = new TextBoxVisual(fullInstantiation: true, tryCreateFormsObject: false);
+
+        sut.Text = "typed";
+
+        vm.Text.ShouldBe("typed");
+    }
+
+    [Fact]
+    public void Label_NestedPathBinding_ShowsViewModelValueNotAuthoredTextAfterSwap()
+    {
+        TestViewModel vm = new() { Child = new TestViewModel { Text = "nested" } };
+        Label sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Label.Text), new Binding("Child.Text"));
+        LabelVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("nested");
+    }
+
+    [Fact]
+    public void Label_TextBindingWithStringFormat_ShowsFormattedViewModelValueAfterSwap()
+    {
+        TestViewModel vm = new() { Text = "Alice" };
+        Label sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Label.Text), new Binding(nameof(TestViewModel.Text)) { StringFormat = "First: {0}" });
+        LabelVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("First: Alice");
+    }
+
+    [Fact]
+    public void Label_TextBindingWithConverter_ShowsConvertedViewModelValueAfterSwap()
+    {
+        TestViewModel vm = new() { IsChecked = true };
+        Label sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Label.Text), new Binding(nameof(TestViewModel.IsChecked)) { Converter = new YesNoConverter() });
+        LabelVisual newVisual = new(tryCreateFormsObject: false);
+        newVisual.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("Yes");
+    }
+
+    [Fact]
+    public void Button_SeveralBoundProperties_AllShowViewModelValuesAfterSwap()
+    {
+        TestViewModel vm = new() { Text = "from view model", IsChecked = false };
+        Button sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Button.Text), nameof(TestViewModel.Text));
+        sut.SetBinding(nameof(Button.IsEnabled), nameof(TestViewModel.IsChecked));
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("from view model");
+        sut.IsEnabled.ShouldBeFalse();
+        newVisual.IsEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TextBox_BoundTextAndPlaceholder_BothShowViewModelValuesAfterSwap()
+    {
+        TestViewModel vm = new() { Text = "text", AuxVm = new AuxTestViewModel { Text = "placeholder" } };
+        TextBox sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+        sut.SetBinding(nameof(TextBox.Placeholder), new Binding("AuxVm.Text"));
+        TextBoxVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored text";
+        newVisual.PlaceholderTextInstance.Text = "Authored placeholder";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("text");
+        sut.Placeholder.ShouldBe("placeholder");
+    }
+
+    [Fact]
+    public void Button_UnboundTextNextToBoundProperty_KeepsNewVisualAuthoredText()
+    {
+        TestViewModel vm = new() { IsChecked = true };
+        Button sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Button.IsEnabled), nameof(TestViewModel.IsChecked));
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("Authored on new visual");
+    }
+
+    [Fact]
+    public void Button_SwappedAwayAndBack_ShowsViewModelValueEachTime()
+    {
+        TestViewModel vm = new() { Text = "one" };
+        Button sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Button.Text), nameof(TestViewModel.Text));
+        InteractiveGue originalVisual = sut.Visual;
+        ButtonVisual other = new(fullInstantiation: true, tryCreateFormsObject: false);
+        other.TextInstance.Text = "Authored on other";
+
+        sut.Visual = other;
+        sut.Text.ShouldBe("one");
+        vm.Text = "two";
+        sut.Visual = originalVisual;
+
+        sut.Text.ShouldBe("two");
+    }
+
+    [Fact]
+    public void Button_InheritedContextAndNewVisualParentedBeforeAssigned_ShowsViewModelValueAfterSwap()
+    {
+        StackPanel parent = new();
+        TestViewModel vm = new() { Text = "from view model" };
+        parent.BindingContext = vm;
+        Button sut = new();
+        parent.AddChild(sut);
+        sut.SetBinding(nameof(Button.Text), nameof(TestViewModel.Text));
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+        parent.Visual.Children.Add(newVisual);
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("from view model");
+    }
+
+    [Fact]
+    public void Button_ExplicitContextWithParentContext_ShowsOwnViewModelValueAfterSwap()
+    {
+        StackPanel parent = new() { BindingContext = new TestViewModel { Text = "parent" } };
+        Button sut = new() { BindingContext = new TestViewModel { Text = "own" } };
+        parent.AddChild(sut);
+        sut.SetBinding(nameof(Button.Text), nameof(TestViewModel.Text));
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("own");
+    }
+
+    [Fact]
+    public void Button_ViewModelValueNull_UsesBindingNullHandlingAfterSwap()
+    {
+        TestViewModel vm = new() { Text = null };
+        Button sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(Button.Text), new Binding(nameof(TestViewModel.Text)) { FallbackValue = "fallback" });
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("fallback");
+    }
+
+    [Fact]
+    public void Button_NoBindingContext_LeavesNewVisualAuthoredTextAfterSwap()
+    {
+        Button sut = new();
+        sut.SetBinding(nameof(Button.Text), nameof(TestViewModel.Text));
+        ButtonVisual newVisual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        newVisual.TextInstance.Text = "Authored on new visual";
+
+        sut.Visual = newVisual;
+
+        sut.Text.ShouldBe("Authored on new visual");
+    }
+
+    [Fact]
+    public void ListBox_BoundItemsAndSelection_AreKeptAfterSwap()
+    {
+        TestViewModel vm = new()
+        {
+            Items = [new() { Text = "Item 1" }, new() { Text = "Item 2" }]
+        };
+        ListBox sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(ListBox.Items), nameof(TestViewModel.Items));
+        sut.SelectedIndex = 1;
+        ListBoxVisual newVisual = new(tryCreateFormsObject: false);
+
+        sut.Visual = newVisual;
+
+        sut.ListBoxItems.Count.ShouldBe(2);
+        newVisual.InnerPanelInstance.Children.Count.ShouldBe(2);
+        sut.ListBoxItems[1].BindingContext.ShouldBe(vm.Items[1]);
+        sut.SelectedIndex.ShouldBe(1);
+    }
+
+    private class YesNoConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter) =>
+            value is true ? "Yes" : "No";
+
+        public object? ConvertBack(object? value, Type sourceType, object? parameter) =>
+            value is "Yes";
     }
 
     #endregion

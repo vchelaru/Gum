@@ -45,6 +45,25 @@ internal class PropertyRegistry
         npcExpression.Start();
     }
 
+    /// <summary>
+    /// Re-evaluates every binding's target from its source, for when the control's Visual is replaced and
+    /// the new Visual's own values sit under the bound properties. Never writes to a source.
+    /// </summary>
+    public void RefreshTargets()
+    {
+        if (NpcBindingExpressions.Count == 0)
+        {
+            return;
+        }
+
+        // A target setter can run user code that adds or clears bindings.
+        List<NpcBindingExpression> expressions = new (NpcBindingExpressions.Values);
+        foreach (NpcBindingExpression expression in expressions)
+        {
+            expression.RefreshTarget();
+        }
+    }
+
     public void ClearBinding(string uiPropertyName)
     {
         if (NpcBindingExpressions.TryGetValue(uiPropertyName, out NpcBindingExpression? npcExpression))

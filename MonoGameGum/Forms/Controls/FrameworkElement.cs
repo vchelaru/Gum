@@ -654,6 +654,10 @@ public class FrameworkElement : INotifyPropertyChanged
                 if (visual != null)
                 {
                     ReactToVisualChanged();
+
+                    // The new Visual's authored values (such as text) now sit under bound properties,
+                    // so show the view model's values instead.
+                    PropertyRegistry.RefreshTargets();
                 }
             }
 
