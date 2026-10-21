@@ -334,6 +334,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public event PropertyChangedEventHandler? PropertyChanged;
     protected virtual void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null!)
     {
+        // Every typed setter that raises PropertyChanged also updates the variable references that read it.
+        ReportTypedPropertyChanged(propertyName);
+
         if (PropertyChanged != null)
         {
             var args = new PropertyChangedEventArgs(propertyName);

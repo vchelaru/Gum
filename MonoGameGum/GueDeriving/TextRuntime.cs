@@ -118,7 +118,11 @@ public class TextRuntime : InteractiveGue
     public int Red
     {
         get => ContainedText.Red;
-        set => ContainedText.Red = value;
+        set
+        {
+            ContainedText.Red = value;
+            ReportTypedPropertyChanged(nameof(Red));
+        }
     }
 
     /// <summary>
@@ -127,7 +131,11 @@ public class TextRuntime : InteractiveGue
     public int Green
     {
         get => ContainedText.Green;
-        set => ContainedText.Green = value;
+        set
+        {
+            ContainedText.Green = value;
+            ReportTypedPropertyChanged(nameof(Green));
+        }
     }
 
     /// <summary>
@@ -136,7 +144,11 @@ public class TextRuntime : InteractiveGue
     public int Blue
     {
         get => ContainedText.Blue;
-        set => ContainedText.Blue = value;
+        set
+        {
+            ContainedText.Blue = value;
+            ReportTypedPropertyChanged(nameof(Blue));
+        }
     }
 
     /// <summary>
@@ -145,7 +157,11 @@ public class TextRuntime : InteractiveGue
     public int Alpha
     {
         get => ContainedText.Alpha;
-        set => ContainedText.Alpha = value;
+        set
+        {
+            ContainedText.Alpha = value;
+            ReportTypedPropertyChanged(nameof(Alpha));
+        }
     }
 
     /// <summary>

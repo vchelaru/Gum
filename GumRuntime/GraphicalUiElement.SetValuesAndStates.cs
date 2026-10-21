@@ -510,6 +510,24 @@ public partial class GraphicalUiElement
 
     // The typed properties report their own changes so that code such as element.X = 5 updates the
     // references that read X. Nothing is boxed unless a reference reads the property.
+    /// <summary>
+    /// Reports a typed property that was just assigned, reading its new value, to the variable references
+    /// that read it. Nothing is read or boxed unless a reference reads the property. Subclasses call this
+    /// from a setter that does not raise <see cref="PropertyChanged"/>.
+    /// </summary>
+    /// <param name="propertyName">The variable name, such as <c>Text</c>.</param>
+    protected void ReportTypedPropertyChanged(string propertyName)
+    {
+#if !FRB
+        // The property reader is not part of the FlatRedBall build.
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None &&
+            this.TryGetProperty(propertyName, out object? value) && value != null)
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+#endif
+    }
+
     private void ReportTypedPropertyChanged(string propertyName, float value)
     {
         if (GetReferenceAudience(propertyName) != ReferenceAudience.None)
