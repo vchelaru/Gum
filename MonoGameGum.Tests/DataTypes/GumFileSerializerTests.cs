@@ -91,6 +91,27 @@ public class GumFileSerializerTests
     }
 
     [Fact]
+    public void DeserializeBehaviorSave_FormsPropertyWithoutDefault_KeepsNullValueAndDescription()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "double?", Name = "LargeChange", Description = "Track click step." });
+
+        FileManager.XmlSerialize(original, out string xml);
+        BehaviorSave? legacy = GumFileSerializer.DeserializeBehaviorSave(xml, projectVersion: 2);
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        BehaviorSave? compact = GumFileSerializer.DeserializeBehaviorSave(SerializeToString(compactSerializer, original), projectVersion: 2);
+
+        foreach (BehaviorSave? result in new[] { legacy, compact })
+        {
+            result.ShouldNotBeNull();
+            result.FormsProperties.Count.ShouldBe(1);
+            result.FormsProperties[0].Type.ShouldBe("double?");
+            result.FormsProperties[0].Value.ShouldBeNull();
+            result.FormsProperties[0].Description.ShouldBe("Track click step.");
+        }
+    }
+
+    [Fact]
     public void DeserializeBehaviorSave_CompactFormat_LoadsFormsPropertyDefaultBoolValue()
     {
         BehaviorSave original = new BehaviorSave();
