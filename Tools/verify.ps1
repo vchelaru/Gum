@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
 Focused pre-push check: runs only the test classes this branch added or changed (which also builds
-the projects they depend on), builds any changed source project no changed test covers, and prints
+the projects they depend on), builds any changed source project no changed test covers (a .cs outside
+every project directory, or a .projitems, builds the csprojs that link or import it), and prints
 per-step status, errors, test summaries, and warnings on lines this branch changed (only projects
 that actually recompiled report warnings; an up-to-date project is skipped by MSBuild). CI runs the
 full matrix; this is the fast loop, not a copy of CI.
@@ -55,13 +56,123 @@ function Find-Project([string]$file) {
     return $null
 }
 
+# A source file can reach a project without sitting under its directory: a csproj can link it with
+# <Compile Include="..\X.cs" Link=...> (or a glob), and a .projitems includes it for every project
+# that imports that .projitems (GumCoreShared.projitems -> the GumCore.* projects). Find-Project
+# sees none of that, so a change to such a file used to build nothing. The index below is read from
+# the csproj/projitems text on first use, so a run without such a file pays nothing for it.
+$script:includeIndex = $null
+function Get-RepoKey([string]$fullPath) { Get-Key ([System.IO.Path]::GetRelativePath($repo, $fullPath)) }
+
+function Resolve-MsBuildPath([string]$item, [string]$dir) {
+    $path = $item.Replace('$(MSBuildThisFileDirectory)', $dir + '/')
+    if ($path -match '\$\(') { return $null }
+    $path = $path -replace '\\', '/'
+    if (-not [System.IO.Path]::IsPathRooted($path)) { $path = Join-Path $dir $path }
+    return [System.IO.Path]::GetFullPath($path)
+}
+
+function Add-ToIndex([hashtable]$table, [string]$key, [string]$value) {
+    if (-not $table.ContainsKey($key)) { $table[$key] = [System.Collections.Generic.List[string]]::new() }
+    $table[$key].Add($value)
+}
+
+function Get-IncludeIndex {
+    if ($script:includeIndex) { return $script:includeIndex }
+    # Exact/Globs: included file (or glob) -> csproj/projitems that include it. Importers: projitems -> csproj.
+    $index = @{ Exact = @{}; Globs = [System.Collections.Generic.List[object]]::new(); Importers = @{} }
+    $files = @(git ls-files --cached --others --exclude-standard -- '*.csproj' '*.projitems' | Where-Object { $_ -and (Test-Path (Join-Path $repo $_)) })
+    foreach ($relative in $files) {
+        $full = Join-Path $repo $relative
+        $dir = Split-Path -Parent $full
+        $text = Get-Content -Raw $full
+        foreach ($m in [regex]::Matches($text, '<Import\s+Project="(?<p>[^"]+\.projitems)"')) {
+            $target = Resolve-MsBuildPath $m.Groups['p'].Value $dir
+            if ($target) { Add-ToIndex $index.Importers (Get-RepoKey $target) $full }
+        }
+        foreach ($m in [regex]::Matches($text, '<Compile\s+Include="(?<p>[^"]+)"')) {
+            $target = Resolve-MsBuildPath $m.Groups['p'].Value $dir
+            if (-not $target) { continue }
+            $key = Get-RepoKey $target
+            if ($key -notmatch '[*?]') { Add-ToIndex $index.Exact $key $relative; continue }
+            # Glob: '**\' spans directories, '*' and '?' stay within one.
+            $pattern = [regex]::Escape($key).Replace('\*\*\\', '(?:.*\\)?').Replace('\*\*', '.*').Replace('\*', '[^\\]*').Replace('\?', '[^\\]')
+            $index.Globs.Add(@{ Regex = [regex]::new("^$pattern$"); Owner = $relative })
+        }
+    }
+    $script:includeIndex = $index
+    return $index
+}
+
+# Importers of a .projitems, narrowed to one representative where the others only swap platform
+# packages around the same source (and need the fna submodule or mobile workloads to build at all).
+$representativeImporters = @{ 'gumcoreshared.projitems' = 'GumCore.DesktopGlNet6.csproj' }
+function Get-Importers([string]$projitemsKey) {
+    $all = @((Get-IncludeIndex).Importers[$projitemsKey])
+    $leaf = Split-Path -Leaf $projitemsKey
+    if ($representativeImporters.ContainsKey($leaf)) {
+        $preferred = @($all | Where-Object { (Split-Path -Leaf $_) -eq $representativeImporters[$leaf] })
+        if ($preferred.Count -gt 0) { return $preferred }
+    }
+    return $all
+}
+
+# Project (full path) -> why it compiles this file, for a file Find-Project could not place.
+# Empty when nothing compiles the file.
+function Find-IndirectProjects([string]$file) {
+    $index = Get-IncludeIndex
+    $found = [ordered]@{}
+    if ($file -like '*.projitems') {
+        foreach ($importer in Get-Importers (Get-Key $file)) { $found[$importer] = "imports $(Split-Path -Leaf $file)" }
+        return $found
+    }
+    $key = Get-Key $file
+    $owners = [System.Collections.Generic.List[string]]::new()
+    if ($index.Exact.ContainsKey($key)) { $owners.AddRange($index.Exact[$key]) }
+    foreach ($glob in $index.Globs) { if ($glob.Regex.IsMatch($key)) { $owners.Add($glob.Owner) } }
+    foreach ($owner in $owners) {
+        if ($owner -like '*.csproj') { $found[(Join-Path $repo $owner)] = 'Compile Include' }
+        else {
+            foreach ($importer in Get-Importers (Get-Key $owner)) { $found[$importer] = "imports $(Split-Path -Leaf $owner)" }
+        }
+    }
+    return $found
+}
+
+# First ProjectReference/Import (followed through ProjectReferences) missing on this machine, such as
+# the ../FlatRedBall sibling or the fna submodule, else $null. A project that cannot build here is
+# reported as unverified instead of failing.
+function Find-MissingDependency([string]$csproj, [System.Collections.Generic.HashSet[string]]$seen) {
+    if (-not $seen.Add($csproj)) { return $null }
+    $dir = Split-Path -Parent $csproj
+    foreach ($m in [regex]::Matches((Get-Content -Raw $csproj), '<(?:ProjectReference\s+Include|Import\s+Project)="(?<p>[^"]+)"')) {
+        $path = Resolve-MsBuildPath $m.Groups['p'].Value $dir
+        if (-not $path) { continue }
+        if (-not (Test-Path $path)) { return [System.IO.Path]::GetRelativePath($repo, $path) }
+        $missing = if ($path -like '*.csproj') { Find-MissingDependency $path $seen }
+        if ($missing) { return $missing }
+    }
+    return $null
+}
+
 # Changed test classes grouped by test project (file name == class name by convention), and
-# changed source projects.
+# changed source projects. A changed .cs with no project directory, and a changed .projitems, are
+# resolved through the include index instead.
 $testFilters = @{}
 $sourceProjects = [System.Collections.Generic.HashSet[string]]::new()
-foreach ($file in ($changedFiles | Where-Object { $_ -like '*.cs' })) {
-    $project = Find-Project $file
-    if (-not $project) { continue }
+$indirectProjects = [ordered]@{}
+$unbuilt = [System.Collections.Generic.List[string]]::new()
+foreach ($file in ($changedFiles | Where-Object { $_ -like '*.cs' -or $_ -like '*.projitems' })) {
+    $project = if ($file -like '*.cs') { Find-Project $file }
+    if (-not $project) {
+        $via = Find-IndirectProjects $file
+        if ($via.Count -eq 0) { $unbuilt.Add("$file (no project directory and no csproj or .projitems includes it)"); continue }
+        foreach ($indirect in $via.Keys) {
+            if (-not $indirectProjects.Contains($indirect)) { $indirectProjects[$indirect] = [System.Collections.Generic.List[string]]::new() }
+            $indirectProjects[$indirect].Add("$file ($($via[$indirect]))")
+        }
+        continue
+    }
     if ($project -match '\.Tests\.csproj$|GumToolUnitTests\.csproj$') {
         $className = [System.IO.Path]::GetFileNameWithoutExtension($file)
         if (-not $testFilters.ContainsKey($project)) { $testFilters[$project] = @() }
@@ -143,8 +254,26 @@ function Invoke-Step {
     if ($exit -ne 0) { $script:failed = $true }
 }
 
-if ($testFilters.Count -eq 0 -and $sourceProjects.Count -eq 0) {
-    Write-Host "No changed .cs files vs $Base"
+if ($testFilters.Count -eq 0 -and $sourceProjects.Count -eq 0 -and $indirectProjects.Count -eq 0 -and $unbuilt.Count -eq 0) {
+    Write-Host "No changed .cs or .projitems files vs $Base"
+}
+
+# Files with no project directory build whatever includes them. A project that cannot build on this
+# machine (missing FlatRedBall sibling or fna submodule) is listed as unverified, not failed.
+$unverified = [System.Collections.Generic.List[string]]::new()
+foreach ($project in $indirectProjects.Keys) {
+    $relativeProject = $project.Substring($repo.Length + 1)
+    $reasons = ($indirectProjects[$project] | Select-Object -First 3) -join '; '
+    if ($indirectProjects[$project].Count -gt 3) { $reasons += "; and $($indirectProjects[$project].Count - 3) more" }
+    $missing = Find-MissingDependency $project ([System.Collections.Generic.HashSet[string]]::new())
+    if ($missing) {
+        Write-Host ("skipped      build $relativeProject`: needs $missing, which is missing here, unverified")
+        $unverified.Add("$relativeProject (needs $missing) for $reasons")
+    }
+    elseif (-not $sourceProjects.Contains($project)) {
+        Write-Host "indirect     $relativeProject <- $reasons"
+        [void]$sourceProjects.Add($project)
+    }
 }
 
 foreach ($project in $testFilters.Keys | Sort-Object) {
@@ -175,6 +304,8 @@ foreach ($project in $sourceProjects | Sort-Object) {
     Invoke-Step -Name "build $relativeProject" -Command @('build', $project, '-nologo', '-v:q', "-p:SolutionDir=$repo\")
 }
 
+foreach ($entry in $unbuilt) { Write-Host "NOT BUILT    $entry" }
+
 if ($warningsOnChangedLines.Count -gt 0) {
     Write-Host "`nWarnings on lines changed vs ${Base}:"
     $warningsOnChangedLines | Sort-Object | ForEach-Object { Write-Host "  $_" }
@@ -184,4 +315,6 @@ else {
 }
 
 if ($failed) { Write-Host "`nVERIFY FAILED"; exit 1 }
+$notCovered = $unbuilt.Count + $unverified.Count
+if ($notCovered -gt 0) { Write-Host "`nVERIFY OK, but $notCovered changed file(s)/project(s) were not built (see NOT BUILT and skipped above)"; exit 0 }
 Write-Host "`nVERIFY OK"
