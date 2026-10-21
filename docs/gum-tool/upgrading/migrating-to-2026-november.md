@@ -515,3 +515,13 @@ Variables driven by a behavior reference, such as a category state that follows 
 This affects you only if an instance sets a variable that its control now hides. A project from before the control hid the variable can hold one without you knowing. Such a variable appears in generated code the next time you generate.
 
 To migrate, regenerate your code and look at the changes. To drop a stale value, remove it from the instance in the tool.
+
+### raylib and Sokol Repeat Held Keys With Gum's Timing
+
+On raylib and Sokol, holding a key such as an arrow, Backspace, or Delete now repeats after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), the same as MonoGame, KNI, FNA and the Skia hosts. Before this version these two hosts used the operating system's key repeat for `KeyTyped` and `KeysTyped`.
+
+Typed characters are not affected. They still repeat as the operating system repeats them.
+
+`IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` (both `TimeSpan`, settable) as default members. A class that implements `IInputReceiverKeyboard` keeps compiling without them. Without an override the getters return 500 ms and 70 ms and the setters do nothing.
+
+This affects you only if you rely on the operating system's key repeat speed for arrow keys or other navigation keys on raylib or Sokol. To migrate, set `RepeatDelay` and `RepeatRate` on the keyboard to the values you want.

@@ -19,8 +19,7 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
     private readonly HashSet<GumKeys> _currentDown = new();
     private readonly HashSet<GumKeys> _previousDown = new();
 
-    private readonly Dictionary<GumKeys, double> _keyDownSince = new();
-    private readonly Dictionary<GumKeys, double> _lastRepeatTime = new();
+    private readonly KeyRepeatTimer _repeatTimer = new();
     private double _currentGameTime;
 
     // Typed text accrues from host events as they arrive (before Update). Activity snapshots and
@@ -34,13 +33,13 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
     /// <summary>
     /// Delay after the initial key press before repeat typing begins.
     /// </summary>
-    public TimeSpan RepeatDelay { get; set; } = TimeSpan.FromMilliseconds(500);
+    public TimeSpan RepeatDelay { get; set; } = KeyRepeatTimer.DefaultDelay;
 
     /// <summary>
     /// Interval between repeated key-typed events while a key is held down, once
     /// <see cref="RepeatDelay"/> has elapsed.
     /// </summary>
-    public TimeSpan RepeatRate { get; set; } = TimeSpan.FromMilliseconds(70);
+    public TimeSpan RepeatRate { get; set; } = KeyRepeatTimer.DefaultRate;
 
     /// <summary>
     /// The Gum keys this host can report. <see cref="Activity"/> polls only these, and
@@ -160,25 +159,7 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
             return true;
         }
 
-        if (!KeyDown(key) || !_keyDownSince.TryGetValue(key, out double downSince))
-        {
-            return false;
-        }
-
-        double elapsedSincePush = _currentGameTime - downSince;
-        if (elapsedSincePush < RepeatDelay.TotalSeconds)
-        {
-            return false;
-        }
-
-        if (_lastRepeatTime.TryGetValue(key, out double lastRepeat) &&
-            _currentGameTime - lastRepeat < RepeatRate.TotalSeconds)
-        {
-            return false;
-        }
-
-        _lastRepeatTime[key] = _currentGameTime;
-        return true;
+        return KeyDown(key) && _repeatTimer.IsRepeatDue(key, _currentGameTime, RepeatDelay, RepeatRate);
     }
 
     /// <summary>
@@ -209,8 +190,7 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
         {
             if (!_previousDown.Contains(key))
             {
-                _keyDownSince[key] = gameTime;
-                _lastRepeatTime.Remove(key);
+                _repeatTimer.OnKeyPushed(key, gameTime);
             }
         }
 
@@ -218,8 +198,7 @@ public abstract class PolledKeyboard : IInputReceiverKeyboard, IDisposable
         {
             if (!_currentDown.Contains(key))
             {
-                _keyDownSince.Remove(key);
-                _lastRepeatTime.Remove(key);
+                _repeatTimer.OnKeyReleased(key);
             }
         }
 

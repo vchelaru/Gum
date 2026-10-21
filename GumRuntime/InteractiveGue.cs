@@ -1373,11 +1373,35 @@ public interface IInputReceiverKeyboard
     /// </summary>
     bool IsCommandDown => false;
 
-    // STUB (replaced in the implementation commit)
-    TimeSpan RepeatDelay { get => TimeSpan.Zero; set { } }
+    /// <summary>
+    /// The delay after a key is first pressed before <see cref="KeyTyped"/> starts repeating while the key is held.
+    /// Every keyboard Gum provides honors it and starts at 500 ms.
+    /// </summary>
+    /// <remarks>
+    /// A default interface member cannot store a value, so on an implementer that does not override this property
+    /// the getter returns 500 ms and the setter does nothing. Override both accessors if your keyboard times its
+    /// own repeat. Character input (<see cref="GetStringTyped"/>) repeats as the operating system repeats it
+    /// and is not affected.
+    /// </remarks>
+    TimeSpan RepeatDelay
+    {
+        get => global::Gum.Input.KeyRepeatTimer.DefaultDelay;
+        set { }
+    }
 
-    // STUB (replaced in the implementation commit)
-    TimeSpan RepeatRate { get => TimeSpan.Zero; set { } }
+    /// <summary>
+    /// The interval between repeated <see cref="KeyTyped"/> results while a key is held, once
+    /// <see cref="RepeatDelay"/> has elapsed. Every keyboard Gum provides honors it and starts at 70 ms.
+    /// </summary>
+    /// <remarks>
+    /// On an implementer that does not override this property the getter returns 70 ms and the setter does
+    /// nothing. See <see cref="RepeatDelay"/>.
+    /// </remarks>
+    TimeSpan RepeatRate
+    {
+        get => global::Gum.Input.KeyRepeatTimer.DefaultRate;
+        set { }
+    }
 
     /// <summary>
     /// Returns the keys typed this frame in the shared <see cref="Gum.Forms.Input.Keys"/>
@@ -1437,9 +1461,7 @@ public interface IInputReceiverKeyboard
 
     /// <summary>
     /// Returns whether the specified key was "typed" this frame — either pushed this frame,
-    /// or held long enough to trigger the OS key-repeat. Matches the behavior of
-    /// <c>Microsoft.Xna.Framework.Input.Keys</c>-based <c>KeyTyped</c> on MonoGame and
-    /// <c>Raylib.IsKeyPressedRepeat</c> on Raylib.
+    /// or held long enough to repeat, timed by <see cref="RepeatDelay"/> and <see cref="RepeatRate"/>.
     /// </summary>
     /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
     bool KeyTyped(Gum.Forms.Input.Keys key);

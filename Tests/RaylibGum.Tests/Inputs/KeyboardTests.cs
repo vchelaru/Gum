@@ -154,24 +154,6 @@ public class KeyboardTests : BaseTestClass
     }
 
     [Fact]
-    public void KeysTyped_IncludesKey_WhenIsKeyPressedRepeatReturnsTrue()
-    {
-        var sut = new Mock<Keyboard>();
-        sut.Protected()
-            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
-            .Returns(false);
-        sut.Protected()
-            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
-            .Returns((KeyboardKey k) => k == KeyboardKey.Delete);
-
-        sut.Object.Activity(1);
-
-        List<GumKeys> result = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
-
-        result.ShouldBe(new List<GumKeys> { GumKeys.Delete });
-    }
-
-    [Fact]
     public void KeysTyped_IncludesKey_WhenIsKeyPressedReturnsTrue()
     {
         var sut = new Mock<Keyboard>();
