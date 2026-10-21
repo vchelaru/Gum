@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Gum.DataTypes;
+using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Input;
 using Gum.Wireframe;
@@ -283,6 +284,225 @@ public class CursorHitTestIdleCostTests : BaseTestClass
         clicks.ShouldBe(1);
     }
 
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenEventsAreTurnedOffAndBackOn()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        CountingInteractive target = children[12 * 8 + 2];
+        int clicks = 0;
+        target.Click += (_, _) => clicks++;
+        target.HasEvents = true;
+        Mock<ICursor> cursor = CreateCursor(cards[12].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        clicks.ShouldBe(1);
+
+        target.HasEvents = false;
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        clicks.ShouldBe(1, "an element without events is not clicked");
+
+        target.HasEvents = true;
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(2);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenElementWithEventsIsInsertedThroughTheChildrenCollection()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        Mock<ICursor> cursor = CreateCursor(cards[9].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        int clicks = 0;
+        CountingInteractive late = CreateBox(0, 0, 10, hasEvents: true);
+        late.Click += (_, _) => clicks++;
+
+        children[9 * 8 + 4].Children.Add(late);
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenElementWithEventsIsAttachedWithTheParentProperty()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        Mock<ICursor> cursor = CreateCursor(cards[9].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        int clicks = 0;
+        CountingInteractive late = CreateBox(0, 0, 10, hasEvents: true);
+        late.Click += (_, _) => clicks++;
+
+        late.Parent = children[9 * 8 + 4];
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenSubtreeWithEventsIsRemovedAndAddedBackElsewhere()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        CountingInteractive mover = CreateBox(0, 0, 10, hasEvents: true);
+        int clicks = 0;
+        mover.Click += (_, _) => clicks++;
+        children[3 * 8].AddChild(mover);
+        Mock<ICursor> cursor = CreateCursor(cards[25].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+
+        children[3 * 8].RemoveChild(mover);
+        Walk(roots, cursor);
+        clicks.ShouldBe(0, "it is detached");
+        children[25 * 8 + 6].AddChild(mover);
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenHiddenAncestorOfElementWithEventsIsShown()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        CountingInteractive hiddenParent = children[18 * 8];
+        CountingInteractive target = CreateBox(0, 0, 10, hasEvents: true);
+        hiddenParent.AddChild(target);
+        int clicks = 0;
+        target.Click += (_, _) => clicks++;
+        hiddenParent.Visible = false;
+        Mock<ICursor> cursor = CreateCursor(cards[18].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        clicks.ShouldBe(0);
+
+        hiddenParent.Visible = true;
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenEventsAreEnabledWhileTheElementIsHiddenAndThenShown()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        CountingInteractive target = children[2 * 8 + 5];
+        int clicks = 0;
+        target.Click += (_, _) => clicks++;
+        target.Visible = false;
+        Mock<ICursor> cursor = CreateCursor(cards[2].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+
+        target.HasEvents = true;
+        Walk(roots, cursor);
+        clicks.ShouldBe(0, "it is still hidden");
+        target.Visible = true;
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseChildClick_WhenParentStartsExposingChildrenEvents()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: true);
+        CountingInteractive child = children[6 * 8 + 7];
+        child.HasEvents = true;
+        int childClicks = 0;
+        child.Click += (_, _) => childClicks++;
+        cards[6].ExposeChildrenEvents = false;
+        Mock<ICursor> cursor = CreateCursor(cards[6].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        childClicks.ShouldBe(0);
+        cursor.Object.VisualOver.ShouldBe(cards[6]);
+
+        cards[6].ExposeChildrenEvents = true;
+        Walk(roots, cursor);
+
+        childClicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenDisabledElementIsEnabledAgain()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        CountingInteractive target = children[44 * 8 + 1];
+        target.HasEvents = true;
+        target.IsEnabled = false;
+        int clicks = 0;
+        target.Click += (_, _) => clicks++;
+        Mock<ICursor> cursor = CreateCursor(cards[44].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        clicks.ShouldBe(0);
+
+        target.IsEnabled = true;
+        Walk(roots, cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldSelectNewItem_WhenListBoxItemsAreAddedAfterTheTreeWasSkipped()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        List<GraphicalUiElement> roots = new() { listBox.Visual };
+        Mock<ICursor> away = CreateCursor(-5000, -5000);
+        Walk(roots, away);
+        Walk(roots, away);
+
+        for (int i = 0; i < 3; i++)
+        {
+            listBox.Items!.Add("Item " + i);
+        }
+        InteractiveGue itemVisual = listBox.ListBoxItems[1]!.Visual;
+        Mock<ICursor> cursor = CreateCursor(
+            itemVisual.GetAbsoluteX() + itemVisual.AbsoluteWidth / 2,
+            itemVisual.GetAbsoluteY() + itemVisual.AbsoluteHeight / 2,
+            click: true);
+        FrameworkElement.MainCursor = cursor.Object;
+        Walk(roots, cursor);
+
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenButtonIsAddedToThePopupRootAfterTheTreeWasSkipped()
+    {
+        Gum.GumService gumService = Gum.GumService.Default;
+        Mock<ICursor> away = CreateCursor(-5000, -5000);
+        Walk(new List<GraphicalUiElement>(gumService.PopupRoot.Children), away);
+        Walk(new List<GraphicalUiElement>(gumService.PopupRoot.Children), away);
+
+        Button button = new();
+        button.Visual.WidthUnits = DimensionUnitType.Absolute;
+        button.Visual.HeightUnits = DimensionUnitType.Absolute;
+        button.Visual.Width = 100;
+        button.Visual.Height = 40;
+        button.Visual.X = 10;
+        button.Visual.Y = 10;
+        int clicks = 0;
+        button.Click += (_, _) => clicks++;
+        gumService.PopupRoot.Children.Add(button.Visual);
+        Mock<ICursor> cursor = CreateCursor(50, 30, click: true);
+        FrameworkElement.MainCursor = cursor.Object;
+        Walk(new List<GraphicalUiElement>(gumService.PopupRoot.Children), cursor);
+
+        clicks.ShouldBe(1);
+    }
+
     #endregion
 
     #region Position conversion
@@ -442,6 +662,71 @@ public class CursorHitTestIdleCostTests : BaseTestClass
         }
 
         clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void HasCursorOver_ShouldUseTheCurrentCamera_WhenAHandlerThrewDuringTheWalk()
+    {
+        Camera camera = SystemManagers.Default.Renderer.Camera;
+        float originalX = camera.X;
+        (float worldX, float worldY) = ScreenToWorld(100, 50);
+        CountingInteractive box = CreateBox(worldX - 5, worldY - 5, 10, hasEvents: true);
+        box.Click += (_, _) => throw new System.InvalidOperationException("handler failed");
+        Mock<ICursor> cursor = CreateCursor(100, 50, click: true);
+        try
+        {
+            Should.Throw<System.InvalidOperationException>(() => Walk(new List<GraphicalUiElement> { box }, cursor));
+            camera.X = originalX + 100;
+
+            box.HasCursorOver(cursor.Object).ShouldBeFalse();
+        }
+        finally
+        {
+            camera.X = originalX;
+        }
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldClickEachWalksOwnTarget_WhenAPreviewHandlerRunsAnotherWalk()
+    {
+        (float worldX, float worldY) = ScreenToWorld(100, 50);
+        (float otherWorldX, float otherWorldY) = ScreenToWorld(400, 300);
+        CountingInteractive otherBox = CreateBox(otherWorldX - 5, otherWorldY - 5, 10, hasEvents: true);
+        int otherClicks = 0;
+        otherBox.Click += (_, _) => otherClicks++;
+        Mock<ICursor> otherCursor = CreateCursor(400, 300, click: true);
+        CountingInteractive parent = CreateBox(worldX - 20, worldY - 20, 40, hasEvents: true);
+        parent.ClickPreview += (_, _) => Walk(new List<GraphicalUiElement> { otherBox }, otherCursor);
+        CountingInteractive child = CreateBox(15, 15, 10, hasEvents: true);
+        int childClicks = 0;
+        child.Click += (_, _) => childClicks++;
+        parent.AddChild(child);
+        Mock<ICursor> cursor = CreateCursor(100, 50, click: true);
+
+        Walk(new List<GraphicalUiElement> { parent }, cursor);
+
+        otherClicks.ShouldBe(1);
+        childClicks.ShouldBe(1);
+        cursor.Object.VisualOver.ShouldBe(child);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldApplyAnAncestorsHitTestTransform_WhenTestingItsChildren()
+    {
+        (float mainWorldX, float mainWorldY) = ScreenToWorld(100, 50);
+        (float shiftedWorldX, float shiftedWorldY) = ScreenToWorld(300, 50);
+        CountingInteractive transformed = CreateBox(shiftedWorldX - 20, shiftedWorldY - 20, 40, hasEvents: false);
+        transformed.HitTestTransformMatrix = System.Numerics.Matrix3x2.CreateTranslation(200, 0);
+        CountingInteractive child = CreateBox(15, 15, 10, hasEvents: true);
+        transformed.AddChild(child);
+        CountingInteractive plain = CreateBox(mainWorldX + 5000, mainWorldY, 10, hasEvents: true);
+        // The plain root is walked first and misses; the child must not reuse its untransformed conversion.
+        List<GraphicalUiElement> roots = new() { transformed, plain };
+        Mock<ICursor> cursor = CreateCursor(100, 50);
+
+        Walk(roots, cursor);
+
+        cursor.Object.VisualOver.ShouldBe(child);
     }
 
     #endregion

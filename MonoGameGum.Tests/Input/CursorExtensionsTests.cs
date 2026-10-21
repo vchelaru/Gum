@@ -268,6 +268,64 @@ public class CursorExtensionsTests : BaseTestClass
         reason.ShouldContain("not directly over");
     }
 
+    private static Mock<ICursor> CreateCursorOver(float x, float y)
+    {
+        Mock<ICursor> cursor = new();
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
+        cursor.Setup(c => c.X).Returns((int)x);
+        cursor.Setup(c => c.Y).Returns((int)y);
+        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        return cursor;
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ShouldReturnNull_WhenTheCursorWalkCachesAreCurrent()
+    {
+        InteractiveGue parent = CreateVisibleElement("Card");
+        InteractiveGue child = CreateVisibleElement("Button");
+        parent.AddChild(child);
+        parent.AddToRoot();
+        InteractiveGue.SubtreeHasEvents(parent).ShouldBeTrue();
+        Mock<ICursor> cursor = CreateCursorOver(50, 50);
+
+        string? reason = cursor.Object.GetEventFailureReason(child);
+
+        reason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ShouldReportTheStaleCache_WhenAnAncestorCachesThatNothingUnderItHasEvents()
+    {
+        InteractiveGue parent = CreateVisibleElement("Card");
+        InteractiveGue child = CreateVisibleElement("Button");
+        parent.AddChild(child);
+        parent.AddToRoot();
+        // A missed invalidation would leave this behind, and the cursor walk would skip the whole card.
+        parent._subtreeEventsState = 1;
+        Mock<ICursor> cursor = CreateCursorOver(50, 50);
+
+        string? reason = cursor.Object.GetEventFailureReason(child);
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("cached");
+        reason.ShouldContain("Card");
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ShouldReportTheStaleCache_WhenTheElementCachesThatItHasNoEvents()
+    {
+        InteractiveGue element = CreateVisibleElement("Button");
+        element.AddToRoot();
+        element._subtreeEventsState = 1;
+        Mock<ICursor> cursor = CreateCursorOver(50, 50);
+
+        string? reason = cursor.Object.GetEventFailureReason(element);
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("cached");
+    }
+
     // -------------------------------------------------------------------------
     // Overloads that look up the target by type and/or name
     // -------------------------------------------------------------------------

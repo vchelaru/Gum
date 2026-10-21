@@ -1,5 +1,6 @@
 using FlatRedBall.Glue.StateInterpolation;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Graphics.Animation;
@@ -341,6 +342,241 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
 
     #endregion
 
+    #region Wake-up: chain animation, other ways in
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenChainsAreAssignedAfterAnimateWasAlreadyOn()
+    {
+        ContainerRuntime root = new();
+        CountingSprite sprite = new();
+        sprite.Animate = true;
+        root.AddChild(new GraphicalUiElement(sprite));
+        RunFrames(root, 5);
+
+        sprite.AnimationLogic.AnimationChains = CreateChains(loops: true, 10f);
+        RunFrames(root, 2);
+
+        TimeInto(sprite).ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldNotAnimate_WhenChainSettingsChangeOnAFinishedChain()
+    {
+        ContainerRuntime root = new();
+        CountingSprite sprite = new();
+        sprite.AnimationLogic.AnimationChains = CreateChains(loops: false, 0.25f, 0.25f);
+        sprite.IsAnimationChainLooping = false;
+        sprite.Animate = true;
+        root.AddChild(new GraphicalUiElement(sprite));
+        RunFrames(root, 5, secondDifference: 0.25);
+        RunFrames(root, 2);
+        double timeWhenFinished = TimeInto(sprite);
+
+        sprite.AnimationLogic.AnimationSpeed = 2;
+        sprite.AnimationLogic.CurrentChainName = "Chain";
+        sprite.AnimationLogic.AnimationChains = CreateChains(loops: false, 0.25f, 0.25f);
+        sprite.IsAnimationChainLooping = false;
+        RunFrames(root, 3);
+
+        sprite.Animate.ShouldBeFalse();
+        TimeInto(sprite).ShouldBe(timeWhenFinished, "selecting a chain or changing its settings does not restart playback");
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldPlayFinishedChainAgain_WhenRestartedAfterTheSubtreeWentIdle()
+    {
+        ContainerRuntime root = new();
+        CountingSprite sprite = new();
+        sprite.AnimationLogic.AnimationChains = CreateChains(loops: false, 0.25f, 0.25f);
+        sprite.IsAnimationChainLooping = false;
+        sprite.Animate = true;
+        root.AddChild(new GraphicalUiElement(sprite));
+        RunFrames(root, 5, secondDifference: 0.25);
+        RunFrames(root, 2);
+        sprite.AnimationLogic.AnimationSpeed = 2;
+
+        sprite.AnimationLogic.TimeIntoAnimation = 0;
+        sprite.Animate = true;
+        RunFrames(root, 1);
+
+        TimeInto(sprite).ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldKeepAnimating_WhenFinishedHandlerRestartsTheChain()
+    {
+        ContainerRuntime root = new();
+        CountingSprite sprite = new();
+        sprite.AnimationLogic.AnimationChains = CreateChains(loops: false, 0.25f, 0.25f);
+        sprite.IsAnimationChainLooping = false;
+        root.AddChild(new GraphicalUiElement(sprite));
+        RunFrames(root, 3);
+        int finishCount = 0;
+        sprite.AnimationChainFinished += () =>
+        {
+            finishCount++;
+            sprite.AnimationLogic.TimeIntoAnimation = 0;
+            sprite.Animate = true;
+        };
+        sprite.Animate = true;
+
+        // Each two frames end the chain and the handler starts it over.
+        RunFrames(root, 10, secondDifference: 0.25);
+
+        finishCount.ShouldBe(5);
+        sprite.Animate.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenSpriteRuntimeAnimateIsSetAfterTheSubtreeWentIdle()
+    {
+        ContainerRuntime root = new();
+        SpriteRuntime spriteRuntime = new();
+        spriteRuntime.AnimationChains = CreateChains(loops: true, 10f);
+        root.AddChild(spriteRuntime);
+        RunFrames(root, 3);
+
+        spriteRuntime.Animate = true;
+        RunFrames(root, 2);
+
+        ((Sprite)spriteRuntime.RenderableComponent).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenAnimateIsSetThroughSetProperty()
+    {
+        ContainerRuntime root = new();
+        SpriteRuntime spriteRuntime = new();
+        spriteRuntime.AnimationChains = CreateChains(loops: true, 10f);
+        root.AddChild(spriteRuntime);
+        RunFrames(root, 3);
+
+        spriteRuntime.SetProperty("Animate", true);
+        RunFrames(root, 2);
+
+        ((Sprite)spriteRuntime.RenderableComponent).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenNineSliceRuntimeAnimateIsSetAfterTheSubtreeWentIdle()
+    {
+        ContainerRuntime root = new();
+        NineSliceRuntime nineSlice = new();
+        ((NineSlice)nineSlice.RenderableComponent).AnimationLogic.AnimationChains = CreateChains(loops: true, 10f);
+        root.AddChild(nineSlice);
+        RunFrames(root, 3);
+
+        nineSlice.Animate = true;
+        RunFrames(root, 2);
+
+        ((NineSlice)nineSlice.RenderableComponent).AnimationLogic.TimeIntoAnimation.ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenClonedElementAnimatesUnderAnIdleParent()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        RunFrames(root, 3);
+
+        // A clone starts detached and childless, so the animating leaf is cloned and added to an idle card.
+        GraphicalUiElement source = root.Children[0].Children[0].Children[0];
+        GraphicalUiElement clone = source.Clone();
+        root.Children[1].AddChild(clone);
+        RunFrames(root, 3);
+        CountingSprite clonedSprite = (CountingSprite)clone.RenderableComponent;
+
+        clonedSprite.Animate = true;
+        RunFrames(root, 2);
+
+        TimeInto(clonedSprite).ShouldBe(0.2, 0.0001);
+        TimeInto(sprites[0]).ShouldBe(0, "the clone's playback does not reach the source");
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenAnimatingElementIsAttachedWithTheParentProperty()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        RunFrames(root, 3);
+
+        CountingSprite late = CreateIdleSprite();
+        late.Animate = true;
+        GraphicalUiElement lateElement = new(late);
+        lateElement.Parent = root.Children[2];
+        RunFrames(root, 2);
+
+        TimeInto(late).ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenAnimatingElementIsAddedThroughTheChildrenCollection()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        RunFrames(root, 3);
+
+        CountingSprite late = CreateIdleSprite();
+        late.Animate = true;
+        GraphicalUiElement lateElement = new(late);
+        root.Children[1].Children.Insert(0, lateElement);
+        RunFrames(root, 2);
+
+        TimeInto(late).ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenSubtreeIsWokenWhileDetachedAndThenAddedBack()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        RunFrames(root, 3);
+        GraphicalUiElement card = root.Children[1];
+        root.RemoveChild(card);
+        RunFrames(root, 2);
+
+        StartAnimating(sprites[4]);
+        RunFrames(root, 2);
+        TimeInto(sprites[4]).ShouldBe(0, "a detached subtree is not walked");
+
+        root.Children[0].AddChild(card);
+        RunFrames(root, 2);
+
+        TimeInto(sprites[4]).ShouldBe(0.2, 0.0001);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenInvisibleDescendantsAreShownThroughTheirAncestor()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        GraphicalUiElement hiddenCard = root.Children[2];
+        hiddenCard.Children[1].Visible = false;
+        hiddenCard.Visible = false;
+        RunFrames(root, 3);
+        StartAnimating(sprites[8]);
+        StartAnimating(sprites[9]);
+
+        hiddenCard.Visible = true;
+        RunFrames(root, 2);
+
+        TimeInto(sprites[8]).ShouldBe(0.2, 0.0001);
+        TimeInto(sprites[9]).ShouldBe(0, "its slot is still hidden");
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldKeepAnimating_WhenElementIsDisabled()
+    {
+        ContainerRuntime root = new();
+        CountingSprite sprite = CreateIdleSprite();
+        InteractiveGue element = new(sprite);
+        element.IsEnabled = false;
+        root.AddChild(element);
+        RunFrames(root, 3);
+
+        sprite.Animate = true;
+        RunFrames(root, 2);
+
+        TimeInto(sprite).ShouldBe(0.2, 0.0001);
+    }
+
+    #endregion
+
     #region Wake-up: state animations
 
     [Fact]
@@ -465,6 +701,41 @@ public class AnimateSelfIdleSubtreeTests : BaseTestClass
         RunFrames(root, 1, secondDifference: 0.5);
 
         card.X.ShouldBe(50, 0.01f);
+    }
+
+    [Fact]
+    public async Task AnimateSelf_ShouldRunStateAnimation_WhenPlayedAsyncAfterTheSubtreeWentIdle()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        GraphicalUiElement card = root.Children[1];
+        AnimationRuntime animation = CreateMoveXAnimation(card);
+        RunFrames(root, 3);
+
+        Task playing = card.PlayAnimationAsync(animation);
+        RunFrames(root, 1, secondDifference: 2);
+        await playing;
+
+        card.X.ShouldBe(100, 0.01f);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldAdvanceChain_WhenAStateAppliedToAnAncestorTurnsAnimateOnForADescendant()
+    {
+        (ContainerRuntime root, List<CountingSprite> sprites) = CreateBoard(3);
+        GraphicalUiElement card = root.Children[1];
+        GraphicalUiElement slot = card.Children[2];
+        slot.Name = "Slot";
+        RunFrames(root, 3);
+        StateSave animating = new() { Name = "Animating" };
+        animating.Variables.Add(new VariableSave { Name = "Slot.X", Value = 40f });
+        animating.Variables.Add(new VariableSave { Name = "Slot.Visible", Value = true });
+
+        card.ApplyState(animating);
+        StartAnimating(sprites[1 * 4 + 2]);
+        RunFrames(root, 2);
+
+        slot.X.ShouldBe(40);
+        TimeInto(sprites[1 * 4 + 2]).ShouldBe(0.2, 0.0001);
     }
 
     #endregion
