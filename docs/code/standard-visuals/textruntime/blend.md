@@ -29,7 +29,7 @@ container.AddChild(text);
 
 The glyphs keep the alpha of the rectangle, and the rest of the text bounds becomes transparent. The bounds are the measured text block plus a 2 pixel margin, and the drop shadow offset when the text has a drop shadow. Nothing outside the bounds changes.
 
-On MonoGame, KNI, and FNA, text masks its bounds only while it draws into a render target container, and only when text renders character by character, which is the default `TextRenderingMode`.
+Setting the static `Text.TextRenderingMode` to `TextRenderingMode.RenderTarget` changes only the glyph pixels and leaves the rest of the text bounds alone. The default, `CharacterByCharacter`, masks the whole bounds.
 
 {% hint style="info" %}
 Masking the whole text bounds is available in November 2026, or now if building Gum from source.

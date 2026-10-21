@@ -167,9 +167,8 @@ A shape with both a fill and a stroke masks as one shape. The fill and the strok
 
 Text uses the measured text block plus a 2 pixel margin as its bounds, and adds the drop shadow offset when it has a drop shadow. Skia also adds the outline thickness and the shadow blur. Glyph pixels keep their alpha, and the rest of the bounds becomes transparent.
 
-On MonoGame, KNI, and FNA, text masks its bounds only inside a render target container, and only when text is drawn character by character (the default). The Gum tool has no `Blend` variable for text, so set `Blend` on the text in code.
+The Gum tool has no `Blend` variable for text, so set `Blend` on the text in code. Like the other alpha-only blends, text masks the content below it when its container has `Is Render Target` set to true.
 
 ### Limits
 
 * An edge of the bounds that falls between pixels (a fractional position or a rotation) is not exact, because a pixel partly covered by the edge cannot be both kept and cleared.
-* On runtimes with premultiplied alpha such as FlatRedBall 1, text with `Replace` `Blend` inside a render target container also masks its bounds.

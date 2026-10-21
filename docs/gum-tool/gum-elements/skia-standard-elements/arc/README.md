@@ -34,8 +34,6 @@ On MonoGame, KNI, and FNA, an Arc in non-square bounds is a circle at the shorte
 
 Skia draws the same `Thickness` all the way around the Arc.
 
-Raylib does not fill the bounds. It draws the circle that fits the shorter side, centered in the bounds.
-
 {% hint style="info" %}
 The elliptical Arc on MonoGame, KNI, and FNA is available in November 2026, or now if building Gum from source. Before then, it drew a circle as wide as `Width`, which overflowed bounds that were shorter than they were wide.
 {% endhint %}

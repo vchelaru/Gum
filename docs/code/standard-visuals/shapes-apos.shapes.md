@@ -414,7 +414,7 @@ Defaults: `Width` = `Height` = 100, `StartAngle` = 0, `SweepAngle` = 90, `IsEndR
 
 A `SweepAngle` of `360` draws the same pixels as a stroked `CircleRuntime` with the same bounds and a `StrokeWidth` equal to the arc's `Thickness`.
 
-When `Width` and `Height` differ, the arc fills the bounds as an ellipse on MonoGame, KNI, FNA, and Skia. A `CircleRuntime` always draws the circle that fits the shorter side, and so does an arc on raylib. For how `Thickness` behaves in non-square bounds, see the [Arc](../../gum-tool/gum-elements/skia-standard-elements/arc/README.md#arcs-in-non-square-bounds) page.
+When `Width` and `Height` differ, the arc fills the bounds as an ellipse on MonoGame, KNI, FNA, and Skia. A `CircleRuntime` always draws the circle that fits the shorter side. For how `Thickness` behaves in non-square bounds, see the [Arc](../../gum-tool/gum-elements/skia-standard-elements/arc/README.md#arcs-in-non-square-bounds) page.
 
 | Property        | Type    | Description                                                                                              |
 | --------------- | ------- | -------------------------------------------------------------------------------------------------------- |
