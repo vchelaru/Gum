@@ -57,6 +57,22 @@ namespace Gum.Mvvm
             public override ValueCell Copy() => new ValueCell<T> { Value = Value };
         }
 
+        // Whether a value stored through Set<T> can be an INotifyCollectionChanged, decided once per T.
+        // False only when that is impossible: T is sealed (or a value type) and does not implement the
+        // interface, so no runtime type can add it. A non-sealed T (object, an interface, an unsealed
+        // class) is always true because a derived runtime type may implement it. A Nullable<S> boxes to S,
+        // so it is judged by S.
+        private static class CanBeCollection<T>
+        {
+            public static readonly bool Value = Compute();
+
+            private static bool Compute()
+            {
+                Type type = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+                return typeof(INotifyCollectionChanged).IsAssignableFrom(type) || type.IsSealed == false;
+            }
+        }
+
         protected T Get<T>([CallerMemberName]string? propertyName = null)
         {
             T toReturn = default(T)!;
@@ -83,7 +99,7 @@ namespace Gum.Mvvm
         {
             bool didSet = SetWithoutNotifying(propertyValue, propertyName);
 
-            if (propertyName != null && propertyValue is INotifyCollectionChanged collection)
+            if (propertyName != null && CanBeCollection<T>.Value && propertyValue is INotifyCollectionChanged collection)
             {
                 // Kept out of line so a non-collection Set does no extra work.
                 SubscribeToCollection(collection, propertyName);
@@ -305,7 +321,9 @@ namespace Gum.Mvvm
                 PropertyChanged(this, _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name)));
             }
 
-            if (notifyRelationships.TryGetValue(propertyName, out var childPropertyNames))
+            // Most view models declare no [DependsOn]; an empty dictionary skips the lookup call. The
+            // dictionary is filled only by the constructor, so this is exact for derived and generic types.
+            if (notifyRelationships.Count != 0 && notifyRelationships.TryGetValue(propertyName, out var childPropertyNames))
             {
                 foreach (var childPropertyName in childPropertyNames)
                 {
