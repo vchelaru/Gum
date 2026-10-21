@@ -34,6 +34,9 @@ public class ViewModelCollectionSubscriptionTests : BaseTestClass
             set => SetWithoutNotifying(value);
         }
 
+        public void SetItemsWithoutNotifying(ObservableCollection<int>? value) =>
+            SetWithoutNotifying(value, nameof(Items));
+
         public CollectionViewModel CloneIt() => Clone<CollectionViewModel>();
     }
 
@@ -274,5 +277,53 @@ public class ViewModelCollectionSubscriptionTests : BaseTestClass
         a.Add(1);
 
         raisedByClone.ShouldBe(new string?[] { nameof(CollectionViewModel.Items) });
+    }
+
+    [Fact]
+    public void Set_BackToPreviousCollection_SubscribesItAgainOnce()
+    {
+        ObservableCollection<int> a = new ObservableCollection<int>();
+        ObservableCollection<int> b = new ObservableCollection<int>();
+        CollectionViewModel vm = new CollectionViewModel { Items = a };
+        vm.Items = b;
+        vm.Items = a;
+        vm.Items = a;
+        List<string?> raised = Record(vm);
+
+        b.Add(1);
+        a.Add(1);
+
+        raised.ShouldBe(new string?[] { nameof(CollectionViewModel.Items) });
+    }
+
+    [Fact]
+    public void Set_SameCollectionStoredWithoutNotifying_Subscribes()
+    {
+        // SetWithoutNotifying stores but never subscribes; a later Set of the same instance
+        // reports no change yet must still start listening.
+        ObservableCollection<int> a = new ObservableCollection<int>();
+        CollectionViewModel vm = new CollectionViewModel();
+        vm.SetItemsWithoutNotifying(a);
+        vm.Items = a;
+        List<string?> raised = Record(vm);
+
+        a.Add(1);
+
+        raised.ShouldBe(new string?[] { nameof(CollectionViewModel.Items) });
+    }
+
+    [Fact]
+    public void Set_EqualButDifferentCollection_ThenStoredInstanceAgain_RaisesOnce()
+    {
+        ValueEqualCollection a = new ValueEqualCollection(1);
+        ValueEqualCollection b = new ValueEqualCollection(1);
+        ValueEqualViewModel vm = new ValueEqualViewModel { Items = a };
+        vm.Items = b;
+        vm.Items = a;
+        List<string?> raised = Record(vm);
+
+        a.Add(2);
+
+        raised.ShouldBe(new string?[] { nameof(ValueEqualViewModel.Items) });
     }
 }
