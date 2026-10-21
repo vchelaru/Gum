@@ -21,7 +21,7 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
     public CodeGeneratorFormsPropertyTests()
     {
         // A variable the Container standard defines, so authored values for it are real visual variables.
-        Project.StandardElements.First(item => item.Name == "Container").DefaultState.Variables.Add(
+        Project.StandardElements.First(item => item.Name == "Container").DefaultState!.Variables.Add(
             new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
     }
 
@@ -83,7 +83,7 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
 
     private static void Author(ElementSave element, string name, string type, object value)
     {
-        element.DefaultState.Variables.Add(new VariableSave
+        element.DefaultState!.Variables.Add(new VariableSave
         {
             Name = name,
             Type = type,
