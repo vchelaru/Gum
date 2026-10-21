@@ -620,7 +620,12 @@ public class FrameworkElement : INotifyPropertyChanged
                     {
                         newVisualInteractiveGue.FormsControlAsObject = this;
                     }
-                    
+
+                    // Before the handlers below subscribe, so the carry is not seen as a context change.
+                    if (oldVisual != null)
+                    {
+                        CarryExplicitBindingContext(oldVisual, visual);
+                    }
 
                     visual.BindingContextChanged += OnVisualBindingContextChanged;
                     visual.InheritedBindingContextChanged += OnVisualInheritedBindingContextChanged;
@@ -655,6 +660,26 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
+
+    /// <summary>
+    /// The BindingContext is stored on the Visual, so a replacement Visual starts without the control's
+    /// context and every SetBinding would detach. A context assigned on the old Visual is copied to the
+    /// new one. A context the old Visual only inherited from its parent is not: the new Visual picks
+    /// that up when it is parented.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Re-applies the context the control already had, so the trim risk was surfaced " +
+            "where that BindingContext or SetBinding was originally assigned.")]
+    private static void CarryExplicitBindingContext(InteractiveGue oldVisual, InteractiveGue newVisual)
+    {
+        object? context = oldVisual.BindingContext;
+        object? inheritedContext = oldVisual.EffectiveParentGue?.BindingContext;
+
+        if (context != null && context != inheritedContext && newVisual.BindingContext != context)
+        {
+            newVisual.BindingContext = context;
+        }
+    }
 
     private void OnVisualBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
     {

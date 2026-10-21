@@ -12,6 +12,8 @@ description: Gum runtime data binding — BindingContext, SetBinding on Graphica
 
 `FrameworkElement.BindingContext` delegates to its `Visual.BindingContext` — they share one context.
 
+On a `Visual` swap, a context assigned on the old visual is copied to the new one (`CarryExplicitBindingContext`), so `SetBinding` bindings keep following the view model. A context the old visual only inherited from its parent is not copied; the new visual gets it when it is parented. The swap does not re-push bound values, so a property that lives on the visual (e.g. `Text`) shows the new visual's value until the view model next changes.
+
 ## BindingContext
 
 Set on any `GraphicalUiElement` or `FrameworkElement`. Cascades automatically to all descendants unless overridden:
