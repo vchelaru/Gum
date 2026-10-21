@@ -154,24 +154,6 @@ public class KeyboardTests : BaseTestClass
     }
 
     [Fact]
-    public void KeysTyped_IncludesKey_WhenIsKeyPressedRepeatReturnsTrue()
-    {
-        var sut = new Mock<Keyboard>();
-        sut.Protected()
-            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
-            .Returns(false);
-        sut.Protected()
-            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
-            .Returns((KeyboardKey k) => k == KeyboardKey.Delete);
-
-        sut.Object.Activity(1);
-
-        List<GumKeys> result = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
-
-        result.ShouldBe(new List<GumKeys> { GumKeys.Delete });
-    }
-
-    [Fact]
     public void KeysTyped_IncludesKey_WhenIsKeyPressedReturnsTrue()
     {
         var sut = new Mock<Keyboard>();
@@ -205,5 +187,46 @@ public class KeyboardTests : BaseTestClass
         List<GumKeys> result = ((IInputReceiverKeyboard)sut.Object).KeysTyped.ToList();
 
         result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void KeyTyped_IsTrue_OnInitialPress()
+    {
+        var sut = new Mock<Keyboard>();
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns((KeyboardKey k) => k == KeyboardKey.Left);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+
+        sut.Object.Activity(1);
+
+        sut.Object.KeyTyped(GumKeys.Left).ShouldBeTrue();
+        sut.Object.KeyTyped(GumKeys.Right).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetStringTyped_ReturnsCharactersTheOsRepeats_WhileAKeyIsHeld()
+    {
+        var sut = new Mock<Keyboard>();
+        sut.Protected()
+            .Setup<bool>("IsKeyDown", ItExpr.IsAny<KeyboardKey>())
+            .Returns((KeyboardKey k) => k == KeyboardKey.A);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressed", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+        sut.Protected()
+            .Setup<bool>("IsKeyPressedRepeat", ItExpr.IsAny<KeyboardKey>())
+            .Returns(false);
+        var codepoints = new Queue<int>(new[] { 97, 0 });
+        sut.Protected()
+            .Setup<int>("GetCharPressed")
+            .Returns(() => codepoints.Count > 0 ? codepoints.Dequeue() : 0);
+
+        // The OS delivers a repeated character at 0.9s, far from the push and not on any Gum timing.
+        sut.Object.Activity(0.9);
+
+        sut.Object.GetStringTyped().ShouldBe("a");
     }
 }

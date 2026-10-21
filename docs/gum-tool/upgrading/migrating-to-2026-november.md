@@ -130,6 +130,12 @@ if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 
 `GumService.Default.Cursor` and `GumService.Default.Keyboard` are unchanged. They return the concrete `Cursor` and `Keyboard` types, and they are `null` while a custom cursor or keyboard is installed.
 
+### More of GumService Is Reachable Through IGumService
+
+Code that works through `IGumService` can now do what a game does through `GumService`, wherever the member is not tied to one engine. `IGumService` gains `Update(double totalSeconds)`, `PopupRoot`, `ModalRoot`, `Gamepads`, `UseKeyboardDefaults()`, `UseGamepadDefaults()`, `RefreshStyles()`, `RefreshStyles(GraphicalUiElement)`, `RefreshLocalization()`, `LocalizationService`, `LastLoadResult`, `ExportSnapshot(string, bool)`, `SynchronizationContext`, `UseSingleThreadedAsync()` and `Uninitialize()`. `IRenderer` gains `AddLayer()` and `RemoveLayer(Layer)`. All have default implementations, so a class that implements either interface keeps compiling; `GumService` and the existing hosts already provide them.
+
+`Update(double totalSeconds)` takes the total seconds since startup, not the time since the last frame. On MonoGame, KNI and FNA it builds a `GameTime` from it and calls `Update(GameTime)`. On KNI Skia, `Update(double)` now does the same, so it sets `GumService.Default.GameTime` and skips input while the window is inactive, as `Update(GameTime)` already did. On those hosts a value that is not a finite number counts as a frame of zero length. `Uninitialize()` now also resets the clock on MonoGame, KNI and FNA, so the first `Update` after initializing the same service again no longer sees the time of the previous run.
+
 ### SkiaResourceManager and EmbeddedResourceContentLoader Are Obsolete
 
 In SkiaSharp projects (including .NET MAUI), `SkiaGum.Content.SkiaResourceManager` and `SkiaGum.Content.EmbeddedResourceContentLoader` are now `[Obsolete]`. Use `RenderingLibrary.Content.ContentLoader`, which has the same name as the loader on MonoGame, KNI, FNA and raylib. Gum installs it as the default loader, and `GumService.ContentLoader` returns it.
@@ -525,3 +531,13 @@ Variables driven by a behavior reference, such as a category state that follows 
 This affects you only if an instance sets a variable that its control now hides. A project from before the control hid the variable can hold one without you knowing. Such a variable appears in generated code the next time you generate.
 
 To migrate, regenerate your code and look at the changes. To drop a stale value, remove it from the instance in the tool.
+
+### raylib and Sokol Repeat Held Keys With Gum's Timing
+
+On raylib and Sokol, holding a key such as an arrow, Backspace, or Delete now repeats after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), the same as MonoGame, KNI, FNA and the Skia hosts. Before this version these two hosts used the operating system's key repeat for `KeyTyped` and `KeysTyped`.
+
+Typed characters are not affected. They still repeat as the operating system repeats them. On raylib this includes the newline that Enter inserts into a multi-line `TextBox`.
+
+`IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` (both `TimeSpan`, settable) as default members. A class that implements `IInputReceiverKeyboard` keeps compiling without them. Without an override the getters return 500 ms and 70 ms and the setters do nothing.
+
+This affects you only if you rely on the operating system's key repeat speed for arrow keys or other navigation keys on raylib or Sokol. To migrate, set `RepeatDelay` and `RepeatRate` on the keyboard to the values you want.

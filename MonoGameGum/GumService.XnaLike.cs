@@ -566,6 +566,9 @@ public partial class GumService
 
         DetachGameDisposedHandler();
 
+        // The clock restarts with the next Initialize, so its first Update advances by zero.
+        GameTime = null;
+
         // Folded from the end of the pre-split Uninitialize (was a trailing #if XNALIKE _game = null).
         // Nothing between this seam's call site and that point reads _game, so the move is inert.
         _game = null;
@@ -596,6 +599,15 @@ public partial class GumService
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
 
         Update(gameTime, this.Root);
+    }
+
+    /// <inheritdoc/>
+    void IGumService.Update(double totalSeconds)
+    {
+        // The elapsed time is the gap since the previous Update, so animations advance as they do for a
+        // real GameTime. The first call has no previous Update, so it advances by zero.
+        FrameClock.ToTimeSpans(totalSeconds, GameTime?.TotalGameTime, out TimeSpan total, out TimeSpan elapsed);
+        Update(new GameTime(total, elapsed));
     }
 
     public void Update(GameTime totalGameTime, GraphicalUiElement root)

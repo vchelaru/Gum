@@ -80,6 +80,27 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Plugins/$(TargetName)" />
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(AvaloniaHeadDir)Plugins/$(TargetName)" />
+	</Target>
+
+	<PropertyGroup>
+		<SolutionDir Condition="'$(SolutionDir)' == '' or '$(SolutionDir)' == '*Undefined*'">$(MSBuildThisFileDirectory)..\..\</SolutionDir>
+	</PropertyGroup>
+	<ItemGroup>
+		<!-- Everything the staged themes are made from: the templates (which include the shared
+		     FormsBehaviors the staging tool reads) and the staging tool itself. -->
+		<FormsThemeStagingInput Include="$(SolutionDir)Tools/Gum.ProjectServices/Templates/**/*.*" />
+		<FormsThemeStagingInput Include="$(SolutionDir)Tools/Gum.FormsStaging/bin/$(Configuration)/net10.0/Gum.FormsStaging.dll" />
+	</ItemGroup>
+	<!-- Incremental: staging nine themes launches the staging tool nine times, which made every build
+	     of anything referencing this plugin pay about 10 seconds even with nothing changed. -->
+	<Target Name="StageFormsThemes" AfterTargets="PostBuildEvent"
+	        Inputs="@(FormsThemeStagingInput)"
+	        Outputs="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/.staged;$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/Content/FormsThemes/.staged">
+		<PropertyGroup>
+			<AvaloniaHeadDir>$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/</AvaloniaHeadDir>
+			<DotNetHost>dotnet</DotNetHost>
+			<DotNetHost Condition="'$(DOTNET_HOST_PATH)' != ''">&quot;$(DOTNET_HOST_PATH)&quot;</DotNetHost>
+		</PropertyGroup>
 
 		<!-- Stage each Forms theme's template content, then run Gum.FormsStaging to layer in the
 		     shared behaviors (SourcePath links in the templates can't be plain-copied - #4070). -->
@@ -137,5 +158,7 @@
 		</ItemGroup>
 		<RemoveDir Directories="$(AvaloniaHeadDir)Content/FormsThemes" Condition="Exists('$(AvaloniaHeadDir)Content/FormsThemes')" />
 		<Copy SourceFiles="@(StagedFormsThemeFiles)" DestinationFolder="$(AvaloniaHeadDir)Content/FormsThemes/%(RecursiveDir)" />
+
+		<Touch Files="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/.staged;$(AvaloniaHeadDir)Content/FormsThemes/.staged" AlwaysCreate="true" />
 	</Target>
 </Project>

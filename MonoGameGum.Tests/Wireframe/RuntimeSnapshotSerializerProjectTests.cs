@@ -143,11 +143,16 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
             startInfo.ArgumentList.Add("run");
             startInfo.ArgumentList.Add("--project");
             startInfo.ArgumentList.Add(cliProject);
-            // The build-only ProjectReference already built gumcli in this configuration; reuse it
-            // rather than rebuilding (which made this test take ~37s).
+            // On GitHub Actions the test project's build-only ProjectReference already built gumcli in
+            // this configuration, so reuse it (building it here, next to the other test streams, exceeds
+            // the time limit). Elsewhere the reference is skipped to keep local builds fast, so dotnet
+            // run builds gumcli (incrementally) itself.
             startInfo.ArgumentList.Add("--configuration");
             startInfo.ArgumentList.Add(configuration);
-            startInfo.ArgumentList.Add("--no-build");
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                startInfo.ArgumentList.Add("--no-build");
+            }
             startInfo.ArgumentList.Add("--");
             startInfo.ArgumentList.Add("check");
             startInfo.ArgumentList.Add(gumxPath);
@@ -508,8 +513,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
 
     private static string DetectBuildConfiguration()
     {
-        // The test runs from .../bin/<Config>/net8.0/; the build-only gumcli reference is built in the
-        // same configuration, so run that one with --no-build.
+        // The test runs from .../bin/<Config>/net8.0/; build and run gumcli in the same configuration.
         DirectoryInfo tfmDirectory = new(AppContext.BaseDirectory);
         if (tfmDirectory.Parent?.Parent?.Name == "bin")
         {
