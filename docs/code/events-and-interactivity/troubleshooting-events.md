@@ -70,7 +70,7 @@ That is usually all you need. The rest of this page covers the remaining overloa
 
 ## GetEventFailureReason
 
-`GetEventFailureReason` lives on the `ICursor` interface (typically `GumService.Default.Cursor`) and comes in several overloads:
+`GetEventFailureReason` is an extension method on `ICursor` (in `Gum.Input`), usually called on `GumUI.Cursor`. It comes in several overloads:
 
 | Overload | Use when | Example |
 | --- | --- | --- |
