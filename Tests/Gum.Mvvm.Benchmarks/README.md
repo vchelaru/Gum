@@ -34,6 +34,12 @@ one store into a sink object per iteration so the JIT cannot delete the read, wh
 plain get reads 2 ns and a value-type one 0.4 ns. Bytes come from `GC.GetAllocatedBytesForCurrentThread`.
 There are no browser/WebAssembly numbers here; #6356 measured roughly 10 to 20 times these desktop costs.
 
+## Spike options (#6390)
+
+- `--types string,int` runs only those exact type names (comma separated). Used for alternating A/B runs of two builds: `--runs 3` per run, alternate the binaries, compare medians.
+- `--count` prints string hashes per call for the old and the keyed style, counted by swapping the ViewModel's private dictionaries for ones with a counting comparer (a proxy for browser cost, where hashing is slow).
+- Rows prefixed `kvm.` are the keyed style (`ViewModelProperty<T>` passed to `GetValue`/`SetValue`). Build with `-p:NoKeyed=true` to compare against a ViewModel without it.
+
 ## Baseline (before any optimization)
 
 Date: 2026-10-21  Mode: full

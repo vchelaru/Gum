@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -19,6 +20,41 @@ namespace Gum.Mvvm
             ParentProperty = parentPropertyName;
         }
 
+    }
+
+    /// <summary>
+    /// Untyped base of <see cref="ViewModelProperty{T}"/>. Create one key per property, once, in a
+    /// static readonly field, and pass it to <c>Get</c>/<c>Set</c> so no property name is hashed per call.
+    /// </summary>
+    public abstract class ViewModelProperty
+    {
+        private static int _nextId = -1;
+
+        internal ViewModelProperty(string name)
+        {
+            Name = name;
+            EventArgs = new PropertyChangedEventArgs(name);
+            Id = Interlocked.Increment(ref _nextId);
+        }
+
+        /// <summary>The property name raised in <see cref="INotifyPropertyChanged.PropertyChanged"/>.</summary>
+        public string Name { get; }
+
+        internal PropertyChangedEventArgs EventArgs { get; }
+
+        /// <summary>Process-wide sequence number; the hash code of the key.</summary>
+        internal int Id { get; }
+    }
+
+    /// <summary>
+    /// A typed key for one view model property, for the faster <c>Get(key)</c>/<c>Set(key, value)</c> style.
+    /// </summary>
+    /// <typeparam name="T">The property type.</typeparam>
+    public sealed class ViewModelProperty<T> : ViewModelProperty
+    {
+        public ViewModelProperty(string name) : base(name)
+        {
+        }
     }
 
     /// <summary>
@@ -57,6 +93,98 @@ namespace Gum.Mvvm
             public override ValueCell Copy() => new ValueCell<T> { Value = Value };
         }
 
+        // Keyed (faster) property style: storage is addressed by a ViewModelProperty<T> key created once
+        // per property, so no property name is hashed on a read or a write. Every keyed property, value
+        // type or reference type, lives in a mutable ValueCell<T>. Keyed and by-name storage are
+        // separate: a property must use one style consistently. Not thread safe, like the rest.
+        // A keyed property's cell lives at index key.Id of this array, so a read is a bounds check, a null
+        // test and a cast: no hashing and no dictionary. The array only grows to the highest key id this
+        // instance has used.
+        private object?[] keyedSlots = Array.Empty<object?>();
+
+        // Set while NotifyPropertyChanged runs for a keyed Set, so the default implementation can reuse the
+        // key's cached event args. The virtual is still called, so overrides keep seeing every notification.
+        private ViewModelProperty? notifyKey;
+
+        private static class CollectionCapable<T>
+        {
+            // False when no value of type T can be an INotifyCollectionChanged, so the interface test is skipped.
+            public static readonly bool Value =
+                typeof(INotifyCollectionChanged).IsAssignableFrom(typeof(T)) || (!typeof(T).IsValueType && !typeof(T).IsSealed);
+        }
+
+        protected T GetValue<T>(ViewModelProperty<T> property)
+        {
+            object?[] slots = keyedSlots;
+            int id = property.Id;
+            if ((uint)id < (uint)slots.Length && slots[id] is object stored)
+            {
+                return ((ValueCell<T>)stored).Value;
+            }
+
+            return default(T)!;
+        }
+
+        protected bool SetValue<T>(ViewModelProperty<T> property, T value)
+        {
+            bool didSet = SetValueWithoutNotifying(property, value);
+
+            if (CollectionCapable<T>.Value && value is INotifyCollectionChanged collection)
+            {
+                SubscribeToKeyedCollection(collection, property);
+            }
+
+            if (didSet)
+            {
+                notifyKey = property;
+                NotifyPropertyChanged(property.Name);
+                notifyKey = null;
+            }
+
+            return didSet;
+        }
+
+        protected bool SetValueWithoutNotifying<T>(ViewModelProperty<T> property, T value)
+        {
+            object?[] slots = keyedSlots;
+            int id = property.Id;
+            if ((uint)id < (uint)slots.Length && slots[id] is object stored)
+            {
+                ValueCell<T> cell = (ValueCell<T>)stored;
+                if (EqualityComparer<T>.Default.Equals(cell.Value, value))
+                {
+                    return false;
+                }
+
+                if (collectionSubscriptions != null && !typeof(T).IsValueType)
+                {
+                    UnsubscribeFromCollection(cell.Value, property.Name);
+                }
+
+                cell.Value = value;
+                return true;
+            }
+
+            if ((uint)id >= (uint)slots.Length)
+            {
+                Array.Resize(ref slots, id + 1);
+                keyedSlots = slots;
+            }
+
+            slots[id] = new ValueCell<T> { Value = value };
+            return EqualityComparer<T>.Default.Equals(default(T), value) == false;
+        }
+
+        private void SubscribeToKeyedCollection<T>(INotifyCollectionChanged collection, ViewModelProperty<T> property)
+        {
+            if (ReferenceEquals(((ValueCell<T>)keyedSlots[property.Id]!).Value, collection) == false)
+            {
+                return;
+            }
+
+            SubscribeToCollectionCore(collection, property.Name);
+        }
+
         protected T Get<T>([CallerMemberName]string? propertyName = null)
         {
             T toReturn = default(T)!;
@@ -83,7 +211,7 @@ namespace Gum.Mvvm
         {
             bool didSet = SetWithoutNotifying(propertyValue, propertyName);
 
-            if (propertyName != null && propertyValue is INotifyCollectionChanged collection)
+            if (propertyName != null && CollectionCapable<T>.Value && propertyValue is INotifyCollectionChanged collection)
             {
                 // Kept out of line so a non-collection Set does no extra work.
                 SubscribeToCollection(collection, propertyName);
@@ -127,6 +255,11 @@ namespace Gum.Mvvm
                 return;
             }
 
+            SubscribeToCollectionCore(collection, propertyName);
+        }
+
+        private void SubscribeToCollectionCore(INotifyCollectionChanged collection, string propertyName)
+        {
             collectionSubscriptions ??= new Dictionary<string, CollectionSubscription>();
             if (collectionSubscriptions.TryGetValue(propertyName, out CollectionSubscription? subscription) == false)
             {
@@ -300,12 +433,16 @@ namespace Gum.Mvvm
         protected virtual void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
+            ViewModelProperty? key = notifyKey;
+            notifyKey = null;
             if (PropertyChanged != null)
             {
-                PropertyChanged(this, _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name)));
+                PropertyChanged(this, key != null && ReferenceEquals(key.Name, propertyName)
+                    ? key.EventArgs
+                    : _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name)));
             }
 
-            if (notifyRelationships.TryGetValue(propertyName, out var childPropertyNames))
+            if (notifyRelationships.Count != 0 && notifyRelationships.TryGetValue(propertyName, out var childPropertyNames))
             {
                 foreach (var childPropertyName in childPropertyNames)
                 {
@@ -328,6 +465,15 @@ namespace Gum.Mvvm
                 copiedProperties[pair.Key] = pair.Value is ValueCell cell ? cell.Copy() : pair.Value;
             }
             asViewModel.propertyDictionary = copiedProperties;
+            if (keyedSlots.Length != 0)
+            {
+                object?[] copiedSlots = new object?[keyedSlots.Length];
+                for (int i = 0; i < copiedSlots.Length; i++)
+                {
+                    copiedSlots[i] = (keyedSlots[i] as ValueCell)?.Copy();
+                }
+                asViewModel.keyedSlots = copiedSlots;
+            }
             // MemberwiseClone copied the reference; the subscriptions belong to this instance, and a
             // clone replacing a collection must not unsubscribe the original.
             asViewModel.collectionSubscriptions = null;
