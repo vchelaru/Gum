@@ -661,6 +661,7 @@ public partial class LayoutVisibilityOrderTests : BaseTestClass
     {
         List<string> failures = new();
         int cases = 0;
+        int index = 0;
         foreach (bool outerStacks in new[] { false, true })
         {
             for (int levels = 1; levels <= 3; levels++)
@@ -694,6 +695,11 @@ public partial class LayoutVisibilityOrderTests : BaseTestClass
 
                             foreach (RevealOrder reveal in Enum.GetValues<RevealOrder>())
                             {
+                                if (!SweepScale.Includes(index++))
+                                {
+                                    continue;
+                                }
+
                                 cases++;
                                 string? failure = RunAndCompare(levels, kind, sizing, outerStacks, steps, reveal);
                                 if (failure != null)
@@ -751,6 +757,7 @@ public partial class LayoutVisibilityOrderTests : BaseTestClass
     {
         List<string> failures = new();
         int cases = 0;
+        int index = 0;
         foreach (StackKind kind in new[] { StackKind.TopToBottom, StackKind.LeftToRight, StackKind.TopToBottomWrapping, StackKind.AutoGridHorizontal })
         {
             foreach (Sizing sizing in Enum.GetValues<Sizing>())
@@ -765,6 +772,11 @@ public partial class LayoutVisibilityOrderTests : BaseTestClass
                             List<int> hidden = Enumerable.Range(0, containerCount).Where(i => (mask & (1 << i)) != 0).ToList();
                             foreach (RevealOrder reveal in Enum.GetValues<RevealOrder>())
                             {
+                                if (!SweepScale.Includes(index++))
+                                {
+                                    continue;
+                                }
+
                                 List<Step> steps = new()
                                 {
                                     new Step(StepKind.Op, Op: ContentOp.AddRows),

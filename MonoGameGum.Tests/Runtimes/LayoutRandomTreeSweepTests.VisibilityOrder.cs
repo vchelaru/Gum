@@ -20,7 +20,7 @@ public partial class LayoutRandomTreeSweepTests
     {
         Edit[] edits = { Edit.Resize, Edit.Spacing, Edit.AddChild, Edit.RemoveChild, Edit.Resize, Edit.AddChild };
         List<string> failures = new();
-        for (int seed = 0; seed < SeedCount; seed++)
+        for (int seed = 0; seed < Seeds; seed++)
         {
             Node root = GenerateTree(seed, wellFormed: true);
             foreach (Node node in Walk(root))
@@ -68,7 +68,7 @@ public partial class LayoutRandomTreeSweepTests
             }
         }
 
-        _output.WriteLine($"{failures.Count} of {SeedCount}: {string.Join("; ", failures)}");
+        _output.WriteLine($"{failures.Count} of {Seeds}: {string.Join("; ", failures)}");
         failures.Count.ShouldBe(0, string.Join("; ", failures.Take(5)));
     }
 
@@ -88,7 +88,7 @@ public partial class LayoutRandomTreeSweepTests
         Edit[] edits = { Edit.Resize, Edit.Spacing, Edit.AddChild, Edit.RemoveChild, Edit.Resize, Edit.AddChild, Edit.AddChild, Edit.Resize, Edit.Spacing, Edit.AddChild, Edit.Resize, Edit.RemoveChild };
         List<string> failures = new();
         int skipped = 0;
-        for (int seed = 0; seed < SeedCount * 2; seed++)
+        for (int seed = 0; seed < Seeds * 2; seed++)
         {
             string? RunOnce(bool hide)
             {
@@ -199,8 +199,8 @@ public partial class LayoutRandomTreeSweepTests
             failures.Add($"seed {seed}: {FirstDifference(expected, incremental).Split('\n')[0]}");
         }
 
-        _output.WriteLine($"{failures.Count} of {SeedCount * 2 - skipped} ({skipped} left out): {string.Join("; ", failures)}");
-        skipped.ShouldBeLessThan(SeedCount * 2 / 4, "only some trees should be left out");
+        _output.WriteLine($"{failures.Count} of {Seeds * 2 - skipped} ({skipped} left out): {string.Join("; ", failures)}");
+        skipped.ShouldBeLessThan(Seeds * 2 / 4, "only some trees should be left out");
         failures.Count.ShouldBe(0, string.Join("; ", failures.Take(5)));
     }
 }
