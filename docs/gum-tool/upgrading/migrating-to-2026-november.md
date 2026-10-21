@@ -100,8 +100,6 @@ To migrate, pass `Gum.Forms.Input.Keys` instead. The enum mirrors the XNA values
 
 The same change adds four members to `ICursor` with default implementations: `VisualPushed` (the same value as `WindowPushed`), `LastX`, `LastY` and `ClearInputValues()`. A class that implements `ICursor` keeps compiling without them.
 
-`ICursor` also gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed` and a read-only `TransformMatrix`, so code that holds an `ICursor` can read what `Cursor` already offered. The `FrameworkElement` members return the control of the matching visual. `TransformMatrix` is a `System.Numerics.Matrix3x2` that defaults to the identity matrix. `Cursor.TransformMatrix` keeps its type and setter (an XNA `Matrix` in MonoGame, KNI and FNA).
-
 ❌ Old:
 
 ```csharp
@@ -121,6 +119,10 @@ if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
     SubmitForm();
 }
 ```
+
+### ICursor Has FrameworkElement Members and TransformMatrix
+
+`ICursor` gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed` and a read-only `TransformMatrix`, so code that holds an `ICursor` can read what `Cursor` already offered. The `FrameworkElement` members return the control of the matching visual. `TransformMatrix` is a `System.Numerics.Matrix3x2` that defaults to the identity matrix. On MonoGame, KNI and FNA, the interface `TransformMatrix` is a 2D conversion of the XNA matrix, so Z and perspective are not part of it. `Cursor.TransformMatrix` keeps its type and setter (an XNA `Matrix` in those runtimes). A class that implements `ICursor` keeps compiling without these members.
 
 ### SkiaResourceManager and EmbeddedResourceContentLoader Are Obsolete
 

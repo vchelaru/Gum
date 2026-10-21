@@ -1376,6 +1376,8 @@ public interface ICursor
     /// The 2D transform applied to the raw device position to produce <see cref="X"/> and <see cref="Y"/>,
     /// used when Gum is drawn to a render target or a modified viewport. Read-only here: set it on the
     /// concrete cursor. Defaults to the identity matrix, which is what a cursor that applies no transform reports.
+    /// On MonoGame, KNI and FNA the concrete <c>Cursor</c> keeps its XNA <c>Matrix</c> property, and this member
+    /// is the platform-neutral 2D view of it (Z and perspective are not included).
     /// </summary>
     System.Numerics.Matrix3x2 TransformMatrix => System.Numerics.Matrix3x2.Identity;
 
