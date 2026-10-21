@@ -2,6 +2,8 @@ using Gum.Mvvm;
 using MonoGameGum.TestsCommon;
 using Shouldly;
 using System.Collections.ObjectModel;
+using System.Collections;
+using System.Collections.Specialized;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms.Data;
@@ -33,6 +35,36 @@ public class ViewModelCollectionSubscriptionTests : BaseTestClass
         }
 
         public CollectionViewModel CloneIt() => Clone<CollectionViewModel>();
+    }
+
+    /// <summary>A collection whose Equals compares contents, like a record or immutable list would.</summary>
+    private class ValueEqualCollection : INotifyCollectionChanged
+    {
+        private readonly List<int> _items = new List<int>();
+
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
+
+        public ValueEqualCollection(params int[] items) => _items.AddRange(items);
+
+        public void Add(int item)
+        {
+            _items.Add(item);
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        public override bool Equals(object? obj) =>
+            obj is ValueEqualCollection other && _items.SequenceEqual(other._items);
+
+        public override int GetHashCode() => _items.Count;
+    }
+
+    private class ValueEqualViewModel : ViewModel
+    {
+        public ValueEqualCollection? Items
+        {
+            get => Get<ValueEqualCollection?>();
+            set => Set(value);
+        }
     }
 
     private static List<string?> Record(ViewModel vm)
@@ -181,5 +213,66 @@ public class ViewModelCollectionSubscriptionTests : BaseTestClass
         b.Add(1);
 
         raised.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Set_EqualButDifferentCollection_DoesNotSubscribeIncoming()
+    {
+        // Equals says equal, so the stored instance is kept and the incoming one is never stored.
+        ValueEqualCollection a = new ValueEqualCollection(1);
+        ValueEqualCollection b = new ValueEqualCollection(1);
+        ValueEqualViewModel vm = new ValueEqualViewModel { Items = a };
+        vm.Items = b;
+        vm.Items.ShouldBeSameAs(a);
+        List<string?> raised = Record(vm);
+
+        b.Add(2);
+
+        raised.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Set_EqualButDifferentCollection_StoredCollectionStillRaises()
+    {
+        ValueEqualCollection a = new ValueEqualCollection(1);
+        ValueEqualCollection b = new ValueEqualCollection(1);
+        ValueEqualViewModel vm = new ValueEqualViewModel { Items = a };
+        vm.Items = b;
+        List<string?> raised = Record(vm);
+
+        a.Add(2);
+
+        raised.ShouldBe(new string?[] { nameof(ValueEqualViewModel.Items) });
+    }
+
+    [Fact]
+    public void Set_NotEqualCollection_ReplacesAndSubscribesIncoming()
+    {
+        ValueEqualCollection a = new ValueEqualCollection(1);
+        ValueEqualCollection b = new ValueEqualCollection(2);
+        ValueEqualViewModel vm = new ValueEqualViewModel { Items = a };
+        vm.Items = b;
+        List<string?> raised = Record(vm);
+
+        a.Add(3);
+        b.Add(3);
+
+        raised.ShouldBe(new string?[] { nameof(ValueEqualViewModel.Items) });
+    }
+
+    [Fact]
+    public void Set_SameCollectionOnClone_Subscribes()
+    {
+        // Pins existing behavior: the clone shares the stored instance but has not subscribed
+        // to it, and setting that same instance subscribes the clone.
+        ObservableCollection<int> a = new ObservableCollection<int>();
+        CollectionViewModel original = new CollectionViewModel { Items = a };
+        CollectionViewModel clone = original.CloneIt();
+        clone.Items = a;
+        List<string?> raisedByClone = Record(clone);
+
+        a.Add(1);
+
+        raisedByClone.ShouldBe(new string?[] { nameof(CollectionViewModel.Items) });
     }
 }
