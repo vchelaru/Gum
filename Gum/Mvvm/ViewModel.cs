@@ -77,6 +77,13 @@ namespace Gum.Mvvm
 
         private void SubscribeToCollection(INotifyCollectionChanged collection, string propertyName)
         {
+            // Listen only to the instance the property actually holds. When Equals says an incoming
+            // collection equals the stored one, the stored one is kept and the incoming one is not.
+            if (ReferenceEquals(propertyDictionary[propertyName], collection) == false)
+            {
+                return;
+            }
+
             collectionHandlers ??= new Dictionary<string, NotifyCollectionChangedEventHandler>();
             if (collectionHandlers.TryGetValue(propertyName, out NotifyCollectionChangedEventHandler? handler) == false)
             {
