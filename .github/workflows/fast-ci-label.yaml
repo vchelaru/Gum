@@ -29,13 +29,20 @@ jobs:
           if [ -z "$id" ]; then echo "No run on $SHA yet; its Changes job will read the label itself."; exit 0; fi
           status="$(gh run view "$id" --json status --jq .status)"
           if [ "$status" != completed ]; then
+            # A run opened together with the label (gh pr create --label) has not reached its Scope step
+            # yet, and that step reads the label live, so there is nothing to redo.
+            reached="$(gh run view "$id" --json jobs --jq '[.jobs[] | select(.name == "Changes") | .steps[] | select((.name | startswith("Scope")) and .status != "pending" and .status != "queued")] | length')"
+            if [ "$reached" = 0 ]; then
+              echo "Run $id has not read the scope yet; its Changes job will read the label itself."
+              exit 0
+            fi
             echo "Cancelling in-flight run $id so the new scope applies."
             gh run cancel "$id"
-            for i in $(seq 1 30); do
-              status="$(gh run view "$id" --json status --jq .status)"
-              [ "$status" = completed ] && break
-              sleep 5
-            done
           fi
-          echo "Re-running run $id."
-          gh run rerun "$id"
+          # A cancelled run can take minutes to finish cancelling, and a rerun is refused until it has.
+          for i in $(seq 1 40); do
+            if gh run rerun "$id"; then echo "Re-ran run $id."; exit 0; fi
+            sleep 15
+          done
+          echo "::error::Run $id never became re-runnable; re-add the fast-ci label once it has completed."
+          exit 1
