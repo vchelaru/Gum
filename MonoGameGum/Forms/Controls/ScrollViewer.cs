@@ -183,6 +183,8 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.SmallChange ?? 0;
         set
         {
+            _smallChange = value;
+            _isSmallChangeSet = true;
             if (verticalScrollBar != null)
             {
                 verticalScrollBar.SmallChange = value;
@@ -194,11 +196,22 @@ public class ScrollViewer :
         }
     }
 
+    double _smallChange;
+    bool _isSmallChangeSet;
+    double _largeChange;
+    bool _isLargeChangeSet;
+
+    /// <summary>
+    /// The amount the scroll bars change when the track is clicked. Defaults to the viewport size;
+    /// assigning a value (in code, or authoring it on the Visual) replaces that.
+    /// </summary>
     public double LargeChange
     {
         get => (verticalScrollBar ?? horizontalScrollBar)?.LargeChange ?? 0;
         set
         {
+            _largeChange = value;
+            _isLargeChangeSet = true;
             if (verticalScrollBar != null)
             {
                 verticalScrollBar.LargeChange = value;
@@ -436,14 +449,25 @@ public class ScrollViewer :
                 // CustomInitialize for UI, so usually this is okay. But eventually 
                 // the user may want to swap out controls and doing so might reset this
                 // value causing confusion? If so, we'd need to store off a temp value.
-                verticalScrollBar.SmallChange = 10;
-                if(verticalScrollBar.ViewportSize > 0)
+                if (_isSmallChangeSet)
+                {
+                    verticalScrollBar.SmallChange = _smallChange;
+                }
+                else
+                {
+                    verticalScrollBar.SetComputedSmallChange(10);
+                }
+                if (_isLargeChangeSet)
+                {
+                    verticalScrollBar.LargeChange = _largeChange;
+                }
+                else if(verticalScrollBar.ViewportSize > 0)
                 {
                     // May 14, 2025 - The ViewportSize can be negative or 0 if the
                     // visual for the ScrollViewer hasn't yet been given a height value.
                     // This may be given a valid height value after the visual is assigned,
                     // but in the meantime the large change should not be set to a negative value.
-                    verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
+                    verticalScrollBar.SetComputedLargeChange(verticalScrollBar.ViewportSize);
                 }
 
 
@@ -470,10 +494,21 @@ public class ScrollViewer :
                 horizontalScrollBar.Orientation = Orientation.Horizontal;
                 horizontalScrollBar.ValueChanged += HandleHorizontalScrollBarValueChanged;
 
-                horizontalScrollBar.SmallChange = 10;
-                if (horizontalScrollBar.ViewportSize > 0)
+                if (_isSmallChangeSet)
                 {
-                    horizontalScrollBar.LargeChange = horizontalScrollBar.ViewportSize;
+                    horizontalScrollBar.SmallChange = _smallChange;
+                }
+                else
+                {
+                    horizontalScrollBar.SetComputedSmallChange(10);
+                }
+                if (_isLargeChangeSet)
+                {
+                    horizontalScrollBar.LargeChange = _largeChange;
+                }
+                else if (horizontalScrollBar.ViewportSize > 0)
+                {
+                    horizontalScrollBar.SetComputedLargeChange(horizontalScrollBar.ViewportSize);
                 }
 
                 horizontalScrollBar.Visual.SizeChanged += HandleHorizontalScrollBarThumbSizeChanged;

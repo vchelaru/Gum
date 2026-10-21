@@ -19,9 +19,8 @@
     <Value xsi:type="xsd:double">10</Value>
     <Description>Step size for arrow buttons / mouse wheel.</Description>
   </FormsProperty>
-  <FormsProperty Type="double" Name="LargeChange">
-    <Value xsi:type="xsd:double">10</Value>
-    <Description>Step size for clicks on the track.</Description>
+  <FormsProperty Type="double?" Name="LargeChange">
+    <Description>Step for track clicks. Empty follows the viewport size.</Description>
   </FormsProperty>
   <FormsProperty Type="Orientation" Name="Orientation">
     <Value xsi:type="xsd:string">Vertical</Value>

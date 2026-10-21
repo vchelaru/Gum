@@ -114,6 +114,7 @@ Logical-only (FormsProperty only — runtime reflects directly):
 - TextBox/PasswordBox: `AcceptsTab`, `IsReadOnly`, `Placeholder`, `MaxLength` (`int?`).
 - TextBox-only: `MaxLettersToShow` (`int?`), `MaxNumberOfLines` (`int?`).
 - Slider/ScrollBar (RangeBase): `Minimum`, `Maximum`, `Value`, `SmallChange`, `LargeChange`.
+- ScrollBar/ScrollViewer `LargeChange` is declared `double?` with no default: unauthored, the runtime computes it from the viewport. `SmallChange` keeps its declared default of 10. A value set in code or authored marks that property as set (`RangeBase.IsLargeChangeSet`/`IsSmallChangeSet`), and the runtime's own writes go through `SetComputedLargeChange`/`SetComputedSmallChange`, which skip once set, so a Visual swap keeps it. A new runtime write to either must use those.
 - Slider-only: `TicksFrequency`, `IsSnapToTickEnabled`.
 - ScrollViewer: `SmallChange`, `LargeChange` (fanned to inner scroll bars by ScrollViewer's setters), `HorizontalScrollBarVisibility`.
 - ItemsControl/ListBox: `Orientation` (`Orientation?`).

@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Forms;
@@ -53,13 +53,6 @@ public class BehaviorFormsPropertyCatalogTests : BaseTestClass
             ["WindowBehavior"] = () => new Gum.Forms.Window(),
         };
 
-    /// <summary>Declared defaults that differ from a computed runtime default; see #6255.</summary>
-    private static readonly HashSet<string> DefaultNotYetPinned = new HashSet<string>(StringComparer.Ordinal)
-    {
-        "ScrollBarBehavior.LargeChange",
-        "ScrollViewerBehavior.LargeChange",
-    };
-
     public static IEnumerable<object[]> BehaviorProperties()
     {
         foreach (BehaviorSave behavior in LoadShippedBehaviors())
@@ -87,7 +80,7 @@ public class BehaviorFormsPropertyCatalogTests : BaseTestClass
         property.ShouldNotBeNull($"{behaviorName} declares {propertyName}, which {control.GetType().Name} does not have");
         property.CanWrite.ShouldBeTrue($"{control.GetType().Name}.{propertyName} has no public setter");
 
-        if (declaration.Value == null || DefaultNotYetPinned.Contains($"{behaviorName}.{propertyName}"))
+        if (declaration.Value == null)
         {
             return;
         }
@@ -99,6 +92,22 @@ public class BehaviorFormsPropertyCatalogTests : BaseTestClass
         object? actual = property.GetValue(control);
 
         actual.ShouldBe(expected, $"{behaviorName}.{propertyName} declares {declaration.Value}, but a new {control.GetType().Name} has {actual}");
+    }
+
+    /// <summary>
+    /// LargeChange is computed from the viewport unless authored, so the behavior exposes the
+    /// property to the tool without a default (#6255).
+    /// </summary>
+    [Theory]
+    [InlineData("ScrollBarBehavior")]
+    [InlineData("ScrollViewerBehavior")]
+    public void LargeChange_ShouldBeDeclaredWithoutDefault(string behaviorName)
+    {
+        BehaviorSave behavior = LoadShippedBehaviors().First(item => item.Name == behaviorName);
+
+        VariableSave declaration = behavior.FormsProperties.First(item => item.Name == "LargeChange");
+
+        declaration.Value.ShouldBeNull();
     }
 
     private static List<BehaviorSave> LoadShippedBehaviors()
