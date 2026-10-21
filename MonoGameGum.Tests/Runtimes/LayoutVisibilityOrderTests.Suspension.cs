@@ -118,6 +118,7 @@ public partial class LayoutVisibilityOrderTests
         s_controlSkips = 0;
         List<string> failures = new();
         int cases = 0;
+        int index = 0;
         foreach (Sizing sizing in new[] { Sizing.Fixed, Sizing.ToChildren })
         {
             foreach (StackKind kind in new[] { StackKind.TopToBottom })
@@ -149,6 +150,11 @@ public partial class LayoutVisibilityOrderTests
                                         {
                                             foreach (bool resumeOuterFirst in new[] { false, true })
                                             {
+                                                if (!SweepScale.Includes(index++))
+                                                {
+                                                    continue;
+                                                }
+
                                                 cases++;
                                                 string? failure = RunAndCompare(levels, kind, sizing, outerStacks: false, steps, reveal,
                                                     resumeBeforeReveal, resumeOuterFirst);
@@ -204,7 +210,7 @@ public partial class LayoutVisibilityOrderTests
         const bool includeHiding = true;
         s_controlSkips = 0;
         List<string> failures = new();
-        const int cases = 2000;
+        int cases = SweepScale.Cases(2000);
         for (int seed = 0; seed < cases; seed++)
         {
             Random random = new(seed + 90000);
