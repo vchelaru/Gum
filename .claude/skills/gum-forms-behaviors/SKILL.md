@@ -94,7 +94,7 @@ Tier 3 is **virtual** — never written to state, never appears in `.gusx`. Stat
 - `BehaviorFormsPropertyApplier.Apply` adds the third tier inline: `ReadEffectiveValue(...) ?? declaration.Value`.
 - `StateReferencingInstanceMember.DefaultValueFallback` lets the variable grid show the declared default in the checkbox/text without writing into state. `IsDefault` still returns true (state empty), preserving the grid's italic/grey styling.
 
-Codegen (FullyInCode GumForms) mirrors tiers 1 and 2 only: it assigns authored values on the control and relies on tier 3 equalling the control's code default (see `CodeGenerator.FillWithFormsPropertyAssignments`, gum-tool-codegen).
+Codegen (FullyInCode GumForms) mirrors tiers 1 and 2 only (and a Forms property authored in a category state, which `ApplyState` also writes onto the control): it assigns authored values on the control and relies on tier 3 equalling the control's code default (see `CodeGenerator.FillWithFormsPropertyAssignments`, gum-tool-codegen).
 
 ### `VariableSave.Description` (v3)
 

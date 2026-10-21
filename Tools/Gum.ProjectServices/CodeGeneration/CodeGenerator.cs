@@ -4620,9 +4620,13 @@ public class CodeGenerator
                 RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
 
+                // The element's own variables are written on its own control, the derived class itself, which
+                // can have a Forms behavior its base type does not.
+                ElementSave controlElement = instance == null ? context.Element : baseElement;
+
                 List<VariableSave> variablesForThisInstance = group
                     .Where(item => GetIfVariableShouldBeIncludedForInstance(
-                        instance, item, baseRecursiveVariableFinder, baseElement, context.CodeOutputProjectSettings.OutputLibrary))
+                        instance, item, baseRecursiveVariableFinder, baseElement, controlElement, context.CodeOutputProjectSettings.OutputLibrary))
                     .ToList();
 
 
@@ -4634,6 +4638,14 @@ public class CodeGenerator
                     var codeLine = GetCodeLine(variable, context.Element, visualApi, stateSave, context);
                     stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
                 }
+
+                // The runtime applies a Forms property authored in a state to the control (ApplyState hands a
+                // name the visual lacks to the Forms control), so it follows the instance's visual variables
+                // the way the default state's does.
+                int previousTabCount = context.TabCount;
+                context.TabCount = tabCount;
+                FillWithFormsPropertyAssignments(context, stringBuilder, instance, stateSave);
+                context.TabCount = previousTabCount;
             }
 
         }
@@ -4781,7 +4793,7 @@ public class CodeGenerator
 
         FillWithVariableAssignments(context, context.StringBuilder, variablesToAssignValues);
 
-        FillWithFormsPropertyAssignments(context, context.Instance);
+        FillWithFormsPropertyAssignments(context, context.StringBuilder, context.Instance, context.Element.DefaultState!);
 
         var variableListsToAssign = context.Element.DefaultState!.VariableLists.Where(item => item.SourceObject == context.Instance.Name)
             .ToArray();
@@ -5598,7 +5610,7 @@ public class CodeGenerator
         // After the instances, like the runtime applying the root control's properties last: a
         // ScrollViewer's setters reach scroll bars that only exist once the instances do.
         context.Instance = null;
-        FillWithFormsPropertyAssignments(context, instance: null);
+        FillWithFormsPropertyAssignments(context, context.StringBuilder, instance: null, context.Element.DefaultState!);
 
         context.TabCount--;
         context.StringBuilder.AppendLine(context.Tabs + "}");
@@ -5969,7 +5981,7 @@ public class CodeGenerator
                 var variablesToConsider = defaultState.Variables
                     .Where(item =>
                     {
-                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement!, outputLibrary);
+                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement!, baseElement!, outputLibrary);
                     })
                     .ToArray();
                 return variablesToConsider;
@@ -5978,7 +5990,7 @@ public class CodeGenerator
         return new VariableSave[0];
     }
 
-    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder, ElementSave instanceBaseElement, OutputLibrary outputLibrary)
+    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder, ElementSave instanceBaseElement, ElementSave formsControlElement, OutputLibrary outputLibrary)
     {
         var shouldInclude =
                                 item.Value != null &&
@@ -6011,7 +6023,7 @@ public class CodeGenerator
         {
             // A Forms property is assigned on the control by FillWithFormsPropertyAssignments; this pass would
             // write it through Visual, which does not have it.
-            shouldInclude = !GetIfFormsPropertyIsAssignedOnControl(instanceBaseElement, item.GetRootName(), outputLibrary);
+            shouldInclude = !GetIfFormsPropertyIsAssignedOnControl(formsControlElement, item.GetRootName(), outputLibrary);
         }
 
         return shouldInclude;
@@ -6021,8 +6033,9 @@ public class CodeGenerator
 
     /// <summary>
     /// Writes the values authored for behavior <see cref="BehaviorSave.FormsProperties"/> declarations
-    /// (ToolTip, LargeChange, IsEnabled, ...) on <paramref name="instance"/>, or in the generated element's own
-    /// default state when it is null, as assignments on the Forms control. This is the code equivalent of the
+    /// (ToolTip, LargeChange, IsEnabled, ...) on <paramref name="instance"/>, or authored for the generated element
+    /// itself when it is null, as assignments on the Forms control. <paramref name="state"/> is the element's default
+    /// state, or a category state whose assignments the generated state code applies. This is the code equivalent of the
     /// runtime BehaviorFormsPropertyApplier, which also writes through reflection and coerces to the control
     /// property's type, so the property is looked up on the real control type and a name it lacks is skipped.
     /// A declaration's default is not written, so output for a project that authors nothing is unchanged. A
@@ -6030,7 +6043,7 @@ public class CodeGenerator
     /// <see cref="GetIfFormsPropertyIsAssignedOnControl"/>, which that pass consults too), and a value that does
     /// not convert is skipped.
     /// </summary>
-    private void FillWithFormsPropertyAssignments(CodeGenerationContext context, InstanceSave? instance)
+    private void FillWithFormsPropertyAssignments(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave? instance, StateSave state)
     {
         if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.GumForms ||
             ObjectFinder.Self.GumProjectSave == null)
@@ -6058,7 +6071,7 @@ public class CodeGenerator
 
         foreach (VariableSave declaration in GetFormsPropertyDeclarations(controlElement))
         {
-            VariableSave? authored = context.Element.DefaultState!.Variables.FirstOrDefault(item =>
+            VariableSave? authored = state.Variables.FirstOrDefault(item =>
                 item.Value != null &&
                 item.SetsValue &&
                 !item.IsCustomVariable &&
@@ -6081,7 +6094,7 @@ public class CodeGenerator
             string? valueInCode = FormsPropertyValueToCode(property.PropertyType, declaration.Type, authored.Value!);
             if (valueInCode != null)
             {
-                context.StringBuilder.AppendLine($"{context.Tabs}{target}.{declaration.Name} = {valueInCode};");
+                stringBuilder.AppendLine($"{context.Tabs}{target}.{declaration.Name} = {valueInCode};");
             }
         }
     }
