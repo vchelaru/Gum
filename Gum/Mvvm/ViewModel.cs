@@ -35,7 +35,29 @@ namespace Gum.Mvvm
     public class ViewModel : INotifyPropertyChanged
     {
         Dictionary<string, List<string>> notifyRelationships = new Dictionary<string, List<string>>();
-        private Dictionary<string, object?> propertyDictionary = new Dictionary<string, object?>();
+        private Dictionary<string, object?> propertyDictionary = new Dictionary<string, object?>(PropertyNameComparer.Instance);
+
+        // Property names almost always arrive as [CallerMemberName] literals, so the same string
+        // instance is looked up again and again. This comparer short-circuits on reference equality and
+        // hashes three characters plus the length instead of the whole string. It still compares by
+        // value, so names that were built at runtime keep working; it only trades hash quality for speed.
+        private sealed class PropertyNameComparer : IEqualityComparer<string>
+        {
+            public static readonly PropertyNameComparer Instance = new PropertyNameComparer();
+
+            public bool Equals(string? x, string? y) => ReferenceEquals(x, y) || string.Equals(x, y, StringComparison.Ordinal);
+
+            public int GetHashCode(string name)
+            {
+                int length = name.Length;
+                if (length == 0)
+                {
+                    return 0;
+                }
+
+                return (((length * 31) + name[0]) * 31 + name[length >> 1]) * 31 + name[length - 1];
+            }
+        }
 
         public int GetPropertyChangeCount() => PropertyChanged?.GetInvocationList().Length ?? 0;
 
@@ -219,7 +241,7 @@ namespace Gum.Mvvm
         {
             var asObject = this.MemberwiseClone();
             var asViewModel = (ViewModel)asObject;
-            asViewModel.propertyDictionary = new Dictionary<string, object?>(this.propertyDictionary);
+            asViewModel.propertyDictionary = new Dictionary<string, object?>(this.propertyDictionary, PropertyNameComparer.Instance);
             // MemberwiseClone copied the reference; the handlers belong to this instance, and a
             // clone replacing a collection must not unsubscribe the original.
             asViewModel.collectionHandlers = null;
