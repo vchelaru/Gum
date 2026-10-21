@@ -191,7 +191,7 @@ public partial class LayoutRandomTreeSweepTests
             {
                 continue;
             }
-            if (control != expected || !ShallowLayoutsLeaveTreeAlone(fresh))
+            if (control != expected)
             {
                 skipped++;
                 continue;
