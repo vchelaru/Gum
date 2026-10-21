@@ -155,6 +155,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // only defers for IsAllLayoutSuspended, not for IsLayoutSuspended. See the comments in
     // CustomSetPropertyOnRenderable.UpdateToFontValues for why.
     bool isFontDirty = false;
+
+    // Hidden descendants hold the layout they skipped, and the walk that gives it to them did not reach this
+    // element's subtree: the element was shown while its own layout was suspended, or a walk from a shown
+    // ancestor skipped it because the user suspended it. Its non-recursive resume runs the walk (#6316).
+    bool resumeDescendantsOnResume = false;
     public bool IsFontDirty
     {
         get => isFontDirty;

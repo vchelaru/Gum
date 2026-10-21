@@ -17,7 +17,7 @@ namespace MonoGameGum.Tests.Runtimes;
 /// (the reference) and once with hide, edit and show steps interleaved in some order. Both must end with the
 /// same rectangle on every element.
 /// </summary>
-public class LayoutVisibilityOrderTests : BaseTestClass
+public partial class LayoutVisibilityOrderTests : BaseTestClass
 {
     #region Scenario
 
@@ -51,7 +51,9 @@ public class LayoutVisibilityOrderTests : BaseTestClass
         AddTextRow,
         LengthenText,
         AddRatioRow,
-        ChangeStackWidthUnitsToRelativeToParent
+        ChangeStackWidthUnitsToRelativeToParent,
+        ReparentFirstRowToOuter,
+        ResizeMiddleContainer
     }
 
     public enum StepKind
@@ -60,10 +62,12 @@ public class LayoutVisibilityOrderTests : BaseTestClass
         Show,
         Op,
         HideRow,
-        ShowRow
+        ShowRow,
+        Suspend,
+        Resume
     }
 
-    public record Step(StepKind Kind, int Target = 0, ContentOp Op = ContentOp.AddRows)
+    public record Step(StepKind Kind, int Target = 0, ContentOp Op = ContentOp.AddRows, bool Recursive = false)
     {
         public override string ToString() => Kind switch
         {
@@ -71,6 +75,8 @@ public class LayoutVisibilityOrderTests : BaseTestClass
             StepKind.Show => $"show[{Target}]",
             StepKind.HideRow => $"hideRow[{Target}]",
             StepKind.ShowRow => $"showRow[{Target}]",
+            StepKind.Suspend => $"suspend[{Target}{(Recursive ? ",recursive" : "")}]",
+            StepKind.Resume => $"resume[{Target}]",
             _ => Op.ToString()
         };
     }
@@ -105,6 +111,8 @@ public class LayoutVisibilityOrderTests : BaseTestClass
         public Sizing Sizing;
         public List<int> HiddenContainers = new();
         public List<int> HiddenRows = new();
+        /// <summary>The containers suspended by a step, and whether each was suspended recursively.</summary>
+        public Dictionary<int, bool> Suspended = new();
     }
 
     private static void SetAbsolute(GraphicalUiElement element, float width, float height)
@@ -224,7 +232,7 @@ public class LayoutVisibilityOrderTests : BaseTestClass
                 }
                 break;
             case ContentOp.RemoveFirstRow:
-                if (s.Rows.Count > 0)
+                if (s.Rows.Count > 0 && ReferenceEquals(s.Rows[0].Parent, s.Stack))
                 {
                     GraphicalUiElement row = s.Rows[0];
                     s.Stack.RemoveChild(row);
@@ -291,6 +299,20 @@ public class LayoutVisibilityOrderTests : BaseTestClass
                 s.Rows.Add(ratio);
                 break;
             }
+            case ContentOp.ReparentFirstRowToOuter:
+                if (s.Rows.Count > 0 && ReferenceEquals(s.Rows[0].Parent, s.Stack))
+                {
+                    GraphicalUiElement row = s.Rows[0];
+                    s.Stack.RemoveChild(row);
+                    s.Outer.AddChild(row);
+                }
+                break;
+            case ContentOp.ResizeMiddleContainer:
+                if (s.Containers.Count > 2 && s.Sizing != Sizing.ToChildren)
+                {
+                    s.Containers[1].Height = s.Containers[1].Height + 20;
+                }
+                break;
             case ContentOp.ChangeStackWidthUnitsToRelativeToParent:
                 if (s.Sizing == Sizing.ToChildren)
                 {
@@ -331,6 +353,33 @@ public class LayoutVisibilityOrderTests : BaseTestClass
             case StepKind.Op:
                 Apply(s, step.Op);
                 break;
+            case StepKind.Suspend:
+                if (!s.Suspended.ContainsKey(step.Target))
+                {
+                    s.Containers[step.Target].SuspendLayout(step.Recursive);
+                    s.Suspended[step.Target] = step.Recursive;
+                }
+                break;
+            case StepKind.Resume:
+                if (s.Suspended.TryGetValue(step.Target, out bool recursive))
+                {
+                    s.Containers[step.Target].ResumeLayout(recursive);
+                    s.Suspended.Remove(step.Target);
+                }
+                break;
+        }
+    }
+
+    private static void ResumeAll(Scenario s, bool outerFirst)
+    {
+        List<int> suspended = s.Suspended.Keys.OrderBy(i => i).ToList();
+        if (!outerFirst)
+        {
+            suspended.Reverse();
+        }
+        foreach (int container in suspended)
+        {
+            Apply(s, new Step(StepKind.Resume, container));
         }
     }
 
@@ -400,10 +449,13 @@ public class LayoutVisibilityOrderTests : BaseTestClass
         return builder.ToString();
     }
 
+    /// <summary>How many sequences were left out because suspension and editing alone already differed.</summary>
+    private static int s_controlSkips;
+
     /// <summary>Runs the steps (and then reveals everything) and returns the first way the result differs from
     /// the never-hidden reference, or null when it matches.</summary>
     private static string? RunAndCompare(int levels, StackKind kind, Sizing sizing, bool outerStacks,
-        IReadOnlyList<Step> steps, RevealOrder revealOrder)
+        IReadOnlyList<Step> steps, RevealOrder revealOrder, bool resumeBeforeReveal = false, bool resumeOuterFirst = true)
     {
         Scenario reference = Build(levels, kind, sizing, outerStacks);
         foreach (Step step in steps.Where(s => s.Kind == StepKind.Op))
@@ -422,12 +474,34 @@ public class LayoutVisibilityOrderTests : BaseTestClass
             }
             Apply(actual, step);
         }
+        if (resumeBeforeReveal)
+        {
+            ResumeAll(actual, resumeOuterFirst);
+        }
         Reveal(actual, revealOrder, hideOrder);
+        ResumeAll(actual, resumeOuterFirst);
         string result = Rectangles(actual);
 
         if (result == expected)
         {
             return null;
+        }
+        if (steps.Any(step => step.Kind == StepKind.Suspend))
+        {
+            // The same steps with nothing hidden. If suspension and editing alone already differ from the visible
+            // tree (a row reparented out of a recursively suspended stack stays suspended, for one), the difference
+            // is not about visibility and is left out.
+            Scenario control = Build(levels, kind, sizing, outerStacks);
+            foreach (Step step in steps.Where(step => step.Kind is StepKind.Op or StepKind.Suspend or StepKind.Resume))
+            {
+                Apply(control, step);
+            }
+            ResumeAll(control, resumeOuterFirst);
+            if (Rectangles(control) != expected)
+            {
+                s_controlSkips++;
+                return null;
+            }
         }
         string[] expectedLines = expected.Split('\n');
         string[] resultLines = result.Split('\n');
@@ -441,7 +515,7 @@ public class LayoutVisibilityOrderTests : BaseTestClass
                 differences.Add($"expected '{e}' but was '{r}'");
             }
         }
-        return $"levels={levels} {kind} {sizing} outerStacks={outerStacks} reveal={revealOrder} steps=[{string.Join(", ", steps)}]: " +
+        return $"levels={levels} {kind} {sizing} outerStacks={outerStacks} reveal={revealOrder} resumeBeforeReveal={resumeBeforeReveal} resumeOuterFirst={resumeOuterFirst} steps=[{string.Join(", ", steps)}]: " +
             string.Join("; ", differences.Take(3));
     }
 
@@ -1146,6 +1220,50 @@ public class LayoutVisibilityOrderTests : BaseTestClass
     }
 
     [Fact]
+    public void ShowingAPanelAfterAFullLayoutOfATreeBuiltSuspended_ShouldCostWhatItCostsInATreeBuiltLive()
+    {
+        // Building under the global suspension leaves every element with a full-depth pending record. The full layout
+        // afterwards does all of it, so nothing should be left to redo the first time a panel is shown.
+        (ContainerRuntime root, ContainerRuntime panel) BuildTree(bool suspended)
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = suspended;
+            ContainerRuntime root = new();
+            SetAbsolute(root, 400, 400);
+            ContainerRuntime panel = new();
+            panel.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+            panel.WidthUnits = DimensionUnitType.Absolute;
+            panel.Width = 100;
+            panel.HeightUnits = DimensionUnitType.RelativeToChildren;
+            panel.Height = 0;
+            root.AddChild(panel);
+            for (int i = 0; i < 40; i++)
+            {
+                ContainerRuntime item = new();
+                item.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+                SetAbsolute(item, 100, 10);
+                panel.AddChild(item);
+                item.AddChild(CreateRow(10, 10));
+            }
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            root.UpdateLayout();
+            return (root, panel);
+        }
+
+        int CostOfHideAndShow((ContainerRuntime root, ContainerRuntime panel) tree)
+        {
+            int before = GraphicalUiElement.UpdateLayoutCallCount;
+            tree.panel.Visible = false;
+            tree.panel.Visible = true;
+            return GraphicalUiElement.UpdateLayoutCallCount - before;
+        }
+
+        int live = CostOfHideAndShow(BuildTree(suspended: false));
+        int afterSuspendedBuild = CostOfHideAndShow(BuildTree(suspended: true));
+
+        afterSuspendedBuild.ShouldBe(live);
+    }
+
+    [Fact]
     public void ChildAddedToAHiddenElement_ShouldMoveTheSiblingsOfItsParentWhenShown()
     {
         // The row is hidden, which leaves the parent narrower; a child added while it is hidden leaves a pending
@@ -1210,11 +1328,9 @@ public class LayoutVisibilityOrderTests : BaseTestClass
         Global
     }
 
-    // SuspendLayout() on the outer container only, then showing everything and calling a non-recursive ResumeLayout()
-    // is left out: that resume does not visit the hidden descendants that were given work, so it needs a decision on
-    // what a non-recursive resume covers (#6316).
     [Theory]
     [InlineData(SuspendMode.Element, true)]
+    [InlineData(SuspendMode.Element, false)]
     [InlineData(SuspendMode.Recursive, true)]
     [InlineData(SuspendMode.Recursive, false)]
     [InlineData(SuspendMode.Global, true)]

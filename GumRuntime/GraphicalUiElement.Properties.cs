@@ -171,6 +171,12 @@ public partial class GraphicalUiElement
                             didUpdate = true;
                         }
                     }
+                    else
+                    {
+                        // The walk above gives descendants the layout they skipped while hidden. Suspension defers
+                        // it to this element's resume, which is not necessarily a recursive one (#6316).
+                        resumeDescendantsOnResume = true;
+                    }
                 }
 
                 if (!didUpdate)

@@ -45,6 +45,8 @@ public partial class GraphicalUiElement
     #region UpdateLayout calls
     // The children depth that reaches every descendant.
     private const int FullUpdateDepth = int.MaxValue / 2;
+    // Any depth this large reaches every descendant of a real tree.
+    private const int UnlimitedDepth = FullUpdateDepth / 2;
 
     public void UpdateLayout()
     {
@@ -193,7 +195,10 @@ public partial class GraphicalUiElement
         #region Originating-call parent climb (early-out; see #3066)
 
         if (currentDirtyState != null &&
-            childrenUpdateDepth >= currentDirtyState.ChildrenUpdateDepth &&
+            (childrenUpdateDepth >= currentDirtyState.ChildrenUpdateDepth ||
+                // A full-depth request loses a level per generation, so a full-depth record would otherwise
+                // outlive the full layout that did all of it.
+                (currentDirtyState.ChildrenUpdateDepth >= UnlimitedDepth && childrenUpdateDepth >= UnlimitedDepth)) &&
             (xOrY == null || xOrY == currentDirtyState.XOrY))
         {
             // Only a layout that does everything that was skipped while this was suspended or hidden clears the

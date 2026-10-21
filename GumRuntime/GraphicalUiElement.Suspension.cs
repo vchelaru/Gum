@@ -107,6 +107,7 @@ public partial class GraphicalUiElement
     {
         currentDirtyState = null;
         isFontDirty = false;
+        resumeDescendantsOnResume = false;
     }
 
     public void ResumeLayout(bool recursive = false)
@@ -141,11 +142,21 @@ public partial class GraphicalUiElement
                     this.UpdateToFontValues();
                 }
             }
+            bool resumeDescendants = resumeDescendantsOnResume && !IsAllLayoutSuspended;
+            if (resumeDescendants)
+            {
+                resumeDescendantsOnResume = false;
+            }
             if (currentDirtyState != null)
             {
                 UpdateLayout(EffectiveDirtyStateParentUpdateType,
                     currentDirtyState.ChildrenUpdateDepth,
                     currentDirtyState.XOrY);
+            }
+            if (resumeDescendants)
+            {
+                // What the user suspended on a descendant stays suspended.
+                ResumeChildrenIfDirty(skipSuspendedChildren: true);
             }
         }
     }
@@ -171,12 +182,13 @@ public partial class GraphicalUiElement
         }
     }
 
-    private bool ResumeLayoutUpdateIfDirtyRecursive()
+    private bool ResumeLayoutUpdateIfDirtyRecursive(bool skipSuspendedChildren = false)
     {
         // mIsLayoutSuspended must be cleared BEFORE calling UpdateFontRecursive so that this
         // element's isFontDirty check inside UpdateFontRecursive passes. Children are still
         // suspended at this point; their suspension is cleared when we recurse below.
         mIsLayoutSuspended = false;
+        resumeDescendantsOnResume = false;
         UpdateFontRecursive();
 
         var didCallUpdateLayout = false;
@@ -189,13 +201,27 @@ public partial class GraphicalUiElement
                 currentDirtyState.XOrY);
         }
 
+        ResumeChildrenIfDirty(skipSuspendedChildren);
+
+        return didCallUpdateLayout;
+    }
+
+    private void ResumeChildrenIfDirty(bool skipSuspendedChildren)
+    {
         if (this.Children?.Count > 0)
         {
             var count = Children.Count;
             for (int i = 0; i < count; i++)
             {
                 var asGraphicalUiElement = Children[i];
-                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
+                if (skipSuspendedChildren && asGraphicalUiElement.mIsLayoutSuspended)
+                {
+                    // Left pending as the user suspended it, but its descendants are not the user's: whoever
+                    // resumes it gives them what they skipped.
+                    asGraphicalUiElement.resumeDescendantsOnResume = true;
+                    continue;
+                }
+                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive(skipSuspendedChildren);
             }
         }
         else
@@ -203,10 +229,13 @@ public partial class GraphicalUiElement
             int count = mWhatThisContains.Count;
             for (int i = 0; i < count; i++)
             {
-                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+                if (skipSuspendedChildren && mWhatThisContains[i].mIsLayoutSuspended)
+                {
+                    mWhatThisContains[i].resumeDescendantsOnResume = true;
+                    continue;
+                }
+                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive(skipSuspendedChildren);
             }
         }
-
-        return didCallUpdateLayout;
     }
 }
