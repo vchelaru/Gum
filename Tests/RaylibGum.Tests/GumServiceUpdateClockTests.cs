@@ -18,7 +18,7 @@ public class GumServiceUpdateClockTests : IDisposable
     private readonly Sprite _sprite = new();
 
     // Held across Uninitialize: a game that keeps its reference re-initializes the same instance.
-    private readonly GumService _service = GumService.Default;
+    private readonly Gum.GumService _service = Gum.GumService.Default;
 
     public GumServiceUpdateClockTests()
     {
