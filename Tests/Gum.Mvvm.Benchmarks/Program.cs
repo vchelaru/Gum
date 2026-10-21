@@ -2,11 +2,14 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
+using Gum.Mvvm;
 using Gum.Mvvm.Benchmarks;
 
 // Usage: dotnet run -c Release --project Tests/Gum.Mvvm.Benchmarks -- [--quick] [--runs <n>] [--type <name>] [--out <file>]
 bool quick = args.Contains("--quick");
 string? typeFilter = ValueOf("--type");
+// --types a,b,c: exact type names (case-insensitive); a quick way to run a subset for alternating comparisons.
+string[]? typeList = ValueOf("--types")?.Split(',');
 string? outputPath = ValueOf("--out");
 Settings settings = quick ? Settings.Quick : Settings.Full;
 if (ValueOf("--runs") is string runsText)
@@ -52,7 +55,7 @@ void RunType<T, TVm, TPlain>(
     where TVm : struct, IAccessor<T>
     where TPlain : struct, IAccessor<T>
 {
-    if (typeFilter != null && !type.Contains(typeFilter, StringComparison.OrdinalIgnoreCase))
+    if (!TypeSelected(type))
     {
         return;
     }
@@ -76,7 +79,29 @@ void RunType<T, TVm, TPlain>(
     Record(type, "vm.setNewSub", n => Loops.SetNew(withSubscriber, a, b, n));
     Record(type, "vm.setNewDep", n => Loops.SetNew(withDependent, a, b, n));
     Record(type, "vm.setQuiet", n => Loops.SetQuiet(viewModel, a, b, n));
+
+#if KEYED
+    // The keyed style (ViewModelProperty<T> passed to GetValue/SetValue): same property, same values.
+    ViewModelProperty<T> key = KeyedBenchViewModel.KeyFor<T>(type);
+    KeyedBenchViewModel keyed = new();
+    KeyedBenchViewModel keyedSubscribed = new();
+    keyedSubscribed.PropertyChanged += subscriber.OnPropertyChanged;
+    KeyedBenchViewModel keyedDependent = new KeyedBenchViewModelWithDependents();
+    KeyedAccessor<T> keyedAccessor = new(keyed, key);
+    KeyedAccessor<T> keyedSubAccessor = new(keyedSubscribed, key);
+    KeyedAccessor<T> keyedDepAccessor = new(keyedDependent, key);
+    Record(type, "kvm.get", n => Loops.Get<T, KeyedAccessor<T>>(keyedAccessor, n));
+    Record(type, "kvm.setSame", n => Loops.SetSame(keyedAccessor, a, n));
+    Record(type, "kvm.setNew", n => Loops.SetNew(keyedAccessor, a, b, n));
+    Record(type, "kvm.setNewSub", n => Loops.SetNew(keyedSubAccessor, a, b, n));
+    Record(type, "kvm.setNewDep", n => Loops.SetNew(keyedDepAccessor, a, b, n));
+    Record(type, "kvm.setQuiet", n => Loops.SetQuiet(keyedAccessor, a, b, n));
+#endif
 }
+
+bool TypeSelected(string type) =>
+    (typeFilter == null || type.Contains(typeFilter, StringComparison.OrdinalIgnoreCase)) &&
+    (typeList == null || typeList.Contains(type, StringComparer.OrdinalIgnoreCase));
 
 RunType("string", m => new VmText(m), m => new PlainText(m), Values.TextA, Values.TextB);
 RunType("ObservableCollection<int>", m => new VmItems(m), m => new PlainItems(m), Values.ItemsA, Values.ItemsB);
@@ -93,7 +118,7 @@ RunType("struct 16 B, no IEquatable", m => new VmUnequatable(m), m => new PlainU
     Values.UnequatableA, Values.UnequatableB);
 
 // ChangeAndNotify over a backing field: the notification cost without the property dictionary.
-if (typeFilter == null)
+if (typeFilter == null && typeList == null)
 {
     foreach ((string type, Func<FieldBackedViewModel, Action<int>> setNew) in new (string, Func<FieldBackedViewModel, Action<int>>)[]
     {
@@ -201,6 +226,19 @@ string BuildReport(Dictionary<(string Type, string Case), Result> results)
     sb.AppendLine(plainAllocations.Count == 0
         ? "Plain cases allocated 0 B/op."
         : $"Plain cases that allocated: {string.Join(", ", plainAllocations)}.");
+
+#if KEYED
+    sb.AppendLine();
+    sb.AppendLine("Keyed style (ViewModelProperty<T> key passed to GetValue/SetValue), ns/op (B/op).");
+    sb.AppendLine();
+    sb.AppendLine("| Type | get | set same | set new | set new + 1 subscriber | set new + [DependsOn] | SetWithoutNotifying |");
+    sb.AppendLine("|---|---|---|---|---|---|---|");
+    foreach (string type in types)
+    {
+        string Cell(string name) => $"{Ns(results[(type, name)])} ({Bytes(results[(type, name)])})";
+        sb.AppendLine($"| {type} | {Cell("kvm.get")} | {Cell("kvm.setSame")} | {Cell("kvm.setNew")} | {Cell("kvm.setNewSub")} | {Cell("kvm.setNewDep")} | {Cell("kvm.setQuiet")} |");
+    }
+#endif
 
     if (results.ContainsKey(("float", "field.setNew")))
     {

@@ -12,6 +12,8 @@
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <!-- Every method is fully optimized on its first JIT, so a timed run never straddles a tier-up. -->
     <TieredCompilation>false</TieredCompilation>
+    <!-- The keyed-style cases need ViewModelProperty<T>; pass -p:NoKeyed=true to build against a ViewModel without it. -->
+    <DefineConstants Condition="'$(NoKeyed)' != 'true'">$(DefineConstants);KEYED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
