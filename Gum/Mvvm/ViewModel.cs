@@ -43,9 +43,9 @@ namespace Gum.Mvvm
         {
             T toReturn = default(T)!;
 
-            if (propertyName != null && propertyDictionary.ContainsKey(propertyName))
+            if (propertyName != null && propertyDictionary.TryGetValue(propertyName, out object? storedValue))
             {
-                toReturn = (T)propertyDictionary[propertyName]!;
+                toReturn = (T)storedValue!;
             }
 
             return toReturn;
@@ -55,13 +55,9 @@ namespace Gum.Mvvm
         {
             if (propertyValue is INotifyCollectionChanged collection)
             {
-                var oldValue = Get<T>(propertyName);
-
-                if (oldValue is INotifyCollectionChanged oldCollection)
-                {
-                    oldCollection.CollectionChanged -= CollectionChangedInternal;
-                }
-                collection.CollectionChanged += CollectionChangedInternal;
+                // Kept out of line: the callback closes over propertyName, and a closure in this
+                // method would be allocated on every Set, collection or not.
+                SubscribeToCollection(collection, Get<T>(propertyName), propertyName);
             }
 
             bool didSet = SetWithoutNotifying(propertyValue, propertyName);
@@ -72,21 +68,20 @@ namespace Gum.Mvvm
             }
 
             return didSet;
+        }
 
+        private void SubscribeToCollection(INotifyCollectionChanged collection, object? oldValue, string? propertyName)
+        {
+            if (oldValue is INotifyCollectionChanged oldCollection)
+            {
+                oldCollection.CollectionChanged -= CollectionChangedInternal;
+            }
+            collection.CollectionChanged += CollectionChangedInternal;
 
             void CollectionChangedInternal(object? sender, NotifyCollectionChangedEventArgs e)
             {
-                var shouldNotify = true;
-                if (e.Action == NotifyCollectionChangedAction.Reset)
-                {
-                    // weirdly enough in Gum, resetting has nulls here even when we 
-                    // call clear. Not sure why so let's return true even if these are null
-                    //shouldNotify = e.OldItems != null || e.NewItems != null;
-                }
-                if (shouldNotify)
-                {
-                    NotifyPropertyChanged(propertyName);
-                }
+                // Reset arrives with null OldItems/NewItems even from Clear(), so every action notifies.
+                NotifyPropertyChanged(propertyName);
             }
         }
 
@@ -95,9 +90,9 @@ namespace Gum.Mvvm
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             var didSet = false;
 
-            if (propertyDictionary.ContainsKey(propertyName))
+            if (propertyDictionary.TryGetValue(propertyName, out object? storedValue))
             {
-                var storage = (T?)propertyDictionary[propertyName];
+                var storage = (T?)storedValue;
                 if (EqualityComparer<T>.Default.Equals(storage, propertyValue) == false)
                 {
                     didSet = true;
@@ -195,10 +190,6 @@ namespace Gum.Mvvm
             var asObject = this.MemberwiseClone();
             var asViewModel = (ViewModel)asObject;
             asViewModel.propertyDictionary = new Dictionary<string, object?>(this.propertyDictionary);
-            foreach(var kvp in propertyDictionary)
-            {
-                asViewModel.propertyDictionary[kvp.Key] = kvp.Value;
-            }
             var asT = (T)asObject;
 
             return asT;
