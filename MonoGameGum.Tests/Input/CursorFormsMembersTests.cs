@@ -93,4 +93,43 @@ public class CursorFormsMembersTests
         cursor.X.ShouldBe(60);
         cursor.Y.ShouldBe(40);
     }
+
+    [Fact]
+    public void TransformMatrix_ThroughInterface_ByDefault_ShouldBeIdentity()
+    {
+        ICursor cursor = new Cursor(null);
+
+        cursor.TransformMatrix.ShouldBe(System.Numerics.Matrix3x2.Identity);
+    }
+
+    [Fact]
+    public void TransformMatrix_ThroughInterface_ShouldTransformPointsLikeTheXnaMatrix()
+    {
+        Cursor cursor = new Cursor(null);
+        cursor.TransformMatrix = Matrix.CreateScale(2, 3, 1) * Matrix.CreateRotationZ(0.5f) * Matrix.CreateTranslation(10, 20, 0);
+        ICursor asInterface = cursor;
+
+        System.Numerics.Vector2 transformed = System.Numerics.Vector2.Transform(new System.Numerics.Vector2(5, 7), asInterface.TransformMatrix);
+
+        XnaVector2 expected = XnaVector2.Transform(new XnaVector2(5, 7), cursor.TransformMatrix);
+        transformed.X.ShouldBe(expected.X, 0.0001f);
+        transformed.Y.ShouldBe(expected.Y, 0.0001f);
+    }
+
+    [Fact]
+    public void TransformMatrix_ThroughInterface_ShouldFollowLaterChanges()
+    {
+        Cursor cursor = new Cursor(null);
+        ICursor asInterface = cursor;
+
+        cursor.TransformMatrix = Matrix.CreateTranslation(4, 9, 0);
+
+        asInterface.TransformMatrix.Translation.ShouldBe(new System.Numerics.Vector2(4, 9));
+    }
+
+    [Fact]
+    public void TransformMatrix_PublicProperty_ShouldKeepItsXnaMatrixType()
+    {
+        typeof(Cursor).GetProperty(nameof(Cursor.TransformMatrix))!.PropertyType.ShouldBe(typeof(Matrix));
+    }
 }

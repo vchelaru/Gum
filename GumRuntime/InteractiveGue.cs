@@ -1351,6 +1351,14 @@ public interface ICursor
     /// </summary>
     int LastY => Y - YChange;
 
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementOver => null;
+
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementPushed => null;
+
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementRightPushed => null;
+
+    System.Numerics.Matrix3x2 TransformMatrix => default;
+
     /// <summary>
     /// Clears the cursor's per-frame input state. Does nothing by default.
     /// </summary>
