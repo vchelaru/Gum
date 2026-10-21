@@ -63,9 +63,11 @@ public partial class GumService
     float? IGumService.GameTime =>
         // On Raylib, GameTime is aliased to double and starts at 0; treat the pre-Update
         // state as null by also returning null when nothing has run Update yet.
-        _hasReceivedUpdate ? (float?)GameTime : null;
+        _previousTotal.HasValue ? (float?)GameTime : null;
 
-    private bool _hasReceivedUpdate;
+    // The clock of the most recent Update, or null before the first one since Initialize. It is the baseline
+    // for the next frame's elapsed time, so the first Update after every Initialize advances by zero.
+    private TimeSpan? _previousTotal;
 
     void IGumService.Initialize() => Initialize(DefaultVisualsVersion.Newest);
 
@@ -173,6 +175,10 @@ public partial class GumService
         // equivalents to the XNALIKE Text - only DefaultFont. default(Font) has
         // BaseSize == 0, the constructor's documented uninitialized-Font sentinel (#3557).
         Text.DefaultFont = default;
+
+        // The clock restarts with the next Initialize, so its first Update advances by zero.
+        _previousTotal = null;
+        GameTime = 0;
     }
 
     partial void AssignClipboard()
@@ -206,16 +212,19 @@ public partial class GumService
 
     public void Update(GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
-        var difference = gameTime - GameTime;
+        // The elapsed time is the gap since the previous Update, and the first Update after Initialize has
+        // no previous one, so it advances by zero. A clock that is not a finite number is a zero-length frame.
+        FrameClock.ToTimeSpans(gameTime, _previousTotal, out TimeSpan total, out TimeSpan elapsed);
+        double totalSeconds = total.TotalSeconds;
 
         UpdatePreamble(roots);
 
-        GameTime = gameTime;
-        _hasReceivedUpdate = true;
+        GameTime = totalSeconds;
+        _previousTotal = total;
 
-        FormsUtilities.Update(gameTime, roots);
+        FormsUtilities.Update(totalSeconds, roots);
 
-        AnimateRoots(difference, roots);
+        AnimateRoots(elapsed.TotalSeconds, roots);
     }
 
     #endregion
