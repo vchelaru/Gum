@@ -25,8 +25,9 @@ public class EmbeddedResourceContentLoaderTests
 
         obsolete.ShouldNotBeNull();
         obsolete!.IsError.ShouldBeFalse();
-        obsolete.Message.ShouldContain("April 2027");
-        obsolete.Message.ShouldContain("November 2027");
+        string message = obsolete.Message ?? string.Empty;
+        message.ShouldContain("April 2027");
+        message.ShouldContain("November 2027");
     }
 
     [Fact]

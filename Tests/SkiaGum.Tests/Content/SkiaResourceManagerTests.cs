@@ -22,8 +22,9 @@ public class SkiaResourceManagerTests
 
         obsolete.ShouldNotBeNull();
         obsolete!.IsError.ShouldBeFalse();
-        obsolete.Message.ShouldContain("April 2027");
-        obsolete.Message.ShouldContain("November 2027");
+        string message = obsolete.Message ?? string.Empty;
+        message.ShouldContain("April 2027");
+        message.ShouldContain("November 2027");
     }
 
     // Regression for #3609: the SKBitmap cache used to be a plain, non-concurrent
