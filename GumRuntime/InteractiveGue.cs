@@ -1352,6 +1352,36 @@ public interface ICursor
     int LastY => Y - YChange;
 
     /// <summary>
+    /// The Forms control whose visual the cursor is currently over, or null if there is none or the
+    /// visual has no Forms control. Defaults to the control of <see cref="VisualOver"/>.
+    /// </summary>
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementOver =>
+        VisualOver?.FormsControlAsObject as Gum.Forms.Controls.FrameworkElement;
+
+    /// <summary>
+    /// The Forms control that was under the cursor when the primary button was pushed, or null if there
+    /// is none or the visual has no Forms control. Defaults to the control of <see cref="VisualPushed"/>.
+    /// </summary>
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementPushed =>
+        VisualPushed?.FormsControlAsObject as Gum.Forms.Controls.FrameworkElement;
+
+    /// <summary>
+    /// The Forms control that was under the cursor when the right button was pushed, or null if there
+    /// is none or the visual has no Forms control. Defaults to the control of <see cref="VisualRightPushed"/>.
+    /// </summary>
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementRightPushed =>
+        VisualRightPushed?.FormsControlAsObject as Gum.Forms.Controls.FrameworkElement;
+
+    /// <summary>
+    /// The 2D transform applied to the raw device position to produce <see cref="X"/> and <see cref="Y"/>,
+    /// used when Gum is drawn to a render target or a modified viewport. Read-only here: set it on the
+    /// concrete cursor. Defaults to the identity matrix, which is what a cursor that applies no transform reports.
+    /// On MonoGame, KNI and FNA the concrete <c>Cursor</c> keeps its XNA <c>Matrix</c> property, and this member
+    /// is the platform-neutral 2D view of it (Z and perspective are not included).
+    /// </summary>
+    System.Numerics.Matrix3x2 TransformMatrix => System.Numerics.Matrix3x2.Identity;
+
+    /// <summary>
     /// Clears the cursor's per-frame input state. Does nothing by default.
     /// </summary>
     void ClearInputValues() { }

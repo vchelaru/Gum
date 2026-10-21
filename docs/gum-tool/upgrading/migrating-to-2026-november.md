@@ -120,6 +120,10 @@ if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 }
 ```
 
+### ICursor Has FrameworkElement Members and TransformMatrix
+
+`ICursor` gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed` and a read-only `TransformMatrix`, so code that holds an `ICursor` can read what `Cursor` already offered. The `FrameworkElement` members return the control of the matching visual. `TransformMatrix` is a `System.Numerics.Matrix3x2` that defaults to the identity matrix. On MonoGame, KNI and FNA, the interface `TransformMatrix` is a 2D conversion of the XNA matrix, so Z and perspective are not part of it. `Cursor.TransformMatrix` keeps its type and setter (an XNA `Matrix` in those runtimes). A class that implements `ICursor` keeps compiling without these members.
+
 ### IGumService Cursor Is Not Null Under a Custom Cursor
 
 `IGumService.Default.Cursor` now returns the cursor Forms is using, including one installed with `FormsUtilities.SetCursor`. It used to return `null` while a custom `ICursor` was installed, and in Skia-based hosts (Silk.NET, Stride, KNI Skia, Unity) it was always `null`. `IGumService` also has a new `Keyboard` member that returns the installed `IInputReceiverKeyboard`, with a default implementation that returns `null`, so a class that implements `IGumService` keeps compiling.
