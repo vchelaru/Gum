@@ -97,14 +97,10 @@ namespace Gum.Mvvm
         // per property, so no property name is hashed on a read or a write. Every keyed property, value
         // type or reference type, lives in a mutable ValueCell<T>. Keyed and by-name storage are
         // separate: a property must use one style consistently. Not thread safe, like the rest.
-        private sealed class KeyComparer : IEqualityComparer<ViewModelProperty>
-        {
-            public static readonly KeyComparer Instance = new KeyComparer();
-            public bool Equals(ViewModelProperty? x, ViewModelProperty? y) => ReferenceEquals(x, y);
-            public int GetHashCode(ViewModelProperty key) => key.Id;
-        }
-
-        private Dictionary<ViewModelProperty, object?>? keyedProperties;
+        // A keyed property's cell lives at index key.Id of this array, so a read is a bounds check, a null
+        // test and a cast: no hashing and no dictionary. The array only grows to the highest key id this
+        // instance has used.
+        private object?[] keyedSlots = Array.Empty<object?>();
 
         // Set while NotifyPropertyChanged runs for a keyed Set, so the default implementation can reuse the
         // key's cached event args. The virtual is still called, so overrides keep seeing every notification.
@@ -119,9 +115,11 @@ namespace Gum.Mvvm
 
         protected T GetValue<T>(ViewModelProperty<T> property)
         {
-            if (keyedProperties != null && keyedProperties.TryGetValue(property, out object? stored))
+            object?[] slots = keyedSlots;
+            int id = property.Id;
+            if ((uint)id < (uint)slots.Length && slots[id] is object stored)
             {
-                return ((ValueCell<T>)stored!).Value;
+                return ((ValueCell<T>)stored).Value;
             }
 
             return default(T)!;
@@ -148,10 +146,11 @@ namespace Gum.Mvvm
 
         protected bool SetValueWithoutNotifying<T>(ViewModelProperty<T> property, T value)
         {
-            keyedProperties ??= new Dictionary<ViewModelProperty, object?>(KeyComparer.Instance);
-            if (keyedProperties.TryGetValue(property, out object? stored))
+            object?[] slots = keyedSlots;
+            int id = property.Id;
+            if ((uint)id < (uint)slots.Length && slots[id] is object stored)
             {
-                ValueCell<T> cell = (ValueCell<T>)stored!;
+                ValueCell<T> cell = (ValueCell<T>)stored;
                 if (EqualityComparer<T>.Default.Equals(cell.Value, value))
                 {
                     return false;
@@ -166,13 +165,19 @@ namespace Gum.Mvvm
                 return true;
             }
 
-            keyedProperties[property] = new ValueCell<T> { Value = value };
+            if ((uint)id >= (uint)slots.Length)
+            {
+                Array.Resize(ref slots, id + 1);
+                keyedSlots = slots;
+            }
+
+            slots[id] = new ValueCell<T> { Value = value };
             return EqualityComparer<T>.Default.Equals(default(T), value) == false;
         }
 
         private void SubscribeToKeyedCollection<T>(INotifyCollectionChanged collection, ViewModelProperty<T> property)
         {
-            if (ReferenceEquals(((ValueCell<T>)keyedProperties![property]!).Value, collection) == false)
+            if (ReferenceEquals(((ValueCell<T>)keyedSlots[property.Id]!).Value, collection) == false)
             {
                 return;
             }
@@ -460,15 +465,14 @@ namespace Gum.Mvvm
                 copiedProperties[pair.Key] = pair.Value is ValueCell cell ? cell.Copy() : pair.Value;
             }
             asViewModel.propertyDictionary = copiedProperties;
-            if (keyedProperties != null)
+            if (keyedSlots.Length != 0)
             {
-                Dictionary<ViewModelProperty, object?> copiedKeyed =
-                    new Dictionary<ViewModelProperty, object?>(keyedProperties.Count, KeyComparer.Instance);
-                foreach (var pair in keyedProperties)
+                object?[] copiedSlots = new object?[keyedSlots.Length];
+                for (int i = 0; i < copiedSlots.Length; i++)
                 {
-                    copiedKeyed[pair.Key] = ((ValueCell)pair.Value!).Copy();
+                    copiedSlots[i] = (keyedSlots[i] as ValueCell)?.Copy();
                 }
-                asViewModel.keyedProperties = copiedKeyed;
+                asViewModel.keyedSlots = copiedSlots;
             }
             // MemberwiseClone copied the reference; the subscriptions belong to this instance, and a
             // clone replacing a collection must not unsubscribe the original.
