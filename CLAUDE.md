@@ -105,6 +105,10 @@ The Gum tool has been progressively migrated to constructor-injected services (`
 
 When draining a **plugin** ctor (`Locator`/`.Self` → `[ImportingConstructor]`), `AllPluginsCompositionTests` guards that every plugin still composes via MEF. If the drain bridges a *new* core service in `PluginManager.AddCoreExports`, mirror that type into `PluginBridgedServiceTypes.All` or the test goes red; a head-only service goes in that head's `IPluginHostConfiguration.AddHeadExports` instead — see the `gum-tool-plugins` skill.
 
+## Concrete Classes and Interfaces in the Runtime
+
+Runtime services come as a concrete class (platform types, most convenient) and an interface (platform-neutral types); Gum's own code depends on the interface, and concrete members keep their platform types. See the "GumService vs IGumService" section of the `gum-service` skill before changing either side.
+
 ## Searching C# Code
 
 There is **no Roslyn/LSP semantic search in this environment** — the local LSP plugin was unreliable (slow workspace-load races on this large repo) and has been disabled. Use `Grep` for searches, and delegate broad "who references/calls/implements this" sweeps to the `Explore` agent, which reads excerpts and can distinguish definitions from uses.
