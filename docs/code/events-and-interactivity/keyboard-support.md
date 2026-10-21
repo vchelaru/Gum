@@ -23,6 +23,21 @@ A focused `ListBox` starts at the top level, where it participates in [tabbing](
 
 To have a `ListBox` start with an item already focused, so the arrow keys work without first pressing Enter, see [Keyboard and Gamepad Navigation](../controls/listbox.md#keyboard-and-gamepad-navigation) on the ListBox page.
 
+## Key Repeat
+
+When a key is held, `KeyTyped` is true when the key is first pressed, again after `RepeatDelay`, then every `RepeatRate`. Arrow keys in a `ListBox` and Backspace in a `TextBox` repeat this way. Both are `TimeSpan` properties on `IInputReceiverKeyboard`, so they are available on any host. They default to 500 ms and 70 ms.
+
+```csharp
+using System;
+
+// Initialize
+GumUI.UseKeyboardDefaults();
+GumUI.Keyboard.RepeatDelay = TimeSpan.FromMilliseconds(300);
+GumUI.Keyboard.RepeatRate = TimeSpan.FromMilliseconds(40);
+```
+
+Typed characters repeat as the operating system repeats them and are not affected. On raylib this includes the newline that Enter inserts into a multi-line `TextBox`. A custom keyboard that does not override the properties ignores what you set.
+
 ## Custom Keyboards
 
 Forms reads keyboard input from the default keyboard that Gum creates at startup. You can replace it with your own implementation of `IInputReceiverKeyboard`, for example to replay recorded keystrokes, drive an on-screen keyboard, or feed input from accessibility tools.
@@ -42,4 +57,10 @@ While a custom keyboard is installed, `GumUI.Keyboard` returns `null` because it
 
 {% hint style="info" %}
 Available in October 2026, or now if building Gum from source.
+{% endhint %}
+
+Code written against `IGumService` can read the active keyboard with `IGumService.Default.Keyboard`.
+
+{% hint style="info" %}
+`IGumService.Default.Keyboard` is available in November 2026, or now if building Gum from source.
 {% endhint %}

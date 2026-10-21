@@ -706,6 +706,207 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
         code.ShouldNotContain("Visual.IsChecked");
     }
 
+    #region Authored in a category state (#6334)
+
+    // The runtime hands a name nothing on the visual claims to the Forms control while applying a state
+    // (MonoGameGum.Tests FormsPropertyInStateTests), so the generated state code assigns it on the control too.
+
+    private static StateSave AddCategoryState(ElementSave element, string categoryName, string stateName, params (string Name, string Type, object Value)[] values)
+    {
+        StateSaveCategory category = element.Categories.FirstOrDefault(item => item.Name == categoryName)
+            ?? new StateSaveCategory { Name = categoryName };
+        if (!element.Categories.Contains(category))
+        {
+            element.Categories.Add(category);
+        }
+        StateSave state = new StateSave { Name = stateName, ParentContainer = element };
+        foreach ((string name, string type, object value) in values)
+        {
+            state.Variables.Add(new VariableSave { Name = name, Type = type, Value = value, SetsValue = true });
+        }
+        category.States.Add(state);
+        return state;
+    }
+
+    private static string GetStateCase(string code, string categoryName, string stateName)
+    {
+        int start = code.IndexOf($"case {categoryName}.{stateName}:", StringComparison.Ordinal);
+        start.ShouldBeGreaterThan(-1, $"no case for {stateName} in:\n{code}");
+        int end = code.IndexOf("break;", start, StringComparison.Ordinal);
+        return code.Substring(start, end - start);
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_ScreenStateAuthoringInstanceFormsProperties_AssignsThemOnTheControl()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(
+            Declare("ToolTip", "string"), Declare("LargeChange", "double", 10d));
+        AddCategoryState(screen, "Cat", "S1",
+            ("ControlInstance.Width", "float", 50f),
+            ("ControlInstance.ToolTip", "string", "in state"),
+            ("ControlInstance.LargeChange", "double", 25d));
+
+        string stateCase = GetStateCase(GenerateElement(screen), "Cat", "S1");
+
+        stateCase.ShouldContain("this.ControlInstance.Visual.Width = 50", Case.Sensitive);
+        stateCase.ShouldContain("this.ControlInstance.ToolTip = @\"in state\";", Case.Sensitive);
+        stateCase.ShouldContain("this.ControlInstance.LargeChange = 25d;", Case.Sensitive);
+        stateCase.ShouldNotContain("Visual.ToolTip");
+        stateCase.ShouldNotContain("Visual.LargeChange");
+        // After the instance's visual variables, like the default state.
+        stateCase.IndexOf("ToolTip", StringComparison.Ordinal).ShouldBeGreaterThan(stateCase.IndexOf("Width", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_ComponentStateAuthoringItsOwnFormsProperties_AssignsThemOnThis()
+    {
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d), Declare("ToolTip", "string"));
+        ComponentSave scroll = AddComponent("ControlStandard", "Container", "ScrollViewerBehavior");
+        AddCategoryState(scroll, "Cat", "S1",
+            ("Width", "float", 50f),
+            ("LargeChange", "double", 25d),
+            ("ToolTip", "string", "tip"));
+
+        string stateCase = GetStateCase(GenerateElement(scroll), "Cat", "S1");
+
+        stateCase.ShouldContain("this.Visual.Width = 50", Case.Sensitive);
+        stateCase.ShouldContain("this.LargeChange = 25d;", Case.Sensitive);
+        stateCase.ShouldContain("this.ToolTip = @\"tip\";", Case.Sensitive);
+        stateCase.ShouldNotContain("Visual.LargeChange");
+        stateCase.ShouldNotContain("Visual.ToolTip");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_DerivedComponentStateAuthoringInheritedFormsProperty_AssignsItOnThis()
+    {
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d));
+        AddComponent("ControlStandard", "Container", "ScrollViewerBehavior");
+        ComponentSave fancy = AddComponent("FancyScroll", "ControlStandard", behaviorName: null);
+        AddCategoryState(fancy, "Cat", "S1", ("LargeChange", "double", 25d));
+
+        string stateCase = GetStateCase(GenerateElement(fancy), "Cat", "S1");
+
+        stateCase.ShouldContain("this.LargeChange = 25d;", Case.Sensitive);
+        stateCase.ShouldNotContain("Visual.LargeChange");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_DerivedComponentStateOverridingBaseAuthoredFormsProperty_AssignsItOnThis()
+    {
+        // The base authors the name in its default state, which makes it a variable of ControlStandard for the
+        // derived component (the shipped CheckBox authors IsChecked).
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d));
+        ComponentSave scroll = AddComponent("ControlStandard", "Container", "ScrollViewerBehavior");
+        Author(scroll, "LargeChange", "double", 15d);
+        ComponentSave fancy = AddComponent("FancyScroll", "ControlStandard", behaviorName: null);
+        AddCategoryState(fancy, "Cat", "S1", ("LargeChange", "double", 25d));
+
+        string stateCase = GetStateCase(GenerateElement(fancy), "Cat", "S1");
+
+        stateCase.ShouldContain("this.LargeChange = 25d;", Case.Sensitive);
+        stateCase.ShouldNotContain("Visual.LargeChange");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_StateAuthoringFormsPropertyOnInstanceOfDerivedComponent_AssignsItOnTheControl()
+    {
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d));
+        ComponentSave scroll = AddComponent("ControlStandard", "Container", "ScrollViewerBehavior");
+        Author(scroll, "LargeChange", "double", 15d);
+        AddComponent("FancyScroll", "ControlStandard", behaviorName: null);
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        Project.Screens.Add(screen);
+        AddInstance(screen, "FancyInstance", "FancyScroll");
+        AddCategoryState(screen, "Cat", "S1", ("FancyInstance.LargeChange", "double", 25d));
+
+        string stateCase = GetStateCase(GenerateElement(screen), "Cat", "S1");
+
+        stateCase.ShouldContain("this.FancyInstance.LargeChange = 25d;", Case.Sensitive);
+        stateCase.ShouldNotContain("Visual.LargeChange");
+    }
+
+    [Theory]
+    [InlineData("CheckBoxBehavior", "IsChecked", "bool", true, "IsChecked = true;")]
+    [InlineData("ScrollBarBehavior", "Orientation", "Orientation", "Horizontal", "Orientation = global::Gum.Forms.Controls.Orientation.Horizontal;")]
+    [InlineData("TextBoxBehavior", "MaxLength", "int?", 12, "MaxLength = 12;")]
+    [InlineData("StackPanelBehavior", "Spacing", "float", 4.5f, "Spacing = 4.5f;")]
+    [InlineData("PanelBehavior", "IsEnabled", "bool", false, "IsEnabled = false;")]
+    public void GetGeneratedCodeForElement_StateAuthoringFormsPropertyOfAnyType_UsesTheSameLiteralAsTheDefaultState(
+        string behaviorName, string name, string type, object value, string expectedAssignment)
+    {
+        (ScreenSave screen, _) = CreateScreen(behaviorName, Declare(name, type));
+        ComponentSave component = Project.Components.First(item => item.Name == "ControlStandard");
+        AddCategoryState(screen, "Cat", "S1", ("ControlInstance." + name, type, value));
+        AddCategoryState(component, "Cat", "S1", (name, type, value));
+        Author(screen, "ControlInstance." + name, type, value);
+
+        string screenCode = GenerateElement(screen);
+        string componentCode = GenerateElement(component);
+
+        string screenCase = GetStateCase(screenCode, "Cat", "S1");
+        screenCase.ShouldContain("this.ControlInstance." + expectedAssignment, Case.Sensitive);
+        screenCase.ShouldNotContain("Visual." + name);
+        GetStateCase(componentCode, "Cat", "S1").ShouldContain("this." + expectedAssignment, Case.Sensitive);
+        // The same literal the default state writes for the instance.
+        screenCode.ShouldContain("this.ControlInstance." + expectedAssignment, Case.Sensitive);
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_StateAuthoringVisualVariableDeclaredByABehavior_StaysOnTheVisual()
+    {
+        // Width is a Container variable, so it is a visual variable even though a behavior declares it.
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("Width", "float"));
+        AddCategoryState(screen, "Cat", "S1", ("ControlInstance.Width", "float", 50f));
+
+        string stateCase = GetStateCase(GenerateElement(screen), "Cat", "S1");
+
+        stateCase.ShouldContain("this.ControlInstance.Visual.Width = 50", Case.Sensitive);
+        stateCase.ShouldNotContain("this.ControlInstance.Width");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_StateAuthoringNameNoBehaviorDeclares_IsNotAssignedOnTheControl()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("ToolTip", "string"));
+        AddCategoryState(screen, "Cat", "S1",
+            ("ControlInstance.Width", "float", 50f),
+            ("ControlInstance.LargeChange", "double", 25d));
+
+        string stateCase = GetStateCase(GenerateElement(screen), "Cat", "S1");
+
+        stateCase.ShouldNotContain("this.ControlInstance.LargeChange");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_StateWithoutFormsProperties_OutputIsUnchanged()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("ToolTip", "string"), Declare("LargeChange", "double", 10d));
+        AddCategoryState(screen, "Cat", "S1", ("ControlInstance.Width", "float", 50f));
+
+        string stateCase = GetStateCase(GenerateElement(screen), "Cat", "S1");
+
+        stateCase.Trim().ReplaceLineEndings("\n").Split('\n').Length.ShouldBe(2);
+        stateCase.ShouldContain("this.ControlInstance.Visual.Width = 50f;", Case.Sensitive);
+        stateCase.ShouldNotContain("ToolTip");
+        stateCase.ShouldNotContain("LargeChange");
+    }
+
+    [Fact]
+    public void GetCodeForState_AuthoringFormsProperty_AssignsItOnTheControl()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        StateSave state = AddCategoryState(screen, "Cat", "S1", ("ControlInstance.LargeChange", "double", 25d));
+        ObjectFinder.Self.GumProjectSave = Project;
+
+        string code = CreateCodeGenerator().GetCodeForState(screen, state, CreateGumForms());
+
+        code.ShouldContain("this.ControlInstance.LargeChange = 25d;", Case.Sensitive);
+        code.ShouldNotContain("Visual.LargeChange");
+    }
+
+    #endregion
+
     private static object SampleValue(string declaredType)
     {
         string type = declaredType.TrimEnd('?');

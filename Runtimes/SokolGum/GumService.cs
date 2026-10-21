@@ -53,7 +53,10 @@ public sealed class GumService : IGumService
 
     IRenderer IGumService.Renderer => SystemManagers.Renderer;
 
-    ICursor IGumService.Cursor => Cursor;
+    // Whichever cursor and keyboard is installed, not the typed Cursor/Keyboard below (null under a custom one).
+    ICursor IGumService.Cursor => FormsUtilities.Cursor!;
+
+    IInputReceiverKeyboard? IGumService.Keyboard => FormsUtilities.Keyboard;
 
     /// <inheritdoc/>
     float? IGumService.GameTime =>

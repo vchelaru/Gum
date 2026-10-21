@@ -226,7 +226,7 @@ For a runnable project with both coordinate spaces interactive in the same frame
 
 ## Disabling the Cursor Globally
 
-The Cursor instance reported by GumService can be replaced with a custom implementation of the `ICursor` interface. A custom `ICursor` class can be created to modify its behavior. For example, the following implementation disables all behavior:
+The cursor that Forms reads each frame can be replaced with a custom implementation of the `ICursor` interface, installed with `FormsUtilities.SetCursor`. A custom `ICursor` class can be created to modify its behavior. For example, the following implementation disables all behavior:
 
 ```csharp
 public class DisabledCursor : ICursor
@@ -297,3 +297,9 @@ protected override void Initialize()
 ```
 
 <figure><img src="../../.gitbook/assets/17_04 48 28.gif" alt=""><figcaption><p><code>DisabledCursor</code> used to prevent UI interaction</p></figcaption></figure>
+
+While a custom cursor is installed, `GumUI.Cursor` returns `null` because it only returns Gum's built-in `Cursor`. Use `FormsUtilities.Cursor` or `IGumService.Default.Cursor` to get whichever cursor is active.
+
+{% hint style="info" %}
+`IGumService.Default.Cursor` and `IGumService.Default.Keyboard` return the installed cursor and keyboard in November 2026, or now if building Gum from source. Before that, `IGumService.Default.Cursor` was also `null` while a custom cursor was installed.
+{% endhint %}

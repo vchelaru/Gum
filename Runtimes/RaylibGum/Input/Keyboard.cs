@@ -18,6 +18,19 @@ public class Keyboard : IInputReceiverKeyboard
     /// </summary>
     internal static Keyboard CreateForCurrentPlatform() => new Keyboard();
 
+    private readonly KeyRepeatTimer _repeatTimer = new();
+
+    /// <summary>
+    /// Delay after the initial key press before repeat typing begins.
+    /// </summary>
+    public System.TimeSpan RepeatDelay { get; set; } = KeyRepeatTimer.DefaultDelay;
+
+    /// <summary>
+    /// Interval between repeated key-typed events while a key is held down, once
+    /// <see cref="RepeatDelay"/> has elapsed.
+    /// </summary>
+    public System.TimeSpan RepeatRate { get; set; } = KeyRepeatTimer.DefaultRate;
+
     double _lastGameTime;
     double _lastGetStringTypedCall = -999;
     string _lastStringTyped = "";
@@ -208,17 +221,18 @@ public class Keyboard : IInputReceiverKeyboard
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Returns true on initial press and on OS-driven repeat intervals (via
-    /// <see cref="Raylib.IsKeyPressedRepeat(KeyboardKey)"/>). This matches MonoGame's
-    /// <c>Keyboard.KeyTyped</c> semantics (push + repeat-rate) closely enough for
-    /// keyboard-driven Forms controls. <c>KeysTyped</c> is also derived from this method,
-    /// so non-character key repeat (e.g. holding Delete in a TextBox) flows through here.
+    /// Returns true on initial press and again at <see cref="RepeatDelay"/>/<see cref="RepeatRate"/>
+    /// intervals while the key is held, matching MonoGame's <c>Keyboard.KeyTyped</c>. Raylib's own
+    /// OS-driven repeat is ignored here so the timing is the same on every host. <c>KeysTyped</c> is also
+    /// derived from this method, so non-character key repeat (e.g. holding Delete in a TextBox) flows
+    /// through here. Characters arrive through <see cref="GetStringTyped"/> and repeat as the OS repeats them.
     /// </remarks>
     public bool KeyTyped(GumKeys key)
     {
         if (_gumToRaylib.TryGetValue(key, out KeyboardKey raylibKey))
         {
-            return IsKeyPressed(raylibKey) || IsKeyPressedRepeat(raylibKey);
+            return IsKeyPressed(raylibKey) ||
+                _repeatTimer.IsRepeatDue(key, _lastGameTime, RepeatDelay, RepeatRate);
         }
         return false;
     }
@@ -230,6 +244,24 @@ public class Keyboard : IInputReceiverKeyboard
     public void Activity(double gameTime)
     {
         _lastGameTime = gameTime;
+
+        // Raylib reports presses and holds, so Gum tracks which keys are held to time their repeat.
+        foreach (KeyValuePair<GumKeys, KeyboardKey> pair in _gumToRaylib)
+        {
+            if (!IsKeyDown(pair.Value))
+            {
+                _repeatTimer.OnKeyReleased(pair.Key);
+            }
+            else if (IsKeyPressed(pair.Value))
+            {
+                _repeatTimer.OnKeyPushed(pair.Key, gameTime);
+            }
+            else
+            {
+                // Held without a seen press (held at startup, or the press frame was skipped).
+                _repeatTimer.OnKeyHeld(pair.Key, gameTime);
+            }
+        }
     }
 
     /// <summary>

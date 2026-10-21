@@ -136,6 +136,14 @@ public partial class Cursor : ICursor
     /// on a render target, or in a modified viewport.</remarks>
     public Matrix TransformMatrix { get; set; } = Matrix.Identity;
 
+#if XNALIKE
+    // ICursor is platform-neutral, so it exposes the 2D part of the XNA matrix.
+    System.Numerics.Matrix3x2 ICursor.TransformMatrix => new System.Numerics.Matrix3x2(
+        TransformMatrix.M11, TransformMatrix.M12,
+        TransformMatrix.M21, TransformMatrix.M22,
+        TransformMatrix.M41, TransformMatrix.M42);
+#endif
+
     /// <summary>
     /// Gets the most recent input device used to interact with the application. This is used
     /// to modify how behavior is interpreted, such as whether to consider cursor hover states.

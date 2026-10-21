@@ -13,6 +13,15 @@ namespace RenderingLibrary
     /// each runtime implements this interface.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// <c>GumService</c> and <c>IGumService</c> are both supported. <c>GumService</c> is strongly typed
+    /// (for example its <c>Cursor</c> and <c>Keyboard</c> are the concrete types) and is the more convenient
+    /// choice for most games. <c>IGumService</c> is for code that should be truly cross-platform, such as
+    /// code that expects to migrate or to support several runtimes, and it exposes interfaces
+    /// (<see cref="ICursor"/>, <see cref="IInputReceiverKeyboard"/>). Neither replaces the other, and each is
+    /// meant to be as fully featured as it can be.
+    /// </para>
+    /// <para>
     /// The no-arg <see cref="Initialize()"/> works on runtimes that do not require
     /// a host object (e.g. Raylib). On runtimes that do — currently MonoGame,
     /// KNI, and FNA, which all need a <c>Game</c> instance — the call throws
@@ -20,6 +29,7 @@ namespace RenderingLibrary
     /// runtimes should call the concrete <c>GumService.Initialize(Game ...)</c>
     /// overload first, then consume <see cref="Default"/> through this
     /// interface from platform-agnostic code.
+    /// </para>
     /// </remarks>
     public interface IGumService
     {
@@ -52,10 +62,26 @@ namespace RenderingLibrary
         IRenderer Renderer { get; }
 
         /// <summary>
-        /// Gets the default cursor for the active runtime — either mouse or touch
-        /// depending on the platform's input capabilities.
+        /// Gets the cursor Forms reads each frame: the runtime's default cursor (mouse or touch, depending on
+        /// the platform's input capabilities), or the one installed with <c>FormsUtilities.SetCursor</c>.
+        /// Null before <c>Initialize</c> and on runtimes without an input pump.
         /// </summary>
+        /// <remarks>
+        /// Unlike the strongly typed <c>GumService.Cursor</c>, which is null while a custom cursor is installed,
+        /// this returns whichever <see cref="ICursor"/> is installed.
+        /// </remarks>
         ICursor Cursor { get; }
+
+        /// <summary>
+        /// Gets the keyboard Forms reads each frame: the runtime's default keyboard, or the one installed with
+        /// <c>FormsUtilities.SetKeyboard</c>. Null before <c>Initialize</c> and on runtimes without an input pump.
+        /// </summary>
+        /// <remarks>
+        /// Unlike the strongly typed <c>GumService.Keyboard</c>, which is null while a custom keyboard is
+        /// installed, this returns whichever <see cref="IInputReceiverKeyboard"/> is installed. The default
+        /// implementation returns null, so an existing implementation of this interface keeps compiling.
+        /// </remarks>
+        IInputReceiverKeyboard? Keyboard => null;
 
         /// <summary>
         /// Gets or sets the width of the canvas, which acts as the root-most
@@ -152,6 +178,140 @@ namespace RenderingLibrary
         /// <param name="index">The zero-based gamepad index to sample.</param>
         /// <param name="time">The total elapsed game time, in seconds.</param>
         void ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) { }
+
+        /// <summary>
+        /// Gets the container for non-modal popups, drawn above <see cref="Root"/>. This is the Forms popup
+        /// root of the service, so a control opened as a popup lands here. The default returns the current
+        /// Forms popup root.
+        /// </summary>
+        InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+
+        /// <summary>
+        /// Gets the topmost container, which blocks input to everything below it while it has children.
+        /// The default returns the current Forms modal root.
+        /// </summary>
+        InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
+
+        /// <summary>
+        /// Gets the gamepads Gum samples each frame. Entries are filled in on runtimes that read gamepads
+        /// and stay unplugged otherwise. The default is an empty array, which a custom implementation that
+        /// has no gamepad input keeps.
+        /// </summary>
+        Gum.Input.GamePad[] Gamepads => System.Array.Empty<Gum.Input.GamePad>();
+
+        /// <summary>
+        /// Per-frame tick. Call once per frame, before <see cref="Draw"/>, with the total number of seconds
+        /// since the application started (not the time since the previous frame). Pumps the cursor,
+        /// keyboard and gamepad, raises control events, runs deferred actions and advances animations, and
+        /// records <paramref name="totalSeconds"/> as <see cref="GameTime"/>. The default does nothing, so a
+        /// custom implementation that has no per-frame work keeps compiling.
+        /// </summary>
+        /// <remarks>
+        /// Each runtime also has its own overload that takes its engine's time type, such as the
+        /// <c>GameTime</c> of MonoGame, KNI and FNA. Both advance the same frame; use the one that matches
+        /// how your code is written.
+        /// </remarks>
+        /// <param name="totalSeconds">
+        /// Total elapsed time in seconds since startup. On MonoGame, KNI, FNA and KNI Skia, a value that is
+        /// not a finite number is a frame of zero length, and a very large one is clamped.
+        /// </param>
+        void Update(double totalSeconds) { }
+
+        /// <summary>
+        /// Registers the default keyboard so Forms controls respond to it. The default adds
+        /// <see cref="Keyboard"/> to <see cref="FrameworkElement.KeyboardsForUiControl"/>.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException">There is no keyboard, because Gum has not been initialized.</exception>
+        void UseKeyboardDefaults()
+        {
+            FrameworkElement.KeyboardsForUiControl.Add(
+                Keyboard ?? throw new System.InvalidOperationException(
+                    "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+        }
+
+        /// <summary>
+        /// Registers <see cref="Gamepads"/> so Forms controls respond to them. The default adds every
+        /// gamepad to <see cref="FrameworkElement.GamePadsForUiControl"/>.
+        /// </summary>
+        void UseGamepadDefaults()
+        {
+            FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+        }
+
+        /// <summary>
+        /// Re-applies all styles on <see cref="Root"/>, <see cref="PopupRoot"/> and <see cref="ModalRoot"/>.
+        /// Call after changing the variable references or default states the visuals read.
+        /// </summary>
+        void RefreshStyles()
+        {
+            Root?.RefreshStyles();
+            PopupRoot?.RefreshStyles();
+            ModalRoot?.RefreshStyles();
+        }
+
+        /// <summary>
+        /// Re-applies all styles on <paramref name="target"/> and its children.
+        /// </summary>
+        /// <param name="target">The root of the subtree to refresh.</param>
+        void RefreshStyles(GraphicalUiElement target)
+        {
+            target?.RefreshStyles();
+        }
+
+        /// <summary>
+        /// Re-translates all live text on <see cref="Root"/>, <see cref="PopupRoot"/> and
+        /// <see cref="ModalRoot"/> using the current language of <see cref="LocalizationService"/>. Text
+        /// assigned through the no-translate path is skipped.
+        /// </summary>
+        void RefreshLocalization()
+        {
+            Root?.RefreshLocalization();
+            PopupRoot?.RefreshLocalization();
+            ModalRoot?.RefreshLocalization();
+        }
+
+        /// <summary>
+        /// Gets the service that provides localized strings, or null when none is assigned. The default
+        /// returns the process-wide active service.
+        /// </summary>
+        Gum.Localization.ILocalizationService? LocalizationService => Gum.Localization.LocalizationRuntimeState.Current;
+
+        /// <summary>
+        /// Gets the result of the most recent project load made by <c>Initialize</c>, including its
+        /// non-fatal warnings. Null when no project file was loaded, and on runtimes that do not record it.
+        /// </summary>
+        Gum.DataTypes.GumLoadResult? LastLoadResult => null;
+
+        /// <summary>
+        /// Exports the live UI tree under <see cref="Root"/> to a Gum project at
+        /// <paramref name="filePath"/>, so it can be opened and inspected in the Gum tool.
+        /// </summary>
+        /// <param name="filePath">Destination .gumx path. Its folder receives the Screens and Standards folders.</param>
+        /// <param name="shake">When true, values equal to the standard-element default are left out.</param>
+        void ExportSnapshot(string filePath, bool shake = true)
+        {
+            new GumSnapshotExporter().ExportSnapshot(Root, filePath, shake);
+        }
+
+        /// <summary>
+        /// Gets the single-threaded synchronization context installed by <see cref="UseSingleThreadedAsync"/>,
+        /// or null if it has not been called. The default is null.
+        /// </summary>
+        Gum.Async.SingleThreadSynchronizationContext? SynchronizationContext => null;
+
+        /// <summary>
+        /// Installs a synchronization context on the calling thread so that <c>await</c> continuations
+        /// resume on the game's main thread, inside <see cref="Update(double)"/>. Call once, after
+        /// <c>Initialize</c>. Skip it when you have installed your own context. The default does nothing.
+        /// </summary>
+        void UseSingleThreadedAsync() { }
+
+        /// <summary>
+        /// Tears the service down so <c>Initialize</c> can be called again: clears the roots, Forms state,
+        /// the loaded project and cached content. A service that is not initialized ignores the call. The
+        /// default does nothing.
+        /// </summary>
+        void Uninitialize() { }
 
         // The per-service state this service owns while it is initialized, or null. Internal: the runtimes
         // reach it through InternalsVisibleTo; it is not part of the public API.
