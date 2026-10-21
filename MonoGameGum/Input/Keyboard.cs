@@ -41,11 +41,11 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     /// <summary>
     /// Delay that happens after initial keypress, before the key is repeated.
     /// </summary>
-    public TimeSpan RepeatDelay { get; set; } = TimeSpan.FromMilliseconds(500);
+    public TimeSpan RepeatDelay { get; set; } = KeyRepeatTimer.DefaultDelay;
     /// <summary>
     /// Time to wait before repeating the character (letter, number, symbol) that is held down
     /// </summary>
-    public TimeSpan RepeatRate { get; set; } = TimeSpan.FromMilliseconds(70);
+    public TimeSpan RepeatRate { get; set; } = KeyRepeatTimer.DefaultRate;
 
     /// <summary>
     /// Returns whether either Shift key is currently held down.

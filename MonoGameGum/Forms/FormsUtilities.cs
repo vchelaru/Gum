@@ -200,6 +200,10 @@ public class FormsUtilities
 
         IInputReceiverKeyboard keyboard = service.CreateKeyboard()!;
 
+        // Repeat starts from the OS settings where Gum can read them. Read once here, so a value the
+        // game sets on the keyboard after Initialize wins.
+        Gum.Input.KeyRepeatDefaults.ApplyOsSettings(keyboard);
+
         for (int i = 0; i < Gamepads.Length; i++)
         {
             Gamepads[i] = new Gum.Input.GamePad();
