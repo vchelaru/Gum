@@ -37,7 +37,7 @@ public partial class LayoutRandomTreeSweepTests
     public void Sweep_ShallowLayoutOfAnyElement_ShouldLeaveTheLaidOutTreeAlone(bool wellFormed)
     {
         List<string> failures = new();
-        for (int seed = 0; seed < SeedCount; seed++)
+        for (int seed = 0; seed < Seeds; seed++)
         {
             Node root = GenerateTree(seed, wellFormed);
             foreach (Node node in Walk(root))
@@ -53,7 +53,7 @@ public partial class LayoutRandomTreeSweepTests
             }
         }
 
-        _output.WriteLine($"{failures.Count} of {SeedCount}: {string.Join("; ", failures)}");
+        _output.WriteLine($"{failures.Count} of {Seeds}: {string.Join("; ", failures)}");
         failures.Count.ShouldBe(0, string.Join("; ", failures.Take(5)));
     }
 }
