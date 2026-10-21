@@ -316,6 +316,7 @@
     * [TextureWidth](code/standard-visuals/spriteruntime/texturewidth.md)
   * [TextRuntime](code/standard-visuals/textruntime/README.md)
     * [BBCode](code/standard-visuals/textruntime/bbcode.md)
+    * [Blend](code/standard-visuals/textruntime/blend.md)
     * [Color](code/standard-visuals/textruntime/color.md)
     * [Fonts](code/standard-visuals/textruntime/fonts.md)
     * [FontScale](code/standard-visuals/textruntime/fontscale.md)

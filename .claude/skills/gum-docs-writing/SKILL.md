@@ -46,6 +46,8 @@ All images live in `docs/.gitbook/assets/`. Reference them using a depth-relativ
 
 Image filename convention: date-time prefix like `15_06 10 06.png` (day_hour minute second) or `08_14 21 31.gif`. Spaces in filenames require wrapping the path in `<>` angle brackets in standard Markdown image syntax: `![](<../../../.gitbook/assets/15_06 10 06.png>)`. In `<figure>` tags the `src` attribute handles spaces without angle brackets.
 
+**Take starting screenshots without being asked.** When a docs change describes something visible in the Gum tool or in a rendered result, take the screenshots yourself, cropped tight, named by the convention above, and wrapped in the same `<figure>` markup as neighboring pages. Pages under `docs/gum-tool/` use the editor: dark theme, only the canvas with its checker background, nothing selected unless the page is about the tool UI. Pages under `docs/code/` use a render of the running game or a sample, not the editor. The user reviews and replaces the images later, so skip red arrows and do not chase a perfect match.
+
 Some images use a generic `image (N).png` naming pattern with numeric suffixes like `image (13) (1).png` — these are GitBook-uploaded files; don't rename them.
 
 ## GitBook-Specific Syntax
@@ -186,6 +188,8 @@ Three habits that cost words without buying understanding:
 - Prefer plain language over jargon when a plainer phrasing says the same thing; keep Gum's own terms (control names, property names) since those are what readers need to look up.
 - Avoid hyphenated compound phrases where a plainer wording works.
 - After writing, re-read a passage and ask whether someone with no technical background could follow it; simplify if not, without dropping needed Gum keywords.
+- **Gum docs never mention FlatRedBall 1 (FRB1).** It has its own docs, differs from Gum use far enough that a note here does not help, and is in maintenance mode while FRB2 replaces it. Do not add new "FRB works differently" text or sections. Leave existing mentions alone.
+- **Describe how to use a feature, not where it is missing.** Do not add lists of platforms or elements that lack a feature, or paragraphs about how one platform differs (Raylib included). Document the behavior users get by following the instructions.
 
 ## Code Sample Placement Comments
 

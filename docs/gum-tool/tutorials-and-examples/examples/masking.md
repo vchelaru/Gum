@@ -42,4 +42,6 @@ The `MinAlpha` value indicates that each pixel should use the minimum alpha, bet
 
 This same concept can be applied with other shapes, such as rectangles to produce rounded corners on images.
 
+The mask uses the whole bounds of the shape, and a shape with both a fill and a stroke masks as one shape. For details see [Whole-Bounds Masking](../../gum-elements/general-properties/blend.md#whole-bounds-masking).
+
 <figure><img src="../../../.gitbook/assets/04_14_02_09.png" alt=""><figcaption><p>Rectangle mask using rounded corners</p></figcaption></figure>

@@ -276,6 +276,18 @@ Both `StrokeDashLength` and `StrokeGapLength` must be greater than `0` for dashe
 | `IsAntialiased` | `bool` | When `true` (the default) the shape's edge is anti-aliased. Set it to `false` for crisp, hard-edged rasterization, useful for pixel-art / retro themes and hairline borders. |
 | `Blend` | `Gum.RenderingLibrary.Blend` | Blend mode used when drawing the shape. Defaults to `Normal`. Other values: `Additive`, `Replace`, `SubtractAlpha`, `ReplaceAlpha`, `MinAlpha`. |
 
+`ReplaceAlpha` and `MinAlpha` use the shape's whole bounds as a mask, and a shape with both a fill and a stroke masks as one shape. See [Whole-Bounds Masking](../../gum-tool/gum-elements/general-properties/blend.md#whole-bounds-masking).
+
+On Skia, the shape runtimes that derive from `SkiaShapeRuntime` (such as `ArcRuntime`, `ColoredCircleRuntime`, and `RoundedRectangleRuntime`) also have a public `Blend` property. Setting it applies to the fill and the stroke.
+
+{% hint style="info" %}
+The public `Blend` property on these Skia shape runtimes is available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+### Edges of shapes
+
+`CircleRuntime` and `RectangleRuntime` are inset so their box is the visible boundary. A `LineRuntime` stroke is centered on the geometric line, so it reaches about half a pixel past its endpoints, and a line drawn along the edge of a box bleeds half a pixel outside the box. This is intentional, because a 1 pixel line inset the same way would vanish.
+
 ### Examples
 
 A filled circle with a soft drop shadow:
@@ -399,6 +411,10 @@ By default shapes are filled. Setting `IsFilled` to `false` produces an outline 
 `ArcRuntime` draws a circular arc inscribed in the shape's `Width` × `Height` bounds. The arc starts at `StartAngle` and sweeps counter-clockwise by `SweepAngle` degrees. Unlike a filled circle, an arc is always stroked: `Thickness` controls how thick the arc is, and `IsEndRounded` controls whether its ends are rounded or flat.
 
 Defaults: `Width` = `Height` = 100, `StartAngle` = 0, `SweepAngle` = 90, `IsEndRounded` = `true`, `Color` = `White`.
+
+A `SweepAngle` of `360` draws the same pixels as a stroked `CircleRuntime` with the same bounds and a `StrokeWidth` equal to the arc's `Thickness`.
+
+When `Width` and `Height` differ, the arc fills the bounds as an ellipse on MonoGame, KNI, FNA, and Skia. A `CircleRuntime` always draws the circle that fits the shorter side. For how `Thickness` behaves in non-square bounds, see the [Arc](../../gum-tool/gum-elements/skia-standard-elements/arc/README.md#arcs-in-non-square-bounds) page.
 
 | Property        | Type    | Description                                                                                              |
 | --------------- | ------- | -------------------------------------------------------------------------------------------------------- |
