@@ -98,7 +98,13 @@ namespace Gum.Mvvm
         // reused afterwards, so the exact delegate that was added is the one removed. A fresh
         // closure per Set never equals the one added earlier, so -= would silently do nothing.
         // Null until a collection is set, so view models without collection properties pay nothing.
-        private Dictionary<string, NotifyCollectionChangedEventHandler>? collectionHandlers;
+        private sealed class CollectionSubscription
+        {
+            public NotifyCollectionChangedEventHandler Handler = null!;
+            public INotifyCollectionChanged? Subscribed;
+        }
+
+        private Dictionary<string, CollectionSubscription>? collectionHandlers;
 
         private void SubscribeToCollection(INotifyCollectionChanged collection, string propertyName)
         {
@@ -109,24 +115,30 @@ namespace Gum.Mvvm
                 return;
             }
 
-            collectionHandlers ??= new Dictionary<string, NotifyCollectionChangedEventHandler>();
-            if (collectionHandlers.TryGetValue(propertyName, out NotifyCollectionChangedEventHandler? handler) == false)
+            collectionHandlers ??= new Dictionary<string, CollectionSubscription>();
+            if (collectionHandlers.TryGetValue(propertyName, out CollectionSubscription? subscription) == false)
             {
-                handler = CreateCollectionHandler(propertyName);
-                collectionHandlers[propertyName] = handler;
+                subscription = new CollectionSubscription { Handler = CreateCollectionHandler(propertyName) };
+                collectionHandlers[propertyName] = subscription;
             }
 
-            // Remove first so setting the same collection again does not subscribe twice.
-            collection.CollectionChanged -= handler;
-            collection.CollectionChanged += handler;
+            // Already listening to this instance: setting the same collection again does nothing.
+            if (ReferenceEquals(subscription.Subscribed, collection))
+            {
+                return;
+            }
+
+            subscription.Subscribed = collection;
+            collection.CollectionChanged += subscription.Handler;
         }
 
         private void UnsubscribeFromCollection(object? oldValue, string propertyName)
         {
             if (oldValue is INotifyCollectionChanged oldCollection &&
-                collectionHandlers!.TryGetValue(propertyName, out NotifyCollectionChangedEventHandler? handler))
+                collectionHandlers!.TryGetValue(propertyName, out CollectionSubscription? subscription))
             {
-                oldCollection.CollectionChanged -= handler;
+                oldCollection.CollectionChanged -= subscription.Handler;
+                subscription.Subscribed = null;
             }
         }
 
