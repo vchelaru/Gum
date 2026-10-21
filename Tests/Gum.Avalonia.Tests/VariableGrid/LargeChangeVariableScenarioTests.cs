@@ -32,6 +32,19 @@ public class LargeChangeVariableScenarioTests
     [AvaloniaTheory]
     [InlineData("Controls/ScrollBar")]
     [InlineData("Controls/ScrollViewer")]
+    public void Instance_LargeChangeDetailText_ExplainsEmpty(string type)
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        InstanceSave instance = FormsTemplateInstanceVariablesScenarioTests.AddStandardInstance(grid, "Instance", type);
+
+        grid.Select(instance);
+
+        grid.Member("LargeChange").DetailText.ShouldBe("Step for track clicks. Empty follows the viewport size.");
+    }
+
+    [AvaloniaTheory]
+    [InlineData("Controls/ScrollBar")]
+    [InlineData("Controls/ScrollViewer")]
     public void Instance_TypingLargeChange_StoresADouble(string type)
     {
         using VariableGridHarness grid = new VariableGridHarness();

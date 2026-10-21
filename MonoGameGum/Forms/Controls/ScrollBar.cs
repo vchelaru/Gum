@@ -198,7 +198,7 @@ public class ScrollBar : RangeBase
         {
             ViewportSize = 10;
             SetComputedLargeChange(10);
-            SmallChange = 2;
+            SetComputedSmallChange(2);
         }
     }
 

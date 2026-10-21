@@ -183,6 +183,8 @@ public class ScrollViewer :
         get => (verticalScrollBar ?? horizontalScrollBar)?.SmallChange ?? 0;
         set
         {
+            _smallChange = value;
+            _isSmallChangeSet = true;
             if (verticalScrollBar != null)
             {
                 verticalScrollBar.SmallChange = value;
@@ -194,6 +196,8 @@ public class ScrollViewer :
         }
     }
 
+    double _smallChange;
+    bool _isSmallChangeSet;
     double _largeChange;
     bool _isLargeChangeSet;
 
@@ -445,7 +449,14 @@ public class ScrollViewer :
                 // CustomInitialize for UI, so usually this is okay. But eventually 
                 // the user may want to swap out controls and doing so might reset this
                 // value causing confusion? If so, we'd need to store off a temp value.
-                verticalScrollBar.SmallChange = 10;
+                if (_isSmallChangeSet)
+                {
+                    verticalScrollBar.SmallChange = _smallChange;
+                }
+                else
+                {
+                    verticalScrollBar.SetComputedSmallChange(10);
+                }
                 if (_isLargeChangeSet)
                 {
                     verticalScrollBar.LargeChange = _largeChange;
@@ -483,7 +494,14 @@ public class ScrollViewer :
                 horizontalScrollBar.Orientation = Orientation.Horizontal;
                 horizontalScrollBar.ValueChanged += HandleHorizontalScrollBarValueChanged;
 
-                horizontalScrollBar.SmallChange = 10;
+                if (_isSmallChangeSet)
+                {
+                    horizontalScrollBar.SmallChange = _smallChange;
+                }
+                else
+                {
+                    horizontalScrollBar.SetComputedSmallChange(10);
+                }
                 if (_isLargeChangeSet)
                 {
                     horizontalScrollBar.LargeChange = _largeChange;

@@ -93,7 +93,36 @@ public abstract class RangeBase :
     /// per mouse wheel tick on a scrollbar, or the amount to change the value in response
     /// to left/right presses on gamepad or keyboard on a Slider.
     /// </summary>
-    public double SmallChange { get; set; }
+    public double SmallChange
+    {
+        get => _smallChange;
+        set
+        {
+            _smallChange = value;
+            IsSmallChangeSet = true;
+        }
+    }
+
+    double _smallChange;
+
+    /// <summary>
+    /// Whether <see cref="SmallChange"/> was assigned (in code, or authored on the Visual in the
+    /// Gum tool). A subclass that derives SmallChange from its layout skips that computation
+    /// while this is true.
+    /// </summary>
+    protected bool IsSmallChangeSet { get; private set; }
+
+    /// <summary>
+    /// Assigns a layout-derived <see cref="SmallChange"/> without marking it as set, so a later
+    /// computation can replace it. Does nothing once <see cref="SmallChange"/> has been assigned.
+    /// </summary>
+    protected internal void SetComputedSmallChange(double value)
+    {
+        if (!IsSmallChangeSet)
+        {
+            _smallChange = value;
+        }
+    }
 
     double minimum = 0;
     /// <summary>
@@ -349,7 +378,7 @@ public abstract class RangeBase :
 
         Minimum = 0;
         Maximum = 100;
-        SmallChange = 10;
+        SetComputedSmallChange(10);
         Value = 0;
 
     }

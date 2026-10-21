@@ -13,9 +13,9 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// ScrollBar and ScrollViewer compute LargeChange from the viewport when a Visual is assigned.
-/// A value authored on the Visual (or set in code) replaces that computation and survives a
-/// Visual swap. See #6255.
+/// ScrollBar and ScrollViewer give LargeChange and SmallChange computed values when a Visual is
+/// assigned. A value authored on the Visual (or set in code) replaces that computation and survives
+/// a Visual swap. See #6255.
 /// </summary>
 public class LargeChangeAuthoredTests : BaseTestClass
 {
@@ -152,6 +152,128 @@ public class LargeChangeAuthoredTests : BaseTestClass
         scrollViewer.Visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
 
         GetVerticalBar(scrollViewer).LargeChange.ShouldBe(25);
+    }
+
+    #endregion
+
+
+    #region SmallChange
+
+    [Fact]
+    public void ScrollBarNew_SmallChangeNotSet_IsTen()
+    {
+        ScrollBar scrollBar = new();
+
+        scrollBar.SmallChange.ShouldBe(10);
+    }
+
+    [Fact]
+    public void ScrollBarWithoutTrackVisual_SmallChangeNotSet_FallsBackToTwo()
+    {
+        ScrollBar scrollBar = new(new Gum.GueDeriving.ContainerRuntime());
+
+        scrollBar.SmallChange.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ScrollViewerNew_SmallChangeNotSet_InnerBarIsTen()
+    {
+        ScrollViewer scrollViewer = new();
+
+        GetVerticalBar(scrollViewer).SmallChange.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Apply_SmallChangeDeclaredWithDefaultTen_SetsTen()
+    {
+        ScrollBarVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        ScrollBar scrollBar = new(visual);
+        AuthorBehavior(visual, new List<(string, object?)> { ("SmallChange", null) }, declaredDefault: 10.0);
+
+        BehaviorFormsPropertyApplier.Apply(scrollBar, visual);
+
+        scrollBar.SmallChange.ShouldBe(10);
+    }
+
+    [Fact]
+    public void ScrollBarVisualSwap_SmallChangeSetInCode_KeepsValue()
+    {
+        ScrollBar scrollBar = new();
+        scrollBar.SmallChange = 7;
+
+        scrollBar.Visual = new Gum.GueDeriving.ContainerRuntime();
+
+        scrollBar.SmallChange.ShouldBe(7);
+    }
+
+    [Fact]
+    public void ScrollViewerVisualSwap_SmallChangeSetInCode_InnerBarsKeepValue()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.SmallChange = 7;
+
+        scrollViewer.Visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+
+        scrollViewer.SmallChange.ShouldBe(7);
+        GetVerticalBar(scrollViewer).SmallChange.ShouldBe(7);
+    }
+
+    [Fact]
+    public void ScrollViewerSetSmallChange_BeforeInnerBarsExist_AppliesWhenVisualAssigned()
+    {
+        ScrollViewer scrollViewer = new(new Gum.GueDeriving.ContainerRuntime());
+        scrollViewer.SmallChange = 7;
+
+        scrollViewer.Visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+
+        GetVerticalBar(scrollViewer).SmallChange.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Apply_SmallChangeAuthored_SetsValueAndSurvivesVisualSwap()
+    {
+        ScrollBarVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        ScrollBar scrollBar = new(visual);
+        AuthorBehavior(visual, new List<(string, object?)> { ("SmallChange", 7.0) }, declaredDefault: 10.0);
+
+        BehaviorFormsPropertyApplier.Apply(scrollBar, visual);
+        scrollBar.SmallChange.ShouldBe(7);
+        scrollBar.Visual = new Gum.GueDeriving.ContainerRuntime();
+
+        scrollBar.SmallChange.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Apply_ScrollViewerSmallChangeAuthored_FansToInnerBarsAndSurvivesVisualSwap()
+    {
+        ScrollViewerVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        ScrollViewer scrollViewer = new(visual);
+        AuthorBehavior(visual, new List<(string, object?)> { ("SmallChange", 7.0) }, declaredDefault: 10.0,
+            behaviorName: StandardFormsBehaviorNames.ScrollViewerBehaviorName);
+
+        BehaviorFormsPropertyApplier.Apply(scrollViewer, visual);
+        GetVerticalBar(scrollViewer).SmallChange.ShouldBe(7);
+        scrollViewer.Visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
+
+        GetVerticalBar(scrollViewer).SmallChange.ShouldBe(7);
+    }
+
+    #endregion
+
+    #region Inner bar values set before the ScrollViewer wraps it
+
+    [Fact]
+    public void ScrollViewerAssign_InnerBarWithChangesSetInCode_KeepsThem()
+    {
+        ScrollViewerVisual visual = new(fullInstantiation: true, tryCreateFormsObject: false);
+        ScrollBar innerBar = (ScrollBar)((InteractiveGue)visual.VerticalScrollBarInstance).FormsControlAsObject!;
+        innerBar.SmallChange = 3;
+        innerBar.LargeChange = 40;
+
+        ScrollViewer scrollViewer = new(visual);
+
+        innerBar.SmallChange.ShouldBe(3);
+        innerBar.LargeChange.ShouldBe(40);
     }
 
     #endregion
