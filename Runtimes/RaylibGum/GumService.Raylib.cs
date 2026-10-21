@@ -173,6 +173,10 @@ public partial class GumService
         // equivalents to the XNALIKE Text - only DefaultFont. default(Font) has
         // BaseSize == 0, the constructor's documented uninitialized-Font sentinel (#3557).
         Text.DefaultFont = default;
+
+        // The clock restarts with the next Initialize, so its first Update advances by zero.
+        GameTime = default;
+        _hasReceivedUpdate = false;
     }
 
     partial void AssignClipboard()

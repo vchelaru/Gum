@@ -107,11 +107,6 @@ public sealed class GumService : IGumService
     public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
     /// <summary>
-    /// Gets the gamepads Gum samples each frame.
-    /// </summary>
-    public GamePad[] Gamepads => FormsUtilities.Gamepads;
-
-    /// <summary>
     /// The popup root, which mirrors <c>FrameworkElement.PopupRoot</c> so callers
     /// can access it from the GumService instance (matches MonoGame/Raylib shape).
     /// </summary>

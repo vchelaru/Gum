@@ -1,8 +1,10 @@
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Wireframe;
 using RenderingLibrary;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
@@ -60,5 +62,46 @@ public class GumServiceInterfaceMembersTests : BaseTestClass
         ((IGumService)service).ModalRoot.ShouldBeSameAs(service.ModalRoot);
         ((IGumService)service).PopupRoot.ShouldBeSameAs(FrameworkElement.PopupRoot);
         service.Uninitialize();
+    }
+
+    [Fact]
+    public void Update_WithTotalSeconds_AfterUninitializeAndInitialize_AdvancesByZeroOnTheFirstFrame()
+    {
+        using ServiceTestGame game = new();
+        game.Start();
+        GumService service = game.CreateService();
+        service.Initialize(game, DefaultVisualsVersion.V3);
+        ((IGumService)service).Update(100.0);
+        service.Uninitialize();
+        service.Initialize(game, DefaultVisualsVersion.V3);
+        ElapsedRecorder recorder = new ElapsedRecorder();
+        service.Root.Children.Add(new InteractiveGue { FormsControlAsObject = recorder });
+
+        ((IGumService)service).Update(1.0);
+
+        recorder.Seconds.ShouldBe(new[] { 0.0 });
+        service.Uninitialize();
+    }
+
+    [Fact]
+    public void GameTime_AfterUninitialize_IsNull()
+    {
+        using ServiceTestGame game = new();
+        game.Start();
+        GumService service = game.CreateService();
+        service.Initialize(game, DefaultVisualsVersion.V3);
+        ((IGumService)service).Update(5.0);
+
+        service.Uninitialize();
+
+        service.GameTime.ShouldBeNull();
+        ((IGumService)service).GameTime.ShouldBeNull();
+    }
+
+    private class ElapsedRecorder : IUpdateEveryFrame
+    {
+        public List<double> Seconds { get; } = new List<double>();
+
+        public void Activity(double secondDifference) => Seconds.Add(secondDifference);
     }
 }

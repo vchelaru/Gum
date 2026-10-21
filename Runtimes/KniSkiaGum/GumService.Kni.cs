@@ -273,12 +273,15 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     /// <see cref="IGumService"/>. It builds the <see cref="XnaGameTime"/> and calls
     /// <see cref="Update(XnaGameTime)"/>, so <see cref="GameTime"/> and an inactive window behave the same.
     /// </summary>
-    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+    /// <param name="totalSeconds">
+    /// Total elapsed time in seconds since startup. A value that is not a finite number is a frame of zero
+    /// length, and a very large one is clamped.
+    /// </param>
     public override void Update(double totalSeconds)
     {
         // The elapsed time is the gap since the previous Update; the first call advances by zero.
-        double elapsedSeconds = GameTime != null ? totalSeconds - GameTime.TotalGameTime.TotalSeconds : 0;
-        Update(new XnaGameTime(TimeSpan.FromSeconds(totalSeconds), TimeSpan.FromSeconds(elapsedSeconds)));
+        FrameClock.ToTimeSpans(totalSeconds, GameTime?.TotalGameTime, out TimeSpan total, out TimeSpan elapsed);
+        Update(new XnaGameTime(total, elapsed));
     }
 
     /// <summary>

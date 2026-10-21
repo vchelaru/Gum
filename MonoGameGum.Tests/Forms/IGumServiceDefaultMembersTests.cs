@@ -112,10 +112,12 @@ public class IGumServiceDefaultMembersTests : BaseTestClass
     [Fact]
     public void RefreshStyles_WithTarget_ByDefault_ShouldReachOnlyThatSubtree()
     {
-        IGumService service = CreateMinimalService().Object;
+        Mock<IGumService> mock = CreateMinimalService();
+        IGumService service = mock.Object;
         Button inTarget = new Button();
         Button elsewhere = new Button();
         InteractiveGue target = CreateRootHolding(inTarget);
+        mock.Setup(x => x.Root).Returns(CreateRootHolding(elsewhere));
         List<object> saved = new List<object>();
         Action<object>? original = GraphicalUiElement.SaveFormsRuntimePropertiesAction;
         GraphicalUiElement.SaveFormsRuntimePropertiesAction = control => saved.Add(control);

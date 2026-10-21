@@ -216,6 +216,34 @@ public class IGumServiceParityTests : BaseTestClass
         Service.GameTime.ShouldBe(30.5f);
     }
 
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void Update_WithANonFiniteValue_IsAZeroLengthFrame(double nonFinite)
+    {
+        ElapsedRecorder recorder = new ElapsedRecorder();
+        Gum.GumService.Default.Root.Children.Add(new InteractiveGue { FormsControlAsObject = recorder });
+        Service.Update(40.0);
+        recorder.Seconds.Clear();
+
+        Should.NotThrow(() => Service.Update(nonFinite));
+
+        recorder.Seconds.ShouldBe(new[] { 0.0 });
+        Service.GameTime.ShouldBe(40f);
+    }
+
+    [Theory]
+    [InlineData(double.MaxValue)]
+    [InlineData(double.MinValue)]
+    public void Update_WithAnOutOfRangeValue_DoesNotThrow(double outOfRange)
+    {
+        Service.Update(40.0);
+
+        Should.NotThrow(() => Service.Update(outOfRange));
+        Should.NotThrow(() => Service.Update(41.0));
+    }
+
     [Fact]
     public void ExportSnapshot_WritesTheProjectFile()
     {

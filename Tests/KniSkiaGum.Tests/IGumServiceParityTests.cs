@@ -28,4 +28,31 @@ public class IGumServiceParityTests : SkiaHostTests.IGumServiceParityTestsBase
 
         GumService.Default.GameTime.ShouldNotBeNull().ElapsedGameTime.ShouldBe(TimeSpan.FromSeconds(0.5));
     }
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void Update_WithANonFiniteValue_DoesNotThrowAndKeepsTheClock(double nonFinite)
+    {
+        IGumService service = GumService.Default;
+        service.Update(9.0);
+
+        Should.NotThrow(() => service.Update(nonFinite));
+
+        service.GameTime.ShouldBe(9f);
+        GumService.Default.GameTime.ShouldNotBeNull().ElapsedGameTime.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Theory]
+    [InlineData(double.MaxValue)]
+    [InlineData(double.MinValue)]
+    public void Update_WithAnOutOfRangeValue_DoesNotThrow(double outOfRange)
+    {
+        IGumService service = GumService.Default;
+        service.Update(9.0);
+
+        Should.NotThrow(() => service.Update(outOfRange));
+        Should.NotThrow(() => service.Update(10.0));
+    }
 }

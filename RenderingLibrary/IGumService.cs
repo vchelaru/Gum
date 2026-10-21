@@ -211,7 +211,10 @@ namespace RenderingLibrary
         /// <c>GameTime</c> of MonoGame, KNI and FNA. Both advance the same frame; use the one that matches
         /// how your code is written.
         /// </remarks>
-        /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+        /// <param name="totalSeconds">
+        /// Total elapsed time in seconds since startup. On MonoGame, KNI, FNA and KNI Skia, a value that is
+        /// not a finite number is a frame of zero length, and a very large one is clamped.
+        /// </param>
         void Update(double totalSeconds) { }
 
         /// <summary>
