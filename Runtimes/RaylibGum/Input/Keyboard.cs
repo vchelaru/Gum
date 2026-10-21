@@ -256,6 +256,11 @@ public class Keyboard : IInputReceiverKeyboard
             {
                 _repeatTimer.OnKeyPushed(pair.Key, gameTime);
             }
+            else
+            {
+                // Held without a seen press (held at startup, or the press frame was skipped).
+                _repeatTimer.OnKeyHeld(pair.Key, gameTime);
+            }
         }
     }
 

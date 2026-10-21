@@ -28,13 +28,15 @@ To have a `ListBox` start with an item already focused, so the arrow keys work w
 When a key is held, `KeyTyped` is true when the key is first pressed, again after `RepeatDelay`, then every `RepeatRate`. Arrow keys in a `ListBox` and Backspace in a `TextBox` repeat this way. Both are `TimeSpan` properties on `IInputReceiverKeyboard`, so they are available on any host. They default to 500 ms and 70 ms.
 
 ```csharp
+using System;
+
 // Initialize
 GumUI.UseKeyboardDefaults();
 GumUI.Keyboard.RepeatDelay = TimeSpan.FromMilliseconds(300);
 GumUI.Keyboard.RepeatRate = TimeSpan.FromMilliseconds(40);
 ```
 
-Typed characters repeat as the operating system repeats them and are not affected. A custom keyboard that does not override the properties ignores what you set.
+Typed characters repeat as the operating system repeats them and are not affected. On raylib this includes the newline that Enter inserts into a multi-line `TextBox`. A custom keyboard that does not override the properties ignores what you set.
 
 ## Custom Keyboards
 

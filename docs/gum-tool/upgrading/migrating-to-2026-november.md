@@ -520,7 +520,7 @@ To migrate, regenerate your code and look at the changes. To drop a stale value,
 
 On raylib and Sokol, holding a key such as an arrow, Backspace, or Delete now repeats after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), the same as MonoGame, KNI, FNA and the Skia hosts. Before this version these two hosts used the operating system's key repeat for `KeyTyped` and `KeysTyped`.
 
-Typed characters are not affected. They still repeat as the operating system repeats them.
+Typed characters are not affected. They still repeat as the operating system repeats them. On raylib this includes the newline that Enter inserts into a multi-line `TextBox`.
 
 `IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` (both `TimeSpan`, settable) as default members. A class that implements `IInputReceiverKeyboard` keeps compiling without them. Without an override the getters return 500 ms and 70 ms and the setters do nothing.
 

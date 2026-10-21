@@ -129,6 +129,23 @@ public class KeyboardRepeatTests : BaseTestClass
     }
 
     [Fact]
+    public void KeyTyped_KeyAlreadyHeldWhenFirstSeen_ShouldRepeatAfterRepeatDelay()
+    {
+        Keyboard keyboard = CreateKeyboard().Object;
+
+        // The press frame was missed (or the key was held at startup): down, but never "pressed".
+        HoldLeft(keyboard, 0);
+        HoldLeft(keyboard, 0.4);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeFalse();
+
+        HoldLeft(keyboard, 0.51);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+
+        HoldLeft(keyboard, 0.59);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+    }
+
+    [Fact]
     public void KeyTyped_WhenOsReportsARepeat_ShouldIgnoreItAndFollowGumTiming()
     {
         Keyboard keyboard = CreateKeyboard().Object;

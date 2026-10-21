@@ -332,6 +332,9 @@ public class Keyboard : IInputReceiverKeyboard
 
         foreach (GumKeys key in _keysDown)
         {
+            // Held without a seen press (held at startup, or the press frame was skipped).
+            _repeatTimer.OnKeyHeld(key, gameTime);
+
             if (!_keysTypedThisFrame.Contains(key) &&
                 _repeatTimer.IsRepeatDue(key, gameTime, RepeatDelay, RepeatRate))
             {

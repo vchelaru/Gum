@@ -37,6 +37,18 @@ internal sealed class KeyRepeatTimer
     }
 
     /// <summary>
+    /// Starts timing <paramref name="key"/> from <paramref name="gameTime"/> only if it is not being timed
+    /// yet. For a key seen held without its push, such as one held at startup or whose press frame was missed.
+    /// </summary>
+    internal void OnKeyHeld(GumKeys key, double gameTime)
+    {
+        if (!_downSince.ContainsKey(key))
+        {
+            _downSince[key] = gameTime;
+        }
+    }
+
+    /// <summary>
     /// Stops timing <paramref name="key"/>. Does nothing if it was not being timed.
     /// </summary>
     internal void OnKeyReleased(GumKeys key)
