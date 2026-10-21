@@ -4621,7 +4621,8 @@ public class CodeGenerator
 
 
                 List<VariableSave> variablesForThisInstance = group
-                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement))
+                    .Where(item => GetIfVariableShouldBeIncludedForInstance(
+                        instance, item, baseRecursiveVariableFinder, baseElement, context.CodeOutputProjectSettings.OutputLibrary))
                     .ToList();
 
 
@@ -4736,6 +4737,11 @@ public class CodeGenerator
                     {
                         shouldInclude = false;
                     }
+
+                    if (GetIfFormsPropertyIsAssignedOnControl(element, rootName, context.CodeOutputProjectSettings.OutputLibrary))
+                    {
+                        shouldInclude = false;
+                    }
                 }
 
                 return shouldInclude;
@@ -4765,7 +4771,8 @@ public class CodeGenerator
 
         #region Get variables to consider
 
-        var variablesToAssignValues = GetVariablesForValueAssignmentCode(context.Instance, context.Element)
+        var variablesToAssignValues = GetVariablesForValueAssignmentCode(
+                context.Instance, context.Element, context.CodeOutputProjectSettings.OutputLibrary)
             .Where(item => item.GetRootName() != "Parent")
             .Where(item => GetIfVariableSupportedBySyntaxVersion(item, context))
             .ToList();
@@ -5942,7 +5949,7 @@ public class CodeGenerator
     }
 
 
-    private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement)
+    private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement, OutputLibrary outputLibrary)
     {
         var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
         if (baseElement == null)
@@ -5962,7 +5969,7 @@ public class CodeGenerator
                 var variablesToConsider = defaultState.Variables
                     .Where(item =>
                     {
-                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement!);
+                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement!, outputLibrary);
                     })
                     .ToArray();
                 return variablesToConsider;
@@ -5971,7 +5978,7 @@ public class CodeGenerator
         return new VariableSave[0];
     }
 
-    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder, ElementSave instanceBaseElement)
+    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder, ElementSave instanceBaseElement, OutputLibrary outputLibrary)
     {
         var shouldInclude =
                                 item.Value != null &&
@@ -6000,6 +6007,13 @@ public class CodeGenerator
                 && ObjectFinder.Self.IsVariableDrivenByToolOnlyReference(instanceBaseElement, rootName));
         }
 
+        if (shouldInclude)
+        {
+            // A Forms property is assigned on the control by FillWithFormsPropertyAssignments; this pass would
+            // write it through Visual, which does not have it.
+            shouldInclude = !GetIfFormsPropertyIsAssignedOnControl(instanceBaseElement, item.GetRootName(), outputLibrary);
+        }
+
         return shouldInclude;
     }
 
@@ -6011,10 +6025,10 @@ public class CodeGenerator
     /// default state when it is null, as assignments on the Forms control. This is the code equivalent of the
     /// runtime BehaviorFormsPropertyApplier, which also writes through reflection and coerces to the control
     /// property's type, so the property is looked up on the real control type and a name it lacks is skipped.
-    /// A declaration's default is not written: the control already has it (pinned by
-    /// BehaviorFormsPropertyCatalogTests), so output for a project that authors nothing is unchanged. A name that
-    /// is also a variable of the control's element is already assigned by the regular variable pass, and a value
-    /// that does not convert is skipped.
+    /// A declaration's default is not written, so output for a project that authors nothing is unchanged. A
+    /// name that is a visual or exposed variable stays with the regular variable pass (see
+    /// <see cref="GetIfFormsPropertyIsAssignedOnControl"/>, which that pass consults too), and a value that does
+    /// not convert is skipped.
     /// </summary>
     private void FillWithFormsPropertyAssignments(CodeGenerationContext context, InstanceSave? instance)
     {
@@ -6038,13 +6052,6 @@ public class CodeGenerator
             return;
         }
 
-        ElementSave? variableOwner = instance == null
-            ? ObjectFinder.Self.GetElementSave(context.Element.BaseType)
-            : controlElement;
-        RecursiveVariableFinder? variableFinder = variableOwner?.DefaultState == null
-            ? null
-            : new RecursiveVariableFinder(variableOwner.DefaultState);
-
         string target = instance == null
             ? "this"
             : "this." + _codeGenerationNameVerifier.ToCSharpName(instance.Name);
@@ -6054,21 +6061,18 @@ public class CodeGenerator
             VariableSave? authored = context.Element.DefaultState!.Variables.FirstOrDefault(item =>
                 item.Value != null &&
                 item.SetsValue &&
+                !item.IsCustomVariable &&
                 item.GetRootName() == declaration.Name &&
                 (instance == null
                     ? string.IsNullOrEmpty(item.SourceObject)
                     : item.SourceObject == instance.Name));
 
-            if (authored == null || variableFinder?.GetVariable(declaration.Name) != null)
+            if (authored == null || GetIfNameIsVisualOrExposedVariable(controlElement, declaration.Name))
             {
                 continue;
             }
 
-            PropertyInfo? property = controlType
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .FirstOrDefault(item => item.Name == declaration.Name &&
-                    item.SetMethod?.IsPublic == true &&
-                    item.GetIndexParameters().Length == 0);
+            PropertyInfo? property = FindWritableProperty(controlType, declaration.Name);
             if (property == null)
             {
                 continue;
@@ -6080,6 +6084,68 @@ public class CodeGenerator
                 context.StringBuilder.AppendLine($"{context.Tabs}{target}.{declaration.Name} = {valueInCode};");
             }
         }
+    }
+
+    /// <summary>
+    /// Whether a variable named <paramref name="name"/> on <paramref name="controlElement"/> is written on the
+    /// Forms control by <see cref="FillWithFormsPropertyAssignments"/>: a declared FormsProperty that is a
+    /// writable property of the control and is neither a variable a standard element defines nor an exposed
+    /// variable. The regular variable pass skips exactly these, so each value is assigned once. A component
+    /// that authors such a name in its own default state makes it a variable of the component, which is why
+    /// "the base element has the variable" cannot decide this.
+    /// </summary>
+    private static bool GetIfFormsPropertyIsAssignedOnControl(ElementSave? controlElement, string name, OutputLibrary outputLibrary)
+    {
+        if (outputLibrary != OutputLibrary.GumForms ||
+            ObjectFinder.Self.GumProjectSave == null ||
+            controlElement == null ||
+            controlElement is StandardElementSave ||
+            GetIfNameIsVisualOrExposedVariable(controlElement, name) ||
+            !GetFormsPropertyDeclarations(controlElement).Any(item => item.Name == name))
+        {
+            return false;
+        }
+
+        Type? controlType = GetFormsControlType(controlElement);
+        return controlType != null && FindWritableProperty(controlType, name) != null;
+    }
+
+    private static PropertyInfo? FindWritableProperty(Type type, string name)
+    {
+        return type
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .FirstOrDefault(item => item.Name == name &&
+                item.SetMethod?.IsPublic == true &&
+                item.GetIndexParameters().Length == 0);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="name"/> is defined by the standard element at the root of the base chain of
+    /// <paramref name="element"/> (a Visual variable) or exposed by an element in the chain.
+    /// </summary>
+    private static bool GetIfNameIsVisualOrExposedVariable(ElementSave element, string name)
+    {
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        ElementSave? current = element;
+
+        while (current != null && visited.Add(current))
+        {
+            if (current is StandardElementSave standard)
+            {
+                return standard.DefaultState?.Variables.Any(item => item.Name == name) == true;
+            }
+
+            if (current.DefaultState?.Variables.Any(item => item.ExposedAsName == name) == true)
+            {
+                return true;
+            }
+
+            current = string.IsNullOrEmpty(current.BaseType)
+                ? null
+                : ObjectFinder.Self.GetElementSave(current.BaseType);
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -6186,12 +6252,16 @@ public class CodeGenerator
             else if (target == typeof(float))
             {
                 float asFloat = Convert.ToSingle(value, CultureInfo.InvariantCulture);
-                return float.IsFinite(asFloat) ? asFloat.ToString(CultureInfo.InvariantCulture) + "f" : null;
+                return float.IsFinite(asFloat)
+                    ? asFloat.ToString(CultureInfo.InvariantCulture) + "f"
+                    : "float." + (float.IsNaN(asFloat) ? "NaN" : asFloat > 0 ? "PositiveInfinity" : "NegativeInfinity");
             }
             else if (target == typeof(double))
             {
                 double asDouble = Convert.ToDouble(value, CultureInfo.InvariantCulture);
-                return double.IsFinite(asDouble) ? asDouble.ToString(CultureInfo.InvariantCulture) + "d" : null;
+                return double.IsFinite(asDouble)
+                    ? asDouble.ToString(CultureInfo.InvariantCulture) + "d"
+                    : "double." + (double.IsNaN(asDouble) ? "NaN" : asDouble > 0 ? "PositiveInfinity" : "NegativeInfinity");
             }
             else if (target.IsEnum)
             {

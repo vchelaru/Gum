@@ -485,6 +485,146 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
     }
 
     [Fact]
+    public void GetCodeForInstance_PropertyAlsoAuthoredInTheComponentDefaultState_IsAssignedOnTheControl()
+    {
+        // The shipped CheckBox component authors IsChecked itself. That makes it a variable of the component,
+        // but not one of the Visual, so an instance's value must not go through .Visual.
+        (ScreenSave screen, InstanceSave instance) = CreateScreen("CheckBoxBehavior", Declare("IsChecked", "bool", false));
+        ComponentSave component = Project.Components.First(item => item.Name == "ControlStandard");
+        Author(component, "IsChecked", "bool", false);
+        Author(screen, "ControlInstance.IsChecked", "bool", true);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.IsChecked = true;", Case.Sensitive);
+        code.ShouldNotContain("Visual.IsChecked");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_PropertyAuthoredOnInnerInstanceOverBaseDefault_IsAssignedOnTheControl()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("ToolTip", "string"), Declare("LargeChange", "double", 10d));
+        ComponentSave scroll = Project.Components.First(item => item.Name == "ControlStandard");
+        Author(scroll, "ToolTip", "string", "base");
+        ComponentSave holder = AddComponent("Holder", "Container", behaviorName: null);
+        InstanceSave inner = AddInstance(holder, "OwnInst", "ControlStandard");
+        Author(holder, "OwnInst.ToolTip", "string", "inner");
+
+        string code = GenerateInstance(inner, holder);
+
+        code.ShouldContain("this.OwnInst.ToolTip = @\"inner\";", Case.Sensitive);
+        code.ShouldNotContain("Visual.ToolTip");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_DerivedComponentOverridingAuthoredBase_IsAssignedOnThis()
+    {
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d));
+        ComponentSave scroll = AddComponent("ScrollViewerStandard", "Container", "ScrollViewerBehavior");
+        Author(scroll, "LargeChange", "double", 30d);
+        ComponentSave derived = AddComponent("Derived", "ScrollViewerStandard", behaviorName: null);
+        Author(derived, "LargeChange", "double", 44d);
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        Project.Screens.Add(screen);
+        InstanceSave instance = AddInstance(screen, "DerivedInstance", "Derived");
+        Author(screen, "DerivedInstance.LargeChange", "double", 77d);
+
+        string derivedCode = GenerateElement(derived);
+        string instanceCode = GenerateInstance(instance, screen);
+
+        derivedCode.ShouldContain("this.LargeChange = 44d;", Case.Sensitive);
+        derivedCode.ShouldNotContain("Visual.LargeChange");
+        instanceCode.ShouldContain("this.DerivedInstance.LargeChange = 77d;", Case.Sensitive);
+        instanceCode.ShouldNotContain("Visual.LargeChange");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_StateSettingAuthoredProperty_DoesNotGoThroughVisual()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("ToolTip", "string"));
+        ComponentSave scroll = Project.Components.First(item => item.Name == "ControlStandard");
+        Author(scroll, "ToolTip", "string", "base");
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        StateSave state = new StateSave { Name = "S1", ParentContainer = screen };
+        state.Variables.Add(new VariableSave
+        {
+            Name = "ControlInstance.ToolTip",
+            Type = "string",
+            Value = "in state",
+            SetsValue = true,
+        });
+        category.States.Add(state);
+        screen.Categories.Add(category);
+
+        string code = GenerateElement(screen);
+
+        code.ShouldNotContain("Visual.ToolTip");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_NameThatIsAlsoAVisualVariable_StaysOnTheVisualOnce()
+    {
+        // Width is a Container variable (see the constructor) and also a FrameworkElement property. The
+        // existing pass keeps owning it, so it is neither dropped nor assigned twice.
+        (ScreenSave screen, InstanceSave instance) = CreateScreen("PanelBehavior", Declare("Width", "double"));
+        Author(screen, "ControlInstance.Width", "float", 100f);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("Visual.Width = 100f;", Case.Sensitive);
+        code.ShouldNotContain("this.ControlInstance.Width = ");
+        System.Text.RegularExpressions.Regex.Matches(code, "Width = 100").Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void GetCodeForInstance_NameExposedByTheComponent_StaysOnTheExposedProperty()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        ComponentSave scroll = Project.Components.First(item => item.Name == "ControlStandard");
+        AddInstance(scroll, "Inner", "Container");
+        scroll.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Inner.Width",
+            Type = "float",
+            SetsValue = true,
+            ExposedAsName = "LargeChange",
+        });
+        Author(screen, "ControlInstance.LargeChange", "float", 25f);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.LargeChange = 25f;", Case.Sensitive);
+        code.ShouldNotContain("Visual.LargeChange");
+        code.ShouldNotContain("LargeChange = 25d");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_NonFiniteNumbers_AreWrittenAsNamedConstants()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScreen(
+            "StackPanelBehavior", Declare("Spacing", "float", 0f));
+        Author(screen, "ControlInstance.Spacing", "float", float.NaN);
+        string spacing = GenerateInstance(instance, screen);
+
+        spacing.ShouldContain("this.ControlInstance.Spacing = float.NaN;", Case.Sensitive);
+    }
+
+    [Theory]
+    [InlineData(double.NaN, "double.NaN")]
+    [InlineData(double.PositiveInfinity, "double.PositiveInfinity")]
+    [InlineData(double.NegativeInfinity, "double.NegativeInfinity")]
+    public void GetCodeForInstance_NonFiniteDouble_IsWrittenAsNamedConstant(double stored, string expected)
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.LargeChange", "double", stored);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain($"this.ControlInstance.LargeChange = {expected};", Case.Sensitive);
+    }
+
+    [Fact]
     public void GetGeneratedCodeForElement_MeadowScrollViewerAndScrollBarInstances_AssignAuthoredFormsProperties()
     {
         // The #6312 repro on a real theme and the shipped behaviors: values authored on a ScrollViewer and
@@ -503,10 +643,12 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         AddInstance(screen, "ScrollViewerInstance", "Meadow/Controls/ScrollViewer");
         AddInstance(screen, "ScrollBarInstance", "Meadow/Controls/ScrollBar");
+        AddInstance(screen, "CheckInstance", "Meadow/Controls/CheckBox");
         Author(screen, "ScrollViewerInstance.LargeChange", "double", 25d);
         Author(screen, "ScrollViewerInstance.SmallChange", "double", 7d);
         Author(screen, "ScrollBarInstance.ToolTip", "string", "Drag me");
         Author(screen, "ScrollBarInstance.LargeChange", "double", 30d);
+        Author(screen, "CheckInstance.IsChecked", "bool", true);
 
         string code = CreateCodeGenerator().GetGeneratedCodeForElement(screen, new CodeOutputElementSettings(), CreateGumForms());
 
@@ -514,6 +656,8 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
         code.ShouldContain("this.ScrollViewerInstance.SmallChange = 7d;", Case.Sensitive);
         code.ShouldContain("this.ScrollBarInstance.ToolTip = @\"Drag me\";", Case.Sensitive);
         code.ShouldContain("this.ScrollBarInstance.LargeChange = 30d;", Case.Sensitive);
+        code.ShouldContain("this.CheckInstance.IsChecked = true;", Case.Sensitive);
+        code.ShouldNotContain("Visual.IsChecked");
     }
 
     private static object SampleValue(string declaredType)
