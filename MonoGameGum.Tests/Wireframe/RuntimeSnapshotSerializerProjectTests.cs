@@ -143,11 +143,11 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
             startInfo.ArgumentList.Add("run");
             startInfo.ArgumentList.Add("--project");
             startInfo.ArgumentList.Add(cliProject);
-            // The build-only ProjectReference already built gumcli in this configuration; reuse it
-            // rather than rebuilding (which made this test take ~37s).
+            // dotnet run builds gumcli (incrementally) in the test's configuration. It is not a
+            // ProjectReference of the test project: that made every build of MonoGameGum.Tests
+            // rebuild the whole CLI graph for the sake of these two tests.
             startInfo.ArgumentList.Add("--configuration");
             startInfo.ArgumentList.Add(configuration);
-            startInfo.ArgumentList.Add("--no-build");
             startInfo.ArgumentList.Add("--");
             startInfo.ArgumentList.Add("check");
             startInfo.ArgumentList.Add(gumxPath);
@@ -508,8 +508,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
 
     private static string DetectBuildConfiguration()
     {
-        // The test runs from .../bin/<Config>/net8.0/; the build-only gumcli reference is built in the
-        // same configuration, so run that one with --no-build.
+        // The test runs from .../bin/<Config>/net8.0/; build and run gumcli in the same configuration.
         DirectoryInfo tfmDirectory = new(AppContext.BaseDirectory);
         if (tfmDirectory.Parent?.Parent?.Name == "bin")
         {
