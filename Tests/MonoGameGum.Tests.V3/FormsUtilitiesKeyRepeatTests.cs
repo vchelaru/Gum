@@ -24,8 +24,8 @@ public class FormsUtilitiesKeyRepeatTests : IDisposable
     private readonly IKeyRepeatSettingsProvider? _originalProvider = KeyRepeatDefaults.Provider;
     private readonly IInputReceiverKeyboard? _originalKeyboard = FormsUtilities.Keyboard;
     private readonly ICursor? _originalCursor = FrameworkElement.MainCursor;
-    private readonly InteractiveGue? _originalPopupRoot = FrameworkElement.PopupRoot;
-    private readonly InteractiveGue? _originalModalRoot = FrameworkElement.ModalRoot;
+    private readonly InteractiveGue _originalPopupRoot = FrameworkElement.PopupRoot!;
+    private readonly InteractiveGue _originalModalRoot = FrameworkElement.ModalRoot!;
 
     public void Dispose()
     {
