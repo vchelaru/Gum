@@ -29,6 +29,9 @@ namespace MonoGameGum.Tests.Runtimes;
 public partial class LayoutRandomTreeSweepTests : BaseTestClass
 {
     private const int SeedCount = 300;
+
+    /// <summary>Seeds for the invariant sweeps: all of <see cref="SeedCount"/> in CI, a tenth locally. The golden file test always runs all of them.</summary>
+    private static int Seeds => SweepScale.Cases(SeedCount);
     private const string GoldenFileName = "LayoutSweepGolden.txt";
 
     private readonly ITestOutputHelper _output;
@@ -679,12 +682,12 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
         return Path.Combine(directory, "Runtimes", GoldenFileName);
     }
 
-    private static List<CaseResult> RunWellFormedCases() => RunAllCases(wellFormed: true);
+    private static List<CaseResult> RunWellFormedCases() => RunAllCases(wellFormed: true, Seeds);
 
-    private static List<CaseResult> RunAllCases(bool wellFormed)
+    private static List<CaseResult> RunAllCases(bool wellFormed, int seeds = SeedCount)
     {
         List<CaseResult> results = new();
-        for (int seed = 0; seed < SeedCount; seed++)
+        for (int seed = 0; seed < seeds; seed++)
         {
             results.Add(RunCase(seed, wellFormed));
         }
@@ -1299,7 +1302,7 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
     [Fact]
     public void Sweep_WellFormedTrees_ShouldNotThrow()
     {
-        List<CaseResult> crashed = RunAllCases(wellFormed: true).Where(r => r.Initial.StartsWith("EXCEPTION")).ToList();
+        List<CaseResult> crashed = RunWellFormedCases().Where(r => r.Initial.StartsWith("EXCEPTION")).ToList();
 
         crashed.Count.ShouldBe(0, string.Join("; ", crashed.Take(5).Select(r => $"seed {r.Seed}: {r.Initial}")));
     }
@@ -1310,7 +1313,7 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
         List<CaseResult> failing = RunWellFormedCases().Where(r => r.Initial != r.AfterSecondLayout).ToList();
         List<string> failures = failing.Select(r => $"seed {r.Seed}").ToList();
 
-        _output.WriteLine($"{failures.Count} of {SeedCount}: {string.Join(", ", failures)}");
+        _output.WriteLine($"{failures.Count} of {Seeds}: {string.Join(", ", failures)}");
         foreach (CaseResult r in failing.Take(3))
         {
             _output.WriteLine($"--- seed {r.Seed}\n{Describe(r.Seed, wellFormed: true)}\n{FirstDifference(r.Initial, r.AfterSecondLayout)}");
@@ -1326,7 +1329,7 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
             .Select(r => $"seed {r.Seed}")
             .ToList();
 
-        _output.WriteLine($"{failures.Count} of {SeedCount}: {string.Join(", ", failures)}");
+        _output.WriteLine($"{failures.Count} of {Seeds}: {string.Join(", ", failures)}");
         failures.Count.ShouldBe(0, string.Join(", ", failures.Take(20)));
     }
 
@@ -1338,7 +1341,7 @@ public partial class LayoutRandomTreeSweepTests : BaseTestClass
             .Select(r => $"seed {r.Seed}")
             .ToList();
 
-        _output.WriteLine($"{failures.Count} of {SeedCount}: {string.Join(", ", failures)}");
+        _output.WriteLine($"{failures.Count} of {Seeds}: {string.Join(", ", failures)}");
         failures.Count.ShouldBe(0, string.Join(", ", failures.Take(20)));
     }
 
