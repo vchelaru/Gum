@@ -130,6 +130,12 @@ if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 
 `GumService.Default.Cursor` and `GumService.Default.Keyboard` are unchanged. They return the concrete `Cursor` and `Keyboard` types, and they are `null` while a custom cursor or keyboard is installed.
 
+### More of GumService Is Reachable Through IGumService
+
+Code that works through `IGumService` can now do what a game does through `GumService`, wherever the member is not tied to one engine. `IGumService` gains `Update(double totalSeconds)`, `PopupRoot`, `ModalRoot`, `Gamepads`, `UseKeyboardDefaults()`, `UseGamepadDefaults()`, `RefreshStyles()`, `RefreshStyles(GraphicalUiElement)`, `RefreshLocalization()`, `LocalizationService`, `LastLoadResult`, `ExportSnapshot(string, bool)`, `SynchronizationContext`, `UseSingleThreadedAsync()` and `Uninitialize()`. `IRenderer` gains `AddLayer()` and `RemoveLayer(Layer)`. All have default implementations, so a class that implements either interface keeps compiling; `GumService` and the existing hosts already provide them.
+
+`Update(double totalSeconds)` takes the total seconds since startup, not the time since the last frame. On MonoGame, KNI and FNA it builds a `GameTime` from it and calls `Update(GameTime)`. On KNI Skia, `Update(double)` now does the same, so it sets `GumService.Default.GameTime` and skips input while the window is inactive, as `Update(GameTime)` already did. On those hosts a value that is not a finite number counts as a frame of zero length. `Uninitialize()` now also resets the clock on MonoGame, KNI and FNA, so the first `Update` after initializing the same service again no longer sees the time of the previous run.
+
 ### SkiaResourceManager and EmbeddedResourceContentLoader Are Obsolete
 
 In SkiaSharp projects (including .NET MAUI), `SkiaGum.Content.SkiaResourceManager` and `SkiaGum.Content.EmbeddedResourceContentLoader` are now `[Obsolete]`. Use `RenderingLibrary.Content.ContentLoader`, which has the same name as the loader on MonoGame, KNI, FNA and raylib. Gum installs it as the default loader, and `GumService.ContentLoader` returns it.
