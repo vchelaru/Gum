@@ -22,6 +22,8 @@ public interface IRenderable
     /// Finer-grained grouping hint read only by <c>BatchKeyGroupedOrderer</c> (e.g. a
     /// Texture2D reference) — unlike <see cref="BatchKey"/>, <c>BatchOrchestrator</c> never
     /// reads this, so it carries no flush cost. Null means "no finer grouping than BatchKey."
+    /// The orderer buckets entries in dictionaries by this key, so a key type that overrides
+    /// <c>Equals</c> must also override <c>GetHashCode</c>.
     /// </summary>
     public object? BatchSortKey => null;
 
