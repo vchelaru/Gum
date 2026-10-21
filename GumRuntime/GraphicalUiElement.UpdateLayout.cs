@@ -180,6 +180,10 @@ public partial class GraphicalUiElement
             var parentAsIVisible = Parent as IVisible;
             if (Visible == false && parentAsIVisible?.AbsoluteVisible == false && !this.IsInRenderTargetRecursively())
             {
+                // Skipped like the suspended case above, so what was asked has to be remembered for when this
+                // is shown. Rows added to this element, or a resize of them, climb here and stop; without the
+                // record nothing relays them out after this and its parent are shown (#6307).
+                MakeDirty(parentUpdateType, childrenUpdateDepth, xOrY);
                 return;
             }
         }
@@ -188,7 +192,15 @@ public partial class GraphicalUiElement
 
         #region Originating-call parent climb (early-out; see #3066)
 
-        currentDirtyState = null;
+        if (currentDirtyState != null &&
+            childrenUpdateDepth >= currentDirtyState.ChildrenUpdateDepth &&
+            (xOrY == null || xOrY == currentDirtyState.XOrY))
+        {
+            // Only a layout that does everything that was skipped while this was suspended or hidden clears the
+            // record. A shallower or narrower one (a parent measuring this element, or the Visible setter) leaves
+            // the rest recorded, such as the children of a stack that was asked to lay them out while hidden (#6307).
+            currentDirtyState = null;
+        }
 
 
         // May 15, 2014

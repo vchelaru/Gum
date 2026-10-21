@@ -26,7 +26,7 @@ namespace MonoGameGum.Tests.Runtimes;
 /// Set <c>GUM_UPDATE_LAYOUT_SWEEP=1</c> to rewrite the golden file and review the diff; set
 /// <c>GUM_DUMP_LAYOUT_SWEEP=&lt;folder&gt;</c> to write every case's full geometry for diffing two builds.
 /// </summary>
-public class LayoutRandomTreeSweepTests : BaseTestClass
+public partial class LayoutRandomTreeSweepTests : BaseTestClass
 {
     private const int SeedCount = 300;
     private const string GoldenFileName = "LayoutSweepGolden.txt";
