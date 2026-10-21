@@ -28,11 +28,13 @@ When `Width` and `Height` differ, an Arc fills the bounds as an ellipse. A Circl
 
 On MonoGame, KNI, and FNA, an Arc in non-square bounds is a circle at the shorter side stretched to fill the bounds. This has three effects:
 
-* `Thickness` is exact along the shorter side and larger along the longer side. For example, an Arc that is 60 by 40 with a `Thickness` of `8` is `8` thick along the short side and `12` thick along the long side.
-* A `Thickness` below `2` draws about `2` thick.
+* `Thickness` is exact across the shorter dimension and larger across the longer one. For example, an Arc that is 60 wide and 40 tall with a `Thickness` of `8` is `8` thick at the top and bottom and about `12` thick at the left and right.
+* With anti-aliasing on (the default), a `Thickness` below `2` draws about `2` thick.
 * Dashes, round ends, and radial gradients stretch with the Arc.
 
 Skia draws the same `Thickness` all the way around the Arc.
+
+<figure><img src="../../../../.gitbook/assets/21_05 10 33.png" alt=""><figcaption><p>Arc that is 60 wide and 40 tall with a Thickness of 8</p></figcaption></figure>
 
 {% hint style="info" %}
 The elliptical Arc on MonoGame, KNI, and FNA is available in November 2026, or now if building Gum from source. Before then, it drew a circle as wide as `Width`, which overflowed bounds that were shorter than they were wide.

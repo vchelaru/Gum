@@ -46,7 +46,7 @@ All images live in `docs/.gitbook/assets/`. Reference them using a depth-relativ
 
 Image filename convention: date-time prefix like `15_06 10 06.png` (day_hour minute second) or `08_14 21 31.gif`. Spaces in filenames require wrapping the path in `<>` angle brackets in standard Markdown image syntax: `![](<../../../.gitbook/assets/15_06 10 06.png>)`. In `<figure>` tags the `src` attribute handles spaces without angle brackets.
 
-**Take starting screenshots without being asked.** When a docs change describes something visible in the Gum tool or in a rendered result, take the screenshots yourself: dark theme, only the editor (canvas) window, nothing selected unless the page is about the tool UI, cropped tight, named by the convention above, and wrapped in the same `<figure>` markup as neighboring pages. The user reviews and replaces them later, so skip red arrows and do not chase a perfect match.
+**Take starting screenshots without being asked.** When a docs change describes something visible in the Gum tool or in a rendered result, take the screenshots yourself, cropped tight, named by the convention above, and wrapped in the same `<figure>` markup as neighboring pages. Pages under `docs/gum-tool/` use the editor: dark theme, only the canvas with its checker background, nothing selected unless the page is about the tool UI. Pages under `docs/code/` use a render of the running game or a sample, not the editor. The user reviews and replaces the images later, so skip red arrows and do not chase a perfect match.
 
 Some images use a generic `image (N).png` naming pattern with numeric suffixes like `image (13) (1).png` — these are GitBook-uploaded files; don't rename them.
 

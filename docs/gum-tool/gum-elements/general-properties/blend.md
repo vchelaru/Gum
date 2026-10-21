@@ -155,6 +155,10 @@ Keep in mind that multiple objects can be combined to create larger masks. For e
 
 This applies to Circle, Rectangle, RoundedRectangle, Arc, Sprite, NineSlice, and text.
 
+The following shows a blue Rectangle in a container with `Is Render Target` set to true. A filled Circle drawn after it uses `Min Alpha`. The Circle keeps the Rectangle's pixels inside the circle and clears the corners of the Circle's bounds, while the Rectangle outside those bounds is unchanged.
+
+<figure><img src="../../../.gitbook/assets/21_05 10 35.png" alt=""><figcaption><p>Min Alpha on a Circle clears the corners of its bounds</p></figcaption></figure>
+
 {% hint style="info" %}
 Whole-bounds masking for shapes and text, and `Replace Alpha` on Skia elements, are available in November 2026, or now if building Gum from source. Before then, `Replace Alpha` on a Skia element drew like `Normal` `Blend`.
 {% endhint %}
@@ -169,6 +173,6 @@ Text uses the measured text block plus a 2 pixel margin as its bounds, and adds 
 
 The Gum tool has no `Blend` variable for text, so set `Blend` on the text in code. Like the other alpha-only blends, text masks the content below it when its container has `Is Render Target` set to true.
 
-### Limits
+### Edges Between Pixels
 
-* An edge of the bounds that falls between pixels (a fractional position or a rotation) is not exact, because a pixel partly covered by the edge cannot be both kept and cleared.
+An edge of the bounds that falls between pixels (a fractional position or a rotation) is not exact, because a pixel partly covered by the edge cannot be both kept and cleared.

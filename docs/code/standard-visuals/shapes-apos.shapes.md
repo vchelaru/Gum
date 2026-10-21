@@ -286,7 +286,7 @@ The public `Blend` property on these Skia shape runtimes is available in Novembe
 
 ### Edges of shapes
 
-`CircleRuntime` and `RectangleRuntime` are inset so their box is the visible boundary. A `LineRuntime` is not inset. Its stroke is centered on the geometric line, so it reaches about half a pixel past its endpoints, and a line drawn along the edge of a box bleeds half a pixel outside the box. This is intentional, because a 1 pixel line inset the same way would vanish.
+`CircleRuntime` and `RectangleRuntime` are inset so their box is the visible boundary. A `LineRuntime` stroke is centered on the geometric line, so it reaches about half a pixel past its endpoints, and a line drawn along the edge of a box bleeds half a pixel outside the box. This is intentional, because a 1 pixel line inset the same way would vanish.
 
 ### Examples
 
