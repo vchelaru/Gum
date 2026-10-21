@@ -118,6 +118,19 @@ internal class NpcBindingExpression : UntypedBindingExpression
         }
     }
 
+    /// <summary>
+    /// Pushes the current source value to the target. Does nothing while detached from a source, so an
+    /// absent view model leaves the target alone, and skips a BindingContext binding, whose value the
+    /// control already carries.
+    /// </summary>
+    public void RefreshTarget()
+    {
+        if (CurrentRoot != null && TargetProperty.Name is not nameof(FrameworkElement.BindingContext))
+        {
+            UpdateTarget();
+        }
+    }
+
     public override void UpdateTarget()
     {
         if (_isUpdatingTarget || Binding.Mode is BindingMode.OneWayToSource)
