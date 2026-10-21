@@ -376,19 +376,21 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
     }
 
     [Fact]
-    public void GetCodeForInstance_ComponentWithoutAFormsControl_IsNotEmitted()
+    public void GetCodeForInstance_ComponentWithoutAMappedFormsBehavior_OnlyReachesFrameworkElementMembers()
     {
-        // No mapped Forms behavior: the generated class is not the control that has the property.
-        AddBehavior("SomeCustomBehavior", Declare("LargeChange", "double", 10d));
+        // The generated class derives from FrameworkElement, which has ToolTip but no LargeChange.
+        AddBehavior("SomeCustomBehavior", Declare("LargeChange", "double", 10d), Declare("ToolTip", "string"));
         AddComponent("PlainThing", "Container", "SomeCustomBehavior");
         ScreenSave screen = new ScreenSave { Name = "MainScreen" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         Project.Screens.Add(screen);
         InstanceSave instance = AddInstance(screen, "PlainInstance", "PlainThing");
         Author(screen, "PlainInstance.LargeChange", "double", 25d);
+        Author(screen, "PlainInstance.ToolTip", "string", "tip");
 
         string code = GenerateInstance(instance, screen);
 
+        code.ShouldContain("this.PlainInstance.ToolTip = @\"tip\";");
         code.ShouldNotContain("LargeChange");
     }
 
@@ -446,5 +448,107 @@ public class CodeGeneratorFormsPropertyTests : BaseTestClass
 
         code.ShouldNotContain("LargeChange");
         code.ShouldNotContain("ToolTip");
+    }
+
+    public static IEnumerable<object[]> ShippedFormsProperties()
+    {
+        foreach (string path in Directory.GetFiles(Path.Combine(FindTemplatesDirectory(), "FormsBehaviors"), "*.behx"))
+        {
+            BehaviorSave behavior = GumFileSerializer.DeserializeBehaviorSave(File.ReadAllText(path), projectVersion: 2)!;
+            ComponentSave probe = new ComponentSave();
+            probe.Behaviors.Add(new ElementBehaviorReference { BehaviorName = behavior.Name });
+            CodeGenerator.GetGumFormsTypeFromBehaviors(probe, out string? formsType, out _);
+            if (formsType == null)
+            {
+                // No control is generated for this behavior, so there is no property to assign.
+                continue;
+            }
+
+            foreach (VariableSave declaration in behavior.FormsProperties)
+            {
+                yield return new object[] { behavior.Name, declaration.Name, declaration.Type };
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(ShippedFormsProperties))]
+    public void GetCodeForInstance_EveryShippedFormsProperty_IsAssignedWhenAuthored(
+        string behaviorName, string propertyName, string declaredType)
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScreen(behaviorName, Declare(propertyName, declaredType));
+        Author(screen, "ControlInstance." + propertyName, declaredType, SampleValue(declaredType));
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain($"this.ControlInstance.{propertyName} = ", Case.Sensitive);
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_MeadowScrollViewerAndScrollBarInstances_AssignAuthoredFormsProperties()
+    {
+        // The #6312 repro on a real theme and the shipped behaviors: values authored on a ScrollViewer and
+        // a ScrollBar instance reach the generated code.
+        ProjectLoadResult result = new ProjectLoader().Load(
+            Path.Combine(FindTemplatesDirectory(), "FormsThemes", "Meadow", "GumProject.gumx"));
+        result.Success.ShouldBeTrue();
+        GumProjectSave meadow = result.Project!;
+        foreach (string path in Directory.GetFiles(Path.Combine(FindTemplatesDirectory(), "FormsBehaviors"), "*.behx"))
+        {
+            meadow.Behaviors.Add(GumFileSerializer.DeserializeBehaviorSave(File.ReadAllText(path), projectVersion: 2)!);
+        }
+        ObjectFinder.Self.GumProjectSave = meadow;
+
+        ScreenSave screen = new ScreenSave { Name = "DemoScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        AddInstance(screen, "ScrollViewerInstance", "Meadow/Controls/ScrollViewer");
+        AddInstance(screen, "ScrollBarInstance", "Meadow/Controls/ScrollBar");
+        Author(screen, "ScrollViewerInstance.LargeChange", "double", 25d);
+        Author(screen, "ScrollViewerInstance.SmallChange", "double", 7d);
+        Author(screen, "ScrollBarInstance.ToolTip", "string", "Drag me");
+        Author(screen, "ScrollBarInstance.LargeChange", "double", 30d);
+
+        string code = CreateCodeGenerator().GetGeneratedCodeForElement(screen, new CodeOutputElementSettings(), CreateGumForms());
+
+        code.ShouldContain("this.ScrollViewerInstance.LargeChange = 25d;", Case.Sensitive);
+        code.ShouldContain("this.ScrollViewerInstance.SmallChange = 7d;", Case.Sensitive);
+        code.ShouldContain("this.ScrollBarInstance.ToolTip = @\"Drag me\";", Case.Sensitive);
+        code.ShouldContain("this.ScrollBarInstance.LargeChange = 30d;", Case.Sensitive);
+    }
+
+    private static object SampleValue(string declaredType)
+    {
+        string type = declaredType.TrimEnd('?');
+        switch (type)
+        {
+            case "bool":
+                return true;
+            case "string":
+                return "sample";
+            case "int":
+            case "long":
+            case "float":
+            case "double":
+                return 3;
+            default:
+                Type enumType = typeof(Gum.Forms.Controls.FrameworkElement).Assembly.GetTypes()
+                    .First(item => item.IsEnum && item.Name == type);
+                return Enum.GetNames(enumType)[0];
+        }
+    }
+
+    private static string FindTemplatesDirectory()
+    {
+        string current = AppContext.BaseDirectory;
+        for (int i = 0; i < 12; i++)
+        {
+            string candidate = Path.Combine(current, "Tools", "Gum.ProjectServices", "Templates");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+            current = Path.GetDirectoryName(current) ?? throw new InvalidOperationException("Templates directory not found");
+        }
+        throw new InvalidOperationException("Templates directory not found");
     }
 }

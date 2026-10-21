@@ -6084,7 +6084,7 @@ public class CodeGenerator
 
     /// <summary>
     /// The real Forms control the generated class of <paramref name="element"/> derives from, from the nearest
-    /// element in its base chain with a Forms behavior, or null when there is none. The controls live in
+    /// element in its base chain with a Forms behavior, else FrameworkElement. The controls live in
     /// GumCommon; Gum.ProjectServices' own placeholder types (FormsControlPlaceholders.cs) are not them.
     /// </summary>
     private static Type? GetFormsControlType(ElementSave element)
@@ -6105,7 +6105,8 @@ public class CodeGenerator
                 : ObjectFinder.Self.GetElementSave(current.BaseType);
         }
 
-        return null;
+        // No Forms behavior: GetInheritance derives such a class from FrameworkElement.
+        return typeof(Gum.Forms.Controls.FrameworkElement);
     }
 
     /// <summary>
