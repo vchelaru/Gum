@@ -8,11 +8,11 @@ Arcs are curved lines with variable thickness. Arcs can also be used to draw wed
 
 ### Arc dimensions
 
-Arcs draw inside their bounds, with the edge of the arc touching the bounding rectangle. The thickness of the arc remains consisntent regardless of the bound width and height.
+Arcs draw inside their bounds, with the edge of the arc touching the bounding rectangle. On Skia, the thickness of the arc remains consistent regardless of the bounds width and height. On MonoGame, KNI, and FNA, the Arc is a circle stretched into non-square bounds, so its thickness is exact on the shorter dimension and grows on the longer one. See [Arcs in Non-Square Bounds](#arcs-in-non-square-bounds).
 
 The following shows an arc with a Sweep Angle of 270 degrees, being resized in the Editor tab.
 
-<figure><img src="../../../../.gitbook/assets/26_16 14 29.gif" alt=""><figcaption><p>Arc thickness remains constant when an arc's dimensions change</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/26_16 14 29.gif" alt=""><figcaption><p>On Skia, arc thickness remains constant when an arc's dimensions change</p></figcaption></figure>
 
 ### Arc and Circle
 
@@ -34,7 +34,7 @@ On MonoGame, KNI, and FNA, an Arc in non-square bounds is a circle at the shorte
 
 Skia draws the same `Thickness` all the way around the Arc.
 
-<figure><img src="../../../../.gitbook/assets/21_05 10 33.png" alt=""><figcaption><p>Arc that is 60 wide and 40 tall with a Thickness of 8</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/21_05 19 29.png" alt=""><figcaption><p>Arc that is 60 wide and 40 tall with a Thickness of 8, a Start Angle of 90 and a Sweep Angle of 270</p></figcaption></figure>
 
 {% hint style="info" %}
 The elliptical Arc on MonoGame, KNI, and FNA is available in November 2026, or now if building Gum from source. Before then, it drew a circle as wide as `Width`, which overflowed bounds that were shorter than they were wide.
