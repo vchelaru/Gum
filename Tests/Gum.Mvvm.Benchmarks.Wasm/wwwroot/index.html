@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gum.Mvvm benchmark (WASM, Debug)</title>
+    <base href="/" />
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 16px; }
+        table { border-collapse: collapse; margin-bottom: 16px; }
+        th, td { border: 1px solid #999; padding: 3px 8px; text-align: right; font-variant-numeric: tabular-nums; }
+        th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+        small { color: #666; }
+        #status { font-weight: bold; }
+        #error { color: #b00; white-space: pre-wrap; }
+    </style>
+    <script>
+        // Result contract: window.__gumBenchDone becomes true when finished; window.__gumBenchResults holds the
+        // parsed JSON ({meta, results[]}) and window.__gumBenchResultsJson the same text. On failure
+        // window.__gumBenchError holds the exception and __gumBenchDone is still set.
+        window.__gumBenchDone = false;
+        window.gumBench = {
+            query: () => window.location.search,
+            progress: text => { document.getElementById('status').textContent = text; },
+            done: (json, html) => {
+                window.__gumBenchResultsJson = json;
+                window.__gumBenchResults = JSON.parse(json);
+                window.__gumBenchResults.meta.userAgent = navigator.userAgent;
+                document.getElementById('status').textContent = 'Done in ' + window.__gumBenchResults.meta.durationSeconds + ' s';
+                document.getElementById('results').innerHTML = html;
+                window.__gumBenchDone = true;
+            },
+            fail: message => {
+                window.__gumBenchError = message;
+                document.getElementById('status').textContent = 'Failed';
+                document.getElementById('error').textContent = message;
+                window.__gumBenchDone = true;
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>Gum.Mvvm ViewModel styles (#6397), Blazor WebAssembly, Debug</h1>
+    <p id="status">Loading .NET...</p>
+    <div id="results"></div>
+    <div id="error"></div>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+</html>

@@ -114,3 +114,14 @@ on `ViewModel`, plus `ViewModelField<T>` (a per-instance property object, `_scor
 `Set(ref _v, value)`, `kfv.` is the key overload, `ovm.` is the property object. `--csv <file>` writes `type;case;ns;bytes` lines;
 the PR numbers are the median of 4 separate `--runs 5` runs (each run already interleaves every case).
 The machine only had the .NET 10 runtime: run with `DOTNET_ROLL_FORWARD=Major`.
+
+## Browser (Blazor WebAssembly, Debug)
+
+`Tests/Gum.Mvvm.Benchmarks.Wasm` runs the same model classes and loops (int and string; old by-name, keyed, ref, ref+key, property object, plus a plain baseline) in the browser on the Mono interpreter. It is in no solution, so CI does not build it. No `wasm-tools` workload is needed.
+
+```
+dotnet publish Tests/Gum.Mvvm.Benchmarks.Wasm -c Debug -o <out>
+python -m http.server 8080 --directory <out>/wwwroot
+```
+
+Open `http://localhost:8080/` (serve from the root; the page sets `<base href="/">`). It starts by itself and takes about 45 s: 5 alternating rounds of about 150 ms per case, median ns/op. The table appears on the page; `window.__gumBenchResults` holds the same data as JSON (`meta`, `results[]` with `nsPerOp`, `bytesPerOp`, per-round `roundNs`) and `window.__gumBenchDone` turns true when finished (`__gumBenchError` is set on failure). The query string overrides the defaults: `?rounds=3&target=100&types=int,string,float,class`. Keep the tab in the foreground while it runs; background tabs are throttled and distort timings.
