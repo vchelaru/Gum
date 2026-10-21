@@ -266,6 +266,7 @@ public class DisabledCursor : ICursor
     public InteractiveGue WindowPushed { get; set; }
     public InteractiveGue VisualRightPushed { get; set; }
     public InteractiveGue WindowOver { get; set; }
+    public InteractiveGue VisualOver { get; set; }
 
     public void Activity(double currentGameTimeTotalSeconds){}
 
