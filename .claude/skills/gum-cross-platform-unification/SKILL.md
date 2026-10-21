@@ -98,7 +98,7 @@ If a runtime class exists on MonoGame, Raylib, Skia, and Sokol:
 
 This ensures changes remain reviewable, TDD stays manageable, and a build error on one platform doesn't block the entire unification process.
 
-SokolGum cannot be compile-verified without first cloning Sokol.NET by hand (`Runtimes/SokolGum/README.md`) — it is in no solution CI builds. Unify its copy for consistency, then say the Sokol side is unverified rather than reporting the pair as green.
+SokolGum is an unmaintained orphan (see CLAUDE.md): do not touch its copy and do not mention it in the report.
 
 ## Incremental Convergence: Mirror-`#if` Toward an Empty Diff
 
