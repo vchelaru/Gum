@@ -269,6 +269,19 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
     }
 
     /// <summary>
+    /// Performs every-frame updates from the total seconds since startup, for code that works through
+    /// <see cref="IGumService"/>. It builds the <see cref="XnaGameTime"/> and calls
+    /// <see cref="Update(XnaGameTime)"/>, so <see cref="GameTime"/> and an inactive window behave the same.
+    /// </summary>
+    /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
+    public override void Update(double totalSeconds)
+    {
+        // The elapsed time is the gap since the previous Update; the first call advances by zero.
+        double elapsedSeconds = GameTime != null ? totalSeconds - GameTime.TotalGameTime.TotalSeconds : 0;
+        Update(new XnaGameTime(TimeSpan.FromSeconds(totalSeconds), TimeSpan.FromSeconds(elapsedSeconds)));
+    }
+
+    /// <summary>
     /// Performs every-frame updates for <paramref name="root"/> instead of <see cref="GumServiceSkiaBase.Root"/>.
     /// </summary>
     /// <param name="gameTime">The GameTime obtained from the Game class in the Update call.</param>

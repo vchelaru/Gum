@@ -598,6 +598,15 @@ public partial class GumService
         Update(gameTime, this.Root);
     }
 
+    /// <inheritdoc/>
+    void IGumService.Update(double totalSeconds)
+    {
+        // The elapsed time is the gap since the previous Update, so animations advance as they do for a
+        // real GameTime. The first call has no previous Update, so it advances by zero.
+        double elapsedSeconds = GameTime != null ? totalSeconds - GameTime.TotalGameTime.TotalSeconds : 0;
+        Update(new GameTime(TimeSpan.FromSeconds(totalSeconds), TimeSpan.FromSeconds(elapsedSeconds)));
+    }
+
     public void Update(GameTime totalGameTime, GraphicalUiElement root)
     {
         roots.Clear();

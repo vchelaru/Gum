@@ -184,20 +184,20 @@ namespace RenderingLibrary
         /// root of the service, so a control opened as a popup lands here. The default returns the current
         /// Forms popup root.
         /// </summary>
-        InteractiveGue PopupRoot => null!;
+        InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
 
         /// <summary>
         /// Gets the topmost container, which blocks input to everything below it while it has children.
         /// The default returns the current Forms modal root.
         /// </summary>
-        InteractiveGue ModalRoot => null!;
+        InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
         /// <summary>
         /// Gets the gamepads Gum samples each frame. Entries are filled in on runtimes that read gamepads
         /// and stay unplugged otherwise. The default is an empty array, which a custom implementation that
         /// has no gamepad input keeps.
         /// </summary>
-        Gum.Input.GamePad[] Gamepads => null!;
+        Gum.Input.GamePad[] Gamepads => System.Array.Empty<Gum.Input.GamePad>();
 
         /// <summary>
         /// Per-frame tick. Call once per frame, before <see cref="Draw"/>, with the total number of seconds
@@ -219,38 +219,59 @@ namespace RenderingLibrary
         /// <see cref="Keyboard"/> to <see cref="FrameworkElement.KeyboardsForUiControl"/>.
         /// </summary>
         /// <exception cref="System.InvalidOperationException">There is no keyboard, because Gum has not been initialized.</exception>
-        void UseKeyboardDefaults() { }
+        void UseKeyboardDefaults()
+        {
+            FrameworkElement.KeyboardsForUiControl.Add(
+                Keyboard ?? throw new System.InvalidOperationException(
+                    "UseKeyboardDefaults was called with no keyboard. Initialize Gum before calling it."));
+        }
 
         /// <summary>
         /// Registers <see cref="Gamepads"/> so Forms controls respond to them. The default adds every
         /// gamepad to <see cref="FrameworkElement.GamePadsForUiControl"/>.
         /// </summary>
-        void UseGamepadDefaults() { }
+        void UseGamepadDefaults()
+        {
+            FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
+        }
 
         /// <summary>
         /// Re-applies all styles on <see cref="Root"/>, <see cref="PopupRoot"/> and <see cref="ModalRoot"/>.
         /// Call after changing the variable references or default states the visuals read.
         /// </summary>
-        void RefreshStyles() { }
+        void RefreshStyles()
+        {
+            Root?.RefreshStyles();
+            PopupRoot?.RefreshStyles();
+            ModalRoot?.RefreshStyles();
+        }
 
         /// <summary>
         /// Re-applies all styles on <paramref name="target"/> and its children.
         /// </summary>
         /// <param name="target">The root of the subtree to refresh.</param>
-        void RefreshStyles(GraphicalUiElement target) { }
+        void RefreshStyles(GraphicalUiElement target)
+        {
+            target?.RefreshStyles();
+        }
 
         /// <summary>
         /// Re-translates all live text on <see cref="Root"/>, <see cref="PopupRoot"/> and
         /// <see cref="ModalRoot"/> using the current language of <see cref="LocalizationService"/>. Text
         /// assigned through the no-translate path is skipped.
         /// </summary>
-        void RefreshLocalization() { }
+        void RefreshLocalization()
+        {
+            Root?.RefreshLocalization();
+            PopupRoot?.RefreshLocalization();
+            ModalRoot?.RefreshLocalization();
+        }
 
         /// <summary>
         /// Gets the service that provides localized strings, or null when none is assigned. The default
         /// returns the process-wide active service.
         /// </summary>
-        Gum.Localization.ILocalizationService? LocalizationService => null;
+        Gum.Localization.ILocalizationService? LocalizationService => Gum.Localization.LocalizationRuntimeState.Current;
 
         /// <summary>
         /// Gets the result of the most recent project load made by <c>Initialize</c>, including its
@@ -264,7 +285,10 @@ namespace RenderingLibrary
         /// </summary>
         /// <param name="filePath">Destination .gumx path. Its folder receives the Screens and Standards folders.</param>
         /// <param name="shake">When true, values equal to the standard-element default are left out.</param>
-        void ExportSnapshot(string filePath, bool shake = true) { }
+        void ExportSnapshot(string filePath, bool shake = true)
+        {
+            new GumSnapshotExporter().ExportSnapshot(Root, filePath, shake);
+        }
 
         /// <summary>
         /// Gets the single-threaded synchronization context installed by <see cref="UseSingleThreadedAsync"/>,

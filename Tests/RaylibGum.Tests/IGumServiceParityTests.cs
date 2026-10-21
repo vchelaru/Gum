@@ -162,7 +162,7 @@ public class IGumServiceParityTests : BaseTestClass
     [Fact]
     public void AddLayerAndRemoveLayer_ThroughTheRendererInterface_ChangeTheLayers()
     {
-        IRenderer renderer = Service.Renderer;
+        IRenderer renderer = SystemManagers.Default.Renderer;
 
         Layer layer = renderer.AddLayer();
 

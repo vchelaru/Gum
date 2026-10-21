@@ -23,13 +23,13 @@ namespace RenderingLibrary.Graphics
         /// manage layers fails loudly instead of silently dropping them.
         /// </summary>
         /// <exception cref="NotSupportedException">The renderer does not support adding layers.</exception>
-        Layer AddLayer() => null!;
+        Layer AddLayer() => throw new NotSupportedException("This renderer does not support adding layers.");
 
         /// <summary>
         /// Removes <paramref name="layer"/>. The default throws.
         /// </summary>
         /// <param name="layer">The layer to remove.</param>
         /// <exception cref="NotSupportedException">The renderer does not support removing layers.</exception>
-        void RemoveLayer(Layer layer) { }
+        void RemoveLayer(Layer layer) => throw new NotSupportedException("This renderer does not support removing layers.");
     }
 }
