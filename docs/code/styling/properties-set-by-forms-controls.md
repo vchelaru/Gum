@@ -41,6 +41,12 @@ Controls find the parts of a Visual by name, such as `TextInstance` or `ThumbIns
 `RefreshStyles` re-applies the Visual's states and then restores some control values. `ComboBox` restores its text, `ScrollBar` and `Slider` restore the thumb position, and `ScrollViewer` restores its scroll offset. `Button`, `Label`, `ToggleButton`, `Expander`, `MenuItem`, `TextBox`, and `PasswordBox` restore their text only when code supplied it, as described in [Text After RefreshStyles](runtime-variable-references.md#text-after-refreshstyles).
 {% endhint %}
 
+### Scroll Step Sizes Survive a Visual Swap
+
+`ScrollBar`, `ScrollViewer`, and `Slider` keep `SmallChange` and `LargeChange` when their Visual is replaced. A value set in code, authored on the Visual, or applied from a behavior is not overwritten.
+
+A value you did not assign keeps its default. `SmallChange` and `LargeChange` are 5 and 25 on a `Slider`, and `LargeChange` follows the viewport size on a `ScrollBar` and `ScrollViewer`.
+
 ## Properties Every Control Forwards
 
 Every Forms control forwards these properties straight to its Visual. The control assigns them only when your code sets them.
@@ -234,7 +240,7 @@ Children: `InnerPanelInstance` and `ClipContainerInstance` are needed for scroll
 | `InnerPanelInstance` | `XUnits` set to `PixelsFromSmall`, `X` set to the negative scroll value | The horizontal scroll bar's value changes. |
 | Scroll bars | `IsVisible` | `VerticalScrollBarVisibility` or `HorizontalScrollBarVisibility` changes, and when the inner panel or the ScrollViewer changes size. `Auto` shows the bar when the inner panel is larger than `ClipContainerInstance`. |
 | Scroll bars | `Minimum` set to 0, `ViewportSize` set to the clip container size, `Maximum` set to the overflow | The same triggers as visibility. |
-| Scroll bars | `SmallChange` and `LargeChange` | Visual assignment. `LargeChange` follows the viewport size. |
+| Scroll bars | `SmallChange` and `LargeChange` | Visual assignment, only for a value you did not assign. `LargeChange` follows the viewport size until you assign it. |
 | Horizontal scroll bar | `Orientation` set to `Horizontal` | Visual assignment. |
 | Sticky headers | `Parent`, `YUnits`, `YOrigin`, `Y`, and placeholder children added to `InnerPanelInstance` | You register a sticky header, and then while scrolling. Only when `StickyHeaderOverlayInstance` exists. |
 

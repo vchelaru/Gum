@@ -56,6 +56,12 @@ scrollViewer.MouseWheelScrollSpeed = 60;
 
 `MouseWheelScrollSpeed` is independent of `SmallChange`, which controls the distance scrolled when clicking the ScrollBar's arrow buttons. Adjusting one does not affect the other.
 
+### SmallChange and LargeChange
+
+`SmallChange` is the distance scrolled when the user clicks a scroll bar arrow button. `LargeChange` is the distance scrolled when the user clicks the track. The ScrollViewer passes both to its vertical and horizontal ScrollBars.
+
+Until you assign `LargeChange`, each ScrollBar uses its viewport size, so a track click moves by one page. See [Properties Set by Forms Controls](../../styling/properties-set-by-forms-controls.md#scroll-step-sizes-survive-a-visual-swap) for how these values behave when the Visual is swapped.
+
 Because `MouseWheelScrollSpeed` is defined on `ScrollViewer`, it is also available on every control that derives from it, including [ItemsControl](../itemscontrol.md), [ListBox](../listbox.md), and ComboBox.
 
 ## Code Example: Creating a ScrollViewer With Non-Forms Children
