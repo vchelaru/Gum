@@ -100,6 +100,8 @@ To migrate, pass `Gum.Forms.Input.Keys` instead. The enum mirrors the XNA values
 
 The same change adds four members to `ICursor` with default implementations: `VisualPushed` (the same value as `WindowPushed`), `LastX`, `LastY` and `ClearInputValues()`. A class that implements `ICursor` keeps compiling without them.
 
+`ICursor` also gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed` and a read-only `TransformMatrix`, so code that holds an `ICursor` can read what `Cursor` already offered. The `FrameworkElement` members return the control of the matching visual. `TransformMatrix` is a `System.Numerics.Matrix3x2` that defaults to the identity matrix. `Cursor.TransformMatrix` keeps its type and setter (an XNA `Matrix` in MonoGame, KNI and FNA).
+
 ❌ Old:
 
 ```csharp
