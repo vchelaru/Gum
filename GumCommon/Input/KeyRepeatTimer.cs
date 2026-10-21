@@ -14,13 +14,13 @@ internal sealed class KeyRepeatTimer
 {
     /// <summary>
     /// The delay before repeat starts, shared by every keyboard and by the
-    /// <see cref="IInputReceiverKeyboard.RepeatDelay"/> default.
+    /// <see cref="Wireframe.IInputReceiverKeyboard.RepeatDelay"/> default.
     /// </summary>
     internal static readonly TimeSpan DefaultDelay = TimeSpan.FromMilliseconds(500);
 
     /// <summary>
     /// The interval between repeats, shared by every keyboard and by the
-    /// <see cref="IInputReceiverKeyboard.RepeatRate"/> default.
+    /// <see cref="Wireframe.IInputReceiverKeyboard.RepeatRate"/> default.
     /// </summary>
     internal static readonly TimeSpan DefaultRate = TimeSpan.FromMilliseconds(70);
 
