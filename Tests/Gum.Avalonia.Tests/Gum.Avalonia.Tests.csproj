@@ -46,7 +46,15 @@
     layout is defined). Only the referenced plugins are copied, all rebuilt by this build, so a
     stale DLL left in the head's folder never reaches a test; both folders are emptied first.
   -->
-  <Target Name="StageHeadPlugins" AfterTargets="Build">
+  <ItemGroup>
+    <!-- What the staging copies from, listed at evaluation so the target can skip when none of it changed
+         (it deleted and recopied both folders on every build, about 5 seconds with nothing to do). -->
+    <_HeadStagingInput Include="$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/Plugins/**/*" />
+    <_HeadStagingInput Include="$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/Content/FormsThemes/**/*" />
+  </ItemGroup>
+  <Target Name="StageHeadPlugins" AfterTargets="Build"
+          Inputs="@(_HeadStagingInput)"
+          Outputs="$(OutDir)Plugins/.staged">
     <PropertyGroup>
       <AvaloniaHeadOutDir>$(MSBuildThisFileDirectory)../../Tool/Gum.Avalonia/bin/$(Configuration)/net10.0/</AvaloniaHeadOutDir>
     </PropertyGroup>
@@ -62,6 +70,7 @@
     <RemoveDir Directories="$(OutDir)Plugins;$(OutDir)Content/FormsThemes" />
     <Copy SourceFiles="@(_HeadPluginFile)" DestinationFolder="$(OutDir)Plugins/%(PluginName)/%(RecursiveDir)" />
     <Copy SourceFiles="@(_HeadFormsThemeFile)" DestinationFolder="$(OutDir)Content/FormsThemes/%(RecursiveDir)" />
+    <Touch Files="$(OutDir)Plugins/.staged" AlwaysCreate="true" />
   </Target>
   <ItemGroup>
     <!-- Per-process temp folder for the tool's per-user files (#5337). -->
