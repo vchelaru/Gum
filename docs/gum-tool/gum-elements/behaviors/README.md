@@ -114,22 +114,6 @@ A ScrollBar instance has an `Orientation` setting in the **Behavior** category. 
 Available in November 2026, or now if building Gum from source.
 {% endhint %}
 
-### Container Settings on Forms Controls
-
-Forms components in the standard templates show the container settings `Contained Type`, `Children Layout`, `Clips Children`, `Is Render Target`, and `Expose Children Events` on an instance only when the control is a bare container:
-
-* `Panel` shows all five.
-* `UserControl` shows `Clips Children`, `Is Render Target`, and `Expose Children Events`.
-* `StackPanel` shows `Contained Type`, `Clips Children`, `Is Render Target`, and `Expose Children Events`. Its `Orientation` setting drives `Children Layout`.
-
-Every other control hides all five, including `ItemsControl`, `ListBox`, `ScrollViewer`, `Window`, and `DialogBox`. These controls have internal containers of their own.
-
-An instance that already sets one of these values keeps showing and using it.
-
-{% hint style="info" %}
-Available in November 2026, or now if building Gum from source.
-{% endhint %}
-
 ### Custom Behaviors
 
 You can add your own Behavior Properties and behavior-driven references to a custom behavior you create, but this is an advanced, rarely-needed scenario. See [Behavior Properties on Custom Behaviors](creating-new-behaviors-advanced.md#behavior-properties-on-custom-behaviors) for a brief overview.

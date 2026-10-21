@@ -29,5 +29,3 @@ Once a container is rendered to a render target, additional special effects can 
 For a step-by-step tool walkthrough of rotating and scaling a clipped container, see [Rotating and Scaling Clipped Contents](../../tutorials-and-examples/examples/rotating-and-scaling-clipped-contents.md). For the same pattern in code, see the [SpriteRuntime RenderTargetTextureSource](../../../code/standard-visuals/spriteruntime/rendertargettexturesource.md) documentation.
 
 If you are managing a render target yourself in code instead of using `Is Render Target`, see [Render Targets](../../../code/rendering/render-targets.md) for the blend-mode setup needed to composite translucent content correctly on MonoGame and raylib.
-
-Instances of Forms controls such as `ScrollViewer`, `ListBox`, and `Window` do not show `Is Render Target`. See [Container Settings on Forms Controls](../behaviors/README.md#container-settings-on-forms-controls).

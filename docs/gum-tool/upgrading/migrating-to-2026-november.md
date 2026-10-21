@@ -506,7 +506,7 @@ For more information see the [Behaviors](../gum-elements/behaviors/README.md#scr
 
 ### Code Generation Emits Variables Hidden From Instances
 
-Code generation now emits a variable that a control hides from its instances, unless a behavior reference drives that variable. For example, `ClipsChildren` is hidden on a `Window` instance, and a `Window` instance that sets it now gets the line in generated code.
+Code generation now emits a variable that a control hides from its instances, unless a behavior reference drives that variable. For example, a `Window` instance that sets `ClipsChildren` now gets that line in generated code.
 
 Before this version, code generation skipped every hidden variable. The Gum tool still showed such a value and your game still loaded it, but generated code left it out.
 
@@ -515,5 +515,3 @@ Variables driven by a behavior reference, such as a category state that follows 
 This affects you only if an instance sets a variable that its control now hides. A project from before the control hid the variable can hold one without you knowing. Such a variable appears in generated code the next time you generate.
 
 To migrate, regenerate your code and look at the changes. To drop a stale value, remove it from the instance in the tool.
-
-For more information see the [Behaviors](../gum-elements/behaviors/README.md#container-settings-on-forms-controls) page.
