@@ -72,6 +72,16 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// </summary>
     internal int PairTestCount { get; private set; }
 
+    /// <summary>
+    /// Number of window entries <see cref="FlushWindow"/> examined while picking the next draw
+    /// (candidate comparisons, heap steps, blocked-candidate checks) during the last
+    /// <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call. A deterministic
+    /// stand-in for the cost of the Kahn loop (#6302).
+    /// </summary>
+    internal int PickStepCount => _pickSteps;
+
+    private int _pickSteps;
+
     /// <summary>Why a <see cref="BatchBreakGroup"/> break happened.</summary>
     public enum BreakReason
     {
@@ -342,7 +352,117 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     private int[] _indegreeBuffer = Array.Empty<int>();
     private List<int>[] _successorsBuffer = Array.Empty<List<int>>();
     private bool[] _drawnBuffer = Array.Empty<bool>();
-    private readonly List<int> _availableBuffer = new List<int>();
+
+    // Pick-next scratch (#6302). Entries are bucketed by (BatchKey, BatchSortKey) and by BatchKey
+    // alone; each bucket, the free containers and the whole window keep a min-heap of the
+    // available entries' DFS indexes, so a pick is a peek instead of a scan of every available
+    // entry. Heaps drop already-drawn entries lazily when they reach the top.
+    private readonly Dictionary<BucketKey, int> _bucketIds = new Dictionary<BucketKey, int>();
+    private readonly Dictionary<string, int> _keyIds = new Dictionary<string, int>();
+    private readonly List<IndexHeap> _bucketHeaps = new List<IndexHeap>();
+    private readonly List<IndexHeap> _keyHeaps = new List<IndexHeap>();
+    private readonly IndexHeap _freeContainerHeap = new IndexHeap();
+    private readonly IndexHeap _allHeap = new IndexHeap();
+    private int[] _bucketOfEntry = Array.Empty<int>();
+    private int[] _keyOfBucket = Array.Empty<int>();
+    private int[] _undrawnInBucket = Array.Empty<int>();
+
+    private readonly struct BucketKey : IEquatable<BucketKey>
+    {
+        public readonly string BatchKey;
+        public readonly object? BatchSortKey;
+
+        public BucketKey(string batchKey, object? batchSortKey)
+        {
+            BatchKey = batchKey;
+            BatchSortKey = batchSortKey;
+        }
+
+        public bool Equals(BucketKey other) =>
+            BatchKey == other.BatchKey && object.Equals(BatchSortKey, other.BatchSortKey);
+
+        public override bool Equals(object? obj) => obj is BucketKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(BatchKey, BatchSortKey);
+    }
+
+    /// <summary>Min-heap of window indexes whose operations are tallied into a step count.</summary>
+    private sealed class IndexHeap
+    {
+        private int[] _items = new int[8];
+        private int _count;
+
+        public void Clear()
+        {
+            _count = 0;
+        }
+
+        public void Push(int value, ref int steps)
+        {
+            if (_count == _items.Length)
+            {
+                Array.Resize(ref _items, _count * 2);
+            }
+
+            int i = _count++;
+            while (i > 0)
+            {
+                int parent = (i - 1) >> 1;
+                steps++;
+                if (_items[parent] <= value)
+                {
+                    break;
+                }
+                _items[i] = _items[parent];
+                i = parent;
+            }
+            _items[i] = value;
+        }
+
+        /// <summary>
+        /// Returns the smallest index not yet drawn, discarding drawn ones from the top, or -1
+        /// when none remain.
+        /// </summary>
+        public int PeekUndrawn(bool[] drawn, ref int steps)
+        {
+            steps++;
+            while (_count > 0 && drawn[_items[0]])
+            {
+                RemoveTop(ref steps);
+            }
+            return _count > 0 ? _items[0] : -1;
+        }
+
+        private void RemoveTop(ref int steps)
+        {
+            int value = _items[--_count];
+            int i = 0;
+            while (true)
+            {
+                int child = (i << 1) + 1;
+                if (child >= _count)
+                {
+                    break;
+                }
+
+                steps++;
+                if (child + 1 < _count && _items[child + 1] < _items[child])
+                {
+                    child++;
+                }
+                if (value <= _items[child])
+                {
+                    break;
+                }
+                _items[i] = _items[child];
+                i = child;
+            }
+            if (_count > 0)
+            {
+                _items[i] = value;
+            }
+        }
+    }
 
     // The "running" batch key/sort key/type, and whether the next comparison against it must be
     // treated as a forced break regardless of key equality. Unlike the per-window Entry/indegree
@@ -363,6 +483,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     {
         destination.Clear();
         PairTestCount = 0;
+        _pickSteps = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -383,6 +504,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     {
         destination.Clear();
         PairTestCount = 0;
+        _pickSteps = 0;
         _runningBatchKey = null;
         _runningSortKey = null;
         _runningRenderableType = null;
@@ -738,6 +860,100 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         PairTestCount += pairTests;
     }
 
+    private void EnsurePickCapacity(int n)
+    {
+        if (_bucketOfEntry.Length >= n)
+        {
+            return;
+        }
+
+        int newSize = System.Math.Max(n, _bucketOfEntry.Length * 2);
+        _bucketOfEntry = new int[newSize];
+        _keyOfBucket = new int[newSize];
+        _undrawnInBucket = new int[newSize];
+    }
+
+    /// <summary>
+    /// Groups the window's entries into (BatchKey, BatchSortKey) buckets nested in BatchKey groups
+    /// and seeds the heaps with the entries that have no incoming edge. Also looks up the bucket
+    /// and key group of the running (BatchKey, BatchSortKey), which may carry over from an earlier
+    /// window; each is -1 when the window has none.
+    /// </summary>
+    private void AssignBuckets(List<Entry> window, int n, int[] indegree, out int runningBucket, out int runningKey)
+    {
+        _bucketIds.Clear();
+        _keyIds.Clear();
+        _freeContainerHeap.Clear();
+        _allHeap.Clear();
+
+        for (int i = 0; i < n; i++)
+        {
+            BucketKey bucketKey = new BucketKey(window[i].BatchKey, window[i].BatchSortKey);
+            if (!_bucketIds.TryGetValue(bucketKey, out int bucket))
+            {
+                bucket = _bucketIds.Count;
+                _bucketIds.Add(bucketKey, bucket);
+
+                if (!_keyIds.TryGetValue(bucketKey.BatchKey, out int key))
+                {
+                    key = _keyIds.Count;
+                    _keyIds.Add(bucketKey.BatchKey, key);
+                    if (key == _keyHeaps.Count)
+                    {
+                        _keyHeaps.Add(new IndexHeap());
+                    }
+                    _keyHeaps[key].Clear();
+                }
+
+                if (bucket == _bucketHeaps.Count)
+                {
+                    _bucketHeaps.Add(new IndexHeap());
+                }
+                _bucketHeaps[bucket].Clear();
+                _keyOfBucket[bucket] = key;
+                _undrawnInBucket[bucket] = 0;
+            }
+
+            _bucketOfEntry[i] = bucket;
+            _undrawnInBucket[bucket]++;
+        }
+        _pickSteps += n;
+
+        for (int i = 0; i < n; i++)
+        {
+            if (indegree[i] == 0)
+            {
+                MakeAvailable(window, i);
+            }
+        }
+
+        runningBucket = -1;
+        runningKey = -1;
+        if (_runningBatchKey != null)
+        {
+            if (_bucketIds.TryGetValue(new BucketKey(_runningBatchKey, _runningSortKey), out int bucket))
+            {
+                runningBucket = bucket;
+            }
+            if (_keyIds.TryGetValue(_runningBatchKey, out int key))
+            {
+                runningKey = key;
+            }
+        }
+    }
+
+    private void MakeAvailable(List<Entry> window, int index)
+    {
+        int bucket = _bucketOfEntry[index];
+        _bucketHeaps[bucket].Push(index, ref _pickSteps);
+        _keyHeaps[_keyOfBucket[bucket]].Push(index, ref _pickSteps);
+        _allHeap.Push(index, ref _pickSteps);
+        if (window[index].IsFreeContainer)
+        {
+            _freeContainerHeap.Push(index, ref _pickSteps);
+        }
+    }
+
     private void FlushWindow(List<Entry> window, List<DrawCommand> destination)
     {
         int n = window.Count;
@@ -780,68 +996,31 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         // last-resort smallest-DFS tier — by which point the first instance's non-matching items
         // have already been drained and the running key has moved on, so nothing merges across
         // instances no matter how many identical, non-overlapping ones exist.
-        List<int> available = _availableBuffer;
-        available.Clear();
-        for (int i = 0; i < n; i++)
-        {
-            if (indegree[i] == 0)
-            {
-                available.Add(i);
-            }
-        }
+        EnsurePickCapacity(n);
+        AssignBuckets(window, n, indegree, out int runningBucket, out int runningKey);
 
-        while (available.Count > 0)
+        while (true)
         {
             int chosen = -1;
-            for (int k = 0; k < available.Count; k++)
+            if (runningBucket != -1)
             {
-                int idx = available[k];
-                if (window[idx].BatchKey == _runningBatchKey && Equals(window[idx].BatchSortKey, _runningSortKey))
-                {
-                    if (chosen == -1 || idx < chosen)
-                    {
-                        chosen = idx;
-                    }
-                }
+                chosen = _bucketHeaps[runningBucket].PeekUndrawn(drawn, ref _pickSteps);
+            }
+            if (chosen == -1 && runningKey != -1)
+            {
+                chosen = _keyHeaps[runningKey].PeekUndrawn(drawn, ref _pickSteps);
             }
             if (chosen == -1)
             {
-                for (int k = 0; k < available.Count; k++)
-                {
-                    int idx = available[k];
-                    if (window[idx].BatchKey == _runningBatchKey)
-                    {
-                        if (chosen == -1 || idx < chosen)
-                        {
-                            chosen = idx;
-                        }
-                    }
-                }
+                chosen = _freeContainerHeap.PeekUndrawn(drawn, ref _pickSteps);
             }
             if (chosen == -1)
             {
-                for (int k = 0; k < available.Count; k++)
-                {
-                    int idx = available[k];
-                    if (window[idx].IsFreeContainer)
-                    {
-                        if (chosen == -1 || idx < chosen)
-                        {
-                            chosen = idx;
-                        }
-                    }
-                }
+                chosen = _allHeap.PeekUndrawn(drawn, ref _pickSteps);
             }
             if (chosen == -1)
             {
-                for (int k = 0; k < available.Count; k++)
-                {
-                    int idx = available[k];
-                    if (chosen == -1 || idx < chosen)
-                    {
-                        chosen = idx;
-                    }
-                }
+                break;
             }
 
             // #4575 diagnostics: classify a key change (BatchKey and/or BatchSortKey differs from
@@ -898,16 +1077,10 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     }
                     else if (!exactMatch)
                     {
-                        bool blockedCandidateExists = false;
-                        for (int k = 0; k < n; k++)
-                        {
-                            if (!drawn[k] && k != chosen &&
-                                window[k].BatchKey == _runningBatchKey && Equals(window[k].BatchSortKey, _runningSortKey))
-                            {
-                                blockedCandidateExists = true;
-                                break;
-                            }
-                        }
+                        // Chosen is not in the running bucket (this is not an exact match), so any
+                        // undrawn entry left there is one overlap is keeping unavailable.
+                        _pickSteps++;
+                        bool blockedCandidateExists = runningBucket != -1 && _undrawnInBucket[runningBucket] > 0;
 
                         BreakReason reason;
                         if (blockedCandidateExists)
@@ -930,11 +1103,14 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
             destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));
             drawn[chosen] = true;
+            _undrawnInBucket[_bucketOfEntry[chosen]]--;
             if (!chosenIsFreeContainer)
             {
                 _runningBatchKey = window[chosen].BatchKey;
                 _runningSortKey = window[chosen].BatchSortKey;
                 _runningRenderableType = window[chosen].Item.GetType();
+                runningBucket = _bucketOfEntry[chosen];
+                runningKey = _keyOfBucket[runningBucket];
             }
             if (window[chosen].Item.IsRenderTarget)
             {
@@ -943,7 +1119,6 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 // override), so whatever comes next is forced too, regardless of its own key.
                 _forceNextTransition = true;
             }
-            available.Remove(chosen);
 
             List<int> succ = successors[chosen];
             for (int k = 0; k < succ.Count; k++)
@@ -951,7 +1126,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 int s = succ[k];
                 if (--indegree[s] == 0)
                 {
-                    available.Add(s);
+                    MakeAvailable(window, s);
                 }
             }
         }
