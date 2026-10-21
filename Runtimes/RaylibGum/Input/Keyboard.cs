@@ -18,6 +18,10 @@ public class Keyboard : IInputReceiverKeyboard
     /// </summary>
     internal static Keyboard CreateForCurrentPlatform() => new Keyboard();
 
+    // STUB (replaced in the implementation commit)
+    public System.TimeSpan RepeatDelay { get; set; } = System.TimeSpan.FromMilliseconds(500);
+    public System.TimeSpan RepeatRate { get; set; } = System.TimeSpan.FromMilliseconds(70);
+
     double _lastGameTime;
     double _lastGetStringTypedCall = -999;
     string _lastStringTyped = "";

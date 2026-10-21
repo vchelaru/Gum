@@ -1373,6 +1373,12 @@ public interface IInputReceiverKeyboard
     /// </summary>
     bool IsCommandDown => false;
 
+    // STUB (replaced in the implementation commit)
+    TimeSpan RepeatDelay { get => TimeSpan.Zero; set { } }
+
+    // STUB (replaced in the implementation commit)
+    TimeSpan RepeatRate { get => TimeSpan.Zero; set { } }
+
     /// <summary>
     /// Returns the keys typed this frame in the shared <see cref="Gum.Forms.Input.Keys"/>
     /// space. Implementations must translate from any native key type to Gum/XNA values
