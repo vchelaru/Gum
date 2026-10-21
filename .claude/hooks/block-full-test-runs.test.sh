@@ -53,6 +53,10 @@ check $allowed "qualified class with trailing dot" 'dotnet test Tests/Foo/Foo.cs
 check $allowed "qualified method" 'dotnet test Tests/Foo/Foo.csproj --filter \"FullyQualifiedName~Gum.Forms.ButtonTests.Click_Raises\"'
 check $allowed "bare classes" 'dotnet test Tests/Foo/Foo.csproj --filter \"ButtonTests|ListBoxTests\"'
 check $allowed "method name filter" 'dotnet test Tests/Foo/Foo.csproj --filter \"Name~Click_Raises\"'
+check $blocked "bare word" 'dotnet test Tests/Foo/Foo.csproj --filter \"Runtimes\"'
+check $blocked "bare word with property prefix" 'dotnet test Tests/Foo/Foo.csproj --filter \"FullyQualifiedName~Layout\"'
+check $blocked "class and a bare word" 'dotnet test Tests/Foo/Foo.csproj --filter \"ButtonTests|Forms\"'
+check $allowed "trait filter" 'dotnet test Tests/Foo/Foo.csproj --filter \"Category=Slow\"'
 check $allowed "class in parentheses" 'dotnet test Tests/Foo/Foo.csproj --filter \"(FullyQualifiedName~Ns.ButtonTests.|FullyQualifiedName~Ns.ButtonTests+)\"'
 
 if [ "$failures" -ne 0 ]; then

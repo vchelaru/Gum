@@ -114,9 +114,10 @@ END {
     if (seg !~ /^dotnet[ \t]+test([ \t)]|$)/) continue
     if (allowed) continue
     if (!match(seg, /[ \t]--filter([ \t=]+|$)/)) exit 2
-    # A namespace-style filter runs thousands of tests that CI already runs. A term with a dot must
-    # contain a class segment (name ending in Test or Tests); Ns.Class, Ns.Class.Method and bare
-    # class or method names pass.
+    # A namespace or bare-word filter (MonoGameGum.Tests.Forms, Layout) runs thousands of tests that CI
+    # already runs. A name term must contain a class segment (name ending in Test or Tests) or be a
+    # method name with an underscore; Ns.Class, Ns.Class.Method, ButtonTests and Click_Raises pass.
+    # Filters on other properties (Category=, Trait) are not names and pass.
     rest = substr(seg, RSTART + RLENGTH)
     if (substr(rest, 1, 1) == "\001") {
       value = qv[substr(rest, 2, index(rest, "\002") - 2) + 0]
@@ -128,8 +129,13 @@ END {
     for (t = 1; t <= termCount; t++) {
       term = terms[t]
       gsub(/^[ \t]+|[ \t]+$/, "", term)
-      sub(/^[A-Za-z]+(~|=|!=|!~)/, "", term)
-      if (index(term, ".") > 0 && term !~ /(^|\.)[A-Za-z0-9_]+Tests?(\.|\+|$)/) exit 3
+      if (match(term, /^[A-Za-z]+(~|=|!=|!~)/)) {
+        prop = substr(term, 1, RLENGTH)
+        term = substr(term, RLENGTH + 1)
+        if (prop !~ /^(FullyQualifiedName|Name|DisplayName|ClassName)/) continue
+      }
+      if (term == "") continue
+      if (term !~ /(^|\.)[A-Za-z0-9_]+Tests?(\.|\+|$)/ && index(term, "_") == 0) exit 3
     }
   }
   exit 0
@@ -141,7 +147,7 @@ if [ $status -eq 2 ]; then
   exit 2
 fi
 if [ $status -eq 3 ]; then
-  echo "Blocked: this --filter names a namespace, not a test class, so it runs thousands of tests that CI already runs. Name classes: 'pwsh Tools/fast-test.ps1 <ClassA>,<ClassB>'. If the user asked for a broad run, prefix the command with GUM_ALLOW_FULL_TESTS=1." >&2
+  echo "Blocked: this --filter names a namespace or a bare word, not a test class, so it runs thousands of tests that CI already runs. Name classes: 'pwsh Tools/fast-test.ps1 <ClassA>,<ClassB>'. If the user asked for a broad run, prefix the command with GUM_ALLOW_FULL_TESTS=1." >&2
   exit 2
 fi
 exit 0
