@@ -569,6 +569,11 @@ public class ScrollViewer :
 
         }
 
+        // The removed Visual's bars no longer belong to this control. The next Visual assigns them
+        // again only if it has bars of its own.
+        verticalScrollBar = null;
+        horizontalScrollBar = null;
+
         base.ReactToVisualRemoved();
     }
 
