@@ -369,6 +369,16 @@ public partial class GraphicalUiElement
 
     private VariableReferenceGraph? _referenceGraph;
 
+    // Greater than zero while SetVariablesRecursively applies this element's own default state. That
+    // call applies the element's rows itself, in order, so what it writes to the element reports to
+    // nobody. What it writes to the element's children does report: a child's rows were evaluated
+    // when the child was created, against its defaults, and need the values the parent overrides.
+    private int _referenceLoadDepth;
+
+    internal void BeginReferenceLoad() => _referenceLoadDepth++;
+
+    internal void EndReferenceLoad() => _referenceLoadDepth--;
+
     [ThreadStatic]
     private static List<ReferenceRow>? _affectedRowsScratch;
 
@@ -472,7 +482,9 @@ public partial class GraphicalUiElement
     private ReferenceAudience GetReferenceAudience(string propertyName)
     {
         ReferenceAudience audience = ReferenceAudience.None;
-        if (VariableReferenceGraph.IsSuppressed)
+        // A row writing its result, or this element applying its own default state: the load applies
+        // its rows right after, so a report would only evaluate them twice.
+        if (VariableReferenceGraph.IsSuppressed || _referenceLoadDepth > 0)
         {
             return audience;
         }
@@ -489,7 +501,8 @@ public partial class GraphicalUiElement
         }
 
         GraphicalUiElement? container = mWhatContainsThis;
-        if (container != null && container.IsFullyCreated && Tag is InstanceSave instance)
+        // A container that is loading applies its own rows after the state that wrote this value.
+        if (container != null && container.IsFullyCreated && container._referenceLoadDepth == 0 && Tag is InstanceSave instance)
         {
             VariableReferenceGraph? containerGraph = container.GetReferenceGraph();
             if (containerGraph != null && containerGraph.IsAffectedBy(instance.Name, propertyName))
@@ -510,6 +523,24 @@ public partial class GraphicalUiElement
 
     // The typed properties report their own changes so that code such as element.X = 5 updates the
     // references that read X. Nothing is boxed unless a reference reads the property.
+    /// <summary>
+    /// Reports a typed property that was just assigned, reading its new value, to the variable references
+    /// that read it. Nothing is read or boxed unless a reference reads the property. Subclasses call this
+    /// from a setter that does not raise <see cref="PropertyChanged"/>.
+    /// </summary>
+    /// <param name="propertyName">The variable name, such as <c>Text</c>.</param>
+    protected void ReportTypedPropertyChanged(string propertyName)
+    {
+#if !FRB
+        // The property reader is not part of the FlatRedBall build.
+        if (GetReferenceAudience(propertyName) != ReferenceAudience.None &&
+            this.TryGetProperty(propertyName, out object? value) && value != null)
+        {
+            ReportReferenceSourceChanged(propertyName, value);
+        }
+#endif
+    }
+
     private void ReportTypedPropertyChanged(string propertyName, float value)
     {
         if (GetReferenceAudience(propertyName) != ReferenceAudience.None)

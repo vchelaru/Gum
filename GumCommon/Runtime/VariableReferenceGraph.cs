@@ -144,6 +144,9 @@ public sealed class VariableReferenceGraph
     /// <summary>True when some row reads a variable another row writes.</summary>
     public bool HasChains => _hasChains;
 
+    /// <summary>True when a base component, rather than the element itself, owns at least one row.</summary>
+    internal bool HasInheritedRows { get; private set; }
+
     /// <summary>
     /// Every row in dependency order: a row comes after every row writing a variable it reads. Rows that
     /// are part of a cycle are not included. Live re-evaluation skips the rows with
@@ -236,9 +239,11 @@ public sealed class VariableReferenceGraph
     {
         List<ReferenceRow> rows = new List<ReferenceRow>();
         IEnumerable<string> instanceNames = ElementSaveExtensions.GetReferencableInstanceNames(element);
+        bool hasInheritedRows = false;
 
         for (int stateIndex = 0; stateIndex < states.Count; stateIndex++)
         {
+            int rowCountBeforeState = rows.Count;
             foreach (VariableListSave list in states[stateIndex].VariableLists)
             {
                 if (list.GetRootName() != "VariableReferences" || list.ValueAsIList.Count == 0)
@@ -298,6 +303,15 @@ public sealed class VariableReferenceGraph
                     }
                 }
             }
+
+            // Rows a base component owns were evaluated against that component's values when the base
+            // state was applied, so a derived element overriding what they read needs them again.
+            // A standard element's rows are styling, which stays explicit.
+            if (rows.Count > rowCountBeforeState && stateIndex < states.Count - 1 &&
+                states[stateIndex].ParentContainer is not StandardElementSave)
+            {
+                hasInheritedRows = true;
+            }
         }
 
         Order(rows, out ReferenceRow[] ordered, out ReferenceRow[] cyclic, out bool hasChains);
@@ -309,6 +323,7 @@ public sealed class VariableReferenceGraph
         }
 
         VariableReferenceGraph graph = new VariableReferenceGraph(ordered, cyclic, sourceStates, element.BaseType, hasChains);
+        graph.HasInheritedRows = hasInheritedRows;
         graph.RecordSources();
         return graph;
     }
@@ -504,7 +519,20 @@ public sealed class VariableReferenceGraph
                 GraphicalUiElement? owner = string.IsNullOrEmpty(row.SourceObject)
                     ? liveRoot
                     : liveRoot.GetGraphicalUiElementByName(row.SourceObject);
-                owner?.SetProperty(row.Left, result.NewValue);
+                if (owner == null)
+                {
+                    continue;
+                }
+
+                owner.SetProperty(row.Left, result.NewValue);
+
+                // The write above reports to nobody (see BeginSuppression). A child component's own
+                // rows that read what this row just wrote still need it; the child's rows cannot lead
+                // back here, so this does not loop.
+                if (owner != liveRoot)
+                {
+                    owner.NotifyVariableChanged(row.Left, result.NewValue);
+                }
             }
         }
         finally
@@ -861,6 +889,13 @@ public sealed class VariableReferenceGraph
     internal bool IsCurrent(ElementSave element)
     {
         if (_baseType != element.BaseType)
+        {
+            return false;
+        }
+
+        // A visual keeps its graph when hot reload gives it a new element of the same name, so the
+        // graph must also be for this element's states and not an earlier copy's.
+        if (_sourceStates.Length > 0 && element.DefaultState != null && !ReferenceEquals(_sourceStates[_sourceStates.Length - 1], element.DefaultState))
         {
             return false;
         }

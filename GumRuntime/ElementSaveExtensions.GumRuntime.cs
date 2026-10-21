@@ -1,4 +1,4 @@
-﻿using Gum;
+using Gum;
 using Gum.DataTypes;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -493,31 +493,32 @@ namespace GumRuntime
                 throw new ArgumentNullException(nameof(graphicalElement));
             }
 #endif
-            if (!string.IsNullOrEmpty(elementSave.BaseType))
-            {
-                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
-                if (baseElementSave != null)
-                {
-
-                    graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState!);
-                }
-            }
-
             // This applies the element's references itself, in the order they are written, so the
-            // variables it sets do not also trigger live re-evaluation.
-            VariableReferenceGraph.BeginSuppression();
+            // variables it sets on the element do not also trigger live re-evaluation. Variables it
+            // sets on its children do (see BeginReferenceLoad).
+            graphicalElement.BeginReferenceLoad();
             try
             {
+                if (!string.IsNullOrEmpty(elementSave.BaseType))
+                {
+                    var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                    if (baseElementSave != null)
+                    {
+                        graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState!);
+                    }
+                }
+
                 graphicalElement.ApplyState(stateSave);
 
                 ApplyVariableReferences(graphicalElement, stateSave);
 
                 // The line above reads every row's inputs from authored values, so a row that reads
-                // another row's result sees it stale. Chains are evaluated again in dependency order.
+                // another row's result sees it stale. Chains are evaluated again in dependency order, as
+                // are rows a base component owns, which were evaluated before this element's values applied.
                 if (stateSave == elementSave.DefaultState && elementSave is not StandardElementSave)
                 {
                     VariableReferenceGraph graph = VariableReferenceGraph.GetFor(elementSave);
-                    if (graph.HasChains)
+                    if (graph.HasChains || graph.HasInheritedRows)
                     {
                         graph.ApplyAll(elementSave, graphicalElement);
                     }
@@ -525,7 +526,7 @@ namespace GumRuntime
             }
             finally
             {
-                VariableReferenceGraph.EndSuppression();
+                graphicalElement.EndReferenceLoad();
             }
         }
 

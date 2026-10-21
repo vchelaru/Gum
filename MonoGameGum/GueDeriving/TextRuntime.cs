@@ -118,7 +118,11 @@ public class TextRuntime : InteractiveGue
     public int Red
     {
         get => ContainedText.Red;
-        set => ContainedText.Red = value;
+        set
+        {
+            ContainedText.Red = value;
+            ReportTypedPropertyChanged(nameof(Red));
+        }
     }
 
     /// <summary>
@@ -127,7 +131,11 @@ public class TextRuntime : InteractiveGue
     public int Green
     {
         get => ContainedText.Green;
-        set => ContainedText.Green = value;
+        set
+        {
+            ContainedText.Green = value;
+            ReportTypedPropertyChanged(nameof(Green));
+        }
     }
 
     /// <summary>
@@ -136,7 +144,11 @@ public class TextRuntime : InteractiveGue
     public int Blue
     {
         get => ContainedText.Blue;
-        set => ContainedText.Blue = value;
+        set
+        {
+            ContainedText.Blue = value;
+            ReportTypedPropertyChanged(nameof(Blue));
+        }
     }
 
     /// <summary>
@@ -145,7 +157,11 @@ public class TextRuntime : InteractiveGue
     public int Alpha
     {
         get => ContainedText.Alpha;
-        set => ContainedText.Alpha = value;
+        set
+        {
+            ContainedText.Alpha = value;
+            ReportTypedPropertyChanged(nameof(Alpha));
+        }
     }
 
     /// <summary>
@@ -384,14 +400,14 @@ public class TextRuntime : InteractiveGue
     public float FontSize
     {
         get { return fontSize; }
-        set { fontSize = value; UpdateToFontValues(); }
+        set { fontSize = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(FontSize)); }
     }
 
     bool isItalic;
     public bool IsItalic
     {
         get => isItalic;
-        set { isItalic = value; UpdateToFontValues(); }
+        set { isItalic = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(IsItalic)); }
     }
 
 #if SKIA
@@ -420,14 +436,14 @@ public class TextRuntime : InteractiveGue
     public bool IsBold
     {
         get => _boldWeight > 1;
-        set { BoldWeight = value ? 1.5f : 1f; }
+        set { BoldWeight = value ? 1.5f : 1f; ReportTypedPropertyChanged(nameof(IsBold)); }
     }
 #else
     bool isBold;
     public bool IsBold
     {
         get => isBold;
-        set { isBold = value; UpdateToFontValues(); }
+        set { isBold = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(IsBold)); }
     }
 #endif
 
@@ -444,7 +460,7 @@ public class TextRuntime : InteractiveGue
     public int OutlineThickness
     {
         get { return outlineThickness; }
-        set { outlineThickness = value; UpdateToFontValues(); }
+        set { outlineThickness = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(OutlineThickness)); }
     }
 
 #if SKIA
