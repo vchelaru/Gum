@@ -121,11 +121,11 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
         }
     }
 
-    /// <inheritdoc/>
     bool IAnimationChainRenderable.IsChainAnimationEnabled => AnimationLogic.Animate;
 
     void IAnimationChainRenderable.SetChainAnimationEnabledCallback(Action? callback) => AnimationLogic.AnimateEnabled = callback;
 
+    /// <inheritdoc/>
     public bool AnimateSelf(double secondDifference)
     {
         if (!Visible)

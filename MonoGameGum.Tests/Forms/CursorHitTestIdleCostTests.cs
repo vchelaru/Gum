@@ -459,9 +459,12 @@ public class CursorHitTestIdleCostTests : BaseTestClass
         ListBox listBox = new();
         listBox.AddToRoot();
         List<GraphicalUiElement> roots = new() { listBox.Visual };
-        Mock<ICursor> away = CreateCursor(-5000, -5000);
-        Walk(roots, away);
-        Walk(roots, away);
+        // The cursor hovers the empty list, so the walk learns that nothing inside it has events.
+        Mock<ICursor> hover = CreateCursor(
+            listBox.Visual.GetAbsoluteX() + listBox.Visual.AbsoluteWidth / 2,
+            listBox.Visual.GetAbsoluteY() + listBox.Visual.AbsoluteHeight / 2);
+        Walk(roots, hover);
+        Walk(roots, hover);
 
         for (int i = 0; i < 3; i++)
         {
@@ -499,6 +502,25 @@ public class CursorHitTestIdleCostTests : BaseTestClass
         Mock<ICursor> cursor = CreateCursor(50, 30, click: true);
         FrameworkElement.MainCursor = cursor.Object;
         Walk(new List<GraphicalUiElement>(gumService.PopupRoot.Children), cursor);
+
+        clicks.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_ShouldRaiseClick_WhenClonedElementWithEventsIsAddedToASkippedParent()
+    {
+        (List<GraphicalUiElement> roots, List<CountingInteractive> cards, List<CountingInteractive> children) =
+            CreateBoard(cardsHaveEvents: false);
+        CountingInteractive source = CreateBox(0, 0, 10, hasEvents: true);
+        Mock<ICursor> cursor = CreateCursor(cards[15].X + 5, 5, click: true);
+        Walk(roots, cursor);
+        Walk(roots, cursor);
+        int clicks = 0;
+
+        GraphicalUiElement clone = source.Clone();
+        ((InteractiveGue)clone).Click += (_, _) => clicks++;
+        children[15 * 8 + 2].AddChild(clone);
+        Walk(roots, cursor);
 
         clicks.ShouldBe(1);
     }
