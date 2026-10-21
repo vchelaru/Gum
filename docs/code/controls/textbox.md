@@ -37,10 +37,10 @@ TextBox supports reading characters from the keyboard. It supports:
 * Backspace - removes a character at the index before the caret
 * Delete - removes a character at the caret index
 * Enter (if multi-line) - inserts the newline character (`'\n'`)
-* Keyboard repeat rate - if a key is held, the repeat rate applies according to the OS settings
+* Keyboard repeat - holding Backspace, Delete, or an arrow key repeats it after `RepeatDelay`, then every `RepeatRate`
 * CTRL X, C, and V for cut, copy, and paste
 
-The TextBox respects the OS-level repat rate. For example, the following animation shows the TextBox responding to the Windows Key repeat rate.
+Typed characters repeat at the OS-level repeat rate. For example, the following animation shows the TextBox responding to the Windows Key repeat rate. Navigation keys follow `RepeatDelay` and `RepeatRate` on the keyboard instead (see [Keyboard Support](../events-and-interactivity/keyboard-support.md#key-repeat)).
 
 <figure><img src="../../.gitbook/assets/03_08 07 14.gif" alt=""><figcaption><p>Key repeat rate adjusted in Windows</p></figcaption></figure>
 

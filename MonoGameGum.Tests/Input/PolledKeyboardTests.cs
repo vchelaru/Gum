@@ -123,4 +123,74 @@ public class PolledKeyboardTests
 
         keyboard.BeginPollCount.ShouldBe(2);
     }
+
+    [Fact]
+    public void RepeatDelayAndRate_ByDefault_ShouldBe500And70Milliseconds()
+    {
+        var keyboard = new FakeHostKeyboard();
+
+        keyboard.RepeatDelay.ShouldBe(System.TimeSpan.FromMilliseconds(500));
+        keyboard.RepeatRate.ShouldBe(System.TimeSpan.FromMilliseconds(70));
+    }
+
+    [Fact]
+    public void KeyTyped_HeldPastRepeatDelay_ShouldRepeatAtRepeatRate()
+    {
+        var keyboard = new FakeHostKeyboard();
+        keyboard.DeviceDown.Add(GumKeys.Left);
+        keyboard.Activity(0);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+
+        keyboard.Activity(0.4);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeFalse();
+
+        keyboard.Activity(0.51);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+
+        keyboard.Activity(0.55);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeFalse();
+
+        keyboard.Activity(0.59);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void KeyTyped_WithCustomDelayAndRate_ShouldUseThem()
+    {
+        var keyboard = new FakeHostKeyboard();
+        keyboard.RepeatDelay = System.TimeSpan.FromMilliseconds(200);
+        keyboard.RepeatRate = System.TimeSpan.FromMilliseconds(30);
+        keyboard.DeviceDown.Add(GumKeys.Left);
+        keyboard.Activity(0);
+
+        keyboard.Activity(0.15);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeFalse();
+
+        keyboard.Activity(0.21);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+
+        keyboard.Activity(0.23);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeFalse();
+
+        keyboard.Activity(0.25);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void KeyTyped_ReleasedAndPressedAgain_ShouldWaitForRepeatDelayAgain()
+    {
+        var keyboard = new FakeHostKeyboard();
+        keyboard.DeviceDown.Add(GumKeys.Left);
+        keyboard.Activity(0);
+        keyboard.Activity(0.6);
+
+        keyboard.DeviceDown.Clear();
+        keyboard.Activity(0.7);
+        keyboard.DeviceDown.Add(GumKeys.Left);
+        keyboard.Activity(0.8);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeTrue();
+
+        keyboard.Activity(1.0);
+        keyboard.KeyTyped(GumKeys.Left).ShouldBeFalse();
+    }
 }
