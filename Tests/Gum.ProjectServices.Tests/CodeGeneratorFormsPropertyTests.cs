@@ -1,0 +1,450 @@
+using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
+using Gum.Localization;
+using Gum.Managers;
+using Gum.ProjectServices.CodeGeneration;
+using Moq;
+using Shouldly;
+
+namespace Gum.ProjectServices.Tests;
+
+/// <summary>
+/// #6312: a value authored for a behavior <see cref="BehaviorSave.FormsProperties"/> declaration (ToolTip,
+/// LargeChange, IsEnabled, ...) on a Forms control instance, or in a component's own default state, must be
+/// written into FullyInCode GumForms output as an assignment on the control. The runtime equivalent is
+/// BehaviorFormsPropertyApplier; a declared default that nothing authored is already the code default of the
+/// control, so it is not emitted.
+/// </summary>
+public class CodeGeneratorFormsPropertyTests : BaseTestClass
+{
+    public CodeGeneratorFormsPropertyTests()
+    {
+        // A variable the Container standard defines, so authored values for it are real visual variables.
+        Project.StandardElements.First(item => item.Name == "Container").DefaultState.Variables.Add(
+            new VariableSave { Name = "Width", Type = "float", Value = 0f, SetsValue = true });
+    }
+
+    private static CodeGenerator CreateCodeGenerator()
+    {
+        Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
+        string? whyNotValid;
+        CommonValidationError error;
+        mockNameVerifier
+            .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))
+            .Returns(true);
+        FixedProjectDirectoryProvider directoryProvider = new FixedProjectDirectoryProvider(projectDirectory: null);
+
+        return new CodeGenerator(
+            new CodeGenerationNameVerifier(mockNameVerifier.Object),
+            new LocalizationService(),
+            new CodeOutputElementSettingsManager(directoryProvider),
+            directoryProvider);
+    }
+
+    private static CodeOutputProjectSettings CreateGumForms() => new CodeOutputProjectSettings
+    {
+        OutputLibrary = OutputLibrary.GumForms,
+        ObjectInstantiationType = ObjectInstantiationType.FullyInCode,
+        RootNamespace = "MyGame",
+    };
+
+    private static VariableSave Declare(string name, string type, object? defaultValue = null)
+    {
+        return new VariableSave { Name = name, Type = type, Value = defaultValue, SetsValue = defaultValue != null };
+    }
+
+    private BehaviorSave AddBehavior(string behaviorName, params VariableSave[] declarations)
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = behaviorName };
+        behavior.FormsProperties.AddRange(declarations);
+        Project.Behaviors.Add(behavior);
+        return behavior;
+    }
+
+    private ComponentSave AddComponent(string name, string baseType, string? behaviorName)
+    {
+        ComponentSave component = new ComponentSave { Name = name, BaseType = baseType };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        if (behaviorName != null)
+        {
+            component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = behaviorName });
+        }
+        Project.Components.Add(component);
+        return component;
+    }
+
+    private static InstanceSave AddInstance(ElementSave container, string name, string baseType)
+    {
+        InstanceSave instance = new InstanceSave { Name = name, BaseType = baseType, ParentContainer = container };
+        container.Instances.Add(instance);
+        return instance;
+    }
+
+    private static void Author(ElementSave element, string name, string type, object value)
+    {
+        element.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = name,
+            Type = type,
+            Value = value,
+            SetsValue = true,
+        });
+    }
+
+    private string GenerateElement(ElementSave element, CodeOutputProjectSettings? settings = null)
+    {
+        ObjectFinder.Self.GumProjectSave = Project;
+        return CreateCodeGenerator().GetGeneratedCodeForElement(
+            element,
+            new CodeOutputElementSettings(),
+            settings ?? CreateGumForms());
+    }
+
+    private string GenerateInstance(InstanceSave instance, ElementSave container, CodeOutputProjectSettings? settings = null)
+    {
+        ObjectFinder.Self.GumProjectSave = Project;
+        return CreateCodeGenerator().GetCodeForInstance(instance, container, settings ?? CreateGumForms());
+    }
+
+    /// <summary>A screen holding one instance of a component with the given Forms behavior.</summary>
+    private (ScreenSave Screen, InstanceSave Instance) CreateScreen(string behaviorName, params VariableSave[] declarations)
+    {
+        AddBehavior(behaviorName, declarations);
+        AddComponent("ControlStandard", "Container", behaviorName);
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        Project.Screens.Add(screen);
+        InstanceSave instance = AddInstance(screen, "ControlInstance", "ControlStandard");
+        return (screen, instance);
+    }
+
+    private (ScreenSave Screen, InstanceSave Instance) CreateScrollViewerScreen(params VariableSave[] declarations) =>
+        CreateScreen("ScrollViewerBehavior", declarations);
+
+    [Fact]
+    public void GetGeneratedCodeForElement_FormsPropertyDeclaredButNothingAuthored_EmitsNoAssignment()
+    {
+        // Pins that a project authoring nothing is untouched: the declared defaults equal the control's own.
+        (ScreenSave screen, _) = CreateScrollViewerScreen(
+            Declare("ToolTip", "string"),
+            Declare("IsEnabled", "bool", true),
+            Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.Width", "float", 100f);
+
+        string code = GenerateElement(screen);
+
+        code.ShouldContain("Width = 100");
+        code.ShouldNotContain("ToolTip");
+        code.ShouldNotContain("IsEnabled");
+        code.ShouldNotContain("LargeChange");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_AuthoredFormsProperties_AreAssignedOnTheControl()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(
+            Declare("ToolTip", "string"),
+            Declare("IsEnabled", "bool", true),
+            Declare("SmallChange", "double", 10d),
+            Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.ToolTip", "string", "Scroll here");
+        Author(screen, "ControlInstance.IsEnabled", "bool", false);
+        Author(screen, "ControlInstance.SmallChange", "double", 7d);
+        Author(screen, "ControlInstance.LargeChange", "double", 25d);
+
+        string code = GenerateInstance(instance, screen);
+
+        // Properties of the Forms control, so not through .Visual.
+        code.ShouldContain("this.ControlInstance.ToolTip = @\"Scroll here\";");
+        code.ShouldContain("this.ControlInstance.IsEnabled = false;");
+        code.ShouldContain("this.ControlInstance.SmallChange = 7d;");
+        code.ShouldContain("this.ControlInstance.LargeChange = 25d;");
+        code.ShouldNotContain("Visual.LargeChange");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_AuthoredFormsProperties_AppearInApplyDefaultVariables()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.LargeChange", "double", 25d);
+
+        string code = GenerateElement(screen);
+
+        int applyIndex = code.IndexOf("private void ApplyDefaultVariables()", StringComparison.Ordinal);
+        applyIndex.ShouldBeGreaterThan(-1);
+        code.IndexOf("this.ControlInstance.LargeChange = 25d;", StringComparison.Ordinal).ShouldBeGreaterThan(applyIndex);
+    }
+
+    [Fact]
+    public void GetCodeForInstance_FormsPropertiesFollowTheRegularVariables()
+    {
+        // Runtime order: the visual's variables first, then the Forms properties.
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.LargeChange", "double", 25d);
+        Author(screen, "ControlInstance.Width", "float", 100f);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.IndexOf("Width = 100", StringComparison.Ordinal).ShouldBeGreaterThan(-1);
+        code.IndexOf("LargeChange = 25d", StringComparison.Ordinal)
+            .ShouldBeGreaterThan(code.IndexOf("Width = 100", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void GetCodeForInstance_NullableDeclaredNumber_AssignsPlainLiteral()
+    {
+        // A "double?" declaration targets a plain double property on the control; the literal must compile for both.
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("LargeChange", "double?", 10d));
+        Author(screen, "ControlInstance.LargeChange", "double?", 25d);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.LargeChange = 25d;");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_TextBoxProperties_AreAssigned()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScreen(
+            "TextBoxBehavior",
+            Declare("MaxLength", "int?"),
+            Declare("Placeholder", "string"),
+            Declare("IsReadOnly", "bool", false),
+            Declare("AcceptsReturn", "bool", false));
+        Author(screen, "ControlInstance.MaxLength", "int?", 12);
+        Author(screen, "ControlInstance.Placeholder", "string", "Type here");
+        Author(screen, "ControlInstance.IsReadOnly", "bool", true);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.MaxLength = 12;");
+        code.ShouldContain("this.ControlInstance.Placeholder = @\"Type here\";");
+        code.ShouldContain("this.ControlInstance.IsReadOnly = true;");
+        code.ShouldNotContain("AcceptsReturn");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_LiteralFollowsTheControlPropertyType_NotTheDeclaredType()
+    {
+        // StackPanel.Spacing is a float; a declaration saying double must not produce a double literal.
+        (ScreenSave screen, InstanceSave instance) = CreateScreen("StackPanelBehavior", Declare("Spacing", "double", 0d));
+        Author(screen, "ControlInstance.Spacing", "double", 4.5d);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.Spacing = 4.5f;");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_NameTheControlLacks_IsSkipped()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(
+            Declare("NoSuchProperty", "double", 1d),
+            Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.NoSuchProperty", "double", 5d);
+        Author(screen, "ControlInstance.LargeChange", "double", 25d);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.LargeChange = 25d;");
+        code.ShouldNotContain("NoSuchProperty");
+    }
+
+    [Theory]
+    [InlineData(25f, "25d")]
+    [InlineData(25, "25d")]
+    [InlineData(2.5, "2.5d")]
+    [InlineData("25", "25d")]
+    public void GetCodeForInstance_NumberOfAnyStoredType_IsWrittenAsTheDeclaredType(object stored, string expected)
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.LargeChange", "double", stored);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain($"this.ControlInstance.LargeChange = {expected};");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_StringWithQuotes_IsEscaped()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("ToolTip", "string"));
+        Author(screen, "ControlInstance.ToolTip", "string", "Say \"hi\"");
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.ToolTip = @\"Say \"\"hi\"\"\";");
+    }
+
+    [Theory]
+    [InlineData("Wrap")]
+    [InlineData(2)]
+    public void GetCodeForInstance_EnumFormsProperty_IsWrittenAsQualifiedEnumMember(object stored)
+    {
+        // The value is a name or the stored int, and the enum comes from the control property's type.
+        (ScreenSave screen, InstanceSave instance) = CreateScreen(
+            "TextBoxBehavior",
+            Declare("TextWrapping", "TextWrapping", "NoWrap"));
+        Author(screen, "ControlInstance.TextWrapping", "TextWrapping", stored);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.TextWrapping = global::Gum.Forms.TextWrapping.Wrap;");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_EnumInControlsNamespace_IsQualified()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(
+            Declare("VerticalScrollBarVisibility", "ScrollBarVisibility", "Auto"));
+        Author(screen, "ControlInstance.VerticalScrollBarVisibility", "ScrollBarVisibility", "Hidden");
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.VerticalScrollBarVisibility = global::Gum.Forms.Controls.ScrollBarVisibility.Hidden;");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_NullableEnumProperty_AssignsTheEnumMember()
+    {
+        // ItemsControl.Orientation is Orientation?.
+        (ScreenSave screen, InstanceSave instance) = CreateScreen("ItemsControlBehavior", Declare("Orientation", "Orientation?"));
+        Author(screen, "ControlInstance.Orientation", "Orientation?", "Horizontal");
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.Orientation = global::Gum.Forms.Controls.Orientation.Horizontal;");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_BoxedEnumValue_IsWrittenAsQualifiedEnumMember()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScreen(
+            "TextBoxBehavior",
+            Declare("TextWrapping", "TextWrapping", "NoWrap"));
+        Author(screen, "ControlInstance.TextWrapping", "TextWrapping", Gum.Forms.TextWrapping.Wrap);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldContain("this.ControlInstance.TextWrapping = global::Gum.Forms.TextWrapping.Wrap;");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_ValueThatDoesNotConvert_IsSkippedWithoutThrowing()
+    {
+        // Mirrors the runtime applier, which skips a value it cannot coerce.
+        (ScreenSave screen, InstanceSave instance) = CreateScreen(
+            "TextBoxBehavior",
+            Declare("MaxLength", "int?"),
+            Declare("TextWrapping", "TextWrapping", "NoWrap"),
+            Declare("IsEnabled", "bool", true));
+        Author(screen, "ControlInstance.MaxLength", "int?", "not a number");
+        Author(screen, "ControlInstance.TextWrapping", "TextWrapping", "Sideways");
+        Author(screen, "ControlInstance.IsEnabled", "bool", "maybe");
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldNotContain("MaxLength");
+        code.ShouldNotContain("TextWrapping");
+        code.ShouldNotContain("IsEnabled");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_DerivedComponent_InheritsDeclarationsFromBaseBehaviors()
+    {
+        (ScreenSave screen, _) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        AddComponent("FancyScroll", "ControlStandard", behaviorName: null);
+        InstanceSave fancy = AddInstance(screen, "FancyInstance", "FancyScroll");
+        Author(screen, "FancyInstance.LargeChange", "double", 25d);
+
+        string code = GenerateInstance(fancy, screen);
+
+        code.ShouldContain("this.FancyInstance.LargeChange = 25d;");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_AuthoredNameNoBehaviorDeclares_IsNotEmitted()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.NotDeclared", "double", 25d);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldNotContain("NotDeclared");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_ComponentWithoutAFormsControl_IsNotEmitted()
+    {
+        // No mapped Forms behavior: the generated class is not the control that has the property.
+        AddBehavior("SomeCustomBehavior", Declare("LargeChange", "double", 10d));
+        AddComponent("PlainThing", "Container", "SomeCustomBehavior");
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        Project.Screens.Add(screen);
+        InstanceSave instance = AddInstance(screen, "PlainInstance", "PlainThing");
+        Author(screen, "PlainInstance.LargeChange", "double", 25d);
+
+        string code = GenerateInstance(instance, screen);
+
+        code.ShouldNotContain("LargeChange");
+    }
+
+    [Fact]
+    public void GetCodeForInstance_LegacyMonoGameOutput_IsNotEmitted()
+    {
+        (ScreenSave screen, InstanceSave instance) = CreateScrollViewerScreen(Declare("LargeChange", "double", 10d));
+        Author(screen, "ControlInstance.LargeChange", "double", 25d);
+
+        string code = GenerateInstance(instance, screen, new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.MonoGame,
+            RootNamespace = "MyGame",
+        });
+
+        code.ShouldNotContain("LargeChange");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_AuthoredOnComponentDefaultState_IsAssignedOnThis()
+    {
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d), Declare("ToolTip", "string"));
+        ComponentSave scroll = AddComponent("ControlStandard", "Container", "ScrollViewerBehavior");
+        Author(scroll, "LargeChange", "double", 25d);
+        Author(scroll, "ToolTip", "string", "tip");
+
+        string code = GenerateElement(scroll);
+
+        code.ShouldContain("this.LargeChange = 25d;");
+        code.ShouldContain("this.ToolTip = @\"tip\";");
+        code.ShouldNotContain("Visual.LargeChange");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_AuthoredOnDerivedComponentDefaultState_IsAssignedOnThis()
+    {
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d));
+        AddComponent("ControlStandard", "Container", "ScrollViewerBehavior");
+        ComponentSave fancy = AddComponent("FancyScroll", "ControlStandard", behaviorName: null);
+        Author(fancy, "LargeChange", "double", 25d);
+
+        string code = GenerateElement(fancy);
+
+        code.ShouldContain("this.LargeChange = 25d;");
+    }
+
+    [Fact]
+    public void GetGeneratedCodeForElement_ComponentDeclaredButNothingAuthored_EmitsNoAssignment()
+    {
+        AddBehavior("ScrollViewerBehavior", Declare("LargeChange", "double", 10d), Declare("ToolTip", "string"));
+        ComponentSave scroll = AddComponent("ControlStandard", "Container", "ScrollViewerBehavior");
+        Author(scroll, "Width", "float", 100f);
+
+        string code = GenerateElement(scroll);
+
+        code.ShouldNotContain("LargeChange");
+        code.ShouldNotContain("ToolTip");
+    }
+}

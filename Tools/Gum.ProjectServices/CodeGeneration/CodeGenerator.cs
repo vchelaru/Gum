@@ -4774,6 +4774,8 @@ public class CodeGenerator
 
         FillWithVariableAssignments(context, context.StringBuilder, variablesToAssignValues);
 
+        FillWithFormsPropertyAssignments(context, context.Instance);
+
         var variableListsToAssign = context.Element.DefaultState!.VariableLists.Where(item => item.SourceObject == context.Instance.Name)
             .ToArray();
 
@@ -5586,6 +5588,11 @@ public class CodeGenerator
             context.StringBuilder.AppendLine();
         }
 
+        // After the instances, like the runtime applying the root control's properties last: a
+        // ScrollViewer's setters reach scroll bars that only exist once the instances do.
+        context.Instance = null;
+        FillWithFormsPropertyAssignments(context, instance: null);
+
         context.TabCount--;
         context.StringBuilder.AppendLine(context.Tabs + "}");
     }
@@ -5995,6 +6002,230 @@ public class CodeGenerator
 
         return shouldInclude;
     }
+
+    #region Behavior FormsProperty assignments
+
+    /// <summary>
+    /// Writes the values authored for behavior <see cref="BehaviorSave.FormsProperties"/> declarations
+    /// (ToolTip, LargeChange, IsEnabled, ...) on <paramref name="instance"/>, or in the generated element's own
+    /// default state when it is null, as assignments on the Forms control. This is the code equivalent of the
+    /// runtime BehaviorFormsPropertyApplier, which also writes through reflection and coerces to the control
+    /// property's type, so the property is looked up on the real control type and a name it lacks is skipped.
+    /// A declaration's default is not written: the control already has it (pinned by
+    /// BehaviorFormsPropertyCatalogTests), so output for a project that authors nothing is unchanged. A name that
+    /// is also a variable of the control's element is already assigned by the regular variable pass, and a value
+    /// that does not convert is skipped.
+    /// </summary>
+    private void FillWithFormsPropertyAssignments(CodeGenerationContext context, InstanceSave? instance)
+    {
+        if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.GumForms ||
+            ObjectFinder.Self.GumProjectSave == null)
+        {
+            return;
+        }
+
+        ElementSave? controlElement = instance == null
+            ? context.Element
+            : ObjectFinder.Self.GetElementSave(instance);
+        if (controlElement == null || controlElement is StandardElementSave)
+        {
+            return;
+        }
+
+        Type? controlType = GetFormsControlType(controlElement);
+        if (controlType == null)
+        {
+            return;
+        }
+
+        ElementSave? variableOwner = instance == null
+            ? ObjectFinder.Self.GetElementSave(context.Element.BaseType)
+            : controlElement;
+        RecursiveVariableFinder? variableFinder = variableOwner?.DefaultState == null
+            ? null
+            : new RecursiveVariableFinder(variableOwner.DefaultState);
+
+        string target = instance == null
+            ? "this"
+            : "this." + _codeGenerationNameVerifier.ToCSharpName(instance.Name);
+
+        foreach (VariableSave declaration in GetFormsPropertyDeclarations(controlElement))
+        {
+            VariableSave? authored = context.Element.DefaultState!.Variables.FirstOrDefault(item =>
+                item.Value != null &&
+                item.SetsValue &&
+                item.GetRootName() == declaration.Name &&
+                (instance == null
+                    ? string.IsNullOrEmpty(item.SourceObject)
+                    : item.SourceObject == instance.Name));
+
+            if (authored == null || variableFinder?.GetVariable(declaration.Name) != null)
+            {
+                continue;
+            }
+
+            PropertyInfo? property = controlType
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(item => item.Name == declaration.Name &&
+                    item.SetMethod?.IsPublic == true &&
+                    item.GetIndexParameters().Length == 0);
+            if (property == null)
+            {
+                continue;
+            }
+
+            string? valueInCode = FormsPropertyValueToCode(property.PropertyType, declaration.Type, authored.Value!);
+            if (valueInCode != null)
+            {
+                context.StringBuilder.AppendLine($"{context.Tabs}{target}.{declaration.Name} = {valueInCode};");
+            }
+        }
+    }
+
+    /// <summary>
+    /// The real Forms control the generated class of <paramref name="element"/> derives from, from the nearest
+    /// element in its base chain with a Forms behavior, or null when there is none. The controls live in
+    /// GumCommon; Gum.ProjectServices' own placeholder types (FormsControlPlaceholders.cs) are not them.
+    /// </summary>
+    private static Type? GetFormsControlType(ElementSave element)
+    {
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        ElementSave? current = element;
+
+        while (current != null && visited.Add(current))
+        {
+            GetGumFormsTypeFromBehaviors(current, out string? formsType, out _);
+            if (formsType != null)
+            {
+                return typeof(Gum.Forms.Controls.FrameworkElement).Assembly.GetType(formsType.Replace("global::", string.Empty));
+            }
+
+            current = string.IsNullOrEmpty(current.BaseType)
+                ? null
+                : ObjectFinder.Self.GetElementSave(current.BaseType);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The FormsProperty declarations of every behavior on <paramref name="element"/> and its base chain, in the
+    /// order the runtime applier visits them, the nearest element winning a repeated name.
+    /// </summary>
+    private static IEnumerable<VariableSave> GetFormsPropertyDeclarations(ElementSave element)
+    {
+        HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        ElementSave? current = element;
+
+        while (current != null && visited.Add(current))
+        {
+            foreach (ElementBehaviorReference reference in current.Behaviors)
+            {
+                BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
+                if (behavior == null)
+                {
+                    continue;
+                }
+
+                foreach (VariableSave declaration in behavior.FormsProperties)
+                {
+                    if (!string.IsNullOrEmpty(declaration.Name) && seen.Add(declaration.Name))
+                    {
+                        yield return declaration;
+                    }
+                }
+            }
+
+            current = string.IsNullOrEmpty(current.BaseType)
+                ? null
+                : ObjectFinder.Self.GetElementSave(current.BaseType);
+        }
+    }
+
+    /// <summary>
+    /// Returns the C# literal for <paramref name="value"/> as <paramref name="propertyType"/> (nullable wrappers
+    /// removed; for an <c>object</c> property the declared type decides), or null when it does not convert.
+    /// </summary>
+    private static string? FormsPropertyValueToCode(Type propertyType, string? declaredType, object value)
+    {
+        Type target = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+        if (target == typeof(object))
+        {
+            target = (declaredType?.TrimEnd('?')) switch
+            {
+                "bool" => typeof(bool),
+                "string" => typeof(string),
+                "int" => typeof(int),
+                "long" => typeof(long),
+                "float" => typeof(float),
+                "double" => typeof(double),
+                _ => typeof(object),
+            };
+        }
+
+        try
+        {
+            if (target == typeof(bool))
+            {
+                return Convert.ToBoolean(value, CultureInfo.InvariantCulture) ? "true" : "false";
+            }
+            else if (target == typeof(string))
+            {
+                return "@\"" + Convert.ToString(value, CultureInfo.InvariantCulture)?.Replace("\"", "\"\"") + "\"";
+            }
+            else if (target == typeof(int))
+            {
+                return Convert.ToInt32(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            }
+            else if (target == typeof(long))
+            {
+                return Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture) + "L";
+            }
+            else if (target == typeof(float))
+            {
+                float asFloat = Convert.ToSingle(value, CultureInfo.InvariantCulture);
+                return float.IsFinite(asFloat) ? asFloat.ToString(CultureInfo.InvariantCulture) + "f" : null;
+            }
+            else if (target == typeof(double))
+            {
+                double asDouble = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+                return double.IsFinite(asDouble) ? asDouble.ToString(CultureInfo.InvariantCulture) + "d" : null;
+            }
+            else if (target.IsEnum)
+            {
+                return FormsEnumValueToCode(target, value);
+            }
+        }
+        catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is OverflowException)
+        {
+        }
+
+        return null;
+    }
+
+    private static string? FormsEnumValueToCode(Type enumType, object value)
+    {
+        object? parsed = null;
+        if (value.GetType() == enumType)
+        {
+            parsed = value;
+        }
+        else if (value is string asString)
+        {
+            Enum.TryParse(enumType, asString, ignoreCase: true, out parsed);
+        }
+        else if (value is IConvertible)
+        {
+            parsed = Enum.ToObject(enumType, Convert.ToInt64(value, CultureInfo.InvariantCulture));
+        }
+
+        return parsed != null && Enum.IsDefined(enumType, parsed)
+            ? $"global::{enumType.FullName}.{parsed}"
+            : null;
+    }
+
+    #endregion
 
     #region Localization
 
