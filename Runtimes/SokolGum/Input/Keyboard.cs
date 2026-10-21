@@ -34,6 +34,19 @@ public class Keyboard : IInputReceiverKeyboard
     /// </summary>
     internal static Keyboard CreateForCurrentPlatform() => new Keyboard();
 
+    private readonly KeyRepeatTimer _repeatTimer = new();
+
+    /// <summary>
+    /// Delay after the initial key press before repeat typing begins.
+    /// </summary>
+    public System.TimeSpan RepeatDelay { get; set; } = KeyRepeatTimer.DefaultDelay;
+
+    /// <summary>
+    /// Interval between repeated key-typed events while a key is held down, once
+    /// <see cref="RepeatDelay"/> has elapsed.
+    /// </summary>
+    public System.TimeSpan RepeatRate { get; set; } = KeyRepeatTimer.DefaultRate;
+
     #region Key translation tables
 
     /// <summary>
@@ -224,12 +237,9 @@ public class Keyboard : IInputReceiverKeyboard
                         _keysPushedThisFrame.Add(downKey);
                         _keysTypedThisFrame.Add(downKey);
                     }
-                    else
-                    {
-                        // Repeat events contribute to KeyTyped but not KeyPushed,
-                        // matching the push-plus-repeat semantics other runtimes use.
-                        _keysTypedThisFrame.Add(downKey);
-                    }
+                    // OS repeat events (key_repeat) are ignored for keys: Activity times the
+                    // repeat from RepeatDelay and RepeatRate, as the other runtimes do. Characters
+                    // still repeat as the OS repeats them, through SAPP_EVENTTYPE_CHAR.
                 }
                 break;
             case sapp_event_type.SAPP_EVENTTYPE_KEY_UP:
@@ -282,9 +292,9 @@ public class Keyboard : IInputReceiverKeyboard
 
     /// <inheritdoc/>
     /// <remarks>
-    /// True on initial press (non-repeat KEY_DOWN) and on OS-driven repeat
-    /// (KEY_DOWN with <c>key_repeat == true</c>). Matches MonoGame/Raylib
-    /// KeyTyped semantics closely enough for keyboard-driven Forms controls.
+    /// True on initial press (non-repeat KEY_DOWN) and again at
+    /// <see cref="RepeatDelay"/>/<see cref="RepeatRate"/> intervals while the key is held, added by
+    /// <see cref="Activity"/>. Matches MonoGame/Raylib KeyTyped semantics.
     /// </remarks>
     public bool KeyTyped(GumKeys key) => _keysTypedThisFrame.Contains(key);
 
@@ -303,6 +313,35 @@ public class Keyboard : IInputReceiverKeyboard
     /// <param name="gameTime">The number of seconds since the start of the game.</param>
     public void Activity(double gameTime)
     {
+        // Sokol reports key events, so Gum tracks which keys are held to time their repeat.
+        foreach (GumKeys key in _lastFrameKeysDown)
+        {
+            if (!_keysDown.Contains(key))
+            {
+                _repeatTimer.OnKeyReleased(key);
+            }
+        }
+
+        foreach (GumKeys key in _keysPushedThisFrame)
+        {
+            if (_keysDown.Contains(key))
+            {
+                _repeatTimer.OnKeyPushed(key, gameTime);
+            }
+        }
+
+        foreach (GumKeys key in _keysDown)
+        {
+            // Held without a seen press (held at startup, or the press frame was skipped).
+            _repeatTimer.OnKeyHeld(key, gameTime);
+
+            if (!_keysTypedThisFrame.Contains(key) &&
+                _repeatTimer.IsRepeatDue(key, gameTime, RepeatDelay, RepeatRate))
+            {
+                _keysTypedThisFrame.Add(key);
+            }
+        }
+
         _lastFrameKeysDown.Clear();
         foreach (GumKeys key in _keysDown)
         {

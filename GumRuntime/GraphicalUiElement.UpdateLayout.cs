@@ -543,7 +543,14 @@ public partial class GraphicalUiElement
 
         }
 
-        if (childrenUpdateDepth > 0)
+        // A wrapping stack lays its children out in the wrap pass above whatever the depth, and that pass places the
+        // ones whose position or size comes from siblings (a Ratio size, a position from the line) only as far as
+        // the lines known by then allow. The pass below finishes them, so a shallow layout of a wrapping stack
+        // has to run it too, or it leaves those children somewhere a full layout would not put them (#6315).
+        var isWrappingStack = WrapsChildren &&
+            (ChildrenLayout == ChildrenLayout.LeftToRightStack || ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
+        if (childrenUpdateDepth > 0 || (isWrappingStack && mContainedObjectAsIpso != null))
         {
             UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize: false, trackChildVisits, alreadyUpdated: fullyUpdatedChildren);
 
@@ -585,9 +592,6 @@ public partial class GraphicalUiElement
             // that was not part of the wrap pass (a Ratio or percent size, a position from the parent)
             // is only laid out in the pass above, and it moves the children stacked after it, so the
             // lines and with them the stack's size can differ from what was measured.
-            var isWrappingStack = WrapsChildren &&
-                (ChildrenLayout == ChildrenLayout.LeftToRightStack || ChildrenLayout == ChildrenLayout.TopToBottomStack);
-
             // Without a renderable (such as a Screen) there is no size of our own to re-measure.
             if (sizeDependsOnChildren && (canOneDimensionChangeOtherDimension || isWrappingStack) && mContainedObjectAsIpso != null)
             {

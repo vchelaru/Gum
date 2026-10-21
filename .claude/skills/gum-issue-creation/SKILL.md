@@ -11,7 +11,7 @@ Use `gh issue create` to file issues. Conventions:
 Check the skills list for one matching the feature area and load it **before** grepping for the file:line pointer — CLAUDE.md's "load matching skills before investigating" rule applies to issue research too, not just edits. A matching skill (e.g. `gum-tool-variable-grid` for a Variables-tab/displayer report) names the relevant files and known gotchas directly instead of rediscovering them by grep.
 
 ## Don't file
-SokolGum and Maui are not maintained. Don't file or work on issues that exist only for them, and a feature that ships on the MonoGame family, raylib, and Skia but not SokolGum is not a tracked gap.
+SokolGum and Maui are not maintained. Don't edit them, don't mention them in reports, PR bodies or briefs, don't file or work on issues that exist only for them, and a feature that ships on the MonoGame family, raylib, and Skia but not SokolGum is not a tracked gap.
 
 FlatRedBall 1 (FRB1) is frozen. It changes only when a game that uses it needs a change, so don't file issues about behavior that is wrong only in the FRB1 build, and don't fix or pin it unprompted. Shared source still has to compile for FRB1 (the FRB canary), and `#if FRB` code is left alone.
 

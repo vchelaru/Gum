@@ -120,6 +120,10 @@ if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.Enter))
 }
 ```
 
+### ICursor Has FrameworkElement Members and TransformMatrix
+
+`ICursor` gains `FrameworkElementOver`, `FrameworkElementPushed`, `FrameworkElementRightPushed` and a read-only `TransformMatrix`, so code that holds an `ICursor` can read what `Cursor` already offered. The `FrameworkElement` members return the control of the matching visual. `TransformMatrix` is a `System.Numerics.Matrix3x2` that defaults to the identity matrix. On MonoGame, KNI and FNA, the interface `TransformMatrix` is a 2D conversion of the XNA matrix, so Z and perspective are not part of it. `Cursor.TransformMatrix` keeps its type and setter (an XNA `Matrix` in those runtimes). A class that implements `ICursor` keeps compiling without these members.
+
 ### IGumService Cursor Is Not Null Under a Custom Cursor
 
 `IGumService.Default.Cursor` now returns the cursor Forms is using, including one installed with `FormsUtilities.SetCursor`. It used to return `null` while a custom `ICursor` was installed, and in Skia-based hosts (Silk.NET, Stride, KNI Skia, Unity) it was always `null`. `IGumService` also has a new `Keyboard` member that returns the installed `IInputReceiverKeyboard`, with a default implementation that returns `null`, so a class that implements `IGumService` keeps compiling.
@@ -527,3 +531,13 @@ Variables driven by a behavior reference, such as a category state that follows 
 This affects you only if an instance sets a variable that its control now hides. A project from before the control hid the variable can hold one without you knowing. Such a variable appears in generated code the next time you generate.
 
 To migrate, regenerate your code and look at the changes. To drop a stale value, remove it from the instance in the tool.
+
+### raylib and Sokol Repeat Held Keys With Gum's Timing
+
+On raylib and Sokol, holding a key such as an arrow, Backspace, or Delete now repeats after `RepeatDelay` (500 ms) at `RepeatRate` (70 ms), the same as MonoGame, KNI, FNA and the Skia hosts. Before this version these two hosts used the operating system's key repeat for `KeyTyped` and `KeysTyped`.
+
+Typed characters are not affected. They still repeat as the operating system repeats them. On raylib this includes the newline that Enter inserts into a multi-line `TextBox`.
+
+`IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` (both `TimeSpan`, settable) as default members. A class that implements `IInputReceiverKeyboard` keeps compiling without them. Without an override the getters return 500 ms and 70 ms and the setters do nothing.
+
+This affects you only if you rely on the operating system's key repeat speed for arrow keys or other navigation keys on raylib or Sokol. To migrate, set `RepeatDelay` and `RepeatRate` on the keyboard to the values you want.

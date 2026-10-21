@@ -1352,6 +1352,36 @@ public interface ICursor
     int LastY => Y - YChange;
 
     /// <summary>
+    /// The Forms control whose visual the cursor is currently over, or null if there is none or the
+    /// visual has no Forms control. Defaults to the control of <see cref="VisualOver"/>.
+    /// </summary>
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementOver =>
+        VisualOver?.FormsControlAsObject as Gum.Forms.Controls.FrameworkElement;
+
+    /// <summary>
+    /// The Forms control that was under the cursor when the primary button was pushed, or null if there
+    /// is none or the visual has no Forms control. Defaults to the control of <see cref="VisualPushed"/>.
+    /// </summary>
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementPushed =>
+        VisualPushed?.FormsControlAsObject as Gum.Forms.Controls.FrameworkElement;
+
+    /// <summary>
+    /// The Forms control that was under the cursor when the right button was pushed, or null if there
+    /// is none or the visual has no Forms control. Defaults to the control of <see cref="VisualRightPushed"/>.
+    /// </summary>
+    Gum.Forms.Controls.FrameworkElement? FrameworkElementRightPushed =>
+        VisualRightPushed?.FormsControlAsObject as Gum.Forms.Controls.FrameworkElement;
+
+    /// <summary>
+    /// The 2D transform applied to the raw device position to produce <see cref="X"/> and <see cref="Y"/>,
+    /// used when Gum is drawn to a render target or a modified viewport. Read-only here: set it on the
+    /// concrete cursor. Defaults to the identity matrix, which is what a cursor that applies no transform reports.
+    /// On MonoGame, KNI and FNA the concrete <c>Cursor</c> keeps its XNA <c>Matrix</c> property, and this member
+    /// is the platform-neutral 2D view of it (Z and perspective are not included).
+    /// </summary>
+    System.Numerics.Matrix3x2 TransformMatrix => System.Numerics.Matrix3x2.Identity;
+
+    /// <summary>
     /// Clears the cursor's per-frame input state. Does nothing by default.
     /// </summary>
     void ClearInputValues() { }
@@ -1372,6 +1402,36 @@ public interface IInputReceiverKeyboard
     /// runtimes that do not report Command keep Ctrl-only shortcuts.
     /// </summary>
     bool IsCommandDown => false;
+
+    /// <summary>
+    /// The delay after a key is first pressed before <see cref="KeyTyped"/> starts repeating while the key is held.
+    /// Every keyboard Gum provides honors it and starts at 500 ms.
+    /// </summary>
+    /// <remarks>
+    /// A default interface member cannot store a value, so on an implementer that does not override this property
+    /// the getter returns 500 ms and the setter does nothing. Override both accessors if your keyboard times its
+    /// own repeat. Character input (<see cref="GetStringTyped"/>) repeats as the operating system repeats it
+    /// and is not affected.
+    /// </remarks>
+    TimeSpan RepeatDelay
+    {
+        get => global::Gum.Input.KeyRepeatTimer.DefaultDelay;
+        set { }
+    }
+
+    /// <summary>
+    /// The interval between repeated <see cref="KeyTyped"/> results while a key is held, once
+    /// <see cref="RepeatDelay"/> has elapsed. Every keyboard Gum provides honors it and starts at 70 ms.
+    /// </summary>
+    /// <remarks>
+    /// On an implementer that does not override this property the getter returns 70 ms and the setter does
+    /// nothing. See <see cref="RepeatDelay"/>.
+    /// </remarks>
+    TimeSpan RepeatRate
+    {
+        get => global::Gum.Input.KeyRepeatTimer.DefaultRate;
+        set { }
+    }
 
     /// <summary>
     /// Returns the keys typed this frame in the shared <see cref="Gum.Forms.Input.Keys"/>
@@ -1431,9 +1491,7 @@ public interface IInputReceiverKeyboard
 
     /// <summary>
     /// Returns whether the specified key was "typed" this frame — either pushed this frame,
-    /// or held long enough to trigger the OS key-repeat. Matches the behavior of
-    /// <c>Microsoft.Xna.Framework.Input.Keys</c>-based <c>KeyTyped</c> on MonoGame and
-    /// <c>Raylib.IsKeyPressedRepeat</c> on Raylib.
+    /// or held long enough to repeat, timed by <see cref="RepeatDelay"/> and <see cref="RepeatRate"/>.
     /// </summary>
     /// <param name="key">The key to query, in the shared <see cref="Gum.Forms.Input.Keys"/> space.</param>
     bool KeyTyped(Gum.Forms.Input.Keys key);
