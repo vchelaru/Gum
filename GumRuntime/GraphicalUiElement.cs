@@ -132,22 +132,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         get
         {
+            // Every case is named, not just the ones this element's parent matches. Each is checked against the
+            // real parent when the update runs, and the update climbs to ancestors with the same flags: an ancestor
+            // that stacks, or is sized from its children, has to hear about a change that was skipped here even
+            // when this element's own parent does neither (#6307).
             var toReturn = currentDirtyState?.ParentUpdateType ?? ParentUpdateType.None;
 
-            if(GetIfParentHasRatioChildren())
-            {
-                toReturn = toReturn | ParentUpdateType.IfParentHasRatioSizedChildren;
-            }
-
-            if(GetIfParentStacks())
-            {
-                toReturn = toReturn | ParentUpdateType.IfParentStacks;
-            }
-            if(GetIfParentWidthHeightDependOnChildren())
-            {
-                toReturn = toReturn | ParentUpdateType.IfParentWidthHeightDependOnChildren;
-            }
-            return toReturn;
+            return toReturn |
+                ParentUpdateType.IfParentHasRatioSizedChildren |
+                ParentUpdateType.IfParentStacks |
+                ParentUpdateType.IfParentIsAutoGrid |
+                ParentUpdateType.IfParentWidthHeightDependOnChildren;
         }
     }
     // Deferred font loading flag. Set to true when a font-related property is changed while
