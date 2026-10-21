@@ -80,7 +80,8 @@ public class FormsUtilities
     /// This also sets <see cref="FrameworkElement.MainKeyboard"/> and swaps the new keyboard into
     /// <see cref="FrameworkElement.KeyboardsForUiControl"/> wherever the old one was registered, so
     /// neither needs to be updated separately. <c>GumService.Keyboard</c> returns only the built-in
-    /// <c>Keyboard</c> type, so it is null while a custom keyboard is installed.
+    /// <c>Keyboard</c> type, so it is null while a custom keyboard is installed. <c>IGumService.Keyboard</c>
+    /// and <see cref="Keyboard"/> return the installed keyboard whatever its type.
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="keyboard"/> is null.</exception>
     public static void SetKeyboard(IInputReceiverKeyboard keyboard)

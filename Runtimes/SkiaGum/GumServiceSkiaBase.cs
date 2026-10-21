@@ -193,11 +193,13 @@ public abstract class GumServiceSkiaBase : IGumService
 
     IRenderer IGumService.Renderer => SystemManagers.Default.Renderer;
 
-    // Skia is a rendering technology, not a windowing/input system, so the render-only base has no
-    // built-in cursor. A host that overrides CreateCursor (e.g. a future Silk.NET-on-Skia consumer)
-    // gets real input; nothing on the render-only path consumes this today (Forms controls render
-    // via their contained visual, which needs no cursor).
-    ICursor IGumService.Cursor => null!;
+    // Skia is a rendering technology, not a windowing/input system, so the render-only base creates no
+    // cursor or keyboard and these are null there. A host that overrides CreateCursor/CreateKeyboard
+    // (Silk, Stride, KNI, Unity) gets real input, and so does a custom one installed with
+    // FormsUtilities.SetCursor/SetKeyboard: these return whichever is installed, like the MonoGame service.
+    ICursor IGumService.Cursor => FormsUtilities.Cursor!;
+
+    IInputReceiverKeyboard? IGumService.Keyboard => FormsUtilities.Keyboard;
 
     float IGumService.CanvasWidth
     {

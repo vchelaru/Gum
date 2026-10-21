@@ -257,6 +257,42 @@ public class GumServiceTests
         GumService.Default.Root.Children.ShouldContain(visual);
     }
 
+    // The render-only service creates no cursor or keyboard (#6322).
+    [Fact]
+    public void InterfaceCursorAndKeyboard_OnTheRenderOnlyService_ShouldBeNullUntilSomethingIsInstalled()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+
+        IGumService service = GumService.Default;
+
+        service.Cursor.ShouldBeNull();
+        service.Keyboard.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InterfaceCursorAndKeyboard_OnTheRenderOnlyService_ShouldReturnWhatSetCursorAndSetKeyboardInstalled()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
+        GumService.Default.Initialize(surface.Canvas, 200, 100);
+        ICursor cursor = new Moq.Mock<ICursor>().Object;
+        IInputReceiverKeyboard keyboard = new Moq.Mock<IInputReceiverKeyboard>().Object;
+        IGumService service = GumService.Default;
+        try
+        {
+            Gum.Forms.FormsUtilities.SetCursor(cursor);
+            Gum.Forms.FormsUtilities.SetKeyboard(keyboard);
+
+            service.Cursor.ShouldBeSameAs(cursor);
+            service.Keyboard.ShouldBeSameAs(keyboard);
+        }
+        finally
+        {
+            FrameworkElement.MainCursor = null!;
+            FrameworkElement.MainKeyboard = null!;
+        }
+    }
+
     [Fact]
     public void Initialize_ShouldSetIGumServiceDefault()
     {

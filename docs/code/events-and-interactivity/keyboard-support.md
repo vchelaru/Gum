@@ -43,3 +43,9 @@ While a custom keyboard is installed, `GumUI.Keyboard` returns `null` because it
 {% hint style="info" %}
 Available in October 2026, or now if building Gum from source.
 {% endhint %}
+
+Code written against `IGumService` can read the active keyboard with `IGumService.Default.Keyboard`.
+
+{% hint style="info" %}
+`IGumService.Default.Keyboard` is available in November 2026, or now if building Gum from source.
+{% endhint %}
