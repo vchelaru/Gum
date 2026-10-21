@@ -53,14 +53,13 @@ namespace Gum.Mvvm
 
         protected bool Set<T>(T propertyValue, [CallerMemberName]string? propertyName = null)
         {
-            if (propertyValue is INotifyCollectionChanged collection)
-            {
-                // Kept out of line: the callback closes over propertyName, and a closure in this
-                // method would be allocated on every Set, collection or not.
-                SubscribeToCollection(collection, Get<T>(propertyName), propertyName);
-            }
-
             bool didSet = SetWithoutNotifying(propertyValue, propertyName);
+
+            if (propertyName != null && propertyValue is INotifyCollectionChanged collection)
+            {
+                // Kept out of line so a non-collection Set does no extra work.
+                SubscribeToCollection(collection, propertyName);
+            }
 
             if (didSet)
             {
@@ -70,19 +69,39 @@ namespace Gum.Mvvm
             return didSet;
         }
 
-        private void SubscribeToCollection(INotifyCollectionChanged collection, object? oldValue, string? propertyName)
-        {
-            if (oldValue is INotifyCollectionChanged oldCollection)
-            {
-                oldCollection.CollectionChanged -= CollectionChangedInternal;
-            }
-            collection.CollectionChanged += CollectionChangedInternal;
+        // One handler per property, created the first time the property holds a collection and
+        // reused afterwards, so the exact delegate that was added is the one removed. A fresh
+        // closure per Set never equals the one added earlier, so -= would silently do nothing.
+        // Null until a collection is set, so view models without collection properties pay nothing.
+        private Dictionary<string, NotifyCollectionChangedEventHandler>? collectionHandlers;
 
-            void CollectionChangedInternal(object? sender, NotifyCollectionChangedEventArgs e)
+        private void SubscribeToCollection(INotifyCollectionChanged collection, string propertyName)
+        {
+            collectionHandlers ??= new Dictionary<string, NotifyCollectionChangedEventHandler>();
+            if (collectionHandlers.TryGetValue(propertyName, out NotifyCollectionChangedEventHandler? handler) == false)
             {
-                // Reset arrives with null OldItems/NewItems even from Clear(), so every action notifies.
-                NotifyPropertyChanged(propertyName);
+                handler = CreateCollectionHandler(propertyName);
+                collectionHandlers[propertyName] = handler;
             }
+
+            // Remove first so setting the same collection again does not subscribe twice.
+            collection.CollectionChanged -= handler;
+            collection.CollectionChanged += handler;
+        }
+
+        private void UnsubscribeFromCollection(object? oldValue, string propertyName)
+        {
+            if (oldValue is INotifyCollectionChanged oldCollection &&
+                collectionHandlers!.TryGetValue(propertyName, out NotifyCollectionChangedEventHandler? handler))
+            {
+                oldCollection.CollectionChanged -= handler;
+            }
+        }
+
+        private NotifyCollectionChangedEventHandler CreateCollectionHandler(string propertyName)
+        {
+            // Reset arrives with null OldItems/NewItems even from Clear(), so every action notifies.
+            return (_, _) => NotifyPropertyChanged(propertyName);
         }
 
         protected bool SetWithoutNotifying<T>(T propertyValue, [CallerMemberName]string? propertyName = null)
@@ -96,6 +115,10 @@ namespace Gum.Mvvm
                 if (EqualityComparer<T>.Default.Equals(storage, propertyValue) == false)
                 {
                     didSet = true;
+                    if (collectionHandlers != null)
+                    {
+                        UnsubscribeFromCollection(storedValue, propertyName);
+                    }
                     propertyDictionary[propertyName] = propertyValue;
                 }
             }
@@ -190,6 +213,9 @@ namespace Gum.Mvvm
             var asObject = this.MemberwiseClone();
             var asViewModel = (ViewModel)asObject;
             asViewModel.propertyDictionary = new Dictionary<string, object?>(this.propertyDictionary);
+            // MemberwiseClone copied the reference; the handlers belong to this instance, and a
+            // clone replacing a collection must not unsubscribe the original.
+            asViewModel.collectionHandlers = null;
             var asT = (T)asObject;
 
             return asT;
