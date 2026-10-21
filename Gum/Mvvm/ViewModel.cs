@@ -211,7 +211,7 @@ namespace Gum.Mvvm
         {
             bool didSet = SetWithoutNotifying(propertyValue, propertyName);
 
-            if (propertyName != null && propertyValue is INotifyCollectionChanged collection)
+            if (propertyName != null && CollectionCapable<T>.Value && propertyValue is INotifyCollectionChanged collection)
             {
                 // Kept out of line so a non-collection Set does no extra work.
                 SubscribeToCollection(collection, propertyName);
@@ -442,7 +442,7 @@ namespace Gum.Mvvm
                     : _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name)));
             }
 
-            if (notifyRelationships.TryGetValue(propertyName, out var childPropertyNames))
+            if (notifyRelationships.Count != 0 && notifyRelationships.TryGetValue(propertyName, out var childPropertyNames))
             {
                 foreach (var childPropertyName in childPropertyNames)
                 {
