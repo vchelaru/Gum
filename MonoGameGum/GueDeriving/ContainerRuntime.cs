@@ -31,6 +31,7 @@ public class ContainerRuntime : InteractiveGue
             if (RenderableComponent is InvisibleRenderable invisibleRenderable)
             {
                 invisibleRenderable.Alpha = value;
+                NotifyPropertyChanged();
             }
         }
     }
@@ -44,6 +45,7 @@ public class ContainerRuntime : InteractiveGue
             if (RenderableComponent is InvisibleRenderable invisibleRenderable)
             {
                 invisibleRenderable.IsRenderTarget = value;
+                NotifyPropertyChanged();
             }
         }
     }

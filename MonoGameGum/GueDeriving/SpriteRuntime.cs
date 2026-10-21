@@ -239,7 +239,11 @@ public class SpriteRuntime : GraphicalUiElement
     public bool Animate
     {
         get => ContainedSprite.AnimationLogic.Animate;
-        set => ContainedSprite.AnimationLogic.Animate = value;
+        set
+        {
+            ContainedSprite.AnimationLogic.Animate = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -252,6 +256,7 @@ public class SpriteRuntime : GraphicalUiElement
         {
             ContainedSprite.AnimationLogic.CurrentChainName = value;
             UpdateTextureValuesFromCurrentFrame();
+            NotifyPropertyChanged();
         }
     }
 

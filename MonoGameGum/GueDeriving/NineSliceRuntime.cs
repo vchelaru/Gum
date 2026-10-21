@@ -380,13 +380,21 @@ public class NineSliceRuntime : InteractiveGue
     public bool IsTilingMiddleSections
     {
         get => ContainedNineSlice.IsTilingMiddleSections;
-        set => ContainedNineSlice.IsTilingMiddleSections = value;
+        set
+        {
+            ContainedNineSlice.IsTilingMiddleSections = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public float BorderScale
     {
         get => ContainedNineSlice.BorderScale;
-        set => ContainedNineSlice.BorderScale = value;
+        set
+        {
+            ContainedNineSlice.BorderScale = value;
+            NotifyPropertyChanged();
+        }
     }
 #endif
 
