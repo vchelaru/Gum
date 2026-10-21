@@ -151,6 +151,23 @@ public class ViewModelAllocationTests : BaseTestClass
     }
 
     [Fact]
+    public void Set_NewStringValue_OnViewModelWithSubscribedCollection_AllocatesNothing()
+    {
+        AllocationViewModel vm = new AllocationViewModel { Items = new ObservableCollection<int>() };
+        string a = "a";
+        string b = "bb";
+        bool useA = false;
+
+        AllocationResult result = Measure(() =>
+        {
+            useA = !useA;
+            vm.StringProperty = useA ? a : b;
+        });
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
+    [Fact]
     public void Get_AllocatesNothing()
     {
         AllocationViewModel vm = new AllocationViewModel { FloatProperty = 3, StringProperty = "abc" };
