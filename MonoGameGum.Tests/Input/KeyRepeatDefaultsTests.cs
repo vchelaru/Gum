@@ -174,6 +174,17 @@ public class KeyRepeatDefaultsTests : IDisposable
     }
 
     [Fact]
+    public void ApplyOsSettings_NullKeyboard_ShouldNotThrow()
+    {
+        KeyRepeatDefaults.Provider = new FakeProvider
+        {
+            Settings = new KeyRepeatSettings(TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(40))
+        };
+
+        Should.NotThrow(() => KeyRepeatDefaults.ApplyOsSettings(null));
+    }
+
+    [Fact]
     public void ApplyOsSettings_KeyboardWithoutRepeatMembers_ShouldNotThrow()
     {
         KeyRepeatDefaults.Provider = new FakeProvider

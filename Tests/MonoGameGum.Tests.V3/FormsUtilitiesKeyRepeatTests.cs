@@ -2,6 +2,7 @@ using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Wireframe;
+using Moq;
 using RenderingLibrary;
 using Shouldly;
 using System;
@@ -55,6 +56,31 @@ public class FormsUtilitiesKeyRepeatTests : IDisposable
 
         FormsUtilities.Keyboard.ShouldNotBeNull().RepeatDelay.ShouldBe(TimeSpan.FromMilliseconds(250));
         FormsUtilities.Keyboard.RepeatRate.ShouldBe(TimeSpan.FromMilliseconds(40));
+    }
+
+    [Fact]
+    public void InitializeDefaults_WhenServiceCreatesNoKeyboard_ShouldNotThrow()
+    {
+        // Render-only hosts (SkiaGum, SkiaGum.Wpf, ...) inherit IGumService.CreateKeyboard() => null.
+        KeyRepeatDefaults.Provider = new FakeProvider
+        {
+            Settings = new KeyRepeatSettings(TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(40))
+        };
+        IGumService? originalService = IGumService.Default;
+        Mock<IGumService> service = new Mock<IGumService> { CallBase = true };
+        service.Setup(x => x.CreateCursor()).Returns(((IGumService)Gum.GumService.Default).CreateCursor());
+        service.Setup(x => x.CreateKeyboard()).Returns((IInputReceiverKeyboard?)null);
+
+        try
+        {
+            IGumService.Default = service.Object;
+
+            Should.NotThrow(() => FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3));
+        }
+        finally
+        {
+            IGumService.Default = originalService;
+        }
     }
 
     [Fact]

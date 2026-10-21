@@ -46,10 +46,15 @@ internal static class KeyRepeatDefaults
     /// <see cref="IInputReceiverKeyboard.RepeatRate"/> from <see cref="Provider"/>. Called once when Gum
     /// creates the keyboard, so a value the user sets afterwards wins. A property that is no longer at
     /// the shared default was set already and is left alone. Does nothing, and never throws, when the
-    /// settings cannot be read.
+    /// settings cannot be read or <paramref name="keyboard"/> is null (render-only hosts create no keyboard).
     /// </summary>
-    internal static void ApplyOsSettings(IInputReceiverKeyboard keyboard)
+    internal static void ApplyOsSettings(IInputReceiverKeyboard? keyboard)
     {
+        if (keyboard == null)
+        {
+            return;
+        }
+
         KeyRepeatSettings? settings;
         try
         {
