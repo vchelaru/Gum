@@ -541,3 +541,5 @@ Typed characters are not affected. They still repeat as the operating system rep
 `IInputReceiverKeyboard` now declares `RepeatDelay` and `RepeatRate` (both `TimeSpan`, settable) as default members. A class that implements `IInputReceiverKeyboard` keeps compiling without them. Without an override the getters return 500 ms and 70 ms and the setters do nothing.
 
 This affects you only if you rely on the operating system's key repeat speed for arrow keys or other navigation keys on raylib or Sokol. To migrate, set `RepeatDelay` and `RepeatRate` on the keyboard to the values you want.
+
+On Windows, `Initialize` also starts `RepeatDelay` and `RepeatRate` from the system keyboard settings (delay 250 ms to 1 second, speed about 2.5 to 30 repeats per second) instead of 500 ms and 70 ms. The system settings are read once, so a change made while the game runs is not picked up. Other platforms keep 500 ms and 70 ms. To keep fixed values on every machine, set `RepeatDelay` and `RepeatRate` after `Initialize`.

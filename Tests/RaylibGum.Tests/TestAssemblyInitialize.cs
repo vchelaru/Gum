@@ -72,6 +72,9 @@ public class TestAssemblyInitialize : XunitTestFramework
         // Qualified as Gum.GumService (the modern, non-obsolete class) to stay warning-free.
         IGumService.Default = Gum.GumService.Default;
 
+        // Tests must not depend on the machine's OS key repeat settings; the keyboard keeps its 500/70 ms defaults.
+        Gum.Input.KeyRepeatDefaults.Provider = null;
+
         // Registers V3 DefaultFormsTemplates (Button, ListBox, Slider, ComboBox, ...) so
         // parameterless Forms constructors produce a control with Visual != null on Raylib.
         FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);

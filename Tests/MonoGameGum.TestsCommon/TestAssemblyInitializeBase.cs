@@ -60,6 +60,9 @@ public class TestAssemblyInitializeBase : XunitTestFramework
         // Qualified as Gum.GumService (the modern, non-obsolete class) to stay warning-free.
         IGumService.Default = Gum.GumService.Default;
 
+        // Tests must not depend on the machine's OS key repeat settings; the keyboard keeps its 500/70 ms defaults.
+        Gum.Input.KeyRepeatDefaults.Provider = null;
+
         FormsUtilities.InitializeDefaults(defaultVisualsVersion: visualVersion);
         CreateStubbedFonts();
 

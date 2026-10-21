@@ -1405,7 +1405,7 @@ public interface IInputReceiverKeyboard
 
     /// <summary>
     /// The delay after a key is first pressed before <see cref="KeyTyped"/> starts repeating while the key is held.
-    /// Every keyboard Gum provides honors it and starts at 500 ms.
+    /// Every keyboard Gum provides honors it and starts at 500 ms, or at the operating system's setting where Gum reads it (Windows) when Gum initializes.
     /// </summary>
     /// <remarks>
     /// A default interface member cannot store a value, so on an implementer that does not override this property
@@ -1421,7 +1421,7 @@ public interface IInputReceiverKeyboard
 
     /// <summary>
     /// The interval between repeated <see cref="KeyTyped"/> results while a key is held, once
-    /// <see cref="RepeatDelay"/> has elapsed. Every keyboard Gum provides honors it and starts at 70 ms.
+    /// <see cref="RepeatDelay"/> has elapsed. Every keyboard Gum provides honors it and starts at 70 ms, or at the operating system's setting where Gum reads it (Windows) when Gum initializes.
     /// </summary>
     /// <remarks>
     /// On an implementer that does not override this property the getter returns 70 ms and the setter does
