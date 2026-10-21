@@ -3,6 +3,7 @@ using SkiaSharp;
 using Shouldly;
 using System;
 using System.IO;
+using System.Reflection;
 using ToolsUtilities;
 using Xunit;
 
@@ -17,6 +18,18 @@ namespace SkiaGum.Tests.Content;
 // mirror of LoadContent.
 public class EmbeddedResourceContentLoaderTests
 {
+    [Fact]
+    public void ObsoleteMessage_ShouldStateErrorAndRemovalDates()
+    {
+        ObsoleteAttribute? obsolete = typeof(EmbeddedResourceContentLoader).GetCustomAttribute<ObsoleteAttribute>();
+
+        obsolete.ShouldNotBeNull();
+        obsolete!.IsError.ShouldBeFalse();
+        string message = obsolete.Message ?? string.Empty;
+        message.ShouldContain("April 2027");
+        message.ShouldContain("November 2027");
+    }
+
     [Fact]
     public void TryLoadContent_WhenContentExists_ShouldReturnLoadedContent()
     {

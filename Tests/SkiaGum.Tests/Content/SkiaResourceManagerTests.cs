@@ -3,6 +3,7 @@ using SkiaSharp;
 using Shouldly;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using Xunit;
@@ -14,6 +15,18 @@ namespace SkiaGum.Tests.Content;
 
 public class SkiaResourceManagerTests
 {
+    [Fact]
+    public void ObsoleteMessage_ShouldStateErrorAndRemovalDates()
+    {
+        ObsoleteAttribute? obsolete = typeof(SkiaResourceManager).GetCustomAttribute<ObsoleteAttribute>();
+
+        obsolete.ShouldNotBeNull();
+        obsolete!.IsError.ShouldBeFalse();
+        string message = obsolete.Message ?? string.Empty;
+        message.ShouldContain("April 2027");
+        message.ShouldContain("November 2027");
+    }
+
     // Regression for #3609: the SKBitmap cache used to be a plain, non-concurrent
     // Dictionary. xUnit runs test classes in parallel, so concurrent GetSKBitmap
     // calls raced on the Dictionary's internal state during a resize, and a
