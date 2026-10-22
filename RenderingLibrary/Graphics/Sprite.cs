@@ -152,13 +152,21 @@ public class Sprite : SpriteBatchRenderableBase,
     public float X
     {
         get { return Position.X; }
-        set { Position.X = value; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            Position.X = value;
+        }
     }
 
     public float Y
     {
         get { return Position.Y; }
-        set { Position.Y = value; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            Position.Y = value;
+        }
     }
 
     public float Z
@@ -167,10 +175,15 @@ public class Sprite : SpriteBatchRenderableBase,
         set;
     }
 
+    float _width;
     public float Width
     {
-        get;
-        set;
+        get => _width;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
+            _width = value;
+        }
     }
 
     float _height;
@@ -179,12 +192,7 @@ public class Sprite : SpriteBatchRenderableBase,
         get => _height;
         set
         {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value))
-            {
-                throw new InvalidOperationException("Cannot assign a Sprite's Height to NaN");
-            }
-#endif
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
             _height = value;
         }
     }
@@ -251,7 +259,16 @@ public class Sprite : SpriteBatchRenderableBase,
         set;
     }
 
-    public float Rotation { get; set; }
+    float _rotationValue;
+    public float Rotation
+    {
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
+    }
 
     public bool Animate
     {
@@ -948,11 +965,6 @@ public class Sprite : SpriteBatchRenderableBase,
             }
 
 #if FULL_DIAGNOSTICS
-            if (float.IsPositiveInfinity( scale.X))
-            {
-                throw new Exception("scale.X is positive infinity, it shouldn't be!");
-            }
-
             if (textureToUse != null && textureToUse.IsDisposed)
             {
                 throw new ObjectDisposedException($"Texture is disposed.  Texture name: {textureToUse.Name}, sprite scale: {scale}, Sprite name: {ipso.Name}");

@@ -141,7 +141,10 @@ public static class IWrappedTextExtensions
             && !textInstance.IsHeightDependentOnLines)
         {
 
-            var maxLinesFromHeight = (int)(textInstance.Height / textInstance.LineHeightInPixels);
+            // An infinite Height is no limit, as an infinite Width is no wrapping below. Cast as is, the result
+            // depends on the platform (#6478).
+            float linesFromHeight = textInstance.Height / textInstance.LineHeightInPixels;
+            var maxLinesFromHeight = float.IsPositiveInfinity(linesFromHeight) ? int.MaxValue : (int)linesFromHeight;
             if (maxLinesFromHeight < effectiveMaxNumberOfLines || effectiveMaxNumberOfLines == null)
             {
                 effectiveMaxNumberOfLines = maxLinesFromHeight;

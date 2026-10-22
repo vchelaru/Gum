@@ -115,13 +115,21 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
     public float X
     {
         get => Position.X;
-        set => Position.X = value;
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            Position.X = value;
+        }
     }
 
     public float Y
     {
         get { return Position.Y; }
-        set { Position.Y = value; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            Position.Y = value;
+        }
     }
 
     public float Z
@@ -136,6 +144,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _width;
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
             var changed = _width != value;
             _width = value;
             if(changed)
@@ -155,6 +164,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get => _height;
         set
         {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
             var changed = _height != value;
             _height = value;
             if(changed)
@@ -172,7 +182,16 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         get;
         set;
     }
-    public float Rotation { get; set; }
+    float _rotationValue;
+    public float Rotation
+    {
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
+    }
 
     public bool Wrap => false;
 

@@ -167,7 +167,9 @@ public partial class GraphicalUiElement
                                 }
                                 else
                                 {
-                                    mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                                    // A null Width is how a text is measured unwrapped. An infinite width would measure the
+                                    // same, but renderables reject it under FULL_DIAGNOSTICS (#6477).
+                                    asText.Width = null;
                                 }
                             }
                             maxHeight = asText.WrappedTextHeight;

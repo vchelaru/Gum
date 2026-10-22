@@ -43,11 +43,13 @@ public class LayoutCoverageGapTests : BaseTestClass
     class WidthRecordingText : FakeText, IText
     {
         public float WidthWhenHeightWasRead { get; private set; }
+        public float? TextWidthWhenHeightWasRead { get; private set; }
         float IText.WrappedTextHeight
         {
             get
             {
                 WidthWhenHeightWasRead = Width;
+                TextWidthWhenHeightWasRead = ((IText)this).Width;
                 return 10;
             }
         }
@@ -291,12 +293,10 @@ public class LayoutCoverageGapTests : BaseTestClass
         element.AbsoluteHeight.ShouldBe(50);
     }
 
-    // A text sized to its children on both axes measures its height at its max width, or unwrapped
-    // when it has none, and restores the renderable's width afterwards.
-    [Theory]
-    [InlineData(100f, 100f)]
-    [InlineData(null, float.PositiveInfinity)]
-    public void TextHeight_ShouldBeMeasuredAtMaxWidth_WhenWidthIsRelativeToChildren(float? maxWidth, float expectedMeasureWidth)
+    // A text sized to its children on both axes measures its height at its max width, and restores the
+    // renderable's width afterwards.
+    [Fact]
+    public void TextHeight_ShouldBeMeasuredAtMaxWidth_WhenWidthIsRelativeToChildren()
     {
         WidthRecordingText renderable = new();
         GraphicalUiElement text = new(renderable);
@@ -304,11 +304,31 @@ public class LayoutCoverageGapTests : BaseTestClass
         text.HeightUnits = DimensionUnitType.RelativeToChildren;
         text.Width = 0;
         text.Height = 0;
-        text.MaxWidth = maxWidth;
+        text.MaxWidth = 100;
 
         text.UpdateLayout();
 
-        renderable.WidthWhenHeightWasRead.ShouldBe(expectedMeasureWidth);
+        renderable.WidthWhenHeightWasRead.ShouldBe(100f);
+    }
+
+    // With no max width the text is measured unwrapped, which the text expresses as a null Width. The layout never
+    // writes an infinite width into the renderable, which rejects it under FULL_DIAGNOSTICS (#6477).
+    [Fact]
+    public void TextHeight_ShouldBeMeasuredUnwrapped_WhenWidthIsRelativeToChildrenWithoutMaxWidth()
+    {
+        WidthRecordingText renderable = new();
+        ((IText)renderable).Width = 5;
+        GraphicalUiElement text = new(renderable);
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 0;
+        text.Height = 0;
+        text.MaxWidth = null;
+
+        text.UpdateLayout();
+
+        renderable.TextWidthWhenHeightWasRead.ShouldBeNull();
+        float.IsInfinity(renderable.WidthWhenHeightWasRead).ShouldBeFalse();
     }
 
     // Some platforms throw while measuring a text; the width falls back to 64.
@@ -749,8 +769,8 @@ public class LayoutCoverageGapTests : BaseTestClass
         GraphicalUiElement.CanvasHeight = float.NaN;
 
         Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
-        exception.Message.ShouldContain("AdjustOffsetsByOrigin");
-        exception.Message.ShouldContain("unitOffsetY");
+        // The container's renderable rejects the NaN height before the offset check is reached (#6477).
+        exception.Message.ShouldContain("Invalid Height");
     }
 
     [Fact]
@@ -763,8 +783,8 @@ public class LayoutCoverageGapTests : BaseTestClass
         GraphicalUiElement.CanvasHeight = float.NaN;
 
         Exception exception = Should.Throw<Exception>(() => element.UpdateLayout());
-        exception.Message.ShouldContain("AdjustOffsetsByOrigin");
-        exception.Message.ShouldContain("unitOffsetX");
+        // The container's renderable rejects the NaN height before the offset check is reached (#6477).
+        exception.Message.ShouldContain("Invalid Height");
     }
 
     #endregion

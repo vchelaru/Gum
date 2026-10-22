@@ -38,12 +38,7 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
         get { return height; }
         set
         {
-#if FULL_DIAGNOSTICS
-            if (float.IsPositiveInfinity(value))
-            {
-                throw new ArgumentException();
-            }
-#endif
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
             height = value;
         }
     }
@@ -71,19 +66,55 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
         }
     }
 
-    public float Rotation { get; set; }
+    float _rotationValue;
+    public float Rotation
+    {
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
+    }
 
     public object? Tag { get; set; }
 
     public bool Visible { get; set; } = true;
 
-    public float Width { get; set; }
+    float width;
+    public float Width
+    {
+        get { return width; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
+            width = value;
+        }
+    }
 
     public bool Wrap => false;
 
-    public float X { get; set; }
+    float _xValue;
+    public float X
+    {
+        get { return _xValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            _xValue = value;
+        }
+    }
 
-    public float Y { get; set; }
+    float _yValue;
+    public float Y
+    {
+        get { return _yValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            _yValue = value;
+        }
+    }
 
     public float Z { get; set; }
 

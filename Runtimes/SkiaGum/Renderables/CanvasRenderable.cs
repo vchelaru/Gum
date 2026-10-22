@@ -66,13 +66,21 @@ internal class CanvasRenderable : IRenderableIpso, IVisible, ICloneable
     public float X
     {
         get { return Position.X; }
-        set { Position.X = value; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "X");
+            Position.X = value;
+        }
     }
 
     public float Y
     {
         get { return Position.Y; }
-        set { Position.Y = value; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Y");
+            Position.Y = value;
+        }
     }
 
     public float Z
@@ -81,19 +89,38 @@ internal class CanvasRenderable : IRenderableIpso, IVisible, ICloneable
         set;
     }
 
+    float _widthValue;
     public float Width
     {
-        get;
-        set;
+        get { return _widthValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Width");
+            _widthValue = value;
+        }
     }
 
+    float _heightValue;
     public float Height
     {
-        get;
-        set;
+        get { return _heightValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Height");
+            _heightValue = value;
+        }
     }
 
-    public float Rotation { get; set; }
+    float _rotationValue;
+    public float Rotation
+    {
+        get { return _rotationValue; }
+        set
+        {
+            global::RenderingLibrary.Graphics.NonFiniteCheck.ThrowIfNotFinite(value, "Rotation");
+            _rotationValue = value;
+        }
+    }
 
 
     public bool FlipHorizontal
