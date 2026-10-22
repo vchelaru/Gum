@@ -247,7 +247,7 @@ A plain reference such as `XUnits = Source.XUnits` copies the value exactly, inc
 
 Without the package, the variable on the right and the variable on the left must have the same type. When they differ, such as `Width = Source.IsBold`, the variable on the left keeps its current value and Gum reports an error that names the reference. The error appears as a `[Gum]` line on `Console.Error` and through `CustomSetPropertyOnRenderable.PropertyAssignmentError`, once for each broken reference on each component.
 
-The error tells you to add `Gum.Expressions` when it converts that pair: `int`, `float`, and `double` among themselves, any value into a `string`, and a `string` into an enum. A pair it cannot convert, such as a `bool` or `string` into a number, a number into a `bool`, or one enum into another, gets an error that says so. A `FontSize` accepts an `int` or a `float`, and an enum variable accepts an `int`, so those references apply as written.
+The error tells you to add `Gum.Expressions` when it converts that pair: `int`, `float`, and `double` among themselves, any value into a `string`, and a `string` into an enum. A pair it cannot convert, such as a `bool` or `string` into a number or a number into a `bool`, gets an error that says so. A `FontSize` accepts an `int` or a `float`, and an enum variable accepts an `int`, so those references apply as written.
 
 ### With Gum.Expressions
 
