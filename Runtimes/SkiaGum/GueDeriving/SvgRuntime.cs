@@ -103,31 +103,51 @@ public class SvgRuntime : InteractiveGue
     public int Alpha
     {
         get => ContainedSvg.Alpha;
-        set => ContainedSvg.Alpha = value;
+        set
+        {
+            ContainedSvg.Alpha = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public int Red
     {
         get => ContainedSvg.Red;
-        set => ContainedSvg.Red = value;
+        set
+        {
+            ContainedSvg.Red = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public int Green
     {
         get => ContainedSvg.Green;
-        set => ContainedSvg.Green = value;
+        set
+        {
+            ContainedSvg.Green = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public int Blue
     {
         get => ContainedSvg.Blue;
-        set => ContainedSvg.Blue = value;
+        set
+        {
+            ContainedSvg.Blue = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public SKColor Color
     {
         get => ContainedSvg.Color;
-        set => ContainedSvg.Color = value;
+        set
+        {
+            ContainedSvg.Color = value;
+            NotifyPropertyChanged();
+        }
     }
 #endif
 

@@ -25,6 +25,11 @@ public class VariableReferenceTypedSetterTests : IDisposable
         ["Polygon"] = () => new PolygonRuntime(),
         ["NineSlice"] = () => new NineSliceRuntime(),
         ["ColoredCircle"] = () => new ColoredCircleRuntime(),
+        ["Arc"] = () => new ArcRuntime(),
+        ["Line"] = () => new LineRuntime(),
+        ["RoundedRectangle"] = () => new RoundedRectangleRuntime(),
+        ["Svg"] = () => new SvgRuntime(),
+        ["LottieAnimation"] = () => new LottieAnimationRuntime(),
     };
 
     private readonly SystemManagers _systemManagers = new SystemManagers();
