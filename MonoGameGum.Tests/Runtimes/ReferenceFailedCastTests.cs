@@ -130,11 +130,22 @@ public class ReferenceFailedCastTests : BaseTestClass
         Add("HorizontalAlignment", HorizontalAlignment.Right, "int?", 7, Outcome.Reports);
         Add("HorizontalAlignment", HorizontalAlignment.Right, "VerticalAlignment", VerticalAlignment.Top, Outcome.Reports);
 
+        // a state category (a type the cast does not know): the value reaches the setter as it does without the package,
+        // which applies a text naming a state and ignores anything else
+        foreach ((string source, object value) in new (string, object)[]
+        {
+            ("bool", true), ("string", "Pressed"), ("string", "Nonsense"), ("int", 2), ("float", 2.5f), ("double", 2.5),
+            ("HorizontalAlignment", HorizontalAlignment.Right)
+        })
+        {
+            Add(source, value, "ButtonCategory", "Enabled", Outcome.Applies, value);
+        }
+
         // a variable with no value
         foreach ((string target, object old) in new (string, object)[]
         {
             ("int", 7), ("float", 7f), ("double", 7.0), ("string", "old"), ("bool", false),
-            ("HorizontalAlignment", HorizontalAlignment.Left), ("int?", 7)
+            ("HorizontalAlignment", HorizontalAlignment.Left), ("int?", 7), ("ButtonCategory", "Enabled")
         })
         {
             Add("missing", Missing, target, old, Outcome.Silent);
@@ -320,36 +331,52 @@ public class ReferenceFailedCastTests : BaseTestClass
         _errors.ShouldBeEmpty();
     }
 
-    // The cast only knows primitives and enums, so text into a state category variable used to be dropped silently.
-    [Fact]
-    public void ApplyAllVariableReferences_TextIntoATypeTheCastDoesNotKnowWithGumExpressions_KeepsTheValueAndReports()
+    // The package never does worse than none: every pair that applies without it applies with it, with no report.
+    [Theory]
+    [MemberData(nameof(Matrix))]
+    public void ApplyAllVariableReferences_PairThatAppliesWithoutGumExpressions_AppliesWithGumExpressionsToo(
+        string source, object? sourceValue, string target, object old, Outcome outcome, object? expected)
     {
-        ComponentSave pair = BuildMatrixPair("string", "Pressed", "ButtonCategory", "Enabled", useExpressions: true);
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        ComponentSave withoutPackage = BuildMatrixPair(source, sourceValue, target, old, useExpressions: false);
+        ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
+        bool appliedWithout = _errors.Count == 0 && !Equals(withoutPackage.DefaultState!.GetValue("Target.Out"), old);
+        object? valueWithout = withoutPackage.DefaultState!.GetValue("Target.Out");
+        _errors.Clear();
+
+        ElementSaveExtensions.CustomEvaluateExpression = null;
+        ComponentSave withPackage = BuildMatrixPair(source, sourceValue, target, old, useExpressions: true);
+        ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
+
+        if (appliedWithout)
+        {
+            _errors.ShouldBeEmpty();
+            Equals(withPackage.DefaultState!.GetValue("Target.Out"), old).ShouldBeFalse($"{source} into {target} applied without the package ({valueWithout})");
+        }
+    }
+
+    // A text that names no state of the category reaches the setter, which ignores it, with or without the package.
+    [Fact]
+    public void ApplyAllVariableReferences_TextNamingNoStateOfTheCategoryWithGumExpressions_BehavesAsWithoutThePackage()
+    {
+        ComponentSave pair = BuildMatrixPair("string", "Nonsense", "ButtonCategory", "Enabled", useExpressions: true);
 
         ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
 
-        pair.DefaultState!.GetValue("Target.Out").ShouldBe("Enabled");
-        _errors.ShouldBe(new[]
-        {
-            "Variable reference 'Out = Source.In' was not applied in Pair (Container): Source.In is \"Pressed\", " +
-            "which is not a value of the ButtonCategory Target.Out. Target.Out keeps its current value."
-        });
+        pair.DefaultState!.GetValue("Target.Out").ShouldBe("Nonsense");
+        _errors.ShouldBeEmpty();
     }
 
     [Fact]
-    public void ApplyAllVariableReferences_TargetWhoseTypeIsNotKnownWithGumExpressions_KeepsTheValueAndReports()
+    public void ApplyAllVariableReferences_TargetWhoseTypeIsNotKnownWithGumExpressions_BehavesAsWithoutThePackage()
     {
         ReferencePairBuilder.Build("Mystery = Source.In", useExpressions: true, new (string, object?)[] { ("Out", 7), ("In", 2) });
         ComponentSave pair = ObjectFinder.Self.GumProjectSave!.Components[0];
 
         ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
 
-        pair.DefaultState!.GetValue("Target.Mystery").ShouldBeNull();
-        _errors.ShouldBe(new[]
-        {
-            "Variable reference 'Mystery = Source.In' was not applied in Pair (Container): Source.In is an int, " +
-            "but the type of Target.Mystery is not known, so it cannot be converted. Target.Mystery keeps its current value."
-        });
+        pair.DefaultState!.GetValue("Target.Mystery").ShouldBe(2);
+        _errors.ShouldBeEmpty();
     }
 
     private GraphicalUiElement CreateTarget(string row, params (string Name, object? Value)[] authored)

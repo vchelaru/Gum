@@ -251,7 +251,7 @@ The error tells you to add `Gum.Expressions` when it converts that pair: `int`, 
 
 ### With Gum.Expressions
 
-After you call `GumExpressionService.Initialize()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`.
+After you call `GumExpressionService.Initialize()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`. A result that cannot be converted reports an error the same way it does without the package.
 
 | Right side result | Left side variable | What happens |
 | --- | --- | --- |
@@ -262,8 +262,8 @@ After you call `GumExpressionService.Initialize()`, Gum evaluates the right side
 | Text such as `"LeftToRightStack"` | Enum, such as `ChildrenLayout` | Converted to the enum value with that name. Capitalization does not matter. |
 | Whole number | Enum | Converted to the enum value with that number. |
 | `XUnits` or `YUnits` value set in code | `XUnits` or `YUnits` | Kept exactly, including `PercentageOfFile`. |
-| Text or a `bool` | A number (`int`, `float`, or `double`) | The reference is not applied and the variable keeps its current value. Text such as `"12"` is not turned into a number. |
-| Anything else that does not fit, such as a number into a `bool` | Any | The reference is not applied and the variable keeps its current value. |
+| Text or a `bool` | A number (`int`, `float`, or `double`) | The reference is not applied, Gum reports an error that names the reference (once for each broken reference on each component), and the variable keeps its current value. Text such as `"12"` is not turned into a number. |
+| Anything else that does not fit, such as a number into a `bool` | Any | The reference is not applied, Gum reports an error that names the reference (once for each broken reference on each component), and the variable keeps its current value. |
 
 A fractional `FontSize` is the one value that does not carry over unchanged. `FontSize` is saved as an `int`, so the result of a reference is truncated when Gum writes it to `FontSize`. A `FontSize` of `12.5` set in code is read as `12.5` inside an expression, but a plain `FontSize = Source.FontSize` writes `12`. The same truncation applies to any fractional result written to an `int` variable.
 

@@ -41,11 +41,14 @@ namespace GumRuntime
         /// </summary>
         public static Func<StateSave, string, string?, GraphicalUiElement?, object?>? CustomEvaluateExpression;
 
-        // Asked only after CustomEvaluateExpression returned null: the value the expression evaluated to when it could not be
-        // cast to the desired type, or null when there was none (a missing variable, a malformed expression). It lets a
-        // reference whose cast failed say why it was not applied (#6463). Set by GumExpressionService.Initialize().
+        // The value Gum.Expressions evaluated but refused to cast to the desired type, left here by the evaluator behind
+        // CustomEvaluateExpression (which can only return null) so the reference can say why it was not applied (#6463).
+        // TryReadReference clears it before each evaluation and reads it right after, so an evaluator that does not set it
+        // simply reports nothing. It is a side channel, not a second evaluation: a live row that is refused every frame
+        // must not evaluate twice.
 #nullable enable
-        internal static Func<StateSave, string, string?, GraphicalUiElement?, object?>? CustomFindRejectedCast;
+        [ThreadStatic]
+        internal static object? RejectedCastValue;
 #nullable restore
 
         /// <summary>
@@ -146,7 +149,6 @@ namespace GumRuntime
                 ElementTypeRegistry.Base.Clear();
                 CustomCreateGraphicalComponentFunc = null;
                 CustomEvaluateExpression = null;
-                CustomFindRejectedCast = null;
                 CustomEvaluateExpressionAllBranches = null;
             }
         }
@@ -1375,17 +1377,16 @@ namespace GumRuntime
             }
             else
             {
+                RejectedCastValue = null;
                 value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
-                if (value == null && CustomEvaluateExpression != null && CustomFindRejectedCast != null)
+                object? rejectedValue = RejectedCastValue;
+                RejectedCastValue = null;
+                if (value == null && CustomEvaluateExpression != null && rejectedValue != null && leftSideType != null
+                    && ReportedRejectedCast(referenceString, right, leftVariableName, leftSideType, rejectedValue, stateSave, liveRoot))
                 {
-                    // Gum.Expressions evaluated the right side but may have refused to cast it to the left side's type.
-                    object? rejectedValue = CustomFindRejectedCast(stateSave, right, leftSideType, liveRoot);
-                    if (rejectedValue != null
-                        && ReportedRejectedCast(referenceString, right, leftVariableName, leftSideType, rejectedValue, stateSave, liveRoot))
-                    {
-                        mismatchReported = true;
-                    }
+                    // Gum.Expressions evaluated the right side but refused to cast it to the left side's type.
+                    mismatchReported = true;
                 }
             }
 
@@ -1404,33 +1405,26 @@ namespace GumRuntime
         // float or double the target cannot hold (#6456). The variable keeps its value, the same as for a mismatch without the
         // package, so a reference is never silently dropped.
         private static bool ReportedRejectedCast(string referenceString, string right, string leftVariableName,
-            string? leftSideType, object rejectedValue, StateSave stateSave, GraphicalUiElement? liveRoot)
+            string leftSideType, object rejectedValue, StateSave stateSave, GraphicalUiElement? liveRoot)
         {
             if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
             {
                 string valueType = TypeNameOf(rejectedValue);
                 string shownRight = DecodeOwnerName(right);
                 string detail;
-                if (leftSideType == null)
+                string targetType = StripNullable(leftSideType);
+                if ((rejectedValue is float || rejectedValue is double) && IsNumericTypeName(targetType))
                 {
-                    detail = $"{shownRight} is {Article(valueType)} {valueType}, but the type of {leftVariableName} is not known, so it cannot be converted.";
+                    detail = $"{shownRight} is {Convert.ToString(rejectedValue, System.Globalization.CultureInfo.InvariantCulture)}, " +
+                        $"which does not fit the {targetType} {leftVariableName}.";
+                }
+                else if (rejectedValue is string name && !IsPrimitiveTypeName(targetType))
+                {
+                    detail = $"{shownRight} is \"{name}\", which is not a value of the {targetType} {leftVariableName}.";
                 }
                 else
                 {
-                    string targetType = StripNullable(leftSideType);
-                    if ((rejectedValue is float || rejectedValue is double) && IsNumericTypeName(targetType))
-                    {
-                        detail = $"{shownRight} is {Convert.ToString(rejectedValue, System.Globalization.CultureInfo.InvariantCulture)}, " +
-                            $"which does not fit the {targetType} {leftVariableName}.";
-                    }
-                    else if (rejectedValue is string name && !IsPrimitiveTypeName(targetType))
-                    {
-                        detail = $"{shownRight} is \"{name}\", which is not a value of the {targetType} {leftVariableName}.";
-                    }
-                    else
-                    {
-                        detail = $"{shownRight} is {Article(valueType)} {valueType} and {leftVariableName} is {Article(targetType)} {targetType}, which cannot be converted.";
-                    }
+                    detail = $"{shownRight} is {Article(valueType)} {valueType} and {leftVariableName} is {Article(targetType)} {targetType}, which cannot be converted.";
                 }
                 ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot, detail);
             }

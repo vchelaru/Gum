@@ -30,8 +30,6 @@ public class GumContextTests : BaseTestClass
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
     private readonly Func<StateSave, string, string?, GraphicalUiElement?, object?>? _originalEvaluate =
         ElementSaveExtensions.CustomEvaluateExpression;
-    private readonly Func<StateSave, string, string?, GraphicalUiElement?, object?>? _originalFindRejectedCast =
-        ElementSaveExtensions.CustomFindRejectedCast;
     private readonly Func<StateSave, string, string?, GraphicalUiElement?, IEnumerable<object>>? _originalEvaluateAllBranches =
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches;
 
@@ -66,7 +64,6 @@ public class GumContextTests : BaseTestClass
         ElementSaveExtensions.Reset();
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = _originalCreateComponent;
         ElementSaveExtensions.CustomEvaluateExpression = _originalEvaluate;
-        ElementSaveExtensions.CustomFindRejectedCast = _originalFindRejectedCast;
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = _originalEvaluateAllBranches;
         FileManager.RelativeDirectory = _originalRelativeDirectory;
         base.Dispose();

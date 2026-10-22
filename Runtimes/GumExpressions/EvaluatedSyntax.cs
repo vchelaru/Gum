@@ -1314,6 +1314,14 @@ public class EvaluatedSyntax
             }
         }
 
+        // A type this does not know (a state category, or a variable with no declared type) is left to the setter, as it is
+        // without Gum.Expressions: the value passes through unchanged (#6465). Only the primitives and enums refuse a value.
+        if (desiredType == null || !(desiredType == "int" || desiredType == "float" || desiredType == "double" || desiredType == "string" || desiredType == "bool"
+            || ResolveEnumType(desiredType) != null))
+        {
+            return true;
+        }
+
         return false;
     }
 
