@@ -2041,6 +2041,7 @@ public class GraphicalUiElementTests : BaseTestClass
         "fullyUpdatedChildren",
         "statesInStack",
         "_pendingCustomVariables",
+        "_referenceInputs",
         "mExposedVariables",
         "mStates",
         "mCategories",

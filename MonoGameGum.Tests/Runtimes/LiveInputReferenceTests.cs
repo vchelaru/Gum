@@ -297,6 +297,30 @@ public class LiveInputReferenceTests : BaseTestClass
         evaluations.ShouldBe(4);
     }
 
+    [Fact]
+    public void Clone_CustomVariableChain_EvaluatesFromItsOwnValuesAndDoesNotLeakToOrFromTheSource()
+    {
+        GraphicalUiElement source = Create("A = B + C", "D = A * 2", "Width = D + F").ToGraphicalUiElement();
+        source.SetProperty("C", 2f);
+        source.SetProperty("F", 100f);
+
+        GraphicalUiElement clone = source.Clone();
+
+        // The clone starts with the source's values...
+        clone.SetProperty("B", 3f);
+        clone.Width.ShouldBe(110f);
+
+        // ...then owns them: a change on the clone is not read by the source, nor the reverse.
+        clone.SetProperty("C", 10f);
+        source.SetProperty("B", 1f);
+        source.Width.ShouldBe(106f);
+        clone.SetProperty("B", 3f);
+        clone.Width.ShouldBe(126f);
+        source.SetProperty("F", 0f);
+        clone.SetProperty("B", 4f);
+        clone.Width.ShouldBe(128f);
+    }
+
     #endregion
 
     #region Override and cycles
