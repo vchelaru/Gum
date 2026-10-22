@@ -12,7 +12,7 @@ namespace MonoGameGum.Shapes.Tests;
 /// effect (Color and Red, Red and Red1), updates a same-component reference that reads it (#6410).
 /// Gum.Expressions is not referenced here, so only the plain-lookup path runs.
 /// </summary>
-public class VariableReferenceTypedSetterTests : IDisposable
+public class VariableReferenceTypedSetterTests : RegistrationIsolatedTest
 {
     private static readonly Dictionary<string, Func<GraphicalUiElement>> Factories = new()
     {
@@ -30,11 +30,6 @@ public class VariableReferenceTypedSetterTests : IDisposable
         StandardElementsManager.Self.Initialize();
         GumRuntime.ElementSaveExtensions.CustomEvaluateExpression = null;
         GumRuntime.ElementSaveExtensions.CustomEvaluateExpressionAllBranches = null;
-    }
-
-    public void Dispose()
-    {
-        ObjectFinder.Self.GumProjectSave = null;
     }
 
     public static IEnumerable<object[]> Variables() => TypedSetterSweep.Cases(Factories, includeExpressions: false);

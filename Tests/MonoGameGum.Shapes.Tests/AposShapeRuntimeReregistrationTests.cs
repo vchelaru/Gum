@@ -11,35 +11,24 @@ namespace MonoGameGum.Shapes.Tests;
 // AposShapeRuntime.UninitializeRuntimeTypes() (the reflection teardown hook added in #4416) never
 // resets _registered, so a subsequent Initialize's re-scan silently no-ops and Arc/ColoredCircle/
 // Line/RoundedRectangle never come back.
-public class AposShapeRuntimeReregistrationTests
+public class AposShapeRuntimeReregistrationTests : RegistrationIsolatedTest
 {
     [Fact]
     public void RegisterRuntimeTypes_AfterUninitializeRuntimeTypes_ReregistersGueInstantiation()
     {
-        // ClearRegistrations nulls the process-wide CustomCreateGraphicalComponentFunc, and xUnit runs
-        // test classes in a random order, so any class that builds elements from a ComponentSave/ScreenSave
-        // (VariableReferenceTypedSetterTests) would throw if it ran after this one. Put it back.
-        var originalCreateComponent = ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
-        try
-        {
-            AposShapeRuntime.RegisterRuntimeTypes();
+        AposShapeRuntime.RegisterRuntimeTypes();
 
-            ElementSaveExtensions.ClearRegistrations();
-            AposShapeRuntime.UninitializeRuntimeTypes();
+        ElementSaveExtensions.ClearRegistrations();
+        AposShapeRuntime.UninitializeRuntimeTypes();
 
-            AposShapeRuntime.RegisterRuntimeTypes();
+        AposShapeRuntime.RegisterRuntimeTypes();
 
-            ComponentSave elementSave = new ComponentSave { Name = "Arc" };
-            var gue = ElementSaveExtensions.CreateGueForElement(elementSave);
+        ComponentSave elementSave = new ComponentSave { Name = "Arc" };
+        var gue = ElementSaveExtensions.CreateGueForElement(elementSave);
 
-            // Covers the obsolete shim type on purpose: registration instantiates the shim (#3380).
+        // Covers the obsolete shim type on purpose: registration instantiates the shim (#3380).
 #pragma warning disable CS0618
-            gue.ShouldBeOfType<global::MonoGameGum.GueDeriving.ArcRuntime>();
+        gue.ShouldBeOfType<global::MonoGameGum.GueDeriving.ArcRuntime>();
 #pragma warning restore CS0618
-        }
-        finally
-        {
-            ElementSaveExtensions.CustomCreateGraphicalComponentFunc = originalCreateComponent;
-        }
     }
 }
