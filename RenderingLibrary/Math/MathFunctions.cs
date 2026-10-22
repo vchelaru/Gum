@@ -30,31 +30,23 @@ namespace RenderingLibrary.Math
                 throw new ArgumentException("floatToRound cannot be NaN");
             }
 #endif
-            // System.Math.Round should give us a number very close to the decimal
-            // Of course, it may give us something like 3.99999, which would become
-            // 3 when converted to an int.  We want that to be 4, so we add a small amount
-            // But...why .5 and not something smaller?  Well, we want to minimize error due
-            // to floating point inaccuracy, so we add a value that is big enough to get us into
-            // the next integer value even when the float is really large (has a lot of error).
             // Update March 6, 2024
             // Perform a MidpointRounding.AwayFromZero
             // so that rounding 0.5 always goes in the same
             // direction. If we don't do this, then rendering
             // Sprites can sometimes be off by 1 pixel.
-            return (int)(System.Math.Round(floatToRound, MidpointRounding.AwayFromZero) + (System.Math.Sign(floatToRound) * .5f));
-
+            return (int)MathF.Round(floatToRound, MidpointRounding.AwayFromZero);
         }
 
         public static int RoundToInt(double doubleToRound)
         {
-            // see the other RoundToInt for information on why we add .5, and why we use MidpointRounding.AwayFromZero.
-            return (int)(System.Math.Round(doubleToRound, MidpointRounding.AwayFromZero) + (System.Math.Sign(doubleToRound) * .5f));
-
+            // see the other RoundToInt for information on why we use MidpointRounding.AwayFromZero.
+            return (int)System.Math.Round(doubleToRound, MidpointRounding.AwayFromZero);
         }
 
         public static int RoundToInt(decimal decimalToRound)
         {
-            // see the other RoundToInt for information on why we add .5, and why we use MidpointRounding.AwayFromZero.
+            // see the float RoundToInt for information on why we use MidpointRounding.AwayFromZero.
             return (int)(System.Math.Round(decimalToRound, MidpointRounding.AwayFromZero) + (System.Math.Sign(decimalToRound) * .5m));
         }
 
