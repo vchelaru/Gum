@@ -63,7 +63,36 @@ public class StyledTextAllocationTests : BaseTestClass
         bytes.ShouldBe(0, "measured bytes over the measured frames");
     }
 
-    private static long MeasureDraw(string markup, float wrapWidth, out TextRuntime text)
+    // #6440: a typewriter reveal. The count is held for several frames between changes.
+    private const string RevealStyled =
+        "lorem [Color=Red]ipsum dolor[/Color] sit\n[FontScale=1.5]amet consectetur[/FontScale] adipiscing\n" +
+        "[Color=Blue]elit sed do eiusmod[/Color] tempor";
+    private const string RevealPlain = "lorem ipsum dolor sit\namet consectetur adipiscing\nelit sed do eiusmod tempor";
+
+    [Theory]
+    [InlineData(RevealStyled)]
+    [InlineData(RevealPlain)]
+    public void Draw_MaxLettersToShowHeldConstantMidLine_AllocatesNothingPerFrame(string markup)
+    {
+        long bytes = MeasureDraw(markup, wrapWidth: 0, out TextRuntime text, maxLettersForFrame: _ => 30);
+
+        text.MaxLettersToShow.ShouldBe(30);
+        bytes.ShouldBe(0, "measured bytes over the measured frames");
+    }
+
+    [Theory]
+    [InlineData(RevealStyled)]
+    [InlineData(RevealPlain)]
+    public void Draw_MaxLettersToShowChangedEveryFrame_AllocatesAtMostOneShortStringPerFrame(string markup)
+    {
+        // The count walks through the middle of the second line, so every frame cuts a line at a new place.
+        long bytes = MeasureDraw(markup, wrapWidth: 0, out _, maxLettersForFrame: frame => 25 + frame % 20);
+
+        const int measuredFrames = 20;
+        (bytes / measuredFrames).ShouldBeLessThanOrEqualTo(96, "bytes per frame; one substring of a short line is the most a new count may cost");
+    }
+
+    private static long MeasureDraw(string markup, float wrapWidth, out TextRuntime text, Func<int, int>? maxLettersForFrame = null)
     {
         text = new TextRuntime();
         if (wrapWidth > 0)
@@ -83,17 +112,27 @@ public class StyledTextAllocationTests : BaseTestClass
         {
             for (int frame = 0; frame < 30; frame++)
             {
+                SetCount(text, maxLettersForFrame, frame);
                 DrawFrame();
             }
 
             long before = GC.GetAllocatedBytesForCurrentThread();
             for (int frame = 0; frame < 20; frame++)
             {
+                SetCount(text, maxLettersForFrame, frame);
                 DrawFrame();
             }
             best = Math.Min(best, GC.GetAllocatedBytesForCurrentThread() - before);
         }
         return best;
+    }
+
+    private static void SetCount(TextRuntime text, Func<int, int>? maxLettersForFrame, int frame)
+    {
+        if (maxLettersForFrame != null)
+        {
+            text.MaxLettersToShow = maxLettersForFrame(frame);
+        }
     }
 
     private static void DrawFrame()
