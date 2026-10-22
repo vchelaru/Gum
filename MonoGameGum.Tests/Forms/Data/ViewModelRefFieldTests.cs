@@ -94,8 +94,9 @@ public class ViewModelRefFieldTests : BaseTestClass
 
         obsolete.ShouldNotBeNull();
         obsolete.IsError.ShouldBeFalse();
-        obsolete.Message.ShouldContain("Set");
-        obsolete.Message.ShouldContain("October 2026");
+        string message = obsolete.Message ?? string.Empty;
+        message.ShouldContain("Set");
+        message.ShouldContain("October 2026");
     }
 
     [Fact]
