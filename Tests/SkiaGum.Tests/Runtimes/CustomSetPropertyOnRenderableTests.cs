@@ -65,11 +65,13 @@ public class CustomSetPropertyOnRenderableTests
     // has matching properties). But the scalar DropshadowBlur has no arm and no matching property
     // on the renderable (only DropshadowBlurX/DropshadowBlurY exist there, which Text.Render reads
     // directly) -- setting it via SetProperty silently no-op'd even after the reflection fallback.
-    // The scalar must seed both per-axis renderable properties, not TextRuntime's own separate
-    // (and unread-by-rendering) DropshadowBlur field.
+    // The scalar must seed both per-axis renderable properties, through the TextRuntime (#6403).
     [Fact]
     public void SetPropertyOnRenderable_TextDropshadowBlur_ShouldForwardToRenderableBothAxes()
     {
+        // The TextRuntime pushes its dropshadow fields to the renderable through the font bridge that
+        // SystemManagers.Initialize wires (#6403).
+        new RenderingLibrary.SystemManagers().Initialize();
         Gum.GueDeriving.TextRuntime textRuntime = new();
         Text renderable = (Text)textRuntime.RenderableComponent;
 
@@ -77,6 +79,22 @@ public class CustomSetPropertyOnRenderableTests
 
         renderable.DropshadowBlurX.ShouldBe(7f);
         renderable.DropshadowBlurY.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void SetProperty_TextOverflowVerticalMode_ShouldKeepSpillOverOnRenderableWhenHeightIsRelativeToChildren()
+    {
+        new RenderingLibrary.SystemManagers().Initialize();
+        Gum.GueDeriving.TextRuntime textRuntime = new();
+        Text renderable = (Text)textRuntime.RenderableComponent;
+        textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+        textRuntime.SetProperty("TextOverflowVerticalMode", TextOverflowVerticalMode.TruncateLine);
+
+        // The runtime keeps the authored value, the renderable spills over while the height follows its content,
+        // the same as when HeightUnits changes after the mode is set (#6403).
+        textRuntime.TextOverflowVerticalMode.ShouldBe(TextOverflowVerticalMode.TruncateLine);
+        renderable.TextOverflowVerticalMode.ShouldBe(TextOverflowVerticalMode.SpillOver);
     }
 
     [Fact]

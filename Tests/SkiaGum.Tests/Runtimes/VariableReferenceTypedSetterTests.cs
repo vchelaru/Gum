@@ -23,6 +23,8 @@ public class VariableReferenceTypedSetterTests : IDisposable
         ["Rectangle"] = () => new RectangleRuntime(),
         ["Circle"] = () => new CircleRuntime(),
         ["Polygon"] = () => new PolygonRuntime(),
+        ["NineSlice"] = () => new NineSliceRuntime(),
+        ["ColoredCircle"] = () => new ColoredCircleRuntime(),
     };
 
     private readonly SystemManagers _systemManagers = new SystemManagers();
@@ -42,11 +44,13 @@ public class VariableReferenceTypedSetterTests : IDisposable
         ObjectFinder.Self.GumProjectSave = null;
     }
 
-    // On Skia, SetProperty of a Text's HasDropshadow, Dropshadow* and TextOverflowVerticalMode writes the Text
-    // renderable and never the TextRuntime's own fields, so a reference cannot copy them whatever the
-    // setters report (#6403).
-    public static IEnumerable<object[]> Variables() => TypedSetterSweep.Cases(Factories, includeExpressions: false,
-        isExcluded: (standard, variable) => standard == "Text" && (variable.Contains("Dropshadow") || variable == "TextOverflowVerticalMode"));
+    public static IEnumerable<object[]> Variables()
+    {
+        // Test discovery runs before any instance: Initialize wires the Skia-only shape default states (Arc,
+        // ColoredCircle, RoundedRectangle, Line) that the case list asks the StandardElementsManager for.
+        new SystemManagers().Initialize();
+        return TypedSetterSweep.Cases(Factories, includeExpressions: false);
+    }
 
     [Theory]
     [MemberData(nameof(Variables))]
