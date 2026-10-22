@@ -219,7 +219,7 @@ GumExpressionService.Initialize();
 ```
 
 {% hint style="info" %}
-The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, which adds approximately 10 MB to your build output. If your variable references only use simple assignments (no arithmetic), you do not need this package.
+The `Gum.Expressions` package uses Microsoft Roslyn for expression parsing, which adds approximately 10 MB to your build output. If your variable references only use simple assignments between variables of the same type (no arithmetic), you do not need this package. See [Casting and Type Considerations](#casting-and-type-considerations).
 {% endhint %}
 
 The same `Gum.Expressions` package also enables runtime evaluation of arithmetic (including modulo `%`), conditional (ternary), comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), and logical (`&&`, `||`, `!`) operators, plus math functions such as `Sin`, `Max`, and `Clamp`, in variable references. Position among siblings (`Index`) and the `Absolute` variables (such as `AbsoluteWidth`) also need the package. See the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page for the full list of supported syntax.
@@ -236,3 +236,51 @@ If you are linking to Gum source instead of NuGet, see the setup page for your p
 
 * [MonoGame/KNI/FNA Setup](../getting-started/setup/adding-initializing-gum/monogame-kni-fna/README.md)
 * [Raylib Setup](../getting-started/setup/adding-initializing-gum/raylib-raylib-cs.md)
+
+## Casting and Type Considerations
+
+Each variable has a type, such as `float` for `X` or `int` for `FontSize`, which is the type your project saves it as. A reference writes its result to the variable on the left, so the result has to fit that type. How Gum handles this depends on whether `Gum.Expressions` is initialized.
+
+### Without Gum.Expressions
+
+A plain reference such as `XUnits = Source.XUnits` copies the value exactly, including values that only code can set. `PercentageOfFile`, `PercentageOfOtherDimension`, and `MaintainFileAspectRatio` on `XUnits` and `YUnits` carry over, and so does a fractional `FontSize` such as `12.5`.
+
+Without the package, the variable on the right and the variable on the left must have the same type. When they differ, such as `Width = Source.IsBold`, the variable on the left keeps its current value and Gum reports an error that names the reference. The error appears as a `[Gum]` line on `Console.Error` and through `CustomSetPropertyOnRenderable.PropertyAssignmentError`, once for each broken reference on each component.
+
+The error tells you to add `Gum.Expressions` when it converts that pair: `int`, `float`, and `double` among themselves, any value into a `string`, and a `string` into an enum. A pair it cannot convert, such as a `bool` or `string` into a number or a number into a `bool`, gets an error that says so. A `FontSize` accepts an `int` or a `float`, and an enum variable accepts an `int`, so those references apply as written.
+
+### With Gum.Expressions
+
+After you call `GumExpressionService.Initialize()`, Gum evaluates the right side of every reference, plain ones included, and converts the result to the type of the variable on the left. The same conversion applies when you call `ApplyAllVariableReferences`.
+
+| Right side result | Left side variable | What happens |
+| --- | --- | --- |
+| `float` or `double` | `int` | The fraction is dropped toward zero. `3.7` becomes `3` and `-3.7` becomes `-3`. |
+| `int` or `double` | `float` | Converted to `float`. |
+| `int` or `float` | `double` | Converted to `double`. |
+| Any value | `string` | The value's text. `42` becomes `"42"`. |
+| Text such as `"LeftToRightStack"` | Enum, such as `ChildrenLayout` | Converted to the enum value with that name. Capitalization does not matter. |
+| Whole number | Enum | Converted to the enum value with that number. |
+| `XUnits` or `YUnits` value set in code | `XUnits` or `YUnits` | Kept exactly, including `PercentageOfFile`. |
+| Text or a `bool` | A number (`int`, `float`, or `double`) | The reference is not applied and the variable keeps its current value. Text such as `"12"` is not turned into a number. |
+| Anything else that does not fit, such as a number into a `bool` | Any | The reference is not applied and the variable keeps its current value. |
+
+A fractional `FontSize` is the one value that does not carry over unchanged. `FontSize` is saved as an `int`, so the result of a reference is truncated when Gum writes it to `FontSize`. A `FontSize` of `12.5` set in code is read as `12.5` inside an expression, but a plain `FontSize = Source.FontSize` writes `12`. The same truncation applies to any fractional result written to an `int` variable.
+
+For nullable variables, see the nullable paragraph in [Live Updates Within a Component](#live-updates-within-a-component).
+
+### Working With Types
+
+* Use whole numbers for variables saved as `int`.
+* To round instead of drop the fraction, wrap the right side in `Round`, `Floor`, or `Ceiling`, such as `FontSize = Round(Source.FontSize * 1.5)`. These are listed under [Math Functions](../../gum-tool/gum-elements/general-properties/variable-references.md#math-functions).
+* To pick an enum value from a reference, add `Gum.Expressions` and use the value's name as text. See [Enum Assignment](../../gum-tool/gum-elements/general-properties/variable-references.md#enum-assignment).
+* To use a fractional `FontSize`, set it in code instead of through a reference, as shown below.
+
+```csharp
+// Initialize
+text.FontSize = 12.5f;
+```
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
