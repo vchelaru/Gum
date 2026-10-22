@@ -246,7 +246,9 @@ public static class GraphicalUiElementPropertyReadExtensions
 
                 // The FontSize variable is an int, but TextRuntime.FontSize is a float. A float here
                 // would fail the (int) cast when the value is written to another element's FontSize.
-                if (!exact && value is float fontSize && propertyName == "FontSize")
+                // An exact read keeps only a fractional one as a float; a whole one is the int the variable is, as
+                // at creation, so it can select an enum value or be cast like any int (#6446).
+                if (value is float fontSize && propertyName == "FontSize" && (!exact || fontSize == Math.Floor(fontSize)))
                 {
                     value = (int)Math.Round(fontSize);
                 }
