@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.GueDeriving;
 using GumRuntime;
 using Shouldly;
@@ -16,19 +16,30 @@ public class AposShapeRuntimeReregistrationTests
     [Fact]
     public void RegisterRuntimeTypes_AfterUninitializeRuntimeTypes_ReregistersGueInstantiation()
     {
-        AposShapeRuntime.RegisterRuntimeTypes();
+        // ClearRegistrations nulls the process-wide CustomCreateGraphicalComponentFunc, and xUnit runs
+        // test classes in a random order, so any class that builds elements from a ComponentSave/ScreenSave
+        // (VariableReferenceTypedSetterTests) would throw if it ran after this one. Put it back.
+        var originalCreateComponent = ElementSaveExtensions.CustomCreateGraphicalComponentFunc;
+        try
+        {
+            AposShapeRuntime.RegisterRuntimeTypes();
 
-        ElementSaveExtensions.ClearRegistrations();
-        AposShapeRuntime.UninitializeRuntimeTypes();
+            ElementSaveExtensions.ClearRegistrations();
+            AposShapeRuntime.UninitializeRuntimeTypes();
 
-        AposShapeRuntime.RegisterRuntimeTypes();
+            AposShapeRuntime.RegisterRuntimeTypes();
 
-        ComponentSave elementSave = new ComponentSave { Name = "Arc" };
-        var gue = ElementSaveExtensions.CreateGueForElement(elementSave);
+            ComponentSave elementSave = new ComponentSave { Name = "Arc" };
+            var gue = ElementSaveExtensions.CreateGueForElement(elementSave);
 
-        // Covers the obsolete shim type on purpose: registration instantiates the shim (#3380).
+            // Covers the obsolete shim type on purpose: registration instantiates the shim (#3380).
 #pragma warning disable CS0618
-        gue.ShouldBeOfType<global::MonoGameGum.GueDeriving.ArcRuntime>();
+            gue.ShouldBeOfType<global::MonoGameGum.GueDeriving.ArcRuntime>();
 #pragma warning restore CS0618
+        }
+        finally
+        {
+            ElementSaveExtensions.CustomCreateGraphicalComponentFunc = originalCreateComponent;
+        }
     }
 }
