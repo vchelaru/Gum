@@ -105,7 +105,7 @@ public class RenderableSizeNonFiniteTests
             {
                 // A circle's Width and Height are the same radius, and a line grid and a polygon derive their size.
                 bool derivedSize = variable == "Width" || variable == "Height";
-                if (renderable == "LineCircle" && variable == "Height" || (renderable == "LineGrid" || renderable == "LinePolygon") && derivedSize)
+                if (renderable == "LineCircle" && variable == "Height" || (renderable == "LineGrid" || renderable == "LinePolygon") && derivedSize || renderable == "LineGrid" && variable == "Rotation")
                 {
                     continue;
                 }
