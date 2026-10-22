@@ -311,6 +311,173 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
         _errors.ShouldBeEmpty();
     }
 
+    // With Gum.Expressions an enum value read into a different enum type is refused like it is without the package
+    // (#6441): Enum.ToObject on its number would turn VerticalAlignment.Bottom into HorizontalAlignment.Right.
+    public static TheoryData<string, object, string, object> OtherEnumTypePairs => new()
+    {
+        { "XOrigin", HorizontalAlignment.Center, "YOrigin", VerticalAlignment.Bottom },
+        { "YOrigin", VerticalAlignment.Center, "XOrigin", HorizontalAlignment.Right },
+        { "HorizontalAlignment", HorizontalAlignment.Left, "VerticalAlignment", VerticalAlignment.Bottom },
+        { "VerticalAlignment", VerticalAlignment.Top, "HorizontalAlignment", HorizontalAlignment.Right },
+    };
+
+    [Theory]
+    [MemberData(nameof(OtherEnumTypePairs))]
+    public void Create_EnumIntoOtherEnumTypeWithGumExpressions_KeepsTheOldValue(string target, object authored, string source, object sourceValue)
+    {
+        GraphicalUiElement targetGue = CreatePair($"{target} = Source.{source}", out _, useExpressions: true, (target, authored), (source, sourceValue));
+
+        Read(targetGue, target).ShouldBe(authored);
+    }
+
+    [Fact]
+    public void Create_EnumIntoOtherEnumTypeWithGumExpressions_ReportsThatItCannotBeConverted()
+    {
+        TryCreate("XOrigin = Source.YOrigin", useExpressions: true,
+            ("XOrigin", HorizontalAlignment.Center), ("YOrigin", VerticalAlignment.Bottom));
+
+        _errors.ShouldBe(new[]
+        {
+            "Variable reference 'XOrigin = Source.YOrigin' was not applied in Pair (Container): Source.YOrigin is a VerticalAlignment " +
+            "and Target.XOrigin is a HorizontalAlignment, which cannot be converted. Target.XOrigin keeps its current value."
+        });
+    }
+
+    [Fact]
+    public void Create_EnumIntoOtherEnumTypeWithoutGumExpressions_ReportsTheSameMessage()
+    {
+        TryCreate("XOrigin = Source.YOrigin", useExpressions: false,
+            ("XOrigin", HorizontalAlignment.Center), ("YOrigin", VerticalAlignment.Bottom));
+
+        _errors.ShouldBe(new[]
+        {
+            "Variable reference 'XOrigin = Source.YOrigin' was not applied in Pair (Container): Source.YOrigin is a VerticalAlignment " +
+            "and Target.XOrigin is a HorizontalAlignment, which cannot be converted. Target.XOrigin keeps its current value."
+        });
+    }
+
+    [Fact]
+    public void LiveUpdate_EnumIntoOtherEnumTypeWithGumExpressions_KeepsTheOldValueAndReportsOnce()
+    {
+        GraphicalUiElement target = CreatePair("XOrigin = Source.YOrigin", out GraphicalUiElement source, useExpressions: true,
+            ("XOrigin", HorizontalAlignment.Center), ("YOrigin", VerticalAlignment.Bottom));
+
+        ((TextRuntime)source).YOrigin = VerticalAlignment.Top;
+        ((TextRuntime)source).YOrigin = VerticalAlignment.Center;
+        source.SetProperty("YOrigin", VerticalAlignment.Bottom);
+
+        Read(target, "XOrigin").ShouldBe(HorizontalAlignment.Center);
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_EnumIntoOtherEnumTypeWithGumExpressions_KeepsTheOldValueAndReports()
+    {
+        BuildPair("XOrigin = Source.YOrigin", useExpressions: true,
+            ("XOrigin", HorizontalAlignment.Center), ("YOrigin", VerticalAlignment.Bottom));
+        ComponentSave pair = ObjectFinder.Self.GumProjectSave!.Components[0];
+
+        ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
+
+        pair.DefaultState!.GetValue("Target.XOrigin").ShouldBe(HorizontalAlignment.Center);
+        _errors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Create_SameEnumTypeWithGumExpressions_Applies()
+    {
+        GraphicalUiElement target = CreatePair("XOrigin = Source.HorizontalAlignment", out _, useExpressions: true,
+            ("XOrigin", HorizontalAlignment.Left), ("HorizontalAlignment", HorizontalAlignment.Right));
+
+        ((TextRuntime)target).XOrigin.ShouldBe(HorizontalAlignment.Right);
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void LiveUpdate_SameEnumTypeWithGumExpressions_Applies()
+    {
+        GraphicalUiElement target = CreatePair("XOrigin = Source.XOrigin", out GraphicalUiElement source, useExpressions: true,
+            ("XOrigin", HorizontalAlignment.Left), ("XOrigin", HorizontalAlignment.Center));
+
+        ((TextRuntime)source).XOrigin = HorizontalAlignment.Right;
+
+        ((TextRuntime)target).XOrigin.ShouldBe(HorizontalAlignment.Right);
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ApplyAllVariableReferences_SameEnumTypeWithGumExpressions_Applies()
+    {
+        BuildPair("XOrigin = Source.XOrigin", useExpressions: true,
+            ("XOrigin", HorizontalAlignment.Left), ("XOrigin", HorizontalAlignment.Right));
+        ComponentSave pair = ObjectFinder.Self.GumProjectSave!.Components[0];
+
+        ObjectFinder.Self.GumProjectSave!.ApplyAllVariableReferences();
+
+        pair.DefaultState!.GetValue("Target.XOrigin").ShouldBe(HorizontalAlignment.Right);
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Create_WholeNumberIntoEnumWithGumExpressions_SelectsTheEnumValue()
+    {
+        GraphicalUiElement target = CreatePair("HorizontalAlignment = Source.FontSize", out _, useExpressions: true,
+            ("HorizontalAlignment", HorizontalAlignment.Left), ("FontSize", 2));
+
+        ((TextRuntime)target).HorizontalAlignment.ShouldBe(HorizontalAlignment.Right);
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void LiveUpdate_WholeNumberIntoEnumWithGumExpressions_SelectsTheEnumValue()
+    {
+        GraphicalUiElement target = CreatePair("HorizontalAlignment = Source.Red", out GraphicalUiElement source, useExpressions: true,
+            ("HorizontalAlignment", HorizontalAlignment.Left), ("Red", 2));
+
+        ((TextRuntime)source).Red = 1;
+
+        ((TextRuntime)target).HorizontalAlignment.ShouldBe(HorizontalAlignment.Center);
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Create_TextNamingAnEnumValueWithGumExpressions_IgnoresCase()
+    {
+        GraphicalUiElement target = CreatePair("HorizontalAlignment = Source.Text", out _, useExpressions: true,
+            ("HorizontalAlignment", HorizontalAlignment.Left), ("Text", "rIGHT"));
+
+        ((TextRuntime)target).HorizontalAlignment.ShouldBe(HorizontalAlignment.Right);
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Create_EnumIntoStringWithGumExpressions_WritesTheValueName()
+    {
+        GraphicalUiElement target = CreatePair("Text = Source.HorizontalAlignment", out _, useExpressions: true,
+            ("Text", "authored"), ("HorizontalAlignment", HorizontalAlignment.Right));
+
+        ((TextRuntime)target).Text.ShouldBe("Right");
+        _errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Create_EnumIntoIntWithGumExpressions_KeepsTheOldValue()
+    {
+        GraphicalUiElement target = CreatePair("FontSize = Source.HorizontalAlignment", out _, useExpressions: true,
+            ("FontSize", 18), ("HorizontalAlignment", HorizontalAlignment.Right));
+
+        ((TextRuntime)target).FontSize.ShouldBe(18f);
+    }
+
+    [Fact]
+    public void Create_EnumIntoFloatWithGumExpressions_KeepsTheOldValue()
+    {
+        GraphicalUiElement target = CreatePair("Width = Source.HorizontalAlignment", out _, useExpressions: true,
+            ("Width", 77f), ("HorizontalAlignment", HorizontalAlignment.Right));
+
+        ((TextRuntime)target).Width.ShouldBe(77f);
+    }
+
     [Fact]
     public void Create_BoolIntoFloatWithGumExpressions_KeepsTheOldValueWithoutThrowing()
     {
@@ -413,8 +580,11 @@ public class ReferenceBetweenMismatchedTypesTests : BaseTestClass
     // Creates the pair like CreatePair but leaves a throw to the caller's assertion on _errors (the throw itself is
     // pinned by the Create_MismatchedTypes_DoesNotThrow tests).
     private void TryCreate(string row, params (string Name, object Value)[] authored)
+        => TryCreate(row, useExpressions: false, authored);
+
+    private void TryCreate(string row, bool useExpressions, params (string Name, object Value)[] authored)
     {
-        ComponentSave pair = BuildPair(row, useExpressions: false, authored);
+        ComponentSave pair = BuildPair(row, useExpressions, authored);
         try
         {
             pair.ToGraphicalUiElement();
