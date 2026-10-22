@@ -181,6 +181,62 @@ public class ReferenceRejectedByTargetTests : BaseTestClass
         target.Progress.ShouldBe(9f);
     }
 
+    // A custom float declared only on the owner (Target.Progress), not by the instance's component, gets its type from the
+    // owner's declaration; the live state carries none.
+    [Theory]
+    [InlineData(false, float.PositiveInfinity)]
+    [InlineData(false, float.NegativeInfinity)]
+    [InlineData(false, float.NaN)]
+    [InlineData(true, float.PositiveInfinity)]
+    [InlineData(true, float.NegativeInfinity)]
+    [InlineData(true, float.NaN)]
+    public void LiveUpdate_InfinityIntoCustomFloatDeclaredOnlyOnTheOwner_KeepsThePreviousValueAndReportsOnce(bool useExpressions, float nonFinite)
+    {
+        ComponentSave pair = ReferencePairBuilder.Build("Progress = Source.StackSpacing", useExpressions,
+            new (string, object?)[] { ("Progress", 77f), ("StackSpacing", 5f) },
+            targetBaseType: "Slider", sourceBaseType: "Container");
+        ComponentSave slider = new ComponentSave { Name = "Slider", BaseType = "Container" };
+        slider.States.Add(new StateSave { Name = "Default", ParentContainer = slider });
+        ObjectFinder.Self.GumProjectSave!.Components.Add(slider);
+        ElementSaveExtensions.RegisterGueInstantiationType("Slider", typeof(SliderRuntime));
+        GraphicalUiElement root = pair.ToGraphicalUiElement();
+        GraphicalUiElement source = root.GetGraphicalUiElementByName("Source")!;
+        SliderRuntime target = (SliderRuntime)root.GetGraphicalUiElementByName("Target")!;
+        target.Progress.ShouldBe(5f);
+
+        source.SetProperty("StackSpacing", nonFinite);
+
+        target.Progress.ShouldBe(5f);
+        _errors.Count.ShouldBe(1, string.Join(Environment.NewLine, _errors));
+    }
+
+    // The declaration sits on a derived element while the row and the instance belong to its base.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LiveUpdate_InfinityIntoVariableDeclaredOnlyByADerivedElement_KeepsThePreviousValueAndReportsOnce(bool useExpressions)
+    {
+        ComponentSave pair = ReferencePairBuilder.Build("Z = Source.StackSpacing", useExpressions,
+            new (string, object?)[] { ("Z", 77f), ("StackSpacing", 5f) },
+            targetBaseType: "Container", sourceBaseType: "Container");
+        // Pair declares Target.Z; Derived adds nothing but its own declaration of the same variable's type.
+        ComponentSave derived = new ComponentSave { Name = "Derived", BaseType = "Pair" };
+        StateSave derivedState = new StateSave { Name = "Default", ParentContainer = derived };
+        derivedState.Variables.Add(new VariableSave { Name = "Target.Z", Type = "float", Value = 40f, SetsValue = true });
+        derived.States.Add(derivedState);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(derived);
+        pair.DefaultState!.Variables.RemoveAll(item => item.Name == "Target.Z");
+        GraphicalUiElement root = derived.ToGraphicalUiElement();
+        GraphicalUiElement source = root.GetGraphicalUiElementByName("Source")!;
+        GraphicalUiElement target = root.GetGraphicalUiElementByName("Target")!;
+        float before = target.Z;
+
+        source.SetProperty("StackSpacing", float.PositiveInfinity);
+
+        target.Z.ShouldBe(before);
+        _errors.Count.ShouldBe(1, string.Join(Environment.NewLine, _errors));
+    }
+
     private class SliderRuntime : GraphicalUiElement
     {
         public SliderRuntime() : base(new InvisibleRenderable(), null) { }
