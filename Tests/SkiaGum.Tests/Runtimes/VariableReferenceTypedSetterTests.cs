@@ -3,6 +3,7 @@ using Gum.Managers;
 using Gum.Tests.Shared;
 using Gum.Wireframe;
 using GumRuntime;
+using Shouldly;
 using RenderingLibrary;
 
 namespace SkiaGum.Tests.Runtimes;
@@ -51,6 +52,7 @@ public class VariableReferenceTypedSetterTests : IDisposable
     [MemberData(nameof(Variables))]
     public void TypedSetAfterCreation_SameComponentReferenceFollows(string standard, string variable, int valueIndex, bool useExpressions)
     {
+        useExpressions.ShouldBeFalse("Gum.Expressions is not referenced by this project");
         TypedSetterSweep.Run(Factories, screen => screen.ToGraphicalUiElement(_systemManagers, addToManagers: false), standard, variable, valueIndex);
     }
 }
