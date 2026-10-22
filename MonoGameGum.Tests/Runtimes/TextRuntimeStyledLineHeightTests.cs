@@ -147,4 +147,15 @@ public class TextRuntimeStyledLineHeightTests : BaseTestClass
         DrawnAdvances(text, baseScale, multiplier).ShouldBe(new[] { plain, plain, plain }, tolerance: 0.01f);
         text.WrappedTextHeight.ShouldBe(3 * plain, tolerance: 1.01f);
     }
+
+    [Fact]
+    public void TrailingNewline_CountsTheEmptyLastLineAtTheMultipliedBase()
+    {
+        float h = PlainLineHeight();
+        // a, the size run, then the empty line after the trailing newline: 3h + 3h + 3h.
+        Text text = Build("a\n[FontScale=3]b\n", 2, 1.5f);
+
+        text.WrappedText.Count.ShouldBe(3);
+        text.WrappedTextHeight.ShouldBe(9 * h, tolerance: 1.01f);
+    }
 }

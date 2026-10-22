@@ -838,8 +838,29 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get
         {
             var textBlock = GetCachedTextBlock();
-            return textBlock.MeasuredHeight;
+            return GetMeasuredHeight(textBlock);
         }
+    }
+
+    /// <summary>
+    /// <paramref name="textBlock"/>'s measured height plus the empty line after a trailing newline, which
+    /// RichTextKit drops but MonoGame and Raylib count (#6459). That line is one plain line at the base size and
+    /// <see cref="LineHeightMultiplier"/>.
+    /// </summary>
+    private float GetMeasuredHeight(TextBlock textBlock)
+    {
+        var height = textBlock.MeasuredHeight;
+        if (_layoutText != null && _layoutText.Length > 0 && _layoutText[_layoutText.Length - 1] == '\n')
+        {
+            var emptyLine = new TextBlock();
+            emptyLine.AddText("x", GetStyle());
+            if (emptyLine.Lines.Count > 0)
+            {
+                height += emptyLine.Lines[0].Height;
+            }
+        }
+
+        return height;
     }
 
     public float WrappedTextWidth
@@ -983,12 +1004,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         if (VerticalAlignment == VerticalAlignment.Center)
         {
-            return (Height - textBlock.MeasuredHeight) / 2.0f;
+            return (Height - GetMeasuredHeight(textBlock)) / 2.0f;
         }
 
         if (VerticalAlignment == VerticalAlignment.Bottom)
         {
-            return Height - textBlock.MeasuredHeight;
+            return Height - GetMeasuredHeight(textBlock);
         }
 
         return 0;

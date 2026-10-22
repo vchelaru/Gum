@@ -39,21 +39,56 @@ public class TextStyledLineHeightTests
 
     private static string Scale(float scale) => scale.ToString(CultureInfo.InvariantCulture);
 
-    private static float Within(float expected) => 0.035f * expected;
+    /// <summary>Float and pixel rounding only, in units of h per line: a line whose height comes from a size run
+    /// at least as tall as the multiplied base, or from plain text at multiplier 1, must match exactly.</summary>
+    private const float ExactTolerance = 0.01f;
 
-    private static void ShouldMatch(Text text, float h, params float[] expectedLineAdvances)
+    /// <summary>
+    /// The known Skia residual, tracked in #6467: RichTextKit multiplies a line's ascent and descent but not its
+    /// leading, so a line whose height comes from the multiplied base (plain text at a multiplier other than 1, or
+    /// a size run smaller than the multiplied base) lands up to this fraction away from <c>base * mult * h</c>.
+    /// Measured at 2%; applies only to such lines, so a wrong size-run formula still fails.
+    /// </summary>
+    private const float LeadingResidualFraction = 0.025f;
+
+    private readonly record struct Line(float Advance, float Tolerance);
+
+    private static Line Plain(float baseScale, float multiplier)
+    {
+        float advance = baseScale * multiplier;
+        return new Line(advance, multiplier == 1 ? ExactTolerance : advance * LeadingResidualFraction + ExactTolerance);
+    }
+
+    private static Line Run(float baseScale, float multiplier, float runScale)
+    {
+        float multipliedBase = baseScale * multiplier;
+        return runScale >= multipliedBase
+            ? new Line(runScale, ExactTolerance)
+            : new Line(multipliedBase, multipliedBase * LeadingResidualFraction + ExactTolerance);
+    }
+
+    // RichTextKit drops the empty line after a trailing newline, so the text adds it to the reported height itself.
+    private static void ShouldMatch(Text text, float h, params Line[] expectedLines) =>
+        ShouldMatch(text, h, false, expectedLines);
+
+    private static void ShouldMatch(Text text, float h, bool endsWithEmptyLine, Line[] expectedLines)
     {
         TextBlock block = text.GetTextBlock();
-        block.Lines.Count.ShouldBe(expectedLineAdvances.Length);
+        block.Lines.Count.ShouldBe(expectedLines.Length - (endsWithEmptyLine ? 1 : 0));
 
         float expectedTop = 0;
-        for (int i = 0; i < expectedLineAdvances.Length; i++)
+        float topTolerance = 0;
+        for (int i = 0; i < expectedLines.Length; i++)
         {
-            block.Lines[i].YCoord.ShouldBe(expectedTop * h, Within(expectedTop * h) + 0.01f, $"top of line {i}");
-            expectedTop += expectedLineAdvances[i];
+            if (i < block.Lines.Count)
+            {
+                block.Lines[i].YCoord.ShouldBe(expectedTop * h, topTolerance * h, $"top of line {i}");
+            }
+            expectedTop += expectedLines[i].Advance;
+            topTolerance += expectedLines[i].Tolerance;
         }
 
-        text.WrappedTextHeight.ShouldBe(expectedTop * h, Within(expectedTop * h), "the reported height is the drawn extent");
+        text.WrappedTextHeight.ShouldBe(expectedTop * h, topTolerance * h, "the reported height is the drawn extent");
     }
 
     public static IEnumerable<object[]> BaseRunMultiplier()
@@ -77,8 +112,7 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build($"a\n[FontScale={Scale(runScale)}]b[/FontScale]\nc", baseScale, multiplier);
 
-        float plain = baseScale * multiplier;
-        ShouldMatch(text, h, plain, System.Math.Max(plain, runScale), plain);
+        ShouldMatch(text, h, Plain(baseScale, multiplier), Run(baseScale, multiplier, runScale), Plain(baseScale, multiplier));
     }
 
     [Theory]
@@ -88,8 +122,7 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build($"a\n[FontScale={Scale(runScale)}]b[/FontScale]", baseScale, multiplier);
 
-        float plain = baseScale * multiplier;
-        ShouldMatch(text, h, plain, System.Math.Max(plain, runScale));
+        ShouldMatch(text, h, Plain(baseScale, multiplier), Run(baseScale, multiplier, runScale));
     }
 
     [Fact]
@@ -98,7 +131,7 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build("[FontScale=3]a[/FontScale]\n[FontScale=1.5]b[/FontScale]\nc", 2, 1.5f);
 
-        ShouldMatch(text, h, 3, 3, 3);
+        ShouldMatch(text, h, Run(2, 1.5f, 3), Run(2, 1.5f, 1.5f), Plain(2, 1.5f));
     }
 
     [Fact]
@@ -108,7 +141,7 @@ public class TextStyledLineHeightTests
         // The #6459 case: base 2, run 3, multiplier 1.5, two lines. Drawn 3h + 3h = 6h.
         Text text = Build("[FontScale=3]a[/FontScale]\nb", 2, 1.5f);
 
-        ShouldMatch(text, h, 3, 3);
+        ShouldMatch(text, h, Run(2, 1.5f, 3), Plain(2, 1.5f));
     }
 
     [Theory]
@@ -120,7 +153,7 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build("a\nb\nc", baseScale, multiplier);
 
-        float plain = baseScale * multiplier;
+        Line plain = Plain(baseScale, multiplier);
         ShouldMatch(text, h, plain, plain, plain);
     }
 
@@ -133,7 +166,35 @@ public class TextStyledLineHeightTests
         float h = PlainLineHeight();
         Text text = Build("[Color=Red]a[/Color]\nb\n[Color=Blue]c[/Color]", baseScale, multiplier);
 
-        float plain = baseScale * multiplier;
+        Line plain = Plain(baseScale, multiplier);
         ShouldMatch(text, h, plain, plain, plain);
+    }
+
+    [Fact]
+    public void TrailingNewline_AddsAnEmptyLastLineAtTheMultipliedBase()
+    {
+        float h = PlainLineHeight();
+        // MonoGame and Raylib count the empty line after a trailing newline: a, the size run, then an empty line.
+        Text text = Build("a\n[FontScale=3]b\n", 2, 1.5f);
+
+        ShouldMatch(text, h, true, new[] { Plain(2, 1.5f), Run(2, 1.5f, 3), Plain(2, 1.5f) });
+    }
+
+    [Fact]
+    public void TrailingNewline_OnPlainText_AddsOneEmptyLine()
+    {
+        float h = PlainLineHeight();
+        Text text = Build("a\n", 1, 1);
+
+        ShouldMatch(text, h, true, new[] { Plain(1, 1), Plain(1, 1) });
+    }
+
+    [Fact]
+    public void TrailingNewline_AfterASizeRunLine_AddsAnEmptyLineAtTheMultipliedBase()
+    {
+        float h = PlainLineHeight();
+        Text text = Build("[FontScale=3]a[/FontScale]\n", 2, 1.5f);
+
+        ShouldMatch(text, h, true, new[] { Run(2, 1.5f, 3), Plain(2, 1.5f) });
     }
 }

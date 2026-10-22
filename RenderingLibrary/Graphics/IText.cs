@@ -52,7 +52,17 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public static float Compute(float lineHeightInPixels, float baseScale, float lineHeightMultiplier, float tallestSizeRunScale)
         {
-            return lineHeightInPixels * System.Math.Max(baseScale * lineHeightMultiplier, tallestSizeRunScale);
+            return Combine(lineHeightInPixels * lineHeightMultiplier * baseScale, lineHeightInPixels * tallestSizeRunScale);
+        }
+
+        /// <summary>
+        /// The single place the multiplied base and the tallest size run are compared, for callers whose run
+        /// is measured in a different font than the base (a [FontSize] swap) and so already holds both
+        /// heights in pixels. The run height is <c>0</c> when the line has no size run.
+        /// </summary>
+        public static float Combine(float multipliedBaseHeightInPixels, float tallestSizeRunHeightInPixels)
+        {
+            return System.Math.Max(multipliedBaseHeightInPixels, tallestSizeRunHeightInPixels);
         }
     }
 }

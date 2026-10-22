@@ -1598,7 +1598,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public float ComputeStyledLineHeight(BitmapFont fontToUse, List<StyledSubstring> substrings, out float maxBaseline)
     {
-        var lineHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+        var multipliedBaseHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+        float tallestSizeRunHeight = 0;
 
         float currentFontScale = EffectiveFontScale;
         BitmapFont currentFont = fontToUse;
@@ -1612,19 +1613,19 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 if (variable.VariableName == nameof(FontScale))
                 {
                     currentFontScale = ComposeFontScale((float)variable.Value);
-                    lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                    tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
                     maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
                 }
                 else if (variable.VariableName == nameof(BitmapFont))
                 {
                     currentFont = (BitmapFont)variable.Value;
-                    lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                    tallestSizeRunHeight = System.Math.Max(tallestSizeRunHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
                     maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
                 }
             }
         }
 
-        return lineHeight;
+        return TextLineHeight.Combine(multipliedBaseHeight, tallestSizeRunHeight);
     }
 
     // made public for auto tests:
