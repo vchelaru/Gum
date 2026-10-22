@@ -8,7 +8,8 @@ namespace RaylibGum.Tests.Renderables;
 /// <summary>
 /// #6426: pins the vertical offset of each wrapped line of a styled (BBCode) Text, which the draw
 /// pass and <see cref="Text.GetLineTopOffsets"/> share. A line advances by the base line height times the
-/// tallest [FontScale] run on it (never less than the base), times the line height multiplier. Explicit
+/// tallest [FontScale] run on it (never less than the base), where the line height multiplier scales the base but
+/// not a run (#6450: <c>max(base * multiplier, run)</c>, as on MonoGame). Explicit
 /// newlines keep the line split independent of font metrics, and every expectation is derived from the
 /// per-line advance of a plain control text, so no font metric is hard-coded.
 /// </summary>
@@ -119,7 +120,7 @@ public class TextLineTopOffsetTests : BaseTestClass
 
         IReadOnlyList<float> offsets = text.GetLineTopOffsets();
         offsets[1].ShouldBe(1.5f * h, 0.01);
-        offsets[2].ShouldBe(1.5f * 3 * h, 0.01);
+        offsets[2].ShouldBe(1.5f * h + 2 * h, 0.01, "because the run is an absolute scale and is not multiplied");
     }
 
     [Fact]
@@ -170,7 +171,7 @@ public class TextLineTopOffsetTests : BaseTestClass
         IReadOnlyList<float> offsets = text.GetLineTopOffsets();
 
         offsets[1].ShouldBe(h * multiplier, 0.01);
-        offsets[2].ShouldBe(4 * h * multiplier, 0.01);
+        offsets[2].ShouldBe(h * multiplier + 3 * h, 0.01, "because the run is an absolute scale and is not multiplied");
     }
 
     [Fact]
