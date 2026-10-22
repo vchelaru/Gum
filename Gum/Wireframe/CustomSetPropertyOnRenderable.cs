@@ -2048,9 +2048,10 @@ public partial class CustomSetPropertyOnRenderable
                         castedValue = GetAndCreateFontIfNecessary();
 #if RAYLIB
                         // With no font creator the open tag stored a raw size (above), so the close tag must end
-                        // that run too (#6468): 0 means "back to the base font", which Text does not treat as a
-                        // size run. Without it the open run would stretch to the end of the text.
-                        castedValue ??= 0f;
+                        // that run too (#6468): back to the enclosing [FontSize] when one is still open, else 0,
+                        // which means "back to the base font" and which Text does not treat as a size run.
+                        // Without it the open run would stretch to the end of the text.
+                        castedValue ??= fontSizeStack.Count > 1 ? fontSizeStack.Peek() : 0f;
 #endif
                     }
                     break;
