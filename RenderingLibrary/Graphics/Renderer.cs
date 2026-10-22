@@ -1130,11 +1130,34 @@ public class Renderer : IRenderer
         return false;
     }
 
+    // Once per Renderer (one per SystemManagers, so in practice once per GraphicsDevice): the
+    // back buffer's usage is a device setting, and a game that draws every frame would otherwise
+    // repeat the message every frame. After the first report this is a single bool test.
     private bool _hasReportedDiscardingRestoreTarget;
 
+    /// <summary>
+    /// #6461: baking an IsRenderTarget container switches to its render target and then back to
+    /// whatever was bound (the back buffer, or a user render target). If that target uses
+    /// <see cref="RenderTargetUsage.DiscardContents"/> the device clears it on the switch back, so
+    /// everything drawn before Gum in the frame disappears. Gum does not change the setting (it is
+    /// the game's), so this reports it, once, through the same channel as Gum's other runtime
+    /// warnings. Returns true only for the call that reported.
+    /// </summary>
     internal bool TryReportDiscardingRestoreTarget(RenderTargetUsage restoreTargetUsage)
     {
-        return false;
+        if (_hasReportedDiscardingRestoreTarget || restoreTargetUsage != RenderTargetUsage.DiscardContents)
+        {
+            return false;
+        }
+
+        _hasReportedDiscardingRestoreTarget = true;
+        CustomSetPropertyOnRenderable.RaisePropertyAssignmentError(
+            "An IsRenderTarget container is being drawn while the render target Gum returns to " +
+            "discards its contents, so anything drawn before Gum in this frame will be cleared. " +
+            "Set RenderTargetUsage.PreserveContents on the back buffer " +
+            "(graphics.PreparingDeviceSettings, PresentationParameters.RenderTargetUsage) or on " +
+            "the render target you draw into to keep it.");
+        return true;
     }
 
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
@@ -1168,6 +1191,13 @@ public class Renderer : IRenderer
 
         if(renderTarget != null)
         {
+            // The target restored after the bake is the one currently bound: a user render target,
+            // or the back buffer when none is.
+            TryReportDiscardingRestoreTarget(
+                oldRenderTarget is RenderTarget2D boundTarget
+                    ? boundTarget.RenderTargetUsage
+                    : InitializedGraphicsDevice.PresentationParameters.RenderTargetUsage);
+
             InitializedGraphicsDevice.SetRenderTarget(renderTarget);
 
             InitializedGraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
