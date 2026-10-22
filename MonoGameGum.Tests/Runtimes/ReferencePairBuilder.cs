@@ -16,10 +16,11 @@ internal static class ReferencePairBuilder
     /// <summary>
     /// The first authored value is Target's, the second Source's. A variable's declared type comes from its value
     /// unless <paramref name="targetType"/> or <paramref name="sourceType"/> gives it. A null source value leaves the
-    /// variable off the state, which is a reference to a variable that has no value.
+    /// variable off the state, which is a reference to a variable that has no value. The instances are Text unless
+    /// <paramref name="targetBaseType"/> or <paramref name="sourceBaseType"/> says Container.
     /// </summary>
     public static ComponentSave Build(string row, bool useExpressions, (string Name, object? Value)[] authored,
-        string? targetType = null, string? sourceType = null)
+        string? targetType = null, string? sourceType = null, string targetBaseType = "Text", string sourceBaseType = "Text")
     {
         if (useExpressions)
         {
@@ -41,8 +42,8 @@ internal static class ReferencePairBuilder
         ComponentSave pair = new ComponentSave { Name = "Pair", BaseType = "Container" };
         StateSave state = new StateSave { Name = "Default", ParentContainer = pair };
         pair.States.Add(state);
-        pair.Instances.Add(new InstanceSave { Name = "Source", BaseType = "Text", ParentContainer = pair });
-        pair.Instances.Add(new InstanceSave { Name = "Target", BaseType = "Text", ParentContainer = pair });
+        pair.Instances.Add(new InstanceSave { Name = "Source", BaseType = sourceBaseType, ParentContainer = pair });
+        pair.Instances.Add(new InstanceSave { Name = "Target", BaseType = targetBaseType, ParentContainer = pair });
         AddAuthored(state, "Target", authored[0], targetType);
         AddAuthored(state, "Source", authored[1], sourceType);
         VariableListSave<string> rows = new VariableListSave<string> { Type = "string", Name = "Target.VariableReferences" };

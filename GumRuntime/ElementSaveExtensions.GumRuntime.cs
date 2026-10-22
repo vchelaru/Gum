@@ -1398,13 +1398,64 @@ namespace GumRuntime
                 value = null;
                 mismatchReported = true;
             }
+
+            // A float or double variable never takes a NaN or infinity from a reference (#6457). The setters of X, Y, Width,
+            // Height, Rotation and FontScale throw on one under FULL_DIAGNOSTICS and take it silently otherwise, and no other
+            // float has a use for it, so the one check sits here, in front of both. A nullable float is left alone: infinity
+            // is a usable MaxWidth. A live update's state holds only the changed and input variables, so a variable that is
+            // not on a standard element (Z, a custom variable) takes its type from the element's own declaration.
+            if (value != null && !mismatchReported && IsNonFiniteNumber(value))
+            {
+                string? numberType = leftSideType ?? GetDeclaredType(leftVariableName, instanceLeft, stateSave);
+                if (numberType != null && (numberType == "float" || numberType == "double")
+                    && ReportedRejectedCast(referenceString, right, leftVariableName, numberType, value, stateSave, liveRoot))
+                {
+                    value = null;
+                    mismatchReported = true;
+                }
+            }
             return true;
         }
 
-        // True, after reporting once per row, when Gum.Expressions evaluated the right side but refused to cast its value to the
-        // left side's type (#6463): a bool or text into a number, an enum into a number, a name that is no value of the enum, a
-        // float or double the target cannot hold (#6456). The variable keeps its value, the same as for a mismatch without the
-        // package, so a reference is never silently dropped.
+        private static bool IsNonFiniteNumber(object value)
+        {
+            if (value is float single)
+            {
+                return float.IsNaN(single) || float.IsInfinity(single);
+            }
+            return value is double precise && (double.IsNaN(precise) || double.IsInfinity(precise));
+        }
+
+        // The type the element (or the base it derives from) declares for a variable on its default state, for a
+        // variable no standard element defines. Null when nothing declares it. Plain loops, since a live row calls this.
+        private static string? GetDeclaredType(string variableName, InstanceSave? instanceLeft, StateSave stateSave)
+        {
+            // The owner whose rows run comes first: an inherited row's instance belongs to the base, but the owner (and the
+            // declarations it adds) is the derived element, and walking its bases reaches the instance's own container.
+            ElementSave? element = stateSave.ParentContainer ?? instanceLeft?.ParentContainer;
+            for (int depth = 0; element != null && depth < 32; depth++)
+            {
+                List<VariableSave>? variables = element.DefaultState?.Variables;
+                if (variables != null)
+                {
+                    for (int i = 0; i < variables.Count; i++)
+                    {
+                        if (variables[i].Name == variableName && variables[i].Type != null)
+                        {
+                            return variables[i].Type;
+                        }
+                    }
+                }
+                element = ObjectFinder.Self.GetElementSave(element.BaseType);
+            }
+            return null;
+        }
+
+        // True, after reporting once per row, when a value cannot be applied to the left side's type: Gum.Expressions evaluated
+        // the right side but refused to cast it (#6463: a bool or text into a number, an enum into a number, a name that is no
+        // value of the enum, a float or double the target cannot hold, #6456), or the value is a NaN or infinity for a float
+        // or double variable (#6457). The variable keeps its value, the same as for a mismatch without the package, so a
+        // reference is never silently dropped.
         private static bool ReportedRejectedCast(string referenceString, string right, string leftVariableName,
             string leftSideType, object rejectedValue, StateSave stateSave, GraphicalUiElement? liveRoot)
         {
