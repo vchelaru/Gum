@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("RaylibGum.Tests")]
 [assembly: InternalsVisibleTo("SkiaGum.Tests")]
 [assembly: InternalsVisibleTo("Gum.Bundle.Tests")]
+// Gum.Expressions shares the int-range guard (GraphicalUiElementPropertyReadExtensions.IsInIntRange) with its CastTo.
+[assembly: InternalsVisibleTo("GumExpressions")]
 [assembly: InternalsVisibleTo("MonoGameGum.IntegrationTests")]
 // Moq builds proxies for IGumService, whose internal Context member is overridden by the proxy.
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

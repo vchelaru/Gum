@@ -1384,12 +1384,43 @@ namespace GumRuntime
                         value = plainValue;
                     }
                 }
+                else if (value == null && CustomEvaluateExpression != null && leftSideType != null
+                    && IsNumericTypeName(StripNullable(leftSideType)) && !IsNegation(right)
+                    && ReportedUnconvertibleNumber(referenceString, right, leftVariableName, StripNullable(leftSideType), stateSave, liveRoot))
+                {
+                    // A plain read of a float or double that Gum.Expressions refused to convert (infinity, NaN, or beyond
+                    // the target's range) leaves no value to say why. Any other expression that fails stays unreported.
+                    mismatchReported = true;
+                }
             }
 
             if (ReportedMismatch(referenceString, right, left, leftVariableName, leftSideType, sourceType, value, leftVariableOnState, instanceLeft, stateSave, liveRoot))
             {
                 value = null;
                 mismatchReported = true;
+            }
+            return true;
+        }
+
+        // True, after reporting once per row, when the right side is a plain reference to a float or double that the numeric
+        // target cannot hold. Gum.Expressions refuses to convert those instead of letting the cast overflow (#6456).
+        private static bool ReportedUnconvertibleNumber(string referenceString, string right, string leftVariableName,
+            string targetType, StateSave stateSave, GraphicalUiElement? liveRoot)
+        {
+            object? plainValue = ReadPlainReference(stateSave, right, findSourceType: false, out _);
+            if (!(plainValue is float || plainValue is double))
+            {
+                return false;
+            }
+
+            if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
+            {
+                object? owner = liveRoot?.Tag ?? stateSave.ParentContainer;
+                string where = owner == null ? string.Empty : $" in {owner}";
+                RaiseReferenceError(
+                    $"Variable reference '{referenceString}' was not applied{where}: {DecodeOwnerName(right)} is " +
+                    $"{Convert.ToString(plainValue, System.Globalization.CultureInfo.InvariantCulture)}, which does not fit " +
+                    $"the {targetType} {leftVariableName}. {leftVariableName} keeps its current value.");
             }
             return true;
         }

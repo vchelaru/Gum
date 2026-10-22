@@ -265,8 +265,10 @@ public static class GraphicalUiElementPropertyReadExtensions
         return false;
     }
 
-    // int.MaxValue rounds up to 2^31 as a float, so the upper bound is exclusive. NaN fails both comparisons.
-    private static bool IsInIntRange(float value) => value >= int.MinValue && value < -(float)int.MinValue;
+    // True when the value converts to an int without overflowing; shared with Gum.Expressions' CastTo (#6456). int.MaxValue
+    // rounds up to 2^31 as a float, so the upper bound is exclusive. NaN fails both comparisons. A float widens to a
+    // double exactly, so one overload serves both.
+    internal static bool IsInIntRange(double value) => value >= int.MinValue && value < 2147483648.0;
 
     // The saved variable is a PositionUnitType, which has no value for the dimension-only units or, on X, the
     // obsolete inverted center. An exact read keeps those as the GeneralUnitType rather than reading them as pixels.

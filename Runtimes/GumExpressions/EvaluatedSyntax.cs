@@ -1199,14 +1199,24 @@ public class EvaluatedSyntax
         switch (desiredType)
         {
             case "int":
+                // An unchecked cast turns infinity, NaN and anything beyond the int range into a platform-defined int,
+                // which is not the value the reference read: refuse it so the variable keeps its value (#6456).
                 if (this.EvaluatedType == "float" && this.Value is float floatToInt)
                 {
+                    if (!GraphicalUiElementPropertyReadExtensions.IsInIntRange(floatToInt))
+                    {
+                        return false;
+                    }
                     this.Value = (int)floatToInt;
                     this.EvaluatedType = desiredType;
                     return true;
                 }
                 else if (this.EvaluatedType == "double" && this.Value is double doubleToInt)
                 {
+                    if (!GraphicalUiElementPropertyReadExtensions.IsInIntRange(doubleToInt))
+                    {
+                        return false;
+                    }
                     this.Value = (int)doubleToInt;
                     this.EvaluatedType = desiredType;
                     return true;
@@ -1221,6 +1231,12 @@ public class EvaluatedSyntax
                 }
                 if (this.EvaluatedType == "double" && this.Value is double doubleToFloat)
                 {
+                    // A finite double beyond the float range would round to infinity. Infinity and NaN are the same value
+                    // as a float, so they convert.
+                    if (double.IsFinite(doubleToFloat) && float.IsInfinity((float)doubleToFloat))
+                    {
+                        return false;
+                    }
                     this.Value = (float)doubleToFloat;
                     this.EvaluatedType = desiredType;
                     return true;
