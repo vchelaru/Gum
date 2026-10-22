@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Throwaway repro for #6388 (text drawing is slow with TieredCompilation off). Not in any solution and
+	     not for merge. Running this project in Release builds it and the GlyphBench
+	     child, then runs every case in child processes and prints one markdown block. -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<Optimize>true</Optimize>
+		<ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+		<!-- GlyphBench is its own project in a subfolder; keep its files out of this one. -->
+		<DefaultItemExcludes>$(DefaultItemExcludes);GlyphBench/**</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="GlyphBench\GlyphBench.csproj" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+			<_Parameter1>ProjectDirectory</_Parameter1>
+			<_Parameter2>$(MSBuildProjectDirectory)</_Parameter2>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+			<_Parameter1>Configuration</_Parameter1>
+			<_Parameter2>$(Configuration)</_Parameter2>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+</Project>

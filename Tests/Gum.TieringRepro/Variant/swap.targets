@@ -1,0 +1,14 @@
+<Project>
+	<!-- Injected into a build of GumCommon.csproj through -p:CustomAfterMicrosoftCommonTargets=...
+	     (no product file changes). Replaces the compiled MathFunctions.cs with the file named by
+	     SwapMathFunctionsFile, so the repro can build a GumCommon.dll whose RoundToInt(float) has a
+	     different body and nothing else different. -->
+	<Target Name="SwapMathFunctions" BeforeTargets="CoreCompile" Condition="'$(SwapMathFunctionsFile)' != ''">
+		<ItemGroup>
+			<_SwappedOut Include="@(Compile)" Condition="'%(Filename)%(Extension)' == 'MathFunctions.cs'" />
+			<Compile Remove="@(_SwappedOut)" />
+			<Compile Include="$(SwapMathFunctionsFile)" />
+		</ItemGroup>
+		<Error Condition="'@(_SwappedOut)' == ''" Text="swap.targets: no MathFunctions.cs in the Compile items." />
+	</Target>
+</Project>

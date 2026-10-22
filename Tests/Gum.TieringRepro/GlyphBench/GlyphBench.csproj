@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Child process of Gum.TieringRepro: draws real Gum text through MonoGame on a hidden window and
+	     times it. Not part of any solution; built by Gum.TieringRepro's ProjectReference. -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<!-- The linked generated code in MonoGameGum uses nothing obsolete here, but keep the test project's setting. -->
+		<NoWarn>$(NoWarn);CS0618</NoWarn>
+		<!-- A background GC thread adds noise to a timing loop. -->
+		<ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\MonoGameGum.IntegrationTests\Content\Fonts\Orbitron-Black.ttf" Link="Orbitron-Black.ttf" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+</Project>
