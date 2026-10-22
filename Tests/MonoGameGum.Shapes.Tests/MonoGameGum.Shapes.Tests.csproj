@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\ShimRetention.cs" Link="Shared\ShimRetention.cs" />
+    <Compile Include="..\Shared\TypedSetterSweep.cs" Link="Shared\TypedSetterSweep.cs" />
   </ItemGroup>
 
 </Project>

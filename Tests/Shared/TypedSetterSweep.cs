@@ -14,6 +14,10 @@ namespace Gum.Tests.Shared;
 /// Shared by the MonoGameGum and SkiaGum test projects. For every standard-element variable that has a
 /// typed property, a component with an instance <c>Shadow</c> holding the row <c>P = P</c> must follow
 /// <c>label.P = value</c> in code, for every enum value and a few float, int and bool values (#6393).
+/// Setting a property can also change other variables (Red changes the Red1 alias, a Color changes
+/// Red/Green/Blue/Alpha); every typed variable that changes as a side effect gets its own reference row
+/// and must follow too (#6410). A color-typed property that is not itself a variable (Color) is set the
+/// same way and only its side effects are checked.
 /// </summary>
 public static class TypedSetterSweep
 {
@@ -24,6 +28,11 @@ public static class TypedSetterSweep
         "Parent", "State", "ContainedType", "SourceShaderFile", "SourceFile", "RenderTargetTextureSource",
         "CurrentChainName",
     };
+
+    // Turning IsFilled off clears the fill slot's color, which the Red/Green/Blue/Alpha getters (and their numbered
+    // gradient forms) read back, while the authored color variables are unchanged: no alias to report.
+    private static bool IsGatedRead(string variable, string reads) =>
+        variable == "IsFilled" && System.Text.RegularExpressions.Regex.IsMatch(reads, "^(Red|Green|Blue|Alpha)[0-9]?$");
 
     /// <summary>The value index of a case that sets a nullable variable to a value, then back to null.</summary>
     public const int SetBackToNull = -1;
@@ -41,7 +50,7 @@ public static class TypedSetterSweep
             foreach (VariableSave variable in defaults.Variables)
             {
                 PropertyInfo? property = GetTypedProperty(fresh.GetType(), variable.Name);
-                if (property == null || isExcluded?.Invoke(pair.Key, variable.Name) == true)
+                if (property == null || IsColorType(property.PropertyType) || isExcluded?.Invoke(pair.Key, variable.Name) == true)
                 {
                     continue;
                 }
@@ -72,7 +81,36 @@ public static class TypedSetterSweep
                     }
                 }
             }
+            // Color is not a variable, but setting it changes Red, Green, Blue and Alpha (and on shapes their
+            // numbered aliases), which are.
+            PropertyInfo? colorProperty = GetTypedProperty(fresh.GetType(), "Color");
+            if (colorProperty != null && IsColorType(colorProperty.PropertyType) && isExcluded?.Invoke(pair.Key, "Color") != true)
+            {
+                IReadOnlyList<object> colors = ValuesFor(colorProperty.PropertyType);
+                object? initialColor = colorProperty.GetValue(fresh);
+                for (int i = 0; i < colors.Count; i++)
+                {
+                    if (AreEqual(colors[i], initialColor))
+                    {
+                        continue;
+                    }
+                    yield return new object[] { pair.Key, "Color", i, false };
+                    if (includeExpressions)
+                    {
+                        yield return new object[] { pair.Key, "Color", i, true };
+                    }
+                }
+            }
         }
+    }
+
+    private static bool IsColorType(Type type) => type.Name is "Color" or "SKColor";
+
+    private static object ColorValue(Type type, byte r, byte g, byte b, byte a)
+    {
+        ConstructorInfo constructor = type.GetConstructors()
+            .First(c => c.GetParameters().Length == 4 && c.GetParameters().All(p => p.ParameterType == typeof(byte)));
+        return constructor.Invoke(new object[] { r, g, b, a });
     }
 
     private static PropertyInfo? GetTypedProperty(Type runtimeType, string variableName)
@@ -97,6 +135,10 @@ public static class TypedSetterSweep
         if (underlying == typeof(bool)) return new object[] { true, false };
         if (underlying == typeof(string)) return new object[] { "changed" };
         if (underlying.IsEnum) return Enum.GetValues(underlying).Cast<object>().ToList();
+        if (IsColorType(underlying) && underlying.GetConstructors().Any(c => c.GetParameters().Length == 4 && c.GetParameters().All(p => p.ParameterType == typeof(byte))))
+        {
+            return new object[] { ColorValue(underlying, 11, 22, 33, 44), ColorValue(underlying, 200, 150, 100, 250) };
+        }
         return Array.Empty<object>();
     }
 
@@ -119,16 +161,67 @@ public static class TypedSetterSweep
         {
             return true;
         }
-        if (a is string || b is string || a is bool || b is bool || a is Enum || b is Enum)
+        if (a is string || b is string || a is bool || b is bool || a is Enum || b is Enum || (a != null && IsColorType(a.GetType())))
         {
             return Equals(a, b);
         }
         return a != null && b != null && Math.Abs(Convert.ToDouble(a) - Convert.ToDouble(b)) < 0.0001;
     }
 
-    /// <summary>Builds the component, sets the label's property in code and asserts the shadow follows.</summary>
+    /// <summary>
+    /// The typed variables other than <paramref name="variable"/> that change when <paramref name="variable"/> is
+    /// set on a fresh element: its aliases (Red and Red1, Color and Red).
+    /// </summary>
+    private static List<string> FindAliases(Func<GraphicalUiElement> factory, string standard, string variable, object newValue)
+    {
+        GraphicalUiElement probe = factory();
+        Dictionary<string, object?> before = new();
+        foreach (VariableSave candidate in StandardElementsManager.Self.GetDefaultStateFor(standard)!.Variables)
+        {
+            PropertyInfo? other = GetTypedProperty(probe.GetType(), candidate.Name);
+            if (other != null && candidate.Name != variable && !IsColorType(other.PropertyType))
+            {
+                before[candidate.Name] = other.GetValue(probe);
+            }
+        }
+        GetTypedProperty(probe.GetType(), variable)!.SetValue(probe, newValue);
+        List<string> aliases = new();
+        foreach (KeyValuePair<string, object?> pair in before)
+        {
+            PropertyInfo other = GetTypedProperty(probe.GetType(), pair.Key)!;
+            if (!AreEqual(other.GetValue(probe), pair.Value) && !IsGatedRead(variable, pair.Key))
+            {
+                aliases.Add(pair.Key);
+            }
+        }
+        return aliases;
+    }
+
+    /// <summary>
+    /// Sets the label's property in code and asserts a same-component reference follows: one pass for the
+    /// variable itself, then one pass per alias with only that alias's row present (a getter that reads
+    /// through to the variable would otherwise hide a missing report).
+    /// </summary>
     public static void Run(Dictionary<string, Func<GraphicalUiElement>> factories, Func<ScreenSave, GraphicalUiElement> createRuntime,
         string standard, string variable, int valueIndex)
+    {
+        PropertyInfo property = GetTypedProperty(factories[standard]().GetType(), variable)!;
+        object? valueForAliases = valueIndex == SetBackToNull ? ValuesFor(property.PropertyType)[0] : ValuesFor(property.PropertyType)[valueIndex];
+        List<string> followed = new();
+        if (!IsColorType(property.PropertyType))
+        {
+            followed.Add(variable);
+        }
+        followed.AddRange(FindAliases(factories[standard], standard, variable, valueForAliases!));
+        foreach (string referenced in followed)
+        {
+            RunPass(factories, createRuntime, standard, variable, valueIndex, referenced);
+        }
+    }
+
+    /// <summary>Builds the component with the single row <c>referenced = referenced</c>, sets the label and asserts the shadow follows.</summary>
+    private static void RunPass(Dictionary<string, Func<GraphicalUiElement>> factories, Func<ScreenSave, GraphicalUiElement> createRuntime,
+        string standard, string variable, int valueIndex, string referenced)
     {
         GumProjectSave project = new GumProjectSave();
         foreach (KeyValuePair<string, Func<GraphicalUiElement>> pair in factories)
@@ -146,7 +239,7 @@ public static class TypedSetterSweep
         component.States.Add(state);
         component.Instances.Add(new InstanceSave { Name = "Shadow", BaseType = standard, ParentContainer = component });
         VariableListSave<string> rows = new VariableListSave<string> { Type = "string", Name = "Shadow.VariableReferences" };
-        rows.Value.Add($"{variable} = {variable}");
+        rows.Value.Add($"{referenced} = {referenced}");
         state.VariableLists.Add(rows);
         project.Components.Add(component);
         ScreenSave screen = new ScreenSave { Name = "TestScreen" };
@@ -171,19 +264,21 @@ public static class TypedSetterSweep
 
         property.SetValue(label, newValue);
 
+        PropertyInfo followed = GetTypedProperty(label.GetType(), referenced)!;
         // The label may normalize the value (an obsolete enum value, a clamp), so the shadow is compared with
         // what the label reads back.
-        object? expected = property.GetValue(label);
-        if (expected == null && newValue != null)
+        object? expected = followed.GetValue(label);
+        if (referenced == variable && expected == null && newValue != null)
         {
             // The label cannot hold the value (a Blend with no named state reads back null), so nothing to follow.
             return;
         }
-        object? actual = property.GetValue(shadow);
+        object? actual = followed.GetValue(shadow);
         if (!AreEqual(actual, expected))
         {
+            string how = referenced == variable ? "" : $" (a reference reading {referenced})";
             throw new Xunit.Sdk.XunitException(
-                $"{standard}.{variable} set to {newValue} (label reads {expected}), the shadow has {actual}");
+                $"{standard}.{variable}{how} set to {newValue ?? "null"} (label reads {expected}), the shadow has {actual}");
         }
     }
 }

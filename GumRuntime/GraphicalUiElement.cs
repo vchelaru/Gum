@@ -336,11 +336,39 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         // Every typed setter that raises PropertyChanged also updates the variable references that read it.
         ReportTypedPropertyChanged(propertyName);
+        ReportColorChannels(propertyName);
 
         if (PropertyChanged != null)
         {
             var args = new PropertyChangedEventArgs(propertyName);
             PropertyChanged(this, args);
+        }
+    }
+
+    // A color is its channels: assigning Color changes Red, Green, Blue and Alpha, which are variables, so the
+    // references that read a channel must follow a color assigned in code (#6410).
+    private void ReportColorChannels(string propertyName)
+    {
+        switch (propertyName)
+        {
+            case "Color":
+                ReportTypedPropertyChanged("Red");
+                ReportTypedPropertyChanged("Green");
+                ReportTypedPropertyChanged("Blue");
+                ReportTypedPropertyChanged("Alpha");
+                break;
+            case "Color1":
+                ReportTypedPropertyChanged("Red1");
+                ReportTypedPropertyChanged("Green1");
+                ReportTypedPropertyChanged("Blue1");
+                ReportTypedPropertyChanged("Alpha1");
+                break;
+            case "Color2":
+                ReportTypedPropertyChanged("Red2");
+                ReportTypedPropertyChanged("Green2");
+                ReportTypedPropertyChanged("Blue2");
+                ReportTypedPropertyChanged("Alpha2");
+                break;
         }
     }
 
