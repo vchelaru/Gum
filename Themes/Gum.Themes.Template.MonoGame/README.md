@@ -92,7 +92,8 @@ TemplateTheme.Apply();
    and `.Raylib`), then add the theme to the `MonoGameGumThemesShowcase` sample (a `ProjectReference`
    plus one `ThemeOption` entry) and run it. `Apply` and font loading only fail at
    runtime — this is where a font `FileNotFoundException` from an uneven rename shows.
-6. **Publish:** flip `<GeneratePackageOnBuild>` to `true` in all three csprojs.
+6. **Publish:** remove `<IsPackable>false</IsPackable>` from all three csprojs. The release workflow
+   packs every packable project with an explicit `dotnet pack`; builds never produce a package.
 
 ## Choosing a style: flat default, or the Rich variants
 
