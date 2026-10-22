@@ -105,11 +105,6 @@ public sealed class ContentLoader : IContentLoader
     }
 
     /// <summary>
-    /// Loads an SVG, applying <see cref="AdjustContentName"/> like <see cref="LoadContent{T}"/>.
-    /// </summary>
-    internal static SKSvg LoadSvg(string contentName) => global::SkiaGum.Content.SkiaResourceManager.GetSvg(Adjust(contentName));
-
-    /// <summary>
     /// Marks the resource manager initialized, as <c>SystemManagers.Initialize</c> always has.
     /// </summary>
     internal static void MarkInitialized() => global::SkiaGum.Content.SkiaResourceManager.Initialize(null);

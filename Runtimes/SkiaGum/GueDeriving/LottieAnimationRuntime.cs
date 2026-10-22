@@ -35,15 +35,9 @@ public class LottieAnimationRuntime : InteractiveGue
             if (sourceFile != value)
             {
                 sourceFile = value;
-                if (string.IsNullOrEmpty(value))
-                {
-                    Animation = null;
-                }
-                else
-                {
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    Animation = loaderManager.LoadContent<Animation>(value);
-                }
+                Animation = global::SkiaGum.Content.SourceFileLoading.LoadOrNull<Animation>(value);
+                // The getter returns the path, which TryGetProperty cannot recover from the animation.
+                ReportTypedPropertyChanged(nameof(SourceFile), value);
             }
         }
     }

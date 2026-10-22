@@ -41,4 +41,29 @@ public class SvgRuntimeTests
             File.Delete(svgPath);
         }
     }
+
+    [Fact]
+    public void SetPropertySourceFile_RealFile_LoadsTextureAndUpdatesSourceFile()
+    {
+        string svgPath = Path.Combine(Path.GetTempPath(), "GumSvgRuntimeTest_" + Guid.NewGuid().ToString("N") + ".svg");
+        File.WriteAllText(svgPath,
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\" fill=\"red\"/></svg>");
+        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
+        LoaderManager.Self.ContentLoader = new RenderingLibrary.Content.ContentLoader();
+
+        try
+        {
+            SvgRuntime sut = new SvgRuntime();
+
+            sut.SetProperty("SourceFile", svgPath);
+
+            sut.Texture.ShouldNotBeNull();
+            sut.SourceFile.ShouldBe(svgPath);
+        }
+        finally
+        {
+            LoaderManager.Self.ContentLoader = originalLoader;
+            File.Delete(svgPath);
+        }
+    }
 }
