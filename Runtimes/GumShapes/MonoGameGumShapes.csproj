@@ -3,6 +3,8 @@
 	<!-- Shared metadata, item excludes, and the SkiaGum source links live in Directory.Build.props. -->
 	<PropertyGroup>
 		<PackageId>Gum.Shapes.MonoGame</PackageId>
+		<!-- Selects the MonoGame-only trimmer declaration in ShapeRenderer (issue #6434). -->
+		<DefineConstants>$(DefineConstants);APOS_MONOGAME</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
