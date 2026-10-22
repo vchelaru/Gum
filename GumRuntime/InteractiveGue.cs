@@ -149,11 +149,25 @@ public partial class InteractiveGue : GraphicalUiElement
                 _hasEvents = value;
                 // The cursor walk skips subtrees with no events, so it has to look at this one again.
                 InvalidateSubtreeCaches();
+                ReportTypedPropertyChanged("HasEvents");
             }
         }
     }
     bool _hasEvents;
-    public bool ExposeChildrenEvents { get; set; } = true;
+
+    bool _exposeChildrenEvents = true;
+    public bool ExposeChildrenEvents
+    {
+        get => _exposeChildrenEvents;
+        set
+        {
+            if (_exposeChildrenEvents != value)
+            {
+                _exposeChildrenEvents = value;
+                ReportTypedPropertyChanged("ExposeChildrenEvents");
+            }
+        }
+    }
 
     /// <summary>
     /// Whether to check each individual child for raising UI events even if the cursor

@@ -1,4 +1,4 @@
-﻿using Gum;
+using Gum;
 using Gum.DataTypes;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -493,31 +493,32 @@ namespace GumRuntime
                 throw new ArgumentNullException(nameof(graphicalElement));
             }
 #endif
-            if (!string.IsNullOrEmpty(elementSave.BaseType))
-            {
-                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
-                if (baseElementSave != null)
-                {
-
-                    graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState!);
-                }
-            }
-
             // This applies the element's references itself, in the order they are written, so the
-            // variables it sets do not also trigger live re-evaluation.
-            VariableReferenceGraph.BeginSuppression();
+            // variables it sets on the element do not also trigger live re-evaluation. Variables it
+            // sets on its children do (see BeginReferenceLoad).
+            graphicalElement.BeginReferenceLoad();
             try
             {
+                if (!string.IsNullOrEmpty(elementSave.BaseType))
+                {
+                    var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                    if (baseElementSave != null)
+                    {
+                        graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState!);
+                    }
+                }
+
                 graphicalElement.ApplyState(stateSave);
 
                 ApplyVariableReferences(graphicalElement, stateSave);
 
                 // The line above reads every row's inputs from authored values, so a row that reads
-                // another row's result sees it stale. Chains are evaluated again in dependency order.
+                // another row's result sees it stale. Chains are evaluated again in dependency order, as
+                // are rows a base component owns, which were evaluated before this element's values applied.
                 if (stateSave == elementSave.DefaultState && elementSave is not StandardElementSave)
                 {
                     VariableReferenceGraph graph = VariableReferenceGraph.GetFor(elementSave);
-                    if (graph.HasChains)
+                    if (graph.HasChains || graph.HasInheritedRows)
                     {
                         graph.ApplyAll(elementSave, graphicalElement);
                     }
@@ -525,7 +526,7 @@ namespace GumRuntime
             }
             finally
             {
-                VariableReferenceGraph.EndSuppression();
+                graphicalElement.EndReferenceLoad();
             }
         }
 
@@ -1229,6 +1230,12 @@ namespace GumRuntime
             public string? VariableName;
             public object? OldValue;
             public object? NewValue;
+
+            /// <summary>
+            /// True when <see cref="NewValue"/> is null because the reference evaluated to null for a nullable
+            /// variable and null was written (see <c>propagateNull</c>), not because nothing was evaluated.
+            /// </summary>
+            public bool AssignsNull;
         }
 
         /// <summary>
@@ -1245,6 +1252,13 @@ namespace GumRuntime
         /// rendered, in which case such identifiers are simply unresolvable.
         /// </summary>
         public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
+        {
+            return ApplyVariableReferencesOnSpecificOwner(instanceLeft, referenceString, stateSave, liveRoot, propagateNull: false);
+        }
+
+        // propagateNull: when true, a null result is written to a nullable variable instead of being skipped.
+#nullable enable
+        internal static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot, bool propagateNull)
         {
 
             //////////////////////////////Early Out/////////////////////////////////
@@ -1282,7 +1296,12 @@ namespace GumRuntime
 
             object? valueBefore = null;
             string? effectiveLeft = null;
-            if (value != null)
+            // A null result is a value only for a nullable variable, only when the caller asks (live re-evaluation),
+            // and only when the right side is a plain reference to a variable that exists and holds null
+            // (MinWidth = Other.MinWidth). Any other null is a failed evaluation, which leaves the variable alone.
+            bool assignsNull = value == null && propagateNull && leftSideType != null && leftSideType.EndsWith("?")
+                && IsVariableOfCompatibleType(stateSave, right, leftSideType!);
+            if (value != null || assignsNull)
             {
                 if (instanceLeft == null)
                 {
@@ -1293,16 +1312,52 @@ namespace GumRuntime
                     effectiveLeft = $"{instanceLeft.Name}.{left}";
                 }
                 valueBefore = stateSave.GetValue(effectiveLeft);
-                stateSave.SetValue(effectiveLeft, value, instanceLeft);
+                stateSave.SetValue(effectiveLeft, value, instanceLeft, assignsNull ? leftSideType : null);
             }
 
             return new VariableReferenceAssignmentResult
             {
                 NewValue = value,
                 OldValue = valueBefore,
-                VariableName = effectiveLeft
+                VariableName = effectiveLeft,
+                AssignsNull = assignsNull
             };
         }
+
+        // True when the text is a plain dotted variable name (no operators, no cross-element path) that exists and
+        // whose type can be the target's: the same type, or int/float/double, ignoring nullability. A variable of a
+        // mismatched type (a bool read into a float?) fails the cast, which is not a null to copy.
+        private static bool IsVariableOfCompatibleType(StateSave stateSave, string right, string targetType)
+        {
+            string name = DecodeOwnerName(right).Trim();
+            if (name.Length == 0)
+            {
+                return false;
+            }
+            foreach (char c in name)
+            {
+                if (!char.IsLetterOrDigit(c) && c != '_' && c != '.')
+                {
+                    return false;
+                }
+            }
+            VariableSave? variable = new RecursiveVariableFinder(stateSave).GetVariable(name);
+            if (variable == null)
+            {
+                return false;
+            }
+            string? sourceType = GetRootVariableType(name, null, stateSave) ?? variable.Type;
+            if (sourceType == null)
+            {
+                return false;
+            }
+            sourceType = sourceType.TrimEnd('?');
+            targetType = targetType.TrimEnd('?');
+            return sourceType == targetType || (IsNumericTypeName(sourceType) && IsNumericTypeName(targetType));
+        }
+
+        private static bool IsNumericTypeName(string type) => type == "int" || type == "float" || type == "double";
+#nullable restore
 
         private static object? GetRightSideValue(StateSave stateSave, string right, string? leftSideType, GraphicalUiElement? liveRoot = null)
         {

@@ -813,7 +813,7 @@ public partial class GraphicalUiElement
                 // changing the texture top won't update the dimensions, just
                 // the contained graphical object. 
                 UpdateLayout(updateParent: false, updateChildren: false);
-
+                ReportTypedPropertyChanged("TextureTop");
             }
         }
     }
@@ -831,6 +831,7 @@ public partial class GraphicalUiElement
             {
                 mTextureLeft = value;
                 UpdateLayout(updateParent: false, updateChildren: false);
+                ReportTypedPropertyChanged("TextureLeft");
             }
         }
     }
@@ -852,6 +853,7 @@ public partial class GraphicalUiElement
             {
                 mTextureWidth = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("TextureWidth");
             }
         }
     }
@@ -873,6 +875,7 @@ public partial class GraphicalUiElement
             {
                 mTextureHeight = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("TextureHeight");
             }
         }
     }
@@ -893,6 +896,7 @@ public partial class GraphicalUiElement
             {
                 mTextureWidthScale = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("TextureWidthScale");
             }
         }
     }
@@ -913,6 +917,7 @@ public partial class GraphicalUiElement
             {
                 mTextureHeightScale = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("TextureHeightScale");
             }
         }
     }
@@ -934,6 +939,7 @@ public partial class GraphicalUiElement
             {
                 mTextureAddress = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("TextureAddress");
             }
         }
     }
@@ -953,6 +959,7 @@ public partial class GraphicalUiElement
             {
                 mWrap = value;
                 UpdateLayout();
+                ReportTypedPropertyChanged("Wrap");
             }
         }
     }
@@ -969,6 +976,7 @@ public partial class GraphicalUiElement
             if (mWrapsChildren != value)
             {
                 mWrapsChildren = value; UpdateLayout();
+                ReportTypedPropertyChanged("WrapsChildren");
             }
         }
     }
@@ -985,6 +993,7 @@ public partial class GraphicalUiElement
             if (mContainedObjectAsIpso is ISetClipsChildren clipsChildrenChild)
             {
                 clipsChildrenChild.ClipsChildren = value;
+                ReportTypedPropertyChanged("ClipsChildren");
             }
         }
     }

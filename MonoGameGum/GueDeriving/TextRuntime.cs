@@ -118,7 +118,11 @@ public class TextRuntime : InteractiveGue
     public int Red
     {
         get => ContainedText.Red;
-        set => ContainedText.Red = value;
+        set
+        {
+            ContainedText.Red = value;
+            ReportTypedPropertyChanged(nameof(Red));
+        }
     }
 
     /// <summary>
@@ -127,7 +131,11 @@ public class TextRuntime : InteractiveGue
     public int Green
     {
         get => ContainedText.Green;
-        set => ContainedText.Green = value;
+        set
+        {
+            ContainedText.Green = value;
+            ReportTypedPropertyChanged(nameof(Green));
+        }
     }
 
     /// <summary>
@@ -136,7 +144,11 @@ public class TextRuntime : InteractiveGue
     public int Blue
     {
         get => ContainedText.Blue;
-        set => ContainedText.Blue = value;
+        set
+        {
+            ContainedText.Blue = value;
+            ReportTypedPropertyChanged(nameof(Blue));
+        }
     }
 
     /// <summary>
@@ -145,7 +157,11 @@ public class TextRuntime : InteractiveGue
     public int Alpha
     {
         get => ContainedText.Alpha;
-        set => ContainedText.Alpha = value;
+        set
+        {
+            ContainedText.Alpha = value;
+            ReportTypedPropertyChanged(nameof(Alpha));
+        }
     }
 
     /// <summary>
@@ -180,7 +196,11 @@ public class TextRuntime : InteractiveGue
     public VerticalAlignment VerticalAlignment
     {
         get => ContainedText.VerticalAlignment;
-        set => ContainedText.VerticalAlignment = value;
+        set
+        {
+            ContainedText.VerticalAlignment = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -194,6 +214,7 @@ public class TextRuntime : InteractiveGue
         set
         {
             ContainedText.MaxLettersToShow = value;
+            NotifyPropertyChanged();
         }
     }
 
@@ -343,7 +364,7 @@ public class TextRuntime : InteractiveGue
     public bool UseCustomFont
     {
         get { return useCustomFont; }
-        set { useCustomFont = value; UpdateToFontValues(); }
+        set { useCustomFont = value; UpdateToFontValues(); NotifyPropertyChanged(); }
     }
 
     string? customFontFile;
@@ -358,7 +379,7 @@ public class TextRuntime : InteractiveGue
     public string? CustomFontFile
     {
         get { return customFontFile; }
-        set { customFontFile = value; UpdateToFontValues(); }
+        set { customFontFile = value; UpdateToFontValues(); NotifyPropertyChanged(); }
     }
 
     string? font;
@@ -368,7 +389,11 @@ public class TextRuntime : InteractiveGue
     public string? Font
     {
         get => FontFamily;
-        set => FontFamily = value;
+        set
+        {
+            FontFamily = value;
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>
@@ -384,14 +409,14 @@ public class TextRuntime : InteractiveGue
     public float FontSize
     {
         get { return fontSize; }
-        set { fontSize = value; UpdateToFontValues(); }
+        set { fontSize = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(FontSize)); }
     }
 
     bool isItalic;
     public bool IsItalic
     {
         get => isItalic;
-        set { isItalic = value; UpdateToFontValues(); }
+        set { isItalic = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(IsItalic)); }
     }
 
 #if SKIA
@@ -420,14 +445,14 @@ public class TextRuntime : InteractiveGue
     public bool IsBold
     {
         get => _boldWeight > 1;
-        set { BoldWeight = value ? 1.5f : 1f; }
+        set { BoldWeight = value ? 1.5f : 1f; ReportTypedPropertyChanged(nameof(IsBold)); }
     }
 #else
     bool isBold;
     public bool IsBold
     {
         get => isBold;
-        set { isBold = value; UpdateToFontValues(); }
+        set { isBold = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(IsBold)); }
     }
 #endif
 
@@ -437,14 +462,14 @@ public class TextRuntime : InteractiveGue
     public bool UseFontSmoothing
     {
         get { return useFontSmoothing; }
-        set { useFontSmoothing = value; UpdateToFontValues(); }
+        set { useFontSmoothing = value; UpdateToFontValues(); NotifyPropertyChanged(); }
     }
 
     int outlineThickness;
     public int OutlineThickness
     {
         get { return outlineThickness; }
-        set { outlineThickness = value; UpdateToFontValues(); }
+        set { outlineThickness = value; UpdateToFontValues(); ReportTypedPropertyChanged(nameof(OutlineThickness)); }
     }
 
 #if SKIA
@@ -485,6 +510,7 @@ public class TextRuntime : InteractiveGue
             hasDropshadow = value;
             UpdateToFontValues();
             ApplyDropshadowToRenderable();
+            NotifyPropertyChanged();
         }
     }
 
@@ -520,39 +546,39 @@ public class TextRuntime : InteractiveGue
     public int DropshadowRed
     {
         get => dropshadowRed;
-        set { dropshadowRed = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowRed = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     public int DropshadowGreen
     {
         get => dropshadowGreen;
-        set { dropshadowGreen = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowGreen = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     public int DropshadowBlue
     {
         get => dropshadowBlue;
-        set { dropshadowBlue = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowBlue = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     public int DropshadowAlpha
     {
         get => dropshadowAlpha;
-        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     float dropshadowOffsetX;
     public float DropshadowOffsetX
     {
         get => dropshadowOffsetX;
-        set { dropshadowOffsetX = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowOffsetX = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     float dropshadowOffsetY;
     public float DropshadowOffsetY
     {
         get => dropshadowOffsetY;
-        set { dropshadowOffsetY = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
+        set { dropshadowOffsetY = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); NotifyPropertyChanged(); }
     }
 
     float dropshadowBlur;
@@ -575,6 +601,7 @@ public class TextRuntime : InteractiveGue
             _dropshadowBlurY = dropshadowBlur;
 #endif
             UpdateToFontValues();
+            NotifyPropertyChanged();
         }
     }
 
@@ -1461,6 +1488,7 @@ public class TextRuntime : InteractiveGue
             if (_localizeText != value)
             {
                 _localizeText = value;
+                NotifyPropertyChanged();
                 string? originalText = CustomSetPropertyOnRenderableType.TryGetLocalizationKey(this);
                 if (originalText != null)
                 {

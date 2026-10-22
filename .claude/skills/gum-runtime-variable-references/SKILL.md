@@ -28,6 +28,10 @@ Located in `Runtimes/GumExpressions/`. Provides Roslyn-based expression evaluati
 - `ApplyVariableReferences(ElementSave, StateSave)` — writes hard values into the StateSave. Use before creating UI.
 - `ApplyVariableReferences(GraphicalUiElement, StateSave)` — sets properties on live runtime visuals via `SetProperty`.
 
+### Nullable variables
+
+A typed set reports null too (`label.MinWidth = null` reaches `Shadow.MinWidth = MinWidth`). Live re-evaluation (`VariableReferenceGraph.Evaluate`) writes a null result only to a variable whose type ends in `?` and only when the right side is a plain reference to an existing variable of a compatible type (`MinWidth = Other.MinWidth`; a bool or string read into a `float?` is a failed cast); any other null (unresolved name, failed expression, arithmetic on null) means "nothing evaluated" and keeps the value. `EvaluatedSyntax.CastTo` accepts `float?`/`int?` targets. `TypedSetterSweep` (shared by the MonoGame and Skia tests) covers nullable variables with and without Gum.Expressions, including set back to null.
+
 ## Architecture
 
 ```
@@ -50,10 +54,11 @@ Reserved identifier (int, mirrors `ILocalizationService.CurrentLanguage`) resolv
 
 ## Live re-evaluation within a component
 
-Rows on a component or screen that read a variable re-evaluate when it changes: see `VariableReferenceGraph` (`GumCommon/Runtime`) and `GraphicalUiElement.NotifyVariablesChanged`. `SetProperty`, `ApplyState` (batched, so animations need no call) and the typed `X`/`Y`/`Width`/`Height`/`Rotation`/`Visible` setters report changes. Any other typed property needs `RefreshReferences`, or its own `ReportTypedPropertyChanged` call. Design: `Direction/decisions/0022-reactive-variable-references-within-a-component.md`.
+Rows on a component or screen that read a variable re-evaluate when it changes: see `VariableReferenceGraph` (`GumCommon/Runtime`) and `GraphicalUiElement.NotifyVariablesChanged`. `SetProperty`, `ApplyState` (batched, so animations need no call) and the typed `X`/`Y`/`Width`/`Height`/`Rotation`/`Visible` setters report changes. Any typed setter that calls `NotifyPropertyChanged` (such as `TextRuntime.Text`) reports through it, reading the new value with `TryGetProperty`; `TextRuntime` `Red`/`Green`/`Blue`/`Alpha` call the protected `ReportTypedPropertyChanged(name)` themselves. `TextRuntime` `FontSize`, `IsBold`, `IsItalic` and `OutlineThickness` call `ReportTypedPropertyChanged` too; `TryGetProperty` returns `FontSize` as the int the variable is, since the float would fail the `(int)` cast when written to another element. Every typed property that is also a Gum variable reports, including the layout ones (`StackSpacing`, the `*Units`, `*Origin`, `ChildrenLayout`, `Min`/`Max` sizes and so on); `VariableReferenceTypedSetterTests` sweeps the standard elements' variables and goes red for a new setter that does not (a setter that wraps another, like `DropshadowRed` over `DropshadowColor`, must report its own name). A setting back to null is not reported (#6400). A setter outside this list needs `RefreshReferences`. Design: `Direction/decisions/0022-reactive-variable-references-within-a-component.md`.
 
 - Live evaluation reads every unchanged variable from authored values, not from the live object. Styling and cross-element references stay explicit.
-- Element load is excluded from live re-evaluation (`VariableReferenceGraph.BeginSuppression` in `SetVariablesRecursively`). A reporting path that must stay silent while rows write their results uses the same flag.
+- `SetVariablesRecursively` marks the element being loaded (`BeginReferenceLoad`): what it writes to that element, and rows reading that element from its container, report to nobody, since the load applies those rows itself. What it writes to the element's children reports as usual, so a screen override (`Label1.Text`), an exposed variable, a nested component's row or a hot reload reaches the child's own rows, which were evaluated at its creation against defaults. Do not wrap a load in `BeginSuppression` again: that silences the children too (#6385).
+- `VariableReferenceGraph.BeginSuppression` is for row evaluation only: `Evaluate` writes each result silently, then notifies a child owner's own rows explicitly. A derived component whose base owns rows has them evaluated again after its own values apply (`HasInheritedRows`).
 - A new reporting path must check `GetReferenceAudience` before boxing a value; the zero-allocation guard is `ReferenceReevaluationAllocationTests`.
 
 ## `@`, `%` and `Index` at runtime

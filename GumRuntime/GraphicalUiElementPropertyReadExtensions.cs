@@ -48,7 +48,7 @@ public static class GraphicalUiElementPropertyReadExtensions
                 propertyName = name.Substring(dot + 1);
             }
 
-            if (owner.TryGetProperty(propertyName, out object? value) && value != null)
+            if (owner.TryGetProperty(propertyName, out object? value))
             {
                 changed.Add(new Gum.DataTypes.Variables.VariableSave { Name = name, Value = value, SetsValue = true });
             }
@@ -228,6 +228,13 @@ public static class GraphicalUiElementPropertyReadExtensions
             try
             {
                 value = property.GetValue(element);
+
+                // The FontSize variable is an int, but TextRuntime.FontSize is a float. A float here
+                // would fail the (int) cast when the value is written to another element's FontSize.
+                if (value is float fontSize && propertyName == "FontSize")
+                {
+                    value = (int)Math.Round(fontSize);
+                }
                 return true;
             }
             catch (TargetInvocationException)

@@ -94,3 +94,5 @@ Both controls stay in sync because they are bound to the same property. Typing i
 Any class which implements `INotifyPropertyChanged` can be used for binding, so developers familiar with binding and MVVM can use any implementation.
 
 For convenience Gum provides a ViewModel class which can be used as a base for view models. Binding documentation uses this class as a base for view models, but most of the concepts apply regardless of view model implementation details.
+
+If you store a struct in a ViewModel property, implement `IEquatable<T>` on it. Without it, every set compares the old and new values slowly and allocates, even when the value is unchanged.

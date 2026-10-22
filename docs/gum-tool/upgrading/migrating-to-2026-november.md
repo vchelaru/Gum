@@ -140,7 +140,7 @@ Code that works through `IGumService` can now do what a game does through `GumSe
 
 In SkiaSharp projects (including .NET MAUI), `SkiaGum.Content.SkiaResourceManager` and `SkiaGum.Content.EmbeddedResourceContentLoader` are now `[Obsolete]`. Use `RenderingLibrary.Content.ContentLoader`, which has the same name as the loader on MonoGame, KNI, FNA and raylib. Gum installs it as the default loader, and `GumService.ContentLoader` returns it.
 
-Both old types keep working and report `CS0618`. Gum keeps them until at least April 2027. A cast such as `LoaderManager.Self.ContentLoader as EmbeddedResourceContentLoader` now returns `null`, because the default loader is a `ContentLoader`.
+Both old types keep working and report `CS0618`. They become errors no earlier than April 2027 and are removed no earlier than November 2027. A cast such as `LoaderManager.Self.ContentLoader as EmbeddedResourceContentLoader` now returns `null`, because the default loader is a `ContentLoader`.
 
 To migrate:
 
@@ -210,8 +210,8 @@ The obsolete shims that keep the old `MonoGameGum`, `SkiaGum` and `MonoGameAndGu
 | `MonoGameAndGum.Renderables` and `MonoGameAndGum.Content` types | `Gum.Renderables` and `Gum.Content` | October 20, 2026 | May 2027 | November 2027 |
 | `Keyboard`, `IInputReceiverKeyboardMonoGame` and `XnaKeyboardExtensions` methods that take XNA `Keys` | The same methods taking `Gum.Forms.Input.Keys` | October 20, 2026 | March 2027 | July 2027 |
 | `OutputLibrary.MonoGameForms` | `OutputLibrary.GumForms` | October 20, 2026 | May 2027 | November 2027 |
-| `SkiaGum.Content.SkiaResourceManager` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | Not scheduled | April 2027 |
-| `SkiaGum.Content.EmbeddedResourceContentLoader` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | Not scheduled | April 2027 |
+| `SkiaGum.Content.SkiaResourceManager` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | April 2027 | November 2027 |
+| `SkiaGum.Content.EmbeddedResourceContentLoader` | `RenderingLibrary.Content.ContentLoader` | October 20, 2026 | April 2027 | November 2027 |
 | `MonoGameGum.GumService` and `RaylibGum.GumService` | `Gum.GumService` | June 12, 2026 | Never | Never |
 
 The `GumService` shim stays because `GumService.Default` returns it. Declarations typed with the old name keep compiling with a `CS0618` warning, and you can change them to `Gum.GumService` whenever you like.

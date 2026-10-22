@@ -269,28 +269,44 @@ public class CircleRuntime : GraphicalUiElement
     public int FillRed
     {
         get => _fillColor.R;
-        set => FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="FillColor"/>.</summary>
     public int FillGreen
     {
         get => _fillColor.G;
-        set => FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
     public int FillBlue
     {
         get => _fillColor.B;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
     public int FillAlpha
     {
         get => _fillColor.A;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     Color _strokeColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
@@ -312,28 +328,44 @@ public class CircleRuntime : GraphicalUiElement
     public int StrokeRed
     {
         get => _strokeColor.R;
-        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeGreen
     {
         get => _strokeColor.G;
-        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeBlue
     {
         get => _strokeColor.B;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeAlpha
     {
         get => _strokeColor.A;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <inheritdoc cref="Gum.Renderables.LineCircle.IsFilled"/>
@@ -576,28 +608,44 @@ public class CircleRuntime : GraphicalUiElement
     public int FillRed
     {
         get => _fillColor.R;
-        set => FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color((byte)value, _fillColor.G, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="FillColor"/>.</summary>
     public int FillGreen
     {
         get => _fillColor.G;
-        set => FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, (byte)value, _fillColor.B, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="FillColor"/>.</summary>
     public int FillBlue
     {
         get => _fillColor.B;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, (byte)value, _fillColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="FillColor"/>.</summary>
     public int FillAlpha
     {
         get => _fillColor.A;
-        set => FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+        set
+        {
+            FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     bool _isFilled = false;
@@ -656,28 +704,44 @@ public class CircleRuntime : GraphicalUiElement
     public int StrokeRed
     {
         get => _strokeColor.R;
-        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeGreen
     {
         get => _strokeColor.G;
-        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeBlue
     {
         get => _strokeColor.B;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Alpha channel of <see cref="StrokeColor"/>.</summary>
     public int StrokeAlpha
     {
         get => _strokeColor.A;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+        set
+        {
+            StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     float _strokeWidth = 1;
@@ -1020,6 +1084,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, (byte)value);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1029,6 +1094,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color((byte)value, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1038,6 +1104,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, (byte)value, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1047,6 +1114,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, (byte)value, _dropshadowState.DropshadowColor.A);
+            NotifyPropertyChanged();
         }
     }
 
@@ -1422,28 +1490,44 @@ public class CircleRuntime : GraphicalUiElement
     public int DropshadowAlpha
     {
         get => _dropshadowColor.A;
-        set => DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, _dropshadowColor.B, (byte)value);
+        set
+        {
+            DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, _dropshadowColor.B, (byte)value);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Red channel of <see cref="DropshadowColor"/>.</summary>
     public int DropshadowRed
     {
         get => _dropshadowColor.R;
-        set => DropshadowColor = new Color((byte)value, _dropshadowColor.G, _dropshadowColor.B, _dropshadowColor.A);
+        set
+        {
+            DropshadowColor = new Color((byte)value, _dropshadowColor.G, _dropshadowColor.B, _dropshadowColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Green channel of <see cref="DropshadowColor"/>.</summary>
     public int DropshadowGreen
     {
         get => _dropshadowColor.G;
-        set => DropshadowColor = new Color(_dropshadowColor.R, (byte)value, _dropshadowColor.B, _dropshadowColor.A);
+        set
+        {
+            DropshadowColor = new Color(_dropshadowColor.R, (byte)value, _dropshadowColor.B, _dropshadowColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     /// <summary>Blue channel of <see cref="DropshadowColor"/>.</summary>
     public int DropshadowBlue
     {
         get => _dropshadowColor.B;
-        set => DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, (byte)value, _dropshadowColor.A);
+        set
+        {
+            DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, (byte)value, _dropshadowColor.A);
+            NotifyPropertyChanged();
+        }
     }
 
     float _dropshadowOffsetX;
@@ -1602,6 +1686,7 @@ public class CircleRuntime : GraphicalUiElement
         {
             base.DropshadowBlurX = value;
             base.DropshadowBlurY = value;
+            NotifyPropertyChanged();
         }
     }
 

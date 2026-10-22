@@ -10,8 +10,8 @@ namespace SkiaGum.Content
     /// loading, implement <see cref="IContentLoader"/> and delegate to an instance of this class for
     /// the content names you do not handle.
     /// </remarks>
-    // Obsoleted on 2026-10-20. Keep until at least 2027-04-20 (six months) before removing it.
-    [System.Obsolete("Use RenderingLibrary.Content.ContentLoader instead. EmbeddedResourceContentLoader will be removed no earlier than April 2027.")]
+    // Obsoleted on 2026-10-20. Warning now; error:true no earlier than April 2027; remove no earlier than November 2027.
+    [System.Obsolete("Use RenderingLibrary.Content.ContentLoader instead. EmbeddedResourceContentLoader becomes an error no earlier than April 2027 and is removed no earlier than November 2027.")]
     public sealed class EmbeddedResourceContentLoader : IContentLoader
     {
         private readonly RenderingLibrary.Content.ContentLoader _contentLoader = new RenderingLibrary.Content.ContentLoader();
