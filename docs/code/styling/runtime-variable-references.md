@@ -44,14 +44,7 @@ In the following examples, `wave` is a `GraphicalUiElement` created from a compo
 
 * `SetProperty` sets the variable, such as a custom variable
 * A state is applied, including each frame of an animation
-* A property is set in code on the component or on one of its instances, such as `wave.StackSpacing = 4`. This covers any property of a Container, Text, Sprite, NineSlice, rectangle, circle, or polygon which is also a Gum variable, including:
-  * Position and size: `X`, `Y`, `Width`, `Height`, `Rotation`, minimum and maximum sizes, their units and origins, and `IgnoredByParentSize`
-  * Layout: `ChildrenLayout`, `StackSpacing`, `WrapsChildren`, AutoGrid cells, and `ClipsChildren`
-  * Container and input: `Visible`, `HasEvents`, and `ExposeChildrenEvents`
-  * Text: `Text`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, alignment, font, and `LocalizeText`
-  * Color: `Red`, `Green`, `Blue`, and `Alpha`
-  * Images: the `Texture` variables, `Wrap`, and `FlipHorizontal`
-  * Shapes: fill, stroke, gradient, and drop shadow properties
+* A property of a runtime object is set in code, on the component or on one of its instances, and the property is also a Gum variable
 
 ```csharp
 // Update
@@ -69,7 +62,7 @@ If a reference does not follow a change, such as a change made through a propert
 wave.RefreshReferences("Progress");
 ```
 
-Nullable variables such as `MaxWidth`, `MinHeight`, and `MaxNumberOfLines` follow your changes too. Setting one back to `null` clears a row which is a plain reference to a variable of a matching type. A row whose expression fails, or which combines values such as `MaxWidth + 10`, keeps its old value.
+Nullable variables follow your changes too. Setting a nullable variable back to `null` clears a row which is a plain reference to a variable of a matching type. A row whose expression fails, or which combines values with an operator, keeps its old value.
 
 References to another component, such as a shared `Styles` component, do not update on their own. After changing the other component, call `ApplyAllVariableReferences` and `RefreshStyles`, as described below.
 
