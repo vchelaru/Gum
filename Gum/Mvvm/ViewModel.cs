@@ -87,26 +87,39 @@ namespace Gum.Mvvm
         protected bool Set<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
-            return SetField(ref field, value, propertyName!, notify: true, trackCollections: true);
+            return SetField(ref field, value, propertyName!, notify: true, CollectionTracking.Full);
         }
 
         /// <summary>
-        /// Assigns a backing field like <see cref="Set{T}(ref T, T, string)"/> but raises no events. A collection
-        /// value is still watched.
+        /// Assigns a backing field like <see cref="Set{T}(ref T, T, string)"/> but raises no events. Like the
+        /// by-name <c>SetWithoutNotifying</c>, a new collection is not watched (a later <c>Set</c> of it starts
+        /// watching), and the collection it replaces stops being watched.
         /// </summary>
         /// <returns>True when the value changed.</returns>
         protected bool SetWithoutNotifying<T>(ref T field, T value, [CallerMemberName]string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
-            return SetField(ref field, value, propertyName!, notify: false, trackCollections: true);
+            return SetField(ref field, value, propertyName!, notify: false, CollectionTracking.UnsubscribeOnly);
         }
 
-        private bool SetField<T>(ref T field, T value, string propertyName, bool notify, bool trackCollections)
+        private enum CollectionTracking
+        {
+            /// <summary>Collections are neither subscribed nor unsubscribed (ChangeAndNotify).</summary>
+            None,
+
+            /// <summary>The replaced collection is unsubscribed, the new one is not subscribed (SetWithoutNotifying).</summary>
+            UnsubscribeOnly,
+
+            /// <summary>The new collection is subscribed and the replaced one unsubscribed (Set).</summary>
+            Full,
+        }
+
+        private bool SetField<T>(ref T field, T value, string propertyName, bool notify, CollectionTracking tracking)
         {
             if (EqualityComparer<T>.Default.Equals(field, value))
             {
                 // Like the by-name style, a collection that is already stored still gets its subscription.
-                if (trackCollections && CanBeCollection<T>.Value && field is INotifyCollectionChanged stored)
+                if (tracking == CollectionTracking.Full && CanBeCollection<T>.Value && field is INotifyCollectionChanged stored)
                 {
                     SubscribeToCollectionCore(stored, propertyName);
                 }
@@ -115,14 +128,14 @@ namespace Gum.Mvvm
             }
 
             // The old value is still in the field here, so its subscription can be removed before assignment.
-            if (trackCollections && collectionSubscriptions != null && !typeof(T).IsValueType)
+            if (tracking != CollectionTracking.None && collectionSubscriptions != null && !typeof(T).IsValueType)
             {
                 UnsubscribeFromCollection(field, propertyName);
             }
 
             field = value;
 
-            if (trackCollections && CanBeCollection<T>.Value && value is INotifyCollectionChanged collection)
+            if (tracking == CollectionTracking.Full && CanBeCollection<T>.Value && value is INotifyCollectionChanged collection)
             {
                 SubscribeToCollectionCore(collection, propertyName);
             }
@@ -370,7 +383,7 @@ namespace Gum.Mvvm
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             // The same as Set(ref ...) except that a collection's contents are not watched.
-            SetField(ref property, value, propertyName!, notify: true, trackCollections: false);
+            SetField(ref property, value, propertyName!, notify: true, CollectionTracking.None);
         }
 
         // PropertyChangedEventArgs is immutable, so one instance per property name is reused across

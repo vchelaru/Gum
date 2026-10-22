@@ -171,6 +171,37 @@ public class ViewModelRefFieldTests : BaseTestClass
     }
 
     [Fact]
+    public void SetWithoutNotifying_Collection_IsNotSubscribed()
+    {
+        // Same as the by-name SetWithoutNotifying: it stores the collection and never listens to it.
+        RefViewModel vm = new RefViewModel();
+        ObservableCollection<int> items = new ObservableCollection<int>();
+        vm.SetItemsQuietly(items);
+        List<string?> raised = Record(vm);
+
+        items.Add(1);
+
+        raised.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SetWithoutNotifying_ReplacingSubscribedCollection_UnsubscribesOldAndDoesNotSubscribeNew()
+    {
+        // Same as the by-name SetWithoutNotifying: the replaced collection stops being watched, the new one is not.
+        RefViewModel vm = new RefViewModel();
+        ObservableCollection<int> first = new ObservableCollection<int>();
+        ObservableCollection<int> second = new ObservableCollection<int>();
+        vm.Items = first;
+        vm.SetItemsQuietly(second);
+        List<string?> raised = Record(vm);
+
+        first.Add(1);
+        second.Add(1);
+
+        raised.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void FieldWithInitialValue_SetToSameValue_RaisesNothing()
     {
         // Differs from the by-name style, where the first Set of any non-default value notifies.
