@@ -1056,8 +1056,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // _inlineVariables are the per-character styling directives fed to the shared splitter. For
     // plain text _hasMarkup is false and _layoutText == mRawText, keeping the render path unchanged.
     private bool _hasMarkup;
-    // True when a [FontSize]/[FontScale] run is present, set by ParseMarkup.
-    private bool _hasSizeRun;
+    // True when a run changes the font family or size ([Font], [FontSize], [FontScale]), set by ParseMarkup.
+    private bool _hasMixedFontOrSizeRun;
     private string? _layoutText;
     private List<InlineVariable> _inlineVariables = new();
     private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
@@ -1696,9 +1696,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         // Style.LineHeight multiplies a run's ascent and descent but not its leading, so the factor is
         // adjusted until the line is exactly the multiplier times a plain line of this run (#6467).
-        // Only for text without a size run: a line that mixes sizes takes its top and bottom from different runs, and
-        // compensating each run alone overshoots there (#6475), so such text keeps the uncompensated factors.
-        style.LineHeight = _hasSizeRun
+        // Only for text without a font or size run: a line that mixes fonts or sizes takes its top and bottom from
+        // different runs, and compensating each run alone overshoots there (#6475), so such text keeps the
+        // uncompensated factors.
+        style.LineHeight = _hasMixedFontOrSizeRun
             ? (isSizeRun ? GetSizeRunLineHeightMultiplier(fontSizePixels * fontScale / FontSize) : LineHeightMultiplier)
             : GetLeadingCompensatedLineHeight(style, LineHeightMultiplier);
 
@@ -1714,7 +1715,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private void ParseMarkup()
     {
         _inlineVariables.Clear();
-        _hasSizeRun = false;
+        _hasMixedFontOrSizeRun = false;
 
         if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
         {
@@ -1740,7 +1741,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         BuildInlineVariables(tags);
         foreach (InlineVariable variable in _inlineVariables)
         {
-            _hasSizeRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale";
+            _hasMixedFontOrSizeRun |= variable.VariableName == "FontSize" || variable.VariableName == "FontScale" || variable.VariableName == "Font";
         }
     }
 
