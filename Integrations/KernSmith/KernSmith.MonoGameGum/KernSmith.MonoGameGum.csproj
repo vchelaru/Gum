@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- Mobile targets are opt-in, the same mechanism as MonoGameGum.csproj (see its comment). -->
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IncludeIOS)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IncludeAndroid)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-android</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>true</IsPackable>
@@ -21,6 +24,11 @@
     <PackageTags>kernsmith;gum;monogame;bitmap-font;font-generation;game-dev;runtime</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+    <!-- Matches MonoGameGum.csproj. -->
+    <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
@@ -31,7 +39,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    <!-- Compile-time types only. PrivateAssets=All keeps these out of the nuspec so an app uses the
+         MonoGame platform package it already references (iOS, Android, DesktopGL), exactly as
+         MonoGameGum.csproj does, including its choice of package per target (DesktopGL compiles
+         net8.0 and net9.0-ios; Android swaps in the Android package). Same pin as MonoGameGum: the
+         lowest version that compiles, because the built dll bakes it in and a consumer on a lower
+         MonoGame then fails to load it (#4818). -->
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.3" PrivateAssets="All" Condition="!$(TargetFramework.Contains('android'))" />
+    <PackageReference Include="MonoGame.Framework.Android" Version="3.8.3" PrivateAssets="All" Condition="$(TargetFramework.Contains('android'))" />
   </ItemGroup>
 
 </Project>
