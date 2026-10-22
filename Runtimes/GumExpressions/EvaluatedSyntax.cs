@@ -1290,6 +1290,13 @@ public class EvaluatedSyntax
                     return false;
                 }
 
+                // True is not the enum's value 1 (#6463): Enum.ToObject would take it as one, so refuse it like any other
+                // reinterpretation.
+                if (this.Value is bool)
+                {
+                    return false;
+                }
+
                 try
                 {
                     this.Value = this.Value is string enumName
@@ -1305,6 +1312,14 @@ public class EvaluatedSyntax
                     return false;
                 }
             }
+        }
+
+        // A type this does not know (a state category, or a variable with no declared type) is left to the setter, as it is
+        // without Gum.Expressions: the value passes through unchanged (#6465). Only the primitives and enums refuse a value.
+        if (desiredType == null || !(desiredType == "int" || desiredType == "float" || desiredType == "double" || desiredType == "string" || desiredType == "bool"
+            || ResolveEnumType(desiredType) != null))
+        {
+            return true;
         }
 
         return false;

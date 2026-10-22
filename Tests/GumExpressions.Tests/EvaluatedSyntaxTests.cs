@@ -397,6 +397,42 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
+    public void CastTo_BoolIntoEnum_Fails()
+    {
+        StateSave state = BuildState(("Instance.IsBold", true, "bool"));
+
+        EvaluatedSyntax result = Evaluate("Instance.IsBold", state);
+
+        result.CastTo("HorizontalAlignment").ShouldBeFalse();
+    }
+
+    // A state category is not a type the cast knows; the value reaches the setter unchanged, as without the package (#6465).
+    [Theory]
+    [InlineData("Pressed", "string")]
+    [InlineData(2, "int")]
+    [InlineData(true, "bool")]
+    public void CastTo_TypeTheCastDoesNotKnow_LeavesTheValueAlone(object value, string declaredType)
+    {
+        StateSave state = BuildState(("Instance.Source", value, declaredType));
+
+        EvaluatedSyntax result = Evaluate("Instance.Source", state);
+
+        result.CastTo("ButtonCategory").ShouldBeTrue();
+        result.Value.ShouldBe(value);
+    }
+
+    [Fact]
+    public void CastTo_NoTypeAtAll_LeavesTheValueAlone()
+    {
+        StateSave state = BuildState(("Instance.Source", 2, "int"));
+
+        EvaluatedSyntax result = Evaluate("Instance.Source", state);
+
+        result.CastTo(null).ShouldBeTrue();
+        result.Value.ShouldBe(2);
+    }
+
+    [Fact]
     public void CastTo_EnumOfTheSameEnumType_Succeeds()
     {
         StateSave state = BuildState(("Instance.XOrigin", RenderingLibrary.Graphics.HorizontalAlignment.Right, "HorizontalAlignment"));

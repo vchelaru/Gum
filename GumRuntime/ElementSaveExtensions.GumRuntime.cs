@@ -41,6 +41,17 @@ namespace GumRuntime
         /// </summary>
         public static Func<StateSave, string, string?, GraphicalUiElement?, object?>? CustomEvaluateExpression;
 
+        // The value Gum.Expressions evaluated but refused to cast to the desired type, left here by the evaluator behind
+        // CustomEvaluateExpression (which can only return null) so the reference can say why it was not applied (#6463).
+        // TryReadReference clears it before each evaluation and reads it right after, so an evaluator that does not set it
+        // simply reports nothing. It is a side channel, not a second evaluation: a live row that is refused every frame
+        // must not evaluate twice. Evaluators must not nest: a wrapper that evaluates a second expression inside
+        // CustomEvaluateExpression makes the outer reference report the inner value.
+#nullable enable
+        [ThreadStatic]
+        internal static object? RejectedCastValue;
+#nullable restore
+
         /// <summary>
         /// Enumerates every value a reference's right side could resolve to (all ternary
         /// branches, not just the one the condition currently selects). Same arguments as
@@ -1367,34 +1378,22 @@ namespace GumRuntime
             }
             else
             {
+                RejectedCastValue = null;
                 value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
                 sourceType = CustomEvaluateExpression == null ? "bool" : null;
-                if (value == null && CustomEvaluateExpression != null && leftSideType != null
-                    && !IsPrimitiveTypeName(StripNullable(leftSideType)) && !IsNegation(right))
+                object? rejectedValue = RejectedCastValue;
+                RejectedCastValue = null;
+                if (value == null && CustomEvaluateExpression != null && rejectedValue != null && leftSideType != null
+                    && ReportedRejectedCast(referenceString, right, leftVariableName, leftSideType, rejectedValue, stateSave, liveRoot))
                 {
-                    // Gum.Expressions refuses an enum value of another enum type, which leaves no value to say why.
-                    // For an enum target, read the plain reference to name the source's type for the report.
-                    object? plainValue = ReadPlainReference(stateSave, right, findSourceType: true, out sourceType);
-                    if (!(plainValue is Enum))
-                    {
-                        sourceType = null;
-                    }
-                    else
-                    {
-                        value = plainValue;
-                    }
-                }
-                else if (value == null && CustomEvaluateExpression != null && leftSideType != null
-                    && IsNumericTypeName(StripNullable(leftSideType)) && !IsNegation(right)
-                    && ReportedUnconvertibleNumber(referenceString, right, leftVariableName, StripNullable(leftSideType), stateSave, liveRoot))
-                {
-                    // A plain read of a float or double that Gum.Expressions refused to convert (infinity, NaN, or beyond
-                    // the target's range) leaves no value to say why. Any other expression that fails stays unreported.
+                    // Gum.Expressions evaluated the right side but refused to cast it to the left side's type.
                     mismatchReported = true;
                 }
             }
 
-            if (ReportedMismatch(referenceString, right, left, leftVariableName, leftSideType, sourceType, value, leftVariableOnState, instanceLeft, stateSave, liveRoot))
+            // With Gum.Expressions the evaluator converts what it can and refuses the rest (reported above).
+            if (CustomEvaluateExpression == null
+                && ReportedMismatch(referenceString, right, left, leftVariableName, leftSideType, sourceType, value, leftVariableOnState, instanceLeft, stateSave, liveRoot))
             {
                 value = null;
                 mismatchReported = true;
@@ -1402,44 +1401,60 @@ namespace GumRuntime
             return true;
         }
 
-        // True, after reporting once per row, when the right side is a plain reference to a float or double that the numeric
-        // target cannot hold. Gum.Expressions refuses to convert those instead of letting the cast overflow (#6456).
-        private static bool ReportedUnconvertibleNumber(string referenceString, string right, string leftVariableName,
-            string targetType, StateSave stateSave, GraphicalUiElement? liveRoot)
+        // True, after reporting once per row, when Gum.Expressions evaluated the right side but refused to cast its value to the
+        // left side's type (#6463): a bool or text into a number, an enum into a number, a name that is no value of the enum, a
+        // float or double the target cannot hold (#6456). The variable keeps its value, the same as for a mismatch without the
+        // package, so a reference is never silently dropped.
+        private static bool ReportedRejectedCast(string referenceString, string right, string leftVariableName,
+            string leftSideType, object rejectedValue, StateSave stateSave, GraphicalUiElement? liveRoot)
         {
-            object? plainValue = ReadPlainReference(stateSave, right, findSourceType: false, out _);
-            if (!(plainValue is float || plainValue is double) || !CannotBeHeldBy(Convert.ToDouble(plainValue), targetType))
-            {
-                return false;
-            }
-
             if (IsFirstReport(liveRoot, stateSave, referenceString, leftVariableName))
             {
-                object? owner = liveRoot?.Tag ?? stateSave.ParentContainer;
-                string where = owner == null ? string.Empty : $" in {owner}";
-                RaiseReferenceError(
-                    $"Variable reference '{referenceString}' was not applied{where}: {DecodeOwnerName(right)} is " +
-                    $"{Convert.ToString(plainValue, System.Globalization.CultureInfo.InvariantCulture)}, which does not fit " +
-                    $"the {targetType} {leftVariableName}. {leftVariableName} keeps its current value.");
+                string valueType = TypeNameOf(rejectedValue);
+                string shownRight = DecodeOwnerName(right);
+                string detail;
+                string targetType = StripNullable(leftSideType);
+                if ((rejectedValue is float || rejectedValue is double) && IsNumericTypeName(targetType))
+                {
+                    detail = $"{shownRight} is {Convert.ToString(rejectedValue, System.Globalization.CultureInfo.InvariantCulture)}, " +
+                        $"which does not fit the {targetType} {leftVariableName}.";
+                }
+                else if (rejectedValue is string name && !IsPrimitiveTypeName(targetType))
+                {
+                    detail = $"{shownRight} is \"{name}\", which is not a value of the {targetType} {leftVariableName}.";
+                }
+                else
+                {
+                    detail = $"{shownRight} is {Article(valueType)} {valueType} and {leftVariableName} is {Article(targetType)} {targetType}, which cannot be converted.";
+                }
+                ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot, detail);
             }
             return true;
+        }
+
+        // The one wording of a reference that was not applied; the caller says why in detail.
+        private static void ReportNotApplied(string referenceString, string leftVariableName, StateSave stateSave,
+            GraphicalUiElement? liveRoot, string detail)
+        {
+            object? owner = liveRoot?.Tag ?? stateSave.ParentContainer;
+            string where = owner == null ? string.Empty : $" in {owner}";
+            RaiseReferenceError($"Variable reference '{referenceString}' was not applied{where}: {detail} {leftVariableName} keeps its current value.");
+        }
+
+        private static string TypeNameOf(object value)
+        {
+            return value is int ? "int"
+                : value is float ? "float"
+                : value is double ? "double"
+                : value is string ? "string"
+                : value is bool ? "bool"
+                : value.GetType().Name;
         }
 
         // True when truncating the value gives an int without overflowing; shared with Gum.Expressions' CastTo (#6456). Both
         // bounds are exclusive (2^31 and -2^31 - 1) so a fraction such as -2147483648.5 still truncates to int.MinValue. NaN
         // fails both comparisons. A float widens to a double exactly, so one overload serves both.
         internal static bool IsInIntRange(double value) => value > -2147483649.0 && value < 2147483648.0;
-
-        // The value Gum.Expressions refuses for the target: beyond the int's range (NaN and infinity included), or a finite
-        // value beyond the float's.
-        private static bool CannotBeHeldBy(double value, string targetType)
-        {
-            if (targetType == "int")
-            {
-                return !IsInIntRange(value);
-            }
-            return targetType == "float" && double.IsFinite(value) && float.IsInfinity((float)value);
-        }
 
         private static bool IsNegation(string right)
         {
@@ -1460,9 +1475,7 @@ namespace GumRuntime
             string? leftSideType, string? sourceType, object? value, VariableSave? leftVariableOnState, InstanceSave? instanceLeft,
             StateSave stateSave, GraphicalUiElement? liveRoot)
         {
-            // With Gum.Expressions the evaluator converts what it can, so only an enum value it refused (sourceType is
-            // set for nothing else, see TryReadReference) is judged here.
-            if (value == null || leftSideType == null || (CustomEvaluateExpression != null && sourceType == null))
+            if (value == null || leftSideType == null)
             {
                 return false;
             }
@@ -1471,12 +1484,7 @@ namespace GumRuntime
             string? valueType = sourceType;
             if (string.IsNullOrEmpty(valueType))
             {
-                valueType = value is int ? "int"
-                    : value is float ? "float"
-                    : value is double ? "double"
-                    : value is string ? "string"
-                    : value is bool ? "bool"
-                    : value.GetType().Name;
+                valueType = TypeNameOf(value);
             }
             if (SameBaseType(valueType, leftSideType))
             {
@@ -1513,11 +1521,8 @@ namespace GumRuntime
                 string reason = expressionsConverts
                     ? ". Add the Gum.Expressions package and call GumExpressionService.Initialize() to convert between them."
                     : ", which cannot be converted.";
-                object? owner = liveRoot?.Tag ?? stateSave.ParentContainer;
-                string where = owner == null ? string.Empty : $" in {owner}";
-                RaiseReferenceError(
-                    $"Variable reference '{referenceString}' was not applied{where}: {DecodeOwnerName(right)} is {Article(valueType)} {valueType} " +
-                    $"and {leftVariableName} is {Article(targetType)} {targetType}{reason} {leftVariableName} keeps its current value.");
+                ReportNotApplied(referenceString, leftVariableName, stateSave, liveRoot,
+                    $"{DecodeOwnerName(right)} is {Article(valueType)} {valueType} and {leftVariableName} is {Article(targetType)} {targetType}{reason}");
             }
             return true;
         }

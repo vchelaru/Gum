@@ -31,11 +31,15 @@ public static class GumExpressionService
         if (syntax != null)
         {
             var evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(syntax, stateSave, liveRoot: liveRoot);
+            // CastTo converts Value in place when it succeeds, so keep what was evaluated for the report if it fails.
+            object? uncast = evaluatedSyntax?.Value;
 
             if (evaluatedSyntax?.CastTo(desiredType) == true)
             {
                 return evaluatedSyntax?.Value;
             }
+
+            ElementSaveExtensions.RejectedCastValue = uncast;
         }
         return null;
     }
