@@ -23,6 +23,23 @@ public static class GumFontGenerator
     public static Func<bool> IsBrowserPlatform = OperatingSystem.IsBrowser;
 
     /// <summary>
+    /// Test seam: finds the StbTrueType rasterizer type. Resolved by name so desktop builds, which do
+    /// not reference <c>KernSmith.Rasterizers.StbTrueType</c>, do not need the package; the iOS and
+    /// Android builds reference it and resolve the type directly, which also keeps a trimmer from
+    /// removing it. Public for the same reason as <see cref="IsBrowserPlatform"/>.
+    /// </summary>
+    public static Func<Type?> ResolveStbTrueTypeRasterizerType =
+#if IOS || ANDROID
+        () => typeof(KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer);
+#else
+        () => Type.GetType("KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer, KernSmith.Rasterizers.StbTrueType");
+#endif
+
+    /// <summary>Test seam: runs a type's static constructor. Public for the same reason as <see cref="IsBrowserPlatform"/>.</summary>
+    public static Action<Type> ForceStaticConstructor =
+        type => System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+
+    /// <summary>
     /// Generates a <see cref="BmFontResult"/> from a Gum <see cref="BmfcSave"/> font descriptor.
     /// The result contains .fnt metadata and texture page pixel data entirely in memory.
     /// </summary>
@@ -121,8 +138,31 @@ public static class GumFontGenerator
         FontGeneratorOptions options = BuildOptions(bmfcSave);
         backend ??= GetPlatformDefaultBackend();
         if (backend.HasValue)
+        {
+            if (backend.Value == RasterizerBackend.StbTrueType)
+            {
+                EnsureStbTrueTypeIsRegistered();
+            }
             options.Backend = backend.Value;
+        }
         return options;
+    }
+
+    /// <summary>
+    /// KernSmith's reflection-based backend discovery is trimmed away in an AOT or trimmed publish
+    /// (every iOS release build, and browser-wasm), which leaves the backend unregistered. Running
+    /// its static constructor registers it. Done whenever the resolved backend is StbTrueType,
+    /// whether the caller passed it or the platform defaulted to it. Same call as
+    /// <c>ThemePlatform.SelectBackend</c> makes for browser-wasm. A no-op when the package is not
+    /// referenced, so KernSmith reports the missing backend itself.
+    /// </summary>
+    private static void EnsureStbTrueTypeIsRegistered()
+    {
+        Type? rasterizerType = ResolveStbTrueTypeRasterizerType();
+        if (rasterizerType != null)
+        {
+            ForceStaticConstructor(rasterizerType);
+        }
     }
 
     /// <summary>
@@ -134,11 +174,6 @@ public static class GumFontGenerator
     private static RasterizerBackend? GetPlatformDefaultBackend()
     {
 #if IOS || ANDROID
-        // KernSmith's reflection-based backend discovery is trimmed away in an AOT/trimmed publish,
-        // which is every iOS release build, so force the backend to register itself. Same call the
-        // browser-wasm convention uses (see ThemePlatform.SelectBackend).
-        System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(
-            typeof(KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer).TypeHandle);
         return RasterizerBackend.StbTrueType;
 #else
         return null;
