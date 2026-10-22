@@ -1143,6 +1143,9 @@ public class Text : IVisible, IRenderableIpso,
         {
             var line = WrappedText[i];
 
+            // How many letters of this line are drawn. The line itself stays whole so the styled run cache,
+            // which is keyed on the whole line, is not rebuilt for every new count (#6440).
+            int lettersToDraw = line.Length;
             if (maxLettersToShow.HasValue)
             {
                 var lettersRemaining = maxLettersToShow.Value - lettersShown;
@@ -1152,9 +1155,9 @@ public class Text : IVisible, IRenderableIpso,
                 }
                 if (lettersRemaining < line.Length)
                 {
-                    line = line.Substring(0, lettersRemaining);
+                    lettersToDraw = lettersRemaining;
                 }
-                lettersShown += line.Length;
+                lettersShown += lettersToDraw;
             }
 
             var linePosition = position;
@@ -1168,11 +1171,11 @@ public class Text : IVisible, IRenderableIpso,
 
             if (substrings == null || substrings.Count == 0)
             {
-                DrawPlainLine(fontValue, line, linePosition, absoluteLeft, origin.Y);
+                DrawPlainLine(fontValue, GetFirstLetters(line, lettersToDraw), linePosition, absoluteLeft, origin.Y);
             }
             else
             {
-                DrawStyledLine(fontValue, substrings, linePosition, absoluteLeft, origin.Y);
+                DrawStyledLine(fontValue, substrings, lettersToDraw, linePosition, absoluteLeft, origin.Y);
             }
 
             if (isStyled)
@@ -1263,6 +1266,32 @@ public class Text : IVisible, IRenderableIpso,
     // No RenderBoundary either -- it's a debug outline used by the Gum tool's XNA-based editor views
     // (rulers, distance arrows), not a feature any game project needs. XNALIKE-only is fine, not
     // adding it here (#3708).
+
+    string? _firstLettersSource;
+    int _firstLettersLength;
+    string _firstLetters = string.Empty;
+
+    /// <summary>
+    /// The first <paramref name="length"/> letters of <paramref name="source"/>: the source itself when all of
+    /// it is wanted, otherwise a substring kept until the source or the length changes. A typewriter reveal
+    /// holds a count for several frames and cuts only one line (or run) per frame, so one cached entry
+    /// allocates nothing while the count is held and one string when it changes (#6440).
+    /// </summary>
+    private string GetFirstLetters(string source, int length)
+    {
+        if (length >= source.Length)
+        {
+            return source;
+        }
+
+        if (!ReferenceEquals(source, _firstLettersSource) || length != _firstLettersLength)
+        {
+            _firstLetters = source.Substring(0, length);
+            _firstLettersSource = source;
+            _firstLettersLength = length;
+        }
+        return _firstLetters;
+    }
 
     /// <summary>
     /// Draws a single line with no inline styling, honoring horizontal alignment and pixel snapping.
@@ -1405,7 +1434,7 @@ public class Text : IVisible, IRenderableIpso,
     /// ReplacementCharacter directly; ScaleX/ScaleY are approximated by their average since a run draws via
     /// one uniform-fontSize <c>DrawTextPro</c> call, and ScaleXOrigin/ScaleYOrigin are not honored.
     /// </summary>
-    private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, Vector2 linePosition, float absoluteLeft, float originY)
+    private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, int lettersToDraw, Vector2 linePosition, float absoluteLeft, float originY)
     {
         // First pass: resolve each run's effective color, font/size, custom-callback offsets and measured
         // width, plus the line totals needed for horizontal alignment (total width) and baseline alignment
@@ -1424,12 +1453,19 @@ public class Text : IVisible, IRenderableIpso,
         // oversample ratio.
         float maxScale = EffectiveFontScale;
 
-        for (int s = 0; s < substrings.Count; s++)
+        // Only the runs holding the first lettersToDraw letters of the line are drawn (the MaxLettersToShow
+        // reveal), the last of them cut short.
+        int runCount = 0;
+        int lettersLeft = lettersToDraw;
+
+        for (int s = 0; s < substrings.Count && lettersLeft > 0; s++)
         {
             var run = substrings[s];
             var runColor = Color;
             var resolvedFont = ResolveRunFont(run.Variables, _font, _oversampleCompensationScale);
-            var runText = run.Substring;
+            var runText = GetFirstLetters(run.Substring, lettersLeft);
+            lettersLeft -= run.Substring.Length;
+            runCount++;
             float xOffset = 0;
             float yOffset = 0;
             float rotationDegrees = 0;
@@ -1548,7 +1584,7 @@ public class Text : IVisible, IRenderableIpso,
         // Texture filtering is applied once when the font's atlas texture is loaded/built (see
         // ContentLoader.DefaultTextureFilter, #3496), not per-draw.
         float advance = 0;
-        for (int s = 0; s < substrings.Count; s++)
+        for (int s = 0; s < runCount; s++)
         {
             ref StyledRunDraw drawRun = ref runs[s];
             var runScale = drawRun.Scale;
