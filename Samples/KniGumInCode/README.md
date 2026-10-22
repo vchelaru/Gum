@@ -27,6 +27,7 @@ The bridge lives only in the sample. Gum ships no library code for it; copy `Kni
 | `bounds(name)` | `{ left, top, width, height, centerX, centerY, visible }` in CSS pixels in the page viewport |
 | `get(name, property)` | The variable's current value (enums come back as their name) |
 | `set(name, property, value)` | `true`; `value` is a number, string, boolean or null |
+| `call(command, args)` | What the other calls run on. `command` is `ready`, `find`, `bounds`, `get` or `set`; `args` is `{ name, property, value }` with the fields that command needs. Returns the command's result or throws. `call('bounds', ...)` is in canvas pixels; only `bounds()` converts to CSS pixels |
 
 A name is an element's `Name`, or a dotted path such as `OptionsComboBox.TextInstance` for a name inside a component. Each segment is the shallowest descendant with that name under the previous one, so names that repeat in many components (`TextInstance`, `Background`) are reached through the named parent. The first segment is searched in `GumService.Default.Root`, then `PopupRoot` (open drop-downs), then `ModalRoot`.
 
