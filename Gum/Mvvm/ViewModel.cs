@@ -373,7 +373,7 @@ namespace Gum.Mvvm
                             childrenProps = notifyRelationships[parent];
                         }
 
-                        childrenProps.Add(child);
+                        childrenProps.Add(string.Intern(child));
                     }
                 }
             }

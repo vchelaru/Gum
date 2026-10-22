@@ -114,9 +114,9 @@ class PlayerViewModel : ViewModel
 }
 ```
 
-`Set(ref field, value)` returns `true` when the value changed. `SetWithoutNotifying(ref field, value)` stores the value without raising `PropertyChanged`. `[DependsOn]`, collection change tracking, and `Clone` work the same as with `Get` and `Set(value)`.
+`Set(ref field, value)` returns `true` when the value changed. `SetWithoutNotifying(ref field, value)` stores the value without raising `PropertyChanged`. `[DependsOn]`, collection change tracking (`Set` watches a collection for changes, `SetWithoutNotifying` does not), and `Clone` work the same as with `Get` and `Set(value)`.
 
-Use `Get` and `Set(value)` when you want the shortest code. Use a backing field for properties that are read or set every frame, or on many view models. The two styles can be mixed in the same class, and `Get` and `Set(value)` are unchanged.
+Use `Get` and `Set(value)` when you want the shortest code. Use a backing field for properties that are read or set every frame, or on many view models. The two styles can be mixed in the same class, and `Get` and `Set(value)` are unchanged. If your view model already defines its own `protected bool Set<T>(ref T, T, string)`, it now hides the base method and the compiler reports warning CS0108: add `new` or rename it.
 
 The styles differ on the first set. `Set(value)` raises `PropertyChanged` the first time a property is set to anything other than its type's default. With a backing field, the field's current value is the starting point, so assigning the value the field already holds raises nothing. In the example above, `Health = 100` raises nothing, while `Health = 50` does.
 
