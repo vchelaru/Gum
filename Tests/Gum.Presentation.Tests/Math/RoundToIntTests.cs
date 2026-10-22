@@ -17,7 +17,6 @@ public class RoundToIntTests
 
     [Theory]
     [InlineData(0f, 0)]
-    [InlineData(-0f, 0)]
     [InlineData(0.49999997f, 0)]
     [InlineData(-0.49999997f, 0)]
     [InlineData(0.5f, 1)]
@@ -86,6 +85,13 @@ public class RoundToIntTests
     }
 
     [Fact]
+    public void RoundToInt_NegativeZero_ReturnsZero()
+    {
+        MathFunctions.RoundToInt(-0f).ShouldBe(0);
+        MathFunctions.RoundToInt(-0.0).ShouldBe(0);
+    }
+
+    [Fact]
     public void RoundToInt_FloatNaN_ThrowsArgumentException()
     {
         Should.Throw<ArgumentException>(() => MathFunctions.RoundToInt(float.NaN));
@@ -93,7 +99,6 @@ public class RoundToIntTests
 
     [Theory]
     [InlineData(0.0, 0)]
-    [InlineData(-0.0, 0)]
     [InlineData(0.49999999999999994, 0)]
     [InlineData(0.5, 1)]
     [InlineData(0.5000000000000001, 1)]
