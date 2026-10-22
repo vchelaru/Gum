@@ -1218,7 +1218,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             if (textRuntime != null)
             {
-                textRuntime.FontSize = (int)value;
+                textRuntime.FontSize = Convert.ToSingle(value);
             }
             ReactToFontValueChange();
         }

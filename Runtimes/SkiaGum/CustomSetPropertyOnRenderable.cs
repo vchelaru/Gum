@@ -1708,7 +1708,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             if (gueAsTextRuntime != null)
             {
-                gueAsTextRuntime.FontSize = (int)value;
+                gueAsTextRuntime.FontSize = Convert.ToSingle(value);
             }
             ReactToFontValueChange();
         }

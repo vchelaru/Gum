@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Gum.Converters;
+using Gum.Managers;
 
 namespace Gum.Wireframe;
 
@@ -48,7 +49,7 @@ public static class GraphicalUiElementPropertyReadExtensions
                 propertyName = name.Substring(dot + 1);
             }
 
-            if (owner.TryGetProperty(propertyName, out object? value))
+            if (owner.TryGetPropertyExact(propertyName, out object? value))
             {
                 changed.Add(new Gum.DataTypes.Variables.VariableSave { Name = name, Value = value, SetsValue = true });
             }
@@ -65,7 +66,21 @@ public static class GraphicalUiElementPropertyReadExtensions
     /// <param name="propertyName">The Gum variable name.</param>
     /// <param name="value">The current value when found; otherwise null.</param>
     /// <returns>True if the property was recognized and read; otherwise false.</returns>
-    public static bool TryGetProperty(this GraphicalUiElement element, string propertyName, out object? value)
+    public static bool TryGetProperty(this GraphicalUiElement element, string propertyName, out object? value) =>
+        TryGetProperty(element, propertyName, exact: false, out value);
+
+    /// <summary>
+    /// Reads a variable for a same-component reference, which must carry the value unchanged. Differs from
+    /// <see cref="TryGetProperty(GraphicalUiElement, string, out object?)"/>, whose values are what a saved project
+    /// can hold, in two cases: an XUnits or YUnits with no <see cref="PositionUnitType"/> counterpart (set in code,
+    /// such as <see cref="GeneralUnitType.PercentageOfFile"/>) comes back as the <see cref="GeneralUnitType"/>, and
+    /// a fractional FontSize stays a float instead of rounding to the int the saved variable is.
+    /// <see cref="GraphicalUiElement.SetProperty(string, object?)"/> accepts both.
+    /// </summary>
+    internal static bool TryGetPropertyExact(this GraphicalUiElement element, string propertyName, out object? value) =>
+        TryGetProperty(element, propertyName, exact: true, out value);
+
+    private static bool TryGetProperty(GraphicalUiElement element, string propertyName, bool exact, out object? value)
     {
         value = null;
         switch (propertyName)
@@ -194,7 +209,7 @@ public static class GraphicalUiElementPropertyReadExtensions
                 return true;
             case "XUnits":
             case "X Units":
-                value = UnitConverter.ConvertToPositionUnit(element.XUnits, isXAxis: true);
+                value = GetPositionUnitValue(element.XUnits, isXAxis: true, exact);
                 return true;
             case "Y":
                 value = element.Y;
@@ -205,7 +220,7 @@ public static class GraphicalUiElementPropertyReadExtensions
                 return true;
             case "YUnits":
             case "Y Units":
-                value = UnitConverter.ConvertToPositionUnit(element.YUnits, isXAxis: false);
+                value = GetPositionUnitValue(element.YUnits, isXAxis: false, exact);
                 return true;
             case "Wrap":
                 value = element.Wrap;
@@ -231,7 +246,7 @@ public static class GraphicalUiElementPropertyReadExtensions
 
                 // The FontSize variable is an int, but TextRuntime.FontSize is a float. A float here
                 // would fail the (int) cast when the value is written to another element's FontSize.
-                if (value is float fontSize && propertyName == "FontSize")
+                if (!exact && value is float fontSize && propertyName == "FontSize")
                 {
                     value = (int)Math.Round(fontSize);
                 }
@@ -244,6 +259,18 @@ public static class GraphicalUiElementPropertyReadExtensions
         }
 
         return false;
+    }
+
+    // The saved variable is a PositionUnitType, which has no value for the dimension-only units or, on X, the
+    // obsolete inverted center. An exact read keeps those as the GeneralUnitType rather than reading them as pixels.
+    private static object GetPositionUnitValue(GeneralUnitType unit, bool isXAxis, bool exact)
+    {
+        PositionUnitType positionUnit = UnitConverter.ConvertToPositionUnit(unit, isXAxis);
+        if (exact && UnitConverter.ConvertToGeneralUnit(positionUnit) != unit)
+        {
+            return unit;
+        }
+        return positionUnit;
     }
 
     // Memoizes the public, readable, non-indexer property per (runtime type, Gum variable name).
